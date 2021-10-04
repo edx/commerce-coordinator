@@ -1,0 +1,22 @@
+# Version constraints for pip-installation.
+#
+# This file doesn't install any packages. It specifies version constraints
+# that will be applied if a package is needed.
+#
+# When pinning something here, please provide an explanation of why.  Ideally,
+# link to other information that will help people in the future to remove the
+# pin when possible.  Writing an issue against the offending project and
+# linking to it here is good.
+
+# Common constraints for edx repos
+-c https://raw.githubusercontent.com/edx/edx-lint/master/edx_lint/files/common_constraints.txt
+
+## begin copied from edx-platform as of https://github.com/edx/edx-platform/blob/1fb0ed58bb4b55a714b6bd9a29ac6ae1a47abbf7/requirements/constraints.txt#L21
+# cryptography 3.3 has dropped python3.5 support.
+cryptography<3.3
+
+# PYJWT[crypto]==2.0.1 requires cryptography>=3.3.1
+PyJWT[crypto]<2.0.0
+# social-auth-core>=4.0.0 requires PYJWT>=2.0.0
+social-auth-core<4.0.0
+
