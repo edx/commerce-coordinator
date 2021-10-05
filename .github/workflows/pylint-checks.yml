@@ -1,0 +1,53 @@
+name: CI
+
+on:
+  pull_request:
+  push:
+    branches:
+      - main
+
+jobs:
+  run_pylint:
+    runs-on: ubuntu-20.04
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - module-name: commerce_coordinator
+            path: "commerce_coordinator"
+
+
+    name: pylint ${{ matrix.module-name }}
+    steps:
+
+    - uses: actions/checkout@v2
+
+    - name: Install Required System Packages
+      run: sudo apt-get update && sudo apt-get install libxmlsec1-dev
+
+    - name: Setup Python
+      uses: actions/setup-python@v2
+      with:
+        python-version: 3.8
+
+    - name: Get pip cache dir
+      id: pip-cache-dir
+      run: |
+        echo "::set-output name=dir::$(pip cache dir)"
+
+    - name: Cache pip dependencies
+      id: cache-dependencies
+      uses: actions/cache@v2
+      with:
+        path: ${{ steps.pip-cache-dir.outputs.dir }}
+        key: ${{ runner.os }}-pip-${{ hashFiles('requirements/edx/development.txt') }}
+        restore-keys: ${{ runner.os }}-pip-
+
+    - name: Install Required Python Dependencies
+      run: |
+        pip install -r requirements/pip.txt
+        pip install -r requirements/edx/development.txt --src ${{ runner.temp }}
+
+    - name: Run Quality Tests
+      run: |
+        pylint  ${{ matrix.path }}
