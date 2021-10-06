@@ -1,4 +1,4 @@
-from commerce-coordinator.settings.base import *
+from commerce_coordinator.settings.base import *
 
 DEBUG = True
 

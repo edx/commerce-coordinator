@@ -2,8 +2,8 @@ from os import environ
 
 import yaml
 
-from commerce-coordinator.settings.base import *
-from commerce-coordinator.settings.utils import get_env_setting
+from commerce_coordinator.settings.base import *
+from commerce_coordinator.settings.utils import get_env_setting
 
 DEBUG = False
 TEMPLATE_DEBUG = DEBUG

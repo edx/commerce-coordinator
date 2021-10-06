@@ -1,4 +1,4 @@
-from commerce-coordinator.settings.local import *
+from commerce_coordinator.settings.local import *
 
 DATABASES = {
     'default': {

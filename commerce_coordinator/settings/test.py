@@ -1,6 +1,6 @@
 import os
 
-from commerce-coordinator.settings.base import *
+from commerce_coordinator.settings.base import *
 
 # IN-MEMORY TEST DATABASE
 DATABASES = {
