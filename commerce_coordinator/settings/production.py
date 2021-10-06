@@ -21,26 +21,28 @@ DICT_UPDATE_KEYS = ('JWT_AUTH',)
 MEDIA_STORAGE_BACKEND = {}
 FILE_STORAGE_BACKEND = {}
 
-CONFIG_FILE = get_env_setting('COMMERCE-COORDINATOR_CFG')
-with open(CONFIG_FILE, encoding='utf-8') as f:
-    config_from_yaml = yaml.load(f)
+# HACK: BJH: This is probably not the right way to solve this
+if 'COMMERCE_COORDINATOR_CFG' in environ:
+    CONFIG_FILE = get_env_setting('COMMERCE_COORDINATOR_CFG')
+    with open(CONFIG_FILE, encoding='utf-8') as f:
+        config_from_yaml = yaml.load(f)
 
-    # Remove the items that should be used to update dicts, and apply them separately rather
-    # than pumping them into the local vars.
-    dict_updates = {key: config_from_yaml.pop(key, None) for key in DICT_UPDATE_KEYS}
+        # Remove the items that should be used to update dicts, and apply them separately rather
+        # than pumping them into the local vars.
+        dict_updates = {key: config_from_yaml.pop(key, None) for key in DICT_UPDATE_KEYS}
 
-    for key, value in dict_updates.items():
-        if value:
-            vars()[key].update(value)
+        for key, value in dict_updates.items():
+            if value:
+                vars()[key].update(value)
 
-    vars().update(config_from_yaml)
+        vars().update(config_from_yaml)
 
-    # Unpack the media and files storage backend settings for django storages.
-    # These dicts are not Django settings themselves, but they contain a mapping
-    # of Django settings.
-    vars().update(FILE_STORAGE_BACKEND)
-    vars().update(MEDIA_STORAGE_BACKEND)
-2
+        # Unpack the media and files storage backend settings for django storages.
+        # These dicts are not Django settings themselves, but they contain a mapping
+        # of Django settings.
+        vars().update(FILE_STORAGE_BACKEND)
+        vars().update(MEDIA_STORAGE_BACKEND)
+2  # FIXME: BJH: this probably shouldn't be here, get it cleaned up in the cookiecutter
 
 DB_OVERRIDES = dict(
     PASSWORD=environ.get('DB_MIGRATION_PASS', DATABASES['default']['PASSWORD']),
