@@ -74,7 +74,7 @@ defusedxml==0.7.1
     #   -r requirements/validation.txt
     #   python3-openid
     #   social-auth-core
-diff-cover==6.4.1
+diff-cover==6.4.2
     # via -r requirements/dev.in
 django==2.2.24
     # via
