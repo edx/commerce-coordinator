@@ -41,8 +41,8 @@ THIRD_PARTY_APPS = (
 )
 
 PROJECT_APPS = (
-    'commerce-coordinator.apps.core',
-    'commerce-coordinator.apps.api',
+    'commerce_coordinator.apps.core',
+    'commerce_coordinator.apps.api',
 )
 
 INSTALLED_APPS += THIRD_PARTY_APPS
@@ -79,10 +79,10 @@ CORS_ALLOW_HEADERS = corsheaders_default_headers + (
 )
 CORS_ORIGIN_WHITELIST = []
 
-ROOT_URLCONF = 'commerce-coordinator.urls'
+ROOT_URLCONF = 'commerce_coordinator.urls'
 
 # Python dotted path to the WSGI application used by Django's runserver.
-WSGI_APPLICATION = 'commerce-coordinator.wsgi.application'
+WSGI_APPLICATION = 'commerce_coordinator.wsgi.application'
 
 # Database
 # https://docs.djangoproject.com/en/2.2/ref/settings/#databases
@@ -155,7 +155,7 @@ TEMPLATES = [
                 'django.template.context_processors.static',
                 'django.template.context_processors.tz',
                 'django.contrib.messages.context_processors.messages',
-                'commerce-coordinator.apps.core.context_processors.core',
+                'commerce_coordinator.apps.core.context_processors.core',
             ),
             'debug': True,  # Django will only display debug pages if the global DEBUG setting is set to True.
         }
