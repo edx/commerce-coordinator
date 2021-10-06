@@ -13,8 +13,8 @@ jobs:
       fail-fast: false
       matrix:
         include:
-          - module-name: commerce-coordinator
-            path: "commerce-coordinator"
+          - module-name: commerce_coordinator
+            path: "commerce_coordinator"
 
 
     name: pylint ${{ matrix.module-name }}
