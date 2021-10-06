@@ -68,21 +68,21 @@ coverage: clean
 	$(BROWSER) htmlcov/index.html
 
 isort_check: ## check that isort has been run
-	isort --check-only -rc commerce-coordinator/
+	isort --check-only -rc commerce_coordinator/
 
 isort: ## run isort to sort imports in all Python files
-	isort --recursive --atomic commerce-coordinator/
+	isort --recursive --atomic commerce_coordinator/
 
 style: ## run Python style checker
-	pylint --rcfile=pylintrc commerce-coordinator *.py
+	pylint --rcfile=pylintrc commerce_coordinator *.py
 
 lint: ## run Python code linting
-	pylint --rcfile=pylintrc commerce-coordinator *.py
+	pylint --rcfile=pylintrc commerce_coordinator *.py
 
 quality: style isort_check lint ## check code style and import sorting, then lint
 
 pii_check: ## check for PII annotations on all Django models
-	DJANGO_SETTINGS_MODULE=commerce-coordinator.settings.test \
+	DJANGO_SETTINGS_MODULE=commerce_coordinator.settings.test \
 	code_annotations django_find_annotations --config_file .pii_annotations.yml --lint --report --coverage
 
 check_keywords: ## Scan the Django models in all installed apps in this project for restricted field names
