@@ -2,7 +2,7 @@
 
 from django.test import RequestFactory, TestCase, override_settings
 
-from commerce-coordinator.apps.core.context_processors import core
+from commerce_coordinator.apps.core.context_processors import core
 
 PLATFORM_NAME = 'Test Platform'
 

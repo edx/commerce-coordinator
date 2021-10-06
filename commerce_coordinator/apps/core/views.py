@@ -10,7 +10,7 @@ from django.shortcuts import redirect
 from django.views.generic import View
 from edx_django_utils.monitoring import ignore_transaction
 
-from commerce-coordinator.apps.core.constants import Status
+from commerce_coordinator.apps.core.constants import Status
 
 logger = logging.getLogger(__name__)
 User = get_user_model()

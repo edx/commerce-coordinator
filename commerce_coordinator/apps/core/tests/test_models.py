@@ -4,7 +4,7 @@ from django.test import TestCase
 from django_dynamic_fixture import G
 from social_django.models import UserSocialAuth
 
-from commerce-coordinator.apps.core.models import User
+from commerce_coordinator.apps.core.models import User
 
 
 class UserTests(TestCase):
@@ -32,7 +32,7 @@ class UserTests(TestCase):
         first_name = 'Jerry'
         last_name = 'Seinfeld'
         user = G(User, full_name=None, first_name=first_name, last_name=last_name)
-        expected = '{first_name} {last_name}'.format(first_name=first_name, last_name=last_name)
+        expected = f'{first_name} {last_name}'
         self.assertEqual(user.get_full_name(), expected)
 
         user = G(User, full_name=full_name, first_name=first_name, last_name=last_name)

@@ -21,8 +21,8 @@ from django.conf.urls import include, url
 from django.contrib import admin
 from rest_framework_swagger.views import get_swagger_view
 
-from commerce-coordinator.apps.api import urls as api_urls
-from commerce-coordinator.apps.core import views as core_views
+from commerce_coordinator.apps.api import urls as api_urls
+from commerce_coordinator.apps.core import views as core_views
 
 admin.autodiscover()
 
@@ -38,5 +38,5 @@ urlpatterns = oauth2_urlpatterns + [
 if settings.DEBUG and os.environ.get('ENABLE_DJANGO_TOOLBAR', False):  # pragma: no cover
     # Disable pylint import error because we don't install django-debug-toolbar
     # for CI build
-    import debug_toolbar  # pylint: disable=import-error
+    import debug_toolbar
     urlpatterns.append(url(r'^__debug__/', include(debug_toolbar.urls)))
