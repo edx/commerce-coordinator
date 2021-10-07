@@ -202,3 +202,6 @@ github_docker_push: github_docker_tag github_docker_auth ## push to docker hub
 	docker push "openedx/repo_name:${GITHUB_SHA}"
 	docker push 'openedx/repo_name:latest-newrelic'
 	docker push "openedx/repo_name:${GITHUB_SHA}-newrelic"
+
+selfcheck: ## check that the Makefile is well-formed
+        @echo "The Makefile is well-formed."
