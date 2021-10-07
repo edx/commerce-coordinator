@@ -1,5 +1,6 @@
+##########
 Change Log
-----------
+##########
 
 ..
    All enhancements and patches to commerce-coordinator will be documented
@@ -12,14 +13,14 @@ Change Log
 .. There should always be an "Unreleased" section for changes pending release.
 
 Unreleased
-~~~~~~~~~~
+**********
 
 *
 
 [0.1.0] - 2021-10-04
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+********************
 
 Added
-_____
+=====
 
 * First release on PyPI.
