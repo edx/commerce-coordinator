@@ -18,7 +18,7 @@ def pre_request(worker, req):
 def close_all_caches():
     """
     Close the cache so newly forked workers cannot accidentally share the socket with the parent processes.
-    
+
     This prevents a race condition in which one worker could get a cache response intended for another worker.
     """
     # We do this in a way that is safe for 1.4 and 1.8 while we still have some
