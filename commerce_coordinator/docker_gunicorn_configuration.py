@@ -1,5 +1,5 @@
 """
-gunicorn configuration file: https://docs.gunicorn.org/en/develop/configure.html
+gunicorn configuration file, seehttps://docs.gunicorn.org/en/develop/configure.html for more info.
 """
 import multiprocessing  # pylint: disable=unused-import
 
@@ -11,15 +11,15 @@ workers = 2
 
 
 def pre_request(worker, req):
+    "Logs requests before they are processed"
     worker.log.info(f"{req.method} {req.path}")
 
 
 def close_all_caches():
     """
-    Close the cache so that newly forked workers cannot accidentally share
-    the socket with the processes they were forked from. This prevents a race
-    condition in which one worker could get a cache response intended for
-    another worker.
+    Close the cache so newly forked workers cannot accidentally share the socket with the parent processes.
+    
+    This prevents a race condition in which one worker could get a cache response intended for another worker.
     """
     # We do this in a way that is safe for 1.4 and 1.8 while we still have some
     # 1.4 installations.
@@ -45,11 +45,12 @@ def close_all_caches():
 
 
 def post_fork(server, worker):  # pylint: disable=unused-argument
+    "Closes caches after forking, see close_all_caches for more info."
     close_all_caches()
 
 
 def when_ready(server):  # pylint: disable=unused-argument
-    """When running in debug mode, run Django's `check` to better match what `manage.py runserver` does"""
+    """When running in debug mode, run Django's `check` to better match what `manage.py runserver` does."""
     from django.conf import settings  # lint-amnesty, pylint: disable=import-outside-toplevel
     from django.core.management import call_command  # lint-amnesty, pylint: disable=import-outside-toplevel
     if settings.DEBUG:
