@@ -57,7 +57,7 @@ VERSION = get_version('commerce_coordinator', '__init__.py')
 
 if sys.argv[-1] == 'tag':
     print("Tagging the version on github:")
-    os.system("git tag -a %s -m 'version %s'" % (VERSION, VERSION))
+    os.system(f"git tag -a {VERSION} -m 'version {VERSION}'")
     os.system("git push --tags")
     sys.exit()
 
