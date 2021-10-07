@@ -1,5 +1,5 @@
 """
-gunicorn configuration file, seehttps://docs.gunicorn.org/en/develop/configure.html for more info.
+gunicorn configuration file, see https://docs.gunicorn.org/en/develop/configure.html for more info.
 """
 import multiprocessing  # pylint: disable=unused-import
 
@@ -11,7 +11,7 @@ workers = 2
 
 
 def pre_request(worker, req):
-    "Logs requests before they are processed"
+    """Log requests before they are processed."""
     worker.log.info(f"{req.method} {req.path}")
 
 
@@ -45,7 +45,7 @@ def close_all_caches():
 
 
 def post_fork(server, worker):  # pylint: disable=unused-argument
-    "Closes caches after forking, see close_all_caches for more info."
+    """Close the cache so newly forked workers cannot accidentally share the socket with the parent processes."""
     close_all_caches()
 
 
