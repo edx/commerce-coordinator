@@ -5,10 +5,15 @@ from corsheaders.defaults import default_headers as corsheaders_default_headers
 
 from commerce_coordinator.settings.utils import get_logger_config
 
+
 # PATH vars
 def here(*x):
     return join(abspath(dirname(__file__)), *x)
+
+
 PROJECT_ROOT = here("..")
+
+
 def root(*x):
     return join(abspath(PROJECT_ROOT), *x)
 
