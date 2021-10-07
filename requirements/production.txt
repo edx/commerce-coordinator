@@ -25,7 +25,7 @@ coreschema==0.0.4
     # via
     #   -r requirements/base.txt
     #   coreapi
-cryptography==3.4.8
+cryptography==35.0.0
     # via
     #   -r requirements/base.txt
     #   pyjwt
@@ -152,7 +152,7 @@ pyjwkest==1.4.2
     # via
     #   -r requirements/base.txt
     #   edx-drf-extensions
-pyjwt[crypto]==2.1.0
+pyjwt[crypto]==2.2.0
     # via
     #   -r requirements/base.txt
     #   drf-jwt

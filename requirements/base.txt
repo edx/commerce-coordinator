@@ -16,7 +16,7 @@ coreapi==2.3.3
     #   openapi-codec
 coreschema==0.0.4
     # via coreapi
-cryptography==3.4.8
+cryptography==35.0.0
     # via
     #   pyjwt
     #   social-auth-core
@@ -105,7 +105,7 @@ pycryptodomex==3.10.4
     # via pyjwkest
 pyjwkest==1.4.2
     # via edx-drf-extensions
-pyjwt[crypto]==2.1.0
+pyjwt[crypto]==2.2.0
     # via
     #   drf-jwt
     #   edx-auth-backends
