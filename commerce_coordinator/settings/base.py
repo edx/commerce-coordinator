@@ -6,9 +6,11 @@ from corsheaders.defaults import default_headers as corsheaders_default_headers
 from commerce_coordinator.settings.utils import get_logger_config
 
 # PATH vars
-here = lambda *x: join(abspath(dirname(__file__)), *x)
+def here(*x):
+    return join(abspath(dirname(__file__)), *x)
 PROJECT_ROOT = here("..")
-root = lambda *x: join(abspath(PROJECT_ROOT), *x)
+def root(*x):
+    return join(abspath(PROJECT_ROOT), *x)
 
 
 # SECURITY WARNING: keep the secret key used in production secret!
