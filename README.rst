@@ -47,7 +47,7 @@ Every time you develop something in this repo
   workon commerce-coordinator
 
   # Grab the latest code
-  git checkout master
+  git checkout main
   git pull
 
   # Install/update the dev requirements
@@ -86,7 +86,7 @@ How To Contribute
 *****************
 
 Contributions are very welcome.
-Please read `How To Contribute <https://github.com/edx/edx-platform/blob/master/CONTRIBUTING.rst>`_ for details.
+Please read `How To Contribute <https://github.com/edx/edx-platform/blob/main/CONTRIBUTING.rst>`_ for details.
 Even though they were written with ``edx-platform`` in mind, the guidelines
 should be followed for all Open edX projects.
 
@@ -118,12 +118,12 @@ For more information about these options, see the `Getting Help`_ page.
     :target: https://pypi.python.org/pypi/commerce-coordinator/
     :alt: PyPI
 
-.. |ci-badge| image:: https://github.com/edx/commerce-coordinator/workflows/Python%20CI/badge.svg?branch=master
+.. |ci-badge| image:: https://github.com/edx/commerce-coordinator/workflows/Python%20CI/badge.svg?branch=main
     :target: https://github.com/edx/commerce-coordinator/actions
     :alt: CI
 
-.. |codecov-badge| image:: https://codecov.io/github/edx/commerce-coordinator/coverage.svg?branch=master
-    :target: https://codecov.io/github/edx/commerce-coordinator?branch=master
+.. |codecov-badge| image:: https://codecov.io/github/edx/commerce-coordinator/coverage.svg?branch=main
+    :target: https://codecov.io/github/edx/commerce-coordinator?branch=main
     :alt: Codecov
 
 .. |doc-badge| image:: https://readthedocs.org/projects/commerce-coordinator/badge/?version=latest
@@ -135,5 +135,5 @@ For more information about these options, see the `Getting Help`_ page.
     :alt: Supported Python versions
 
 .. |license-badge| image:: https://img.shields.io/github/license/edx/commerce-coordinator.svg
-    :target: https://github.com/edx/commerce-coordinator/blob/master/LICENSE.txt
+    :target: https://github.com/edx/commerce-coordinator/blob/main/LICENSE.txt
     :alt: License
