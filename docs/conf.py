@@ -38,7 +38,7 @@ def get_version(*file_paths):
 REPO_ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 sys.path.append(REPO_ROOT)
 
-VERSION = get_version('../commerce-coordinator', '__init__.py')
+VERSION = get_version('../commerce_coordinator', '__init__.py')
 
 
 # If extensions (or modules to document with autodoc) are in another directory,
@@ -101,7 +101,7 @@ html_context = {
     "display_github": True,  # Integrate GitHub
     "github_user": "edx",  # Username
     "github_repo": 'commerce-coordinator',  # Repo name
-    "github_version": "master",  # Version
+    "github_version": "main",  # Version
     "conf_py_path": "/docs/",  # Path in the checkout to the docs root
 }
 
@@ -498,8 +498,8 @@ def on_init(app):  # pylint: disable=unused-argument
         # If we are, assemble the path manually
         bin_path = os.path.abspath(os.path.join(sys.prefix, 'bin'))
         apidoc_path = os.path.join(bin_path, apidoc_path)
-    check_call([apidoc_path, '-o', docs_path, os.path.join(root_path, 'commerce-coordinator'),
-                os.path.join(root_path, 'commerce-coordinator/migrations')])
+    check_call([apidoc_path, '-o', docs_path, os.path.join(root_path, 'commerce_coordinator'),
+                os.path.join(root_path, 'commerce_coordinator/migrations')])
 
 
 def setup(app):

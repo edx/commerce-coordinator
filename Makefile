@@ -68,21 +68,21 @@ coverage: clean
 	$(BROWSER) htmlcov/index.html
 
 isort_check: ## check that isort has been run
-	isort --check-only -rc commerce-coordinator/
+	isort --check-only -rc commerce_coordinator/
 
 isort: ## run isort to sort imports in all Python files
-	isort --recursive --atomic commerce-coordinator/
+	isort --recursive --atomic commerce_coordinator/
 
 style: ## run Python style checker
-	pylint --rcfile=pylintrc commerce-coordinator *.py
+	pylint --rcfile=pylintrc commerce_coordinator *.py
 
 lint: ## run Python code linting
-	pylint --rcfile=pylintrc commerce-coordinator *.py
+	pylint --rcfile=pylintrc commerce_coordinator *.py
 
 quality: style isort_check lint ## check code style and import sorting, then lint
 
 pii_check: ## check for PII annotations on all Django models
-	DJANGO_SETTINGS_MODULE=commerce-coordinator.settings.test \
+	DJANGO_SETTINGS_MODULE=commerce_coordinator.settings.test \
 	code_annotations django_find_annotations --config_file .pii_annotations.yml --lint --report --coverage
 
 check_keywords: ## Scan the Django models in all installed apps in this project for restricted field names
@@ -102,6 +102,7 @@ upgrade: piptools ## update the requirements/*.txt files with the latest package
 	pip-compile --upgrade -o requirements/pip-tools.txt requirements/pip-tools.in
 	pip-compile --upgrade -o requirements/base.txt requirements/base.in
 	pip-compile --upgrade -o requirements/test.txt requirements/test.in
+	pip-compile --upgrade -o requirements/ci.txt requirements/ci.in
 	pip-compile --upgrade -o requirements/doc.txt requirements/doc.in
 	pip-compile --upgrade -o requirements/quality.txt requirements/quality.in
 	pip-compile --upgrade -o requirements/validation.txt requirements/validation.in
@@ -113,7 +114,7 @@ extract_translations: ## extract strings to be translated, outputting .mo files
 	python manage.py makemessages -l en -v1 -d djangojs
 
 dummy_translations: ## generate dummy translation (.po) files
-	cd commerce-coordinator && i18n_tool dummy
+	cd commerce_coordinator && i18n_tool dummy
 
 compile_translations: # compile translation files, outputting .po files for each supported language
 	python manage.py compilemessages
@@ -201,3 +202,6 @@ github_docker_push: github_docker_tag github_docker_auth ## push to docker hub
 	docker push "openedx/repo_name:${GITHUB_SHA}"
 	docker push 'openedx/repo_name:latest-newrelic'
 	docker push "openedx/repo_name:${GITHUB_SHA}-newrelic"
+
+selfcheck: ## check that the Makefile is well-formed
+	@echo "The Makefile is well-formed."
