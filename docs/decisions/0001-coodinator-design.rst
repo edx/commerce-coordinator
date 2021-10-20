@@ -28,16 +28,16 @@ Consequences
 Django based
 ============
 
-
+The Commerce Coordinator will be a Django web service written in Python. This decision is to leverage the wealth of experience that the edX developers have in writing and running these services, allowing for a faster time to value and more stable deployment.
 
 Highly modular
 ==============
 
 The world of online commerce is rapidly changing, and with so many moving pieces it is important to Open edX operators to be able to use the services and tools that are the best fit for them, in the ways that they need to. As such we have decided to use a system of decoupled events to allow maximum flexibility in implementation. The exact details of the event mechanisms will be addressed in subsequent ADRs.
 
-The system will have a fixed set of default messages handling most current use cases (ex: Payment Received, Refund Requested) and a built in set of message handlers that can be enabled via configuration which interact with other Open edX systems (LMS notified upon Payment Received). Additional Django Apps can be installed in the usual fashion which to offer additional handlers.
+The system will allow for a set of messages and handlers to be configured to support any set of use cases (ex: Payment Received, Refund Requested). A built set of messages and handlers will be included with the distribution that can be enabled via configuration which interact with various Open edX systems (for example LMS notified upon Payment Received), but those message and handlers are entirely optional. Additional Django Apps can be installed in the usual fashion which to offer additional handlers and new messages.
 
-In addition to handlers, the system will provide default URL endpoints to receive incoming API calls / callbacks from external services, and allow extensibility via the usual Django app mechanisms to add new API endpoints and callback handlers which can, in turn, fire off custom messages.
+In addition to handlers, the system will provide URL endpoints to receive incoming API calls / callbacks from external services, and allow extensibility via the usual Django app mechanisms to add new API endpoints and callback handlers which can, in turn, fire off custom messages.
 
 The expectation is that the combination of these functionalities will allow significant flexibility via configuration, and the ability to insert custom business logic where necessary to glue together functionality from different systems into one cohesive commerce solution.
 
@@ -45,7 +45,7 @@ The expectation is that the combination of these functionalities will allow sign
 No customer-facing user interface
 =================================
 
-The goal is to make this system the central coordinator of functionality from numerous other sources, not for it to be a one-to-one replacement for functionality currently in the edX Oscar-based Ecommerce system. As such, the expectation will be that any UI functionality will exist in 3rd party hosted services, micro-frontends, or other custom solutions that fill the specific need of the site operator. Any UI would be able to communicte with the public API of this service to retrieve information or perform actions on behalf of a user, however.
+The goal is to make this system the central coordinator of functionality from numerous other sources, not for it to be a one-to-one replacement for functionality currently in the edX Oscar-based Ecommerce system. As such, the expectation will be that any UI functionality will exist in 3rd party hosted services, micro-frontends, or other custom solutions that fill the specific need of the site operator. Any UI would be able to communicate with the public API of this service to retrieve information or perform actions on behalf of a user, however.
 
 As this is a Django app, we *do* expect to use the Django Admin interface for administrative functionality such as configuration or storing Waffle flag state.
 
