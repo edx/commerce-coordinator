@@ -61,7 +61,7 @@ By default the connections between signals and their configured handlers can be 
 Rejected Alternatives
 *********************
 
-A lengthy investigation was undertaken to look at several options for making this system loosely coupled and easily extensible. For those with access, the results are here: https://docs.google.com/document/d/11PTYakKm7vR3BC_FYggemfRYZE8R3exfeHRDalasPcc#
+A lengthy investigation was undertaken to look at several options for making this system loosely coupled and easily extensible.
 
 Alternatives that were investigated and rejected:
 
