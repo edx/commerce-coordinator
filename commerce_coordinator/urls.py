@@ -25,6 +25,7 @@ from rest_framework_swagger.views import get_swagger_view
 
 from commerce_coordinator.apps.api import urls as api_urls
 from commerce_coordinator.apps.core import views as core_views
+from commerce_coordinator.apps.lms import urls as lms_urls
 
 admin.autodiscover()
 
@@ -35,6 +36,8 @@ urlpatterns = oauth2_urlpatterns + [
     url(r'^auto_auth/$', core_views.AutoAuth.as_view(), name='auto_auth'),
     url(r'', include('csrf.urls')),  # Include csrf urls from edx-drf-extensions
     url(r'^health/$', core_views.health, name='health'),
+    # FIXME: Currently this is only test code, we may want to decouple LMS code here at some point...
+    url(r'^lms/', include(lms_urls))
 ]
 
 if settings.DEBUG and os.environ.get('ENABLE_DJANGO_TOOLBAR', False):  # pragma: no cover

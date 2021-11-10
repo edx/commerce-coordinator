@@ -2,6 +2,10 @@ from commerce_coordinator.settings.base import *
 
 DEBUG = True
 
+INSTALLED_APPS += (
+    'commerce_coordinator.apps.lms.apps.LmsConfig',
+)
+
 # CACHE CONFIGURATION
 # See: https://docs.djangoproject.com/en/dev/ref/settings/#caches
 CACHES = {
@@ -63,6 +67,7 @@ JWT_AUTH.update({
 ENABLE_AUTO_AUTH = True
 
 LOGGING = get_logger_config(debug=DEBUG)
+
 
 #####################################################################
 # Lastly, see if the developer has any local overrides.

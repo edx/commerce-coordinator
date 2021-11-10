@@ -48,7 +48,7 @@ THIRD_PARTY_APPS = (
 )
 
 PROJECT_APPS = (
-    'commerce_coordinator.apps.core',
+    'commerce_coordinator.apps.core.apps.CoreConfig',
     'commerce_coordinator.apps.api',
 )
 
@@ -235,3 +235,21 @@ PLATFORM_NAME = 'Your Platform Name Here'
 
 # Set up logging for development use (logging to stdout)
 LOGGING = get_logger_config(debug=DEBUG)
+
+#####################################################################
+# Commerce Coordinator Signal Configuration
+#
+# The keys are instances of CoordinatorSignal in any installed app
+# and the values are Django signal receiver functions from any
+# installed app to be called when the given signal is dispatched.
+# These mappings are bound and enforced in
+# core.apps.CoreConfig.ready() which is run on Django startup.
+#####################################################################
+CC_SIGNALS = {
+    # Fixme: This configuration is just for proof-of-concept and can
+    # be removed once we have real signals
+    'commerce_coordinator.apps.core.signals.test_signal': [
+        'commerce_coordinator.apps.lms.signals.test_receiver',
+        'commerce_coordinator.apps.core.signals.test_receiver_exception'
+    ]
+}
