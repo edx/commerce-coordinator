@@ -68,6 +68,7 @@ ENABLE_AUTO_AUTH = True
 
 LOGGING = get_logger_config(debug=DEBUG)
 
+CELERY_BROKER_URL = "redis://:password@localhost:6379/0"
 
 #####################################################################
 # Lastly, see if the developer has any local overrides.
