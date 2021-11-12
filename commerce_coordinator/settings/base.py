@@ -250,6 +250,7 @@ CC_SIGNALS = {
     # be removed once we have real signals
     'commerce_coordinator.apps.core.signals.test_signal': [
         'commerce_coordinator.apps.lms.signals.test_receiver',
-        'commerce_coordinator.apps.core.signals.test_receiver_exception'
+        'commerce_coordinator.apps.core.signals.test_receiver_exception',
+        'commerce_coordinator.apps.core.signals.test_celery_task',
     ]
 }
