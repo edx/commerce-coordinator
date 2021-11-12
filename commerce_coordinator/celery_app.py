@@ -14,10 +14,6 @@ os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'commerce_coordinator.settings.l
 app = Celery('commerce-coordinator')
 app.config_from_object('django.conf:settings', namespace='CELERY')
 
-# Load task modules from all registered Django apps.
+# Load task modules from all registered Django apps. Any Celery tasks located in a tasks.py file under a Django
+# app in INSTALLED_APPS should automatically be found.
 app.autodiscover_tasks()
-
-
-@app.task(bind=True)
-def debug_task(self):
-    print(f'Request: {self.request!r}')
