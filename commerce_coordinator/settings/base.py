@@ -261,4 +261,7 @@ CC_SIGNALS = {
     'commerce_coordinator.apps.lms.signals.enroll_learner_signal': [
         'commerce_coordinator.apps.lms.signals.demo_enroll_learner_in_course',
     ],
+    'commerce_coordinator.apps.core.signals.test_celery_signal': [
+        'commerce_coordinator.apps.core.signals.test_celery_signal_task',
+    ],
 }
