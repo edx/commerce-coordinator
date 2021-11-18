@@ -16,9 +16,12 @@ def debug_task():
 
 @shared_task()
 def debug_celery_signal_task():
+    """
+    Celery task that calls a Django Signal, which in turn queues another Celery task.
+    """
     # Note: Using signals from tasks is likely to create a circular import since the normal paradigm is to call tasks
     # from signals! Working around that here.
-    from .signals import test_signal
+    from .signals import test_signal  # pylint: disable=import-outside-toplevel
 
     logger.info('Core debug_celery_signal_task fired.')
 
@@ -26,4 +29,3 @@ def debug_celery_signal_task():
     # signals and handlers from inside a Celery task. This is a simple one that just fires off the test signal, which
     # in turn will queue another Celery task for "debug_task" that should also execute.
     test_signal.send_robust("Sending a signal from a celery task!")
-
