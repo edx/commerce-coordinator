@@ -4,7 +4,7 @@ Core app signals and receivers.
 import logging
 
 from .signal_helpers import CoordinatorSignal
-from .tasks import debug_celery_signal_task, debug_task
+from .tasks import debug_task
 
 logger = logging.getLogger(__name__)
 
@@ -13,7 +13,6 @@ logger = logging.getLogger(__name__)
 # DEMO: Proof-of-concept test code from here to end of file
 #############################################################
 test_signal = CoordinatorSignal()
-test_celery_signal = CoordinatorSignal()
 
 
 def test_receiver_exception(sender, **kwargs):
@@ -33,8 +32,3 @@ def test_celery_task(sender, **kwargs):
     # This takes places our call to the Celery task on the redis queue. The actual debug_task function will be called
     # inside the Celery process when it finds the new message on the queue.
     debug_task.delay()
-
-
-def test_celery_signal_task(sender, **kwargs):
-    logger.info(f"Queuing Celery task debug_celery_signal_task from sender '{sender}'.")
-    debug_celery_signal_task.delay()

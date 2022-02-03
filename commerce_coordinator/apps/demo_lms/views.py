@@ -6,7 +6,7 @@ import traceback
 
 from django.http import JsonResponse
 
-from commerce_coordinator.apps.core.signals import test_celery_signal, test_signal
+from commerce_coordinator.apps.core.signals import test_signal
 
 from .signals import purchase_complete_signal
 
@@ -47,17 +47,6 @@ def test_view(_):
     # send_robust() will ensure all receivers are called, as opposed to send() which will return immediately upon
     # any failure, causing some receivers to never be called.
     results = test_signal.send_robust("Something")
-
-    return _format_signal_send_response(results)
-
-
-def test_celery_signal_view(_):
-    """
-    DEMO: Test view for the proof-of-concept. It exists to show that we can call signals from inside Celery tasks
-
-    Returns a JSON object with the results of our signal call, including string formatting traceback on an exception.
-    """
-    results = test_celery_signal.send_robust("Something")
 
     return _format_signal_send_response(results)
 
