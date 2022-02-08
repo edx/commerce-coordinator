@@ -6,4 +6,4 @@ from django.apps import AppConfig
 
 
 class LmsConfig(AppConfig):
-    name = 'commerce_coordinator.apps.lms'
+    name = 'commerce_coordinator.apps.demo_lms'

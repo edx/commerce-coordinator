@@ -4,7 +4,7 @@ LMS app signals and receivers.
 import logging
 
 from commerce_coordinator.apps.core.signal_helpers import CoordinatorSignal
-from commerce_coordinator.apps.lms.tasks import (
+from commerce_coordinator.apps.demo_lms.tasks import (
     demo_order_complete_send_confirmation_email_task,
     demo_order_complete_send_enroll_in_course_task,
     demo_order_complete_send_order_history_task
