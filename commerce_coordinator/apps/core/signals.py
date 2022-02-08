@@ -10,7 +10,7 @@ logger = logging.getLogger(__name__)
 
 
 #############################################################
-# FIXME: Proof-of-concept test code from here to end of file
+# DEMO: Proof-of-concept test code from here to end of file
 #############################################################
 test_signal = CoordinatorSignal()
 test_celery_signal = CoordinatorSignal()

@@ -13,7 +13,7 @@ from commerce_coordinator.apps.demo_lms.tasks import (
 logger = logging.getLogger(__name__)
 
 #############################################################
-# FIXME: Proof-of-concept test code from here to end of file
+# DEMO: Proof-of-concept test code from here to end of file
 #############################################################
 
 

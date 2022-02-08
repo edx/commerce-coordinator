@@ -246,7 +246,7 @@ LOGGING = get_logger_config(debug=DEBUG)
 # core.apps.CoreConfig.ready() which is run on Django startup.
 #####################################################################
 CC_SIGNALS = {
-    # Fixme: This configuration is just for proof-of-concept and can
+    # DEMO: This configuration is just for proof-of-concept and can
     # be removed once we have real signals
     'commerce_coordinator.apps.core.signals.test_signal': [
         'commerce_coordinator.apps.demo_lms.signals.test_receiver',
