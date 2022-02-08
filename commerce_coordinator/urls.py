@@ -36,7 +36,7 @@ urlpatterns = oauth2_urlpatterns + [
     url(r'^auto_auth/$', core_views.AutoAuth.as_view(), name='auto_auth'),
     url(r'', include('csrf.urls')),  # Include csrf urls from edx-drf-extensions
     url(r'^health/$', core_views.health, name='health'),
-    # FIXME: Currently this is only test code, we may want to decouple LMS code here at some point...
+    # DEMO: Currently this is only test code, we may want to decouple LMS code here at some point...
     url(r'^demo_lms/', include(demo_lms_urls))
 ]
 

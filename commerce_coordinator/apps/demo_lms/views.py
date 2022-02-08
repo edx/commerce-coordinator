@@ -36,7 +36,7 @@ def _format_signal_send_response(results):
 
 def test_view(_):
     """
-    FIXME: Test view for the proof-of-concept. It exists simply to show that we can call signals mapped in settings
+    DEMO: Test view for the proof-of-concept. It exists simply to show that we can call signals mapped in settings
     and how we can potentially handle responses / exceptions from receivers.
 
     Returns a JSON object with the results of our signal call, including string formatting traceback on an exception.
@@ -53,7 +53,7 @@ def test_view(_):
 
 def test_celery_signal_view(_):
     """
-    FIXME: Test view for the proof-of-concept. It exists to show that we can call signals from inside Celery tasks
+    DEMO: Test view for the proof-of-concept. It exists to show that we can call signals from inside Celery tasks
 
     Returns a JSON object with the results of our signal call, including string formatting traceback on an exception.
     """
