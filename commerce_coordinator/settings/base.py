@@ -249,17 +249,17 @@ CC_SIGNALS = {
     # Fixme: This configuration is just for proof-of-concept and can
     # be removed once we have real signals
     'commerce_coordinator.apps.core.signals.test_signal': [
-        'commerce_coordinator.apps.lms.signals.test_receiver',
+        'commerce_coordinator.apps.demo_lms.signals.test_receiver',
         'commerce_coordinator.apps.core.signals.test_receiver_exception',
         'commerce_coordinator.apps.core.signals.test_celery_task',
     ],
-    'commerce_coordinator.apps.lms.signals.purchase_complete_signal': [
-        'commerce_coordinator.apps.lms.signals.demo_purchase_complete_order_history',
-        'commerce_coordinator.apps.lms.signals.demo_purchase_complete_send_confirmation_email',
-        'commerce_coordinator.apps.lms.signals.demo_purchase_complete_enroll_in_course',
+    'commerce_coordinator.apps.demo_lms.signals.purchase_complete_signal': [
+        'commerce_coordinator.apps.demo_lms.signals.demo_purchase_complete_order_history',
+        'commerce_coordinator.apps.demo_lms.signals.demo_purchase_complete_send_confirmation_email',
+        'commerce_coordinator.apps.demo_lms.signals.demo_purchase_complete_enroll_in_course',
     ],
-    'commerce_coordinator.apps.lms.signals.enroll_learner_signal': [
-        'commerce_coordinator.apps.lms.signals.demo_enroll_learner_in_course',
+    'commerce_coordinator.apps.demo_lms.signals.enroll_learner_signal': [
+        'commerce_coordinator.apps.demo_lms.signals.demo_enroll_learner_in_course',
     ],
     'commerce_coordinator.apps.core.signals.test_celery_signal': [
         'commerce_coordinator.apps.core.signals.test_celery_signal_task',
