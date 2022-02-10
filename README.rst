@@ -27,52 +27,96 @@ Documentation
 Development Workflow
 ********************
 
-One Time Setup
-==============
+Initial Setup: steps and confirmation
+======================================
 .. code-block::
 
   # Clone the repository
   git clone git@github.com:edx/commerce-coordinator.git
   cd commerce-coordinator
 
-  # Set up a virtualenv using virtualenvwrapper with the same name as the repo and activate it
-  mkvirtualenv -p python3.8 commerce-coordinator
+  # install mysql in your local directory
+  brew install mysql
+
+  # Set up a virtualenv and activate it
+  python3 -m venv .venv
+  source .venv/bin/activate
+
+  # Install/update the dev requirements (run inside the venv)
+  make requirements
+  # If you get 'Unsupported architecture' errors above, instead use: CFLAGS='-D__x86_64__' make requirements
+
+  # run commerce-coordinator locally (run inside the venv)
+  python manage.py runserver localhost:8000 --settings=commerce_coordinator.settings.local
+
+  # You should see output ending with "Quit the server with CONTROL-C"
+  # In your browser, hit the URL: http://localhost:8000/demo_lms/test/
+  # You should see JSON output indicating that two receivers were called, one successful, and one with exception/traceback information.
+  # In the shell where the server is running you should see log output indicating that two test receivers were called with the sender argument "Something".
 
 
 Every time you develop something in this repo
 =============================================
 .. code-block::
 
-  # Activate the virtualenv
-  workon commerce-coordinator
-
   # Grab the latest code
   git checkout main
   git pull
 
-  # Install/update the dev requirements
-  make requirements
+  # Activate the virtualenv
+  source .venv/bin/activate
 
-  # Run the tests and quality checks (to verify the status before you make any changes)
-  make validate
+  # Install/update the dev requirements (run inside the venv)
+  make requirements
+  # If you get 'Unsupported architecture' errors above, instead use: CFLAGS='-D__x86_64__' make requirements
 
   # Make a new branch for your changes
   git checkout -b <your_github_username>/<short_description>
 
-  # Using your favorite editor, edit the code to make your change.
-  vim …
-
-  # Run your new tests
-  pytest ./path/to/new/tests
-
-  # Run all the tests and quality checks
+  # Run the tests and quality checks (before and after your changes)
   make validate
 
-  # Commit all your changes
+  # Commit your changes
   git commit …
   git push
 
   # Open a PR and ask for review.
+
+
+Local testing with Celery (needed until commerce coordinator is part of devstack)
+=================================================================================
+.. code-block::
+
+  # Install requirements into your Commerce Coordinator venv
+  make dev_requirements
+
+  # Expose the redis port for devstack
+  # (redis is the backend that Celery is using for persisting the message queue)
+  # In your local Devstack directory, edit docker-compose.yml: go to the redis service line and add a ports section
+  ports:
+  - "6379:6379"
+
+  # Start redis in devstack from your local devstack directory
+  make dev.up.redis
+
+  # Start celery from the commerce-coordinator venv
+  celery -A commerce_coordinator worker -l INFO
+  # More test URLs you can hit in the browser or pipe through jq (https://stedolan.github.io/jq/) to make the output more readable:
+  ⫸ curl -s "http://localhost:8000/lms/test_celery_signal/" | jq '.'
+ {
+  "<function test_celery_signal_task at 0x10e17a9d0>": ""
+ }
+ ⫸ curl -s "http://localhost:8000/lms/test_celery_signal/" | jq '.'
+ {
+  "<function test_celery_signal_task at 0x10e17a9d0>": ""
+ }
+ ⫸ curl -s "http://localhost:8000/lms/demo_purchase_complete/" | jq '.'
+ {
+  "<function demo_purchase_complete_order_history at 0x10e18a430>": "",
+  "<function demo_purchase_complete_send_confirmation_email at 0x10e18a5e0>": "",
+  "<function demo_purchase_complete_enroll_in_course at 0x10e18a670>": ""
+ }
+
 
 License
 *******
@@ -81,6 +125,18 @@ The code in this repository is licensed under the AGPL 3.0 unless
 otherwise noted.
 
 Please see `LICENSE.txt <LICENSE.txt>`_ for details.
+
+Areas of concern/refinement
+***************************
+
+This is very preliminary work proving out our ability to confirm and control Django
+signal / receiver mappings using the settings file. It's not a fully robust implementation
+and is just a guidepost showing that our intended implementation can work.
+
+We should consider whether we really want to allow signals to be sent in the Celery or
+management command environments; it may be easier to reason about if signals are only
+confined to the primary IDA and other environments could call API endpoints to trigger
+workflows.
 
 How To Contribute
 *****************
