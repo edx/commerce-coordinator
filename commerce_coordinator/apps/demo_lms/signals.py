@@ -17,10 +17,14 @@ logger = logging.getLogger(__name__)
 #############################################################
 
 
-# Basic signal receiver to test out connecting signals and handlers via config
 @coordinator_receiver(logger)
-def test_receiver(sender, **kwargs):
-    pass
+def test_receiver(**kwargs):
+    """
+    Basic signal receiver to test out connecting signals and handlers via config.
+    Due to the coordinator_receiver decorator, this is an example of what we'll emit to the logs:
+    INFO 2394 [commerce_coordinator.apps.demo_lms.signals] test_receiver CALLED with sender '{sender}' and {kwargs}.
+    """
+    # This test can be modified accordingly to include more uses.
 
 
 # The rest of this file is related to the "Purchase Complete" demo
@@ -29,7 +33,7 @@ enroll_learner_signal = CoordinatorSignal()
 
 
 @coordinator_receiver(logger)
-def demo_purchase_complete_order_history(sender, **kwargs):
+def demo_purchase_complete_order_history(**kwargs):
     """
     This signal receiver would typically be in a separate app for just the Order History service, but is here for
     convenience. It kicks off a Celery task that would normally make an API to a 3rd party order history service.
@@ -38,7 +42,7 @@ def demo_purchase_complete_order_history(sender, **kwargs):
 
 
 @coordinator_receiver(logger)
-def demo_purchase_complete_send_confirmation_email(sender, **kwargs):
+def demo_purchase_complete_send_confirmation_email(**kwargs):
     """
     This signal receiver would typically be in a separate app for just the email service, but is here for
     convenience. It kicks off a Celery task that would normally make an API to a 3rd party email service to send
@@ -48,7 +52,7 @@ def demo_purchase_complete_send_confirmation_email(sender, **kwargs):
 
 
 @coordinator_receiver(logger)
-def demo_purchase_complete_enroll_in_course(sender, **kwargs):
+def demo_purchase_complete_enroll_in_course(**kwargs):
     """
     This signal receiver is one that legitimately belongs in LMS, it first off an enrollment event for each purchased
     course in an order. Any number of signal handlers could care about that, but in this demo only
@@ -60,7 +64,7 @@ def demo_purchase_complete_enroll_in_course(sender, **kwargs):
 
 
 @coordinator_receiver(logger)
-def demo_enroll_learner_in_course(sender, **kwargs):
+def demo_enroll_learner_in_course(**kwargs):
     """
     This signal receiver is one that legitimately belongs in LMS, it would kick off a Celery task to LMS to enroll a
     user in a single course.

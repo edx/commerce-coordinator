@@ -2,7 +2,6 @@
 Commerce Coordinator helper methods for ensuring consistency with Django signal handling.
 """
 import functools
-import inspect
 
 from django.dispatch import Signal
 
@@ -14,7 +13,7 @@ class CoordinatorSignal(Signal):
 
 def coordinator_receiver(logger):
     """
-    Return a decorated function with LMS log messages.
+    Return a decorated function with log messages.
     """
     def decorator(func):
         @functools.wraps(func)
@@ -23,8 +22,9 @@ def coordinator_receiver(logger):
             Wrapper function around the original function or method.
             """
             try:
+                # Django's signal dispatcher will give the sender as a keyword argument
                 sender = kwargs['sender']
-                logger.info(f"LMS {func.__name__} CALLED with sender '{sender}' and {kwargs}")
+                logger.info(f"{func.__name__} CALLED with sender '{sender}' and {kwargs}")
                 return func(*args, **kwargs)
             except Exception as e:
                 logger.exception(f"Something went wrong! Exception raised in {func.__name__} with error {repr(e)}")
