@@ -38,6 +38,9 @@ htmlcov
 nosetests.xml
 unittests.xml
 
+# Virtual environment files
+.venv
+
 # PII annotation reports
 pii_report
 
