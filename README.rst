@@ -46,6 +46,15 @@ Initial Setup: steps and confirmation
   make requirements
   # If you get 'Unsupported architecture' errors above, instead use: CFLAGS='-D__x86_64__' make requirements
 
+  # Expose the redis port for devstack (needed until commerce coordinator is part of devstack)
+  # (redis is the backend that Celery is using for persisting the message queue)
+  # In your local Devstack directory, edit docker-compose.yml: go to the redis service line and add a ports section
+  ports:
+  - "6379:6379"
+
+  # Start redis in devstack from your local devstack directory
+  make dev.up.redis
+
   # run commerce-coordinator locally (run inside the venv)
   python manage.py runserver localhost:8000 --settings=commerce_coordinator.settings.local
 
@@ -73,6 +82,8 @@ Every time you develop something in this repo
   # Make a new branch for your changes
   git checkout -b <your_github_username>/<short_description>
 
+  # Start redis and the webserver as in previous section
+
   # Run the tests and quality checks (before and after your changes)
   make validate
 
@@ -83,18 +94,9 @@ Every time you develop something in this repo
   # Open a PR and ask for review.
 
 
-Local testing with Celery (needed until commerce coordinator is part of devstack)
-=================================================================================
+Local testing with Celery
+=========================
 .. code-block::
-
-  # Install requirements into your Commerce Coordinator venv
-  make dev_requirements
-
-  # Expose the redis port for devstack
-  # (redis is the backend that Celery is using for persisting the message queue)
-  # In your local Devstack directory, edit docker-compose.yml: go to the redis service line and add a ports section
-  ports:
-  - "6379:6379"
 
   # Start redis in devstack from your local devstack directory
   make dev.up.redis
