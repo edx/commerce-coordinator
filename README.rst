@@ -101,8 +101,9 @@ Local testing with Celery
   # Start redis in devstack from your local devstack directory
   make dev.up.redis
 
-  # Start celery from the commerce-coordinator venv
-  celery -A commerce_coordinator worker -l INFO
+  # Start celery from the commerce-coordinator venv; this management command will auto-reload celery when python files are changed
+  python manage.py celery
+
   # More test URLs you can hit in the browser or pipe through jq (https://stedolan.github.io/jq/) to make the output more readable:
   ⫸ curl -s "http://localhost:8000/lms/test_celery_signal/" | jq '.'
  {
@@ -135,10 +136,7 @@ This is very preliminary work proving out our ability to confirm and control Dja
 signal / receiver mappings using the settings file. It's not a fully robust implementation
 and is just a guidepost showing that our intended implementation can work.
 
-We should consider whether we really want to allow signals to be sent in the Celery or
-management command environments; it may be easier to reason about if signals are only
-confined to the primary IDA and other environments could call API endpoints to trigger
-workflows.
+Note: We expect that the system will be easier to reason about if signals are only confined to the primary IDA; other environments (e.g. Celery workers) could call API endpoints to trigger workflows if necessary.
 
 How To Contribute
 *****************
