@@ -5,10 +5,10 @@ from django.utils import autoreload
 
 
 def restart_celery():
-    cmd = ('pkill', 'celery')
-    subprocess.call(cmd)
-    cmd = ('celery', '-A', 'commerce_coordinator', 'worker', '-l', 'INFO')
-    subprocess.call(cmd)
+    celery_cmd = ('celery', '-A', 'commerce_coordinator', 'worker', '-l', 'INFO')
+    kill_cmd = ('pkill', '-f', ' '.join(celery_cmd))
+    subprocess.run(kill_cmd)
+    subprocess.run(celery_cmd)
 
 
 class Command(BaseCommand):
