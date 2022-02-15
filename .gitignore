@@ -81,12 +81,14 @@ private.py
 # Emacs
 *~
 
+# VS Code
+.vscode/
+
 # OS X
 .DS_Store
 
 # Editor Temp Files
 *.swp
-
 *.trace
 
 docs/_build/
