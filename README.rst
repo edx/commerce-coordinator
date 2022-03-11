@@ -5,19 +5,18 @@ commerce-coordinator
 |pypi-badge| |ci-badge| |codecov-badge| |doc-badge| |pyversions-badge|
 |license-badge|
 
-The ``README.rst`` file should start with a brief description of the repository,
-which sets it in the context of other repositories under the ``edx``
-organization. It should make clear where this fits in to the overall edX
-codebase.
-
 A controller to manage commerce workflows and services
 
-Overview (please modify)
-************************
+Overview
+********
 
-The ``README.rst`` file should then provide an overview of the code in this
-repository, including the main components and useful entry points for starting
-to understand the code in more detail.
+Commerce Coordinator is intended to be a highly decoupled, modular, asynchronous platform for handling a wide variety of use cases and workflows. In order to allow for flexibility in configuration and extensibility the Coordinator needs to have a loosely coupled internal architecture that allows for pluggable components to work with the same events.
+
+Individual Django apps will act as plugins to implement specific functionality, for example a webhook for a payment service provider to call when a purchase is successful, that plugin can then signal one that performs the fulfillment in the LMS.
+
+The core of the Coordinator will allow commerce workflows to be tailored by combining plugins and routing signals, and will eventually include tools for validating configurations and tracing signal flows.
+
+For more details, please see the `architectural decision docs <docs/decisions>`_
 
 Documentation
 *************
@@ -29,6 +28,9 @@ Development Workflow
 
 Initial Setup: steps and confirmation
 ======================================
+
+Note: this setup process is temporary; we will be working on a Tutor plugin
+
 .. code-block::
 
   # Clone the repository
@@ -132,9 +134,7 @@ Please see `LICENSE.txt <LICENSE.txt>`_ for details.
 Areas of concern/refinement
 ***************************
 
-This is very preliminary work proving out our ability to confirm and control Django
-signal / receiver mappings using the settings file. It's not a fully robust implementation
-and is just a guidepost showing that our intended implementation can work.
+So far, this is very preliminary work proving out our ability to confirm and control Django signal / receiver mappings using the settings file. It is not yet a fully robust implementation, but is just a guidepost showing that our intended implementation can work.
 
 Note: We expect that the system will be easier to reason about if signals are only confined to the primary IDA; other environments (e.g. Celery workers) could call API endpoints to trigger workflows if necessary.
 
@@ -142,15 +142,11 @@ How To Contribute
 *****************
 
 Contributions are very welcome.
-Please read `How To Contribute <https://github.com/edx/edx-platform/blob/main/CONTRIBUTING.rst>`_ for details.
-Even though they were written with ``edx-platform`` in mind, the guidelines
-should be followed for all Open edX projects.
+Please read `How To Contribute <https://github.com/edx/edx-platform/blob/main/CONTRIBUTING.rst>`_ for details.  Even though they were written with ``edx-platform`` in mind, the guidelines should be followed for all Open edX projects.
 
-The pull request description template should be automatically applied if you are creating a pull request from GitHub. Otherwise you
-can find it at `PULL_REQUEST_TEMPLATE.md <.github/PULL_REQUEST_TEMPLATE.md>`_.
+The pull request description template should be automatically applied if you are creating a pull request from GitHub. Otherwise you can find it at `PULL_REQUEST_TEMPLATE.md <.github/PULL_REQUEST_TEMPLATE.md>`_.
 
-The issue report template should be automatically applied if you are creating an issue on GitHub as well. Otherwise you
-can find it at `ISSUE_TEMPLATE.md <.github/ISSUE_TEMPLATE.md>`_.
+The issue report template should be automatically applied if you are creating an issue on GitHub as well. Otherwise you can find it at `ISSUE_TEMPLATE.md <.github/ISSUE_TEMPLATE.md>`_.
 
 Reporting Security Issues
 *************************
