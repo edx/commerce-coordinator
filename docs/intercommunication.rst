@@ -19,9 +19,10 @@ and the `reducer`_ updates the state.
 
 MODIFICATIONS COMING:
 
-1. We'll add a receiver function in commerce-coordinator that calls that ecommerce endpoint and yields the results properly
+1. We'll create a new 'orders' app under which we define an 'orders_requested' receiver function (using coordinator_receiver decorator) in signals.py. 
+This function will call that ecommerce endpoint and yield the results properly. 
 
-2. We'll update that `making an async call`_ code to fire a signal with suitable payload (so the new code executes)
+2. We'll update that `making an async call`_ code to fire the new 'orders_requested' signal with suitable payload (so the new code executes)
 
 .. _actions.js: https://github.com/openedx/frontend-app-ecommerce/blob/f425c4b5369947449758ea96cfecdf207689d71a/src/order-history/actions.js
 .. _saga: https://github.com/openedx/frontend-app-ecommerce/blob/f425c4b5369947449758ea96cfecdf207689d71a/src/order-history/saga.js#L14
