@@ -17,6 +17,17 @@ Unreleased
 
 *
 
+[0.2.0] - 2021-10-04
+********************
+
+Added
+=====
+Added Support for Django40
+
+Dropped
+=======
+Dropped support for Django22, 30 and 31
+
 [0.1.0] - 2021-10-04
 ********************
 

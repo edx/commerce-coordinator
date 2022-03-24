@@ -19,8 +19,8 @@ import os
 
 from auth_backends.urls import oauth2_urlpatterns
 from django.conf import settings
-from django.conf.urls import include, url
 from django.contrib import admin
+from django.urls import include, path
 from rest_framework_swagger.views import get_swagger_view
 
 from commerce_coordinator.apps.api import urls as api_urls
@@ -30,18 +30,18 @@ from commerce_coordinator.apps.demo_lms import urls as demo_lms_urls
 admin.autodiscover()
 
 urlpatterns = oauth2_urlpatterns + [
-    url(r'^admin/', admin.site.urls),
-    url(r'^api/', include(api_urls)),
-    url(r'^api-docs/', get_swagger_view(title='commerce-coordinator API')),
-    url(r'^auto_auth/$', core_views.AutoAuth.as_view(), name='auto_auth'),
-    url(r'', include('csrf.urls')),  # Include csrf urls from edx-drf-extensions
-    url(r'^health/$', core_views.health, name='health'),
+    path('admin/', admin.site.urls),
+    path('api/', include(api_urls)),
+    path('api-docs/', get_swagger_view(title='commerce-coordinator API')),
+    path('auto_auth/', core_views.AutoAuth.as_view(), name='auto_auth'),
+    path('', include('csrf.urls')),  # Include csrf urls from edx-drf-extensions
+    path('health/', core_views.health, name='health'),
     # DEMO: Currently this is only test code, we may want to decouple LMS code here at some point...
-    url(r'^demo_lms/', include(demo_lms_urls))
+    path('demo_lms/', include(demo_lms_urls))
 ]
 
 if settings.DEBUG and os.environ.get('ENABLE_DJANGO_TOOLBAR', False):  # pragma: no cover
     # Disable pylint import error because we don't install django-debug-toolbar
     # for CI build
     import debug_toolbar
-    urlpatterns.append(url(r'^__debug__/', include(debug_toolbar.urls)))
+    urlpatterns.append(path('__debug__/', include(debug_toolbar.urls)))
