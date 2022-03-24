@@ -60,7 +60,7 @@ def load_requirements(*requirements_paths):
 
     # process .in files and store the path to any constraint files that are pulled in
     for path in requirements_paths:
-        with open(path) as reqs:
+        with open(path, encoding='utf-8') as reqs:
             for line in reqs:
                 if is_requirement(line):
                     add_version_constraint_or_raise(line, requirements, True)
@@ -69,7 +69,7 @@ def load_requirements(*requirements_paths):
 
     # process constraint files and add any new constraints found to existing requirements
     for constraint_file in constraint_files:
-        with open(constraint_file) as reader:
+        with open(constraint_file, encoding='utf-8') as reader:
             for line in reader:
                 if is_requirement(line):
                     add_version_constraint_or_raise(line, requirements, False)
