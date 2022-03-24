@@ -22,11 +22,11 @@ services:
     container_name: commerce-coordinator.app
     volumes:
       - .:/edx/app/commerce-coordinator/
-    command: bash -c 'while true; do python /edx/app/commerce-coordinator/manage.py runserver 0.0.0.0:8000; sleep 2; done'
+    command: bash -c 'while true; do python /edx/app/commerce-coordinator/manage.py runserver 0.0.0.0:8140; sleep 2; done'
     environment:
       DJANGO_SETTINGS_MODULE: commerce_coordinator.settings.devstack
     ports:
-      - "8000:8000" # TODO: change this to your port
+      - "8140:8140"
     networks:
       - devstack_default
     stdin_open: true

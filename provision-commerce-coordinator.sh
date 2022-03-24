@@ -1,5 +1,5 @@
 name="commerce-coordinator"
-port="8000"
+port="8140"
 
 docker-compose up -d --build
 

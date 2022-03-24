@@ -58,10 +58,10 @@ Note: this setup process is temporary; we will be working on a Tutor plugin
   make dev.up.redis
 
   # run commerce-coordinator locally (run inside the venv)
-  python manage.py runserver localhost:8000 --settings=commerce_coordinator.settings.local
+  python manage.py runserver localhost:8140 --settings=commerce_coordinator.settings.local
 
   # You should see output ending with "Quit the server with CONTROL-C"
-  # In your browser, hit the URL: http://localhost:8000/demo_lms/test/
+  # In your browser, hit the URL: http://localhost:8140/demo_lms/test/
   # You should see JSON output indicating that two receivers were called, one successful, and one with exception/traceback information.
   # In the shell where the server is running you should see log output indicating that two test receivers were called with the sender argument "Something".
 
@@ -107,15 +107,15 @@ Local testing with Celery
   python manage.py celery
 
   # More test URLs you can hit in the browser or pipe through jq (https://stedolan.github.io/jq/) to make the output more readable:
-  ⫸ curl -s "http://localhost:8000/lms/test_celery_signal/" | jq '.'
+  ⫸ curl -s "http://localhost:8140/lms/test_celery_signal/" | jq '.'
  {
   "<function test_celery_signal_task at 0x10e17a9d0>": ""
  }
- ⫸ curl -s "http://localhost:8000/lms/test_celery_signal/" | jq '.'
+ ⫸ curl -s "http://localhost:8140/lms/test_celery_signal/" | jq '.'
  {
   "<function test_celery_signal_task at 0x10e17a9d0>": ""
  }
- ⫸ curl -s "http://localhost:8000/lms/demo_purchase_complete/" | jq '.'
+ ⫸ curl -s "http://localhost:8140/lms/demo_purchase_complete/" | jq '.'
  {
   "<function demo_purchase_complete_order_history at 0x10e18a430>": "",
   "<function demo_purchase_complete_send_confirmation_email at 0x10e18a5e0>": "",
