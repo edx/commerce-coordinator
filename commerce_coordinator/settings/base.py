@@ -208,7 +208,7 @@ BACKEND_SERVICE_EDX_OAUTH2_KEY = 'replace-me'
 BACKEND_SERVICE_EDX_OAUTH2_SECRET = 'replace-me'
 
 JWT_AUTH = {
-    'JWT_ISSUER': 'http://127.0.0.1:8000/oauth2',
+    'JWT_ISSUER': 'http://127.0.0.1:8140/oauth2',
     'JWT_ALGORITHM': 'HS256',
     'JWT_VERIFY_EXPIRATION': True,
     'JWT_PAYLOAD_GET_USERNAME_HANDLER': lambda d: d.get('preferred_username'),

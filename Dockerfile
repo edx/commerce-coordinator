@@ -44,7 +44,7 @@ ENV LANGUAGE en_US:en
 ENV LC_ALL en_US.UTF-8
 ENV DJANGO_SETTINGS_MODULE commerce_coordinator.settings.production
 
-EXPOSE 8000
+EXPOSE 8140
 RUN useradd -m --shell /bin/false app
 
 WORKDIR /edx/app/commerce-coordinator
