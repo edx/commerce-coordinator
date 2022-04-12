@@ -4,6 +4,7 @@ DEBUG = True
 
 INSTALLED_APPS += (
     'commerce_coordinator.apps.demo_lms.apps.LmsConfig',
+    # 'commerce_coordinator.apps.orders.apps.OrdersConfig',
 )
 
 # CACHE CONFIGURATION
