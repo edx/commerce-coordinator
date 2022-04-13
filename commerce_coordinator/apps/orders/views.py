@@ -3,8 +3,7 @@ Views for the orders app
 """
 
 from django.http import JsonResponse
-import requests
-
+from .clients import EcommerceApiClient
 
 def get_user_orders__ecommerce(_):
     """
@@ -26,9 +25,12 @@ def get_user_orders__ecommerce(_):
     }
 
     url_to_hit = f'{ECOMMERCE_API_BASE_URL}/orders/?page={one}&page_size={one}&username={username}'
-    ecommerce_response = requests.get(url_to_hit)
+
+    ecommerce_api_client = EcommerceApiClient()
+    ecommerce_response = ecommerce_api_client.get_orders(username)
+
     # print('DKTEST ecommerce_response: ', ecommerce_response)
 
     # requests.get(url_to_hit, params=params) # ValueError at /orders/test/, too many values to unpack (expected 2)
 
-    return JsonResponse(ecommerce_response.json())
+    return JsonResponse(ecommerce_response)
