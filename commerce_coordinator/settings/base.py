@@ -262,3 +262,11 @@ CC_SIGNALS = {
         'commerce_coordinator.apps.demo_lms.signals.demo_enroll_learner_in_course',
     ],
 }
+
+# Default timeouts for requests
+# (See https://docs.python-requests.org/en/master/user/advanced/#timeouts for more info.)
+REQUEST_CONNECT_TIMEOUT_SECONDS = 3.05
+REQUEST_READ_TIMEOUT_SECONDS = 5
+
+# API URLs
+ECOMMERCE_URL = None
