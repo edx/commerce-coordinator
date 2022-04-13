@@ -111,10 +111,6 @@ Local testing with Celery
  {
   "<function test_celery_signal_task at 0x10e17a9d0>": ""
  }
- ⫸ curl -s "http://localhost:8140/demo_lms/test_celery_signal/" | jq '.'
- {
-  "<function test_celery_signal_task at 0x10e17a9d0>": ""
- }
  ⫸ curl -s "http://localhost:8140/demo_lms/demo_purchase_complete/" | jq '.'
  {
   "<function demo_purchase_complete_order_history at 0x10e18a430>": "",
