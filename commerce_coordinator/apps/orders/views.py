@@ -3,7 +3,9 @@ Views for the orders app
 """
 
 from django.http import JsonResponse
+
 from .clients import EcommerceApiClient
+
 
 def get_user_orders__ecommerce(request):
     """

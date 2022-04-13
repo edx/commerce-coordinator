@@ -2,12 +2,13 @@
 API clients for services that manage orders.
 """
 import logging
-import requests
 
+import requests
 from django.conf import settings
 from edx_rest_api_client.client import OAuthAPIClient
 
 logger = logging.getLogger(__name__)
+
 
 class BaseEdxOAuthClient:
     """
@@ -38,7 +39,7 @@ class EcommerceApiClient(BaseEdxOAuthClient):
     """
     API client for calls to the edX Ecommerce service.
     """
-    api_base_url = settings.ECOMMERCE_URL + '/api/v2/'
+    api_base_url = str(settings.ECOMMERCE_URL) + '/api/v2/'
 
     def get_orders(self, username):
         """
@@ -63,4 +64,3 @@ class EcommerceApiClient(BaseEdxOAuthClient):
         except requests.exceptions.HTTPError as exc:
             logger.exception(exc)
             raise
-
