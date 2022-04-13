@@ -107,15 +107,15 @@ Local testing with Celery
   python manage.py celery
 
   # More test URLs you can hit in the browser or pipe through jq (https://stedolan.github.io/jq/) to make the output more readable:
-  ⫸ curl -s "http://localhost:8140/lms/test_celery_signal/" | jq '.'
+  ⫸ curl -s "http://localhost:8140/demo_lms/test_celery_signal/" | jq '.'
  {
   "<function test_celery_signal_task at 0x10e17a9d0>": ""
  }
- ⫸ curl -s "http://localhost:8140/lms/test_celery_signal/" | jq '.'
+ ⫸ curl -s "http://localhost:8140/demo_lms/test_celery_signal/" | jq '.'
  {
   "<function test_celery_signal_task at 0x10e17a9d0>": ""
  }
- ⫸ curl -s "http://localhost:8140/lms/demo_purchase_complete/" | jq '.'
+ ⫸ curl -s "http://localhost:8140/demo_lms/demo_purchase_complete/" | jq '.'
  {
   "<function demo_purchase_complete_order_history at 0x10e18a430>": "",
   "<function demo_purchase_complete_send_confirmation_email at 0x10e18a5e0>": "",
