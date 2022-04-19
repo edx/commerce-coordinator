@@ -84,7 +84,9 @@ CORS_ALLOW_CREDENTIALS = True
 CORS_ALLOW_HEADERS = corsheaders_default_headers + (
     'use-jwt-cookie',
 )
-CORS_ORIGIN_WHITELIST = []
+CORS_ORIGIN_WHITELIST = [
+    'http://localhost:1996'
+]
 
 ROOT_URLCONF = 'commerce_coordinator.urls'
 
