@@ -2,10 +2,13 @@
 Views for the orders app
 """
 import logging
+
 from django.http import JsonResponse
 
 from .clients import EcommerceApiClient
+
 logger = logging.getLogger(__name__)
+
 
 def get_user_orders__ecommerce(request):
     """
@@ -14,7 +17,7 @@ def get_user_orders__ecommerce(request):
     username = request.GET['username']
     page = request.GET['page']
     page_size = request.GET['page_size']
-    params = {username, page, page_size}
+    params = {'username': username, "page": page, "page_size": page_size}
 
     logger.info(f'DKTEST: get_user_orders__ecommerce called with params: {params}.')
 

@@ -41,7 +41,7 @@ class EcommerceApiClient(BaseEdxOAuthClient):
     """
     api_base_url = str(settings.ECOMMERCE_URL) + '/api/v2/'
 
-    def get_orders(self, username):
+    def get_orders(self, query_params):
         """
         Call ecommerce API overview endpoint for data about an order.
 
@@ -52,11 +52,27 @@ class EcommerceApiClient(BaseEdxOAuthClient):
 
         example response:
         {
-            # TODO: Fill in.
+            {"count": 1, "next": null, "previous": null, "results": [{"billing_address": {"first_name":
+            "Diane", "last_name": "Test", "line1": "50 turner st", "line2": "", "postcode": "02135",
+            "state": "MA", "country": "US", "city": "Brighton"}, "currency": "USD", "date_placed":
+            "2021-12-20T15:09:44Z", "discount": "0", "lines": [{"title": "Seat in edX Demonstration
+            Course with verified certificate (and ID verification)", "quantity": 1, "description":
+            "Seat in edX Demonstration Course with verified certificate (and ID verification)", "status":
+            "Complete", "line_price_excl_tax": "149.00", "unit_price_excl_tax": "149.00", "product":
+            {"id": 3, "url": "http://localhost:18130/api/v2/products/3/", "structure": "child",
+            "product_class": "Seat", "title": "Seat in edX Demonstration Course with verified certificate
+            (and ID verification)", "price": "149.00", "expires": "2022-11-08T22:54:30.777313Z",
+            "attribute_values": [{"name": "certificate_type", "code": "certificate_type", "value":
+            "verified"}, {"name": "course_key", "code": "course_key", "value":
+            "course-v1:edX+DemoX+Demo_Course"}, {"name": "id_verification_required", "code":
+            "id_verification_required", "value": true}], "is_available_to_buy": true, "stockrecords":
+            [{"id": 3, "product": 3, "partner": 1, "partner_sku": "8CF08E5", "price_currency": "USD",
+            "price_excl_tax": "149.00"}]}}], "number": "EDX-100004", "payment_processor":
+            "cybersource-rest", "status": "Complete", "total_excl_tax": "149.00", "user":
+            {"email": "edx@example.com", "username": "edx"}, "vouchers": []} ]}
         }
         """
         try:
-            query_params = {'username': username}
             endpoint = self.api_base_url + 'orders/'
             response = self.client.get(endpoint, params=query_params)
             response.raise_for_status()
