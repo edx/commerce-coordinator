@@ -16,6 +16,12 @@ CACHES = {
 }
 # END CACHE CONFIGURATION
 
+# CORS CONFIGURATION
+CORS_ORIGIN_WHITELIST = [
+    'http://localhost:1996'
+]
+# END CORS CONFIGURATION
+
 # DATABASE CONFIGURATION
 # See: https://docs.djangoproject.com/en/dev/ref/settings/#databases
 DATABASES = {
