@@ -6,6 +6,7 @@ import logging
 
 from django.test import TestCase
 from mock import patch
+from django.urls import reverse
 
 from .clients import EcommerceApiClient
 
@@ -17,6 +18,7 @@ class OrderRetrievalTests(TestCase):
     Verify endpoint availability for order retrieval endpoint(s)
     """
     maxDiff = None
+    ORDERS_ECOMMERCE_PATH = reverse('orders:orders_ecommerce')
 
     def setUp(self):
         super().setUp()
@@ -45,6 +47,8 @@ class OrderRetrievalTests(TestCase):
 
         self.assertEqual(expected_result, ecommerce_response.__dict__)
 
-    # also add a test for the function in views.py? (test_ecommerce_view, to call get_user_orders__ecommerce)
-    # def test_ecommerce_view(self, mock_response):
+    # def test_ecommerce_view(self):
     #     """We can call get_user_orders__ecommerce successfully."""
+    #     test_params = {'username': 'edx', "page": 1, "page_size": 20}
+    #     response = self.client.get(self.ORDERS_ECOMMERCE_PATH, test_params)
+    #     self.assertEqual(response.status_code, 200)
