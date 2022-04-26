@@ -18,7 +18,7 @@ class OrderRetrievalTests(TestCase):
     Verify endpoint availability for order retrieval endpoint(s)
     """
     maxDiff = None
-    ORDERS_ECOMMERCE_PATH = reverse('orders:orders_ecommerce')
+    ORDER_HISTORY_PATH = reverse('orders:order_history')
 
     def setUp(self):
         super().setUp()
@@ -50,5 +50,5 @@ class OrderRetrievalTests(TestCase):
     # def test_ecommerce_view(self):
     #     """We can call get_user_orders__ecommerce successfully."""
     #     test_params = {'username': 'edx', "page": 1, "page_size": 20}
-    #     response = self.client.get(self.ORDERS_ECOMMERCE_PATH, test_params)
+    #     response = self.client.get(self.ORDER_HISTORY_PATH, test_params)
     #     self.assertEqual(response.status_code, 200)

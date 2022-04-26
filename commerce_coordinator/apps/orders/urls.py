@@ -8,5 +8,5 @@ from commerce_coordinator.apps.orders.views import get_user_orders__ecommerce
 
 app_name = 'orders'
 urlpatterns = [
-    path('ecommerce/', get_user_orders__ecommerce, name='orders_ecommerce'),
+    path('order_history/', get_user_orders__ecommerce, name='order_history'),
 ]
