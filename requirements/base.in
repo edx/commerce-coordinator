@@ -15,4 +15,5 @@ edx-django-release-util
 edx-drf-extensions
 edx-rest-api-client
 mysqlclient
+openedx-filters
 pytz

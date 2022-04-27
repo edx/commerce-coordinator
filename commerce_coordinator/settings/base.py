@@ -251,7 +251,7 @@ CC_SIGNALS = {
     'commerce_coordinator.apps.core.signals.test_signal': [
         'commerce_coordinator.apps.demo_lms.signals.test_receiver',
         'commerce_coordinator.apps.core.signals.test_receiver_exception',
-        'commerce_coordinator.apps.core.signals.test_celery_task',
+        # 'commerce_coordinator.apps.core.signals.test_celery_task',
     ],
     'commerce_coordinator.apps.demo_lms.signals.purchase_complete_signal': [
         'commerce_coordinator.apps.demo_lms.signals.demo_purchase_complete_order_history',
@@ -270,3 +270,14 @@ REQUEST_READ_TIMEOUT_SECONDS = 5
 
 # API URLs
 ECOMMERCE_URL = None
+
+# Filters PoC
+OPEN_EDX_FILTERS_CONFIG = {
+    "org.edx.coordinator.demo_lms.sample_data.v1": {
+        "fail_silently": False,
+        "pipeline": [
+            'commerce_coordinator.apps.demo_lms.pipeline.SomeData',
+            'commerce_coordinator.apps.demo_lms.pipeline.SomeMoreData',
+        ]
+    }
+}

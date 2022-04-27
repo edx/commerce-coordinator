@@ -8,6 +8,7 @@ from django.http import JsonResponse
 
 from commerce_coordinator.apps.core.signals import test_signal
 
+from .filters import SampleDataRequested
 from .signals import purchase_complete_signal
 
 
@@ -83,3 +84,16 @@ def demo_purchase_complete(_):
     results = purchase_complete_signal.send_robust('demo_purchase_complete', order_results=callback_results)
 
     return _format_signal_send_response(results)
+
+
+def demo_get_sample_data(_):
+    """
+    Demonstrate a workflow that gets data from providers configured as pipeline steps.
+    """
+
+    sample_data = SampleDataRequested.run_filter()
+    return JsonResponse({"sample_data": sample_data})
+
+    # BJH: try using run_pipeline directly and see what else we get back
+    # results = SampleDataRequested.run_pipeline(sample_data=[])
+    # return JsonResponse(results)
