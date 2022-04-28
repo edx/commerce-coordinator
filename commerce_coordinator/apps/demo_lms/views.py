@@ -1,5 +1,5 @@
 """
-Views for the LMS app
+Views for the Demo LMS app which implement the API endpoints or callback handlers.
 """
 
 import traceback
