@@ -10,8 +10,6 @@ from mock import patch
 
 from .clients import EcommerceApiClient
 
-# from pprint import pp
-
 
 logger = logging.getLogger(__name__)
 sample_response = {'count': 1,
@@ -103,8 +101,10 @@ class OrderRetrievalTests(TestCase):
 
         self.assertEqual(sample_response, ecommerce_response.__dict__)
 
-    # def test_ecommerce_view(self):
-    #     """We can call get_user_orders__ecommerce successfully."""
-    #     test_params = {'username': 'edx', "page": 1, "page_size": 20}
-    #     response = self.client.get(self.ORDER_HISTORY_PATH, test_params)
-    #     self.assertEqual(response.status_code, 200)
+    def test_ecommerce_view(self):
+        """We can call get_user_orders__ecommerce successfully."""
+        test_params = {'username': 'edx', "page": 1, "page_size": 20}
+        breakpoint()
+        response = self.client.get(self.ORDER_HISTORY_PATH, test_params) #  Invalid URL 'replace-me/oauth2/access_token': No scheme supplied. Perhaps you meant http://replace-me/oauth2/access_token?
+        # response = self.client.get('/orders/ecommerce/', test_params) # <HttpResponseNotFound status_code=404, "text/html">
+        self.assertEqual(response.status_code, 200)
