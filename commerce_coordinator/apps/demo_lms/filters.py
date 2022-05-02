@@ -14,9 +14,9 @@ class SampleDataRequested(OpenEdxPublicFilter):
     # This is the key for configuring the pipeline steps in the OPEN_EDX_FILTERS_CONFIG dict in `settings/base.py`
     filter_type = "org.edx.coordinator.demo_lms.sample_data.v1"
 
-
     # Although pipelines can be run using the generic `run_pipeline` method, implementing a `run_filter` method allows
     # more control, including a specific signature, default arguments, and extracting the relevant results
+
     @classmethod
     def run_filter(cls, sample_data=None):
         """
