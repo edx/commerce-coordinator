@@ -17,9 +17,9 @@ Contents:
    getting_started
    testing
    features
-   internationalization
    modules
    changelog
+   api
    decisions
 
 

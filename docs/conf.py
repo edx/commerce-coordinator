@@ -61,9 +61,10 @@ VERSION = get_version('../commerce_coordinator', '__init__.py')
 extensions = [
     'edx_theme',
     'sphinx.ext.autodoc',
+    'sphinx.ext.autosummary',
     'sphinx.ext.doctest',
-    'sphinx.ext.intersphinx',
     'sphinx.ext.ifconfig',
+    'sphinx.ext.intersphinx',
     'sphinx.ext.napoleon'
 ]
 

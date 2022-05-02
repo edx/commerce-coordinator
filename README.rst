@@ -21,6 +21,8 @@ For more details, please see the `architectural decision docs <docs/decisions>`_
 Documentation
 *************
 
+* API documentation is automatically generated in /api-docs.
+
 (TODO: `Set up documentation <https://openedx.atlassian.net/wiki/spaces/DOC/pages/21627535/Publish+Documentation+on+Read+the+Docs>`_)
 
 Development Workflow

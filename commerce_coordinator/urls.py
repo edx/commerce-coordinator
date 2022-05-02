@@ -22,6 +22,7 @@ from django.conf import settings
 from django.contrib import admin
 from django.urls import include, path
 from rest_framework_swagger.views import get_swagger_view
+from edx_api_doc_tools import make_api_info, make_docs_urls
 
 from commerce_coordinator.apps.api import urls as api_urls
 from commerce_coordinator.apps.core import views as core_views
@@ -33,7 +34,6 @@ admin.autodiscover()
 urlpatterns = oauth2_urlpatterns + [
     path('admin/', admin.site.urls),
     path('api/', include(api_urls)),
-    path('api-docs/', get_swagger_view(title='commerce-coordinator API')),
     path('auto_auth/', core_views.AutoAuth.as_view(), name='auto_auth'),
     path('', include('csrf.urls')),  # Include csrf urls from edx-drf-extensions
     path('health/', core_views.health, name='health'),
@@ -41,6 +41,9 @@ urlpatterns = oauth2_urlpatterns + [
     # DEMO: Currently this is only test code, we may want to decouple LMS code here at some point...
     path('demo_lms/', include(demo_lms_urls))
 ]
+
+api_info = make_api_info(title="Commerce Coordinator API", version="v1")
+urlpatterns += make_docs_urls(api_info)
 
 if settings.DEBUG and os.environ.get('ENABLE_DJANGO_TOOLBAR', False):  # pragma: no cover
     # Disable pylint import error because we don't install django-debug-toolbar

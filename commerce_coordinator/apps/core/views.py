@@ -15,6 +15,17 @@ from commerce_coordinator.apps.core.constants import Status
 logger = logging.getLogger(__name__)
 User = get_user_model()
 
+@schema_for(
+    "get",
+    """Allows a load balancer to verify this service is up.
+
+    Checks the status of the database connection on which this service relies.
+    """,
+    responses={
+        200: 'Service is availalble, with JSON data indicating the health of each required service'
+        503: 'Service is unavailable, with JSON data indicating the health of each required service'
+    },
+)
 
 @transaction.non_atomic_requests
 def health(_):
@@ -31,7 +42,7 @@ def health(_):
         >>> response.status_code
         200
         >>> response.content
-        '{"overall_status": "OK", "detailed_status": {"database_status": "OK", "lms_status": "OK"}}'
+        '{"overall_status": "OK","detailed_status": {"database_status": "OK", "lms_status": "OK"}}'
     """
 
     # Ignores health check in performance monitoring so as to not artifically inflate our response time metrics

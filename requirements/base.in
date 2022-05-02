@@ -6,9 +6,9 @@ celery[redis]
 Django>=2.2          # Web application framework
 django-cors-headers
 django-extensions
-django-rest-swagger
 django-waffle
 djangorestframework
+edx-api-doc-tools
 edx-auth-backends
 edx-django-utils
 edx-django-release-util
