@@ -21,5 +21,4 @@ def get_user_orders__ecommerce(request):
 
     ecommerce_api_client = EcommerceApiClient()
     ecommerce_response = ecommerce_api_client.get_orders(params)
-
     return JsonResponse(ecommerce_response)

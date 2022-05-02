@@ -1,7 +1,6 @@
 """
 Tests for the orders app.
 """
-
 import logging
 
 from django.test import TestCase
@@ -10,8 +9,12 @@ from mock import patch
 
 from .clients import EcommerceApiClient
 
-
 logger = logging.getLogger(__name__)
+
+# test parameters used by order history endpoint
+test_params = {'username': 'TestUser', "page": 1, "page_size": 20}
+
+# sample response from EcommerceApiClient.get_orders
 sample_response = {'count': 1,
                    'results': [{'billing_address': {'city': 'Brighton',
                                                     'country': 'US',
@@ -76,35 +79,24 @@ class OrderRetrievalTests(TestCase):
     Verify endpoint availability for order retrieval endpoint(s)
     """
     maxDiff = None
-    ORDER_HISTORY_PATH = reverse('orders:order_history')
 
     def setUp(self):
         super().setUp()
-
-        class TestResponse:
-            def __init__(self, **kwargs):
-                self.__dict__ = kwargs
-
-        #  mock response from ecommerce orders API
-        self.test_response = TestResponse(**sample_response)
+        self.mock_response = sample_response
 
     @patch('commerce_coordinator.apps.orders.clients.EcommerceApiClient.get_orders')
     def test_EcommerceApiClient(self, mock_response):
         """We can call the EcommerceApiClient successfully."""
+        mock_response.return_value = self.mock_response
 
-        mock_response.return_value = self.test_response
-        params = {'username': 'TestUser', "page": 1, "page_size": 20}
-
-        # Call the new function (EcommerceApiClient().get_orders(params)), mocking the response
         ecommerce_api_client = EcommerceApiClient()
-        ecommerce_response = ecommerce_api_client.get_orders(params)
+        ecommerce_response = ecommerce_api_client.get_orders(test_params)
+        self.assertEqual(sample_response, ecommerce_response)
 
-        self.assertEqual(sample_response, ecommerce_response.__dict__)
+    @patch('commerce_coordinator.apps.orders.clients.EcommerceApiClient.get_orders')
+    def test_ecommerce_view(self, mock_response):
+        """We can call get_user_orders__ecommerce successfully (via its url)."""
 
-    def test_ecommerce_view(self):
-        """We can call get_user_orders__ecommerce successfully."""
-        test_params = {'username': 'edx', "page": 1, "page_size": 20}
-        breakpoint()
-        response = self.client.get(self.ORDER_HISTORY_PATH, test_params) #  Invalid URL 'replace-me/oauth2/access_token': No scheme supplied. Perhaps you meant http://replace-me/oauth2/access_token?
-        # response = self.client.get('/orders/ecommerce/', test_params) # <HttpResponseNotFound status_code=404, "text/html">
+        mock_response.return_value = self.mock_response
+        response = self.client.get(reverse('orders:order_history'), test_params)
         self.assertEqual(response.status_code, 200)
