@@ -19,12 +19,12 @@ As outlined in `ADR-3 <./0003-internal-communication.rst>`__, Django signals pro
 
 There are cases for which signals are a poor fit when a component or action requires a direct response, however, we still want the source of that response data to be be decoupled and highly configurable.
 
-There is substantial cost to having multiple distinct but similar mechanisms in an ecosystem; conversely there are benefits to using a common foundation as long as basically serves the need, even if it may not fit as well as a bespoke solution.
+`Openedx-filters <https://github.com/openedx/openedx-filters>`__ is a mechanism being developed to make the edx-platform project more extensible, and specifically to allow configurable functionality that augments, filters, or transforms data at key points in various processes.  It is expressly designed to compliment signals-driven extensions.
+
+If we develop our own extensability mechanism to fill our need when signals are not viable, there is substantial cost to having multiple distinct but similar mechanisms in the Open edX ecosystem; conversely there are benefits to using a common foundation as long as basically serves the need, even if it may not fit as well as a bespoke solution.
 
 - Shared development and maintenence burden
-- Skills and knowledge translation
-
-`Openedx-filters <https://github.com/openedx/openedx-filters>`__ is a mechanism being developed to make the edx-platform project more extensible, and specifically to allow configurable functionality that augments, filters, or transforms data at key points in various processes.  It is expressly designed to compliment signals-driven extensions.
+- Skills and knowledge translation among projects in the ecosystem
 
 Decision
 ********
