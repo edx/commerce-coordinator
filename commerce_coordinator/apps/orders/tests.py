@@ -85,7 +85,7 @@ class OrderRetrievalTests(TestCase):
         self.mock_response = sample_response
 
     @patch('commerce_coordinator.apps.orders.clients.EcommerceApiClient.get_orders')
-    def test_EcommerceApiClient(self, mock_response):
+    def test_ecommerce_api_client(self, mock_response):
         """We can call the EcommerceApiClient successfully."""
         mock_response.return_value = self.mock_response
 
