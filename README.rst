@@ -61,7 +61,7 @@ Note: this setup process is temporary; we will be working on a Tutor plugin
   make dev.up.ecommerce+lms
 
   # Return to the commerce-coordinator repo directory and provision credentials:
-  bash provision-commerce-coordinator.sh
+  bash local-provision-commerce-coordinator.sh
 
   # run commerce-coordinator locally (run inside the venv)
   python manage.py runserver localhost:8140 --settings=commerce_coordinator.settings.local
