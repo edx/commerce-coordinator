@@ -28,9 +28,7 @@ docker exec -t commerce-coordinator.app bash -c "echo 'from django.contrib.auth 
 
 # Provision IDA User in LMS
 echo -e "${GREEN}Provisioning ${name}_worker in LMS...${NC}"
-docker exec -t edx.devstack.lms  bash -c "source /edx/app/edxapp/edxapp_env && python /edx/app/edxapp/edx-platform/manage.py lms --settings=devstack_docker manage_user ${name}_worker ${name}_worker@example.com --staff --superuser"
-
-# Create the DOT applications - one for single sign-on and one for backend service IDA-to-IDA authentication.
+	@@ -34,5 +13,3 @@ docker exec -t edx.devstack.lms  bash -c "source /edx/app/edxapp/edxapp_env && p
 docker exec -t edx.devstack.lms  bash -c "source /edx/app/edxapp/edxapp_env && python /edx/app/edxapp/edx-platform/manage.py lms --settings=devstack_docker create_dot_application --grant-type authorization-code --skip-authorization --redirect-uris 'http://localhost:${port}/complete/edx-oauth2/' --client-id '${name}-sso-key' --client-secret '${name}-sso-secret' --scopes 'user_id' ${name}-sso ${name}_worker"
 docker exec -t edx.devstack.lms bash -c "source /edx/app/edxapp/edxapp_env && python /edx/app/edxapp/edx-platform/manage.py lms --settings=devstack_docker create_dot_application --grant-type client-credentials --client-id '${name}-backend-service-key' --client-secret '${name}-backend-service-secret' ${name}-backend-service ${name}_worker"
 

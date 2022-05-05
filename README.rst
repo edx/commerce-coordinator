@@ -57,6 +57,12 @@ Note: this setup process is temporary; we will be working on a Tutor plugin
   # Start redis in devstack from your local devstack directory
   make dev.up.redis
 
+  # Start ecommerce and lms in devstack from your local devstack directory
+  make dev.up.ecommerce+lms
+
+  # Return to the commerce-coordinator repo directory and provision credentials:
+  bash local-provision-commerce-coordinator.sh
+
   # run commerce-coordinator locally (run inside the venv)
   python manage.py runserver localhost:8140 --settings=commerce_coordinator.settings.local
 
