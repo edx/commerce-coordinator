@@ -1,4 +1,5 @@
 from os import environ
+from socket import IPPROTO_TCP, getaddrinfo, gethostname
 
 import yaml
 
@@ -55,3 +56,6 @@ DB_OVERRIDES = dict(
 
 for override, value in DB_OVERRIDES.items():
     DATABASES['default'][override] = value
+
+# add local IP to ALLOWED_HOSTS for k8s health_check
+ALLOWED_HOSTS += [addrinfo[4][0] for addrinfo in getaddrinfo(gethostname(), port=None, proto=IPPROTO_TCP)]
