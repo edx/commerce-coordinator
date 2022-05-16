@@ -17,14 +17,13 @@ Context
 
 As outlined in `ADR-3 <./0003-internal-communication.rst>`__, Django signals provide excellent decoupling of components and we will be extending them to improve tracing/debugging, validation, and holistic system comprehension.
 
-There are cases for which signals are a poor fit when a component or action requires a direct response, however, we still want the source of that response data to be be decoupled and highly configurable.
+Signals work well in cases where some action simply needs to be triggered at the appropreate time or a system only needs to be notified of an event but does not need to return any sort of response.
+
+There are cases for which signals are a poor fit, such as when a component or action requires a direct response; however, we still want the source of that response data to be be decoupled and highly configurable.
 
 `Openedx-filters <https://github.com/openedx/openedx-filters>`__ is a mechanism being developed to make the edx-platform project more extensible, and specifically to allow configurable functionality that augments, filters, or transforms data at key points in various processes.  It is expressly designed to compliment signals-driven extensions.
 
-If we develop our own extensability mechanism to fill our need when signals are not viable, there is substantial cost to having multiple distinct but similar mechanisms in the Open edX ecosystem; conversely there are benefits to using a common foundation as long as basically serves the need, even if it may not fit as well as a bespoke solution.
-
-- Shared development and maintenence burden
-- Skills and knowledge translation among projects in the ecosystem
+There are benefits to using a common foundation as long as basically serves the need, especially shared development and maintenence burden and portability of knowledge and skills among projects in the ecosystem; conversely, developing our own extensions for when signals are not viable would carry significant costs, both short- and long-term, even if our bespoke solution might fit better.
 
 Decision
 ********
@@ -38,8 +37,10 @@ Consequences
 
 - Coordinator will be extensible using more-or-less the same mechanisms as edx-platform; experience extending the LMS will transfer to building and extending Commerce Coordinator workflows.
 
-- As with signals, we will need to subclass and extend parts of openedx-filters to improve reliability, tracability, validation, and other broad project goals.
+- As with signals, we will need to subclass and extend parts of openedx-filters to improve reliability, tracability, validation, and other broad project goals, including:
 
-  - Suppress the "fail silently" option
-  - Add tracing of pipeline steps
-  - Add validation and other support tooling
+  - Suppressing the "fail silently" option
+  - Adding tracing of pipeline steps
+  - Adding validation and other support tooling
+
+  This should *not*, however, change the fundamental design or operation of openedx-filters.
