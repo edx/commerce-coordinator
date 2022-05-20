@@ -23,7 +23,7 @@ There are cases for which signals are a poor fit, such as when a component or ac
 
 `Openedx-filters <https://github.com/openedx/openedx-filters>`__ is a mechanism being developed to make the edx-platform project more extensible, and specifically to allow configurable functionality that augments, filters, or transforms data at key points in various processes.  It is expressly designed to compliment signals-driven extensions.
 
-There are benefits to using a common foundation as long as basically serves the need, especially shared development and maintenence burden and portability of knowledge and skills among projects in the ecosystem; conversely, developing our own extensions for when signals are not viable would carry significant costs, both short- and long-term, even if our bespoke solution might fit better.
+There are benefits to using a common foundation as long as basically serves the need, especially shared development and maintenence burden and portability of knowledge and skills among projects in the ecosystem.
 
 Decision
 ********
@@ -36,6 +36,8 @@ Consequences
 - Components that communicate relatively directly are more tightly coupled, so when possible try to keep things loose enough to use signal, background tasks, etc.
 
 - Coordinator will be extensible using more-or-less the same mechanisms as edx-platform; experience extending the LMS will transfer to building and extending Commerce Coordinator workflows.
+
+- Openedx-filters defines many filters specific to ``edx-platform`` which are not applicable to Commerce Coordinator; given the `highly modular <./0001-coodinator-design.rst>`__ nature of the Coordinator design, there may not be a similar "single repository" of filter definitions.
 
 - As with signals, we will need to subclass and extend parts of openedx-filters to improve reliability, tracability, validation, and other broad project goals, including:
 
