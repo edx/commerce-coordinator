@@ -93,7 +93,3 @@ def demo_get_sample_data(_):
 
     sample_data = SampleDataRequested.run_filter()
     return JsonResponse({"sample_data": sample_data})
-
-    # BJH: try using run_pipeline directly and see what else we get back
-    # results = SampleDataRequested.run_pipeline(sample_data=[])
-    # return JsonResponse(results)
