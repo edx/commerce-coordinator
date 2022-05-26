@@ -251,7 +251,7 @@ CC_SIGNALS = {
     'commerce_coordinator.apps.core.signals.test_signal': [
         'commerce_coordinator.apps.demo_lms.signals.test_receiver',
         'commerce_coordinator.apps.core.signals.test_receiver_exception',
-        # 'commerce_coordinator.apps.core.signals.test_celery_task',
+        'commerce_coordinator.apps.core.signals.test_celery_task',
     ],
     'commerce_coordinator.apps.demo_lms.signals.purchase_complete_signal': [
         'commerce_coordinator.apps.demo_lms.signals.demo_purchase_complete_order_history',
