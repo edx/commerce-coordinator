@@ -1,5 +1,5 @@
 """
-LMS app signals and receivers.
+Demo LMS app signals and receivers.
 """
 import logging
 
