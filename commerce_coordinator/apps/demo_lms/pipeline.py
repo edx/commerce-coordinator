@@ -11,7 +11,7 @@ from openedx_filters import PipelineStep
 #
 # By overriding `run_filter` and adding expected arguments to the signature, we get a small amount checking that the
 # name, for example here "sample_data", was among the arguments passed in.
-class SomeData(PipelineStep):
+class AddSomeData(PipelineStep):
     """
     Adds data to the sample data list.
     """
@@ -21,7 +21,7 @@ class SomeData(PipelineStep):
         }
 
 
-class SomeMoreData(PipelineStep):
+class AddSomeMoreData(PipelineStep):
     """
     Adds more data to the sample data list.
     """
