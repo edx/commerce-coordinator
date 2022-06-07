@@ -270,3 +270,14 @@ REQUEST_READ_TIMEOUT_SECONDS = 5
 
 # API URLs
 ECOMMERCE_URL = None
+
+# Filters PoC
+OPEN_EDX_FILTERS_CONFIG = {
+    "org.edx.coordinator.demo_lms.sample_data.v1": {
+        "fail_silently": False,  # TODO: Coordinator filters should NEVER be allowed to fail silently
+        "pipeline": [
+            'commerce_coordinator.apps.demo_lms.pipeline.AddSomeData',
+            'commerce_coordinator.apps.demo_lms.pipeline.AddSomeMoreData',
+        ]
+    }
+}
