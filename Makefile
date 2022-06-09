@@ -68,7 +68,7 @@ coverage: clean
 	$(BROWSER) htmlcov/index.html
 
 isort_check: ## check that isort has been run
-	isort --check-only --diff -rc commerce_coordinator/
+	isort --check-only --diff commerce_coordinator/
 
 isort: ## run isort to sort imports in all Python files
 	isort --recursive --atomic commerce_coordinator/
