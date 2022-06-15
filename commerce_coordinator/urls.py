@@ -50,5 +50,5 @@ urlpatterns = oauth2_urlpatterns + [
 if settings.DEBUG and os.environ.get('ENABLE_DJANGO_TOOLBAR', False):  # pragma: no cover
     # Disable pylint import error because we don't install django-debug-toolbar
     # for CI build
-    import debug_toolbar
+    import debug_toolbar  # pylint: disable=import-error
     urlpatterns.append(path('__debug__/', include(debug_toolbar.urls)))
