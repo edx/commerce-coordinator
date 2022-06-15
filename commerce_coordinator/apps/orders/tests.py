@@ -4,10 +4,12 @@ Tests for the orders app.
 import logging
 
 from django.test import TestCase
+from django.test.client import RequestFactory
 from django.urls import reverse
 from mock import patch
 
 from .clients import EcommerceApiClient
+from .views import redirect_user_orders__ecommerce
 
 logger = logging.getLogger(__name__)
 
@@ -99,4 +101,26 @@ class OrderRetrievalTests(TestCase):
 
         mock_response.return_value = self.mock_response
         response = self.client.get(reverse('orders:order_history'), test_params)
-        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.status_code, 302)
+
+
+class RedirectUserOrdersEcommerceTests(TestCase):
+    """
+    Test views for redirect_user_orders__ecommerce.
+    """
+
+    def setUp(self):
+        """
+        Set up tests.
+        """
+        super().setUp()
+        self.factory = RequestFactory()
+        self.uut = redirect_user_orders__ecommerce
+
+    def test_query_string_is_passed(self):
+        """
+        Check GET requests parameters is sent to response.
+        """
+        request = self.factory.get('url/?a=1')
+        response = self.uut(request)
+        self.assertContains(response.url, '?a=1')
