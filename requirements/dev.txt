@@ -35,7 +35,7 @@ bleach==5.0.0
     #   readme-renderer
 celery[redis]==5.2.7
     # via -r requirements/validation.txt
-certifi==2022.5.18.1
+certifi==2022.6.15
     # via
     #   -r requirements/validation.txt
     #   requests

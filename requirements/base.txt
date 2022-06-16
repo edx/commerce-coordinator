@@ -14,7 +14,7 @@ billiard==3.6.4.0
     # via celery
 celery[redis]==5.2.7
     # via -r requirements/base.in
-certifi==2022.5.18.1
+certifi==2022.6.15
     # via requests
 cffi==1.15.0
     # via
