@@ -31,7 +31,7 @@ Initial Setup: steps and confirmation
 
 Note: this setup process is temporary; we will be working on a Tutor plugin
 
-.. code-block::
+.. code-block:: shell
 
   # Clone the repository
   git clone git@github.com:edx/commerce-coordinator.git
@@ -74,7 +74,7 @@ Note: this setup process is temporary; we will be working on a Tutor plugin
 
 Every time you develop something in this repo
 =============================================
-.. code-block::
+.. code-block:: shell
 
   # Grab the latest code
   git checkout main
@@ -104,7 +104,7 @@ Every time you develop something in this repo
 
 Local testing with Celery
 =========================
-.. code-block::
+.. code-block:: shell
 
   # Start redis in devstack from your local devstack directory
   make dev.up.redis
