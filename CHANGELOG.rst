@@ -20,9 +20,13 @@ Unreleased
 [0.2.0] - 2021-10-04
 ********************
 
+.. _added_0.2.0:
+
 Added
 =====
 Added Support for Django40
+
+.. _dropped_0.2.0:
 
 Dropped
 =======
@@ -30,6 +34,8 @@ Dropped support for Django22, 30 and 31
 
 [0.1.0] - 2021-10-04
 ********************
+
+.. _added_0.1.0:
 
 Added
 =====

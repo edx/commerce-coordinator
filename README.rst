@@ -140,8 +140,8 @@ So far, this is very preliminary work proving out our ability to confirm and con
 
 Note: We expect that the system will be easier to reason about if signals are only confined to the primary IDA; other environments (e.g. Celery workers) could call API endpoints to trigger workflows if necessary.
 
-How To Contribute
-*****************
+Contributing
+************
 
 Contributions are very welcome.
 Please read `How To Contribute <https://github.com/edx/edx-platform/blob/main/CONTRIBUTING.rst>`_ for details.  Even though they were written with ``edx-platform`` in mind, the guidelines should be followed for all Open edX projects.
@@ -155,8 +155,8 @@ Reporting Security Issues
 
 Please do not report security issues in public. Please email security@edx.org.
 
-Getting Help
-************
+Getting Assistance
+******************
 
 If you're having trouble, we have discussion forums at https://discuss.openedx.org where you can connect with others in the community.
 
