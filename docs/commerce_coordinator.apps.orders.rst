@@ -8,6 +8,7 @@ Subpackages
    :maxdepth: 4
 
    commerce_coordinator.apps.orders.migrations
+   commerce_coordinator.apps.orders.tests
 
 Submodules
 ----------
@@ -40,14 +41,6 @@ commerce\_coordinator.apps.orders.models module
 -----------------------------------------------
 
 .. automodule:: commerce_coordinator.apps.orders.models
-   :members:
-   :undoc-members:
-   :show-inheritance:
-
-commerce\_coordinator.apps.orders.tests module
-----------------------------------------------
-
-.. automodule:: commerce_coordinator.apps.orders.tests
    :members:
    :undoc-members:
    :show-inheritance:

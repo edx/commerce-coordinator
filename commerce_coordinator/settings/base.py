@@ -67,6 +67,7 @@ MIDDLEWARE = (
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.locale.LocaleMiddleware',
     'django.middleware.common.CommonMiddleware',
+    'edx_rest_framework_extensions.auth.jwt.middleware.JwtRedirectToLoginIfUnauthenticatedMiddleware',
     'edx_rest_framework_extensions.auth.jwt.middleware.JwtAuthCookieMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
@@ -215,6 +216,7 @@ BACKEND_SERVICE_EDX_OAUTH2_KEY = 'replace-me'
 BACKEND_SERVICE_EDX_OAUTH2_SECRET = 'replace-me'
 
 JWT_AUTH = {
+    'JWT_AUTH_HEADER_PREFIX': 'JWT',
     'JWT_ISSUER': 'http://127.0.0.1:8140/oauth2',
     'JWT_ALGORITHM': 'HS256',
     'JWT_VERIFY_EXPIRATION': True,
@@ -235,6 +237,14 @@ EXTRA_SCOPE = ['permissions']
 LOGIN_REDIRECT_URL = '/admin/'
 # END AUTHENTICATION CONFIGURATION
 
+# DRF CONFIGURATION
+REST_FRAMEWORK = {
+    'DEFAULT_AUTHENTICATION_CLASSES': (
+        'edx_rest_framework_extensions.auth.jwt.authentication.JwtAuthentication',
+        'rest_framework.authentication.SessionAuthentication',
+    ),
+}
+# END DRF CONFIGURATION
 
 # OPENEDX-SPECIFIC CONFIGURATION
 PLATFORM_NAME = 'Your Platform Name Here'
