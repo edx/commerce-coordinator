@@ -68,7 +68,3 @@ CMD gunicorn --workers=2 --name commerce-coordinator -c /edx/app/commerce-coordi
 # This line is after the requirements so that changes to the code will not
 # bust the image cache
 COPY . /edx/app/commerce-coordinator
-
-FROM app as newrelic
-RUN pip install newrelic
-CMD newrelic-admin run-program gunicorn --workers=2 --name commerce-coordinator -c /edx/app/commerce-coordinator/commerce_coordinator/docker_gunicorn_configuration.py --log-file - --max-requests=1000 commerce_coordinator.wsgi:application
