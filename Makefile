@@ -148,20 +148,6 @@ validate_translations: fake_translations detect_changed_source_translations ## i
 
 docker_build:
 	docker build . -f Dockerfile -t openedx/commerce-coordinator
-	docker build . -f Dockerfile --target newrelic -t openedx/commerce-coordinator:latest-newrelic
-
-travis_docker_tag: docker_build
-	docker tag openedx/commerce-coordinator openedx/commerce-coordinator:$$TRAVIS_COMMIT
-	docker tag openedx/commerce-coordinator:latest-newrelic openedx/commerce-coordinator:$$TRAVIS_COMMIT-newrelic
-
-travis_docker_auth:
-	echo "$$DOCKER_PASSWORD" | docker login -u "$$DOCKER_USERNAME" --password-stdin
-
-travis_docker_push: travis_docker_tag travis_docker_auth ## push to docker hub
-	docker push 'openedx/commerce-coordinator:latest'
-	docker push "openedx/commerce-coordinator:$$TRAVIS_COMMIT"
-	docker push 'openedx/commerce-coordinator:latest-newrelic'
-	docker push "openedx/commerce-coordinator:$$TRAVIS_COMMIT-newrelic"
 
 # devstack-themed shortcuts
 dev.up: # Starts all containers
@@ -193,11 +179,9 @@ db-shell: # Run the app shell as root, enter the app's database
 
 github_docker_build:
 	docker build . -f Dockerfile --target app -t openedx/commerce-coordinator
-	docker build . -f Dockerfile --target newrelic -t openedx/commerce-coordinator:latest-newrelic
 
 github_docker_tag: github_docker_build
 	docker tag openedx/commerce-coordinator openedx/commerce-coordinator:${GITHUB_SHA}
-	docker tag openedx/commerce-coordinator:latest-newrelic openedx/commerce-coordinator:${GITHUB_SHA}-newrelic
 
 github_docker_auth:
 	echo "$$DOCKERHUB_PASSWORD" | docker login -u "$$DOCKERHUB_USERNAME" --password-stdin
@@ -205,8 +189,6 @@ github_docker_auth:
 github_docker_push: github_docker_tag github_docker_auth ## push to docker hub
 	docker push 'openedx/commerce-coordinator:latest'
 	docker push "openedx/commerce-coordinator:${GITHUB_SHA}"
-	docker push 'openedx/commerce-coordinator:latest-newrelic'
-	docker push "openedx/commerce-coordinator:${GITHUB_SHA}-newrelic"
 
 selfcheck: ## check that the Makefile is well-formed
 	@echo "The Makefile is well-formed."
