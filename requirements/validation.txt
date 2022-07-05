@@ -43,7 +43,7 @@ celery[redis]==5.2.7
     # via
     #   -r requirements/quality.txt
     #   -r requirements/test.txt
-certifi==2022.5.18.1
+certifi==2022.6.15
     # via
     #   -r requirements/quality.txt
     #   -r requirements/test.txt

@@ -6,4 +6,5 @@
 doc8                      # reStructuredText style checker
 edx_sphinx_theme          # edX theme for Sphinx output
 readme_renderer           # Validates README.rst for usage on PyPI
+rstcheck                  # Validates reStructedText
 Sphinx                    # Documentation builder
