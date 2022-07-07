@@ -29,24 +29,28 @@ billiard==3.6.4.0
     # via
     #   -r requirements/validation.txt
     #   celery
-bleach==5.0.0
+bleach==5.0.1
     # via
     #   -r requirements/validation.txt
     #   readme-renderer
+build==0.8.0
+    # via
+    #   -r requirements/pip-tools.txt
+    #   pip-tools
 celery[redis]==5.2.7
     # via -r requirements/validation.txt
-certifi==2022.5.18.1
+certifi==2022.6.15
     # via
     #   -r requirements/validation.txt
     #   requests
-cffi==1.15.0
+cffi==1.15.1
     # via
     #   -r requirements/validation.txt
     #   cryptography
     #   pynacl
-chardet==4.0.0
+chardet==5.0.0
     # via diff-cover
-charset-normalizer==2.0.12
+charset-normalizer==2.1.0
     # via
     #   -r requirements/validation.txt
     #   requests
@@ -100,7 +104,7 @@ coverage[toml]==6.4.1
     # via
     #   -r requirements/validation.txt
     #   pytest-cov
-cryptography==37.0.2
+cryptography==37.0.4
     # via
     #   -r requirements/validation.txt
     #   pyjwt
@@ -114,13 +118,13 @@ deprecated==1.2.13
     # via
     #   -r requirements/validation.txt
     #   redis
-diff-cover==6.5.0
+diff-cover==6.5.1
     # via -r requirements/dev.in
 dill==0.3.5.1
     # via
     #   -r requirements/validation.txt
     #   pylint
-django==3.2.13
+django==3.2.14
     # via
     #   -r requirements/validation.txt
     #   django-cors-headers
@@ -141,7 +145,7 @@ django-crum==0.7.9
     # via
     #   -r requirements/validation.txt
     #   edx-django-utils
-django-debug-toolbar==3.4.0
+django-debug-toolbar==3.5.0
     # via
     #   -r requirements/dev.in
     #   -r requirements/validation.txt
@@ -162,7 +166,7 @@ djangorestframework==3.13.1
     #   django-rest-swagger
     #   drf-jwt
     #   edx-drf-extensions
-docutils==0.18.1
+docutils==0.19
     # via
     #   -r requirements/validation.txt
     #   readme-renderer
@@ -199,7 +203,7 @@ idna==3.3
     # via
     #   -r requirements/validation.txt
     #   requests
-importlib-metadata==4.11.4
+importlib-metadata==4.12.0
     # via
     #   -r requirements/validation.txt
     #   keyring
@@ -244,9 +248,9 @@ mccabe==0.7.0
     #   pylint
 mock==4.0.3
     # via -r requirements/validation.txt
-mysqlclient==2.1.0
+mysqlclient==2.1.1
     # via -r requirements/validation.txt
-newrelic==7.12.0.176
+newrelic==7.14.0.177
     # via
     #   -r requirements/validation.txt
     #   edx-django-utils
@@ -263,7 +267,9 @@ openedx-filters==0.7.0
     # via -r requirements/validation.txt
 packaging==21.3
     # via
+    #   -r requirements/pip-tools.txt
     #   -r requirements/validation.txt
+    #   build
     #   pytest
     #   redis
 path==16.4.0
@@ -275,8 +281,8 @@ pbr==5.9.0
 pep517==0.12.0
     # via
     #   -r requirements/pip-tools.txt
-    #   pip-tools
-pip-tools==6.6.2
+    #   build
+pip-tools==6.8.0
     # via -r requirements/pip-tools.txt
 pkginfo==1.8.3
     # via
@@ -293,7 +299,7 @@ pluggy==1.0.0
     #   pytest
 polib==1.1.1
     # via edx-i18n-tools
-prompt-toolkit==3.0.29
+prompt-toolkit==3.0.30
     # via
     #   -r requirements/validation.txt
     #   click-repl
@@ -311,7 +317,7 @@ pycparser==2.21
     # via
     #   -r requirements/validation.txt
     #   cffi
-pycryptodomex==3.14.1
+pycryptodomex==3.15.0
     # via
     #   -r requirements/validation.txt
     #   pyjwkest
@@ -335,7 +341,7 @@ pyjwt[crypto]==2.4.0
     #   edx-drf-extensions
     #   edx-rest-api-client
     #   social-auth-core
-pylint==2.14.2
+pylint==2.14.4
     # via
     #   -r requirements/validation.txt
     #   edx-lint
@@ -365,6 +371,7 @@ pynacl==1.5.0
     #   edx-django-utils
 pyparsing==3.0.9
     # via
+    #   -r requirements/pip-tools.txt
     #   -r requirements/validation.txt
     #   packaging
 pytest==7.1.2
@@ -404,11 +411,11 @@ readme-renderer==35.0
     # via
     #   -r requirements/validation.txt
     #   twine
-redis==4.3.3
+redis==4.3.4
     # via
     #   -r requirements/validation.txt
     #   celery
-requests==2.28.0
+requests==2.28.1
     # via
     #   -r requirements/validation.txt
     #   coreapi
@@ -492,17 +499,18 @@ tomli==2.0.1
     # via
     #   -r requirements/pip-tools.txt
     #   -r requirements/validation.txt
+    #   build
     #   coverage
     #   pep517
     #   pylint
     #   pytest
-tomlkit==0.11.0
+tomlkit==0.11.1
     # via
     #   -r requirements/validation.txt
     #   pylint
 twine==4.0.1
     # via -r requirements/validation.txt
-typing-extensions==4.2.0
+typing-extensions==4.3.0
     # via
     #   -r requirements/validation.txt
     #   astroid
