@@ -22,16 +22,16 @@ billiard==3.6.4.0
     #   celery
 celery[redis]==5.2.7
     # via -r requirements/base.txt
-certifi==2022.5.18.1
+certifi==2022.6.15
     # via
     #   -r requirements/base.txt
     #   requests
-cffi==1.15.0
+cffi==1.15.1
     # via
     #   -r requirements/base.txt
     #   cryptography
     #   pynacl
-charset-normalizer==2.0.12
+charset-normalizer==2.1.0
     # via
     #   -r requirements/base.txt
     #   requests
@@ -64,7 +64,7 @@ coreschema==0.0.4
     # via
     #   -r requirements/base.txt
     #   coreapi
-cryptography==37.0.2
+cryptography==37.0.4
     # via
     #   -r requirements/base.txt
     #   pyjwt
@@ -78,7 +78,7 @@ deprecated==1.2.13
     # via
     #   -r requirements/base.txt
     #   redis
-django==3.2.13
+django==3.2.14
     # via
     #   -r requirements/base.txt
     #   django-cors-headers
@@ -163,11 +163,11 @@ markupsafe==2.1.1
     # via
     #   -r requirements/base.txt
     #   jinja2
-mysqlclient==2.1.0
+mysqlclient==2.1.1
     # via
     #   -r requirements/base.txt
     #   -r requirements/production.in
-newrelic==7.12.0.176
+newrelic==7.14.0.177
     # via
     #   -r requirements/base.txt
     #   edx-django-utils
@@ -190,7 +190,7 @@ pbr==5.9.0
     # via
     #   -r requirements/base.txt
     #   stevedore
-prompt-toolkit==3.0.29
+prompt-toolkit==3.0.30
     # via
     #   -r requirements/base.txt
     #   click-repl
@@ -202,7 +202,7 @@ pycparser==2.21
     # via
     #   -r requirements/base.txt
     #   cffi
-pycryptodomex==3.14.1
+pycryptodomex==3.15.0
     # via
     #   -r requirements/base.txt
     #   pyjwkest
@@ -218,6 +218,8 @@ pyjwt[crypto]==2.4.0
     #   edx-drf-extensions
     #   edx-rest-api-client
     #   social-auth-core
+pymemcache==3.5.2
+    # via -r requirements/production.in
 pymongo==3.12.3
     # via
     #   -r requirements/base.txt
@@ -234,8 +236,6 @@ python-dateutil==2.8.2
     # via
     #   -r requirements/base.txt
     #   edx-drf-extensions
-python-memcached==1.59
-    # via -r requirements/production.in
 python3-openid==3.2.0
     # via
     #   -r requirements/base.txt
@@ -251,11 +251,11 @@ pyyaml==6.0
     #   -r requirements/base.txt
     #   -r requirements/production.in
     #   edx-django-release-util
-redis==4.3.3
+redis==4.3.4
     # via
     #   -r requirements/base.txt
     #   celery
-requests==2.28.0
+requests==2.28.1
     # via
     #   -r requirements/base.txt
     #   coreapi
@@ -285,8 +285,8 @@ six==1.16.0
     #   edx-django-release-util
     #   edx-drf-extensions
     #   pyjwkest
+    #   pymemcache
     #   python-dateutil
-    #   python-memcached
 slumber==0.7.1
     # via
     #   -r requirements/base.txt
