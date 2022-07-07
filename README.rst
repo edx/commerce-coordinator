@@ -31,7 +31,7 @@ Initial Setup: steps and confirmation
 
 Note: this setup process is temporary; we will be working on a Tutor plugin
 
-.. code-block::
+.. code-block:: shell
 
   # Clone the repository
   git clone git@github.com:edx/commerce-coordinator.git
@@ -74,7 +74,7 @@ Note: this setup process is temporary; we will be working on a Tutor plugin
 
 Every time you develop something in this repo
 =============================================
-.. code-block::
+.. code-block:: shell
 
   # Grab the latest code
   git checkout main
@@ -104,7 +104,7 @@ Every time you develop something in this repo
 
 Local testing with Celery
 =========================
-.. code-block::
+.. code-block:: shell
 
   # Start redis in devstack from your local devstack directory
   make dev.up.redis
@@ -140,8 +140,8 @@ So far, this is very preliminary work proving out our ability to confirm and con
 
 Note: We expect that the system will be easier to reason about if signals are only confined to the primary IDA; other environments (e.g. Celery workers) could call API endpoints to trigger workflows if necessary.
 
-How To Contribute
-*****************
+Contributing
+************
 
 Contributions are very welcome.
 Please read `How To Contribute <https://github.com/edx/edx-platform/blob/main/CONTRIBUTING.rst>`_ for details.  Even though they were written with ``edx-platform`` in mind, the guidelines should be followed for all Open edX projects.
@@ -155,8 +155,8 @@ Reporting Security Issues
 
 Please do not report security issues in public. Please email security@edx.org.
 
-Getting Help
-************
+Getting Assistance
+******************
 
 If you're having trouble, we have discussion forums at https://discuss.openedx.org where you can connect with others in the community.
 
