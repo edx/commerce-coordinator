@@ -4,5 +4,5 @@
 gevent
 gunicorn
 mysqlclient
-python-memcached
+pymemcache
 PyYAML>=5.1
