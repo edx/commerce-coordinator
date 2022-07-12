@@ -24,7 +24,7 @@ Decision
 
 Use a proxy pattern when interposing Coordinator in front of other services' APIs, particularly while decoupling the legacy ecommerce service.
 
-Note: Commerce Coordinator does _not_ have to be in the middle of _every_ step; it should be used to facilitate coordination, especially _between_ systems involved in the order management workflow.  
+Note: Commerce Coordinator should be used to facilitate coordination, especially _between_ systems involved in the order management workflow. It does not have to be added into the middle of every step.
 
 Consequences
 ************
