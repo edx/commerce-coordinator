@@ -5,12 +5,18 @@
 Status
 ******
 
-**Draft**
+**Accepted**
 
 Context
 *******
 
 edX's monolithic Ecommerce Service was meant to be a full-featured product catalog, discounting, and order management service and has grown in complexity for many years until it has become very hard to maintain, let alone evolve.  In that time, more and better hosted services have become available for solving many of these problems, and complex use cases have evolved that make flexibility for Open edX operators vital.
+
+To avoid simply rebuilding another complicated, hard to change system, Commerce Coordinator design and implementation is guided by three main principles:
+
+- Simplicity: keep the design simple and the code clean.  Always start simple and iterate or extend if required.
+- Extensibility: the highly modular architecture helps keep solutions simple and allows iterating them; any necessary complexity can be encapsulated in plugins or pushed to external systems as much as possible.
+- Integration rather than function: both the core and the plugins should strive to do *less*; plugins should simply communicate with a specific external system and integrate with other plugins to bring the data and functionality of those systems together.
 
 
 Decisions
