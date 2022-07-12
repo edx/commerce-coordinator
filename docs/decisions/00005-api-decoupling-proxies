@@ -1,6 +1,10 @@
 ##########################
-00005 API Decoupling Proxy
+0005 API Decoupling Proxy
 ##########################
+
+Status
+******
+***Draft***
 
 Context
 *******
@@ -40,7 +44,7 @@ Alternatives Considered
 Replication of business objects or functionality
 ================================================
 
-- This would add significant complexity, requiring replication and sychronization processes for each type of data being duplicated.
+- This would add significant complexity, requiring replication and synchronization processes for each type of data being duplicated.
 - One argument for replication is to guard against failure in the source-of-truth legacy system; currently the legacy system is already a potential point-of-failure, it is the Coordinator that is a new possible failure point and obviously replication doesn't help with that.
 
 Caching of results
