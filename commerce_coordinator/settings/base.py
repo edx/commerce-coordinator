@@ -41,7 +41,6 @@ INSTALLED_APPS = (
 THIRD_PARTY_APPS = (
     'corsheaders',
     'csrf.apps.CsrfAppConfig',  # Enables frontend apps to retrieve CSRF tokens
-    'edx_django_utils.user',
     'rest_framework',
     'rest_framework_swagger',
     'social_django',
