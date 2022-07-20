@@ -10,6 +10,7 @@ from rest_framework.throttling import UserRateThrottle
 from rest_framework.views import APIView
 
 from .clients import EcommerceApiClient
+from .filters import OrderDataRequested
 
 logger = logging.getLogger(__name__)
 
@@ -35,3 +36,18 @@ class EcommerceUserOrdersView(APIView):
         ecommerce_api_client = EcommerceApiClient()
         ecommerce_response = ecommerce_api_client.get_orders(params)
         return Response(ecommerce_response)
+
+
+class UserOrdersView(APIView):
+    """Get the order history for the authenticated user."""
+    permission_classes = [LoginRedirectIfUnauthenticated]
+    throttle_classes = [UserRateThrottle]
+
+    def get(self, request):
+        """Return paginated response of user's order history."""
+
+        # deny global queries
+        if not request.user.username:
+            raise PermissionDenied(detail="Could not detect username.")
+        order_data = OrderDataRequested.run_filter(request)
+        return Response({"order_data": order_data})
