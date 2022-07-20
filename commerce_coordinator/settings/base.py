@@ -301,8 +301,7 @@ OPEN_EDX_FILTERS_CONFIG = {
     "org.edx.coordinator.orders.v1": {
         "fail_silently": False,  # TODO: Coordinator filters should NEVER be allowed to fail silently
         "pipeline": [
-            'commerce_coordinator.apps.orders.pipeline.AddEcommerceOrders',
-            'commerce_coordinator.apps.orders.pipeline.AddSomeMoreData',
+            'commerce_coordinator.apps.orders.pipeline.GetEcommerceOrders',
         ]
     }
 }
