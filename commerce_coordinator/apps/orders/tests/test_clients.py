@@ -7,7 +7,7 @@ from django.test import TestCase
 from mock import patch
 
 from commerce_coordinator.apps.orders.clients import EcommerceApiClient
-from commerce_coordinator.apps.orders.tests import ECOMMERCE_REQUEST_EXPECTED_RESPONSE, ECOMMERCE_REQUEST_GET_PARAMETERS
+from commerce_coordinator.apps.orders.tests import ECOMMERCE_REQUEST_EXPECTED_RESPONSE, ORDER_HISTORY_GET_PARAMETERS
 
 logger = logging.getLogger(__name__)
 
@@ -23,5 +23,5 @@ class OrdersClientTests(TestCase):
         mock_response.return_value = ECOMMERCE_REQUEST_EXPECTED_RESPONSE
 
         ecommerce_api_client = EcommerceApiClient()
-        ecommerce_response = ecommerce_api_client.get_orders(ECOMMERCE_REQUEST_GET_PARAMETERS)
+        ecommerce_response = ecommerce_api_client.get_orders(ORDER_HISTORY_GET_PARAMETERS)
         self.assertEqual(ECOMMERCE_REQUEST_EXPECTED_RESPONSE, ecommerce_response)
