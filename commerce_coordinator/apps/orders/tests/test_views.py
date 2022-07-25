@@ -21,7 +21,7 @@ class EcommerceClientMock(MagicMock):
 
 
 @patch('commerce_coordinator.apps.orders.clients.EcommerceApiClient.get_orders', new_callable=EcommerceClientMock)
-class OrdersEcommerceViewsTests(TestCase):
+class OrdersViewTests(TestCase):
     """
     Tests for Ecommerce order views.
     """
@@ -49,7 +49,7 @@ class OrdersEcommerceViewsTests(TestCase):
         super().tearDown()
         self.client.logout()
 
-    def test_ecommerce_view_rejects_post(self, mock_ecommerce_client):
+    def test_view_rejects_post(self, mock_ecommerce_client):
         """Check POST from authorized user receives a 405 Method Not Allowed."""
 
         # Login
@@ -61,7 +61,7 @@ class OrdersEcommerceViewsTests(TestCase):
         # Check 405 Method Not Allowed
         self.assertEqual(response.status_code, 405)
 
-    def test_ecommerce_view_rejects_unauthorized(self, mock_ecommerce_client):
+    def test_view_rejects_unauthorized(self, mock_ecommerce_client):
         """Check unauthorized users querying orders are redirected to login page."""
 
         # Perform GET without logging in.
@@ -71,7 +71,7 @@ class OrdersEcommerceViewsTests(TestCase):
         self.assertEqual(response.status_code, 302)
         self.assertIn("/login", response.url)
 
-    def test_ecommerce_view_returns_ok(self, mock_ecommerce_client):
+    def test_view_returns_ok(self, mock_ecommerce_client):
         """Check authorized user querying orders receives an HTTP 200 OK."""
 
         # Login
@@ -83,7 +83,7 @@ class OrdersEcommerceViewsTests(TestCase):
         # Check 200 OK
         self.assertEqual(response.status_code, 200)
 
-    def test_ecommerce_view_returns_expected_response(self, mock_ecommerce_client):
+    def test_view_returns_expected_ecommerce_response(self, mock_ecommerce_client):
         """Check authorized user querying orders receive an expected response."""
 
         # Login
@@ -95,7 +95,7 @@ class OrdersEcommerceViewsTests(TestCase):
         # Check expected response
         self.assertEqual(response.json(), ECOMMERCE_REQUEST_EXPECTED_RESPONSE)
 
-    def test_ecommerce_view_passes_username(self, mock_ecommerce_client):
+    def test_view_passes_username(self, mock_ecommerce_client):
         """Check logged in user's username is passed to the ecommerce client."""
 
         # Login
