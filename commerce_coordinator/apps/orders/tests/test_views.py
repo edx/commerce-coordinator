@@ -20,10 +20,11 @@ class EcommerceClientMock(MagicMock):
     return_value = ECOMMERCE_REQUEST_EXPECTED_RESPONSE
 
 
-@patch('commerce_coordinator.apps.orders.clients.EcommerceApiClient.get_orders', new_callable=EcommerceClientMock)
+@patch('commerce_coordinator.apps.ecommerce_caller.clients.EcommerceApiClient.get_orders',
+       new_callable=EcommerceClientMock)
 class OrdersViewTests(TestCase):
     """
-    Tests for Ecommerce order views.
+    Tests for order views.
     """
     # Disable unused-argument due to global @patch
     # pylint: disable=unused-argument

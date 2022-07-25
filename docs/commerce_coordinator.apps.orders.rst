@@ -29,14 +29,6 @@ commerce\_coordinator.apps.orders.apps module
    :undoc-members:
    :show-inheritance:
 
-commerce\_coordinator.apps.orders.clients module
-------------------------------------------------
-
-.. automodule:: commerce_coordinator.apps.orders.clients
-   :members:
-   :undoc-members:
-   :show-inheritance:
-
 commerce\_coordinator.apps.orders.models module
 -----------------------------------------------
 
