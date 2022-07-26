@@ -20,7 +20,7 @@ class EcommerceClientMock(MagicMock):
     return_value = ECOMMERCE_REQUEST_EXPECTED_RESPONSE
 
 
-@patch('commerce_coordinator.apps.ecommerce_caller.clients.EcommerceApiClient.get_orders',
+@patch('commerce_coordinator.apps.ecommerce.clients.EcommerceApiClient.get_orders',
        new_callable=EcommerceClientMock)
 class OrdersViewTests(TestCase):
     """

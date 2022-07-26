@@ -4,7 +4,7 @@ order app filter pipeline implementations
 
 from openedx_filters import PipelineStep
 
-from commerce_coordinator.apps.ecommerce_caller.clients import EcommerceApiClient
+from commerce_coordinator.apps.ecommerce.clients import EcommerceApiClient
 
 
 class GetEcommerceOrders(PipelineStep):
