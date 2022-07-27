@@ -1,5 +1,5 @@
 """
-Tests for the ecommerce_caller views.
+Tests for the ecommerce views.
 """
 
 # from django.test import TestCase

@@ -1,5 +1,5 @@
 """
-Models for the ecommerce_caller app.
+Models for the ecommerce app.
 """
 
 # from django.db import models

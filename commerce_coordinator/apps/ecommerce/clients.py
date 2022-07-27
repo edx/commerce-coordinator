@@ -1,5 +1,5 @@
 """
-API clients for ecommerce_caller app.
+API clients for ecommerce app.
 """
 import logging
 

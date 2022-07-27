@@ -1,5 +1,5 @@
 """
-Views for the ecommerce_caller app which implement the API endpoints or callback handlers.
+Views for the ecommerce app which implement the API endpoints or callback handlers.
 """
 
 # from django.shortcuts import render

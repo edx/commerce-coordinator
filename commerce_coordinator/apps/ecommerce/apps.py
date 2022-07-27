@@ -1,10 +1,10 @@
 """
-App configuration for the ecommerce_caller app.
+App configuration for the ecommerce app.
 """
 
 from django.apps import AppConfig
 
 
-class EcommerceCallerConfig(AppConfig):
+class EcommerceConfig(AppConfig):
     default_auto_field = 'django.db.models.BigAutoField'
-    name = 'ecommerce_caller'
+    name = 'ecommerce'
