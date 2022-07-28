@@ -12,17 +12,12 @@ class OrderDataRequested(OpenEdxPublicFilter):
     filter_type = "org.edx.coordinator.orders.v1"
 
     @classmethod
-    def run_filter(cls, request, order_data=None):
+    def run_filter(cls, request, params, order_data=None):
         """
         Call the PipelineStep(s) defined for this filter, to gather orders and return together
         """
         if order_data is None:
             order_data = []
-
-        # build parameters
-        page = request.query_params.get("page")
-        page_size = request.query_params.get("page_size")
-        params = {'username': request.user.username, "page": page, "page_size": page_size}
 
         data = super().run_pipeline(params=params, order_data=order_data)
         return data.get("order_data")

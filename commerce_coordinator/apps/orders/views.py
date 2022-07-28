@@ -22,8 +22,13 @@ class UserOrdersView(APIView):
     def get(self, request):
         """Return paginated response of user's order history."""
 
+        # build parameters
+        page = request.query_params.get("page")
+        page_size = request.query_params.get("page_size")
+        params = {'username': request.user.username, "page": page, "page_size": page_size}
+
         # deny global queries
         if not request.user.username:
             raise PermissionDenied(detail="Could not detect username.")
-        order_data = OrderDataRequested.run_filter(request)
+        order_data = OrderDataRequested.run_filter(request, params)
         return Response(order_data[0])
