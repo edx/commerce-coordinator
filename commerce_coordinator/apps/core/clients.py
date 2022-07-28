@@ -1,5 +1,5 @@
 """
-API clients for services that manage orders.
+API client logic shared between plugins.
 """
 import logging
 

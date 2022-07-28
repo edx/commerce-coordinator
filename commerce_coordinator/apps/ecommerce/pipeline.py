@@ -1,5 +1,5 @@
 """
-order app filter pipeline implementations
+Ecommerce filter pipelines
 """
 
 from openedx_filters import PipelineStep
