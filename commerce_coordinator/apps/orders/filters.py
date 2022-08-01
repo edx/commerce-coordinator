@@ -12,7 +12,7 @@ class OrderDataRequested(OpenEdxPublicFilter):
     filter_type = "org.edx.coordinator.orders.v1"
 
     @classmethod
-    def run_filter(cls, request, params, order_data=None):
+    def run_filter(cls, params, order_data=None):
         """
         Call the PipelineStep(s) defined for this filter, to gather orders and return together
         """

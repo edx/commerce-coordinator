@@ -30,5 +30,5 @@ class UserOrdersView(APIView):
         # deny global queries
         if not request.user.username:
             raise PermissionDenied(detail="Could not detect username.")
-        order_data = OrderDataRequested.run_filter(request, params)
+        order_data = OrderDataRequested.run_filter(params)
         return Response(order_data[0])
