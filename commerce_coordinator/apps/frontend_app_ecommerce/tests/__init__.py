@@ -1,4 +1,4 @@
-"""Constants for orders app tests."""
+"""Constants for frontend_app_ecommerce app tests."""
 
 # Test parameters used by order history endpoint
 ORDER_HISTORY_GET_PARAMETERS = {'username': 'TestUser', "page": 1, "page_size": 20}

@@ -31,7 +31,7 @@ from rest_framework_swagger.views import get_swagger_view
 from commerce_coordinator.apps.api import urls as api_urls
 from commerce_coordinator.apps.core import views as core_views
 from commerce_coordinator.apps.demo_lms import urls as demo_lms_urls
-from commerce_coordinator.apps.orders import urls as orders_urls
+from commerce_coordinator.apps.frontend_app_ecommerce import urls as orders_urls
 
 admin.autodiscover()
 

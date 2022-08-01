@@ -1,5 +1,5 @@
 """
-Models for the Commerce Coordinator orders app.
+Models for the Commerce Coordinator frontend_app_ecommerce app.
 """
 
 # from django.db import models

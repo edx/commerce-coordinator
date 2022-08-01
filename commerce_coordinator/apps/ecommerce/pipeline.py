@@ -12,18 +12,19 @@ class GetEcommerceOrders(PipelineStep):
     Adds ecommerce orders to the order data list.
     """
 
-    def run_filter(self, order_data, **kwargs):  # pylint: disable=arguments-differ
+    def run_filter(self, params, order_data):  # pylint: disable=arguments-differ
         """
         Execute a filter with the signature specified.
         Arguments:
-            order_data: eventually this filter will collect from multiple pipeline steps
-            We'll add any new order data to those previous results and return the whole set together
-            kwargs: we override run_filter to check that expected arguments are passed in
+            params: arguments passed through from the original order history url querystring
+            order_data: any preliminary orders (from earlier pipeline step) we want to append to
         """
 
         ecommerce_api_client = EcommerceApiClient()
-        ecommerce_response = ecommerce_api_client.get_orders(kwargs['params'])
+        ecommerce_response = ecommerce_api_client.get_orders(params)
+
+        order_data.append(ecommerce_response)
 
         return {
-            "order_data": order_data + [ecommerce_response],
+            "order_data": order_data
         }

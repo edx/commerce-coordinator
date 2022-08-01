@@ -1,5 +1,5 @@
 """
-Tests for the orders app views.
+Tests for the frontend_app_ecommerce app views.
 """
 import logging
 from unittest.mock import MagicMock
@@ -10,7 +10,10 @@ from django.urls import reverse
 from mock import patch
 from rest_framework.test import APIClient
 
-from commerce_coordinator.apps.orders.tests import ECOMMERCE_REQUEST_EXPECTED_RESPONSE, ORDER_HISTORY_GET_PARAMETERS
+from commerce_coordinator.apps.frontend_app_ecommerce.tests import (
+    ECOMMERCE_REQUEST_EXPECTED_RESPONSE,
+    ORDER_HISTORY_GET_PARAMETERS
+)
 
 logger = logging.getLogger(__name__)
 
@@ -57,7 +60,7 @@ class OrdersViewTests(TestCase):
         self.client.login(username=self.test_user_username, password=self.test_user_password)
 
         # Perform POST
-        response = self.client.post(reverse('orders:order_history'), ORDER_HISTORY_GET_PARAMETERS)
+        response = self.client.post(reverse('frontend_app_ecommerce:order_history'), ORDER_HISTORY_GET_PARAMETERS)
 
         # Check 405 Method Not Allowed
         self.assertEqual(response.status_code, 405)
@@ -66,7 +69,7 @@ class OrdersViewTests(TestCase):
         """Check unauthorized users querying orders are redirected to login page."""
 
         # Perform GET without logging in.
-        response = self.client.get(reverse('orders:order_history'), ORDER_HISTORY_GET_PARAMETERS)
+        response = self.client.get(reverse('frontend_app_ecommerce:order_history'), ORDER_HISTORY_GET_PARAMETERS)
 
         # Check 302 Found with redirect to login page.
         self.assertEqual(response.status_code, 302)
@@ -79,8 +82,7 @@ class OrdersViewTests(TestCase):
         self.client.login(username=self.test_user_username, password=self.test_user_password)
 
         # Perform GET
-        response = self.client.get(reverse('orders:order_history'), ORDER_HISTORY_GET_PARAMETERS)
-
+        response = self.client.get(reverse('frontend_app_ecommerce:order_history'), ORDER_HISTORY_GET_PARAMETERS)
         # Check 200 OK
         self.assertEqual(response.status_code, 200)
 
@@ -91,7 +93,7 @@ class OrdersViewTests(TestCase):
         self.client.login(username=self.test_user_username, password=self.test_user_password)
 
         # Perform GET
-        response = self.client.get(reverse('orders:order_history'), ORDER_HISTORY_GET_PARAMETERS)
+        response = self.client.get(reverse('frontend_app_ecommerce:order_history'), ORDER_HISTORY_GET_PARAMETERS)
 
         # Check expected response
         self.assertEqual(response.json(), ECOMMERCE_REQUEST_EXPECTED_RESPONSE)
@@ -103,7 +105,7 @@ class OrdersViewTests(TestCase):
         self.client.login(username=self.test_user_username, password=self.test_user_password)
 
         # Perform GET
-        self.client.get(reverse('orders:order_history'), ORDER_HISTORY_GET_PARAMETERS)
+        self.client.get(reverse('frontend_app_ecommerce:order_history'), ORDER_HISTORY_GET_PARAMETERS)
 
         # Get username sent to ecommerce client
         request_username = mock_ecommerce_client.call_args.args[0]['username']
