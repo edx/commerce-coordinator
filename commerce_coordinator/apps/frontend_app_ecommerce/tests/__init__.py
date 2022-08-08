@@ -1,7 +1,7 @@
-"""Constants for orders app tests."""
+"""Constants for frontend_app_ecommerce app tests."""
 
 # Test parameters used by order history endpoint
-ECOMMERCE_REQUEST_GET_PARAMETERS = {'username': 'TestUser', "page": 1, "page_size": 20}
+ORDER_HISTORY_GET_PARAMETERS = {'username': 'TestUser', "page": 1, "page_size": 20}
 
 # Sample response from EcommerceApiClient.get_orders
 ECOMMERCE_REQUEST_EXPECTED_RESPONSE = {

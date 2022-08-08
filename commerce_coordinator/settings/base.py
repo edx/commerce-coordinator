@@ -297,5 +297,11 @@ OPEN_EDX_FILTERS_CONFIG = {
             'commerce_coordinator.apps.demo_lms.pipeline.AddSomeData',
             'commerce_coordinator.apps.demo_lms.pipeline.AddSomeMoreData',
         ]
+    },
+    "org.edx.coordinator.frontend_app_ecommerce.order.history.requested.v1": {
+        "fail_silently": False,  # TODO: Coordinator filters should NEVER be allowed to fail silently
+        "pipeline": [
+            'commerce_coordinator.apps.ecommerce.pipeline.GetEcommerceOrders',
+        ]
     }
 }
