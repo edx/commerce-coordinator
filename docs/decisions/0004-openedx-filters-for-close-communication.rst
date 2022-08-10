@@ -5,12 +5,7 @@
 Status
 ******
 
-**Draft**
-
-.. Standard statuses
-    - **Draft** if the decision is still preliminary and in experimental phase
-    - **Accepted** *(date)* once it is agreed upon
-    - **Superseded** *(date)* with a reference to its replacement if a later ADR changes or reverses the decision
+**Accepted**
 
 Context
 *******
