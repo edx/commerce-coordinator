@@ -31,16 +31,18 @@ from rest_framework_swagger.views import get_swagger_view
 from commerce_coordinator.apps.api import urls as api_urls
 from commerce_coordinator.apps.core import views as core_views
 from commerce_coordinator.apps.demo_lms import urls as demo_lms_urls
+from commerce_coordinator.apps.ecommerce import urls as ecommerce_urls
 from commerce_coordinator.apps.frontend_app_ecommerce import urls as orders_urls
 
 admin.autodiscover()
 
 urlpatterns = oauth2_urlpatterns + [
-    path('admin/', admin.site.urls),
-    path('api/', include(api_urls)),
-    path('api-docs/', get_swagger_view(title='commerce-coordinator API')),
-    path('auto_auth/', core_views.AutoAuth.as_view(), name='auto_auth'),
     path('', include('csrf.urls')),  # Include csrf urls from edx-drf-extensions
+    path('admin/', admin.site.urls),
+    path('api-docs/', get_swagger_view(title='commerce-coordinator API')),
+    path('api/', include(api_urls)),
+    path('auto_auth/', core_views.AutoAuth.as_view(), name='auto_auth'),
+    path('ecommerce/', include(ecommerce_urls), name='ecommerce'),
     path('health/', core_views.health, name='health'),
     path('orders/', include(orders_urls)),
     # DEMO: Currently this is only test code, we may want to decouple LMS code here at some point...

@@ -51,6 +51,9 @@ THIRD_PARTY_APPS = (
 PROJECT_APPS = (
     'commerce_coordinator.apps.core.apps.CoreConfig',
     'commerce_coordinator.apps.api',
+    'commerce_coordinator.apps.ecommerce.apps.EcommerceConfig',
+    'commerce_coordinator.apps.frontend_app_ecommerce.apps.FrontendAppEcommerceConfig',
+    'commerce_coordinator.apps.titan.apps.TitanConfig',
 )
 
 INSTALLED_APPS += THIRD_PARTY_APPS
@@ -278,6 +281,9 @@ CC_SIGNALS = {
     ],
     'commerce_coordinator.apps.demo_lms.signals.enroll_learner_signal': [
         'commerce_coordinator.apps.demo_lms.signals.demo_enroll_learner_in_course',
+    ],
+    'commerce_coordinator.apps.ecommerce.signals.enrollment_code_redemption_requested_signal': [
+        'commerce_coordinator.apps.titan.signals.enrollment_code_redemption_requested_create_order',
     ],
 }
 
