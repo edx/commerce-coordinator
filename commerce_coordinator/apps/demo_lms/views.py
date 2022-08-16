@@ -2,11 +2,11 @@
 Views for the Demo LMS app which implement the API endpoints or callback handlers.
 """
 
-import traceback
-
 from django.http import JsonResponse
 
 from commerce_coordinator.apps.core.signals import test_signal
+from commerce_coordinator.apps.core.signal_helpers import format_signal_results
+
 
 from .filters import SampleDataRequested
 from .signals import purchase_complete_signal
@@ -16,22 +16,7 @@ def _format_signal_send_response(results):
     """
     Takes the return value from a signal send_robust and returns a JSON HTTP response
     """
-    # The results of a send_robust are a tuple of a reference to the method called and the exception, if one was raised
-    data = {}
-    for receiver, response in results:
-        receiver_name = str(receiver)
-
-        if response and response.__traceback__:
-            traceback_list = traceback.format_tb(response.__traceback__)
-            response_str = str(response) + " " + "\n".join(traceback_list)
-        elif response:
-            response_str = str(response)
-        else:
-            response_str = ""
-
-        result_dict = {receiver_name: response_str}
-        data.update(result_dict)
-
+    data = format_signal_results(results)
     return JsonResponse(data)
 
 

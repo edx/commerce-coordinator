@@ -2,6 +2,7 @@
 Commerce Coordinator helper methods for ensuring consistency with Django signal handling.
 """
 import functools
+import traceback
 
 from django.dispatch import Signal
 
@@ -31,3 +32,27 @@ def coordinator_receiver(logger):
                 raise e
         return wrapper
     return decorator
+
+def format_signal_results(results):
+    """
+    Takes the return value from a signal send_robust and returns a dict with formatted results.
+    """
+    # The results of a send_robust are a tuple of a reference to the method called and the exception, if one was raised
+    data = {}
+    for receiver, response in results:
+        receiver_name = str(receiver)
+        exception_occurred = bool(response and response.__traceback__)
+        if exception_occurred:
+            response_str = traceback.format_exception(
+                type(response),
+                response,
+                response.__traceback__,
+            )
+        elif response:
+            response_str = str(response)
+        else:
+            response_str = ""
+
+        result_dict = { receiver_name: { "response": response_str, "error": exception_occurred } }
+        data.update(result_dict)
+    return data

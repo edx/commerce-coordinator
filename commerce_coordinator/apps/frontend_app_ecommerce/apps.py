@@ -6,4 +6,4 @@ from django.apps import AppConfig
 
 
 class FrontendAppEcommerceConfig(AppConfig):
-    name = 'frontend_app_ecommerce'
+    name = 'commerce_coordinator.apps.frontend_app_ecommerce'
