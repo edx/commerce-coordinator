@@ -240,6 +240,9 @@ EXTRA_SCOPE = ['permissions']
 
 # TODO Set this to another (non-staff, ideally) path.
 LOGIN_REDIRECT_URL = '/admin/'
+
+# Set token credentials for non-edX services.
+TITAN_API_KEY = 'replace-me'
 # END AUTHENTICATION CONFIGURATION
 
 # DRF CONFIGURATION
@@ -294,7 +297,8 @@ REQUEST_CONNECT_TIMEOUT_SECONDS = 3.05
 REQUEST_READ_TIMEOUT_SECONDS = 5
 
 # API URLs
-ECOMMERCE_URL = None
+ECOMMERCE_URL = 'replace-me'
+TITAN_URL = 'replace-me'
 
 # Filters PoC
 OPEN_EDX_FILTERS_CONFIG = {
