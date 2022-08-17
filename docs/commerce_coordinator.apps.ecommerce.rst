@@ -45,6 +45,29 @@ commerce\_coordinator.apps.ecommerce.models module
    :undoc-members:
    :show-inheritance:
 
+commerce\_coordinator.apps.ecommerce.pipeline module
+----------------------------------------------------
+
+.. automodule:: commerce_coordinator.apps.ecommerce.pipeline
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+commerce\_coordinator.apps.ecommerce.signals module
+---------------------------------------------------
+
+.. automodule:: commerce_coordinator.apps.ecommerce.signals
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+commerce\_coordinator.apps.ecommerce.urls module
+------------------------------------------------
+
+.. automodule:: commerce_coordinator.apps.ecommerce.urls
+   :members:
+   :undoc-members:
+   :show-inheritance:
 
 commerce\_coordinator.apps.ecommerce.views module
 -------------------------------------------------

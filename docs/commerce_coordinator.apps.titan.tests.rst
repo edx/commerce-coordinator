@@ -4,9 +4,8 @@ commerce\_coordinator.apps.titan.tests package
 Submodules
 ----------
 
-
 commerce\_coordinator.apps.titan.tests.test\_views module
-----------------------------------------------------------
+---------------------------------------------------------
 
 .. automodule:: commerce_coordinator.apps.titan.tests.test_views
    :members:
