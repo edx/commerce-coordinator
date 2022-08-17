@@ -33,6 +33,7 @@ def coordinator_receiver(logger):
         return wrapper
     return decorator
 
+
 def format_signal_results(results):
     """
     Takes the return value from a signal send_robust and returns a dict with formatted results.
@@ -53,6 +54,6 @@ def format_signal_results(results):
         else:
             response_str = ""
 
-        result_dict = { receiver_name: { "response": response_str, "error": exception_occurred } }
+        result_dict = {receiver_name: {"response": response_str, "error": exception_occurred}}
         data.update(result_dict)
     return data
