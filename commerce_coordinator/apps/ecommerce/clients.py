@@ -15,7 +15,7 @@ class EcommerceApiClient(BaseEdxOAuthClient):
     """
     API client for calls to the edX Ecommerce service.
     """
-    api_base_url = str(settings.ECOMMERCE_URL) + '/api/v2/'
+    api_base_url = str(settings.ECOMMERCE_URL).strip('/') + '/api/v2'
 
     def get_orders(self, query_params):
         """
@@ -30,8 +30,8 @@ class EcommerceApiClient(BaseEdxOAuthClient):
 
         """
         try:
-            endpoint = self.api_base_url + 'orders/'
-            response = self.client.get(endpoint, params=query_params)
+            resource_url= self.api_base_url + '/orders'
+            response = self.client.get(resource_url, params=query_params)
             response.raise_for_status()
             return response.json()
         except requests.exceptions.HTTPError as exc:
