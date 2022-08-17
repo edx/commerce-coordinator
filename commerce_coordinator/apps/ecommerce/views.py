@@ -1,8 +1,6 @@
 """
 Views for the ecommerce app
 """
-import logging
-
 from edx_rest_framework_extensions.permissions import LoginRedirectIfUnauthenticated
 from rest_framework.response import Response
 from rest_framework.throttling import UserRateThrottle
@@ -11,8 +9,6 @@ from rest_framework.views import APIView
 from commerce_coordinator.apps.core.signal_helpers import format_signal_results
 
 from .signals import enrollment_code_redemption_requested_signal
-
-logger = logging.getLogger(__name__)
 
 
 class RedeemEnrollmentCodeView(APIView):
