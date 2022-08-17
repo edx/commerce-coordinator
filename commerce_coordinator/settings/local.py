@@ -109,6 +109,8 @@ CELERY_BROKER_URL = "redis://:password@localhost:6379/0"
 
 ECOMMERCE_URL = "http://localhost:18130"
 
+TITAN_URL = None
+
 #####################################################################
 # Lastly, see if the developer has any local overrides.
 if os.path.isfile(join(dirname(abspath(__file__)), 'private.py')):
