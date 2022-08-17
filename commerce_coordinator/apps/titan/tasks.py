@@ -13,5 +13,5 @@ def enrollment_code_redemption_requested_create_order_task(user_id, sku, enrollm
     """
     Enrollment code redemption.
     """
-    logger.info('Titan enrollment_code_redemption_requested_create_order_task fired ' \
+    logger.info('Titan enrollment_code_redemption_requested_create_order_task fired '
                 f'with user {user_id} and sku {sku} and enrollment_code {enrollment_code}.')

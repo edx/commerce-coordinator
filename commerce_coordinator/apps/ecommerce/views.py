@@ -14,6 +14,7 @@ from .signals import enrollment_code_redemption_requested_signal
 
 logger = logging.getLogger(__name__)
 
+
 class RedeemEnrollmentCodeView(APIView):
     """User requests to redeem enrollment code."""
     permission_classes = [LoginRedirectIfUnauthenticated]
