@@ -1,5 +1,5 @@
-commerce\_coordinator.apps.frontend_app_ecommerce package
-=========================================================
+commerce\_coordinator.apps.frontend\_app\_ecommerce package
+===========================================================
 
 Subpackages
 -----------
@@ -13,40 +13,48 @@ Subpackages
 Submodules
 ----------
 
-commerce\_coordinator.apps.frontend_app_ecommerce.admin module
---------------------------------------------------------------
+commerce\_coordinator.apps.frontend\_app\_ecommerce.admin module
+----------------------------------------------------------------
 
 .. automodule:: commerce_coordinator.apps.frontend_app_ecommerce.admin
    :members:
    :undoc-members:
    :show-inheritance:
 
-commerce\_coordinator.apps.frontend_app_ecommerce.apps module
--------------------------------------------------------------
+commerce\_coordinator.apps.frontend\_app\_ecommerce.apps module
+---------------------------------------------------------------
 
 .. automodule:: commerce_coordinator.apps.frontend_app_ecommerce.apps
    :members:
    :undoc-members:
    :show-inheritance:
 
-commerce\_coordinator.apps.frontend_app_ecommerce.models module
----------------------------------------------------------------
+commerce\_coordinator.apps.frontend\_app\_ecommerce.filters module
+------------------------------------------------------------------
+
+.. automodule:: commerce_coordinator.apps.frontend_app_ecommerce.filters
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+commerce\_coordinator.apps.frontend\_app\_ecommerce.models module
+-----------------------------------------------------------------
 
 .. automodule:: commerce_coordinator.apps.frontend_app_ecommerce.models
    :members:
    :undoc-members:
    :show-inheritance:
 
-commerce\_coordinator.apps.frontend_app_ecommerce.urls module
--------------------------------------------------------------
+commerce\_coordinator.apps.frontend\_app\_ecommerce.urls module
+---------------------------------------------------------------
 
 .. automodule:: commerce_coordinator.apps.frontend_app_ecommerce.urls
    :members:
    :undoc-members:
    :show-inheritance:
 
-commerce\_coordinator.apps.frontend_app_ecommerce.views module
---------------------------------------------------------------
+commerce\_coordinator.apps.frontend\_app\_ecommerce.views module
+----------------------------------------------------------------
 
 .. automodule:: commerce_coordinator.apps.frontend_app_ecommerce.views
    :members:

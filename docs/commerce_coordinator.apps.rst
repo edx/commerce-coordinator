@@ -15,7 +15,6 @@ Subpackages
    commerce_coordinator.apps.lms
    commerce_coordinator.apps.titan
 
-
 Module contents
 ---------------
 

@@ -30,7 +30,7 @@ commerce\_coordinator.apps.core.apps module
    :show-inheritance:
 
 commerce\_coordinator.apps.core.clients module
-------------------------------------------------
+----------------------------------------------
 
 .. automodule:: commerce_coordinator.apps.core.clients
    :members:

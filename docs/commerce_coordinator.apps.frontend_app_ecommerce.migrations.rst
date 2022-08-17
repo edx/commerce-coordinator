@@ -1,5 +1,5 @@
-commerce\_coordinator.apps.frontend_app_ecommerce.migrations package
-====================================================================
+commerce\_coordinator.apps.frontend\_app\_ecommerce.migrations package
+======================================================================
 
 Module contents
 ---------------
