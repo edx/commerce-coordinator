@@ -23,4 +23,4 @@ CELERY_BROKER_URL = "redis://:password@edx.devstack.redis:6379/0"
 
 # Application URLs in devstack.
 ECOMMERCE_URL = "http://edx.devstack.ecommerce:18130"
-TITAN_URL = None
+TITAN_URL = "http://localhost/replace-me"

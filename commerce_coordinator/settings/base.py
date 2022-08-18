@@ -243,6 +243,11 @@ LOGIN_REDIRECT_URL = '/admin/'
 
 # Set token credentials for non-edX services.
 TITAN_API_KEY = 'replace-me'
+
+# Set OAuth2 credentials for non-edX services.
+TITAN_OAUTH2_PROVIDER_URL = 'replace-me'
+TITAN_OAUTH2_KEY = 'replace-me'
+TITAN_OAUTH2_SECRET = 'replace-me'
 # END AUTHENTICATION CONFIGURATION
 
 # DRF CONFIGURATION
