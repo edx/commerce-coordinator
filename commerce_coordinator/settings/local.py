@@ -109,7 +109,9 @@ CELERY_BROKER_URL = "redis://:password@localhost:6379/0"
 
 ECOMMERCE_URL = "http://localhost:18130"
 
-TITAN_URL = None
+TITAN_URL = "http://example.com"
+
+TITAN_OAUTH2_PROVIDER_URL = "http://example.com"
 
 #####################################################################
 # Lastly, see if the developer has any local overrides.
