@@ -53,6 +53,7 @@ PROJECT_APPS = (
     'commerce_coordinator.apps.api',
     'commerce_coordinator.apps.ecommerce.apps.EcommerceConfig',
     'commerce_coordinator.apps.frontend_app_ecommerce.apps.FrontendAppEcommerceConfig',
+    'commerce_coordinator.apps.lms.apps.LmsConfig',
     'commerce_coordinator.apps.titan.apps.TitanConfig',
 )
 

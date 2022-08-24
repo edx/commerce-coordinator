@@ -12,6 +12,7 @@ Subpackages
    commerce_coordinator.apps.demo_lms
    commerce_coordinator.apps.ecommerce
    commerce_coordinator.apps.frontend_app_ecommerce
+   commerce_coordinator.apps.lms
    commerce_coordinator.apps.titan
 
 
