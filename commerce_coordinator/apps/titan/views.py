@@ -50,15 +50,15 @@ class OrderFulfillView(APIView):
         }
         """
         # TODO: below commented code is without a serializer
-        # user_id = request.data.get('user_id')
-        # # user_id = request.POST.get('user_id')
-        # # user_id = request.user.id
+        # edx_lms_user_id = request.data.get('edx_lms_user_id')
+        # # edx_lms_user_id = request.POST.get('edx_lms_user_id')
+        # # edx_lms_user_id = request.user.id
         # partner_sku = request.data.get('partner_sku')
         # titan_order_id = request.data.get('titan_order_id')
         # coupon_code = request.data.get('coupon_code')
         # course_id = request.data.get('course_id')
         # data = {
-        #     "user_id": user_id,
+        #     "edx_lms_user_id": edx_lms_user_id,
         #     "sku": partner_sku,
         #     "titan_order_id": titan_order_id,
         #     "coupon_code": coupon_code,
