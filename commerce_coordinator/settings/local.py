@@ -3,7 +3,7 @@ from commerce_coordinator.settings.base import *
 DEBUG = True
 
 INSTALLED_APPS += (
-    'commerce_coordinator.apps.demo_lms.apps.LmsConfig',
+    'commerce_coordinator.apps.demo_lms.apps.DemoLmsConfig',
 )
 
 # CACHE CONFIGURATION

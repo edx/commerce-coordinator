@@ -4,9 +4,8 @@ Views for the Demo LMS app which implement the API endpoints or callback handler
 
 from django.http import JsonResponse
 
-from commerce_coordinator.apps.core.signals import test_signal
 from commerce_coordinator.apps.core.signal_helpers import format_signal_results
-
+from commerce_coordinator.apps.core.signals import test_signal
 
 from .filters import SampleDataRequested
 from .signals import purchase_complete_signal
