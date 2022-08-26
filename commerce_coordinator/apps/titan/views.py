@@ -5,14 +5,16 @@ Views for the titan app
 import logging
 
 from edx_rest_framework_extensions.permissions import LoginRedirectIfUnauthenticated
-from rest_framework import status
 from rest_framework.authentication import BasicAuthentication, SessionAuthentication
 from rest_framework.exceptions import PermissionDenied
 from rest_framework.response import Response
 from rest_framework.throttling import UserRateThrottle
 from rest_framework.views import APIView
 
+from commerce_coordinator.apps.core.signal_helpers import format_signal_results
+
 from .serializers import OrderFulfillSerializer
+from .signals import fulfill_order_placed_signal
 
 logger = logging.getLogger(__name__)
 
@@ -49,34 +51,42 @@ class OrderFulfillView(APIView):
             },
         }
         """
-        # TODO: below commented code is without a serializer
-        # edx_lms_user_id = request.data.get('edx_lms_user_id')
-        # # edx_lms_user_id = request.POST.get('edx_lms_user_id')
-        # # edx_lms_user_id = request.user.id
-        # partner_sku = request.data.get('partner_sku')
-        # titan_order_id = request.data.get('titan_order_id')
-        # coupon_code = request.data.get('coupon_code')
-        # course_id = request.data.get('course_id')
-        # data = {
-        #     "edx_lms_user_id": edx_lms_user_id,
-        #     "sku": partner_sku,
-        #     "titan_order_id": titan_order_id,
-        #     "coupon_code": coupon_code,
-        # }
-        # By default REST framework's APIView  class will raise an error if
-        # the client data is malformed and return a 400 Bad Request response.
-        # return Response(data, status=status.HTTP_201_CREATED)
+        coupon_code = request.data.get('coupon_code')
+        course_id = request.data.get('course_id')
+        date_placed = request.data.get('date_placed')
+        edx_lms_user_id = request.user.id
+        mode = request.data.get('mode')
+        partner_sku = request.data.get('partner_sku')
+        titan_order_uuid = request.data.get('titan_order_uuid')
+        edx_lms_username = request.data.get('edx_lms_username')
+
+        # TODO: add enterprise data for enrollment API here
+
+        # TODO: add credit_provider data here
+        # /ecommerce/extensions/fulfillment/modules.py#L315
 
         # deny global queries
         if not request.user.username:
             raise PermissionDenied(detail="Could not detect username.")
 
-        titan_order_id = request.data.get('titan_order_id')
-        coupon_code = request.data.get('coupon_code')
-        logger.info('Fulfillment requested for titan order id [%s] and coupon code [%s].', titan_order_id, coupon_code)
+        logger.info(
+            'Attempting to fulfill Titan order ID [%s] for user ID [%s], course ID [%s] and SKU [%s], on [%s]',
+            titan_order_uuid,
+            edx_lms_user_id,
+            course_id,
+            partner_sku,
+            date_placed,
+        )
 
-        serializer = OrderFulfillSerializer(data=request.data)
-        if serializer.is_valid():
-            serializer.save()
-            return Response(serializer.data, status=status.HTTP_201_CREATED)
-        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+        results = fulfill_order_placed_signal.send_robust(
+            sender=self.__class__,
+            date_placed=date_placed,
+            edx_lms_user_id=edx_lms_user_id,
+            course_id=course_id,
+            coupon_code=coupon_code,
+            mode=mode,
+            partner_sku=partner_sku,
+            titan_order_uuid=titan_order_uuid,
+            edx_lms_username=edx_lms_username,
+        )
+        return Response(format_signal_results(results))
