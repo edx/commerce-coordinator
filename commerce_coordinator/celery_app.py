@@ -21,9 +21,11 @@ app.config_from_object('django.conf:settings', namespace='CELERY')
 app.autodiscover_tasks()
 
 
-# Dive deeper into calls to log debug messages in tasks if Django logging level is also set to debug.
 @celery.signals.after_setup_task_logger.connect
 def on_after_setup_task_logger(**kwargs):
+    """
+    Dive deeper into calls to log debug messages in tasks if Django logging level is also set to debug.
+    """
     if django.conf.settings.DEBUG:
         logger = kwargs["logger"]
         logger.setLevel(logging.DEBUG)
