@@ -30,7 +30,7 @@ class EcommerceApiClient(BaseEdxOAuthClient):
 
         """
         try:
-            resource_url= self.api_base_url + '/orders'
+            resource_url = self.api_base_url + '/orders'
             response = self.client.get(resource_url, params=query_params)
             response.raise_for_status()
             return response.json()

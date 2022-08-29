@@ -37,6 +37,7 @@ def enrollment_code_redemption_requested_create_order_task(user_id, email, sku, 
         }
     )
 
+
 @shared_task()
 def enrollment_code_redemption_requested_create_order_oauth_task(user_id, email, sku, coupon_code):
     """

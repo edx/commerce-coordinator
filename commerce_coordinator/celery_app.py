@@ -20,6 +20,7 @@ app.config_from_object('django.conf:settings', namespace='CELERY')
 # app in INSTALLED_APPS should automatically be found.
 app.autodiscover_tasks()
 
+
 # Dive deeper into calls to log debug messages in tasks if Django logging level is also set to debug.
 @celery.signals.after_setup_task_logger.connect
 def on_after_setup_task_logger(**kwargs):
