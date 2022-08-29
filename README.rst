@@ -63,6 +63,9 @@ Note: this setup process is temporary; we will be working on a Tutor plugin
   # Return to the commerce-coordinator repo directory and provision credentials:
   bash local-provision-commerce-coordinator.sh
 
+  # compile static assets
+  python manage.py collectstatic
+
   # run commerce-coordinator locally (run inside the venv)
   python manage.py runserver localhost:8140 --settings=commerce_coordinator.settings.local
 
