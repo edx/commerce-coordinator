@@ -62,7 +62,7 @@ def demo_purchase_complete(_):
     # Send the signal for anything that cares about an order (as defined in settings). This should be three receivers:
     # - Order history (kicks off a celery task to make an API call)
     # - Email service (confirmation email gets sent)
-    # - LMS (enerolls the learner in all 3 courses by firing an enrollment signal for each course, which has a secondary
+    # - LMS (enrolls the learner in all 3 courses by firing an enrollment signal for each course, which has a secondary
     #       handler that kicks off a Celery task which sends an LMS API call for each)
 
     results = purchase_complete_signal.send_robust('demo_purchase_complete', order_results=callback_results)
