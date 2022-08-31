@@ -1,6 +1,7 @@
 """
 API clients for Titan.
 """
+from urllib.parse import urljoin
 
 import requests
 from celery.utils.log import get_task_logger
@@ -24,7 +25,7 @@ class TitanAPIClient():
     @property
     def api_base_url(self):
         """URL of API service."""
-        return str(settings.TITAN_URL).strip('/') + '/v1'
+        return urljoin(settings.TITAN_URL, '/v1')
 
     @property
     def api_key_header(self):
@@ -55,7 +56,7 @@ class TitanAPIClient():
 
         """
         try:
-            resource_url = self.api_base_url.strip('/') + resource_path
+            resource_url = urljoin(self.api_base_url, resource_path)
             response = self.client.post(
                 resource_url,
                 json=data,

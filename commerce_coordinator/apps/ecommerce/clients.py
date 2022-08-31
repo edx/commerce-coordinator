@@ -2,6 +2,7 @@
 API clients for ecommerce app.
 """
 import logging
+from urllib.parse import urljoin
 
 import requests
 from django.conf import settings
@@ -15,7 +16,7 @@ class EcommerceApiClient(BaseEdxOAuthClient):
     """
     API client for calls to the edX Ecommerce service.
     """
-    api_base_url = str(settings.ECOMMERCE_URL).strip('/') + '/api/v2'
+    api_base_url = urljoin(settings.ECOMMERCE_URL, '/api/v2')
 
     def get_orders(self, query_params):
         """
@@ -30,7 +31,7 @@ class EcommerceApiClient(BaseEdxOAuthClient):
 
         """
         try:
-            resource_url = self.api_base_url + '/orders'
+            resource_url = urljoin(self.api_base_url, '/orders')
             response = self.client.get(resource_url, params=query_params)
             response.raise_for_status()
             return response.json()
