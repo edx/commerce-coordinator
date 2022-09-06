@@ -12,7 +12,7 @@ from commerce_coordinator.apps.core.clients import BaseEdxOAuthClient
 logger = logging.getLogger(__name__)
 
 
-class EcommerceApiClient(BaseEdxOAuthClient):
+class EcommerceAPIClient(BaseEdxOAuthClient):
     """
     API client for calls to the edX Ecommerce service.
     """

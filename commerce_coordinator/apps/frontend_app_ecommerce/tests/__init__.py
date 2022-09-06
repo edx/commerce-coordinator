@@ -3,7 +3,7 @@
 # Test parameters used by order history endpoint
 ORDER_HISTORY_GET_PARAMETERS = {'username': 'TestUser', "page": 1, "page_size": 20}
 
-# Sample response from EcommerceApiClient.get_orders
+# Sample response from EcommerceAPIClient.get_orders
 ECOMMERCE_REQUEST_EXPECTED_RESPONSE = {
     'count': 1,
     'results': [

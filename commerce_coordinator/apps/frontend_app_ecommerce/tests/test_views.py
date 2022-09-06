@@ -19,11 +19,11 @@ logger = logging.getLogger(__name__)
 
 
 class EcommerceClientMock(MagicMock):
-    """A mock EcommerceApiClient that always returns ECOMMERCE_REQUEST_EXPECTED_RESPONSE."""
+    """A mock EcommerceAPIClient that always returns ECOMMERCE_REQUEST_EXPECTED_RESPONSE."""
     return_value = ECOMMERCE_REQUEST_EXPECTED_RESPONSE
 
 
-@patch('commerce_coordinator.apps.ecommerce.clients.EcommerceApiClient.get_orders',
+@patch('commerce_coordinator.apps.ecommerce.clients.EcommerceAPIClient.get_orders',
        new_callable=EcommerceClientMock)
 class OrdersViewTests(TestCase):
     """
