@@ -1,5 +1,5 @@
 """
-Views for the frontend_app_ecommerce app
+Views for the ecommerce app
 """
 import logging
 

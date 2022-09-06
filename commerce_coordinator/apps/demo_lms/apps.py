@@ -1,5 +1,5 @@
 """
-App configuration for the Commerce Coordinator LMS app.
+App configuration for the Commerce Coordinator Demo LMS app.
 """
 
 from django.apps import AppConfig

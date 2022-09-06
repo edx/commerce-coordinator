@@ -1,5 +1,5 @@
 """
-Tests for the LMS app.
+Tests for the Demo LMS app.
 """
 
 # from django.test import TestCase

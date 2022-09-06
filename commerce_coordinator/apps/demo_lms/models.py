@@ -1,5 +1,5 @@
 """
-Models for the Commerce Coordinator LMS app.
+Models for the Commerce Coordinator Demo LMS app.
 """
 
 # from django.db import models
