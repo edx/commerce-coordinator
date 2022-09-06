@@ -27,6 +27,9 @@ class RedeemEnrollmentCodeView(APIView):
 
         Returns:
             Dictionary with results from signal dispatch to redeem an enrollment code.
+
+        Raises:
+            PermissionDenied: Djano was unable to determine the user's id or email.
         """
 
         sku = request.query_params.get('sku')
