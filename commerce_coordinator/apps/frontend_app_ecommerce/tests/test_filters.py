@@ -13,7 +13,7 @@ from commerce_coordinator.apps.frontend_app_ecommerce.tests import (
 from commerce_coordinator.apps.frontend_app_ecommerce.tests.test_views import EcommerceClientMock
 
 
-@patch('commerce_coordinator.apps.ecommerce.clients.EcommerceApiClient.get_orders',
+@patch('commerce_coordinator.apps.ecommerce.clients.EcommerceAPIClient.get_orders',
        new_callable=EcommerceClientMock)
 class TestFrontendAppEcommerceFilters(TestCase):
     """

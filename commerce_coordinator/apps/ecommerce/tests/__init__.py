@@ -1,6 +1,6 @@
 """Constants for ecommerce app tests."""
 
-# Sample response from EcommerceApiClient.get_orders
+# Sample response from EcommerceAPIClient.get_orders
 ECOMMERCE_REQUEST_EXPECTED_RESPONSE = {
     'count': 1,
     'results': [
