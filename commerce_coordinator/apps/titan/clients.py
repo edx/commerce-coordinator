@@ -8,11 +8,13 @@ from celery.utils.log import get_task_logger
 from django.conf import settings
 from edx_rest_api_client.client import OAuthAPIClient
 
+from commerce_coordinator.apps.core.clients import Client
+
 # Use special Celery logger for tasks client calls.
 logger = get_task_logger(__name__)
 
 
-class TitanAPIClient():
+class TitanAPIClient(Client):
     """
     API client for calls to Titan using API key.
     """
@@ -31,18 +33,6 @@ class TitanAPIClient():
     def api_key_header(self):
         """Header to add to all API requests to authenticate to endpoint."""
         return {'X-API-Key': settings.TITAN_API_KEY}
-
-    @property
-    def normal_timeout(self):
-        """
-        Shortcut for a normal timeout. Must be manually applied to each request.
-
-        See https://requests.readthedocs.io/en/latest/user/quickstart/#timeouts.
-        """
-        return (
-            settings.REQUEST_CONNECT_TIMEOUT_SECONDS,
-            settings.REQUEST_READ_TIMEOUT_SECONDS
-        )
 
     def post(self, resource_path, data):
         """
@@ -85,10 +75,7 @@ class TitanOAuthAPIClient(TitanAPIClient):
             settings.TITAN_OAUTH2_PROVIDER_URL,
             self.oauth2_client_id,
             self.oauth2_client_secret,
-            timeout=(
-                settings.REQUEST_CONNECT_TIMEOUT_SECONDS,
-                settings.REQUEST_READ_TIMEOUT_SECONDS
-            )
+            timeout=self.normal_timeout
         )
         # Always send API key.
         self.client.headers.update(self.api_key_header)
