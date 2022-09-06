@@ -35,8 +35,11 @@ class RedeemEnrollmentCodeView(APIView):
         sku = request.query_params.get('sku')
         code = request.query_params.get('code')
 
-        if not request.user.id or not request.user.email:
-            raise PermissionDenied(detail="Could not detect user id or email.")
+        if not request.user.id:
+            raise PermissionDenied(detail="Could not detect user id.")
+        if not request.user.email:
+            raise PermissionDenied(detail="Could not detect user email.")
+
         if not sku:
             return Response({'error': 'SKU not provided.'})
         if not code:
