@@ -29,7 +29,7 @@ class RedeemEnrollmentCodeView(APIView):
             Dictionary with results from signal dispatch to redeem an enrollment code.
 
         Raises:
-            PermissionDenied: Djano was unable to determine the user's id or email.
+            PermissionDenied: Djano was unable to determine the user's id, username, or email.
         """
 
         sku = request.query_params.get('sku')
@@ -37,6 +37,8 @@ class RedeemEnrollmentCodeView(APIView):
 
         if not request.user.id:
             raise PermissionDenied(detail="Could not detect user id.")
+        if not request.user.username:
+            raise PermissionDenied(detail="Could not detect username.")
         if not request.user.email:
             raise PermissionDenied(detail="Could not detect user email.")
 
@@ -48,6 +50,7 @@ class RedeemEnrollmentCodeView(APIView):
         results = enrollment_code_redemption_requested_signal.send_robust(
             sender=self.__class__,
             user_id=request.user.id,
+            username=request.user.username,
             email=request.user.email,
             sku=sku,
             coupon_code=code,

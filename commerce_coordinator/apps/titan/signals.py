@@ -20,12 +20,14 @@ def enrollment_code_redemption_requested_create_order(**kwargs):
     """
     enrollment_code_redemption_requested_create_order_task.delay(
         kwargs['user_id'],
+        kwargs['username'],
         kwargs['email'],
         kwargs['sku'],
         kwargs['coupon_code'],
     )
     enrollment_code_redemption_requested_create_order_oauth_task.delay(
         kwargs['user_id'],
+        kwargs['username'],
         kwargs['email'],
         kwargs['sku'],
         kwargs['coupon_code'],
