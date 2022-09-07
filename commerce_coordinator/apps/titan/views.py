@@ -32,24 +32,29 @@ class OrderFulfillView(APIView):
     def post(self, request):
         """
         POST request handler for /order/fulfill
+
         Requires a JSON object of the following format:
-        {
-            "coupon_code": "WELCOME100",
-            "course_id": "course-v1:edX+DemoX+Demo_Course",
-            "date_placed": "2022-08-24T16:57:00.127327+00:00",
-            "edx_lms_user_id": 1,
-            "mode": "verified",
-            "partner_sku": "test-sku",
-            "titan_order_uuid": "123-abc",
-            "edx_lms_username": "test-user"
-        }
+            {
+                "coupon_code": "WELCOME100",
+                "course_id": "course-v1:edX+DemoX+Demo_Course",
+                "date_placed": "2022-08-24T16:57:00.127327+00:00",
+                "edx_lms_user_id": 1,
+                "mode": "verified",
+                "partner_sku": "test-sku",
+                "titan_order_uuid": "123-abc",
+                "edx_lms_username": "test-user",
+
+            }
+
         Returns a JSON object of the following format:
-        {
-            "<function fulfill_order_placed_send_enroll_in_course at 0x105088700>": {
-              "response": "",
-              "error": false
-            },
-        }
+            {
+                "<function fulfill_order_placed_send_enroll_in_course at 0x105088700>": {
+                    "response": "",
+                    "error": false,
+
+                },
+
+            }
         """
         coupon_code = request.data.get('coupon_code')
         course_id = request.data.get('course_id')
