@@ -14,6 +14,7 @@ logger = logging.getLogger(__name__)
 
 fulfill_order_placed_signal = CoordinatorSignal()
 
+
 @coordinator_receiver(logger)
 def enrollment_code_redemption_requested_create_order(**kwargs):
     """
