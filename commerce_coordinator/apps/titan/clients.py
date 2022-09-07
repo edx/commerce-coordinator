@@ -31,7 +31,7 @@ class TitanAPIClient(Client):
 
     @property
     def api_key_header(self):
-        """Header to add to all API requests to authenticate to endpoint."""
+        """Header to add as API key for requests."""
         return {'X-API-Key': settings.TITAN_API_KEY}
 
     def post(self, resource_path, data):
