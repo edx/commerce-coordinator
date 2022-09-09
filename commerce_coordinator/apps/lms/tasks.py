@@ -14,10 +14,10 @@ def fulfill_order_placed_send_enroll_in_course_task(
     course_id,
     date_placed,
     edx_lms_user_id,
+    edx_lms_username,
     mode,
     partner_sku,
     titan_order_uuid,
-    edx_lms_username,
 ):
     """
     Celery task for order placed fulfillment and enrollment via LMS Enrollment API.

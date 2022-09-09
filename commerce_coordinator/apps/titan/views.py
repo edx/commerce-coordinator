@@ -36,10 +36,10 @@ class OrderFulfillView(APIView):
                 "course_id": "course-v1:edX+DemoX+Demo_Course",
                 "date_placed": "2022-08-24T16:57:00.127327+00:00",
                 "edx_lms_user_id": 1,
+                "edx_lms_username": "test-user",
                 "mode": "verified",
                 "partner_sku": "test-sku",
                 "titan_order_uuid": "123-abc",
-                "edx_lms_username": "test-user",
 
             }
 
@@ -56,11 +56,11 @@ class OrderFulfillView(APIView):
         coupon_code = request.data.get('coupon_code')
         course_id = request.data.get('course_id')
         date_placed = request.data.get('date_placed')
-        edx_lms_user_id = request.user.id
+        edx_lms_user_id = request.data.get('edx_lms_user_id')
+        edx_lms_username = request.data.get('edx_lms_username')
         mode = request.data.get('mode')
         partner_sku = request.data.get('partner_sku')
         titan_order_uuid = request.data.get('titan_order_uuid')
-        edx_lms_username = request.data.get('edx_lms_username')
 
         # TODO: add enterprise data for enrollment API here
 
@@ -79,11 +79,11 @@ class OrderFulfillView(APIView):
             sender=self.__class__,
             date_placed=date_placed,
             edx_lms_user_id=edx_lms_user_id,
+            edx_lms_username=edx_lms_username,
             course_id=course_id,
             coupon_code=coupon_code,
             mode=mode,
             partner_sku=partner_sku,
             titan_order_uuid=titan_order_uuid,
-            edx_lms_username=edx_lms_username,
         )
         return Response(format_signal_results(results))
