@@ -23,11 +23,13 @@ def fulfill_order_placed_send_enroll_in_course_task(
     Celery task for order placed fulfillment and enrollment via LMS Enrollment API.
     """
     logger.info(
-        f'LMS fulfill_order_placed_send_enroll_in_course_task fired with user {edx_lms_user_id},'
-        f'course_id {course_id}, mode {mode}, SKU {partner_sku}, '
-        f'for titan_order_uuid {titan_order_uuid} placed on {date_placed},'
-        f'with coupon {coupon_code}.'
+        f'LMS fulfill_order_placed_send_enroll_in_course_task fired with coupon {coupon_code},'
+        f'course ID {course_id}, on {date_placed}, for LMS user ID {edx_lms_user_id}, with mode {mode},'
+        f'SKU {partner_sku}, for Titan Order: {titan_order_uuid}.'
     )
+
     # TODO: make the API call to LMS here.
+    # Temporary if statement below since username is PII and cannot
+    # be logged but will be used as enrollment data in the next commit
     if edx_lms_username:
         logger.info('Calling LMS enrollment API...')

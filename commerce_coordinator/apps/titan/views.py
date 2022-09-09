@@ -4,9 +4,7 @@ Views for the titan app
 
 import logging
 
-from edx_rest_framework_extensions.permissions import LoginRedirectIfUnauthenticated
-from rest_framework.authentication import BasicAuthentication, SessionAuthentication
-from rest_framework.exceptions import PermissionDenied
+from rest_framework.permissions import IsAdminUser
 from rest_framework.response import Response
 from rest_framework.throttling import UserRateThrottle
 from rest_framework.views import APIView
@@ -23,8 +21,7 @@ class OrderFulfillView(APIView):
     """
     API for order fulfillment that is called from Titan.
     """
-    permission_classes = [LoginRedirectIfUnauthenticated]
-    authentication_classes = [SessionAuthentication, BasicAuthentication]
+    permission_classes = [IsAdminUser]
     throttle_classes = [UserRateThrottle]
 
     serializer_class = OrderFulfillSerializer
@@ -70,16 +67,11 @@ class OrderFulfillView(APIView):
         # TODO: add credit_provider data here
         # /ecommerce/extensions/fulfillment/modules.py#L315
 
-        # deny global queries
-        if not request.user.username:
-            raise PermissionDenied(detail="Could not detect username.")
-
         logger.info(
-            'Attempting to fulfill Titan order ID [%s] for user ID [%s], course ID [%s] and SKU [%s], on [%s]',
+            'Attempting to fulfill Titan order ID [%s] for user ID [%s], course ID [%s], on [%s]',
             titan_order_uuid,
             edx_lms_user_id,
             course_id,
-            partner_sku,
             date_placed,
         )
 

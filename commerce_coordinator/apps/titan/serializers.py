@@ -14,13 +14,12 @@ class OrderFulfillSerializer(serializers.Serializer):
     titan_order_uuid = serializers.IntegerField()
     edx_lms_username = serializers.CharField(max_length=200)
 
-    def create(self, validated_data):
-        # TODO: perform checks here
-        return validated_data
-
-    def update(self, instance, validated_data):
-        instance.coupon_code = validated_data.get('coupon_code', instance.coupon_code)
-        instance.course_id = validated_data.get('course_id', instance.course_id)
-        instance.partner_sku = validated_data.get('partner_sku', instance.partner_sku)
-        instance.mode = validated_data.get('mode', instance.mode)
-        return instance
+    def save(self):
+        coupon_code = self.validated_data['coupon_code']
+        course_id = self.validated_data['course_id']
+        date_placed = self.validated_data['date_placed']
+        edx_lms_user_id = self.validated_data['edx_lms_user_id']
+        mode = self.validated_data['mode']
+        partner_sku = self.validated_data['partner_sku']
+        titan_order_uuid = self.validated_data['titan_order_uuid']
+        edx_lms_username = self.validated_data['edx_lms_username']

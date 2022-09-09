@@ -17,7 +17,6 @@ class EnrollmentView(APIView):
     API for LMS enrollment.
     """
     permission_classes = [LoginRedirectIfUnauthenticated]
-    authentication_classes = [SessionAuthentication, BasicAuthentication]
     throttle_classes = [UserRateThrottle]
 
     logger.info('LMS app views')
