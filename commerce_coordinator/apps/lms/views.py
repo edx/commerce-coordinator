@@ -5,7 +5,6 @@ Views for the LMS app
 import logging
 
 from edx_rest_framework_extensions.permissions import LoginRedirectIfUnauthenticated
-from rest_framework.authentication import BasicAuthentication, SessionAuthentication
 from rest_framework.throttling import UserRateThrottle
 from rest_framework.views import APIView
 
