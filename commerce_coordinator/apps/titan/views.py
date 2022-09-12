@@ -11,7 +11,6 @@ from rest_framework.views import APIView
 
 from commerce_coordinator.apps.core.signal_helpers import format_signal_results
 
-from .serializers import OrderFulfillSerializer
 from .signals import fulfill_order_placed_signal
 
 logger = logging.getLogger(__name__)
@@ -23,8 +22,6 @@ class OrderFulfillView(APIView):
     """
     permission_classes = [IsAdminUser]
     throttle_classes = [UserRateThrottle]
-
-    serializer_class = OrderFulfillSerializer
 
     def post(self, request):
         """
