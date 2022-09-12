@@ -294,6 +294,9 @@ CC_SIGNALS = {
     'commerce_coordinator.apps.ecommerce.signals.enrollment_code_redemption_requested_signal': [
         'commerce_coordinator.apps.titan.signals.enrollment_code_redemption_requested_create_order',
     ],
+    'commerce_coordinator.apps.titan.signals.fulfill_order_placed_signal': [
+        'commerce_coordinator.apps.lms.signals.fulfill_order_placed_send_enroll_in_course',
+    ],
 }
 
 # Default timeouts for requests
