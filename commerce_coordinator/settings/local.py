@@ -114,6 +114,8 @@ CELERY_BROKER_URL = "redis://:password@localhost:6379/0"
 
 ECOMMERCE_URL = "http://localhost:18130"
 
+LMS_URL_ROOT = "http://localhost:18000"
+
 TITAN_URL = "http://example.com"
 
 TITAN_OAUTH2_PROVIDER_URL = "http://example.com"
