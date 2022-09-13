@@ -4,6 +4,8 @@ LMS Celery tasks
 from celery import shared_task
 from celery.utils.log import get_task_logger
 
+from commerce_coordinator.apps.lms.clients import LMSAPIClient
+
 # Use the special Celery logger for our tasks
 logger = get_task_logger(__name__)
 
@@ -28,8 +30,19 @@ def fulfill_order_placed_send_enroll_in_course_task(
         f'SKU {partner_sku}, for Titan Order: {titan_order_uuid}.'
     )
 
-    # TODO: make the API call to LMS here.
-    # Temporary if statement below since username is PII and cannot
-    # be logged but will be used as enrollment data in the next commit
-    if edx_lms_username:
-        logger.info('Calling LMS enrollment API...')
+    enrollment_data = {
+        'is_active': True,
+        'mode': mode,
+        'course_details': {
+            'course_id': course_id
+        },
+        'enrollment_attributes': [
+            {
+                'namespace': 'order',
+                'name': 'date_placed',
+                'value': date_placed,
+            }
+        ]
+    }
+    lms_api_client = LMSAPIClient()
+    return lms_api_client.post('enrollment', enrollment_data)
