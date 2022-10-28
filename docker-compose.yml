@@ -1,24 +1,20 @@
 version: "2.1"
 services:
   db:
-    image: mysql:5.6
+    image: edxops/mysql:5.7
     container_name: commerce-coordinator.db
     environment:
       MYSQL_ROOT_PASSWORD: ""
       MYSQL_ALLOW_EMPTY_PASSWORD: "yes"
-    networks:
-      - devstack_default
     volumes:
       - commerce-coordinator_mysql:/var/lib/mysql
 
   memcache:
-    image: memcached:1.4.24
+    image: memcached:1.5.10-alpine
     container_name: commerce-coordinator.memcache
 
   app:
-    # Uncomment this line to use the official commerce-coordinator base image
     image: openedx/commerce-coordinator
-
     container_name: commerce-coordinator.app
     volumes:
       - .:/edx/app/commerce-coordinator/
@@ -27,13 +23,20 @@ services:
       DJANGO_SETTINGS_MODULE: commerce_coordinator.settings.devstack
     ports:
       - "8140:8140"
-    networks:
-      - devstack_default
     stdin_open: true
     tty: true
+    depends_on:
+      - "db"
+    networks:
+      - devstack_default # edX Dev Stack
+      - titan_default    # GetSmarter Titan
+      - default          # Just these containers
 
 networks:
+  default:
   devstack_default:
+    external: true
+  titan_default:
     external: true
 
 volumes:
