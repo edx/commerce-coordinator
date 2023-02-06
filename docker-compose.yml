@@ -29,14 +29,11 @@ services:
       - "db"
     networks:
       - devstack_default # edX Dev Stack
-      - titan_default    # GetSmarter Titan
       - default          # Just these containers
 
 networks:
   default:
   devstack_default:
-    external: true
-  titan_default:
     external: true
 
 volumes:
