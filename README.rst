@@ -133,14 +133,13 @@ Local testing with Celery
 With Docker
 ===========
 
-1. First start Titan (if you have it)
-2. Execute `make dev.provision_docker`
+As of the time of this writing, you must have run `make dev.up.ecommerce+lms+redis` in edX's devstack as a prerequisite to this one.
 
-> Note: This will attempt to connect to LMS and create the required superusers, please ensure you have the edX devstack setup first.
+Execute `make dev.provision_docker`
+
+This will attempt to connect to LMS and create the required superusers, please ensure you have the edX devstack setup first.
 
 After you can manage the stack by calling `make dev.up`, `make dev.down` (delete) or `make dev.stop`.
-
-As of the time of this writing, you must have run `make dev.up.ecommerce+lms+redis` in edX's devstack as a prerequisite to this one.
 
 License
 *******

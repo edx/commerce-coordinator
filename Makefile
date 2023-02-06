@@ -149,7 +149,7 @@ validate_translations: fake_translations detect_changed_source_translations ## i
 docker_build:
 	docker build . -f Dockerfile -t openedx/commerce-coordinator
 
-dev.provision_docker: # start LMS, and Setup a clean commerce-coordinator stack. You will need to start titan yourself.
+dev.provision_docker: # start LMS, and Setup a clean commerce-coordinator stack.
 	bash provision-commerce-coordinator.sh
 
 dev.run_test_query:
@@ -169,17 +169,14 @@ dev.stop: # Stops containers so they can be restarted
 	docker-compose stop
 
 dev.multistack.up:
-	docker compose -p titan up
 	bash find-start-lms.sh
 	docker-compose up -d --build
 
 dev.multistack.stop:
-	docker compose -p titan stop
 	docker compose -p devstack stop
 	docker compose stop
 
 dev.multistack.start:
-	docker compose -p titan start
 	bash find-start-lms.sh
 	docker compose start
 
