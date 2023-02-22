@@ -105,6 +105,8 @@ cryptography==39.0.1
     #   -r requirements/validation.txt
     #   pyjwt
     #   social-auth-core
+ddt==1.6.0
+    # via -r requirements/validation.txt
 defusedxml==0.7.1
     # via
     #   -r requirements/validation.txt
@@ -430,6 +432,7 @@ requests==2.28.2
     #   pyjwkest
     #   requests-oauthlib
     #   requests-toolbelt
+    #   responses
     #   slumber
     #   social-auth-core
     #   twine
@@ -441,6 +444,8 @@ requests-toolbelt==0.10.1
     # via
     #   -r requirements/validation.txt
     #   twine
+responses==0.22.0
+    # via -r requirements/validation.txt
 rfc3986==2.0.0
     # via
     #   -r requirements/validation.txt
@@ -497,10 +502,16 @@ stevedore==5.0.0
     #   code-annotations
     #   edx-django-utils
     #   edx-opaque-keys
+testfixtures==7.1.0
+    # via -r requirements/validation.txt
 text-unidecode==1.3
     # via
     #   -r requirements/validation.txt
     #   python-slugify
+toml==0.10.2
+    # via
+    #   -r requirements/validation.txt
+    #   responses
 tomli==2.0.1
     # via
     #   -r requirements/pip-tools.txt
@@ -516,6 +527,10 @@ tomlkit==0.11.6
     #   pylint
 twine==4.0.2
     # via -r requirements/validation.txt
+types-toml==0.10.8.5
+    # via
+    #   -r requirements/validation.txt
+    #   responses
 typing-extensions==4.5.0
     # via
     #   -r requirements/validation.txt
@@ -530,6 +545,7 @@ urllib3==1.26.14
     # via
     #   -r requirements/validation.txt
     #   requests
+    #   responses
     #   twine
 vine==5.0.0
     # via
