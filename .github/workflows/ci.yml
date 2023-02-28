@@ -3,7 +3,7 @@ name: Python CI
 on:
   push:
     branches: 
-    - main2u
+    - main
     - 2u/project-theseus
   pull_request:
     branches:
