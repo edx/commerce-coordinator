@@ -324,3 +324,15 @@ OPEN_EDX_FILTERS_CONFIG = {
         ]
     }
 }
+
+# Carry fields from the JWT token and LMS user into the local user
+EDX_DRF_EXTENSIONS = {
+    "JWT_PAYLOAD_USER_ATTRIBUTE_MAPPING": {
+        "administrator": "is_staff",
+        "email": "email",
+        "full_name": "full_name",
+        "user_id": "lms_user_id",
+    },
+    "OAUTH2_USER_INFO_URL": "http://127.0.0.1:8000/oauth2/user_info",
+    "ENABLE_SET_REQUEST_USER_FOR_JWT_COOKIE": True,
+}

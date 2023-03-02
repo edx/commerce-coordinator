@@ -9,7 +9,7 @@ from commerce_coordinator.apps.core.models import User
 
 class CustomUserAdmin(UserAdmin):
     """ Admin configuration for the custom User model. """
-    list_display = ('username', 'email', 'full_name', 'first_name', 'last_name', 'is_staff')
+    list_display = ('username', 'email', 'full_name', 'first_name', 'last_name', 'is_staff', 'lms_user_id')
     fieldsets = (
         (None, {'fields': ('username', 'password')}),
         (_('Personal info'), {'fields': ('full_name', 'first_name', 'last_name', 'email')}),
