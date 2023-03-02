@@ -296,6 +296,9 @@ CC_SIGNALS = {
     'commerce_coordinator.apps.titan.signals.fulfill_order_placed_signal': [
         'commerce_coordinator.apps.lms.signals.fulfill_order_placed_send_enroll_in_course',
     ],
+    'commerce_coordinator.apps.ecommerce.signals.order_created_signal': [
+        'commerce_coordinator.apps.titan.signals.order_created_save',
+    ],
 }
 
 # Default timeouts for requests
