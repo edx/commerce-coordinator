@@ -12,7 +12,7 @@ class CoordinatorSignal(Signal):
         raise NotImplementedError("Coordinator Signals do not implement the send method. Use send_robust instead.")
 
 
-def coordinator_receiver(logger):
+def log_receiver(logger):
     """
     Return a decorated function with log messages.
     """
@@ -41,7 +41,7 @@ def format_signal_results(results):
     # The results of a send_robust are a tuple of a reference to the method called and the exception, if one was raised
     data = {}
     for receiver, response in results:
-        receiver_name = str(receiver)
+        receiver_name = receiver.__name__
         exception_occurred = bool(response and response.__traceback__)
         if exception_occurred:
             response_str = traceback.format_exception(

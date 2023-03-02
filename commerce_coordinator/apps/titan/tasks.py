@@ -69,3 +69,27 @@ def enrollment_code_redemption_requested_create_order_oauth_task(user_id, userna
             'email': email,
         }
     )
+
+
+@shared_task()
+def create_order_task(edx_lms_user_id, email, product_sku, coupon_code):
+    """
+    task to create a basket/order for a user in Titan.
+
+    Args:
+        coupon_code: A coupon code to initially apply to the order.
+        edx_lms_user_id: The edx.org LMS user ID of the user receiving the order.
+        email: The edx.org profile email of the user receiving the order. Required by Spree to create a user.
+        product_sku: Array. An edx.org stock keeping units (SKUs) that the user would like to purchase.
+    Returns:
+        order_id: Optional. The ID of the created order in Spree.
+    """
+    logger.info('Titan create_order_task fired '
+                f'with user: {edx_lms_user_id}, email: {email},'
+                f'sku: {product_sku} and coupon code: {coupon_code}.')
+
+    titan_api_client = TitanAPIClient()
+    order_id = titan_api_client.create_order(
+        edx_lms_user_id, email, product_sku, coupon_code
+    )
+    return order_id

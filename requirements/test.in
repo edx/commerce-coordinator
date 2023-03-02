@@ -13,4 +13,3 @@ pytest-cov
 pytest-django
 responses
 testfixtures
-tox
