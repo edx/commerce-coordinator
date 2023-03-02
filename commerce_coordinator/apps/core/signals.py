@@ -23,7 +23,7 @@ def test_receiver_exception(sender, **kwargs):
     how an exception could be handled.
     """
     logger.info(f"CORE TEST_RECEIVER_EXCEPTION CALLED with sender '{sender}'!")
-    raise Exception("Oh no, something went wrong!")
+    raise Exception("Oh no, something went wrong!")  # pylint: disable=broad-exception-raised
 
 
 def test_celery_task(sender, **kwargs):
