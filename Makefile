@@ -127,7 +127,7 @@ compile_translations: # compile translation files, outputting .po files for each
 fake_translations: ## generate and compile dummy translation files
 
 pull_translations: ## pull translations from Transifex
-	tx pull -af --mode reviewed
+	tx pull -t -af --mode reviewed
 
 push_translations: ## push source translation files (.po) from Transifex
 	tx push -s
@@ -149,6 +149,12 @@ validate_translations: fake_translations detect_changed_source_translations ## i
 docker_build:
 	docker build . -f Dockerfile -t openedx/commerce-coordinator
 
+dev.provision_docker: # start LMS, and Setup a clean commerce-coordinator stack.
+	bash provision-commerce-coordinator.sh
+
+dev.run_test_query:
+	curl  http://localhost:8140/demo_lms/test/
+
 # devstack-themed shortcuts
 dev.up: # Starts all containers
 	docker-compose up -d
@@ -161,6 +167,18 @@ dev.down: # Kills containers and all of their data that isn't in volumes
 
 dev.stop: # Stops containers so they can be restarted
 	docker-compose stop
+
+dev.multistack.up:
+	bash find-start-lms.sh
+	docker-compose up -d --build
+
+dev.multistack.stop:
+	docker compose -p devstack stop
+	docker compose stop
+
+dev.multistack.start:
+	bash find-start-lms.sh
+	docker compose start
 
 app-shell: # Run the app shell as root
 	docker exec -u 0 -it commerce-coordinator.app bash
