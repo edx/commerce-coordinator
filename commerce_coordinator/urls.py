@@ -33,7 +33,6 @@ from commerce_coordinator.apps.core import views as core_views
 from commerce_coordinator.apps.demo_lms import urls as demo_lms_urls
 from commerce_coordinator.apps.ecommerce import urls as ecommerce_urls
 from commerce_coordinator.apps.frontend_app_ecommerce import urls as orders_urls
-from commerce_coordinator.apps.lms import urls as lms_urls
 from commerce_coordinator.apps.titan import urls as titan_urls
 
 admin.autodiscover()
@@ -45,7 +44,6 @@ urlpatterns = oauth2_urlpatterns + [
     path('api/', include(api_urls)),
     path('auto_auth/', core_views.AutoAuth.as_view(), name='auto_auth'),
     path('ecommerce/', include(ecommerce_urls), name='ecommerce'),
-    path('lms/', include(lms_urls), name='lms'),
     path('health/', core_views.health, name='health'),
     path('titan/', include(titan_urls), name='titan'),
     path('orders/', include(orders_urls)),
