@@ -27,12 +27,12 @@ class TitanAPIClient(Client):
     @property
     def api_base_url(self):
         """URL of API service."""
-        return urljoin(settings.TITAN_URL, 'v1/')
+        return urljoin(settings.TITAN_URL, '/api/edx/v1/')
 
     @property
     def api_key_header(self):
         """Header to add as API key for requests."""
-        return {'X-API-Key': settings.TITAN_API_KEY}
+        return {'X-Spree-API-Key': settings.TITAN_API_KEY}
 
     def post(self, resource_path, data):
         """
@@ -63,7 +63,7 @@ class TitanAPIClient(Client):
             logger.debug("Request body: %s", exc.request.body)
             raise
 
-    def _request(self, request_method, resource_path, params=None, json=None):
+    def _request(self, request_method, resource_path, params=None, json=None, headers=None):
         """
         Send a request to a Titan API resource.
 
@@ -72,6 +72,7 @@ class TitanAPIClient(Client):
             resource_path: the path of the API resource
             params: (optional) Dictionary or bytes to be sent in the query string for the :class:`Request`.
             json: (optional) json to send in the body of the :class:`Request`.
+            headers: (optional) Dictionary of HTTP Headers to send with the :class:`Request`.
         Returns:
             dict: Dictionary representation of JSON returned from API
 
@@ -84,6 +85,7 @@ class TitanAPIClient(Client):
                 params=params,
                 json=json,
                 timeout=self.normal_timeout,
+                headers=headers,
             )
             logger.debug('response status: %s', response.status_code)
             logger.debug('Request body: %s', response.request.body)
@@ -98,25 +100,71 @@ class TitanAPIClient(Client):
             logger.debug('Request body: %s', exc.request.body)
             raise
 
-    def create_order(self, edx_lms_user_id, email, product_sku, coupon_code):
+    def create_order(self, edx_lms_user_id, email, first_name, last_name, currency='USD'):
         """
-        API call to create a basket/order for a user in Titan.
+        Request Titan to create a basket/order for a user
 
         Args:
-            coupon_code: A coupon code to initially apply to the order.
             edx_lms_user_id: The edx.org LMS user ID of the user receiving the order.
             email: The edx.org profile email of the user receiving the order. Required by Spree to create a user.
-            product_sku: Array. An edx.org stock keeping units (SKUs) that the user would like to purchase.
+            first_name: The edx.org profile first name of the user receiving the order
+            last_name: The edx.org profile last name of the user receiving the order
+            currency: Optional. The ISO code of the currency to use for the order (defaults to USD)
         """
         return self._request(
-            request_method='PUT',
-            resource_path='order',
+            request_method='POST',
+            resource_path='cart',
             json={
-                'couponCode': coupon_code,
+                'currency': currency,
                 'edxLmsUserId': edx_lms_user_id,
                 'email': email,
-                'productSku': product_sku,
-            }
+                'firstName': first_name,
+                'lastName': last_name,
+            },
+            headers={
+                'Content-Type': 'application/vnd.api+json'
+            },
+        )
+
+    def add_item(self, order_uuid, course_sku):
+        """
+        Request Titan to add an item to a cart for a user
+
+        Args:
+            order_uuid: The UUID of the created order in Spree.
+            course_sku: The SKU of the course being added to the order
+        """
+        return self._request(
+            request_method='POST',
+            resource_path='cart/add_item',
+            json={
+                'orderUuid': order_uuid,
+                'courseSku': course_sku,
+            },
+            headers={
+                'Content-Type': 'application/vnd.api+json'
+            },
+
+        )
+
+    def complete_order(self, order_uuid, edx_lms_user_id):
+        """
+        Request Titan to complete the order
+
+        Args:
+            order_uuid: The UUID of the created order in Spree.
+            edx_lms_user_id: The edx.org LMS user ID of the user receiving the order.
+        """
+        return self._request(
+            request_method='POST',
+            resource_path='checkout/complete',
+            json={
+                'orderUuid': order_uuid,
+                'edxLmsUserId': edx_lms_user_id,
+            },
+            headers={
+                'Content-Type': 'application/vnd.api+json'
+            },
         )
 
 
