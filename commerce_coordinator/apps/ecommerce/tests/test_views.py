@@ -83,13 +83,31 @@ class OrderCreateViewTests(APITestCase):
             {'error_key': 'email', 'error_message': 'This field may not be null.'}
         ),
         (
+            # test invalid email.
+            {'email': 'invalid-email'}, None, status.HTTP_400_BAD_REQUEST,
+            {
+                'error_key': 'email',
+                'error_message': 'Enter a valid email address.'
+            }
+        ),
+        (
+            # test empty email.
+            {
+                'email': ''
+            }, None, status.HTTP_400_BAD_REQUEST,
+            {
+                'error_key': 'email',
+                'error_message': 'This field may not be blank.'
+            }
+        ),
+        (
             # test edx_lms_user_id should be valid integer.
             {'edx_lms_user_id': 'invalid-id'}, None, status.HTTP_400_BAD_REQUEST,
             {'error_key': 'edx_lms_user_id', 'error_message': 'A valid integer is required.'}
         ),
     )
     @ddt.unpack
-    @patch('commerce_coordinator.apps.titan.signals.create_order_task.delay')
+    @patch('commerce_coordinator.apps.titan.signals.order_created_save_task.delay')
     def test_create_order(self, update_params, skip_param, expected_status, expected_error, mock_create_order_task):
         """
         Ensure data validation and success scenarios for order create.
@@ -97,7 +115,7 @@ class OrderCreateViewTests(APITestCase):
         self.client.force_authenticate(user=self.user)
         query_params = {
             'edx_lms_user_id': 1,
-            'product_sku': 'sku1',
+            'product_sku': ['sku1'],
             'coupon_code': 'test_code',
             'email': 'pass-by-param@example.com',
         }
@@ -113,9 +131,12 @@ class OrderCreateViewTests(APITestCase):
         if expected_status == status.HTTP_200_OK:
             self.assertFalse(response_json['order_created_save']['error'])
             self.assertTrue(mock_create_order_task.called)
-            self.assertEqual(mock_create_order_task.call_args.args[0], query_params['edx_lms_user_id'])
-            self.assertEqual(mock_create_order_task.call_args.args[1], query_params['email'])
-            self.assertEqual(mock_create_order_task.call_args.args[2], [query_params['product_sku']])
+            args = mock_create_order_task.call_args.args
+            self.assertEqual(args[0], query_params['product_sku'])
+            self.assertEqual(args[1], query_params['edx_lms_user_id'])
+            self.assertEqual(args[2], query_params['email'])
+            self.assertEqual(args[3], 'John')
+            self.assertEqual(args[4], 'Doe')
         else:
             expected_error_key = expected_error['error_key']
             expected_error_message = expected_error['error_message']

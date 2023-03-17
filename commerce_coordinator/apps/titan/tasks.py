@@ -72,24 +72,36 @@ def enrollment_code_redemption_requested_create_order_oauth_task(user_id, userna
 
 
 @shared_task()
-def create_order_task(edx_lms_user_id, email, product_sku, coupon_code):
+def order_created_save_task(product_sku, edx_lms_user_id, email, first_name, last_name, coupon_code):
     """
     task to create a basket/order for a user in Titan.
 
     Args:
-        coupon_code: A coupon code to initially apply to the order.
+        product_sku: List. An edx.org stock keeping units (SKUs) that the user would like to purchase.
         edx_lms_user_id: The edx.org LMS user ID of the user receiving the order.
         email: The edx.org profile email of the user receiving the order. Required by Spree to create a user.
-        product_sku: Array. An edx.org stock keeping units (SKUs) that the user would like to purchase.
+        first_name: The edx.org profile first name of the user receiving the order
+        last_name: The edx.org profile last name of the user receiving the order
+        coupon_code: A coupon code to initially apply to the order.
+
     Returns:
         order_id: Optional. The ID of the created order in Spree.
     """
-    logger.info('Titan create_order_task fired '
+    logger.info('Titan order_created_save_task fired '
                 f'with user: {edx_lms_user_id}, email: {email},'
                 f'sku: {product_sku} and coupon code: {coupon_code}.')
 
     titan_api_client = TitanAPIClient()
-    order_id = titan_api_client.create_order(
-        edx_lms_user_id, email, product_sku, coupon_code
+
+    # Creating Cart/Basket
+    order_created_response = titan_api_client.create_order(
+        edx_lms_user_id, email, first_name, last_name
     )
-    return order_id
+    order_uuid = order_created_response['uuid']
+
+    # Adding courses in Cart/Basket
+    for sku in product_sku:
+        titan_api_client.add_item(order_uuid, sku)
+
+    # Completing Cart/Basket
+    titan_api_client.complete_order(order_uuid, edx_lms_user_id)
