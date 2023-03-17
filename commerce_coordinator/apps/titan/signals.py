@@ -6,9 +6,9 @@ import logging
 
 from commerce_coordinator.apps.core.signal_helpers import CoordinatorSignal, log_receiver
 from commerce_coordinator.apps.titan.tasks import (
-    create_order_task,
     enrollment_code_redemption_requested_create_order_oauth_task,
-    enrollment_code_redemption_requested_create_order_task
+    enrollment_code_redemption_requested_create_order_task,
+    order_created_save_task
 )
 
 logger = logging.getLogger(__name__)
@@ -42,9 +42,11 @@ def order_created_save(**kwargs):
     """
     Create an order.
     """
-    create_order_task.delay(
+    order_created_save_task.delay(
+        kwargs['product_sku'],
         kwargs['edx_lms_user_id'],
         kwargs['email'],
-        kwargs['product_sku'],
+        kwargs['first_name'],
+        kwargs['last_name'],
         kwargs['coupon_code'],
     )
