@@ -95,6 +95,9 @@ class OrderCreateView(APIView):
             'edx_lms_user_id': request.query_params.get('edx_lms_user_id'),
             # TODO: email should be taken from request.user.email once we go live.
             'email': request.query_params.get('email'),
+            # TODO: first_name, last_name should be taken from request.user once we go live.
+            'first_name': 'John',
+            'last_name': 'Doe',
             'coupon_code': request.query_params.get('coupon_code'),
         }
         serializer = OrderCreatedSignalInputSerializer(data=order_created_signal_params)
