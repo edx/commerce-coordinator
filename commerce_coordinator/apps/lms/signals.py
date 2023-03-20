@@ -15,12 +15,11 @@ def fulfill_order_placed_send_enroll_in_course(**kwargs):
     Fulfill the order placed in Titan with a Celery task to LMS to enroll a user in a single course.
     """
     fulfill_order_placed_send_enroll_in_course_task.delay(
-        coupon_code=kwargs['coupon_code'],
         course_id=kwargs['course_id'],
+        course_mode=kwargs['course_mode'],
         date_placed=kwargs['date_placed'],
         edx_lms_user_id=kwargs['edx_lms_user_id'],
-        edx_lms_username=kwargs['edx_lms_username'],
-        mode=kwargs['mode'],
-        partner_sku=kwargs['partner_sku'],
-        titan_order_uuid=kwargs['titan_order_uuid'],
+        email_opt_in=kwargs['email_opt_in'],
+        order_number=kwargs['order_number'],
+        provider_id=kwargs['provider_id'],
     )
