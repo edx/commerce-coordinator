@@ -23,8 +23,7 @@ class LMSAPIClient(BaseEdxOAuthClient):
         """
         return self.urljoin_directory(settings.LMS_URL_ROOT, '/api/enrollment/v1/enrollment')
 
-
-    def post(self, path, enrollment_data):
+    def enroll_user_in_course(self, enrollment_data):
         """
         Send a POST request to LMS Enrollment API endpoint
         Arguments:
@@ -32,15 +31,38 @@ class LMSAPIClient(BaseEdxOAuthClient):
         Returns:
             dict: Dictionary represention of JSON returned from API
         """
+        return self.post(
+            url=self.api_enrollment_base_url,
+            json=enrollment_data,
+            timeout=settings.FULFILLMENT_TIMEOUT
+        )
+
+    def post(self, url, json, timeout=None):
+        """
+        Send a POST request to a url with json payload.
+        """
+        if not timeout:
+            timeout = self.normal_timeout
         try:
-            enrollment_api_url = urljoin(self.api_enrollment_base_url, path)
+            headers = {
+                # EDX_API_KEY is a legacy authentication mechanism. Even though
+                # this endpoint uses OAuth2, we send a valid EDX_API_KEY
+                # anyways because LMS still uses this key to recognize whether
+                # a request should receive backend service superpowers.
+                'X-Edx-Api-Key': settings.EDX_API_KEY
+            }
             response = self.client.post(
-                enrollment_api_url,
-                json=enrollment_data,
-                timeout=self.normal_timeout,
+                url,
+                headers=headers,
+                json=json,
+                timeout=timeout,
             )
+            logger.debug('Response status: %s', response.status_code)
+            logger.debug('Request body: %s', response.request.body)
+            response_json = response.json()
+            logger.debug('Response JSON: %s', response_json)
             response.raise_for_status()
-            return response.json()
+            return response_json
         except requests.exceptions.HTTPError as exc:
             logger.error(exc)
             raise
