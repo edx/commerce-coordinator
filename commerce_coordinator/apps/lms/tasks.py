@@ -59,5 +59,4 @@ def fulfill_order_placed_send_enroll_in_course_task(
             'value': provider_id,
         })
 
-    lms_api_client = LMSAPIClient()
-    return lms_api_client.post('enrollment', enrollment_data)
+    return LMSAPIClient().enroll_user_in_course(enrollment_data)
