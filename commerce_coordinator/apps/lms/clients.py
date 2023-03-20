@@ -1,8 +1,6 @@
 """
 API clients for LMS app.
 """
-from urllib.parse import urljoin
-
 import requests
 from celery.utils.log import get_task_logger
 from django.conf import settings
@@ -23,7 +21,8 @@ class LMSAPIClient(BaseEdxOAuthClient):
         """
         Base URL for LMS Enrollment API service.
         """
-        return urljoin(settings.LMS_URL_ROOT, '/api/enrollment/v1/')
+        return self.urljoin_directory(settings.LMS_URL_ROOT, '/api/enrollment/v1/enrollment')
+
 
     def post(self, path, enrollment_data):
         """
