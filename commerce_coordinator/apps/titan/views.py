@@ -11,6 +11,7 @@ from rest_framework.views import APIView
 
 from commerce_coordinator.apps.core.signal_helpers import format_signal_results
 
+from .serializers import OrderFulfillViewInputSerializer
 from .signals import fulfill_order_placed_signal
 
 logger = logging.getLogger(__name__)
@@ -50,37 +51,30 @@ class OrderFulfillView(APIView):
 
             }
         """
-        coupon_code = request.data.get('coupon_code')
-        course_id = request.data.get('course_id')
-        date_placed = request.data.get('date_placed')
-        edx_lms_user_id = request.data.get('edx_lms_user_id')
-        edx_lms_username = request.data.get('edx_lms_username')
-        mode = request.data.get('mode')
-        partner_sku = request.data.get('partner_sku')
-        titan_order_uuid = request.data.get('titan_order_uuid')
+        params = {
+            'course_id': request.data.get('course_id'),
+            'course_mode': request.data.get('course_mode'),
+            'date_placed': request.data.get('order_placed'),
+            'edx_lms_user_id': request.data.get('edx_lms_user_id'),
+            'email_opt_in': request.data.get('email_opt_in'),
+            'order_number': request.data.get('order_number'),
+            'provider_id': request.data.get('provider'),
+        }
 
         # TODO: add enterprise data for enrollment API here
 
         # TODO: add credit_provider data here
         # /ecommerce/extensions/fulfillment/modules.py#L315
 
-        logger.info(
-            'Attempting to fulfill Titan order ID [%s] for user ID [%s], course ID [%s], on [%s]',
-            titan_order_uuid,
-            edx_lms_user_id,
-            course_id,
-            date_placed,
-        )
+        logger.info(f'Titan OrderFulfillView.post() called using {locals()}.')
 
-        results = fulfill_order_placed_signal.send_robust(
-            sender=self.__class__,
-            date_placed=date_placed,
-            edx_lms_user_id=edx_lms_user_id,
-            edx_lms_username=edx_lms_username,
-            course_id=course_id,
-            coupon_code=coupon_code,
-            mode=mode,
-            partner_sku=partner_sku,
-            titan_order_uuid=titan_order_uuid,
-        )
-        return Response(format_signal_results(results))
+        serializer = OrderFulfillViewInputSerializer(data=params)
+
+        if serializer.is_valid(raise_exception=True):
+            results = fulfill_order_placed_signal.send_robust(
+                sender=self.__class__,
+                **serializer.validated_data
+            )
+            return Response(format_signal_results(results))
+        else:
+            return None
