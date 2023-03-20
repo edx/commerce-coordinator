@@ -112,6 +112,8 @@ LOGGING = get_logger_config(debug=DEBUG)
 
 CELERY_BROKER_URL = "redis://:password@localhost:6379/0"
 
+EDX_API_KEY = 'PUT_YOUR_API_KEY_HERE'  # This is the actual API key in devstack.
+
 ECOMMERCE_URL = "http://localhost:18130"
 
 LMS_URL_ROOT = "http://localhost:18000"
@@ -119,6 +121,8 @@ LMS_URL_ROOT = "http://localhost:18000"
 TITAN_URL = "http://example.com"
 
 TITAN_OAUTH2_PROVIDER_URL = "http://example.com"
+
+FULFILLMENT_TIMEOUT = 15  # Devstack is slow!
 
 #####################################################################
 # Lastly, see if the developer has any local overrides.
