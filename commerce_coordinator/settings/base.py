@@ -243,6 +243,9 @@ EXTRA_SCOPE = ['permissions']
 # TODO Set this to another (non-staff, ideally) path.
 LOGIN_REDIRECT_URL = '/admin/'
 
+# Set legacy credentials to access edX services.
+EDX_API_KEY = 'replace-me'
+
 # Set token credentials for non-edX services.
 TITAN_API_KEY = 'replace-me'
 
@@ -308,6 +311,9 @@ CC_SIGNALS = {
 # (See https://docs.python-requests.org/en/master/user/advanced/#timeouts for more info.)
 REQUEST_CONNECT_TIMEOUT_SECONDS = 3.05
 REQUEST_READ_TIMEOUT_SECONDS = 5
+
+# Special timeout for fulfillment
+FULFILLMENT_TIMEOUT = 7
 
 # API URLs
 ECOMMERCE_URL = 'replace-me'
