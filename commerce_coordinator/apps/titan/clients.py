@@ -85,8 +85,9 @@ class TitanAPIClient(Client):
                 timeout=self.normal_timeout,
                 headers=headers,
             )
-            logger.debug('response status: %s', response.status_code)
+            logger.debug('Response status: %s', response.status_code)
             logger.debug('Request body: %s', response.request.body)
+            logger.debug('Request headers: %s', response.request.headers)
             response.raise_for_status()
             response_json = response.json()
             logger.debug('Response body: %s', response_json)
