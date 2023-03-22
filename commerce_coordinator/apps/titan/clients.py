@@ -19,7 +19,7 @@ class TitanAPIClient(Client):
     def __init__(self):
         self.client = requests.Session()
         # Always send API key.
-        self.client.headers.update(self.api_key_header)
+        self.client.headers.update(self.api_base_header)
 
     @property
     def api_base_url(self):
@@ -27,10 +27,13 @@ class TitanAPIClient(Client):
         return self.urljoin_directory(settings.TITAN_URL, '/edx/api/v1/')
 
     @property
-    def api_key_header(self):
-        """Header to add as API key for requests."""
-        return {'X-Spree-API-Key': settings.TITAN_API_KEY}
-
+    def api_base_header(self):
+        """Header to add to all requests."""
+        return {
+            'Content-Type': 'application/vnd.api+json',
+            'User-Agent': '',
+            'X-Spree-API-Key': settings.TITAN_API_KEY,
+        }
 
     def _request(self, request_method, resource_path, params=None, json=None, headers=None):
         """
@@ -91,9 +94,6 @@ class TitanAPIClient(Client):
                 'firstName': first_name,
                 'lastName': last_name,
             },
-            headers={
-                'Content-Type': 'application/vnd.api+json'
-            },
         )
 
     def add_item(self, order_uuid, course_sku):
@@ -111,10 +111,6 @@ class TitanAPIClient(Client):
                 'orderUuid': order_uuid,
                 'courseSku': course_sku,
             },
-            headers={
-                'Content-Type': 'application/vnd.api+json'
-            },
-
         )
 
     def complete_order(self, order_uuid, edx_lms_user_id):
