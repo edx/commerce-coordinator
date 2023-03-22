@@ -58,7 +58,7 @@ def order_created_save_task(product_sku, edx_lms_user_id, email, first_name, las
     order_created_response = titan_api_client.create_order(
         edx_lms_user_id, email, first_name, last_name
     )
-    order_uuid = order_created_response['uuid']
+    order_uuid = order_created_response['data']['attributes']['uuid']
 
     # Adding courses in Cart/Basket
     for sku in product_sku:
