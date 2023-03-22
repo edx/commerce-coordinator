@@ -88,11 +88,15 @@ class TitanAPIClient(Client):
             request_method='POST',
             resource_path='cart',
             json={
-                'currency': currency,
-                'edxLmsUserId': edx_lms_user_id,
-                'email': email,
-                'firstName': first_name,
-                'lastName': last_name,
+                'data': {
+                    'attributes': {
+                        'currency': currency,
+                        'edxLmsUserId': edx_lms_user_id,
+                        'email': email,
+                        'firstName': first_name,
+                        'lastName': last_name,
+                    }
+                }
             },
         )
 
