@@ -25,7 +25,7 @@ class TitanAPIClient(Client):
     @property
     def api_base_url(self):
         """URL of API service."""
-        return self.urljoin_directory(settings.TITAN_URL, '/api/edx/v1/')
+        return self.urljoin_directory(settings.TITAN_URL, '/edx/api/v1/')
 
     @property
     def api_key_header(self):
