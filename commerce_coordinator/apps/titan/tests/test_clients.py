@@ -71,7 +71,7 @@ class TestTitanAPIClient(TestCase):
         with LogCapture(LOGGER_NAME) as logger:
             response = self.client.create_order(**self.order_create_data)
             logger.check_present(
-                (LOGGER_NAME, 'DEBUG', 'Response status: 200'),
+                (LOGGER_NAME, 'DEBUG', 'Response status: 200 OK'),
             )
         self.assertEqual(response['uuid'], self.order_uuid)
         request = responses.calls[-1].request
@@ -84,7 +84,7 @@ class TestTitanAPIClient(TestCase):
             with pytest.raises(HTTPError):
                 self.client.create_order(**self.order_create_data)
             logger.check_present(
-                (LOGGER_NAME, 'DEBUG', 'Response status: 400'),
+                (LOGGER_NAME, 'INFO', 'Response status: 400 Bad Request'),
             )
         request = responses.calls[-1].request
         self._assert_order_create_request(request)
@@ -111,7 +111,7 @@ class TestTitanAPIClient(TestCase):
         with LogCapture(LOGGER_NAME) as logger:
             response = self.client.add_item(**self.add_item_data)
             logger.check_present(
-                (LOGGER_NAME, 'DEBUG', 'Response status: 200'),
+                (LOGGER_NAME, 'DEBUG', 'Response status: 200 OK'),
             )
         self.assertEqual(response['uuid'], self.order_uuid)
         request = responses.calls[-1].request
@@ -124,7 +124,7 @@ class TestTitanAPIClient(TestCase):
             with pytest.raises(HTTPError):
                 self.client.add_item(**self.add_item_data)
             logger.check_present(
-                (LOGGER_NAME, 'DEBUG', 'Response status: 400'),
+                (LOGGER_NAME, 'INFO', 'Response status: 400 Bad Request'),
             )
         request = responses.calls[-1].request
         self._assert_add_item_request(request)
@@ -151,7 +151,7 @@ class TestTitanAPIClient(TestCase):
         with LogCapture(LOGGER_NAME) as logger:
             response = self.client.complete_order(**self.order_complete_data)
             logger.check_present(
-                (LOGGER_NAME, 'DEBUG', 'Response status: 200'),
+                (LOGGER_NAME, 'DEBUG', 'Response status: 200 OK'),
             )
         self.assertEqual(response['uuid'], self.order_uuid)
         request = responses.calls[-1].request
@@ -164,7 +164,7 @@ class TestTitanAPIClient(TestCase):
             with pytest.raises(HTTPError):
                 self.client.complete_order(**self.order_complete_data)
             logger.check_present(
-                (LOGGER_NAME, 'DEBUG', 'Response status: 400'),
+                (LOGGER_NAME, 'INFO', 'Response status: 400 Bad Request'),
             )
         request = responses.calls[-1].request
         self._assert_complete_order_request(request)
