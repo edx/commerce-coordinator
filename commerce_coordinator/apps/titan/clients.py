@@ -117,9 +117,13 @@ class TitanAPIClient(Client):
             request_method='POST',
             resource_path='cart/add_item',
             json={
-                'orderUuid': order_uuid,
-                'courseSku': course_sku,
-            },
+                'data': {
+                    'attributes': {
+                        'orderUuid': order_uuid,
+                        'courseSku': course_sku,
+                        }
+                    }
+                },
         )
 
     def complete_order(self, order_uuid, edx_lms_user_id):
