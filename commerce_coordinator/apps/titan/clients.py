@@ -89,6 +89,7 @@ class TitanAPIClient(Client):
             last_name: The edx.org profile last name of the user receiving the order
             currency: Optional. The ISO code of the currency to use for the order (defaults to USD)
         """
+        logger.info(f'TitanAPIClient.create_order called using {locals()}.')
         return self._request(
             request_method='POST',
             resource_path='cart',
@@ -113,6 +114,7 @@ class TitanAPIClient(Client):
             order_uuid: The UUID of the created order in Spree.
             course_sku: The SKU of the course being added to the order
         """
+        logger.info(f'TitanAPIClient.add_item called using {locals()}.')
         return self._request(
             request_method='POST',
             resource_path='cart/add_item',
@@ -134,6 +136,7 @@ class TitanAPIClient(Client):
             order_uuid: The UUID of the created order in Spree.
             edx_lms_user_id: The edx.org LMS user ID of the user receiving the order.
         """
+        logger.info(f'TitanAPIClient.complete_order called using {locals()}.')
         return self._request(
             request_method='POST',
             resource_path='checkout/complete',
