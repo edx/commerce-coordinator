@@ -141,8 +141,12 @@ class TitanAPIClient(Client):
             request_method='POST',
             resource_path='checkout/complete',
             json={
-                'orderUuid': order_uuid,
-                'edxLmsUserId': edx_lms_user_id,
+                'data': {
+                    'attributes': {
+                        'orderUuid': order_uuid,
+                        'edxLmsUserId': edx_lms_user_id,
+                    }
+                }
             },
         )
 
