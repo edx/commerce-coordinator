@@ -118,9 +118,9 @@ DATABASES = {
 DEFAULT_AUTO_FIELD = 'django.db.models.AutoField'
 
 # Celery
-CELERY_DEFAULT_EXCHANGE = 'commerce_coordinator'
-CELERY_DEFAULT_QUEUE = 'commerce_coordinator.default'
-CELERY_DEFAULT_ROUTING_KEY = 'commerce_coordinator'
+CELERY_TASK_DEFAULT_EXCHANGE = 'commerce_coordinator'
+CELERY_TASK_DEFAULT_QUEUE = 'commerce_coordinator.default'
+CELERY_TASK_DEFAULT_ROUTING_KEY = 'commerce_coordinator'
 
 # Internationalization
 # https://docs.djangoproject.com/en/dev/topics/i18n/
