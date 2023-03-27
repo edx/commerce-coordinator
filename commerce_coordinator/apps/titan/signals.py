@@ -20,13 +20,14 @@ def enrollment_code_redemption_requested_create_order(**kwargs):
     """
     Create an order using the requested enrollment code.
     """
-    enrollment_code_redemption_requested_create_order_task.delay(
+    async_result = enrollment_code_redemption_requested_create_order_task.delay(
         kwargs['user_id'],
         kwargs['username'],
         kwargs['email'],
         kwargs['sku'],
         kwargs['coupon_code'],
     )
+    return async_result.id
 
 
 @log_receiver(logger)
@@ -34,7 +35,7 @@ def order_created_save(**kwargs):
     """
     Create an order.
     """
-    order_created_save_task.delay(
+    async_result = order_created_save_task.delay(
         kwargs['product_sku'],
         kwargs['edx_lms_user_id'],
         kwargs['email'],
@@ -42,3 +43,4 @@ def order_created_save(**kwargs):
         kwargs['last_name'],
         kwargs['coupon_code'],
     )
+    return async_result.id
