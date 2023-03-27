@@ -25,9 +25,11 @@ def log_receiver(logger):
             try:
                 # Django's signal dispatcher will give the sender as a keyword argument
                 sender = kwargs['sender']
-                logger.info(f"{func.__name__} CALLED with sender '{sender}' and {kwargs}")
-                return func(*args, **kwargs)
+                result = func(*args, **kwargs)
+                logger.info(f"{func.__name__} CALLED with sender '{sender}' and {kwargs}, starting task {result}")
+                return result
             except Exception as e:
+                logger.info(f"{func.__name__} CALLED with sender '{sender}' and {kwargs}")
                 logger.exception(f"Something went wrong! Exception raised in {func.__name__} with error {repr(e)}")
                 raise e
         return wrapper
@@ -42,7 +44,7 @@ def format_signal_results(results):
     data = {}
     for receiver, response in results:
         receiver_name = receiver.__name__
-        exception_occurred = bool(response and response.__traceback__)
+        exception_occurred = bool(response and hasattr(response, "__traceback__"))
         if exception_occurred:
             response_str = traceback.format_exception(
                 type(response),
