@@ -54,6 +54,10 @@ lms_exec "manage_user ${name}_worker ${name}_worker@example.com --staff --superu
 lms_exec "create_dot_application --grant-type authorization-code --skip-authorization --redirect-uris 'http://localhost:${port}/complete/edx-oauth2/' --client-id '${name}-sso-key' --client-secret '${name}-sso-secret' --scopes 'user_id' ${name}-sso ${name}_worker"
 lms_exec "create_dot_application --grant-type client-credentials --client-id '${name}-backend-service-key' --client-secret '${name}-backend-service-secret' ${name}-backend-service ${name}_worker"
 
+echo -e "${GREEN}Provisioning titan_worker in LMS...${NC}"
+lms_exec "manage_user titan_worker titan_worker@example.com --staff --superuser"
+lms_exec "create_dot_application --grant-type client-credentials --client-id 'titan-backend-service-key' --client-secret 'titan-backend-service-secret' titan-backend-service titan_worker"
+
 echo -e "${GREEN}Processing static files...${NC}"
 docker exec -i commerce-coordinator.app bash -c "python /edx/app/${name}/manage.py collectstatic"
 
