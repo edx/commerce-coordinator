@@ -53,6 +53,14 @@ commerce\_coordinator.apps.ecommerce.pipeline module
    :undoc-members:
    :show-inheritance:
 
+commerce\_coordinator.apps.ecommerce.serializers module
+-------------------------------------------------------
+
+.. automodule:: commerce_coordinator.apps.ecommerce.serializers
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
 commerce\_coordinator.apps.ecommerce.signals module
 ---------------------------------------------------
 

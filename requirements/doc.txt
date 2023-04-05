@@ -52,7 +52,7 @@ cffi==1.15.1
     #   -r requirements/test.txt
     #   cryptography
     #   pynacl
-charset-normalizer==3.0.1
+charset-normalizer==3.1.0
     # via
     #   -r requirements/test.txt
     #   requests
@@ -191,7 +191,7 @@ edx-rest-api-client==5.6.0
     # via -r requirements/test.txt
 edx-sphinx-theme==3.1.0
     # via -r requirements/doc.in
-exceptiongroup==1.1.0
+exceptiongroup==1.1.1
     # via
     #   -r requirements/test.txt
     #   pytest
@@ -284,7 +284,7 @@ pbr==5.11.1
     # via
     #   -r requirements/test.txt
     #   stevedore
-platformdirs==3.0.0
+platformdirs==3.1.1
     # via
     #   -r requirements/test.txt
     #   pylint
@@ -412,7 +412,7 @@ requests-oauthlib==1.3.1
     # via
     #   -r requirements/test.txt
     #   social-auth-core
-responses==0.22.0
+responses==0.23.1
     # via -r requirements/test.txt
 restructuredtext-lint==1.4.0
     # via doc8
@@ -488,10 +488,6 @@ text-unidecode==1.3
     # via
     #   -r requirements/test.txt
     #   python-slugify
-toml==0.10.2
-    # via
-    #   -r requirements/test.txt
-    #   responses
 tomli==2.0.1
     # via
     #   -r requirements/test.txt
