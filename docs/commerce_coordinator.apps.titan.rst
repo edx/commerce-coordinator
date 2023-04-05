@@ -7,19 +7,10 @@ Subpackages
 .. toctree::
    :maxdepth: 4
 
-   commerce_coordinator.apps.titan.migrations
    commerce_coordinator.apps.titan.tests
 
 Submodules
 ----------
-
-commerce\_coordinator.apps.titan.admin module
----------------------------------------------
-
-.. automodule:: commerce_coordinator.apps.titan.admin
-   :members:
-   :undoc-members:
-   :show-inheritance:
 
 commerce\_coordinator.apps.titan.apps module
 --------------------------------------------
@@ -33,14 +24,6 @@ commerce\_coordinator.apps.titan.clients module
 -----------------------------------------------
 
 .. automodule:: commerce_coordinator.apps.titan.clients
-   :members:
-   :undoc-members:
-   :show-inheritance:
-
-commerce\_coordinator.apps.titan.models module
-----------------------------------------------
-
-.. automodule:: commerce_coordinator.apps.titan.models
    :members:
    :undoc-members:
    :show-inheritance:

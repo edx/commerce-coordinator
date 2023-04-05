@@ -13,10 +13,10 @@ Subpackages
 Submodules
 ----------
 
-commerce\_coordinator.celery\_app module
-----------------------------------------
+commerce\_coordinator.celery module
+-----------------------------------
 
-.. automodule:: commerce_coordinator.celery_app
+.. automodule:: commerce_coordinator.celery
    :members:
    :undoc-members:
    :show-inheritance:

@@ -117,6 +117,11 @@ DATABASES = {
 # New DB primary keys default to an IntegerField.
 DEFAULT_AUTO_FIELD = 'django.db.models.AutoField'
 
+# Celery
+CELERY_TASK_DEFAULT_EXCHANGE = 'commerce_coordinator'
+CELERY_TASK_DEFAULT_QUEUE = 'commerce_coordinator.default'
+CELERY_TASK_DEFAULT_ROUTING_KEY = 'commerce_coordinator'
+
 # Internationalization
 # https://docs.djangoproject.com/en/dev/topics/i18n/
 
@@ -336,6 +341,5 @@ EDX_DRF_EXTENSIONS = {
         "full_name": "full_name",
         "user_id": "lms_user_id",
     },
-    "OAUTH2_USER_INFO_URL": "http://127.0.0.1:8000/oauth2/user_info",
     "ENABLE_SET_REQUEST_USER_FOR_JWT_COOKIE": True,
 }
