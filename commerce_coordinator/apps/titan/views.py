@@ -53,6 +53,9 @@ class OrderFulfillView(APIView):
 
             }
         """
+        logger.debug(f'Titan OrderFulfillView.post() request object: {request.data}.')
+        logger.debug(f'Titan OrderFulfillView.post() headers: {request.headers}.')
+
         params = {
             'course_id': request.data.get('course_id'),
             'course_mode': request.data.get('course_mode'),
