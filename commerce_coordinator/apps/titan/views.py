@@ -4,6 +4,7 @@ Views for the titan app
 
 import logging
 
+from rest_framework.parsers import JSONParser
 from rest_framework.permissions import IsAdminUser
 from rest_framework.response import Response
 from rest_framework.throttling import UserRateThrottle
@@ -21,6 +22,7 @@ class OrderFulfillView(APIView):
     """
     API for order fulfillment that is called from Titan.
     """
+    parser_classes = [JSONParser]
     permission_classes = [IsAdminUser]
     throttle_classes = [UserRateThrottle]
 
