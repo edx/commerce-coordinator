@@ -11,7 +11,11 @@ ORDER_UUID = 'test-uuid'
 class TitanClientMock(MagicMock):
     """A mock EcommerceAPIClient that always returns ECOMMERCE_REQUEST_EXPECTED_RESPONSE."""
     return_value = {
-        'uuid': ORDER_UUID,
+        'data': {
+            'attributes': {
+                'uuid': ORDER_UUID,
+            },
+        },
     }
 
 
