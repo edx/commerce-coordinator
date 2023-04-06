@@ -4,7 +4,7 @@ Serializers shared between plugins.
 from datetime import datetime
 
 from django.utils.translation import gettext_lazy as _
-from rest_framework.serializers import *
+from rest_framework.serializers import *  # pylint: disable=wildcard-import; this module extends DRF serializers
 
 
 class UnixDateTimeField(DateTimeField):
