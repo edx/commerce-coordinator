@@ -1,6 +1,7 @@
 """Test core.serializers."""
 
 import datetime
+import sys
 
 import ddt
 from django.test import TestCase
@@ -27,3 +28,16 @@ class UnixDateTimeFieldTests(TestCase):
         """Check internal representation of UnixDateTimeField matches expected."""
         output = serializers.UnixDateTimeField().run_validation(input_value)
         self.assertEqual(output, expected_output)
+
+    @ddt.data(
+        ('not_a_date', ['A valid integer is required.']),
+        (sys.maxsize, ['Could not parse POSIX timestamp.']),
+        ('long_string' * 91, ['String value too large.']),
+    )
+    @ddt.unpack
+    def test_invalid_values(self, input_value, expected_failure_message):
+        """Check failures of conversion of internal representation of UnixDateTimeField produce expected errors."""
+        with self.assertRaises(serializers.ValidationError) as exc_info:
+            serializers.UnixDateTimeField().run_validation(input_value)
+
+        self.assertEquals(exc_info.exception.detail, expected_failure_message)
