@@ -8,7 +8,6 @@ from django.test import TestCase
 
 from commerce_coordinator.apps.core import serializers
 
-
 utc = datetime.timezone.utc
 
 
@@ -40,4 +39,4 @@ class UnixDateTimeFieldTests(TestCase):
         with self.assertRaises(serializers.ValidationError) as exc_info:
             serializers.UnixDateTimeField().run_validation(input_value)
 
-        self.assertEquals(exc_info.exception.detail, expected_failure_message)
+        self.assertEqual(exc_info.exception.detail, expected_failure_message)
