@@ -58,7 +58,7 @@ class TestTitanAPIClient(TestCase):
     def _assert_order_create_request(self, request):
         """Assert request."""
         self._assert_request_headers(request.headers)
-        request_body = json.loads(request.body)
+        request_body = json.loads(request.body)['data']['attributes']
         self.assertEqual(request_body['currency'], 'USD')
         self.assertEqual(request_body['edxLmsUserId'], self.order_create_data['edx_lms_user_id'])
         self.assertEqual(request_body['email'], self.order_create_data['email'])
@@ -101,7 +101,7 @@ class TestTitanAPIClient(TestCase):
 
     def _assert_add_item_request(self, request):
         self._assert_request_headers(request.headers)
-        request_body = json.loads(request.body)
+        request_body = json.loads(request.body)['data']['attributes']
         self.assertEqual(request_body['orderUuid'], self.add_item_data['order_uuid'])
         self.assertEqual(request_body['courseSku'], self.add_item_data['course_sku'])
 
@@ -141,7 +141,7 @@ class TestTitanAPIClient(TestCase):
 
     def _assert_complete_order_request(self, request):
         self._assert_request_headers(request.headers)
-        request_body = json.loads(request.body)
+        request_body = json.loads(request.body)['data']['attributes']
         self.assertEqual(request_body['orderUuid'], self.order_complete_data['order_uuid'])
         self.assertEqual(request_body['edxLmsUserId'], self.order_complete_data['edx_lms_user_id'])
 
