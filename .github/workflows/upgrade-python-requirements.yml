@@ -2,8 +2,7 @@ name: Upgrade Python Requirements
 
 on:
   schedule:
-    # Monthly on the first of the month at 00:00 UTC.
-    - cron: "0 0 1 * *"
+    - cron: "0 0 * * 1"
   workflow_dispatch:
     inputs:
       branch:
@@ -12,40 +11,15 @@ on:
         default: 'main'
 
 jobs:
-
-
   call-upgrade-python-requirements-workflow:
-
-    uses: edx/.github/.github/workflows/upgrade-python-requirements.yml@master
-
+    uses: openedx/.github/.github/workflows/upgrade-python-requirements.yml@master
     with:
-      branch: ${{ github.event.inputs.branch || "main" }}
-      user_reviewers: edx-revenue-tasks
-      team_reviewers: ""
-      email_address: revenue-tasks@edx.org
-      send_success_notification: false
-
-    secrets:
-      requirements_bot_github_token: ${{ secrets.REQUIREMENTS_BOT_GITHUB_TOKEN }}
-      requirements_bot_github_email: ${{ secrets.REQUIREMENTS_BOT_GITHUB_EMAIL }}
-      edx_smtp_username: ${{ secrets.EDX_SMTP_USERNAME }}
-      edx_smtp_password: ${{ secrets.EDX_SMTP_PASSWORD }}
-
-
-  call-upgrade-python-requirements-workflow-develop:
-
-    # Unless called for a specific branch, run on the develop branch too.
-    if: github.event.inputs.branch == ""
-
-    uses: edx/.github/.github/workflows/upgrade-python-requirements.yml@master
-
-    with:
-      branch: develop
-      user_reviewers: edx-revenue-tasks
-      team_reviewers: ""
-      email_address: revenue-tasks@edx.org
-      send_success_notification: false
-
+      branch: ${{ github.event.inputs.branch || 'main' }}
+      # optional parameters below; fill in if you'd like github or email notifications
+      # user_reviewers: ""
+      # team_reviewers: ""
+      # email_address: ""
+      # send_success_notification: false
     secrets:
       requirements_bot_github_token: ${{ secrets.REQUIREMENTS_BOT_GITHUB_TOKEN }}
       requirements_bot_github_email: ${{ secrets.REQUIREMENTS_BOT_GITHUB_EMAIL }}

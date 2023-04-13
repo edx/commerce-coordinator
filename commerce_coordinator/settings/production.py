@@ -16,12 +16,11 @@ LOGGING = get_logger_config()
 # the values read from disk should UPDATE the pre-configured dicts.
 DICT_UPDATE_KEYS = ('JWT_AUTH',)
 
-# This may be overridden by the YAML in commerce-coordinator_CFG,
+# This may be overridden by the YAML in commerce_coordinator_CFG,
 # but it should be here as a default.
 MEDIA_STORAGE_BACKEND = {}
 FILE_STORAGE_BACKEND = {}
 
-# HACK: BJH: This is probably not the right way to solve this
 if 'COMMERCE_COORDINATOR_CFG' in environ:
     CONFIG_FILE = get_env_setting('COMMERCE_COORDINATOR_CFG')
     with open(CONFIG_FILE, encoding='utf-8') as f:
@@ -42,7 +41,6 @@ if 'COMMERCE_COORDINATOR_CFG' in environ:
         # of Django settings.
         vars().update(FILE_STORAGE_BACKEND)
         vars().update(MEDIA_STORAGE_BACKEND)
-2  # FIXME: BJH: this probably shouldn't be here, get it cleaned up in the cookiecutter
 
 DB_OVERRIDES = dict(
     PASSWORD=environ.get('DB_MIGRATION_PASS', DATABASES['default']['PASSWORD']),
