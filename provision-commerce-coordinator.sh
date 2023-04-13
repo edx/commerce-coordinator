@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-name="commerce-coordinator"
+name="commerce_coordinator"
 port="8140"
 
 RED="\x1B[31m"
@@ -16,8 +16,8 @@ docker-compose up -d --build
 # Can be skipped right now because we're using the --build flag on docker-compose. This will need to be changed once we move to devstack.
 
 # Wait for MySQL
-echo "Waiting for ${name} MySQL"
-until docker exec -i commerce-coordinator.db mysql -u root -se "SELECT EXISTS(SELECT 1 FROM mysql.user WHERE user = 'root')" &> /dev/null
+echo "Waiting for MySQL"
+until docker exec -i commerce_coordinator.db mysql -u root -se "SELECT EXISTS(SELECT 1 FROM mysql.user WHERE user = 'root')" &> /dev/null
 do
   printf "."
   sleep 1
@@ -26,12 +26,11 @@ sleep 5
 echo -e ""
 
 # Create the database
-
-docker exec -i commerce-coordinator.db mysql -u root -se 'CREATE DATABASE `commerce-coordinator`;'
+docker exec -i commerce_coordinator.db mysql -u root -se "CREATE DATABASE commerce_coordinator;"
 
 # Run migrations
 echo -e "${GREEN}Running migrations for ${name}...${NC}"
-docker exec -t commerce-coordinator.app bash -c "cd /edx/app/${name}/ && python manage.py migrate"
+docker exec -t commerce_coordinator.app bash -c "cd /edx/app/${name}/ && make migrate"
 
 # Create superuser
 echo -e "${GREEN}Creating super-user for ${name}...${NC}"
