@@ -39,12 +39,6 @@ def mock_receiver_exception(**kwargs):
     raise RuntimeError('This is an expected exception.')
 
 
-@log_receiver(logger)
-def mock_receiver_innocent_bystander(**kwargs):
-    """No-op receiver that should never be called"""
-    raise RuntimeError('This receiver should never be set up or called.')
-
-
 class CoordinatorSignalTestCase(TestCase):
     """Base class for testing CoordinatorSignal."""
 
