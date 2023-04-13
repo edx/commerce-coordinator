@@ -55,9 +55,9 @@ reports/
 !django.mo
 !djangojs.po
 !djangojs.mo
-commerce-coordinator/conf/locale/fake*/LC_MESSAGES/*.po
-commerce-coordinator/conf/locale/fake*/LC_MESSAGES/*.mo
-commerce-coordinator/conf/locale/messages.mo
+commerce_coordinator/conf/locale/fake*/LC_MESSAGES/*.po
+commerce_coordinator/conf/locale/fake*/LC_MESSAGES/*.mo
+commerce_coordinator/conf/locale/messages.mo
 
 
 # Mr Developer
@@ -92,6 +92,10 @@ private.py
 
 # Editor Temp Files
 *.swp
+
 *.trace
 
 docs/_build/
+
+#transifex exe
+tx

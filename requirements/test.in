@@ -1,5 +1,6 @@
 # Requirements for test runs.
 
+-c constraints.txt
 -r base.txt               # Core dependencies for this package
 
 code-annotations
@@ -12,3 +13,4 @@ pytest-cov
 pytest-django
 responses
 testfixtures
+tox

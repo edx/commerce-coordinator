@@ -3,7 +3,7 @@ commerce-coordinator
 ####################
 
 |pypi-badge| |ci-badge| |codecov-badge| |doc-badge| |pyversions-badge|
-|license-badge|
+|license-badge| |status-badge|
 
 A controller to manage commerce workflows and services
 
@@ -205,5 +205,7 @@ For more information about these options, see the `Getting Help`_ page.
     :alt: Supported Python versions
 
 .. |license-badge| image:: https://img.shields.io/github/license/edx/commerce-coordinator.svg
-    :target: https://github.com/edx/commerce-coordinator/blob/main/LICENSE.txt
+    :target: https://github.com/edx/commerce-coordinator/blob/main/LICENSE
     :alt: License
+
+.. |status-badge| image:: https://img.shields.io/badge/Status-Experimental-yellow
