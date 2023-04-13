@@ -5,21 +5,16 @@ from corsheaders.defaults import default_headers as corsheaders_default_headers
 
 from commerce_coordinator.settings.utils import get_logger_config
 
-
 # PATH vars
-def here(*x):
-    return join(abspath(dirname(__file__)), *x)
+PROJECT_ROOT = join(abspath(dirname(__file__)), "..")
 
 
-PROJECT_ROOT = here("..")
-
-
-def root(*x):
-    return join(abspath(PROJECT_ROOT), *x)
+def root(*path_fragments):
+    return join(abspath(PROJECT_ROOT), *path_fragments)
 
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = os.environ.get('COMMERCE-COORDINATOR_SECRET_KEY', 'insecure-secret-key')
+SECRET_KEY = os.environ.get('COMMERCE_COORDINATOR_SECRET_KEY', 'insecure-secret-key')
 
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = False
@@ -63,11 +58,13 @@ INSTALLED_APPS += PROJECT_APPS
 MIDDLEWARE = (
     # Resets RequestCache utility for added safety.
     'edx_django_utils.cache.middleware.RequestCacheMiddleware',
+
     # Monitoring middleware should be immediately after RequestCacheMiddleware
     'edx_django_utils.monitoring.DeploymentMonitoringMiddleware',  # python and django version
     'edx_django_utils.monitoring.CookieMonitoringMiddleware',  # cookie names (compliance) and sizes
     'edx_django_utils.monitoring.CachedCustomMonitoringMiddleware',  # support accumulate & increment
     'edx_django_utils.monitoring.MonitoringMemoryMiddleware',  # memory usage
+
     'corsheaders.middleware.CorsMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.locale.LocaleMiddleware',
@@ -101,7 +98,7 @@ ROOT_URLCONF = 'commerce_coordinator.urls'
 WSGI_APPLICATION = 'commerce_coordinator.wsgi.application'
 
 # Database
-# https://docs.djangoproject.com/en/2.2/ref/settings/#databases
+# https://docs.djangoproject.com/en/3.2/ref/settings/#databases
 # Set this value in the environment-specific files (e.g. local.py, production.py, test.py)
 DATABASES = {
     'default': {
@@ -162,7 +159,7 @@ STATICFILES_DIRS = (
 )
 
 # TEMPLATE CONFIGURATION
-# See: https://docs.djangoproject.com/en/2.2/ref/settings/#templates
+# See: https://docs.djangoproject.com/en/3.2/ref/settings/#templates
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
@@ -193,9 +190,9 @@ TEMPLATES = [
 # The purpose of customizing the cookie names is to avoid conflicts when
 # multiple Django services are running behind the same hostname.
 # Detailed information at: https://docs.djangoproject.com/en/dev/ref/settings/
-SESSION_COOKIE_NAME = 'commerce-coordinator_sessionid'
-CSRF_COOKIE_NAME = 'commerce-coordinator_csrftoken'
-LANGUAGE_COOKIE_NAME = 'commerce-coordinator_language'
+SESSION_COOKIE_NAME = 'commerce_coordinator_sessionid'
+CSRF_COOKIE_NAME = 'commerce_coordinator_csrftoken'
+LANGUAGE_COOKIE_NAME = 'commerce_coordinator_language'
 # END COOKIE CONFIGURATION
 
 CSRF_COOKIE_SECURE = False
@@ -227,7 +224,7 @@ BACKEND_SERVICE_EDX_OAUTH2_SECRET = 'replace-me'
 
 JWT_AUTH = {
     'JWT_AUTH_HEADER_PREFIX': 'JWT',
-    'JWT_ISSUER': 'http://127.0.0.1:8140/oauth2',
+    'JWT_ISSUER': 'http://127.0.0.1:8000/oauth2',
     'JWT_ALGORITHM': 'HS256',
     'JWT_VERIFY_EXPIRATION': True,
     'JWT_PAYLOAD_GET_USERNAME_HANDLER': lambda d: d.get('preferred_username'),

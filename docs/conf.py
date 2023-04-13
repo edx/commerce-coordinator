@@ -1,6 +1,6 @@
 # pylint: disable=invalid-name
 """
-commerce-coordinator documentation build configuration file.
+commerce_coordinator documentation build configuration file.
 
 This file is execfile()d with the current directory set to its
 containing dir.
@@ -95,10 +95,10 @@ source_suffix = '.rst'
 top_level_doc = 'index'
 
 # General information about the project.
-project = 'commerce-coordinator'
+project = 'commerce_coordinator'
 copyright = edx_theme.COPYRIGHT  # pylint: disable=redefined-builtin
 author = edx_theme.AUTHOR
-project_title = 'commerce-coordinator'
+project_title = 'commerce_coordinator'
 documentation_title = f"{project_title}"
 
 
@@ -139,7 +139,14 @@ language = 'en'
 # List of patterns, relative to source directory, that match files and
 # directories to ignore when looking for source files.
 # This patterns also effect to html_static_path and html_extra_path
-exclude_patterns = ['_build', 'Thumbs.db', '.DS_Store']
+exclude_patterns = [
+    '_build',
+    'Thumbs.db',
+    '.DS_Store',
+    # This file is intended as a guide for developers browsing the source tree,
+    # not to be rendered into the output docs.
+    'decisions/README.rst',
+]
 
 # The reST default role (used for this markup: `text`) to use for all
 # documents.
@@ -192,7 +199,7 @@ html_theme_path = [edx_theme.get_html_theme_path()]
 # The name for this set of Sphinx documents.
 # "<project> v<release> documentation" by default.
 #
-# html_title = 'commerce-coordinator v0.1.0'
+# html_title = 'commerce_coordinator v0.1.0'
 
 # A shorter title for the navigation bar.  Default is the same as html_title.
 #

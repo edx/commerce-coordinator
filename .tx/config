@@ -2,14 +2,13 @@
 host = https://www.transifex.com
 
 [o:open-edx:p:edx-platform:r:commerce-coordinator]
-file_filter = commerce-coordinator/conf/locale/<lang>/LC_MESSAGES/django.po
-source_file = commerce-coordinator/conf/locale/en/LC_MESSAGES/django.po
+file_filter = commerce_coordinator/conf/locale/<lang>/LC_MESSAGES/django.po
+source_file = commerce_coordinator/conf/locale/en/LC_MESSAGES/django.po
 source_lang = en
 type        = PO
 
 [o:open-edx:p:edx-platform:r:commerce-coordinator-js]
-file_filter = commerce-coordinator/conf/locale/<lang>/LC_MESSAGES/djangojs.po
-source_file = commerce-coordinator/conf/locale/en/LC_MESSAGES/djangojs.po
+file_filter = commerce_coordinator/conf/locale/<lang>/LC_MESSAGES/djangojs.po
+source_file = commerce_coordinator/conf/locale/en/LC_MESSAGES/djangojs.po
 source_lang = en
 type        = PO
-
