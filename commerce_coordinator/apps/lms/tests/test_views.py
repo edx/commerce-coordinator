@@ -1,5 +1,5 @@
 """
-Tests for the ecommerce views.
+Tests for the LMS (edx-platform) views.
 """
 import ddt
 from django.contrib.auth import get_user_model
@@ -22,7 +22,7 @@ class OrderCreateViewTests(APITestCase):
     test_user_username = 'test'
     test_user_email = 'test@example.com'
     test_user_password = 'secret'
-    url = reverse('ecommerce:create_order')
+    url = reverse('lms:create_order')
 
     def setUp(self):
         """Create test user before test starts."""
