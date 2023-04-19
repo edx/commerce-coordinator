@@ -1,6 +1,8 @@
 """
 Views for the ecommerce app
 """
+import logging
+
 from edx_rest_framework_extensions.auth.jwt.authentication import JwtAuthentication
 from edx_rest_framework_extensions.permissions import LoginRedirectIfUnauthenticated
 from rest_framework.exceptions import PermissionDenied
@@ -9,10 +11,13 @@ from rest_framework.response import Response
 from rest_framework.throttling import UserRateThrottle
 from rest_framework.views import APIView
 
+from commerce_coordinator.apps.core.models import User
 from commerce_coordinator.apps.core.signal_helpers import format_signal_results
 
-from .serializers import OrderCreatedSignalInputSerializer
-from .signals import enrollment_code_redemption_requested_signal, order_created_signal
+from .serializers import OrderCreatedSignalInputSerializer, OrderFulfillViewInputSerializer
+from .signals import enrollment_code_redemption_requested_signal, fulfill_order_placed_signal, order_created_signal
+
+logger = logging.getLogger(__name__)
 
 
 class RedeemEnrollmentCodeView(APIView):
@@ -107,3 +112,75 @@ class OrderCreateView(APIView):
                 **serializer.validated_data
             )
             return Response(format_signal_results(results))
+
+
+class OrderFulfillView(APIView):
+    """
+    API for order fulfillment that is called from Ecommerce.
+    """
+    permission_classes = [IsAdminUser]
+    throttle_classes = [UserRateThrottle]
+
+    def post(self, request):
+        """
+        POST request handler for /order/fulfill
+
+        Requires a JSON object of the following format:
+            {
+                "coupon_code": "WELCOME100",
+                "course_id": "course-v1:edX+DemoX+Demo_Course",
+                "date_placed": "2022-08-24T16:57:00.127327+00:00",
+                "edx_lms_user_id": 1,
+                "edx_lms_username": "test-user",
+                "mode": "verified",
+                "partner_sku": "test-sku",
+                "titan_order_uuid": "123-abc",
+
+            }
+
+        Returns a JSON object of the following format:
+            {
+                "<function fulfill_order_placed_send_enroll_in_course at 0x105088700>": {
+                    "response": "",
+                    "error": false,
+
+                },
+
+            }
+        """
+        logger.debug(f'Ecommerce OrderFulfillView.post() request object: {request.data}.')
+        logger.debug(f'Ecommerce OrderFulfillView.post() headers: {request.headers}.')
+
+        params = {
+            'course_id': request.data.get('course_id'),
+            'course_mode': request.data.get('course_mode'),
+            'date_placed': request.data.get('order_placed'),
+            'email_opt_in': request.data.get('email_opt_in'),
+            'order_number': request.data.get('order_number'),
+            'provider_id': request.data.get('provider'),
+            'user': request.data.get('user'),
+        }
+
+        logger.info(f'Ecommerce OrderFulfillView.post() called using {locals()}.')
+
+        serializer = OrderFulfillViewInputSerializer(data=params)
+
+        if serializer.is_valid(raise_exception=True):
+            payload = serializer.validated_data
+
+            # Replace username with LMS user id.
+            translated_user_id = User.objects.get(username=payload['user']).lms_user_id
+            logger.info('Ecommerce OrderFulfillView.post() translated username [%s] into LMS user id [%s].',
+                        payload['user'],
+                        translated_user_id,
+                        )
+            payload['edx_lms_user_id'] = translated_user_id
+            payload.pop('user')
+
+            results = fulfill_order_placed_signal.send_robust(
+                sender=self.__class__,
+                **payload
+            )
+            return Response(format_signal_results(results))
+        else:
+            return None
