@@ -2,7 +2,7 @@
 LMS (edx-platform) app URLS
 """
 
-from django.urls import include, path
+from django.urls import path
 
 from commerce_coordinator.apps.lms.views import OrderCreateView
 

@@ -8,7 +8,7 @@ from mock import patch
 from rest_framework import status
 from rest_framework.test import APITestCase
 
-from commerce_coordinator.apps.core.tests import name_test
+from commerce_coordinator.apps.core.tests.utils import name_test
 
 User = get_user_model()
 

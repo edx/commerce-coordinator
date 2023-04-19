@@ -31,8 +31,8 @@ from commerce_coordinator.apps.api import urls as api_urls
 from commerce_coordinator.apps.core import views as core_views
 from commerce_coordinator.apps.demo_lms import urls as demo_lms_urls
 from commerce_coordinator.apps.ecommerce import urls as ecommerce_urls
-from commerce_coordinator.apps.lms import urls as lms_urls
 from commerce_coordinator.apps.frontend_app_ecommerce import urls as orders_urls
+from commerce_coordinator.apps.lms import urls as lms_urls
 from commerce_coordinator.apps.titan import urls as titan_urls
 
 admin.autodiscover()

@@ -8,7 +8,7 @@ from mock import patch
 from rest_framework import status
 from rest_framework.test import APITestCase
 
-from commerce_coordinator.apps.core.tests import name_test
+from commerce_coordinator.apps.core.tests.utils import name_test
 
 User = get_user_model()
 
@@ -61,11 +61,23 @@ class OrderCreateViewTests(APITestCase):
     @ddt.data(
         name_test("test success", (
             {}, None, status.HTTP_200_OK,
-            {}
+            {
+                'order_data': None,
+                'params': {
+                    'coupon_code': 'test_code', 'edx_lms_user_id': 1, 'email': 'pass-by-param@example.com',
+                    'first_name': 'John', 'last_name': 'Doe', 'product_sku': ['sku1']
+                }
+             }
         )),
         name_test("test coupon_code is optional.", (
             {}, 'coupon_code', status.HTTP_200_OK,
-            {}
+            {
+                'order_data': None,
+                'params': {
+                    'coupon_code': None, 'edx_lms_user_id': 1, 'email': 'pass-by-param@example.com',
+                    'first_name': 'John', 'last_name': 'Doe', 'product_sku': ['sku1']
+                }
+             }
         )),
         name_test("test product_sku in required", (
             {}, 'product_sku', status.HTTP_400_BAD_REQUEST,
@@ -102,7 +114,7 @@ class OrderCreateViewTests(APITestCase):
     )
     @ddt.unpack
     @patch('commerce_coordinator.apps.titan.signals.order_created_save_task.delay')
-    def test_create_order(self, update_params, skip_param, expected_status, expected_error, mock_create_order_task):
+    def test_create_order(self, update_params, skip_param, expected_status, expected_error_or_resonse, _):
         """
         Ensure data validation and success scenarios for order create.
         """
@@ -123,16 +135,10 @@ class OrderCreateViewTests(APITestCase):
 
         response_json = response.json()
         if expected_status == status.HTTP_200_OK:
-            self.assertFalse(response_json['order_created_save']['error'])
-            self.assertTrue(mock_create_order_task.called)
-            args = mock_create_order_task.call_args.args
-            self.assertEqual(args[0], query_params['product_sku'])
-            self.assertEqual(args[1], query_params['edx_lms_user_id'])
-            self.assertEqual(args[2], query_params['email'])
-            self.assertEqual(args[3], 'John')
-            self.assertEqual(args[4], 'Doe')
+            args = expected_error_or_resonse
+            self.assertEqual(args, response_json)
         else:
-            expected_error_key = expected_error['error_key']
-            expected_error_message = expected_error['error_message']
+            expected_error_key = expected_error_or_resonse['error_key']
+            expected_error_message = expected_error_or_resonse['error_message']
             self.assertIn(expected_error_key, response_json)
             self.assertIn(expected_error_message, response_json[expected_error_key])

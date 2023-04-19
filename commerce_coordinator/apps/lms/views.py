@@ -8,9 +8,11 @@ from rest_framework.response import Response
 from rest_framework.throttling import UserRateThrottle
 from rest_framework.views import APIView
 
-from commerce_coordinator.apps.core.signal_helpers import format_signal_results
+from .filters import OrderCreateRequested
 from .serializers import OrderCreatedSignalInputSerializer
-from .signals import order_created_signal
+
+# TODO: Once we are live for good, kill this and default the lines as expected.
+IS_LIVE = False
 
 
 class OrderCreateView(APIView):
@@ -41,19 +43,14 @@ class OrderCreateView(APIView):
         """
         order_created_signal_params = {
             'product_sku': request.query_params.getlist('product_sku'),
-            # TODO: edx_lms_user_id should be taken from request.user.lms_user_id once we go live.
-            'edx_lms_user_id': request.query_params.get('edx_lms_user_id'),
-            # TODO: email should be taken from request.user.email once we go live.
-            'email': request.query_params.get('email'),
-            # TODO: first_name, last_name should be taken from request.user once we go live.
-            'first_name': 'John',
-            'last_name': 'Doe',
+            'edx_lms_user_id': request.user.lms_user_id if IS_LIVE else request.query_params.get('edx_lms_user_id'),
+            'email': request.user.email if IS_LIVE else request.query_params.get('email'),
+            'first_name': request.user.first_name if IS_LIVE else 'John',
+            'last_name': request.user.last_name if IS_LIVE else 'Doe',
             'coupon_code': request.query_params.get('coupon_code'),
         }
         serializer = OrderCreatedSignalInputSerializer(data=order_created_signal_params)
+
         if serializer.is_valid(raise_exception=True):
-            results = order_created_signal.send_robust(
-                sender=self.__class__,
-                **serializer.validated_data
-            )
-            return Response(format_signal_results(results))
+            result = OrderCreateRequested.run_filter(serializer.validated_data)
+            return Response(result)

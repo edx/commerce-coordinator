@@ -1,6 +1,8 @@
 '''Utilities to help test Coordinator apps.'''
 
 import json
+import random
+import string
 
 import responses
 from django.apps import apps
@@ -11,6 +13,8 @@ from commerce_coordinator.apps.core.clients import urljoin_directory
 from commerce_coordinator.apps.core.signal_helpers import CoordinatorSignal
 
 example_signal = CoordinatorSignal()
+
+ANGRY_FACE = '\U0001F92C'
 
 
 class CoordinatorSignalReceiverTestCase(TestCase):
@@ -236,3 +240,68 @@ class CoordinatorOAuthClientTestCase(CoordinatorClientTestCase):
             mock_status=mock_status,
             expected_output=expected_output
         )
+
+
+def name_test(name: str, x):
+    """
+    Permits the naming of simple ddt packed tests in common collection containers
+
+    NOTE: This may "feel weird" but it's the way the developers do it see
+    `def annotated(str, list)` at https://ddt.readthedocs.io/en/latest/example.html
+    """
+
+    class WrappedTuple(tuple):
+        pass
+
+    class WrappedList(list):
+        pass
+
+    class WrappedDict(dict):
+        pass
+
+    wx = None
+    if isinstance(x, dict):
+        wx = WrappedDict(x)
+    elif isinstance(x, tuple):
+        wx = WrappedTuple(x)
+    elif isinstance(x, list):  # coverage skipping here is a bug. sorry.
+        wx = WrappedList(x)
+
+    # See note in Class PyDoc, Parameterized PyTest is planned in the future.
+    # pylint: disable-next=literal-used-as-attribute
+    setattr(wx, "__name__", name)
+    return wx
+
+
+def random_unicode_str(ln: int, limit_unicode=True, weight_divisor=2):
+    """ Generate a string of X characters guaranteed to include at least one non ASCII one. """
+
+    uchars = ['\xe9', '\xf1', '\xfc', '\u0110', '\u0159', '\u016f', '\xc5', '\xdf', '\xe7', '\u0131',
+              '\u0130', '\uff21', '\ufb04', '\u211a', '\xbd', '\u20ac', '\u20b9', '\xa5', '\u0416', '\u03b7',
+              '\uae00', '\u0913', '\u0b15', '\u3058', '\u5b57', '\U0001f40d', '\U0001f496', '\u2652', '\u2658']
+
+    # The above represents, Escapes used incase this file is ever re-encoded by accident.
+    # ['é', 'ñ', 'ü', 'Đ', 'ř', 'ů', 'Å', 'ß', 'ç', 'ı', 'İ', 'Ａ', 'ﬄ', 'ℚ', '½', '€', '₹', '¥', 'Ж', 'η', '글',
+    # 'ओ', 'କ', 'じ', '字', '🐍', '💖', '♒', '♘']
+
+    chars = uchars + list(string.printable)
+
+    def _unicode_limiter(c: (int, str)):
+        """ Map replacement function to limit unicode based on a divisor """
+
+        if limit_unicode:
+            if len(bytes(chars[c[0]], encoding='utf8')) > 1:
+                return 1
+            else:
+                return abs(len(chars) / weight_divisor)
+        else:
+            return 1
+
+    weights = list(map(_unicode_limiter, enumerate(chars)))
+
+    retval = ''.join(random.choices(chars, weights=weights, k=ln - 1))
+
+    retval += random.choice(uchars)  # ensure we get one unicode no matter what.
+
+    assert len(retval) == ln
+    return retval

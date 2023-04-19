@@ -2,6 +2,7 @@
 from rest_framework import serializers
 
 
+# Originally stolen verbatim from Ecomm
 class OrderCreatedSignalInputSerializer(serializers.Serializer):  # pylint: disable=abstract-method
     """
     Serializer for order_created_signal input validation.
