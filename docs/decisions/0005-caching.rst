@@ -57,8 +57,20 @@ Consequences
 Wrapper Functions
 -----------------
 
-..
-    Add example of how to use wrapper functions here.
+Here is an example wrapper function
+
+.. code-block:: python3
+
+    from edx_django_utils.cache import get_cache_key
+
+    def get_payment_state_cache_key(payment_number, payment_state):
+        cache_key = get_cache_key(
+            cache_name='payment',
+            identifier=payment_number,
+            version=payment_state
+        )
+        return cache_key
+
 
 Versioning
 ----------
