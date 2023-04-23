@@ -21,6 +21,7 @@ class UnixDateTimeFieldTests(TestCase):
         ("1680700901", datetime.datetime(2023, 4, 5, 13, 21, 41, tzinfo=utc)),
         (1680700901, datetime.datetime(2023, 4, 5, 13, 21, 41, tzinfo=utc)),
         (" 1680700901 ", datetime.datetime(2023, 4, 5, 13, 21, 41, tzinfo=utc)),
+        ("1680700901.999999", datetime.datetime(2023, 4, 5, 13, 21, 41, 999999, tzinfo=utc)),
     )
     @ddt.unpack
     def test_valid_values(self, input_value, expected_output):
@@ -29,7 +30,7 @@ class UnixDateTimeFieldTests(TestCase):
         self.assertEqual(output, expected_output)
 
     @ddt.data(
-        ('not_a_date', ['A valid integer is required.']),
+        ('not_a_date', ['A valid number is required.']),
         (sys.maxsize, ['Could not parse POSIX timestamp.']),
         ('long_string' * 91, ['String value too large.']),
     )
