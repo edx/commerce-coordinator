@@ -15,11 +15,12 @@ class UnixDateTimeField(DateTimeField):
 
     Most Unix time values are already in POSIX time.
 
-    This class is a combination of DRF classes IntegerField and DateTimeField.
+    This class is a combination of DRF classes FloatField and DateTimeField.
     """
     default_error_messages = {
-        'invalid_int': _('A valid integer is required.'),
+        'invalid_float': _('A valid number is required.'),
         'max_string_length': _('String value too large.'),
+        'overflow': _('Integer value too large to convert to float'),
         'unparsable_posix_timestamp': _('Could not parse POSIX timestamp.'),
     }
 
@@ -30,19 +31,21 @@ class UnixDateTimeField(DateTimeField):
             self.fail('max_string_length')
 
         try:
-            value = int(str(value))
+            float_value = float(value)
         except (ValueError, TypeError):
-            self.fail('invalid_int')
+            self.fail('invalid_float')
+        except OverflowError:
+            self.fail('overflow')
 
         try:
-            value = datetime.fromtimestamp(value)
+            datetime_value = datetime.fromtimestamp(float_value)
         except (OverflowError, OSError):
             # Typically restricted to years in 1970 through 2038.
             # Will not catch Unix time stamps that count leap seconds.
             self.fail('unparsable_posix_timestamp')
 
         # Continue parsing as DateTimeField.
-        return super().to_internal_value(value)
+        return super().to_internal_value(datetime_value)
 
 
 # The code in UnixDateTimeField was adapted from encode/django-rest-framework,
