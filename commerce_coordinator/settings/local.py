@@ -2,6 +2,11 @@ from commerce_coordinator.settings.base import *
 
 DEBUG = True
 
+ALLOWED_HOSTS += (
+    # Built-in alias to reach the host machine running Docker Desktop from inside a container:
+    'host.docker.internal',
+)
+
 INSTALLED_APPS += (
     'commerce_coordinator.apps.demo_lms.apps.DemoLmsConfig',
 )
