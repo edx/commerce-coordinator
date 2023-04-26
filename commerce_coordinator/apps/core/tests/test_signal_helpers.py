@@ -3,19 +3,19 @@
 import logging
 from pprint import pformat
 
-from django.apps import apps
-from django.test import TestCase, override_settings
+from django.test import override_settings
 
-from commerce_coordinator.apps.core.signal_helpers import CoordinatorSignal, format_signal_results, log_receiver
+from commerce_coordinator.apps.core.signal_helpers import format_signal_results, log_receiver
+from commerce_coordinator.apps.core.tests.utils import CoordinatorSignalReceiverTestCase
 
 # Log using module name.
 logger = logging.getLogger(__name__)
 
-# Fully qualified module name.
-fqmn = __name__
-
 # Test signal & receivers.
-mock_signal = CoordinatorSignal()
+test_signal_helpers_parameters = {
+    'param1': 'parameter1_value',
+    'param2': 'parameter2_value',
+}
 
 
 @log_receiver(logger)
@@ -39,45 +39,17 @@ def mock_receiver_exception(**kwargs):
     raise RuntimeError('This is an expected exception.')
 
 
-class CoordinatorSignalTestCase(TestCase):
-    """Base class for testing CoordinatorSignal."""
-
-    def setUp(self):
-        # Initialize store for signal result.
-        self.result = None
-
-        # Initialize context manager for holding test logs.
-        self.logging_cm = None
-
-        # Clear receiver connections from previous tests.
-        mock_signal.receivers = []
-        mock_signal.sender_receivers_cache.clear()
-
-        # Remount signals after settings override.
-        apps.get_app_config('core').ready()
-
-        # Send mock_signal.
-        parameters = {
-            'param1': 'parameter1_value',
-            'param2': 'parameter2_value',
-        }
-
-        with self.assertLogs() as self.logging_cm:
-            self.result = mock_signal.send_robust(
-                sender=self.__class__,
-                **parameters
-            )
-
-
 @override_settings(
     CC_SIGNALS={
-        fqmn + '.mock_signal': [
-            fqmn + '.mock_receiver_1',
+        'commerce_coordinator.apps.core.tests.utils.example_signal': [
+            'commerce_coordinator.apps.core.tests.test_signal_helpers.mock_receiver_1',
         ],
     }
 )
-class CoordinatorSignalTests(CoordinatorSignalTestCase):
+class CoordinatorSignalTests(CoordinatorSignalReceiverTestCase):
     """Tests of CoordinatorSignal class."""
+
+    mock_parameters = test_signal_helpers_parameters
 
     def test_config_matches_num_calls(self):
         logger.info('self.result: %s', self.result)
@@ -108,22 +80,24 @@ class CoordinatorSignalTests(CoordinatorSignalTestCase):
 
     def test_exception_on_unrobust_send(self):
         with self.assertRaises(NotImplementedError):
-            self.result = mock_signal.send(
+            self.mock_signal.send(
                 sender=self.__class__
             )
 
 
 @override_settings(
     CC_SIGNALS={
-        fqmn + '.mock_signal': [
-            fqmn + '.mock_receiver_1',
-            fqmn + '.mock_receiver_2',
-            fqmn + '.mock_receiver_exception',
+        'commerce_coordinator.apps.core.tests.utils.example_signal': [
+            'commerce_coordinator.apps.core.tests.test_signal_helpers.mock_receiver_1',
+            'commerce_coordinator.apps.core.tests.test_signal_helpers.mock_receiver_2',
+            'commerce_coordinator.apps.core.tests.test_signal_helpers.mock_receiver_exception',
         ],
     }
 )
-class LogReceiverTests(CoordinatorSignalTestCase):
+class LogReceiverTests(CoordinatorSignalReceiverTestCase):
     """Tests of log_receiver() helper function."""
+
+    mock_parameters = test_signal_helpers_parameters
 
     def test_config_matches_num_calls(self):
         logger.info('self.result: %s', self.result)
@@ -164,15 +138,17 @@ class LogReceiverTests(CoordinatorSignalTestCase):
 
 @override_settings(
     CC_SIGNALS={
-        fqmn + '.mock_signal': [
-            fqmn + '.mock_receiver_1',
-            fqmn + '.mock_receiver_2',
-            fqmn + '.mock_receiver_exception',
+        'commerce_coordinator.apps.core.tests.utils.example_signal': [
+            'commerce_coordinator.apps.core.tests.test_signal_helpers.mock_receiver_1',
+            'commerce_coordinator.apps.core.tests.test_signal_helpers.mock_receiver_2',
+            'commerce_coordinator.apps.core.tests.test_signal_helpers.mock_receiver_exception',
         ],
     }
 )
-class FormatSignalResultsTests(CoordinatorSignalTestCase):
+class FormatSignalResultsTests(CoordinatorSignalReceiverTestCase):
     """Tests of format_signal_results() helper function."""
+
+    mock_parameters = test_signal_helpers_parameters
 
     def setUp(self):
         super().setUp()
