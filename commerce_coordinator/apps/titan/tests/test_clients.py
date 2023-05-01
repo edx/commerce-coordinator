@@ -48,6 +48,7 @@ class TestTitanAPIClient(CoordinatorClientTestCase):
                     }
                 }
             },
+            expected_headers=self.expected_headers,
             mock_url=url,
             mock_response={
                 'uuid': 'test-uuid',
@@ -73,6 +74,7 @@ class TestTitanAPIClient(CoordinatorClientTestCase):
                     }
                 }
             },
+            expected_headers=self.expected_headers,
             mock_url=url,
             mock_response={
                 'uuid': 'test-uuid',
@@ -98,6 +100,7 @@ class TestTitanAPIClient(CoordinatorClientTestCase):
                     }
                 }
             },
+            expected_headers=self.expected_headers,
             mock_url=url,
             mock_response={
                 'uuid': 'test-uuid',
@@ -126,6 +129,7 @@ class TestTitanAPIClient(CoordinatorClientTestCase):
                 'productSku': 'C4D5E6',
                 'source': 'edx'
             },
+            expected_headers=self.expected_headers,
             mock_url=url,
             mock_response={
                 'uuid': 'test-uuid',
