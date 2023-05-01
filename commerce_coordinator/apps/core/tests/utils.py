@@ -6,6 +6,7 @@ import responses
 from django.apps import apps
 from django.test import TestCase
 
+from commerce_coordinator.apps.core.clients import urljoin_directory
 from commerce_coordinator.apps.core.signal_helpers import CoordinatorSignal
 
 example_signal = CoordinatorSignal()
