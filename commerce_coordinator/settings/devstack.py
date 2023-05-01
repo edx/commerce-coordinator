@@ -28,6 +28,11 @@ SOCIAL_AUTH_EDX_OAUTH2_PUBLIC_URL_ROOT = os.environ.get(
 )
 
 # OAuth2 variables specific to backend service API calls.
+BACKEND_SERVICE_EDX_OAUTH2_PROVIDER_URL = os.environ.get(
+    'BACKEND_SERVICE_EDX_OAUTH2_PROVIDER_URL',
+    'http://edx.devstack.lms:18000'
+)
+
 BACKEND_SERVICE_EDX_OAUTH2_KEY = os.environ.get(
     'BACKEND_SERVICE_EDX_OAUTH2_KEY',
     'commerce_coordinator-backend-service-key'

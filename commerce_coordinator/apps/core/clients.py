@@ -72,7 +72,7 @@ class BaseEdxOAuthClient(Client):
 
     def __init__(self):
         self.client = OAuthAPIClient(
-            settings.SOCIAL_AUTH_EDX_OAUTH2_URL_ROOT.strip('/'),
+            settings.BACKEND_SERVICE_EDX_OAUTH2_PROVIDER_URL.strip('/'),
             self.oauth2_client_id,
             self.oauth2_client_secret,
             timeout=self.normal_timeout
