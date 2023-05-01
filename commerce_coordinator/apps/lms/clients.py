@@ -5,7 +5,7 @@ import requests
 from celery.utils.log import get_task_logger
 from django.conf import settings
 
-from commerce_coordinator.apps.core.clients import BaseEdxOAuthClient
+from commerce_coordinator.apps.core.clients import BaseEdxOAuthClient, urljoin_directory
 
 # Use special Celery logger for tasks client calls.
 logger = get_task_logger(__name__)
@@ -21,7 +21,7 @@ class LMSAPIClient(BaseEdxOAuthClient):
         """
         Base URL for LMS Enrollment API service.
         """
-        return self.urljoin_directory(settings.LMS_URL_ROOT, '/api/enrollment/v1/enrollment')
+        return urljoin_directory(settings.LMS_URL_ROOT, '/api/enrollment/v1/enrollment')
 
     def enroll_user_in_course(self, enrollment_data):
         """
