@@ -6,7 +6,7 @@ import logging
 import requests
 from django.conf import settings
 
-from commerce_coordinator.apps.core.clients import BaseEdxOAuthClient
+from commerce_coordinator.apps.core.clients import BaseEdxOAuthClient, urljoin_directory
 
 logger = logging.getLogger(__name__)
 
@@ -19,7 +19,7 @@ class EcommerceAPIClient(BaseEdxOAuthClient):
 
     def __init__(self):
         super().__init__()
-        self.api_base_url = self.urljoin_directory(settings.ECOMMERCE_URL, '/api/v2')
+        self.api_base_url = urljoin_directory(settings.ECOMMERCE_URL, '/api/v2')
 
     def get_orders(self, query_params):
         """
@@ -34,7 +34,7 @@ class EcommerceAPIClient(BaseEdxOAuthClient):
 
         """
         try:
-            resource_url = self.urljoin_directory(self.api_base_url, '/orders')
+            resource_url = urljoin_directory(self.api_base_url, '/orders')
             response = self.client.get(resource_url, params=query_params)
             response.raise_for_status()
             return response.json()

@@ -10,6 +10,43 @@ from edx_rest_api_client.client import OAuthAPIClient
 logger = logging.getLogger(__name__)
 
 
+def urljoin_directory(base_directory_url, relative_target_directory_url):
+    """
+    Adds relative_target_directory_url at the end of base_directory_url.
+
+    Supports inconsistent trailing slashes and chaining outputs to inputs.
+
+    A directory URL is one with an empty final path segment.
+
+    See RFC 3986 for definition of a path segment and a relative-path
+    reference.
+
+    Args:
+        base_directory_url: A directory URL, like
+            "http://example.com/directory/".
+        relative_target_directory_url: A relative-path reference of a
+            directory URL, like "subdirectory/".
+
+    Returns:
+        String. The expanded URL of relative_target_directory_url when
+        applied to base_directory_url.
+
+        If base_directory_url is "http://example.com/directory/" and
+        relative_target_directory_url is "subdirectory/", the returned
+        string is "http://example.com/directory/subdirectory/".
+
+        Will preserve both presence and absence of trailing slash in
+        relative_target_directory_url.
+    """
+    # Add slash at end of base_directory_url so relative_target_directory_url won't overwrite last path segment.
+    if not base_directory_url.endswith("/"):
+        base_directory_url += "/"
+    # Remove slash from start of relative_target_directory_url already present in base_directory_url.
+    if relative_target_directory_url.startswith("/"):
+        relative_target_directory_url = relative_target_directory_url[1:]
+    return urljoin(base_directory_url, relative_target_directory_url)
+
+
 class Client:
     """
     Base class for API clients.
@@ -26,43 +63,6 @@ class Client:
             settings.REQUEST_CONNECT_TIMEOUT_SECONDS,
             settings.REQUEST_READ_TIMEOUT_SECONDS
         )
-
-    @staticmethod
-    def urljoin_directory(base_directory_url, relative_target_directory_url):
-        """
-        Adds relative_target_directory_url at the end of base_directory_url.
-
-        Supports inconsistent trailing slashes and chaining outputs to inputs.
-
-        A directory URL is one with an empty final path segment.
-
-        See RFC 3986 for definition of a path segment and a relative-path
-        reference.
-
-        Args:
-            base_directory_url: A directory URL, like
-                "http://example.com/directory/".
-            relative_target_directory_url: A relative-path reference of a
-                directory URL, like "subdirectory/".
-
-        Returns:
-            String. The expanded URL of relative_target_directory_url when
-            applied to base_directory_url.
-
-            If base_directory_url is "http://example.com/directory/" and
-            relative_target_directory_url is "subdirectory/", the returned
-            string is "http://example.com/directory/subdirectory/".
-
-            Will preserve both presence and absence of trailing slash in
-            relative_target_directory_url.
-        """
-        # Add slash at end of base_directory_url so relative_target_directory_url won't overwrite last path segment.
-        if not base_directory_url.endswith("/"):
-            base_directory_url += "/"
-        # Remove slash from start of relative_target_directory_url already present in base_directory_url.
-        if relative_target_directory_url.startswith("/"):
-            relative_target_directory_url = relative_target_directory_url[1:]
-        return urljoin(base_directory_url, relative_target_directory_url)
 
 
 class BaseEdxOAuthClient(Client):
