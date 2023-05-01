@@ -5,7 +5,7 @@ import requests
 from celery.utils.log import get_task_logger
 from django.conf import settings
 
-from commerce_coordinator.apps.core.clients import Client
+from commerce_coordinator.apps.core.clients import Client, urljoin_directory
 
 # Use special Celery logger for tasks client calls.
 logger = get_task_logger(__name__)
@@ -24,7 +24,7 @@ class TitanAPIClient(Client):
     @property
     def api_base_url(self):
         """URL of API service."""
-        return self.urljoin_directory(settings.TITAN_URL, '/edx/api/v1/')
+        return urljoin_directory(settings.TITAN_URL, '/edx/api/v1/')
 
     @property
     def api_base_header(self):
@@ -50,7 +50,7 @@ class TitanAPIClient(Client):
 
         """
         try:
-            resource_url = self.urljoin_directory(self.api_base_url, resource_path)
+            resource_url = urljoin_directory(self.api_base_url, resource_path)
             response = self.client.request(
                 method=request_method,
                 url=resource_url,
