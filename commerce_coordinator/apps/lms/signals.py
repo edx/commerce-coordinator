@@ -14,7 +14,7 @@ def fulfill_order_placed_send_enroll_in_course(**kwargs):
     """
     Fulfill the order placed in Titan with a Celery task to LMS to enroll a user in a single course.
     """
-    fulfill_order_placed_send_enroll_in_course_task.delay(
+    async_result = fulfill_order_placed_send_enroll_in_course_task.delay(
         course_id=kwargs['course_id'],
         course_mode=kwargs['course_mode'],
         date_placed=kwargs['date_placed'],
@@ -23,3 +23,4 @@ def fulfill_order_placed_send_enroll_in_course(**kwargs):
         order_number=kwargs['order_number'],
         provider_id=kwargs['provider_id'],
     )
+    return async_result.id
