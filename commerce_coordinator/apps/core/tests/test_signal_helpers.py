@@ -52,33 +52,39 @@ class CoordinatorSignalTests(CoordinatorSignalReceiverTestCase):
     mock_parameters = test_signal_helpers_parameters
 
     def test_config_matches_num_calls(self):
-        logger.info('self.result: %s', self.result)
-        self.assertEqual(len(self.result), 1,
+        result, _ = self.fire_signal()
+        logger.info('result: %s', result)
+        self.assertEqual(len(result), 1,
                          'Check 1 receiver is called')
 
     def test_return_has_name_and_result(self):
-        logger.info('self.result: %s', self.result)
-        self.assertEqual(len(self.result[0]), 2,
-                         'Check receiver self.result has name and self.result')
+        result, _ = self.fire_signal()
+        logger.info('result: %s', result)
+        self.assertEqual(len(result[0]), 2,
+                         'Check receiver result has name and result')
 
     def test_correct_receiver_called(self):
-        logger.info('self.result: %s', self.result)
-        self.assertEqual(self.result[0][0].__name__, 'mock_receiver_1',
+        result, _ = self.fire_signal()
+        logger.info('result: %s', result)
+        self.assertEqual(result[0][0].__name__, 'mock_receiver_1',
                          'Check receiver name is mock_receiver')
 
     def test_correct_response_returned(self):
-        logger.info('self.result: %s', self.result)
-        self.assertEqual(self.result[0][1], 'bogus_mock_receiver_1_task_id',
-                         'Check reciever self.result is a task id')
+        result, _ = self.fire_signal()
+        logger.info('result: %s', result)
+        self.assertEqual(result[0][1], 'bogus_mock_receiver_1_task_id',
+                         'Check reciever result is a task id')
 
     def test_correct_arguments_passed(self):
-        logger.info('self.logging_cm.output: %s', self.logging_cm.output)
-        self.assertTrue(any('parameter1_value' in line for line in self.logging_cm.output),
+        _, logs = self.fire_signal()
+        logger.info('logs.output: %s', logs.output)
+        self.assertTrue(any('parameter1_value' in line for line in logs.output),
                         'Check parameter1_value is received by receiver')
-        self.assertTrue(any('parameter2_value' in line for line in self.logging_cm.output),
+        self.assertTrue(any('parameter2_value' in line for line in logs.output),
                         'Check parameter2_value is received by receiver')
 
     def test_exception_on_unrobust_send(self):
+        self.fire_signal()
         with self.assertRaises(NotImplementedError):
             self.mock_signal.send(
                 sender=self.__class__
@@ -100,37 +106,41 @@ class LogReceiverTests(CoordinatorSignalReceiverTestCase):
     mock_parameters = test_signal_helpers_parameters
 
     def test_config_matches_num_calls(self):
-        logger.info('self.result: %s', self.result)
-        self.assertEqual(len(self.result), 3,
+        result, _ = self.fire_signal()
+        logger.info('result: %s', result)
+        self.assertEqual(len(result), 3,
                          'Check 3 receivers called')
 
     def test_mock_receiver_exception_called(self):
-        logger.info('self.result: %s', self.result)
+        result, _ = self.fire_signal()
+        logger.info('result: %s', result)
         self.assertTrue(
             any(
                 receiver.__name__ == 'mock_receiver_exception'
-                for receiver, response in self.result
+                for receiver, response in result
             ),
             'Check mock_receiver_exception called'
         )
 
     def test_mock_receiver_exception_reported(self):
-        logger.info('self.result: %s', self.result)
+        result, _ = self.fire_signal()
+        logger.info('result: %s', result)
         self.assertTrue(
             any(
                 receiver.__name__ == 'mock_receiver_exception'
                 and isinstance(response, RuntimeError)
-                for receiver, response in self.result
+                for receiver, response in result
             ),
             'Check mock_receiver_exception reports its RuntimeError'
         )
 
     def test_mock_receiver_exception_logged(self):
-        logger.info('self.logging_cm.output: %s', self.logging_cm.output)
+        _, logs = self.fire_signal()
+        logger.info('logs.output: %s', logs.output)
         self.assertTrue(
             any(
                 'This is an expected exception' in line
-                for line in self.logging_cm.output
+                for line in logs.output
             ),
             'Check mock_receiver_exception\'s RuntimeError is logged'
         )
@@ -150,28 +160,28 @@ class FormatSignalResultsTests(CoordinatorSignalReceiverTestCase):
 
     mock_parameters = test_signal_helpers_parameters
 
-    def setUp(self):
-        super().setUp()
-
-        # Format results
-        self.formatted_result = format_signal_results(self.result)
-
     def test_returns_dict(self):
-        logger.info('self.formatted_result: \n%s', pformat(self.formatted_result))
-        logger.info('type(self.formatted_result): %s', type(self.formatted_result))
-        self.assertIsInstance(self.formatted_result, dict,
+        result, _ = self.fire_signal()
+        formatted_result = format_signal_results(result)
+        logger.info('formatted_result: \n%s', pformat(formatted_result))
+        logger.info('type(formatted_result): %s', type(formatted_result))
+        self.assertIsInstance(formatted_result, dict,
                               'Check output is a Python dict')
 
     def test_config_matches_num_formatted_result_entries(self):
-        logger.info('self.formatted_result: \n%s', pformat(self.formatted_result))
-        self.assertEqual(len(self.formatted_result), 3,
+        result, _ = self.fire_signal()
+        formatted_result = format_signal_results(result)
+        logger.info('formatted_result: \n%s', pformat(formatted_result))
+        self.assertEqual(len(formatted_result), 3,
                          'Check 3 results are returned, one for each signal')
 
     def test_formatted_result_shape(self):
-        logger.info('self.result: %s', self.result)
-        logger.info('self.formatted_result: \n%s', pformat(self.formatted_result))
+        result, _ = self.fire_signal()
+        formatted_result = format_signal_results(result)
+        logger.info('result: %s', result)
+        logger.info('formatted_result: \n%s', pformat(formatted_result))
 
-        for value in self.formatted_result.values():
+        for value in formatted_result.values():
             self.assertIsInstance(value, dict,
                                   'Check each output value is a dict')
             self.assertIn('error', value.keys(),
@@ -180,13 +190,15 @@ class FormatSignalResultsTests(CoordinatorSignalReceiverTestCase):
                           'Check dict for each output value has key called response')
 
     def test_mock_receiver_1_result(self):
-        logger.info('self.result: %s', self.result)
-        logger.info('self.formatted_result: \n%s', pformat(self.formatted_result))
+        result, _ = self.fire_signal()
+        formatted_result = format_signal_results(result)
+        logger.info('result: %s', result)
+        logger.info('formatted_result: \n%s', pformat(formatted_result))
 
-        self.assertIn('mock_receiver_1', self.formatted_result,
+        self.assertIn('mock_receiver_1', formatted_result,
                       'Check results have entry for mock_receiver_1')
 
-        entry = self.formatted_result['mock_receiver_1']
+        entry = formatted_result['mock_receiver_1']
 
         self.assertFalse(entry['error'],
                          'Check mock_receiver_1 reports no error')
@@ -195,13 +207,15 @@ class FormatSignalResultsTests(CoordinatorSignalReceiverTestCase):
                          'Check mock_receiver_1 reports its return value')
 
     def test_mock_receiver_exception_result(self):
-        logger.info('self.result: %s', self.result)
-        logger.info('self.formatted_result: \n%s', pformat(self.formatted_result))
+        result, _ = self.fire_signal()
+        formatted_result = format_signal_results(result)
+        logger.info('result: %s', result)
+        logger.info('formatted_result: \n%s', pformat(formatted_result))
 
-        self.assertIn('mock_receiver_exception', self.formatted_result,
+        self.assertIn('mock_receiver_exception', formatted_result,
                       'Check results have entry for mock_receiver_exception')
 
-        entry = self.formatted_result['mock_receiver_exception']
+        entry = formatted_result['mock_receiver_exception']
 
         self.assertTrue(entry['error'],
                         'Check mock_receiver_exception reports an error')

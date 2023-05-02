@@ -66,12 +66,14 @@ class CoordinatorSignalReceiverTestCase(TestCase):
         # Remount signals after settings override.
         apps.get_app_config('core').ready()
 
-        # Send mock_signal.
-        with self.assertLogs() as self.logging_cm:
-            self.result = self.mock_signal.send_robust(
+    def fire_signal(self):
+        '''Send mock_signal.'''
+        with self.assertLogs() as logs:
+            result = self.mock_signal.send_robust(
                 sender=self.__class__,
                 **self.mock_parameters
             )
+        return (result, logs)
 
 
 class CoordinatorClientTestCase(TestCase):
