@@ -4,6 +4,7 @@ import json
 
 import responses
 from django.apps import apps
+from django.conf import settings
 from django.test import TestCase
 
 from commerce_coordinator.apps.core.clients import urljoin_directory
@@ -150,4 +151,43 @@ class CoordinatorClientTestCase(TestCase):
             output,
             expected_output,
             'Check client returns expected output'
+        )
+
+
+class CoordinatorOAuthClientTestCase(CoordinatorClientTestCase):
+    '''
+    Testing class for methods of OAuth clients.py of a Coordinator app.
+
+    Note: There is no class named CoordinatorOAuthClient. This is a utility class.
+    '''
+
+    def register_mock_oauth_call(self):
+        '''
+        Add a mock OAuth call to
+        settings.BACKEND_SERVICE_EDX_OAUTH2_PROVIDER_URL's
+        /oauth/access_token endpoint.
+        '''
+        url = urljoin_directory(
+            settings.BACKEND_SERVICE_EDX_OAUTH2_PROVIDER_URL,
+            '/oauth2/access_token'
+        )
+        responses.add(method='POST', url=url, json={
+            'access_token': 'a1b2c3d4',
+            'expires_in': 1000
+        })
+
+    @responses.activate
+    def assertJSONClientResponse(self, *, uut, input_kwargs, expected_request,
+                                 expected_headers=None, mock_method='POST',
+                                 mock_url, mock_response, expected_output):
+        self.register_mock_oauth_call()
+        super().assertJSONClientResponse(
+            uut=uut,
+            input_kwargs=input_kwargs,
+            expected_request=expected_request,
+            expected_headers=expected_headers,
+            mock_method=mock_method,
+            mock_url=mock_url,
+            mock_response=mock_response,
+            expected_output=expected_output
         )
