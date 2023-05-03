@@ -57,12 +57,11 @@ class LMSAPIClient(BaseEdxOAuthClient):
                 json=json,
                 timeout=timeout,
             )
-            logger.debug('Response status: %s', response.status_code)
-            logger.debug('Request body: %s', response.request.body)
-            logger.debug('Response text: %s', response.text)
-            response_json = response.json()
             response.raise_for_status()
+            response_json = response.json()
+            self.log_request_response(logger, response)
             return response_json
-        except requests.exceptions.HTTPError as exc:
+        except (requests.exceptions.HTTPError, requests.exceptions.JSONDecodeError) as exc:
+            self.log_request_exception(logger, exc)
             logger.error(exc)
             raise
