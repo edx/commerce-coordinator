@@ -37,7 +37,9 @@ class EcommerceAPIClient(BaseEdxOAuthClient):
             resource_url = urljoin_directory(self.api_base_url, '/orders')
             response = self.client.get(resource_url, params=query_params)
             response.raise_for_status()
-            return response.json()
-        except requests.exceptions.HTTPError as exc:
-            logger.exception(exc)
+            response_json = response.json()
+            self.log_request_response(logger, response)
+            return response_json
+        except (requests.exceptions.HTTPError, requests.exceptions.JSONDecodeError) as exc:
+            self.log_request_exception(logger, exc)
             raise

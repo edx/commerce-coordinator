@@ -64,6 +64,39 @@ class Client:
             settings.REQUEST_READ_TIMEOUT_SECONDS
         )
 
+    def log_request_response(self, ext_logger, response):
+        """
+        Log requests.Request Response.
+
+        Args:
+            ext_logger: The logger of the module the Client (or Client-
+                derived class) is running in.
+            response: A successful Response object from the requests library.
+        """
+        ext_logger.debug('Request URL: %s', response.request.url)
+        ext_logger.debug('Request method: %s', response.request.method)
+        ext_logger.debug('Request body: %s', response.request.body)
+        ext_logger.debug('Request headers: %s', response.request.headers)
+        ext_logger.debug('Response status: %s %s', response.status_code, response.reason)
+        ext_logger.debug('Response text: %s', response.text)
+
+    def log_request_exception(self, ext_logger, exc):
+        """
+        Log requests.Request exceptions.
+
+        Args:
+            ext_logger: The logger of the module the Client (or Client-
+                derived class) is running in.
+            response: A RequestException object from the requests library.
+        """
+        ext_logger.error(exc)
+        ext_logger.info('Request URL: %s', exc.request.url)
+        ext_logger.info('Request method: %s', exc.request.method)
+        ext_logger.info('Request body: %s', exc.request.body)
+        ext_logger.debug('Request headers: %s', exc.request.headers)
+        ext_logger.info('Response status: %s %s', exc.response.status_code, exc.response.reason)
+        ext_logger.info('Response body: %s', exc.response.text)
+
 
 class BaseEdxOAuthClient(Client):
     """
