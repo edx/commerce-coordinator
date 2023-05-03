@@ -61,21 +61,10 @@ class TitanAPIClient(Client):
             )
             response.raise_for_status()
             response_json = response.json()
-            logger.debug('Request URL: %s', response.request.url)
-            logger.debug('Request method: %s', response.request.method)
-            logger.debug('Request body: %s', response.request.body)
-            logger.debug('Request headers: %s', response.request.headers)
-            logger.debug('Response status: %s %s', response.status_code, response.reason)
-            logger.debug('Response body: %s', response_json)
+            self.log_request_response(logger, response)
             return response_json
         except (requests.exceptions.HTTPError, requests.exceptions.JSONDecodeError) as exc:
-            logger.error(exc)
-            logger.info('Request URL: %s', exc.request.url)
-            logger.info('Request method: %s', exc.request.method)
-            logger.info('Request body: %s', exc.request.body)
-            logger.debug('Request headers: %s', exc.request.headers)
-            logger.info('Response status: %s %s', exc.response.status_code, exc.response.reason)
-            logger.info('Response body: %s', exc.response.text)
+            self.log_request_exception(logger, exc)
             raise
 
     def create_order(self, edx_lms_user_id, email, first_name, last_name, currency='USD'):
