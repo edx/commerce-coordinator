@@ -4,6 +4,7 @@ from unittest.mock import patch, sentinel
 from django.test import override_settings
 
 from commerce_coordinator.apps.core.tests.utils import CoordinatorSignalReceiverTestCase
+from commerce_coordinator.apps.lms.tests.constants import EXAMPLE_FULFILLMENT_SIGNAL_PAYLOAD
 
 # Log using module name.
 logger = logging.getLogger(__name__)
@@ -19,15 +20,7 @@ logger = logging.getLogger(__name__)
 @patch('commerce_coordinator.apps.lms.signals.fulfill_order_placed_send_enroll_in_course_task')
 class FulfillOrderPlacedSendEnrollInCourseTest(CoordinatorSignalReceiverTestCase):
 
-    mock_parameters = {
-        'course_id': 1,
-        'course_mode': 2,
-        'date_placed': 3,
-        'edx_lms_user_id': 4,
-        'email_opt_in': 5,
-        'order_number': 6,
-        'provider_id': 7,
-    }
+    mock_parameters = EXAMPLE_FULFILLMENT_SIGNAL_PAYLOAD
 
     def test_correct_arguments_passed(self, mock_task):
         result, logs = self.fire_signal()
