@@ -3,10 +3,10 @@ branch = True
 data_file = .coverage
 source=commerce_coordinator
 omit =
-    commerce_coordinator/settings*
-    commerce_coordinator/conf*
+    commerce_coordinator/settings/*
+    commerce_coordinator/conf/*
     *wsgi.py
-    *migrations*
-    *admin.py
-    *static*
-    *templates*
+    */migrations/*
+    */admin.py
+    */static/*
+    */templates/*
