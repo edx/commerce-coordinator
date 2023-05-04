@@ -149,7 +149,8 @@ class CoordinatorClientTestCase(TestCase):
         exception_thrown = None
         try:
             output = uut(**input_kwargs)
-        except Exception as exc:
+        except Exception as exc:  # pylint: disable=broad-exception-caught
+            # Will rethrow this exception later.
             exception_thrown = exc
 
         request = responses.calls[-1].request
