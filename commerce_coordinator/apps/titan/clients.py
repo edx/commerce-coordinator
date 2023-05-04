@@ -1,9 +1,10 @@
 """
 API clients for Titan.
 """
-import requests
 from celery.utils.log import get_task_logger
 from django.conf import settings
+from requests import Session
+from requests.exceptions import RequestException
 
 from commerce_coordinator.apps.core.clients import Client, urljoin_directory
 
@@ -17,7 +18,7 @@ class TitanAPIClient(Client):
     """
 
     def __init__(self):
-        self.client = requests.Session()
+        self.client = Session()
         # Always send API key.
         self.client.headers.update(self.api_base_header)
 
@@ -60,12 +61,11 @@ class TitanAPIClient(Client):
                 headers=headers,
             )
             response.raise_for_status()
-            response_json = response.json()
             self.log_request_response(logger, response)
-            return response_json
-        except (requests.exceptions.HTTPError, requests.exceptions.JSONDecodeError) as exc:
+        except RequestException as exc:
             self.log_request_exception(logger, exc)
             raise
+        return response.json()
 
     def create_order(self, edx_lms_user_id, email, first_name, last_name, currency='USD'):
         """

@@ -3,8 +3,8 @@ API clients for ecommerce app.
 """
 import logging
 
-import requests
 from django.conf import settings
+from requests.exceptions import RequestException
 
 from commerce_coordinator.apps.core.clients import BaseEdxOAuthClient, urljoin_directory
 
@@ -37,9 +37,8 @@ class EcommerceAPIClient(BaseEdxOAuthClient):
             resource_url = urljoin_directory(self.api_base_url, '/orders')
             response = self.client.get(resource_url, params=query_params)
             response.raise_for_status()
-            response_json = response.json()
             self.log_request_response(logger, response)
-            return response_json
-        except (requests.exceptions.HTTPError, requests.exceptions.JSONDecodeError) as exc:
+        except RequestException as exc:
             self.log_request_exception(logger, exc)
             raise
+        return response.json()
