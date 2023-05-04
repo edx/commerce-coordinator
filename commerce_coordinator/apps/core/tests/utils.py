@@ -142,10 +142,16 @@ class CoordinatorClientTestCase(TestCase):
             match=expected_match,
         )
 
-        # Get client output & request it built for external API:
+        # Get client output & request it built for external API.
+        # Throw exceptions after asserts.
         if not input_kwargs:
             input_kwargs = {}
-        output = uut(**input_kwargs)
+        exception_thrown = None
+        try:
+            output = uut(**input_kwargs)
+        except Exception as exc:
+            exception_thrown = exc
+
         request = responses.calls[-1].request
 
         # Convert the request into a dictionary:
@@ -168,11 +174,17 @@ class CoordinatorClientTestCase(TestCase):
                 'Check external API called with expected input'
             )
         if expected_output:
+            if exception_thrown:
+                self.fail('Cannot validate expected_output on exceptions.')
             self.assertEqual(
                 output,
                 expected_output,
                 'Check client returns expected output'
             )
+
+        # Re-throw exception after checks:
+        if exception_thrown:
+            raise exception_thrown
 
 
 class CoordinatorOAuthClientTestCase(CoordinatorClientTestCase):
