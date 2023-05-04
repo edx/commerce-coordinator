@@ -84,10 +84,19 @@ class CoordinatorClientTestCase(TestCase):
     '''
 
     @responses.activate
-    def assertJSONClientResponse(self, *, uut, input_kwargs, expected_request,
-                                 expected_headers=None, mock_method='POST',
-                                 mock_url, mock_response, mock_status=200,
-                                 expected_output):
+    def assertJSONClientResponse(
+        self,
+        *,
+        uut,
+        input_kwargs=None,
+        expected_request=None,
+        expected_headers=None,
+        mock_method='POST',
+        mock_url,
+        mock_response=None,
+        mock_status=200,
+        expected_output=None
+    ):
         '''
         Checks uut produces expected_request and expected_output given
         input_kwargs and mock_response.
@@ -98,13 +107,13 @@ class CoordinatorClientTestCase(TestCase):
         Optionally, checks headers match self.expected_headers.
 
         Args:
-            uut (callable): Unit under test. Calls an external API using the
-                requests library.
+            uut (callable): Required. Unit under test. Calls an external API
+                using the requests library.
             input_kwargs (dict): kwargs to provide uut.
             expected_request (dict): Expected request of uut to external API
                 given input_kwargs. POST requests will be converted to JSON.
             expected_headers (dict): Expected headers of uut to external API.
-            mock_url (str): URL of external API to mock.
+            mock_url (str): Required. URL of external API to mock.
             mock_response (dict): Mock response external API should provide uut
                 given expected_request. Will be converted to JSON.
             mock_status (int): Mock response status code external API should
@@ -123,6 +132,8 @@ class CoordinatorClientTestCase(TestCase):
             expected_match = []
 
         # Prepare external API's mock response:
+        if not mock_response:
+            mock_response = {}
         responses.add(
             method=mock_method,
             url=mock_url,
@@ -132,6 +143,8 @@ class CoordinatorClientTestCase(TestCase):
         )
 
         # Get client output & request it built for external API:
+        if not input_kwargs:
+            input_kwargs = {}
         output = uut(**input_kwargs)
         request = responses.calls[-1].request
 
@@ -148,16 +161,18 @@ class CoordinatorClientTestCase(TestCase):
                 expected_headers.items(),
                 'Check external API called with expected headers'
             )
-        self.assertEqual(
-            request_dict,
-            expected_request,
-            'Check external API called with expected input'
-        )
-        self.assertEqual(
-            output,
-            expected_output,
-            'Check client returns expected output'
-        )
+        if expected_request:
+            self.assertEqual(
+                request_dict,
+                expected_request,
+                'Check external API called with expected input'
+            )
+        if expected_output:
+            self.assertEqual(
+                output,
+                expected_output,
+                'Check client returns expected output'
+            )
 
 
 class CoordinatorOAuthClientTestCase(CoordinatorClientTestCase):
@@ -183,10 +198,19 @@ class CoordinatorOAuthClientTestCase(CoordinatorClientTestCase):
         })
 
     @responses.activate
-    def assertJSONClientResponse(self, *, uut, input_kwargs, expected_request,
-                                 expected_headers=None, mock_method='POST',
-                                 mock_url, mock_response, mock_status=200,
-                                 expected_output):
+    def assertJSONClientResponse(
+        self,
+        *,
+        uut,
+        input_kwargs=None,
+        expected_request=None,
+        expected_headers=None,
+        mock_method='POST',
+        mock_url,
+        mock_response=None,
+        mock_status=200,
+        expected_output=None
+    ):
         self.register_mock_oauth_call()
         super().assertJSONClientResponse(
             uut=uut,

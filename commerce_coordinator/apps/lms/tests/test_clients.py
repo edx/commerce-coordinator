@@ -50,12 +50,7 @@ class LMSAPIClientTests(CoordinatorOAuthClientTestCase):
         with self.assertRaises(HTTPError):
             self.assertJSONClientResponse(
                 uut=self.client.enroll_user_in_course,
-                input_kwargs={
-                    'enrollment_data': {},
-                },
-                expected_request={},
+                input_kwargs={'enrollment_data': ''},
                 mock_url=self.url,
-                mock_response={},
                 mock_status=400,
-                expected_output={},
             )
