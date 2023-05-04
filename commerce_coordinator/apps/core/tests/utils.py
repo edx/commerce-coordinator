@@ -86,7 +86,8 @@ class CoordinatorClientTestCase(TestCase):
     @responses.activate
     def assertJSONClientResponse(self, *, uut, input_kwargs, expected_request,
                                  expected_headers=None, mock_method='POST',
-                                 mock_url, mock_response, expected_output):
+                                 mock_url, mock_response, mock_status=200,
+                                 expected_output):
         '''
         Checks uut produces expected_request and expected_output given
         input_kwargs and mock_response.
@@ -106,6 +107,8 @@ class CoordinatorClientTestCase(TestCase):
             mock_url (str): URL of external API to mock.
             mock_response (dict): Mock response external API should provide uut
                 given expected_request. Will be converted to JSON.
+            mock_status (int): Mock response status code external API should
+                provide uut given expected_request.
             expected_output (object): Expected return value of uut given
                 mock_response.
         '''
@@ -123,6 +126,7 @@ class CoordinatorClientTestCase(TestCase):
         responses.add(
             method=mock_method,
             url=mock_url,
+            status=mock_status,
             json=mock_response,
             match=expected_match,
         )
@@ -181,7 +185,8 @@ class CoordinatorOAuthClientTestCase(CoordinatorClientTestCase):
     @responses.activate
     def assertJSONClientResponse(self, *, uut, input_kwargs, expected_request,
                                  expected_headers=None, mock_method='POST',
-                                 mock_url, mock_response, expected_output):
+                                 mock_url, mock_response, mock_status=200,
+                                 expected_output):
         self.register_mock_oauth_call()
         super().assertJSONClientResponse(
             uut=uut,
@@ -191,5 +196,6 @@ class CoordinatorOAuthClientTestCase(CoordinatorClientTestCase):
             mock_method=mock_method,
             mock_url=mock_url,
             mock_response=mock_response,
+            mock_status=mock_status,
             expected_output=expected_output
         )
