@@ -1,9 +1,9 @@
 """
 API clients for LMS app.
 """
-import requests
 from celery.utils.log import get_task_logger
 from django.conf import settings
+from requests.exceptions import RequestException
 
 from commerce_coordinator.apps.core.clients import BaseEdxOAuthClient, urljoin_directory
 
@@ -58,10 +58,8 @@ class LMSAPIClient(BaseEdxOAuthClient):
                 timeout=timeout,
             )
             response.raise_for_status()
-            response_json = response.json()
             self.log_request_response(logger, response)
-            return response_json
-        except (requests.exceptions.HTTPError, requests.exceptions.JSONDecodeError) as exc:
+        except RequestException as exc:
             self.log_request_exception(logger, exc)
-            logger.error(exc)
             raise
+        return response.json()
