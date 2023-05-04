@@ -1,7 +1,10 @@
 """
 Tests for the LMS (edx-platform) views.
 """
+import uuid
+
 import ddt
+import django.conf
 from django.contrib.auth import get_user_model
 from django.urls import reverse
 from mock import patch
@@ -60,7 +63,7 @@ class OrderCreateViewTests(APITestCase):
 
     @ddt.data(
         name_test("test success", (
-            {}, None, status.HTTP_200_OK,
+            {}, None, status.HTTP_303_SEE_OTHER,
             {
                 'order_data': None,
                 'params': {
@@ -70,7 +73,7 @@ class OrderCreateViewTests(APITestCase):
              }
         )),
         name_test("test coupon_code is optional.", (
-            {}, 'coupon_code', status.HTTP_200_OK,
+            {}, 'coupon_code', status.HTTP_303_SEE_OTHER,
             {
                 'order_data': None,
                 'params': {
@@ -114,10 +117,13 @@ class OrderCreateViewTests(APITestCase):
     )
     @ddt.unpack
     @patch('commerce_coordinator.apps.titan.signals.order_created_save_task.delay')
-    def test_create_order(self, update_params, skip_param, expected_status, expected_error_or_resonse, _):
+    def test_create_order(self, update_params, skip_param, expected_status, expected_error_or_response, _):
         """
         Ensure data validation and success scenarios for order create.
         """
+
+        is_redirect_test = status.HTTP_301_MOVED_PERMANENTLY <= expected_status <= status.HTTP_303_SEE_OTHER
+
         self.client.force_authenticate(user=self.user)
         query_params = {
             'edx_lms_user_id': 1,
@@ -126,6 +132,12 @@ class OrderCreateViewTests(APITestCase):
             'email': 'pass-by-param@example.com',
         }
 
+        if is_redirect_test:
+            query_params.update({
+                'utm_source': uuid.uuid4(),
+                'utm_custom': uuid.uuid4(),
+            })
+
         query_params.update(update_params)
         if skip_param:
             del query_params[skip_param]
@@ -133,12 +145,20 @@ class OrderCreateViewTests(APITestCase):
         response = self.client.get(self.url, data=query_params)
         self.assertEqual(response.status_code, expected_status)
 
-        response_json = response.json()
-        if expected_status == status.HTTP_200_OK:
-            args = expected_error_or_resonse
+        if is_redirect_test:
+            redirect_location: str = response.headers['Location']
+
+            self.assertTrue(redirect_location.startswith(django.conf.settings.PAYMENT_MICROFRONTEND_URL))
+            self.assertIn("utm_", redirect_location, "No UTM Params Found")
+            self.assertIn(f"utm_source={query_params['utm_source']}", redirect_location, "Std UTM Params Not Found")
+            self.assertIn(f"utm_custom={query_params['utm_custom']}", redirect_location, "Custom UTM Params Not Found")
+        elif expected_status == status.HTTP_200_OK:
+            response_json = response.json()
+            args = expected_error_or_response
             self.assertEqual(args, response_json)
         else:
-            expected_error_key = expected_error_or_resonse['error_key']
-            expected_error_message = expected_error_or_resonse['error_message']
+            response_json = response.json()
+            expected_error_key = expected_error_or_response['error_key']
+            expected_error_message = expected_error_or_response['error_message']
             self.assertIn(expected_error_key, response_json)
             self.assertIn(expected_error_message, response_json[expected_error_key])

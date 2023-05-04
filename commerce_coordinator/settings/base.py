@@ -320,6 +320,9 @@ FULFILLMENT_TIMEOUT = 7
 ECOMMERCE_URL = 'replace-me'
 TITAN_URL = 'replace-me'
 
+# Needed to link to the payment micro-frontend
+PAYMENT_MICROFRONTEND_URL = 'replace-me'
+
 # Filters PoC
 OPEN_EDX_FILTERS_CONFIG = {
     "org.edx.coordinator.demo_lms.sample_data.v1": {

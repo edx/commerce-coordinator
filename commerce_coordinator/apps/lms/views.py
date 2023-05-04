@@ -1,10 +1,13 @@
 """
 Views for the ecommerce app
 """
+import logging
+from urllib.parse import unquote, urlencode
 
+from django.conf import settings
+from django.http import HttpResponseRedirect
 from edx_rest_framework_extensions.auth.jwt.authentication import JwtAuthentication
 from edx_rest_framework_extensions.permissions import IsAuthenticated
-from rest_framework.response import Response
 from rest_framework.throttling import UserRateThrottle
 from rest_framework.views import APIView
 
@@ -13,6 +16,8 @@ from .serializers import OrderCreatedSignalInputSerializer
 
 # TODO: Once we are live for good, kill this and default the lines as expected.
 IS_LIVE = False
+
+logger = logging.getLogger(__name__)
 
 
 class OrderCreateView(APIView):
@@ -26,6 +31,9 @@ class OrderCreateView(APIView):
         Create orders for an authenticated user.
 
         Args:
+            request: (django.HttpRequest)
+
+        Query Params:
             product_sku: Array. An edx.org stock keeping units (SKUs) that the user would like to purchase.
             coupon_code: (Optional) A coupon code to initially apply to the order.
             edx_lms_user_id: (Temporary) Initially we will be calling this API from a server. this param is to bypass
@@ -41,6 +49,9 @@ class OrderCreateView(APIView):
             401: if user is unauthorized.
 
         """
+        logger.debug(f'{self.get.__qualname__} request object: {request.data}.')
+        logger.debug(f'{self.get.__qualname__} headers: {request.headers}.')
+
         order_created_signal_params = {
             'product_sku': request.query_params.getlist('product_sku'),
             'edx_lms_user_id': request.user.lms_user_id if IS_LIVE else request.query_params.get('edx_lms_user_id'),
@@ -53,4 +64,49 @@ class OrderCreateView(APIView):
 
         if serializer.is_valid(raise_exception=True):
             result = OrderCreateRequested.run_filter(serializer.validated_data)
-            return Response(result)
+            logger.debug(f'{self.get.__qualname__} pipeline result: {result}.')
+            return self._redirect_response_to_basket_or_payment(request)
+
+        # Log for Diagnostics
+        logger.debug(f'{self.get.__qualname__} we didnt redirect..')  # pragma: no cover
+
+    def _redirect_response_to_basket_or_payment(self, request):
+        """
+        Redirect to Payment MFE with its Adornments (like UTM).
+
+        Args:
+            request (django.HttpRequest):
+        Returns:
+            response (django.HttpResponse):
+        """
+
+        redirect_url = self._add_utm_params_to_url(
+            settings.PAYMENT_MICROFRONTEND_URL,
+            list(self.request.GET.items())
+        )
+
+        redirect = HttpResponseRedirect(redirect_url, status=303)
+        redirect.headers['Content-type'] = 'application/json'
+        logger.debug(f'{self._redirect_response_to_basket_or_payment.__qualname__} Redirecting 303 via {redirect}.')
+        return redirect
+
+    @staticmethod
+    def _add_utm_params_to_url(url, params):
+        """
+        Add UTM (Urchin Tracking/Google Analytics) flags to the URL for the MFE to use in its reporting
+
+        Args:
+            params (list): Query Params from Req as an encoded list
+        Returns:
+            url (str): A URL asa Python String
+        """
+
+        # utm_params is [(u'utm_content', u'course-v1:IDBx IDB20.1x 1T2017'),...
+        utm_params = [item for item in params if 'utm_' in item[0]]
+        # utm_params is utm_content=course-v1%3AIDBx+IDB20.1x+1T2017&...
+        utm_params = urlencode(utm_params, True)
+        # utm_params is utm_content=course-v1:IDBx+IDB20.1x+1T2017&...
+        # (course-keys do not have url encoding)
+        utm_params = unquote(utm_params)
+        url = url + '?' + utm_params if utm_params else url
+        return url

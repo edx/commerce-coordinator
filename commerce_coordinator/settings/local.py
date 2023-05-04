@@ -118,9 +118,13 @@ CELERY_BROKER_URL = "redis://:password@localhost:6379/0"
 
 EDX_API_KEY = 'PUT_YOUR_API_KEY_HERE'  # This is the actual API key in devstack.
 
+# DevStack: https://edx.readthedocs.io/projects/open-edx-devstack/en/latest/service_list.html
 ECOMMERCE_URL = "http://localhost:18130"
 
 LMS_URL_ROOT = "http://localhost:18000"
+
+PAYMENT_MICROFRONTEND_URL = "http://localhost:1998"
+# /DevStack
 
 TITAN_URL = "http://example.com"
 
