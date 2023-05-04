@@ -21,32 +21,29 @@ class CoordinatorSignalReceiverTestCase(TestCase):
     '''
     Test a CoordinatorSignal receiver.
 
-    Use by subclassing like this:
+    Example:
+        Use by subclassing like this::
 
-    .. code-block:: python
+            from django.test import override_settings
 
-        from django.test import override_settings
+            from commerce_coordinator.apps.core.tests.utils import CoordinatorSignalReceiverTestCase
 
-        from commerce_coordinator.apps.core.tests.utils import CoordinatorSignalReceiverTestCase
+            @override_settings(
+                CC_SIGNALS={
+                    'commerce_coordinator.apps.core.tests.utils.example_signal': [
+                        'commerce_coordinator.apps.your_app.signals.receiver_under_test',
+                    ],
+                }
+            )
+            class ReceiverUnderTestTests(CoordinatorSignalReceiverTestCase):
 
-        @override_settings(
-            CC_SIGNALS={
-                'commerce_coordinator.apps.core.tests.utils.example_signal': [
-                    'commerce_coordinator.apps.your_app.signals.receiver_under_test',
-                ],
-            }
-        )
-        class ReceiverUnderTestTests(CoordinatorSignalReceiverTestCase):
+                mock_parameters =  {
+                    'param1': 'parameter1_value',
+                    'param2': 'parameter2_value',
+                }
 
-            mock_parameters =  {
-                'param1': 'parameter1_value',
-                'param2': 'parameter2_value',
-            }
-
-            def test_config_matches_num_calls(self):
-                self.assertEqual(len(self.result), 1, 'Check 1 receiver is called')
-
-        ...
+                def test_config_matches_num_calls(self):
+                    self.assertEqual(len(self.result), 1, 'Check 1 receiver is called')
 
     '''
 
@@ -104,30 +101,27 @@ class CoordinatorClientTestCase(TestCase):
         expected_output=None
     ):
         '''
-        Checks uut produces expected_request and expected_output given
-        input_kwargs and mock_response.
+        Checks that uut produces expected_request and expected_output given input_kwargs and mock_response.
 
-        Mocks any calls by requests to self.mock_url. Returns
-        mock_response for those calls as JSON.
+        Mocks any calls by requests to self.mock_url. Returns mock_response for those calls as JSON.
 
         Optionally, checks headers match self.expected_headers.
 
         Args:
-            uut (callable): Required. Unit under test. Calls an external API
-                using the requests library.
-            input_kwargs (dict): Required. kwargs to provide uut.
-            expected_request (dict): Expected request of uut to external API
-                given input_kwargs. POST requests will be converted to JSON.
+            uut (callable): Unit under test. Calls an external API using the `requests` library.
+            input_kwargs (dict): kwargs to provide uut.
+            expected_request (dict): Expected request of uut to external API given input_kwargs. POST requests will be
+                converted to JSON.
             expected_headers (dict): Expected headers of uut to external API.
-            mock_method (str): Method of mocked request. Defaults to POST.
-            mock_url (str): Required. URL of external API to mock.
-            mock_response (dict): Mock response external API should provide uut
-                given expected_request. Will be converted to JSON.
-            mock_status (int): Mock response status code external API should
-                provide uut given expected_request.
-            expected_output (object): Expected return value of uut given
-                mock_response.
+            mock_url (str): URL of external API to mock.
+            mock_response (dict): Mock response external API should provide uut given expected_request. Will be
+                converted to JSON.
+            mock_status (int): HTTP Status Code
+            mock_method (str): String of the Mocked Method (GET, POST, etc)
+            expected_output (object): Expected return value of uut given mock_response.
+
         '''
+
         is_get = mock_method == 'GET'
 
         # Use matcher for query params for GET requests:
@@ -196,7 +190,6 @@ class CoordinatorOAuthClientTestCase(CoordinatorClientTestCase):
     Testing class for methods of OAuth clients.py of a Coordinator app.
 
     Note: There is no class named CoordinatorOAuthClient. This is a utility class.
-
     '''
 
     def register_mock_oauth_call(self):

@@ -31,9 +31,6 @@ class OrderCreateView(APIView):
         Create orders for an authenticated user.
 
         Args:
-            request: (django.HttpRequest)
-
-        Query Params:
             product_sku: Array. An edx.org stock keeping units (SKUs) that the user would like to purchase.
             coupon_code: (Optional) A coupon code to initially apply to the order.
             edx_lms_user_id: (Temporary) Initially we will be calling this API from a server. this param is to bypass
