@@ -1,6 +1,7 @@
 """Test Titan clients."""
 
 from django.test import override_settings
+from requests.exceptions import HTTPError
 
 from commerce_coordinator.apps.core.tests.utils import CoordinatorClientTestCase
 from commerce_coordinator.apps.titan.clients import TitanAPIClient, urljoin_directory
@@ -16,6 +17,8 @@ TITAN_API_KEY = 'top-secret'
 class TestTitanAPIClient(CoordinatorClientTestCase):
     """TitanAPIClient tests."""
 
+    api_base_url = urljoin_directory(TITAN_URL, '/edx/api/v1/')
+
     expected_headers = {
         'Content-Type': 'application/vnd.api+json',
         'User-Agent': '',
@@ -25,8 +28,18 @@ class TestTitanAPIClient(CoordinatorClientTestCase):
     def setUp(self):
         self.client = TitanAPIClient()
 
+    def test_post_failure(self):
+        '''Check empty request and mock 400 generates exception.'''
+        with self.assertRaises(HTTPError):
+            self.assertJSONClientResponse(
+                uut=self.client._request,  # pylint: disable=protected-access
+                input_kwargs={'request_method': 'POST', 'resource_path': '/'},
+                mock_url=self.api_base_url,
+                mock_status=400,
+            )
+
     def test_order_create_success(self):
-        url = urljoin_directory(TITAN_URL, 'edx/api/v1/cart')
+        url = urljoin_directory(self.api_base_url, '/cart')
         self.assertJSONClientResponse(
             uut=self.client.create_order,
             input_kwargs={
@@ -57,7 +70,7 @@ class TestTitanAPIClient(CoordinatorClientTestCase):
         )
 
     def test_add_item_success(self):
-        url = urljoin_directory(TITAN_URL, 'edx/api/v1/cart/add_item')
+        url = urljoin_directory(self.api_base_url, '/cart/add_item')
         self.assertJSONClientResponse(
             uut=self.client.add_item,
             input_kwargs={
@@ -83,7 +96,7 @@ class TestTitanAPIClient(CoordinatorClientTestCase):
         )
 
     def test_order_complete_success(self):
-        url = urljoin_directory(TITAN_URL, 'edx/api/v1/checkout/complete')
+        url = urljoin_directory(self.api_base_url, '/checkout/complete')
         self.assertJSONClientResponse(
             uut=self.client.complete_order,
             input_kwargs={
@@ -109,7 +122,7 @@ class TestTitanAPIClient(CoordinatorClientTestCase):
         )
 
     def test_redeem_enrollment_code_success(self):
-        url = urljoin_directory(TITAN_URL, 'edx/api/v1/redeem-enrollment-code')
+        url = urljoin_directory(self.api_base_url, '/redeem-enrollment-code')
         self.assertJSONClientResponse(
             uut=self.client.redeem_enrollment_code,
             input_kwargs={
