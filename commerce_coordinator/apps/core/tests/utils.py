@@ -88,7 +88,7 @@ class CoordinatorClientTestCase(TestCase):
         self,
         *,
         uut,
-        input_kwargs=None,
+        input_kwargs,
         expected_request=None,
         expected_headers=None,
         mock_method='POST',
@@ -109,7 +109,7 @@ class CoordinatorClientTestCase(TestCase):
         Args:
             uut (callable): Required. Unit under test. Calls an external API
                 using the requests library.
-            input_kwargs (dict): kwargs to provide uut.
+            input_kwargs (dict): Required. kwargs to provide uut.
             expected_request (dict): Expected request of uut to external API
                 given input_kwargs. POST requests will be converted to JSON.
             expected_headers (dict): Expected headers of uut to external API.
@@ -144,8 +144,6 @@ class CoordinatorClientTestCase(TestCase):
 
         # Get client output & request it built for external API.
         # Throw exceptions after asserts.
-        if not input_kwargs:
-            input_kwargs = {}
         exception_thrown = None
         try:
             output = uut(**input_kwargs)
@@ -155,12 +153,6 @@ class CoordinatorClientTestCase(TestCase):
 
         request = responses.calls[-1].request
 
-        # Convert the request into a dictionary:
-        if is_get:
-            request_dict = request.params
-        else:
-            request_dict = json.loads(request.body)
-
         # Perform checks:
         if expected_headers:
             self.assertGreaterEqual(
@@ -169,6 +161,10 @@ class CoordinatorClientTestCase(TestCase):
                 'Check external API called with expected headers'
             )
         if expected_request:
+            if is_get:
+                request_dict = request.params
+            else:
+                request_dict = json.loads(request.body)
             self.assertEqual(
                 request_dict,
                 expected_request,
@@ -215,7 +211,7 @@ class CoordinatorOAuthClientTestCase(CoordinatorClientTestCase):
         self,
         *,
         uut,
-        input_kwargs=None,
+        input_kwargs,
         expected_request=None,
         expected_headers=None,
         mock_method='POST',
