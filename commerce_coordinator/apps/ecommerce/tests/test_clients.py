@@ -4,7 +4,9 @@ Tests for the ecommerce app API clients.
 import logging
 
 from django.test import override_settings
+from requests.exceptions import HTTPError
 
+from commerce_coordinator.apps.core.clients import urljoin_directory
 from commerce_coordinator.apps.core.tests.utils import CoordinatorOAuthClientTestCase
 from commerce_coordinator.apps.ecommerce.clients import EcommerceAPIClient
 from commerce_coordinator.apps.frontend_app_ecommerce.tests import (
@@ -24,11 +26,13 @@ TEST_ECOMMERCE_URL = 'https://testserver.com'
 class EcommerceAPIClientTests(CoordinatorOAuthClientTestCase):
     """EcommerceAPIClient tests."""
 
+    api_base_url = urljoin_directory(TEST_ECOMMERCE_URL, '/api/v2/')
+
     def setUp(self):
         self.client = EcommerceAPIClient()
 
-    def test_order_create_success(self):
-        url = TEST_ECOMMERCE_URL + '/api/v2/orders'
+    def test_get_orders_success(self):
+        url = urljoin_directory(self.api_base_url, '/orders')
         self.assertJSONClientResponse(
             uut=self.client.get_orders,
             input_kwargs={
@@ -44,3 +48,15 @@ class EcommerceAPIClientTests(CoordinatorOAuthClientTestCase):
             mock_response=ECOMMERCE_REQUEST_EXPECTED_RESPONSE,
             expected_output=ECOMMERCE_REQUEST_EXPECTED_RESPONSE,
         )
+
+    def test_get_orders_failure(self):
+        '''Check empty request and mock 400 generates exception.'''
+        url = urljoin_directory(self.api_base_url, '/orders')
+        with self.assertRaises(HTTPError):
+            self.assertJSONClientResponse(
+                uut=self.client.get_orders,
+                input_kwargs={'query_params': ''},
+                mock_method='GET',
+                mock_url=url,
+                mock_status=400,
+            )
