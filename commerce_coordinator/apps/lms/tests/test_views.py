@@ -6,14 +6,34 @@ import uuid
 import ddt
 import django.conf
 from django.contrib.auth import get_user_model
+from django.test import override_settings
 from django.urls import reverse
 from mock import patch
+from openedx_filters import PipelineStep
 from rest_framework import status
 from rest_framework.test import APITestCase
 
 from commerce_coordinator.apps.core.tests.utils import name_test
+from commerce_coordinator.apps.lms.filters import OrderCreateRequested
 
 User = get_user_model()
+
+
+class TestOrderCreateRequestedFilterPipelineThatExplodes(PipelineStep):
+    """
+    An example exploding Pipeline, to test filter failures return expected codes when if something is uncaught
+    """
+
+    targets = 'org.edx.coordinator.lms.order.create.requested.v1'
+
+    @classmethod
+    def get_fqtn(cls):
+        """ Return the fully qualified type name to this class """
+        return f'{cls.__module__}.{cls.__qualname__}'
+
+    def run_filter(self, params, order_data):  # pylint: disable=arguments-differ
+        """ Implemented by the default pipeline, this intentionally explodes on us. Has a bomb emoji too. """
+        raise Exception('\U0001f4a3 (this is intentional)')
 
 
 @ddt.ddt
@@ -61,76 +81,179 @@ class OrderCreateViewTests(APITestCase):
         # Error HTTP_401_UNAUTHORIZED
         self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
 
+    @override_settings(
+        OPEN_EDX_FILTERS_CONFIG={
+            TestOrderCreateRequestedFilterPipelineThatExplodes.targets: {
+                'fail_silently': False,  # explosion won't be caught if true (the default)
+                'pipeline': [
+                    TestOrderCreateRequestedFilterPipelineThatExplodes.get_fqtn(),
+                ],
+            },
+        }
+    )
+    def test_filter_exceptions_return_500(self):
+        # Validate pipeline
+        configs = OrderCreateRequested.get_pipeline_configuration()[0]
+        self.assertEqual(1, len(configs))
+        self.assertIn(TestOrderCreateRequestedFilterPipelineThatExplodes.get_fqtn(), configs)
+
+        query_params = {
+            'coupon_code': 'test_code', 'product_sku': ['sku1'],
+        }
+
+        user_email = 'pass-by-param@example.com'
+
+        self.user = User.objects.create_user(
+            self.test_user_username + str(uuid.uuid4()),  # User IDs must be Unique.
+            user_email,
+            self.test_user_password,
+            # TODO: Remove is_staff=True
+            is_staff=True,
+            lms_user_id=1, first_name='John', last_name='Doe'
+        )
+
+        self.client.force_authenticate(user=self.user)
+
+        response = self.client.get(self.url, data=query_params)
+        self.assertEqual(response.status_code, status.HTTP_500_INTERNAL_SERVER_ERROR)
+
     @ddt.data(
-        name_test("test success", (
-            {}, None, status.HTTP_303_SEE_OTHER,
-            {
-                'order_data': None,
-                'params': {
-                    'coupon_code': 'test_code', 'edx_lms_user_id': 1, 'email': 'pass-by-param@example.com',
-                    'first_name': 'John', 'last_name': 'Doe', 'product_sku': ['sku1']
+        name_test(
+            "test success",
+            (
+                {
+                    'lms_user_id': 1, 'email': 'pass-by-param@example.com',
+                    'first_name': 'John', 'last_name': 'Doe'
+                },
+                {
+                    'coupon_code': 'test_code', 'product_sku': ['sku1'],
+                },
+                status.HTTP_303_SEE_OTHER,
+                {
+                    'order_data': None,
+                    'params': {
+                        'coupon_code': 'test_code', 'edx_lms_user_id': 1, 'email': 'pass-by-param@example.com',
+                        'first_name': 'John', 'last_name': 'Doe', 'product_sku': ['sku1']
+                    }
                 }
-             }
-        )),
-        name_test("test coupon_code is optional.", (
-            {}, 'coupon_code', status.HTTP_303_SEE_OTHER,
-            {
-                'order_data': None,
-                'params': {
-                    'coupon_code': None, 'edx_lms_user_id': 1, 'email': 'pass-by-param@example.com',
-                    'first_name': 'John', 'last_name': 'Doe', 'product_sku': ['sku1']
+            )
+        ),
+        name_test(
+            "test coupon optional success",
+            (
+                {
+                    'lms_user_id': 1, 'email': 'pass-by-param@example.com',
+                    'first_name': 'John', 'last_name': 'Doe'
+                },
+                {'product_sku': ['sku1']},
+                status.HTTP_303_SEE_OTHER,
+                {
+                    'order_data': None,
+                    'params': {
+                        'edx_lms_user_id': 1, 'email': 'pass-by-param@example.com',
+                        'first_name': 'John', 'last_name': 'Doe', 'product_sku': ['sku1']
+                    }
                 }
-             }
-        )),
-        name_test("test product_sku in required", (
-            {}, 'product_sku', status.HTTP_400_BAD_REQUEST,
-            {'error_key': 'product_sku', 'error_message': 'This list may not be empty.'}
-        )),
-        name_test("test edx_lms_user_id in required.", (
-            {}, 'edx_lms_user_id', status.HTTP_400_BAD_REQUEST,
-            {'error_key': 'edx_lms_user_id', 'error_message': 'This field may not be null.'}
-        )),
-        name_test("test email in required.", (
-            {}, 'email', status.HTTP_400_BAD_REQUEST,
-            {'error_key': 'email', 'error_message': 'This field may not be null.'}
-        )),
-        name_test("test invalid email.", (
-            {'email': 'invalid-email'}, None, status.HTTP_400_BAD_REQUEST,
-            {
-                'error_key': 'email',
-                'error_message': 'Enter a valid email address.'
-            }
-        )),
-        name_test("test empty email.", (
-            {
-                'email': ''
-            }, None, status.HTTP_400_BAD_REQUEST,
-            {
-                'error_key': 'email',
-                'error_message': 'This field may not be blank.'
-            }
-        )),
-        name_test("test edx_lms_user_id should be valid integer.", (
-            {'edx_lms_user_id': 'invalid-id'}, None, status.HTTP_400_BAD_REQUEST,
-            {'error_key': 'edx_lms_user_id', 'error_message': 'A valid integer is required.'}
-        )),
+            )
+        ),
+        name_test(
+            "test failure, product_sku must have 1 value",
+            (
+                {
+                    'lms_user_id': 1, 'email': 'pass-by-param@example.com',
+                    'first_name': 'John', 'last_name': 'Doe'
+                },
+                {'coupon_code': 'test_code', 'product_sku': []},
+                status.HTTP_400_BAD_REQUEST,
+                {'error_key': 'product_sku', 'error_message': 'This list may not be empty.'}
+            )
+        ),
+        name_test(
+            "test failure, product_sku must not be null",
+            (
+                {
+                    'lms_user_id': 1, 'email': 'pass-by-param@example.com',
+                    'first_name': 'John', 'last_name': 'Doe'
+                },
+                {'coupon_code': 'test_code'},
+                status.HTTP_400_BAD_REQUEST,
+                {'error_key': 'product_sku', 'error_message': 'This list may not be empty.'}
+            )
+        ),
+        name_test(
+            "test failure, product_sku must not be string",
+            (
+                {
+                    'lms_user_id': 1, 'email': 'pass-by-param@example.com',
+                    'first_name': 'John', 'last_name': 'Doe'
+                },
+                {'coupon_code': 'test_code', 'product_sku': ''},
+                status.HTTP_400_BAD_REQUEST,
+                {'error_key': 'product_sku', 'error_message': 'This field may not be blank.'}
+            )
+        ),
+        name_test(
+            "test failure, edx_lms_user_id must be set",
+            (
+                {
+                    'email': 'pass-by-param@example.com',
+                    'first_name': 'John', 'last_name': 'Doe'
+                },
+                {'coupon_code': 'test_code', 'product_sku': ['sku1']},
+                status.HTTP_400_BAD_REQUEST,
+                {'error_key': 'edx_lms_user_id', 'error_message': 'This field may not be null.'}
+            )
+        ),
+        name_test(
+            "test failed, email cannot be empty",
+            (
+                {
+                    'lms_user_id': 1, 'email': '',
+                    'first_name': 'John', 'last_name': 'Doe'
+                },
+                {
+                    'coupon_code': 'test_code', 'product_sku': ['sku1'],
+                },
+                status.HTTP_400_BAD_REQUEST,
+                {'error_key': 'email', 'error_message': 'This field may not be blank.'}
+            )
+        ),
+        name_test(
+            "test failed, email cannot be invalid",
+            (
+                {
+                    'lms_user_id': 1, 'email': '#^#$%^',
+                    'first_name': 'John', 'last_name': 'Doe'
+                },
+                {
+                    'coupon_code': 'test_code', 'product_sku': ['sku1'],
+                },
+                status.HTTP_400_BAD_REQUEST,
+                {'error_key': 'email', 'error_message': 'Enter a valid email address.'}
+            )
+        ),
     )
     @ddt.unpack
     @patch('commerce_coordinator.apps.titan.signals.order_created_save_task.delay')
-    def test_create_order(self, update_params, skip_param, expected_status, expected_error_or_response, _):
-        """
-        Ensure data validation and success scenarios for order create.
-        """
-
+    def test_create_order(self, user_params, in_query_params, expected_status, expected_error_or_response, _):
         is_redirect_test = status.HTTP_301_MOVED_PERMANENTLY <= expected_status <= status.HTTP_303_SEE_OTHER
 
-        self.client.force_authenticate(user=self.user)
-        query_params = {
-            'edx_lms_user_id': 1,
-            'product_sku': ['sku1'],
-            'coupon_code': 'test_code',
-            'email': 'pass-by-param@example.com',
-        }
+        query_params = {**in_query_params}
+
+        user_email = None
+
+        if 'email' in user_params:  # positional parameters cant be sent through
+            user_email = user_params['email']
+            del user_params['email']
+
+        self.user = User.objects.create_user(
+            self.test_user_username + str(uuid.uuid4()),  # User IDs must be Unique.
+            user_email,
+            self.test_user_password,
+            # TODO: Remove is_staff=True
+            is_staff=True,
+            **user_params
+        )
 
         if is_redirect_test:
             query_params.update({
@@ -138,9 +261,7 @@ class OrderCreateViewTests(APITestCase):
                 'utm_custom': uuid.uuid4(),
             })
 
-        query_params.update(update_params)
-        if skip_param:
-            del query_params[skip_param]
+        self.client.force_authenticate(user=self.user)
 
         response = self.client.get(self.url, data=query_params)
         self.assertEqual(response.status_code, expected_status)
@@ -152,13 +273,9 @@ class OrderCreateViewTests(APITestCase):
             self.assertIn("utm_", redirect_location, "No UTM Params Found")
             self.assertIn(f"utm_source={query_params['utm_source']}", redirect_location, "Std UTM Params Not Found")
             self.assertIn(f"utm_custom={query_params['utm_custom']}", redirect_location, "Custom UTM Params Not Found")
-        elif expected_status == status.HTTP_200_OK:
-            response_json = response.json()
-            args = expected_error_or_response
-            self.assertEqual(args, response_json)
         else:
             response_json = response.json()
             expected_error_key = expected_error_or_response['error_key']
             expected_error_message = expected_error_or_response['error_message']
             self.assertIn(expected_error_key, response_json)
-            self.assertIn(expected_error_message, response_json[expected_error_key])
+            self.assertIn(expected_error_message, str(response_json[expected_error_key]))

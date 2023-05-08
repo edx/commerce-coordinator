@@ -8,35 +8,35 @@ from commerce_coordinator.apps.core.tests.utils import ANGRY_FACE, name_test, ra
 
 
 @ddt.ddt
-class UtilFunctions(TestCase):
+class TestUtilFunctions(TestCase):
     """Utility Function tests"""
 
     @ddt.data(
-        {"x": [1, 2, 3], "t": list, "class_name": "WrappedList"},
-        {"x": ["1", 2, 3], "t": list, "class_name": "WrappedList"},
-        {"x": ["1", {}, (), []], "t": list, "class_name": "WrappedList"},
-        {"x": tuple((1, 2, 3)), "t": tuple, "class_name": "WrappedTuple"},
-        {"x": tuple(("1", 2, 3)), "t": tuple, "class_name": "WrappedTuple"},
-        {"x": tuple(("1", {}, (), [])), "t": tuple, "class_name": "WrappedTuple"},
-        {"x": {"a": 1, "b": 2, "c": 3}, "t": dict, "class_name": "WrappedDict"},
-        {"x": {"a": "1", "b": 2, "c": 3}, "t": dict, "class_name": "WrappedDict"},
-        {"x": {"a": "1", "b": {}, "c": (), "d": []}, "t": dict, "class_name": "WrappedDict"},
+        {"val": [1, 2, 3], "in_type": list, "class_name": "WrappedList"},
+        {"val": ["1", 2, 3], "in_type": list, "class_name": "WrappedList"},
+        {"val": ["1", {}, (), []], "in_type": list, "class_name": "WrappedList"},
+        {"val": (1, 2, 3), "in_type": tuple, "class_name": "WrappedTuple"},
+        {"val": ("1", 2, 3), "in_type": tuple, "class_name": "WrappedTuple"},
+        {"val": ("1", {}, (), []), "in_type": tuple, "class_name": "WrappedTuple"},
+        {"val": {"a": 1, "b": 2, "c": 3}, "in_type": dict, "class_name": "WrappedDict"},
+        {"val": {"a": "1", "b": 2, "c": 3}, "in_type": dict, "class_name": "WrappedDict"},
+        {"val": {"a": "1", "b": {}, "c": (), "d": []}, "in_type": dict, "class_name": "WrappedDict"},
     )
     @ddt.unpack
-    def test_name_test(self, x, t, class_name):
+    def test_name_test(self, val, in_type, class_name):
         invalid_name_value = ANGRY_FACE  # angry face
         valid_name = random_unicode_str(32)  # '29920F96-373D-4F01-B2EA-1D57D47C62CC'  # a value that could be valid
 
-        ntr = name_test(valid_name, x)
+        ntr = name_test(valid_name, val)
 
         # assert that type is subclass of the base type
-        self.assertTrue(isinstance(ntr, t))
+        self.assertTrue(isinstance(ntr, in_type))
         # assert class is of the expected (hidden wrapper)
         self.assertEqual(class_name, ntr.__class__.__name__)
         # test the name matches
         self.assertEqual(valid_name, getattr(ntr, "__name__", invalid_name_value))
         # test sp that we don't lose items (incl native pointers) in back conversion.
-        self.assertEqual(x, t(x))
+        self.assertEqual(val, in_type(val))
 
     # (i): The random number testers use a hashing trick to take all the string values and use them in a dictionary then
     # counting the number of keys to know how many were unique. It's a simple shorthand.

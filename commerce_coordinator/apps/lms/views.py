@@ -5,7 +5,7 @@ import logging
 from urllib.parse import unquote, urlencode
 
 from django.conf import settings
-from django.http import HttpResponseRedirect
+from django.http import HttpResponseRedirect, HttpResponseServerError
 from edx_rest_framework_extensions.auth.jwt.authentication import JwtAuthentication
 from edx_rest_framework_extensions.permissions import IsAuthenticated
 from rest_framework.throttling import UserRateThrottle
@@ -13,9 +13,6 @@ from rest_framework.views import APIView
 
 from .filters import OrderCreateRequested
 from .serializers import OrderCreatedSignalInputSerializer
-
-# TODO: Once we are live for good, kill this and default the lines as expected.
-IS_LIVE = False
 
 logger = logging.getLogger(__name__)
 
@@ -51,23 +48,28 @@ class OrderCreateView(APIView):
 
         order_created_signal_params = {
             'product_sku': request.query_params.getlist('product_sku'),
-            'edx_lms_user_id': request.user.lms_user_id if IS_LIVE else request.query_params.get('edx_lms_user_id'),
-            'email': request.user.email if IS_LIVE else request.query_params.get('email'),
-            'first_name': request.user.first_name if IS_LIVE else 'John',
-            'last_name': request.user.last_name if IS_LIVE else 'Doe',
+            'edx_lms_user_id': request.user.lms_user_id,
+            'email': request.user.email,
+            'first_name': request.user.first_name,
+            'last_name': request.user.last_name,
             'coupon_code': request.query_params.get('coupon_code'),
         }
         serializer = OrderCreatedSignalInputSerializer(data=order_created_signal_params)
 
         if serializer.is_valid(raise_exception=True):
-            result = OrderCreateRequested.run_filter(serializer.validated_data)
-            logger.debug(f'{self.get.__qualname__} pipeline result: {result}.')
-            return self._redirect_response_to_basket_or_payment(request)
+            try:
+                result = OrderCreateRequested.run_filter(serializer.validated_data)
+                logger.debug(f'{self.get.__qualname__} pipeline result: {result}.')
+
+                return self._redirect_response_payment(request)
+            except Exception as e:  # pylint: disable=broad-exception-caught
+                logger.exception(f"Something went wrong! Exception raised in {self.get.__name__} with error {repr(e)}")
+                return HttpResponseServerError()
 
         # Log for Diagnostics
         logger.debug(f'{self.get.__qualname__} we didnt redirect..')  # pragma: no cover
 
-    def _redirect_response_to_basket_or_payment(self, request):
+    def _redirect_response_payment(self, request):
         """
         Redirect to Payment MFE with its Adornments (like UTM).
 
@@ -84,7 +86,7 @@ class OrderCreateView(APIView):
 
         redirect = HttpResponseRedirect(redirect_url, status=303)
         redirect.headers['Content-type'] = 'application/json'
-        logger.debug(f'{self._redirect_response_to_basket_or_payment.__qualname__} Redirecting 303 via {redirect}.')
+        logger.debug(f'{self._redirect_response_payment.__qualname__} Redirecting 303 via {redirect}.')
         return redirect
 
     @staticmethod
