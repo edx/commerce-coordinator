@@ -81,6 +81,7 @@ class CoordinatorClientTestCase(TestCase):
     Testing class for methods of clients.py of a Coordinator app.
 
     Note: There is no class named CoordinatorClient. This is a utility class.
+
     '''
 
     @responses.activate
@@ -113,6 +114,7 @@ class CoordinatorClientTestCase(TestCase):
             expected_request (dict): Expected request of uut to external API
                 given input_kwargs. POST requests will be converted to JSON.
             expected_headers (dict): Expected headers of uut to external API.
+            mock_method (str): Method of mocked request. Defaults to POST.
             mock_url (str): Required. URL of external API to mock.
             mock_response (dict): Mock response external API should provide uut
                 given expected_request. Will be converted to JSON.
@@ -189,6 +191,7 @@ class CoordinatorOAuthClientTestCase(CoordinatorClientTestCase):
     Testing class for methods of OAuth clients.py of a Coordinator app.
 
     Note: There is no class named CoordinatorOAuthClient. This is a utility class.
+
     '''
 
     def register_mock_oauth_call(self):
