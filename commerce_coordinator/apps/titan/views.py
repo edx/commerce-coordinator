@@ -29,27 +29,21 @@ class OrderFulfillView(APIView):
         POST request handler for /fulfill
 
         Requires a JSON object of the following format:
+
+        .. code-block:: json
+
             {
-                "coupon_code": "WELCOME100",
                 "course_id": "course-v1:edX+DemoX+Demo_Course",
-                "date_placed": "2022-08-24T16:57:00.127327+00:00",
-                "edx_lms_user_id": 1,
-                "edx_lms_username": "test-user",
-                "mode": "verified",
-                "partner_sku": "test-sku",
-                "titan_order_uuid": "123-abc",
-
+                "course_mode": "verified",
+                "order_placed": 1681738233,
+                "edx_lms_user_id": 4,
+                "email_opt_in": 0,
+                "order_number": "61ec1afa-1b0e-4234-ae28-f997728054fa"
             }
 
-        Returns a JSON object of the following format:
-            {
-                "<function fulfill_order_placed_send_enroll_in_course at 0x105088700>": {
-                    "response": "",
-                    "error": false,
-
-                },
-
-            }
+        Returns a JSON object listing the signal receivers of
+        fulfill_order_placed_signal.send_robust which processed the
+        request.
         """
         logger.debug(f'Titan OrderFulfillView.post() request object: {request.data}.')
         logger.debug(f'Titan OrderFulfillView.post() headers: {request.headers}.')
