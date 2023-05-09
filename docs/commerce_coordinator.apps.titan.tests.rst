@@ -4,6 +4,14 @@ commerce\_coordinator.apps.titan.tests package
 Submodules
 ----------
 
+commerce\_coordinator.apps.titan.tests.constants module
+-------------------------------------------------------
+
+.. automodule:: commerce_coordinator.apps.titan.tests.constants
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
 commerce\_coordinator.apps.titan.tests.test\_clients module
 -----------------------------------------------------------
 
