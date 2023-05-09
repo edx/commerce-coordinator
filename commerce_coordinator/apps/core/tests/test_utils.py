@@ -54,8 +54,8 @@ class TestUtilFunctions(TestCase):
         tries = 1000
 
         examples = dict(
-            (h, True)  # kvp, val (True) is ignored
-            for h in [
+            (hashed_string, True)  # kvp, val (True) is ignored
+            for hashed_string in [
                 random_unicode_str(strlen, limit_unicode=limit_unicode) for _ in range(tries)
             ]
         )
@@ -101,8 +101,8 @@ class TestUtilFunctions(TestCase):
             expected_results = num_unichar - (num_unichar * deviation)
 
         examples = dict(
-            (h, True)  # kvp, val (True) is ignored
-            for h in [
+            (hashed_string, True)  # kvp, val (True) is ignored
+            for hashed_string in [
                 random_unicode_str(strlen, limit_unicode=limit_unicode) for _ in range(tries)
             ]
         )

@@ -101,6 +101,12 @@ author = edx_theme.AUTHOR
 project_title = 'commerce_coordinator'
 documentation_title = f"{project_title}"
 
+napoleon_google_docstring = True
+napoleon_custom_sections = [
+    ('Query Parameters', 'params_style'),
+    ('Form Parameters', 'params_style'),
+    ('JSON Parameters', 'params_style'),
+]
 
 # Set display_github to False if you don't want "edit on Github" button
 html_context = {

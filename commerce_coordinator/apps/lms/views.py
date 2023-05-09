@@ -28,6 +28,9 @@ class OrderCreateView(APIView):
         Create orders for an authenticated user.
 
         Args:
+            request (django.http.HttpRequest): django.http.HttpRequest
+
+        Query Parameters:
             product_sku: Array. An edx.org stock keeping units (SKUs) that the user would like to purchase.
             coupon_code: (Optional) A coupon code to initially apply to the order.
             edx_lms_user_id: (Temporary) Initially we will be calling this API from a server. this param is to bypass
@@ -35,12 +38,14 @@ class OrderCreateView(APIView):
                 edx_lms_user_id from request.user.lms_user_id.
 
         Returns:
-            order_created_save:
-                error: Boolean: Represents if there was error in releasing signal
+            an HTTP Response, in the form of an error or as an HTTP Redirect.
+
+            - HTTP Redirect (303): Redirection to Payment MFE upon Success
+            - HTTP File or Server Error (400-599) see Errors section for more information.
 
         Errors:
-            400: if required params are missing or not in supported format.
-            401: if user is unauthorized.
+            - 400: if required params are missing or not in supported format.
+            - 401: if user is unauthorized.
 
         """
         logger.debug(f'{self.get.__qualname__} request object: {request.data}.')

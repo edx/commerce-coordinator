@@ -235,7 +235,7 @@ class CoordinatorOAuthClientTestCase(CoordinatorClientTestCase):
         )
 
 
-def name_test(name: str, x):
+def name_test(name: str, test_packed_params):
     """
     Permits the naming of simple ddt packed tests in common collection containers
 
@@ -252,18 +252,18 @@ def name_test(name: str, x):
     class WrappedDict(dict):
         pass
 
-    wx = None
-    if isinstance(x, dict):
-        wx = WrappedDict(x)
-    elif isinstance(x, tuple):
-        wx = WrappedTuple(x)
-    elif isinstance(x, list):  # coverage skipping here is a bug. sorry.
-        wx = WrappedList(x)
+    wrapped_test_params = None
+    if isinstance(test_packed_params, dict):
+        wrapped_test_params = WrappedDict(test_packed_params)
+    elif isinstance(test_packed_params, tuple):
+        wrapped_test_params = WrappedTuple(test_packed_params)
+    elif isinstance(test_packed_params, list):  # coverage skipping here is a bug. sorry.
+        wrapped_test_params = WrappedList(test_packed_params)
 
     # See note in Class PyDoc, Parameterized PyTest is planned in the future.
     # pylint: disable-next=literal-used-as-attribute
-    setattr(wx, "__name__", name)
-    return wx
+    setattr(wrapped_test_params, "__name__", name)
+    return wrapped_test_params
 
 
 def random_unicode_str(ln: int, limit_unicode=True, weight_divisor=2):
