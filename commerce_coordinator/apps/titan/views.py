@@ -26,7 +26,7 @@ class OrderFulfillView(APIView):
 
     def post(self, request):
         """
-        POST request handler for /order/fulfill
+        POST request handler for /fulfill
 
         Requires a JSON object of the following format:
             {
