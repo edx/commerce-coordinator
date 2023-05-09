@@ -7,7 +7,6 @@ import logging
 from rest_framework.parsers import JSONParser
 from rest_framework.permissions import IsAdminUser
 from rest_framework.response import Response
-from rest_framework.throttling import UserRateThrottle
 from rest_framework.views import APIView
 
 from commerce_coordinator.apps.core.signal_helpers import format_signal_results
@@ -24,7 +23,6 @@ class OrderFulfillView(APIView):
     """
     parser_classes = [JSONParser]
     permission_classes = [IsAdminUser]
-    throttle_classes = [UserRateThrottle]
 
     def post(self, request):
         """
