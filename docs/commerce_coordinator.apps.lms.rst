@@ -12,6 +12,14 @@ commerce\_coordinator.apps.lms.apps module
    :undoc-members:
    :show-inheritance:
 
+commerce\_coordinator.apps.lms.clients module
+---------------------------------------------
+
+.. automodule:: commerce_coordinator.apps.lms.clients
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
 commerce\_coordinator.apps.lms.signals module
 ---------------------------------------------
 

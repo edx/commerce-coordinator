@@ -4,6 +4,14 @@ commerce\_coordinator.apps.core.tests package
 Submodules
 ----------
 
+commerce\_coordinator.apps.core.tests.test\_clients module
+----------------------------------------------------------
+
+.. automodule:: commerce_coordinator.apps.core.tests.test_clients
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
 commerce\_coordinator.apps.core.tests.test\_context\_processors module
 ----------------------------------------------------------------------
 
@@ -20,10 +28,34 @@ commerce\_coordinator.apps.core.tests.test\_models module
    :undoc-members:
    :show-inheritance:
 
+commerce\_coordinator.apps.core.tests.test\_serializers module
+--------------------------------------------------------------
+
+.. automodule:: commerce_coordinator.apps.core.tests.test_serializers
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+commerce\_coordinator.apps.core.tests.test\_signal\_helpers module
+------------------------------------------------------------------
+
+.. automodule:: commerce_coordinator.apps.core.tests.test_signal_helpers
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
 commerce\_coordinator.apps.core.tests.test\_views module
 --------------------------------------------------------
 
 .. automodule:: commerce_coordinator.apps.core.tests.test_views
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+commerce\_coordinator.apps.core.tests.utils module
+--------------------------------------------------
+
+.. automodule:: commerce_coordinator.apps.core.tests.utils
    :members:
    :undoc-members:
    :show-inheritance:
