@@ -19,6 +19,8 @@ class CoordinatorSignalReceiverTestCase(TestCase):
 
     Use by subclassing like this:
 
+    .. code-block:: python
+
         from django.test import override_settings
 
         from commerce_coordinator.apps.core.tests.utils import CoordinatorSignalReceiverTestCase
@@ -81,7 +83,6 @@ class CoordinatorClientTestCase(TestCase):
     Testing class for methods of clients.py of a Coordinator app.
 
     Note: There is no class named CoordinatorClient. This is a utility class.
-
     '''
 
     @responses.activate
