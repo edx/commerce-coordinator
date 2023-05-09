@@ -61,6 +61,14 @@ commerce\_coordinator.apps.core.models module
    :undoc-members:
    :show-inheritance:
 
+commerce\_coordinator.apps.core.serializers module
+--------------------------------------------------
+
+.. automodule:: commerce_coordinator.apps.core.serializers
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
 commerce\_coordinator.apps.core.signal\_helpers module
 ------------------------------------------------------
 
