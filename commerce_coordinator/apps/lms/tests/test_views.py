@@ -36,6 +36,28 @@ class TestOrderCreateRequestedFilterPipelineThatExplodes(PipelineStep):
         raise Exception('\U0001f4a3 (this is intentional)')
 
 
+class TestOrderCreateRequestedFilterPipelineRecordsInputData(PipelineStep):
+    """
+    An example no-op Pipeline, to test filter success and validate result
+    """
+
+    LAST_DATA = None
+    targets = 'org.edx.coordinator.lms.order.create.requested.v1'
+
+    @classmethod
+    def get_fqtn(cls):
+        """ Return the fully qualified type name to this class """
+        return f'{cls.__module__}.{cls.__qualname__}'
+
+    def run_filter(self, params, order_data):  # pylint: disable=arguments-differ
+        """ Implemented by the default pipeline, this intentionally doesnt do much, but allows introspection. """
+        TestOrderCreateRequestedFilterPipelineRecordsInputData.LAST_DATA = {
+            'params': dict(params),
+            'order_data': order_data
+        }
+        return TestOrderCreateRequestedFilterPipelineRecordsInputData.LAST_DATA
+
+
 @ddt.ddt
 class OrderCreateViewTests(APITestCase):
     """
@@ -117,9 +139,19 @@ class OrderCreateViewTests(APITestCase):
         response = self.client.get(self.url, data=query_params)
         self.assertEqual(response.status_code, status.HTTP_500_INTERNAL_SERVER_ERROR)
 
+    @override_settings(
+        OPEN_EDX_FILTERS_CONFIG={
+            TestOrderCreateRequestedFilterPipelineRecordsInputData.targets: {
+                'fail_silently': True,  # explosion won't be caught if true (the default)
+                'pipeline': [
+                    TestOrderCreateRequestedFilterPipelineRecordsInputData.get_fqtn(),
+                ],
+            },
+        }
+    )
     @ddt.data(
         name_test(
-            "test success",
+            "test success with coupon",
             (
                 {
                     'lms_user_id': 1, 'email': 'pass-by-param@example.com',
@@ -132,8 +164,8 @@ class OrderCreateViewTests(APITestCase):
                 {
                     'order_data': None,
                     'params': {
-                        'coupon_code': 'test_code', 'edx_lms_user_id': 1, 'email': 'pass-by-param@example.com',
-                        'first_name': 'John', 'last_name': 'Doe', 'product_sku': ['sku1']
+                        'edx_lms_user_id': 1, 'email': 'pass-by-param@example.com',
+                        'first_name': 'John', 'last_name': 'Doe', 'product_sku': ['sku1'], 'coupon_code': 'test_code',
                     }
                 }
             )
@@ -143,7 +175,7 @@ class OrderCreateViewTests(APITestCase):
             (
                 {
                     'lms_user_id': 1, 'email': 'pass-by-param@example.com',
-                    'first_name': 'John', 'last_name': 'Doe'
+                    'first_name': 'John', 'last_name': 'Doe',
                 },
                 {'product_sku': ['sku1']},
                 status.HTTP_303_SEE_OTHER,
@@ -151,7 +183,7 @@ class OrderCreateViewTests(APITestCase):
                     'order_data': None,
                     'params': {
                         'edx_lms_user_id': 1, 'email': 'pass-by-param@example.com',
-                        'first_name': 'John', 'last_name': 'Doe', 'product_sku': ['sku1']
+                        'first_name': 'John', 'last_name': 'Doe', 'product_sku': ['sku1'], 'coupon_code': None
                     }
                 }
             )
@@ -235,7 +267,20 @@ class OrderCreateViewTests(APITestCase):
     )
     @ddt.unpack
     @patch('commerce_coordinator.apps.titan.signals.order_created_save_task.delay')
-    def test_create_order(self, user_params, in_query_params, expected_status, expected_error_or_response, _):
+    def test_create_order(
+        self,
+        user_params,
+        in_query_params,
+        expected_status,
+        expected_error_or_response,
+        _mock_order_created_save_task
+    ):
+
+        # Validate pipeline
+        configs = OrderCreateRequested.get_pipeline_configuration()[0]
+        self.assertEqual(1, len(configs))
+        self.assertIn(TestOrderCreateRequestedFilterPipelineRecordsInputData.get_fqtn(), configs)
+
         is_redirect_test = status.HTTP_301_MOVED_PERMANENTLY <= expected_status <= status.HTTP_303_SEE_OTHER
 
         query_params = {**in_query_params}
@@ -268,6 +313,13 @@ class OrderCreateViewTests(APITestCase):
 
         if is_redirect_test:
             redirect_location: str = response.headers['Location']
+
+            self.assertNotEqual(None, TestOrderCreateRequestedFilterPipelineRecordsInputData.LAST_DATA)
+
+            self.assertEqual(
+                TestOrderCreateRequestedFilterPipelineRecordsInputData.LAST_DATA,
+                expected_error_or_response
+            )
 
             self.assertTrue(redirect_location.startswith(django.conf.settings.PAYMENT_MICROFRONTEND_URL))
             self.assertIn("utm_", redirect_location, "No UTM Params Found")

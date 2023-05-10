@@ -1,4 +1,5 @@
 """Test Titan clients."""
+from unittest.mock import MagicMock, patch
 
 from django.test import override_settings
 from requests.exceptions import HTTPError
@@ -8,6 +9,29 @@ from commerce_coordinator.apps.titan.clients import TitanAPIClient, urljoin_dire
 
 TITAN_URL = 'https://testserver.com'
 TITAN_API_KEY = 'top-secret'
+
+ORDER_UUID = 'test-uuid'
+DEFAULT_CURRENCY = 'USD'
+
+ORDER_CREATE_DATA = {
+    'product_sku': ['sku1', 'sku_2'],
+    'edx_lms_user_id': 1,
+    'email': 'edx@example.com',
+    'first_name': 'John',
+    'last_name': 'Doe',
+    'coupon_code': 'test_code',
+}
+
+
+class TitanClientMock(MagicMock):
+    """A mock TitanClient."""
+    return_value = {
+        'data': {
+            'attributes': {
+                'uuid': ORDER_UUID,
+            },
+        },
+    }
 
 
 @override_settings(
@@ -38,10 +62,38 @@ class TestTitanAPIClient(CoordinatorClientTestCase):
                 mock_status=400,
             )
 
-    def test_order_create_success(self):
+    #
+    @patch('commerce_coordinator.apps.titan.clients.TitanAPIClient.create_cart', new_callable=TitanClientMock)
+    @patch('commerce_coordinator.apps.titan.clients.TitanAPIClient.add_item', new_callable=TitanClientMock)
+    @patch('commerce_coordinator.apps.titan.clients.TitanAPIClient.complete_order', new_callable=TitanClientMock)
+    def test_create_order_success(self, mock_complete_order, mock_add_item, mock_create_cart):
+        self.client.create_order(
+            ORDER_CREATE_DATA['product_sku'],
+            ORDER_CREATE_DATA['edx_lms_user_id'],
+            ORDER_CREATE_DATA['email'],
+            ORDER_CREATE_DATA['first_name'],
+            ORDER_CREATE_DATA['last_name'],
+            ORDER_CREATE_DATA['coupon_code'],
+            DEFAULT_CURRENCY
+        )
+        mock_create_cart.assert_called_with(
+            ORDER_CREATE_DATA['edx_lms_user_id'],
+            ORDER_CREATE_DATA['email'],
+            ORDER_CREATE_DATA['first_name'],
+            ORDER_CREATE_DATA['last_name'],
+            DEFAULT_CURRENCY
+        )
+        mock_add_item.assert_called_with(
+            ORDER_UUID, ORDER_CREATE_DATA['product_sku'][-1]
+        )
+        mock_complete_order.assert_called_with(
+            ORDER_UUID, ORDER_CREATE_DATA['edx_lms_user_id']
+        )
+
+    def test_create_cart_success(self):
         url = urljoin_directory(self.api_base_url, '/cart')
         self.assertJSONClientResponse(
-            uut=self.client.create_order,
+            uut=self.client.create_cart,
             input_kwargs={
                 'edx_lms_user_id': 1,
                 'email': 'edx@example.com',

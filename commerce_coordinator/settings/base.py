@@ -338,10 +338,10 @@ OPEN_EDX_FILTERS_CONFIG = {
             'commerce_coordinator.apps.ecommerce.pipeline.GetEcommerceOrders',
         ]
     },
-    "org.edx.coordinator.lms.order.history.requested.v1": {
+    "org.edx.coordinator.lms.order.create.requested.v1": {
         "fail_silently": False,  # TODO: Coordinator filters should NEVER be allowed to fail silently
         "pipeline": [
-            'commerce_coordinator.apps.titan.pipeline.GetTitanOrders',
+            'commerce_coordinator.apps.titan.pipeline.CreateTitanOrder',
         ]
     }
 }

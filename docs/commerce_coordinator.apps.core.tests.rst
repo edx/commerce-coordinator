@@ -44,14 +44,6 @@ commerce\_coordinator.apps.core.tests.test\_signal\_helpers module
    :undoc-members:
    :show-inheritance:
 
-commerce\_coordinator.apps.core.tests.test\_utils module
---------------------------------------------------------
-
-.. automodule:: commerce_coordinator.apps.core.tests.test_utils
-   :members:
-   :undoc-members:
-   :show-inheritance:
-
 commerce\_coordinator.apps.core.tests.test\_views module
 --------------------------------------------------------
 

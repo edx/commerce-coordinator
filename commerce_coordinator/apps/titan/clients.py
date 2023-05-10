@@ -67,18 +67,51 @@ class TitanAPIClient(Client):
             raise
         return response.json()
 
-    def create_order(self, edx_lms_user_id, email, first_name, last_name, currency='USD'):
+    def create_order(self, product_sku, edx_lms_user_id, email, first_name, last_name, coupon_code, currency='USD'):
         """
-        Request Titan to create a basket/order for a user
+        Task to create a basket/order for a user in Titan.
+
+        Args:
+            product_sku: List. An edx.org stock keeping units (SKUs) that the user would like to purchase.
+            edx_lms_user_id: The edx.org LMS user ID of the user receiving the order.
+            email: The edx.org profile email of the user receiving the order. Required by Spree to create a user.
+            first_name: The edx.org profile first name of the user receiving the order
+            last_name: The edx.org profile last name of the user receiving the order
+            coupon_code: A coupon code to initially apply to the order.
+            currency (str): Optional; The ISO code of the currency to use for the order (defaults to USD)
+
+        Returns:
+            order_id: Optional. The ID of the created order in Spree.
+        """
+        logger.info(f'TitanAPIClient.create_cart called '
+                    f'with user: {edx_lms_user_id}, email: {email},'
+                    f'sku: {product_sku} and coupon code: {coupon_code}.')
+
+        # Creating Order (for Cart/Basket)
+        order_created_response = self.create_cart(
+            edx_lms_user_id, email, first_name, last_name, currency
+        )
+        order_uuid = order_created_response['data']['attributes']['uuid']
+
+        # Adding courses in Cart/Basket
+        for sku in product_sku:
+            self.add_item(order_uuid, sku)
+
+        # Completing Cart/Basket
+        return self.complete_order(order_uuid, edx_lms_user_id)
+
+    def create_cart(self, edx_lms_user_id, email, first_name, last_name, currency='USD'):
+        """
+        Request Titan to create a basket/cart for a user
 
         Args:
             edx_lms_user_id: The edx.org LMS user ID of the user receiving the order.
             email: The edx.org profile email of the user receiving the order. Required by Spree to create a user.
             first_name: The edx.org profile first name of the user receiving the order
             last_name: The edx.org profile last name of the user receiving the order
-            currency: Optional. The ISO code of the currency to use for the order (defaults to USD)
+            currency: Optional; The ISO code of the currency to use for the order (defaults to USD)
         """
-        logger.info(f'TitanAPIClient.create_order called using {locals()}.')
+        logger.info(f'TitanAPIClient.create_cart called using {locals()}.')
         return self._request(
             request_method='POST',
             resource_path='cart',
@@ -112,9 +145,9 @@ class TitanAPIClient(Client):
                     'attributes': {
                         'orderUuid': order_uuid,
                         'courseSku': course_sku,
-                        }
                     }
-                },
+                }
+            },
         )
 
     def complete_order(self, order_uuid, edx_lms_user_id):

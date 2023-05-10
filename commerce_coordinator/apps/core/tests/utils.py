@@ -152,6 +152,7 @@ class CoordinatorClientTestCase(TestCase):
             # Will rethrow this exception later.
             exception_thrown = exc
 
+        self.assertGreaterEqual(len(responses.calls), 1, "no responses were generated for this API")
         request = responses.calls[-1].request
 
         # Perform checks:

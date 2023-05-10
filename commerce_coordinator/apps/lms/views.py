@@ -33,9 +33,6 @@ class OrderCreateView(APIView):
         Query Parameters:
             product_sku: Array. An edx.org stock keeping units (SKUs) that the user would like to purchase.
             coupon_code: (Optional) A coupon code to initially apply to the order.
-            edx_lms_user_id: (Temporary) Initially we will be calling this API from a server. this param is to bypass
-                the edx_lms_user_id from the calling server. later on, we will remove this param and extract
-                edx_lms_user_id from request.user.lms_user_id.
 
         Returns:
             an HTTP Response, in the form of an error or as an HTTP Redirect.

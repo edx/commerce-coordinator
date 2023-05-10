@@ -7,7 +7,7 @@ from openedx_filters import PipelineStep
 from commerce_coordinator.apps.titan.clients import TitanAPIClient
 
 
-class GetTitanOrders(PipelineStep):
+class CreateTitanOrder(PipelineStep):
     """
     Adds titan orders to the order data list.
     """
