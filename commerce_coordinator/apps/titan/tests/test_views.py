@@ -65,7 +65,7 @@ class OrderFulfillViewTests(TestCase):
         self.client.logout()
 
     def test_view_rejects_anonymous(self, mock_signal):
-        """Check anonymous users requesting fulfillment receive a HTTP 401 Unauthorized."""
+        """Check anonymous user requesting fulfillment receives a HTTP 401 Unauthorized."""
 
         # Send request without logging in.
         response = self.client.post(reverse('titan:order_fulfill'), EXAMPLE_FULFILLMENT_REQUEST_PAYLOAD, format='json')
@@ -74,7 +74,7 @@ class OrderFulfillViewTests(TestCase):
         self.assertEqual(response.status_code, 401)
 
     def test_view_rejects_unauthorized(self, mock_signal):
-        """Check unauthorized users requesting fulfillment receive a HTTP 403 Forbidden"""
+        """Check unauthorized account requesting fulfillment receives a HTTP 403 Forbidden"""
 
         # Login as unprivileged user who should be forbidden on this endpoint.
         self.client.login(username=self.test_user_username, password=self.test_password)
@@ -97,19 +97,6 @@ class OrderFulfillViewTests(TestCase):
         # Check 200 OK
         self.assertEqual(response.status_code, 200)
 
-    def test_view_returns_expected_response(self, mock_signal):
-        """Check authorized user requesting fulfillment receive an expected response."""
-
-        # Login
-        self.client.login(username=self.test_staff_username, password=self.test_password)
-
-        # Send request
-        response = self.client.post(reverse('titan:order_fulfill'), EXAMPLE_FULFILLMENT_REQUEST_PAYLOAD, format='json')
-
-        # Check expected response
-        expected_response = format_signal_results(FulfillOrderPlacedSignalMock.return_value)
-        self.assertEqual(response.json(), expected_response)
-
     def test_view_sends_expected_signal_parameters(self, mock_signal):
         """Check view sends expected signal parameters."""
         # Login
@@ -120,3 +107,16 @@ class OrderFulfillViewTests(TestCase):
 
         # Check expected response
         mock_signal.assert_called_once_with(**EXAMPLE_FULFILLMENT_SIGNAL_PAYLOAD)
+
+    def test_view_returns_expected_response(self, mock_signal):
+        """Check authorized account requesting fulfillment receives an expected response."""
+
+        # Login
+        self.client.login(username=self.test_staff_username, password=self.test_password)
+
+        # Send request
+        response = self.client.post(reverse('titan:order_fulfill'), EXAMPLE_FULFILLMENT_REQUEST_PAYLOAD, format='json')
+
+        # Check expected response
+        expected_response = format_signal_results(FulfillOrderPlacedSignalMock.return_value)
+        self.assertEqual(response.json(), expected_response)
