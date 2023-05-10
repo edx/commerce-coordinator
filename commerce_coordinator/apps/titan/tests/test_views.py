@@ -120,3 +120,24 @@ class OrderFulfillViewTests(TestCase):
         # Check expected response
         expected_response = format_signal_results(FulfillOrderPlacedSignalMock.return_value)
         self.assertEqual(response.json(), expected_response)
+
+    def test_view_returns_expected_error(self, mock_signal):
+        """Check authorized account requesting fulfillment with bad inputs receive an expected error."""
+
+        # Login
+        self.client.login(username=self.test_staff_username, password=self.test_password)
+
+        # Add errors to example request
+        payload_with_errors = EXAMPLE_FULFILLMENT_REQUEST_PAYLOAD.copy()
+        payload_with_errors.pop('course_id')
+        payload_with_errors['order_placed'] = 'bad_date'
+
+        # Send request
+        response = self.client.post(reverse('titan:order_fulfill'), payload_with_errors, format='json')
+
+        # Check expected response
+        expected_response = {
+            'course_id': ['This field may not be null.'],
+            'date_placed': ['A valid number is required.'],
+        }
+        self.assertEqual(response.json(), expected_response)
