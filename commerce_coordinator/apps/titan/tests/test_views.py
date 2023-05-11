@@ -26,7 +26,7 @@ class FulfillOrderPlacedSignalMock(MagicMock):
     """
 
     def mock_receiver(self):
-        pass
+        pass  # pragma: no cover
 
     return_value = [
         (mock_receiver, 'bogus_task_id'),
