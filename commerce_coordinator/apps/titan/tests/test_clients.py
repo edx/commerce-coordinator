@@ -22,6 +22,8 @@ ORDER_CREATE_DATA = {
     'coupon_code': 'test_code',
 }
 
+ORDER_CREATE_DATA_WITH_CURRENCY = {'currency': DEFAULT_CURRENCY, **ORDER_CREATE_DATA}
+
 
 class TitanClientMock(MagicMock):
     """A mock TitanClient."""
