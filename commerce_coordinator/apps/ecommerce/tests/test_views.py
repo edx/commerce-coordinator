@@ -8,6 +8,8 @@ from mock import patch
 from rest_framework import status
 from rest_framework.test import APITestCase
 
+from commerce_coordinator.apps.core.tests.utils import name_test
+
 User = get_user_model()
 
 
@@ -57,41 +59,34 @@ class OrderCreateViewTests(APITestCase):
         self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
 
     @ddt.data(
-        (
-            # test success.
+        name_test("test success", (
             {}, None, status.HTTP_200_OK,
             {}
-        ),
-        (
-            # test coupon_code is optional.
+        )),
+        name_test("test coupon_code is optional.", (
             {}, 'coupon_code', status.HTTP_200_OK,
             {}
-        ),
-        (
-            # test product_sku in required.
+        )),
+        name_test("test product_sku in required", (
             {}, 'product_sku', status.HTTP_400_BAD_REQUEST,
             {'error_key': 'product_sku', 'error_message': 'This list may not be empty.'}
-        ),
-        (
-            # test edx_lms_user_id in required.
+        )),
+        name_test("test edx_lms_user_id in required.", (
             {}, 'edx_lms_user_id', status.HTTP_400_BAD_REQUEST,
             {'error_key': 'edx_lms_user_id', 'error_message': 'This field may not be null.'}
-        ),
-        (
-            # test email in required.
+        )),
+        name_test("test email in required.", (
             {}, 'email', status.HTTP_400_BAD_REQUEST,
             {'error_key': 'email', 'error_message': 'This field may not be null.'}
-        ),
-        (
-            # test invalid email.
+        )),
+        name_test("test invalid email.", (
             {'email': 'invalid-email'}, None, status.HTTP_400_BAD_REQUEST,
             {
                 'error_key': 'email',
                 'error_message': 'Enter a valid email address.'
             }
-        ),
-        (
-            # test empty email.
+        )),
+        name_test("test empty email.", (
             {
                 'email': ''
             }, None, status.HTTP_400_BAD_REQUEST,
@@ -99,12 +94,11 @@ class OrderCreateViewTests(APITestCase):
                 'error_key': 'email',
                 'error_message': 'This field may not be blank.'
             }
-        ),
-        (
-            # test edx_lms_user_id should be valid integer.
+        )),
+        name_test("test edx_lms_user_id should be valid integer.", (
             {'edx_lms_user_id': 'invalid-id'}, None, status.HTTP_400_BAD_REQUEST,
             {'error_key': 'edx_lms_user_id', 'error_message': 'A valid integer is required.'}
-        ),
+        )),
     )
     @ddt.unpack
     @patch('commerce_coordinator.apps.titan.signals.order_created_save_task.delay')

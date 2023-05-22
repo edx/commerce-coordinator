@@ -1,10 +1,13 @@
+"""
+LMS app Task Tests
+"""
+
 import logging
 from unittest.mock import patch, sentinel
 
-from django.test import TestCase, override_settings
+from django.test import TestCase
 
 from commerce_coordinator.apps.core.models import User
-from commerce_coordinator.apps.core.tests.utils import CoordinatorSignalReceiverTestCase
 from commerce_coordinator.apps.lms.tasks import fulfill_order_placed_send_enroll_in_course_task
 from commerce_coordinator.apps.lms.tests.constants import (
     EXAMPLE_FULFILLMENT_REQUEST_PAYLOAD,
@@ -14,12 +17,28 @@ from commerce_coordinator.apps.lms.tests.constants import (
 # Log using module name.
 logger = logging.getLogger(__name__)
 
+# Define unit under test.
+# Note: if the UUT is part of the class as an ivar, it trims off arg0 as 'self' and
+#       claims too many args supplied
+uut = fulfill_order_placed_send_enroll_in_course_task
+
 
 @patch('commerce_coordinator.apps.lms.tasks.LMSAPIClient')
 class FulfillOrderPlacedSendEnrollInCourseTaskTest(TestCase):
+    """ Fulfill Order Placed Send Enroll In Course Task Test """
 
-    # Define unit under test.
-    uut = fulfill_order_placed_send_enroll_in_course_task
+    @staticmethod
+    def unpack_for_uut(values):
+        """ Unpack the dictionary in the order required for the UUT """
+        return (
+            values['course_id'],
+            values['course_mode'],
+            values['date_placed'],
+            values['edx_lms_user_id'],
+            values['email_opt_in'],
+            values['order_number'],
+            values['provider_id']
+        )
 
     def setUp(self):
         User.objects.create(username='test-user', lms_user_id=4)
@@ -29,7 +48,7 @@ class FulfillOrderPlacedSendEnrollInCourseTaskTest(TestCase):
         Check calling uut with mock_parameters yields call to client with
         expected_data.
         '''
-        result = self.uut(**EXAMPLE_FULFILLMENT_SIGNAL_PAYLOAD)
+        _ = uut(*self.unpack_for_uut(EXAMPLE_FULFILLMENT_SIGNAL_PAYLOAD))
         logger.info('mock_client().mock_calls: %s', mock_client().mock_calls)
         mock_client().enroll_user_in_course.assert_called_once_with(EXAMPLE_FULFILLMENT_REQUEST_PAYLOAD)
 
@@ -53,15 +72,15 @@ class FulfillOrderPlacedSendEnrollInCourseTaskTest(TestCase):
         })
 
         # Run test:
-        result = self.uut(**credit_mock_parameters)
+        _ = uut(*self.unpack_for_uut(credit_mock_parameters))
         logger.info('mock_client().mock_calls: %s', mock_client().mock_calls)
         mock_client().enroll_user_in_course.assert_called_once_with(credit_expected_data)
 
     def test_passes_through_client_return(self, mock_client):
         '''
-        Check uut returns whatever client returns.
+        Check uut returns whatever the client returns.
         '''
         mock_client().enroll_user_in_course.return_value = sentinel.mock_client_return_value
-        result = self.uut(**EXAMPLE_FULFILLMENT_SIGNAL_PAYLOAD)
+        result = uut(*self.unpack_for_uut(EXAMPLE_FULFILLMENT_SIGNAL_PAYLOAD))
         logger.info('result: %s', result)
         self.assertEqual(result, sentinel.mock_client_return_value)

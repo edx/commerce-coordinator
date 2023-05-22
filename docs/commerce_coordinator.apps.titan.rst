@@ -28,6 +28,14 @@ commerce\_coordinator.apps.titan.clients module
    :undoc-members:
    :show-inheritance:
 
+commerce\_coordinator.apps.titan.pipeline module
+------------------------------------------------
+
+.. automodule:: commerce_coordinator.apps.titan.pipeline
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
 commerce\_coordinator.apps.titan.serializers module
 ---------------------------------------------------
 
