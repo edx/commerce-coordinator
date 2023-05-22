@@ -20,6 +20,14 @@ commerce\_coordinator.apps.titan.tests.test\_clients module
    :undoc-members:
    :show-inheritance:
 
+commerce\_coordinator.apps.titan.tests.test\_pipeline module
+------------------------------------------------------------
+
+.. automodule:: commerce_coordinator.apps.titan.tests.test_pipeline
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
 commerce\_coordinator.apps.titan.tests.test\_tasks module
 ---------------------------------------------------------
 
