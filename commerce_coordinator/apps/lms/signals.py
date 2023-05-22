@@ -3,8 +3,10 @@ LMS app signals and receivers.
 """
 import logging
 
-from commerce_coordinator.apps.core.signal_helpers import log_receiver
+from commerce_coordinator.apps.core.signal_helpers import CoordinatorSignal, log_receiver
 from commerce_coordinator.apps.lms.tasks import fulfill_order_placed_send_enroll_in_course_task
+
+order_created_signal = CoordinatorSignal()
 
 logger = logging.getLogger(__name__)
 

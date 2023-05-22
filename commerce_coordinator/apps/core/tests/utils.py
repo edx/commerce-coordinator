@@ -1,6 +1,8 @@
 '''Utilities to help test Coordinator apps.'''
 
 import json
+import random
+import string
 
 import responses
 from django.apps import apps
@@ -12,37 +14,36 @@ from commerce_coordinator.apps.core.signal_helpers import CoordinatorSignal
 
 example_signal = CoordinatorSignal()
 
+ANGRY_FACE = '\U0001F92C'
+
 
 class CoordinatorSignalReceiverTestCase(TestCase):
     '''
     Test a CoordinatorSignal receiver.
 
-    Use by subclassing like this:
+    Example:
+        Use by subclassing like this::
 
-    .. code-block:: python
+            from django.test import override_settings
 
-        from django.test import override_settings
+            from commerce_coordinator.apps.core.tests.utils import CoordinatorSignalReceiverTestCase
 
-        from commerce_coordinator.apps.core.tests.utils import CoordinatorSignalReceiverTestCase
+            @override_settings(
+                CC_SIGNALS={
+                    'commerce_coordinator.apps.core.tests.utils.example_signal': [
+                        'commerce_coordinator.apps.your_app.signals.receiver_under_test',
+                    ],
+                }
+            )
+            class ReceiverUnderTestTests(CoordinatorSignalReceiverTestCase):
 
-        @override_settings(
-            CC_SIGNALS={
-                'commerce_coordinator.apps.core.tests.utils.example_signal': [
-                    'commerce_coordinator.apps.your_app.signals.receiver_under_test',
-                ],
-            }
-        )
-        class ReceiverUnderTestTests(CoordinatorSignalReceiverTestCase):
+                mock_parameters =  {
+                    'param1': 'parameter1_value',
+                    'param2': 'parameter2_value',
+                }
 
-            mock_parameters =  {
-                'param1': 'parameter1_value',
-                'param2': 'parameter2_value',
-            }
-
-            def test_config_matches_num_calls(self):
-                self.assertEqual(len(self.result), 1, 'Check 1 receiver is called')
-
-        ...
+                def test_config_matches_num_calls(self):
+                    self.assertEqual(len(self.result), 1, 'Check 1 receiver is called')
 
     '''
 
@@ -100,30 +101,27 @@ class CoordinatorClientTestCase(TestCase):
         expected_output=None
     ):
         '''
-        Checks uut produces expected_request and expected_output given
-        input_kwargs and mock_response.
+        Checks that uut produces expected_request and expected_output given input_kwargs and mock_response.
 
-        Mocks any calls by requests to self.mock_url. Returns
-        mock_response for those calls as JSON.
+        Mocks any calls by requests to self.mock_url. Returns mock_response for those calls as JSON.
 
         Optionally, checks headers match self.expected_headers.
 
         Args:
-            uut (callable): Required. Unit under test. Calls an external API
-                using the requests library.
-            input_kwargs (dict): Required. kwargs to provide uut.
-            expected_request (dict): Expected request of uut to external API
-                given input_kwargs. POST requests will be converted to JSON.
+            uut (callable): Unit under test. Calls an external API using the `requests` library.
+            input_kwargs (dict): kwargs to provide uut.
+            expected_request (dict): Expected request of uut to external API given input_kwargs. POST requests will be
+                converted to JSON.
             expected_headers (dict): Expected headers of uut to external API.
-            mock_method (str): Method of mocked request. Defaults to POST.
-            mock_url (str): Required. URL of external API to mock.
-            mock_response (dict): Mock response external API should provide uut
-                given expected_request. Will be converted to JSON.
-            mock_status (int): Mock response status code external API should
-                provide uut given expected_request.
-            expected_output (object): Expected return value of uut given
-                mock_response.
+            mock_url (str): URL of external API to mock.
+            mock_response (dict): Mock response external API should provide uut given expected_request. Will be
+                converted to JSON.
+            mock_status (int): HTTP Status Code
+            mock_method (str): String of the Mocked Method (GET, POST, etc)
+            expected_output (object): Expected return value of uut given mock_response.
+
         '''
+
         is_get = mock_method == 'GET'
 
         # Use matcher for query params for GET requests:
@@ -154,6 +152,7 @@ class CoordinatorClientTestCase(TestCase):
             # Will rethrow this exception later.
             exception_thrown = exc
 
+        self.assertGreaterEqual(len(responses.calls), 1, "no responses were generated for this API")
         request = responses.calls[-1].request
 
         # Perform checks:
@@ -192,7 +191,6 @@ class CoordinatorOAuthClientTestCase(CoordinatorClientTestCase):
     Testing class for methods of OAuth clients.py of a Coordinator app.
 
     Note: There is no class named CoordinatorOAuthClient. This is a utility class.
-
     '''
 
     def register_mock_oauth_call(self):
@@ -236,3 +234,68 @@ class CoordinatorOAuthClientTestCase(CoordinatorClientTestCase):
             mock_status=mock_status,
             expected_output=expected_output
         )
+
+
+def name_test(name: str, test_packed_params):
+    """
+    Permits the naming of simple ddt packed tests in common collection containers
+
+    NOTE: This may "feel weird" but it's the way the developers do it see
+    `def annotated(str, list)` at https://ddt.readthedocs.io/en/latest/example.html
+    """
+
+    class WrappedTuple(tuple):
+        pass
+
+    class WrappedList(list):
+        pass
+
+    class WrappedDict(dict):
+        pass
+
+    wrapped_test_params = None
+    if isinstance(test_packed_params, dict):
+        wrapped_test_params = WrappedDict(test_packed_params)
+    elif isinstance(test_packed_params, tuple):
+        wrapped_test_params = WrappedTuple(test_packed_params)
+    elif isinstance(test_packed_params, list):  # coverage skipping here is a bug. sorry.
+        wrapped_test_params = WrappedList(test_packed_params)
+
+    # See note in Class PyDoc, Parameterized PyTest is planned in the future.
+    # pylint: disable-next=literal-used-as-attribute
+    setattr(wrapped_test_params, "__name__", name)
+    return wrapped_test_params
+
+
+def random_unicode_str(ln: int, limit_unicode=True, weight_divisor=2):
+    """ Generate a string of X characters guaranteed to include at least one non ASCII one. """
+
+    uchars = ['\xe9', '\xf1', '\xfc', '\u0110', '\u0159', '\u016f', '\xc5', '\xdf', '\xe7', '\u0131',
+              '\u0130', '\uff21', '\ufb04', '\u211a', '\xbd', '\u20ac', '\u20b9', '\xa5', '\u0416', '\u03b7',
+              '\uae00', '\u0913', '\u0b15', '\u3058', '\u5b57', '\U0001f40d', '\U0001f496', '\u2652', '\u2658']
+
+    # The above represents, Escapes used incase this file is ever re-encoded by accident.
+    # ['é', 'ñ', 'ü', 'Đ', 'ř', 'ů', 'Å', 'ß', 'ç', 'ı', 'İ', 'Ａ', 'ﬄ', 'ℚ', '½', '€', '₹', '¥', 'Ж', 'η', '글',
+    # 'ओ', 'କ', 'じ', '字', '🐍', '💖', '♒', '♘']
+
+    chars = uchars + list(string.printable)
+
+    def _unicode_limiter(c: (int, str)):
+        """ Map replacement function to limit unicode based on a divisor """
+
+        if limit_unicode:
+            if len(bytes(chars[c[0]], encoding='utf8')) > 1:
+                return 1
+            else:
+                return abs(len(chars) / weight_divisor)
+        else:
+            return 1
+
+    weights = list(map(_unicode_limiter, enumerate(chars)))
+
+    retval = ''.join(random.choices(chars, weights=weights, k=ln - 1))
+
+    retval += random.choice(uchars)  # ensure we get one unicode no matter what.
+
+    assert len(retval) == ln
+    return retval
