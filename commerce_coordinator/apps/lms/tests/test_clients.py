@@ -3,8 +3,7 @@ Tests for the lms app API clients.
 '''
 import logging
 
-from django.test import TestCase, override_settings
-from mock import patch
+from django.test import override_settings
 from requests.exceptions import HTTPError
 
 from commerce_coordinator.apps.core.clients import urljoin_directory

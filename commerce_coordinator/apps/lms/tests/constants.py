@@ -1,4 +1,9 @@
-EXAMPLE_FULFILLMENT_SIGNAL_PAYLOAD = {
+"""
+LMS App Testing Data Constants
+"""
+from typing import Dict, Union
+
+EXAMPLE_FULFILLMENT_SIGNAL_PAYLOAD: Dict[str, Union[str, bool, int, None]] = {
     'course_id': 'course-v1:edX+DemoX+Demo_Course',
     'course_mode': 'verified',
     'date_placed': '2023-04-17T13:30:33Z',

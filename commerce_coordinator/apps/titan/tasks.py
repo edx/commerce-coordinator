@@ -54,15 +54,4 @@ def order_created_save_task(product_sku, edx_lms_user_id, email, first_name, las
 
     titan_api_client = TitanAPIClient()
 
-    # Creating Cart/Basket
-    order_created_response = titan_api_client.create_order(
-        edx_lms_user_id, email, first_name, last_name
-    )
-    order_uuid = order_created_response['data']['attributes']['uuid']
-
-    # Adding courses in Cart/Basket
-    for sku in product_sku:
-        titan_api_client.add_item(order_uuid, sku)
-
-    # Completing Cart/Basket
-    titan_api_client.complete_order(order_uuid, edx_lms_user_id)
+    titan_api_client.create_order(product_sku, edx_lms_user_id, email, first_name, last_name, coupon_code)
