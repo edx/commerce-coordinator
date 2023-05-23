@@ -34,14 +34,14 @@ Note: this setup process is temporary; we will be working on a Tutor plugin
 Local
 ======
 
-.. code-block::
+.. code-block:: console
 
   # Clone the repository
   git clone git@github.com:edx/commerce-coordinator.git
   cd commerce-coordinator
 
-  # install mysql in your local directory
-  brew install mysql
+  # if you wish to use a mysql daemon, install mysql, otherwise, start along with redis
+  # brew install mysql
 
   # Set up a virtualenv and activate it
   python3 -m venv .venv
@@ -54,11 +54,14 @@ Local
   # Expose the redis port for devstack (needed until commerce coordinator is part of devstack)
   # (redis is the backend that Celery is using for persisting the message queue)
   # In your local Devstack directory, edit docker-compose.yml: go to the redis service line and add a ports section
-  ports:
-  - "6379:6379"
+  # ports:
+  #  - "6379:6379"
 
-  # Start redis in devstack from your local devstack directory
+  # Start redis/mysql in devstack from your local devstack directory
   make dev.up.redis
+
+  # If youd prefer to reuse mysql from devstack, start it now.
+  # make dev.up.mysql57
 
   # Start ecommerce and lms in devstack from your local devstack directory
   make dev.up.ecommerce+lms
@@ -80,7 +83,7 @@ Local
 
 Every time you develop something in this repo
 =============================================
-.. code-block::
+.. code-block:: console
 
   # Grab the latest code
   git checkout main
@@ -110,7 +113,7 @@ Every time you develop something in this repo
 
 Local testing with Celery
 =========================
-.. code-block::
+.. code-block:: console
 
   # Start redis in devstack from your local devstack directory
   make dev.up.redis
@@ -130,8 +133,8 @@ Local testing with Celery
   "<function demo_purchase_complete_enroll_in_course at 0x10e18a670>": ""
  }
 
-With Docker
-===========
+With Docker (Not currently supported)
+=====================================
 
 As of the time of this writing, you must have run `make dev.up.ecommerce+lms+redis` in edX's devstack as a prerequisite to this one.
 
