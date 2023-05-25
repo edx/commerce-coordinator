@@ -121,7 +121,7 @@ class OrderFulfillView(APIView):
     permission_classes = [IsAdminUser]
     throttle_classes = [UserRateThrottle]
 
-    def post(self, request):
+    def post(self, request):  # pylint: disable=inconsistent-return-statements
         """
         POST request handler for /order/fulfill
 
@@ -182,5 +182,3 @@ class OrderFulfillView(APIView):
                 **payload
             )
             return Response(format_signal_results(results))
-        else:
-            return None

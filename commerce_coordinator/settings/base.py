@@ -48,6 +48,7 @@ PROJECT_APPS = (
     'commerce_coordinator.apps.api',
     'commerce_coordinator.apps.ecommerce.apps.EcommerceConfig',
     'commerce_coordinator.apps.frontend_app_ecommerce.apps.FrontendAppEcommerceConfig',
+    'commerce_coordinator.apps.frontend_app_payment.apps.FrontendAppPaymentConfig',
     'commerce_coordinator.apps.lms.apps.LmsConfig',
     'commerce_coordinator.apps.titan.apps.TitanConfig',
 )
@@ -84,6 +85,19 @@ MIDDLEWARE = (
     # Ensures proper DRF permissions in support of JWTs
     'edx_rest_framework_extensions.auth.jwt.middleware.EnsureJWTAuthSettingsMiddleware',
 )
+
+# Cache Configuration
+CACHES = {
+    'default': {
+        'VERSION': '1',
+        'KEY_FUNCTION': 'commerce_coordinator.apps.core.memcache.safe_key',
+        'LOCATION': ['localhost:11211'],
+        'KEY_PREFIX': 'default',
+        'BACKEND': 'django.core.cache.backends.memcached.PyMemcacheCache',
+    },
+}
+DEFAULT_TIMEOUT = 30 * 60  # Value is in seconds
+# End Cache Configuration
 
 # Enable CORS
 CORS_ALLOW_CREDENTIALS = True
@@ -262,6 +276,13 @@ REST_FRAMEWORK = {
         'edx_rest_framework_extensions.auth.jwt.authentication.JwtAuthentication',
         'rest_framework.authentication.SessionAuthentication',
     ),
+    'DEFAULT_THROTTLE_CLASSES': [
+        'rest_framework.throttling.UserRateThrottle'
+    ],
+    'DEFAULT_THROTTLE_RATES': {
+        'user': '75/minute',
+        'get_payment': '1000/hour',
+    },
 }
 # END DRF CONFIGURATION
 
@@ -343,7 +364,13 @@ OPEN_EDX_FILTERS_CONFIG = {
         "pipeline": [
             'commerce_coordinator.apps.titan.pipeline.CreateTitanOrder',
         ]
-    }
+    },
+    "org.edx.coordinator.frontend_app_ecommerce.payment.get.requested.v1": {
+        "fail_silently": False,  # TODO: Coordinator filters should NEVER be allowed to fail silently
+        "pipeline": [
+            'commerce_coordinator.apps.titan.pipeline.GetTitanPayment',
+        ]
+    },
 }
 
 # Carry fields from the JWT token and LMS user into the local user
