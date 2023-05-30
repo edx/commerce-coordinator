@@ -172,6 +172,57 @@ class TitanAPIClient(Client):
             },
         )
 
+    def get_payment(self, edx_lms_user_id=None, payment_number=None):
+        """
+        Request Titan to complete the order
+
+        Args:
+            edx_lms_user_id: The edx.org LMS user ID of the user receiving the order.
+            payment_number: The Payment identifier in Spree.
+        """
+        if payment_number is None and edx_lms_user_id is None:
+            raise RuntimeError("payment_number or edx_lms_user_id should be passed as param.")
+
+        query_params = {}
+        if edx_lms_user_id is not None:
+            query_params['edxLmsUserId'] = edx_lms_user_id
+        if payment_number is not None:
+            query_params['paymentNumber'] = payment_number
+
+        logger.info(f'TitanAPIClient.get_payment called using {locals()}.')
+        response = self._request(
+            request_method='GET',
+            resource_path='payments',
+            params=query_params,
+        )
+
+        return response['data']['attributes']
+
+    def update_payment(self, payment_number, payment_state, response_code):
+        """
+        Request Titan to update payment.
+
+        Args:
+            payment_number: The Payment identifier in Spree.
+            payment_state: State to advance the payment to.
+            response_code: Payment attempt response code provided by stripe.
+        """
+        response = self._request(
+            request_method='PATCH',
+            resource_path='payments',
+            json={
+                'data': {
+                    'attributes': {
+                        'paymentNumber': payment_number,
+                        'paymentState': payment_state,
+                        'responseCode': response_code,
+                    }
+                }
+            },
+        )
+
+        return response['data']['attributes']
+
     def redeem_enrollment_code(self, sku, coupon_code, user_id, username, email):
         """
         Request Titan to redeem an enrollment code
