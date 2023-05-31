@@ -198,6 +198,31 @@ class TitanAPIClient(Client):
 
         return response['data']['attributes']
 
+    def update_payment(self, payment_number, payment_state, response_code):
+        """
+        Request Titan to update payment.
+
+        Args:
+            payment_number: The Payment identifier in Spree.
+            payment_state: State to advance the payment to.
+            response_code: Payment attempt response code provided by stripe.
+        """
+        response = self._request(
+            request_method='PATCH',
+            resource_path='payments',
+            json={
+                'data': {
+                    'attributes': {
+                        'paymentNumber': payment_number,
+                        'paymentState': payment_state,
+                        'responseCode': response_code,
+                    }
+                }
+            },
+        )
+
+        return response['data']['attributes']
+
     def redeem_enrollment_code(self, sku, coupon_code, user_id, username, email):
         """
         Request Titan to redeem an enrollment code

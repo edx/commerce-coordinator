@@ -281,3 +281,44 @@ class TestTitanAPIClient(CoordinatorClientTestCase):
             mock_response=mock_response,
             expected_output=expected_output,
         )
+
+    def test_update_payment(self):
+        url = urljoin_directory(self.api_base_url, '/payments')
+        payment_number = '1234'
+        payment_state = PaymentState.COMPLETED.value
+        response_code = 'a_stripe_response_code'
+
+        mock_response = {
+            'data': {
+                'attributes': {
+                    'number': payment_number,
+                    'orderUuid': 'test-uuid',
+                    'state': payment_state,
+
+                }
+            }
+        }
+        expected_output = mock_response['data']['attributes']
+
+        self.assertJSONClientResponse(
+            uut=self.client.update_payment,
+            input_kwargs={
+                'payment_number': payment_number,
+                'payment_state': payment_state,
+                'response_code': response_code,
+            },
+            expected_request={
+                'data': {
+                    'attributes': {
+                        'paymentNumber': payment_number,
+                        'paymentState': payment_state,
+                        'responseCode': response_code,
+                    }
+                }
+            },
+            expected_headers=self.expected_headers,
+            mock_method='PATCH',
+            mock_url=url,
+            mock_response=mock_response,
+            expected_output=expected_output,
+        )
