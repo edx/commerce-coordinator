@@ -5,6 +5,7 @@ DEBUG = True
 ALLOWED_HOSTS += (
     # Built-in alias to reach the host machine running Docker Desktop from inside a container:
     'host.docker.internal',
+    'localhost',
 )
 
 INSTALLED_APPS += (
