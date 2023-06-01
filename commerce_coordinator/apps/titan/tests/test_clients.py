@@ -4,6 +4,7 @@ from unittest.mock import MagicMock, patch
 from django.test import override_settings
 from requests.exceptions import HTTPError
 
+from commerce_coordinator.apps.core.constants import PaymentState
 from commerce_coordinator.apps.core.tests.utils import CoordinatorClientTestCase
 from commerce_coordinator.apps.titan.clients import TitanAPIClient, urljoin_directory
 
@@ -202,4 +203,81 @@ class TestTitanAPIClient(CoordinatorClientTestCase):
             expected_output={
                 'uuid': 'test-uuid',
             },
+        )
+
+    def test_get_payment(self):
+        url = urljoin_directory(self.api_base_url, '/payments')
+        mock_response = {
+            'data': {
+                'attributes': {
+                    'orderUuid': 'test-uuid',
+                    'state': PaymentState.FAILED.value,
+
+                }
+            }
+        }
+        expected_output = {
+            'orderUuid': 'test-uuid',
+            'state': PaymentState.FAILED.value,
+
+        }
+
+        # test with no params
+        with self.assertRaises(RuntimeError) as ex:
+            self.assertJSONClientResponse(
+                uut=self.client.get_payment,
+                input_kwargs={},
+                mock_method='GET',
+                mock_url=url,
+            )
+        self.assertEqual(str(ex.exception), 'payment_number or edx_lms_user_id should be passed as param.')
+
+        # test with edx_lms_user_id only
+        self.assertJSONClientResponse(
+            uut=self.client.get_payment,
+            input_kwargs={
+                'edx_lms_user_id': 1,
+            },
+            expected_request={
+                'edxLmsUserId': 1,
+            },
+            expected_headers=self.expected_headers,
+            mock_method='GET',
+            mock_url=url,
+            mock_response=mock_response,
+            expected_output=expected_output,
+        )
+
+        # test with payment_number only
+        self.assertJSONClientResponse(
+            uut=self.client.get_payment,
+            input_kwargs={
+                'payment_number': '1234',
+            },
+            expected_request={
+                'paymentNumber': '1234',
+            },
+            expected_headers=self.expected_headers,
+            mock_method='GET',
+            mock_url=url,
+            mock_response=mock_response,
+            expected_output=expected_output,
+        )
+
+        # test with both params
+        self.assertJSONClientResponse(
+            uut=self.client.get_payment,
+            input_kwargs={
+                'edx_lms_user_id': 1,
+                'payment_number': '1234',
+            },
+            expected_request={
+                'edxLmsUserId': 1,
+                'paymentNumber': '1234',
+            },
+            expected_headers=self.expected_headers,
+            mock_method='GET',
+            mock_url=url,
+            mock_response=mock_response,
+            expected_output=expected_output,
         )
