@@ -55,3 +55,28 @@ def order_created_save_task(product_sku, edx_lms_user_id, email, first_name, las
     titan_api_client = TitanAPIClient()
 
     titan_api_client.create_order(product_sku, edx_lms_user_id, email, first_name, last_name, coupon_code)
+
+
+@shared_task()
+def payment_processed_save_task(payment_number, payment_state, response_code):
+    """
+    task to update payment in Titan.
+
+    Args:
+        Args:
+            payment_number: The Payment identifier in Spree.
+            payment_state: State to advance the payment to.
+            response_code: Payment attempt response code provided by stripe.
+
+    """
+    logger.info('Titan payment_processed_save_task fired '
+                f'with payment_number: {payment_number}, payment_state: {payment_state},'
+                f'and response_code: {response_code}.')
+
+    titan_api_client = TitanAPIClient()
+
+    titan_api_client.update_payment(
+        payment_number=payment_number,
+        payment_state=payment_state,
+        response_code=response_code
+    )
