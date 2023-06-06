@@ -8,7 +8,7 @@ from openedx_filters import PipelineStep
 from requests import HTTPError
 
 from commerce_coordinator.apps.titan.clients import TitanAPIClient
-from commerce_coordinator.apps.titan.exceptions import PaymentNotFond
+from commerce_coordinator.apps.titan.exceptions import PaymentNotFound, NoActiveOrder
 
 logger = logging.getLogger(__name__)
 
@@ -58,5 +58,26 @@ class GetTitanPayment(PipelineStep):
             )
         except HTTPError as exc:
             logger.exception("[GetTitanPayment] Payment %s not found for user: %s", payment_number, edx_lms_user_id)
-            raise PaymentNotFond from exc
+            raise PaymentNotFound from exc
         return payment
+
+class GetTitanActiveOrder(PipelineStep):
+    """
+    """
+
+    def run_filter(self, edx_lms_user_id):
+        """
+        Execute a filter with the signature specified.
+        Args:
+            edx_lms_user_id: The edx.org LMS user ID of the user receiving the order.
+
+        """
+        api_client = TitanAPIClient()
+        try:
+            order = api_client.get_active_order(
+                edx_lms_user_id=edx_lms_user_id
+            )
+        except HTTPError as e:
+            logger.exception("[GetTitanActiveOrder] The specified user %s does not have an active order", edx_lms_user_id)
+            raise NoActiveOrder from e
+        return order

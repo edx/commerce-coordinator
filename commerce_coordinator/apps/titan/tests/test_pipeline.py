@@ -7,7 +7,7 @@ from requests import HTTPError
 
 from commerce_coordinator.apps.titan.pipeline import CreateTitanOrder, GetTitanPayment
 
-from ..exceptions import PaymentNotFond
+from ..exceptions import PaymentNotFound
 from .test_clients import ORDER_CREATE_DATA_WITH_CURRENCY, TitanClientMock
 
 
@@ -88,7 +88,7 @@ class TestGetTitanPaymentPipelineStep(TestCase):
             'payment_number': '1234',
         }
 
-        with self.assertRaises(PaymentNotFond) as ex:
+        with self.assertRaises(PaymentNotFound) as ex:
             payment_pipe.run_filter(
                 **get_payment_data,
             )

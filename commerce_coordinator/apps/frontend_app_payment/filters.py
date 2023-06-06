@@ -71,3 +71,8 @@ class ActiveOrderRequested(OpenEdxPublicFilter):
         Arguments:
             params: arguments passed through from the original get active order url querystring
         """
+        active_order = super().run_pipeline(
+            edx_lms_user_id=params['edx_lms_user_id'],
+        )
+
+        return active_order
