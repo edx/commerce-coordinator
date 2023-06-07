@@ -7,7 +7,8 @@ import logging
 from commerce_coordinator.apps.core.signal_helpers import CoordinatorSignal, log_receiver
 from commerce_coordinator.apps.titan.tasks import (
     enrollment_code_redemption_requested_create_order_task,
-    order_created_save_task
+    order_created_save_task,
+    payment_processed_save_task
 )
 
 logger = logging.getLogger(__name__)
@@ -42,5 +43,18 @@ def order_created_save(**kwargs):
         kwargs['first_name'],
         kwargs['last_name'],
         kwargs['coupon_code'],
+    )
+    return async_result.id
+
+
+@log_receiver(logger)
+def payment_processed_save(**kwargs):
+    """
+    Update an payment.
+    """
+    async_result = payment_processed_save_task.delay(
+        kwargs['payment_number'],
+        kwargs['payment_state'],
+        kwargs['response_code'],
     )
     return async_result.id
