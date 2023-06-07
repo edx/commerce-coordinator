@@ -50,6 +50,7 @@ PROJECT_APPS = (
     'commerce_coordinator.apps.frontend_app_ecommerce.apps.FrontendAppEcommerceConfig',
     'commerce_coordinator.apps.frontend_app_payment.apps.FrontendAppPaymentConfig',
     'commerce_coordinator.apps.lms.apps.LmsConfig',
+    'commerce_coordinator.apps.stripe.apps.StripeConfig',
     'commerce_coordinator.apps.titan.apps.TitanConfig',
 )
 
@@ -325,6 +326,9 @@ CC_SIGNALS = {
     ],
     'commerce_coordinator.apps.ecommerce.signals.order_created_signal': [
         'commerce_coordinator.apps.titan.signals.order_created_save',
+    ],
+    'commerce_coordinator.apps.stripe.signals.payment_processed_signal': [
+        'commerce_coordinator.apps.titan.signals.payment_processed_save',
     ],
 }
 
