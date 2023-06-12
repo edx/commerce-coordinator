@@ -18,7 +18,7 @@ class PaymentRequested(OpenEdxPublicFilter):
     Filter to gather payment data from the defined PipelineStep(s)
     """
     # See pipeline step configuration OPEN_EDX_FILTERS_CONFIG dict in `settings/base.py`
-    filter_type = "org.edx.coordinator.frontend_app_ecommerce.payment.get.requested.v1"
+    filter_type = "org.edx.coordinator.frontend_app_payment.payment.get.requested.v1"
 
     @classmethod
     def run_filter(cls, params):
@@ -56,5 +56,26 @@ class PaymentRequested(OpenEdxPublicFilter):
             TieredCache.set_all_tiers(payment_state_paid_cache_key, payment, settings.DEFAULT_TIMEOUT)
         elif payment_state in [PaymentState.PROCESSING.value, PaymentState.FAILED.value]:
             TieredCache.set_all_tiers(payment_state_processing_cache_key, payment, settings.DEFAULT_TIMEOUT)
+
+        return payment
+
+
+class DraftPaymentRequested(OpenEdxPublicFilter):
+    """
+    Filter to gather draft payment from the defined PipelineStep(s)
+    """
+    # See pipeline step configuration OPEN_EDX_FILTERS_CONFIG dict in `settings/base.py`
+    filter_type = "org.edx.coordinator.frontend_app_payment.payment.draft.requested.v1"
+
+    @classmethod
+    def run_filter(cls, params):
+        """
+        Call the PipelineStep(s) defined for this filter, to gather orders and return together
+        Arguments:
+            params (dict): Arguments passed through from the original get payment url querystring
+        """
+        payment = super().run_pipeline(
+            edx_lms_user_id=params['edx_lms_user_id'],
+        )
 
         return payment
