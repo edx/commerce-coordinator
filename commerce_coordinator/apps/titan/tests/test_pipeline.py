@@ -5,7 +5,7 @@ from unittest.mock import patch
 
 from requests import HTTPError
 
-from commerce_coordinator.apps.titan.pipeline import CreateTitanOrder, GetTitanPayment
+from commerce_coordinator.apps.titan.pipeline import CreateTitanOrder, GetTitanPayment, GetTitanActiveOrder
 
 from ..exceptions import PaymentNotFound
 from .test_clients import ORDER_CREATE_DATA_WITH_CURRENCY, TitanClientMock
@@ -99,3 +99,16 @@ class TestGetTitanPaymentPipelineStep(TestCase):
         )
         # ensure our input data arrives as expected
         mock_get_payment.assert_called_once_with(**get_payment_data)
+
+class TestGetTitanActiveOrderPipelineStep(TestCase):
+    """A pytest Test case for the GetTitanActiveOrder Pipeline Step"""
+    @patch('commerce_coordinator.apps.titan.clients.TitanAPIClient.get_active_order', new_callable=TitanClientMock)
+    def test_pipeline_step(self, mock_get_active_order):
+        active_order_pipe = GetTitanActiveOrder("test_pipe", None)
+        get_active_order_data = {
+            'edx_lms_user_id': 1,
+        }
+        result: dict = active_order_pipe.run_filter(**get_active_order_data)
+
+        mock_get_active_order.assert_called_once_with(**get_active_order_data)
+        self.assertIn('data', result)

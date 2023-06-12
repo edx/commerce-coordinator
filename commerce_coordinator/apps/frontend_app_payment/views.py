@@ -43,11 +43,12 @@ class PaymentGetView(APIView):
 
 
 class GetActiveOrderView(APIView):
-    authentication_classes = (JwtAuthentication,)
-    permission_classes = (IsAuthenticated,)
-    
+    # authentication_classes = (JwtAuthentication,)
+    # permission_classes = (IsAuthenticated,)
+
     def get(self, request):
         """return the user's current active order"""
+        logger.info('here')
         params = {
             'edx_lms_user_id': request.user.lms_user_id
         }
@@ -55,7 +56,9 @@ class GetActiveOrderView(APIView):
         if input_serializer.is_valid(raise_exception=True):
             params = input_serializer.data
             order_data = ActiveOrderRequested.run_filter(params)
+            print('*******************************')
             print(order_data)
+            return Response(order_data)
             # output_serializer = GetPaymentOutputSerializer(data=order_data)
             # if output_serializer.is_valid(raise_exception=True):
             #     return Response(output_serializer.data)

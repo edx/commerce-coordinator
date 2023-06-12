@@ -23,7 +23,8 @@ CACHES = {
 
 # CORS CONFIGURATION
 CORS_ORIGIN_WHITELIST = [
-    'http://localhost:1996'
+    'http://localhost:1996', # frontend-app-ecommerce
+    'http://localhost:1998', # frontend-app-payment
 ]
 # END CORS CONFIGURATION
 
@@ -127,9 +128,9 @@ LMS_URL_ROOT = "http://localhost:18000"
 
 PAYMENT_MICROFRONTEND_URL = "http://localhost:1998"
 
-TITAN_URL = "http://example.com"
+TITAN_URL = "https://theseus.staging.getsmarter.com/"
 
-TITAN_OAUTH2_PROVIDER_URL = "http://example.com"
+TITAN_OAUTH2_PROVIDER_URL = "https://theseus.staging.getsmarter.com/"
 
 FULFILLMENT_TIMEOUT = 15  # Devstack is slow!
 
