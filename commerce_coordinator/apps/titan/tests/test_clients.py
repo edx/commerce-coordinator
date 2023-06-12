@@ -4,7 +4,7 @@ from unittest.mock import MagicMock, patch
 from django.test import override_settings
 from requests.exceptions import HTTPError
 
-from commerce_coordinator.apps.core.constants import PaymentState
+from commerce_coordinator.apps.core.constants import PaymentMethod, PaymentState
 from commerce_coordinator.apps.core.tests.utils import CoordinatorClientTestCase
 from commerce_coordinator.apps.titan.clients import TitanAPIClient, urljoin_directory
 
@@ -318,6 +318,88 @@ class TestTitanAPIClient(CoordinatorClientTestCase):
             },
             expected_headers=self.expected_headers,
             mock_method='PATCH',
+            mock_url=url,
+            mock_response=mock_response,
+            expected_output=expected_output,
+        )
+
+    def test_create_payment(self):
+        url = urljoin_directory(self.api_base_url, '/payments')
+        payment_method_name = PaymentMethod.STRIPE.value
+        response_code = 'a_stripe_response_code'
+        provider_response_body = '{"test_key":"test_value"}'
+        reference = 'test_reference'
+        amount = 1000
+        payment_date = '1686318774'
+        source = {"test_key": "test_value"}
+
+        mock_response = {
+            'data': {
+                'attributes': {
+                    'orderUuid': ORDER_UUID,
+                    'responseCode': response_code,
+                    'paymentMethodName': payment_method_name,
+                    'providerResponseBody': provider_response_body,
+                }
+            }
+        }
+        expected_output = mock_response['data']['attributes']
+
+        # test with all params
+        self.assertJSONClientResponse(
+            uut=self.client.create_payment,
+            input_kwargs={
+                'order_uuid': ORDER_UUID,
+                'response_code': response_code,
+                'payment_method_name': payment_method_name,
+                'provider_response_body': provider_response_body,
+                'reference': reference,
+                'amount': amount,
+                'payment_date': payment_date,
+                'source': source,
+            },
+            expected_request={
+                'data': {
+                    'attributes': {
+                        'orderUuid': ORDER_UUID,
+                        'responseCode': response_code,
+                        'paymentMethodName': payment_method_name,
+                        'providerResponseBody': provider_response_body,
+                        'reference': reference,
+                        'amount': amount,
+                        'paymentDate': payment_date,
+                        'source': source,
+                    }
+                }
+            },
+            expected_headers=self.expected_headers,
+            mock_method='POST',
+            mock_url=url,
+            mock_response=mock_response,
+            expected_output=expected_output,
+        )
+
+        # Test with only required params.
+        self.assertJSONClientResponse(
+            uut=self.client.create_payment,
+            input_kwargs={
+                'order_uuid': ORDER_UUID,
+                'response_code': response_code,
+                'payment_method_name': payment_method_name,
+                'provider_response_body': provider_response_body,
+            },
+            expected_request={
+                'data': {
+                    'attributes': {
+                        'orderUuid': ORDER_UUID,
+                        'responseCode': response_code,
+                        'paymentMethodName': payment_method_name,
+                        'providerResponseBody': provider_response_body,
+                    }
+                }
+            },
+            expected_headers=self.expected_headers,
+            mock_method='POST',
             mock_url=url,
             mock_response=mock_response,
             expected_output=expected_output,
