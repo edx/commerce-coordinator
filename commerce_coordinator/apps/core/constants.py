@@ -17,3 +17,7 @@ class PaymentState(Enum):
     FAILED = 'failed'
     PENDING = 'pending'
     PROCESSING = 'processing'
+
+
+class PaymentMethod(Enum):
+    STRIPE = 'Stripe No Capture'
