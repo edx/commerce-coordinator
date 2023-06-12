@@ -238,6 +238,59 @@ class TitanAPIClient(Client):
 
         return response['data']['attributes']
 
+    def create_payment(
+        self,
+        order_uuid,
+        response_code,
+        payment_method_name,
+        provider_response_body,
+        reference=None,
+        amount=None,
+        payment_date=None,
+        source=None,
+    ):
+        """
+        Request Titan to Create payment.
+
+        Args:
+            order_uuid(str): Order UUID related to this order.
+            response_code(str): Payment attempt response code (payment intent id) provided by stripe.
+            payment_method_name(str): The name of the payment method used for this payment. See enums for valid values.
+            provider_response_body(str): The response JSON dump from a request to the payment provider..
+            reference(str): Optional. Reference to be saved against the payment.
+            amount(float): Optional. Payment amount to apply to order.
+            payment_date(ISO-8601 str): Optional. Payment date to save against the payment.
+            source(dict): Optional. Payment source details to be saved. It should have 'ccType',
+                'gatewayCustomerProfileId', 'gatewayPaymentProfileId', 'lastDigits', 'month', 'name' and 'year'
+                keys in 'str' format.
+        """
+        payload_attributes = {
+            'orderUuid': order_uuid,
+            'responseCode': response_code,
+            'paymentMethodName': payment_method_name,
+            'providerResponseBody': provider_response_body,
+        }
+        if reference is not None:
+            payload_attributes['reference'] = reference
+        if amount is not None:
+            payload_attributes['amount'] = amount
+        if payment_date is not None:
+            payload_attributes['paymentDate'] = payment_date
+        if source is not None:
+            payload_attributes['source'] = source
+
+        response = self._request(
+            request_method='POST',
+            resource_path='payments',
+            json={
+                'data': {
+                    'attributes': payload_attributes
+                }
+            },
+        )
+
+        return response['data']['attributes']
+
     def redeem_enrollment_code(self, sku, coupon_code, user_id, username, email):
         """
         Request Titan to redeem an enrollment code

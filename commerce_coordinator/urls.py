@@ -34,6 +34,7 @@ from commerce_coordinator.apps.ecommerce import urls as ecommerce_urls
 from commerce_coordinator.apps.frontend_app_ecommerce import urls as orders_urls
 from commerce_coordinator.apps.frontend_app_payment import urls as frontend_app_payment_urls
 from commerce_coordinator.apps.lms import urls as lms_urls
+from commerce_coordinator.apps.stripe import urls as stripe_urls
 from commerce_coordinator.apps.titan import urls as titan_urls
 
 admin.autodiscover()
@@ -50,6 +51,7 @@ urlpatterns = oauth2_urlpatterns + [
     re_path('^titan/', include(titan_urls), name='titan'),
     re_path('^orders/', include(orders_urls)),
     re_path('^frontend-app-payment/', include(frontend_app_payment_urls)),
+    re_path('^stripe/', include(stripe_urls)),
     # DEMO: Currently this is only test code, we may want to decouple LMS code here at some point...
     re_path('^demo_lms/', include(demo_lms_urls))
 ]

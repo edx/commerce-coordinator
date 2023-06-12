@@ -50,6 +50,7 @@ PROJECT_APPS = (
     'commerce_coordinator.apps.frontend_app_ecommerce.apps.FrontendAppEcommerceConfig',
     'commerce_coordinator.apps.frontend_app_payment.apps.FrontendAppPaymentConfig',
     'commerce_coordinator.apps.lms.apps.LmsConfig',
+    'commerce_coordinator.apps.stripe.apps.StripeConfig',
     'commerce_coordinator.apps.titan.apps.TitanConfig',
 )
 
@@ -327,6 +328,9 @@ CC_SIGNALS = {
     'commerce_coordinator.apps.ecommerce.signals.order_created_signal': [
         'commerce_coordinator.apps.titan.signals.order_created_save',
     ],
+    'commerce_coordinator.apps.stripe.signals.payment_processed_signal': [
+        'commerce_coordinator.apps.titan.signals.payment_processed_save',
+    ],
 }
 
 # Default timeouts for requests
@@ -389,3 +393,21 @@ EDX_DRF_EXTENSIONS = {
     },
     "ENABLE_SET_REQUEST_USER_FOR_JWT_COOKIE": True,
 }
+
+
+# PAYMENT PROCESSING
+PAYMENT_PROCESSOR_CONFIG = {
+    'edx': {
+        'stripe': {
+            'api_version': '2022-08-01; server_side_confirmation_beta=v1',
+            'enable_telemetry': None,
+            'log_level': 'debug',
+            'max_network_retries': 0,
+            'proxy': None,
+            'publishable_key': 'SET-ME-PLEASE',
+            'secret_key': 'SET-ME-PLEASE',
+            'webhook_endpoint_secret': 'SET-ME-PLEASE',
+        },
+    },
+}
+# END PAYMENT PROCESSING

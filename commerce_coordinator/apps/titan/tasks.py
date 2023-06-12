@@ -4,10 +4,18 @@ Titan Celery tasks
 
 from celery import shared_task
 from celery.utils.log import get_task_logger
+from django.conf import settings
+from edx_django_utils.cache import TieredCache
+from requests import HTTPError
+
+from commerce_coordinator.apps.core.cache import (
+    get_paid_payment_state_cache_key,
+    get_processing_payment_state_cache_key
+)
+from commerce_coordinator.apps.core.constants import PaymentState
 
 from .clients import TitanAPIClient
 
-# Use the special Celery logger for our tasks
 logger = get_task_logger(__name__)
 
 
@@ -75,8 +83,21 @@ def payment_processed_save_task(payment_number, payment_state, response_code):
 
     titan_api_client = TitanAPIClient()
 
-    titan_api_client.update_payment(
-        payment_number=payment_number,
-        payment_state=payment_state,
-        response_code=response_code
-    )
+    try:
+        payment = titan_api_client.update_payment(
+            payment_number=payment_number,
+            payment_state=payment_state,
+            response_code=response_code
+        )
+        # Set cache after successfully updating payment state in Titan's system.
+        payment_state = payment['state']
+        if payment_state == PaymentState.COMPLETED.value:
+            payment_state_paid_cache_key = get_paid_payment_state_cache_key(payment_number)
+            TieredCache.set_all_tiers(payment_state_paid_cache_key, payment, settings.DEFAULT_TIMEOUT)
+        elif payment_state == PaymentState.FAILED.value:
+            payment_state_processing_cache_key = get_processing_payment_state_cache_key(payment_number)
+            TieredCache.set_all_tiers(payment_state_processing_cache_key, payment, settings.DEFAULT_TIMEOUT)
+    except HTTPError as ex:
+        logger.exception('Titan payment_processed_save_task Failed '
+                         f'with payment_number: {payment_number}, payment_state: {payment_state},'
+                         f'and response_code: {response_code}. Exception: {ex}')
