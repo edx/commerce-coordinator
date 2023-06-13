@@ -5,7 +5,6 @@ source=commerce_coordinator
 omit =
     commerce_coordinator/settings/*
     commerce_coordinator/conf/*
-    commerce_coordinator/apps/core/tests/*.py
     *wsgi.py
     */migrations/*
     */admin.py
