@@ -368,7 +368,13 @@ OPEN_EDX_FILTERS_CONFIG = {
             'commerce_coordinator.apps.titan.pipeline.CreateTitanOrder',
         ]
     },
-    "org.edx.coordinator.frontend_app_ecommerce.payment.get.requested.v1": {
+    "org.edx.coordinator.frontend_app_payment.payment.get.requested.v1": {
+        "fail_silently": False,  # TODO: Coordinator filters should NEVER be allowed to fail silently
+        "pipeline": [
+            'commerce_coordinator.apps.titan.pipeline.GetTitanPayment',
+        ]
+    },
+    "org.edx.coordinator.frontend_app_payment.payment.draft.requested.v1": {
         "fail_silently": False,  # TODO: Coordinator filters should NEVER be allowed to fail silently
         "pipeline": [
             'commerce_coordinator.apps.titan.pipeline.GetTitanPayment',

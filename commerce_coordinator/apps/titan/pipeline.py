@@ -41,12 +41,12 @@ class GetTitanPayment(PipelineStep):
     Adds Titan's payment in payment data list.
     """
 
-    def run_filter(self, edx_lms_user_id, payment_number):  # pylint: disable=arguments-differ
+    def run_filter(self, edx_lms_user_id, payment_number=None):  # pylint: disable=arguments-differ
         """
         Execute a filter with the signature specified.
         Args:
             edx_lms_user_id: The edx.org LMS user ID of the user receiving the order.
-            payment_number: The Payment identifier in Spree.
+            payment_number: Optional. The Payment identifier in Spree.
 
         """
 
