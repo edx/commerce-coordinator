@@ -3,12 +3,24 @@
 from unittest import TestCase
 from unittest.mock import patch
 
+from django.test import override_settings
+
 from commerce_coordinator.apps.frontend_app_payment.filters import DraftPaymentRequested
 
 
 class TestDraftPaymentRequestedFilter(TestCase):
     """ A pytest Test Case for then `DraftPaymentRequested` """
 
+    @override_settings(
+        OPEN_EDX_FILTERS_CONFIG={
+            "org.edx.coordinator.frontend_app_payment.payment.draft.requested.v1": {
+                "fail_silently": False,
+                "pipeline": [
+                    'commerce_coordinator.apps.titan.pipeline.GetTitanPayment',
+                ]
+            },
+        },
+    )
     @patch('commerce_coordinator.apps.titan.clients.TitanAPIClient.get_payment')
     def test_filter_when_payment_exist_in_titan(self, mock_get_payment):
         """
@@ -28,4 +40,4 @@ class TestDraftPaymentRequestedFilter(TestCase):
         payment_details = DraftPaymentRequested.run_filter(filter_params)
 
         expected_payment_details = dict(filter_params, **mock_get_payment_data)
-        self.assertEqual(payment_details, expected_payment_details)
+        self.assertEqual(expected_payment_details, payment_details)
