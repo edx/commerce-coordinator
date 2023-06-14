@@ -49,21 +49,21 @@ class MemcacheTest(TestCase):
             key = safe_key(key, '', '')
 
             # The key should now be valid
-            assert self._is_valid_key(key), f'Failed for key length {length}'
+            self.assert_is_valid_key(key)
 
     def test_long_key_prefix_version(self):
 
         # Long key
         key = safe_key('a' * 300, 'prefix', 'version')
-        assert self._is_valid_key(key)
+        self.assert_is_valid_key(key)
 
         # Long prefix
         key = safe_key('key', 'a' * 300, 'version')
-        assert self._is_valid_key(key)
+        self.assert_is_valid_key(key)
 
         # Long version
         key = safe_key('key', 'prefix', 'a' * 300)
-        assert self._is_valid_key(key)
+        self.assert_is_valid_key(key)
 
     def test_safe_key_unicode(self):
 
@@ -76,7 +76,7 @@ class MemcacheTest(TestCase):
             key = safe_key(key, '', '')
 
             # The key should now be valid
-            assert self._is_valid_key(key), f'Failed for unicode character {unicode_char}'
+            self.assert_is_valid_key(key)
 
     def test_safe_key_prefix_unicode(self):
 
@@ -89,7 +89,7 @@ class MemcacheTest(TestCase):
             key = safe_key('test', prefix, '')
 
             # The key should now be valid
-            assert self._is_valid_key(key), f'Failed for unicode character {unicode_char}'
+            self.assert_is_valid_key(key)
 
     def test_safe_key_version_unicode(self):
 
@@ -102,21 +102,20 @@ class MemcacheTest(TestCase):
             key = safe_key('test', '', version)
 
             # The key should now be valid
-            assert self._is_valid_key(key), f'Failed for unicode character {unicode_char}'
+            self.assert_is_valid_key(key)
 
-    def _is_valid_key(self, key):
+    def assert_is_valid_key(self, key):
         """
         Test that a key is memcache-compatible.
         Based on Django's validator in core.cache.backends.base
         """
 
-        # Check the length
-        if len(key) > 250:
-            return False
+        # Check the length, it should 250 or less than 250
+        self.assertLessEqual(len(key), 250, f'Failed for key length {len(key)}')
 
         # Check that there are no spaces or control characters
         for char in key:
-            if ord(char) < 33 or ord(char) == 127:
-                return False
-
-        return True
+            self.assertFalse(
+                ord(char) < 33 or ord(char) == 127,
+                f'Failed for unicode character {char}'
+            )
