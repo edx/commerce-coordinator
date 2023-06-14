@@ -3,7 +3,7 @@ Views for the stripe app
 """
 import logging
 
-import stripe  # pylint: disable=import-error
+import stripe
 from django.conf import settings
 from django.views.decorators.csrf import csrf_exempt
 from rest_framework import status
