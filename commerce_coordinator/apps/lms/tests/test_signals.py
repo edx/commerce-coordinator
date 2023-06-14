@@ -20,7 +20,7 @@ logger = logging.getLogger(__name__)
 )
 @patch('commerce_coordinator.apps.lms.signals.fulfill_order_placed_send_enroll_in_course_task')
 class FulfillOrderPlacedSendEnrollInCourseTest(CoordinatorSignalReceiverTestCase):
-    """ LMS Fulfillment Oder Placed, Enrollment Signal Tester"""
+    """ LMS Fulfillment Order Placed, Enrollment Signal Tester"""
     mock_parameters = {
         'course_id': 1,
         'course_mode': 2,
