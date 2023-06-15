@@ -252,6 +252,13 @@ class DraftPaymentCreateViewTests(APITestCase):
     test_user_password = 'secret'
     test_lms_user_id = 1
     url = reverse('frontend_app_payment:creat_draft_payment')
+    order_uuid = '123e4567-e89b-12d3-a456-426614174000'
+    mock_get_payment_data = {
+        'orderUuid': order_uuid,
+        'state': PaymentState.PROCESSING.value,
+        'responseCode': 'test-code',
+        'number': 'test-number'
+    }
 
     def setUp(self):
         """Create test user before test starts."""
@@ -287,20 +294,14 @@ class DraftPaymentCreateViewTests(APITestCase):
         self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
 
     @patch('commerce_coordinator.apps.titan.clients.TitanAPIClient.get_payment')
-    def test_get_payment(self, mock_get_payment):
+    def test_create_payment(self, mock_get_payment):
         """
         Ensure data validation and success scenarios for create draft payment.
         """
-        order_uuid = '123e4567-e89b-12d3-a456-426614174000'
-        mock_get_payment.return_value = {
-            'orderUuid': order_uuid,
-            'state': PaymentState.PROCESSING.value,
-            'responseCode': 'test-code',
-            'number': 'test-number'
-        }
+        mock_get_payment.return_value = self.mock_get_payment_data
         expected_response = {
             'payment_number': 'test-number',
-            'order_uuid': order_uuid,
+            'order_uuid': self.order_uuid,
             'key_id': 'test-code',
             'state': PaymentState.PROCESSING.value
         }
@@ -313,3 +314,39 @@ class DraftPaymentCreateViewTests(APITestCase):
         self.assertTrue(mock_get_payment.called)
         kwargs = mock_get_payment.call_args.kwargs
         self.assertEqual(kwargs['edx_lms_user_id'], self.test_lms_user_id)
+
+    @patch('commerce_coordinator.apps.titan.clients.TitanAPIClient.get_payment')
+    def test_create_payment_missing_user_id(self, mock_get_payment):
+        """
+        Ensure data validation and success scenarios for create draft payment.
+        """
+        self.user.lms_user_id = None
+        self.user.save()
+
+        order_uuid = '123e4567-e89b-12d3-a456-426614174000'
+        mock_get_payment.return_value = {
+            'orderUuid': order_uuid,
+            'state': PaymentState.PROCESSING.value,
+            'responseCode': 'test-code',
+            'number': 'test-number'
+        }
+        self.client.force_authenticate(user=self.user)
+        response = self.client.put(self.url)
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        response_json = response.json()
+        self.assertIn('This field may not be null.', response_json['edx_lms_user_id'])
+
+    @patch('commerce_coordinator.apps.titan.clients.TitanAPIClient.get_payment')
+    def test_create_payment_for_unexpected_payment(self, mock_get_payment):
+        """
+        Ensure data validation and success scenarios for create draft payment.
+        """
+        mock_get_payment.return_value = {
+            # orderUuid missing.
+            'state': PaymentState.PROCESSING.value,
+            'responseCode': 'test-code',
+            'number': 'test-number'
+        }
+        self.client.force_authenticate(user=self.user)
+        response = self.client.put(self.url)
+        self.assertEqual(response.status_code, status.HTTP_500_INTERNAL_SERVER_ERROR)
