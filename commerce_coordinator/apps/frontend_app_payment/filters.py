@@ -70,12 +70,11 @@ class DraftPaymentRequested(OpenEdxPublicFilter):
     @classmethod
     def run_filter(cls, params):
         """
-        Call the PipelineStep(s) defined for this filter, to gather orders and return together
+        Call the PipelineStep(s) defined for this filter, to gather payment draft payment details.
         Arguments:
             params (dict): Arguments passed through from the original get payment url querystring
         """
         payment = super().run_pipeline(
             edx_lms_user_id=params['edx_lms_user_id'],
         )
-
         return payment

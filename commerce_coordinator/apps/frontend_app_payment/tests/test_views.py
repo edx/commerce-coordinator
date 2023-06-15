@@ -239,3 +239,77 @@ class GetPaymentViewTests(APITestCase):
 
         response_json = response.json()
         self.assertIn(response_json['detail'], 'Your requested payment does not belong to this payment')
+
+
+@ddt.ddt
+class DraftPaymentCreateViewTests(APITestCase):
+    """
+    Tests for create draft payment view.
+    """
+    # Define test user properties
+    test_user_username = 'test'
+    test_user_email = 'test@example.com'
+    test_user_password = 'secret'
+    test_lms_user_id = 1
+    url = reverse('frontend_app_payment:creat_draft_payment')
+
+    def setUp(self):
+        """Create test user before test starts."""
+        super().setUp()
+        self.user = User.objects.create_user(
+            self.test_user_username,
+            self.test_user_email,
+            self.test_user_password,
+            lms_user_id=self.test_lms_user_id,
+        )
+
+    def tearDown(self):
+        """Log out any user from client after test ends."""
+        super().tearDown()
+        self.client.logout()
+
+    def test_view_rejects_session_auth(self):
+        """Check Session Auth Not Allowed."""
+        # Login
+        self.client.login(username=self.test_user_username, password=self.test_user_password)
+        # Request get payment
+        response = self.client.put(self.url)
+        # Error HTTP_401_UNAUTHORIZED
+        self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
+
+    def test_view_rejects_unauthorized(self):
+        """Check unauthorized users creating draft payments are getting error"""
+        # Logout user
+        self.client.logout()
+        # Request payment
+        response = self.client.put(self.url)
+        # Error HTTP_401_UNAUTHORIZED
+        self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
+
+    @patch('commerce_coordinator.apps.titan.clients.TitanAPIClient.get_payment')
+    def test_get_payment(self, mock_get_payment):
+        """
+        Ensure data validation and success scenarios for create draft payment.
+        """
+        order_uuid = '123e4567-e89b-12d3-a456-426614174000'
+        mock_get_payment.return_value = {
+            'orderUuid': order_uuid,
+            'state': PaymentState.PROCESSING.value,
+            'responseCode': 'test-code',
+            'number': 'test-number'
+        }
+        expected_response = {
+            'payment_number': 'test-number',
+            'order_uuid': order_uuid,
+            'key_id': 'test-code',
+            'state': PaymentState.PROCESSING.value
+        }
+        self.client.force_authenticate(user=self.user)
+        response = self.client.put(self.url)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+
+        response_json = response.json()
+        self.assertEqual(response_json, expected_response)
+        self.assertTrue(mock_get_payment.called)
+        kwargs = mock_get_payment.call_args.kwargs
+        self.assertEqual(kwargs['edx_lms_user_id'], self.test_lms_user_id)
