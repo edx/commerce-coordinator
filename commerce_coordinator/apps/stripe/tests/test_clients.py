@@ -1,16 +1,26 @@
 """Tests for stripe app clients.py."""
 
+from django.conf import settings
+from django.test import override_settings
+
 from commerce_coordinator.apps.core.tests.utils import CoordinatorClientTestCase
 from commerce_coordinator.apps.stripe.clients import StripeAPIClient
 
+# Sentinel value for order_uuid.
 TEST_ORDER_UUID = 'abcdef01-1234-5678-90ab-cdef01234567'
 
+# Build test PAYMENT_PROCESSOR_CONFIG with sentinel value for Stripe's secret_key.
+TEST_SECRET = 'TEST_SECRET'
+TEST_PAYMENT_PROCESSOR_CONFIG = settings.PAYMENT_PROCESSOR_CONFIG
+TEST_PAYMENT_PROCESSOR_CONFIG['edx']['stripe']['secret_key'] = TEST_SECRET
 
+
+@override_settings(PAYMENT_PROCESSOR_CONFIG=TEST_PAYMENT_PROCESSOR_CONFIG)
 class TestStripeAPIClient(CoordinatorClientTestCase):
     """Tests for StripeAPIClient."""
 
     expected_headers = {
-        'Authorization': 'Bearer SET-ME-PLEASE',
+        'Authorization': 'Bearer ' + TEST_SECRET,
         'Stripe-Version': '2022-08-01; server_side_confirmation_beta=v1',
     }
 
