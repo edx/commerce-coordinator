@@ -93,3 +93,39 @@ class TestStripeAPIClient(CoordinatorClientTestCase):
                     },
                 },
             )
+
+    def test_create_payment_intent_idempotency_key_in_use(self):
+        # Add Idempotency-Key to expected headers:
+        expected_idempotency_key = 'order_number_pi_create_v1_' + TEST_ORDER_UUID
+        expected_headers_with_idempot_key = self.expected_headers.copy()
+        expected_headers_with_idempot_key['Idempotency-Key'] = expected_idempotency_key
+
+        with self.assertRaises(stripe.error.APIError):
+            self.assertJSONClientResponse(
+                uut=self.client.create_payment_intent,
+                input_kwargs={
+                    'order_uuid': TEST_ORDER_UUID,
+                    'amount_in_cents': 10000,
+                    'currency': 'USD',
+                },
+                expected_request={
+                    'amount': ['10000'],
+                    'currency': ['USD'],
+                    'description': [TEST_ORDER_UUID],
+                    'metadata[order_number]': [TEST_ORDER_UUID],
+                    'metadata[source_system]': ['edx/commerce_coordinator?v=1'],
+                    'secret_key_confirmation': ['required'],
+                },
+                request_type='query_string',
+                expected_headers=expected_headers_with_idempot_key,
+                mock_url='https://api.stripe.com/v1/payment_intents',
+                mock_status=409,
+                mock_response={
+                    "error": {
+                        "code": "idempotency_key_in_use",
+                        "doc_url": "https://stripe.com/docs/error-codes/idempotency-key-in-use",
+                        "message": "There is currently another in-progress...",
+                        "type": "invalid_request_error"
+                    },
+                },
+            )
