@@ -70,10 +70,24 @@ class StripeAPIClient:
                 # Don't create a new intent for the same order_number.
                 idempotency_key=f'order_number_pi_create_v1_{order_uuid}',
             )
-
-        except stripe.error.IdempotencyError:
+        except stripe.error.IdempotencyError as exc:
             logger.error('StripeAPIClient.create_or_get_payment_intent threw '
-                         'stripe.error.IdempotencyError with '
+                         f'[{exc}] with '
+                         f'order_uuid: [{order_uuid}], '
+                         f'amount_in_cents: [{amount_in_cents}], '
+                         f'currency: [{currency}].')
+            # TODO: In the future, we might expect IdempotencyError as a normal
+            # part of our users' flows. For example: in our legacy ecommerce
+            # repo, we avoid a request to the database to see if an order
+            # already has a Stripe PaymentIntent. Either: (a) Remove this block
+            # if this assumption is no longer the case. IdempotencyErrors will
+            # be caught anyways by the stripe.error.StripeError exception
+            # handler below. Or: (b) Remove the raise & implement expected
+            # behavior here.
+            raise
+        except stripe.error.StripeError as exc:
+            logger.error('StripeAPIClient.create_or_get_payment_intent threw '
+                         f'[{exc}] with '
                          f'order_uuid: [{order_uuid}], '
                          f'amount_in_cents: [{amount_in_cents}], '
                          f'currency: [{currency}].')
