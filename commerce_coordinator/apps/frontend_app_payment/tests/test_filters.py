@@ -5,7 +5,9 @@ from unittest.mock import patch
 
 from django.test import override_settings
 
+from commerce_coordinator.apps.core.constants import PaymentState
 from commerce_coordinator.apps.frontend_app_payment.filters import DraftPaymentRequested
+from commerce_coordinator.apps.titan.tests.test_clients import ORDER_UUID
 
 
 class TestDraftPaymentRequestedFilter(TestCase):
@@ -21,23 +23,21 @@ class TestDraftPaymentRequestedFilter(TestCase):
             },
         },
     )
-    @patch('commerce_coordinator.apps.titan.clients.TitanAPIClient.get_payment')
-    def test_filter_when_payment_exist_in_titan(self, mock_get_payment):
+    @patch('commerce_coordinator.apps.titan.pipeline.GetTitanPayment.run_filter')
+    def test_filter_when_payment_exist_in_titan(self, mock_pipeline):
         """
         Test when Payment exists in Titan system.
         """
 
-        mock_get_payment_data = {
-            'orderUuid': 'test-uuid',
-            'number': '123456',
+        mock_payment = {
+            'payment_number': '12345',
+            'order_uuid': ORDER_UUID,
+            'key_id': 'test-code',
+            'state': PaymentState.PROCESSING.value
         }
-        mock_get_payment.return_value = mock_get_payment_data
-
+        mock_pipeline.return_value = mock_payment
         filter_params = {
             'edx_lms_user_id': 1,
         }
-
         payment_details = DraftPaymentRequested.run_filter(filter_params)
-
-        expected_payment_details = dict(filter_params, **mock_get_payment_data)
-        self.assertEqual(expected_payment_details, payment_details)
+        self.assertEqual(mock_payment, payment_details)
