@@ -9,6 +9,7 @@ from requests import HTTPError
 
 from commerce_coordinator.apps.titan.clients import TitanAPIClient
 from commerce_coordinator.apps.titan.exceptions import PaymentNotFond
+from commerce_coordinator.apps.titan.serializers import PaymentSerializer
 
 logger = logging.getLogger(__name__)
 
@@ -59,4 +60,6 @@ class GetTitanPayment(PipelineStep):
         except HTTPError as exc:
             logger.exception("[GetTitanPayment] Payment %s not found for user: %s", payment_number, edx_lms_user_id)
             raise PaymentNotFond from exc
-        return payment
+        payment_serializer = PaymentSerializer(data=payment)
+        payment_serializer.is_valid(raise_exception=True)
+        return payment_serializer.data
