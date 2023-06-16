@@ -11,7 +11,7 @@ from commerce_coordinator.apps.titan.clients import TitanAPIClient, urljoin_dire
 TITAN_URL = 'https://testserver.com'
 TITAN_API_KEY = 'top-secret'
 
-ORDER_UUID = 'test-uuid'
+ORDER_UUID = '123e4567-e89b-12d3-a456-426614174000'
 DEFAULT_CURRENCY = 'USD'
 
 ORDER_CREATE_DATA = {
@@ -34,6 +34,16 @@ class TitanClientMock(MagicMock):
                 'uuid': ORDER_UUID,
             },
         },
+    }
+
+
+class TitanPaymentClientMock(MagicMock):
+    """A mock TitanClient."""
+    return_value = {
+        'orderUuid': ORDER_UUID,
+        'state': PaymentState.PROCESSING.value,
+        'responseCode': 'test-code',
+        'number': 'test-number'
     }
 
 

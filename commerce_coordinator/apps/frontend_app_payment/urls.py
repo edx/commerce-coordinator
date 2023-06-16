@@ -8,6 +8,6 @@ from commerce_coordinator.apps.frontend_app_payment.views import DraftPaymentCre
 
 app_name = 'frontend_app_payment'
 urlpatterns = [
-    path('payment/', PaymentGetView.as_view(), name='get_payment'),
-    path('payment/draft/', DraftPaymentCreateView.as_view(), name='creat_draft_payment'),
+    path('payment', PaymentGetView.as_view(), name='get_payment'),
+    path('payment/draft', DraftPaymentCreateView.as_view(), name='creat_draft_payment'),
 ]
