@@ -24,7 +24,7 @@ class PaymentGetView(APIView):
     throttle_rate = (ScopedRateThrottle,)
     throttle_scope = 'get_payment'
 
-    def get(self, request):  # pylint: disable=inconsistent-return-statements
+    def get(self, request):
         """Get Payment details including it's status"""
         params = {
             'edx_lms_user_id': request.user.lms_user_id,
@@ -32,14 +32,14 @@ class PaymentGetView(APIView):
             'payment_number': request.query_params.get('payment_number'),
         }
         input_serializer = GetPaymentInputSerializer(data=params)
-        if input_serializer.is_valid(raise_exception=True):
-            params = input_serializer.data
-            payment_details = PaymentRequested.run_filter(params)
-            if payment_details['order_uuid'] != params['order_uuid']:
-                raise InvalidOrderPayment
-            output_serializer = GetPaymentOutputSerializer(data=payment_details)
-            if output_serializer.is_valid(raise_exception=True):
-                return Response(output_serializer.data)
+        input_serializer.is_valid(raise_exception=True)
+        params = input_serializer.data
+        payment_details = PaymentRequested.run_filter(params)
+        if payment_details['order_uuid'] != params['order_uuid']:
+            raise InvalidOrderPayment
+        output_serializer = GetPaymentOutputSerializer(data=payment_details)
+        output_serializer.is_valid(raise_exception=True)
+        return Response(output_serializer.data)
 
 
 class DraftPaymentCreateView(APIView):
@@ -47,13 +47,13 @@ class DraftPaymentCreateView(APIView):
     authentication_classes = (JwtAuthentication,)
     permission_classes = (IsAuthenticated,)
 
-    def put(self, request):  # pylint: disable=inconsistent-return-statements
+    def put(self, request):
         """Gets initial information required to collect payment details on a basket."""
         params = {
             'edx_lms_user_id': request.user.lms_user_id,
         }
         input_serializer = DraftPaymentCreateViewInputSerializer(data=params)
-        if input_serializer.is_valid(raise_exception=True):
-            params = input_serializer.data
-            payment_details = DraftPaymentRequested.run_filter(params)
-            return Response(payment_details)
+        input_serializer.is_valid(raise_exception=True)
+        params = input_serializer.data
+        payment_details = DraftPaymentRequested.run_filter(params)
+        return Response(payment_details)
