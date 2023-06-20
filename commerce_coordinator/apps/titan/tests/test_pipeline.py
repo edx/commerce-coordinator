@@ -8,7 +8,7 @@ from requests import HTTPError
 from commerce_coordinator.apps.titan.pipeline import CreateTitanOrder, GetTitanActiveOrder, GetTitanPayment
 
 from ..exceptions import NoActiveOrder, PaymentNotFound
-from .test_clients import ORDER_CREATE_DATA_WITH_CURRENCY, TitanClientMock
+from .test_clients import ORDER_CREATE_DATA_WITH_CURRENCY, TitanClientMock, TitanPaymentClientMock
 
 
 class TestCreateTitanOrderPipelineStep(TestCase):
@@ -52,7 +52,7 @@ class TestCreateTitanOrderPipelineStep(TestCase):
 class TestGetTitanPaymentPipelineStep(TestCase):
     """ A pytest Test Case for then `GetTitanPayment(PipelineStep)` """
 
-    @patch('commerce_coordinator.apps.titan.clients.TitanAPIClient.get_payment', new_callable=TitanClientMock)
+    @patch('commerce_coordinator.apps.titan.clients.TitanAPIClient.get_payment', new_callable=TitanPaymentClientMock)
     def test_pipeline_step(self, mock_get_payment):
         """
         A test to red/green whether our pipeline step accepts data, invokes right, and sends things off as coded
@@ -72,7 +72,10 @@ class TestGetTitanPaymentPipelineStep(TestCase):
 
         # ensure our input data arrives as expected
         mock_get_payment.assert_called_once_with(**get_payment_data)
-        self.assertIn('data', result)
+        self.assertIn('payment_number', result)
+        self.assertIn('order_uuid', result)
+        self.assertIn('key_id', result)
+        self.assertIn('state', result)
 
     @patch('commerce_coordinator.apps.titan.clients.TitanAPIClient.get_payment', side_effect=HTTPError)
     def test_pipeline_step_raises_exception(self, mock_get_payment):

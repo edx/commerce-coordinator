@@ -9,6 +9,7 @@ from requests import HTTPError
 
 from commerce_coordinator.apps.titan.clients import TitanAPIClient
 from commerce_coordinator.apps.titan.exceptions import NoActiveOrder, PaymentNotFound
+from commerce_coordinator.apps.titan.serializers import PaymentSerializer
 
 logger = logging.getLogger(__name__)
 
@@ -41,12 +42,12 @@ class GetTitanPayment(PipelineStep):
     Adds Titan's payment in payment data list.
     """
 
-    def run_filter(self, edx_lms_user_id, payment_number):  # pylint: disable=arguments-differ
+    def run_filter(self, edx_lms_user_id, payment_number=None):  # pylint: disable=arguments-differ
         """
         Execute a filter with the signature specified.
         Args:
             edx_lms_user_id: The edx.org LMS user ID of the user receiving the order.
-            payment_number: The Payment identifier in Spree.
+            payment_number: Optional. The Payment identifier in Spree.
 
         """
 
@@ -59,7 +60,9 @@ class GetTitanPayment(PipelineStep):
         except HTTPError as exc:
             logger.exception("[GetTitanPayment] Payment %s not found for user: %s", payment_number, edx_lms_user_id)
             raise PaymentNotFound from exc
-        return payment
+        payment_serializer = PaymentSerializer(data=payment)
+        payment_serializer.is_valid(raise_exception=True)
+        return payment_serializer.data
 
 
 class GetTitanActiveOrder(PipelineStep):

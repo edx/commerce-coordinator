@@ -9,6 +9,7 @@ from openedx_filters.tooling import OpenEdxPublicFilter
 
 from commerce_coordinator.apps.core.cache import CachePaymentStates, get_payment_state_cache_key
 from commerce_coordinator.apps.core.constants import PaymentState
+from commerce_coordinator.apps.frontend_app_payment.serializers import DraftPaymentCreateViewOutputSerializer
 
 logger = logging.getLogger(__name__)
 
@@ -18,7 +19,7 @@ class PaymentRequested(OpenEdxPublicFilter):
     Filter to gather payment data from the defined PipelineStep(s)
     """
     # See pipeline step configuration OPEN_EDX_FILTERS_CONFIG dict in `settings/base.py`
-    filter_type = "org.edx.coordinator.frontend_app_ecommerce.payment.get.requested.v1"
+    filter_type = "org.edx.coordinator.frontend_app_payment.payment.get.requested.v1"
 
     @classmethod
     def run_filter(cls, params):
@@ -58,6 +59,28 @@ class PaymentRequested(OpenEdxPublicFilter):
             TieredCache.set_all_tiers(payment_state_processing_cache_key, payment, settings.DEFAULT_TIMEOUT)
 
         return payment
+
+
+class DraftPaymentRequested(OpenEdxPublicFilter):
+    """
+    Filter to gather draft payment from the defined PipelineStep(s)
+    """
+    # See pipeline step configuration OPEN_EDX_FILTERS_CONFIG dict in `settings/base.py`
+    filter_type = "org.edx.coordinator.frontend_app_payment.payment.draft.requested.v1"
+
+    @classmethod
+    def run_filter(cls, params):
+        """
+        Call the PipelineStep(s) defined for this filter, to gather payment draft payment details.
+        Arguments:
+            params (dict): Arguments passed through from the original get payment url querystring
+        """
+        payment = super().run_pipeline(
+            edx_lms_user_id=params['edx_lms_user_id'],
+        )
+        payment_output = DraftPaymentCreateViewOutputSerializer(data=payment)
+        payment_output.is_valid(raise_exception=True)
+        return payment_output.data
 
 
 class ActiveOrderRequested(OpenEdxPublicFilter):

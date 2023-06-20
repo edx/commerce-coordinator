@@ -18,6 +18,23 @@ class GetPaymentOutputSerializer(serializers.Serializer):  # pylint: disable=abs
     state = serializers.CharField(allow_null=False)
 
 
+class DraftPaymentCreateViewInputSerializer(serializers.Serializer):  # pylint: disable=abstract-method
+    """
+    Serializer for DraftPaymentCreateView input validation.
+    """
+    edx_lms_user_id = serializers.IntegerField(allow_null=False)
+
+
+class DraftPaymentCreateViewOutputSerializer(serializers.Serializer):  # pylint: disable=abstract-method
+    """
+    Serializer for DraftPaymentCreateView input validation.
+    """
+    payment_number = serializers.CharField(allow_null=False)
+    order_uuid = serializers.UUIDField(allow_null=False)
+    key_id = serializers.CharField(allow_null=False)
+    state = serializers.CharField(allow_null=False)
+
+
 class GetActiveOrderInputSerializer(serializers.Serializer):  # pylint: disable=abstract-method
     """
     Serializer for GetActiveOrderView input validation

@@ -3,6 +3,7 @@
 import json
 import random
 import string
+from urllib.parse import parse_qs
 
 import responses
 from django.apps import apps
@@ -92,6 +93,7 @@ class CoordinatorClientTestCase(TestCase):
         *,
         uut,
         input_kwargs,
+        request_type='json',
         expected_request=None,
         expected_headers=None,
         mock_method='POST',
@@ -112,6 +114,8 @@ class CoordinatorClientTestCase(TestCase):
             input_kwargs (dict): kwargs to provide uut.
             expected_request (dict): Expected request of uut to external API given input_kwargs. POST requests will be
                 converted to JSON.
+            request_type (str): 'query_string' if the expected_request is of type application/x-www-form-urlencoded;
+                'json' for type 'application/json'. Defaults to 'json'.
             expected_headers (dict): Expected headers of uut to external API.
             mock_url (str): URL of external API to mock.
             mock_response (dict): Mock response external API should provide uut given expected_request. Will be
@@ -165,8 +169,13 @@ class CoordinatorClientTestCase(TestCase):
         if expected_request:
             if is_get:
                 request_dict = request.params
-            else:
+            elif request_type == 'query_string':
+                request_dict = parse_qs(request.body, strict_parsing=True)
+            elif request_type == 'json':
                 request_dict = json.loads(request.body)
+            else:
+                raise ValueError('request_type must be "query_string" or "json" ' +
+                                 'for non-GET expected_request')
             self.assertEqual(
                 request_dict,
                 expected_request,
@@ -215,6 +224,7 @@ class CoordinatorOAuthClientTestCase(CoordinatorClientTestCase):
         uut,
         input_kwargs,
         expected_request=None,
+        request_type='json',
         expected_headers=None,
         mock_method='POST',
         mock_url,
@@ -227,6 +237,7 @@ class CoordinatorOAuthClientTestCase(CoordinatorClientTestCase):
             uut=uut,
             input_kwargs=input_kwargs,
             expected_request=expected_request,
+            request_type=request_type,
             expected_headers=expected_headers,
             mock_method=mock_method,
             mock_url=mock_url,
