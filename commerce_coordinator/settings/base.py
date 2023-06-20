@@ -401,7 +401,7 @@ PAYMENT_PROCESSOR_CONFIG = {
         'stripe': {
             'api_version': '2022-08-01; server_side_confirmation_beta=v1',
             'enable_telemetry': None,
-            'log_level': 'debug',
+            'log_level': 'info',
             'max_network_retries': 0,
             'proxy': None,
             'publishable_key': 'SET-ME-PLEASE',
