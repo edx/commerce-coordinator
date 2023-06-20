@@ -133,6 +133,21 @@ TITAN_OAUTH2_PROVIDER_URL = "http://example.com"
 
 FULFILLMENT_TIMEOUT = 15  # Devstack is slow!
 
+PAYMENT_PROCESSOR_CONFIG = {
+    'edx': {
+        'stripe': {
+            'api_version': '2022-08-01; server_side_confirmation_beta=v1',
+            'enable_telemetry': None,
+            'log_level': 'debug',
+            'max_network_retries': 0,
+            'proxy': None,
+            'publishable_key': 'SET-ME-PLEASE',
+            'secret_key': 'SET-ME-PLEASE',
+            'webhook_endpoint_secret': 'SET-ME-PLEASE',
+        },
+    },
+}
+
 #####################################################################
 # Lastly, see if the developer has any local overrides.
 if os.path.isfile(join(dirname(abspath(__file__)), 'private.py')):
