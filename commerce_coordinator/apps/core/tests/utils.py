@@ -173,6 +173,9 @@ class CoordinatorClientTestCase(TestCase):
                 request_dict = parse_qs(request.body, strict_parsing=True)
             elif request_type == 'json':
                 request_dict = json.loads(request.body)
+            else:
+                raise ValueError('request_type must be "query_string" or "json" ' +
+                                 'for non-GET expected_request')
             self.assertEqual(
                 request_dict,
                 expected_request,
