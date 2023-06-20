@@ -263,7 +263,7 @@ LOGIN_REDIRECT_URL = '/admin/'
 EDX_API_KEY = 'replace-me'
 
 # Set token credentials for non-edX services.
-TITAN_API_KEY = '9bf46eca442eb78c7019c6c0785fcc5179171473f23cfcbc'
+TITAN_API_KEY = 'replace-me'
 
 # Set OAuth2 credentials for non-edX services.
 TITAN_OAUTH2_PROVIDER_URL = 'replace-me'
