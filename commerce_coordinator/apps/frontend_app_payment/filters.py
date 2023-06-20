@@ -58,9 +58,12 @@ class PaymentRequested(OpenEdxPublicFilter):
             TieredCache.set_all_tiers(payment_state_processing_cache_key, payment, settings.DEFAULT_TIMEOUT)
 
         return payment
-    
+
 
 class ActiveOrderRequested(OpenEdxPublicFilter):
+    """
+    Filter to gather payment data from the defined PipelineStep(s)
+    """
 
     filter_type = "org.edx.coordinator.frontend_app_payment.active.order.requested.v1"
 
@@ -74,5 +77,11 @@ class ActiveOrderRequested(OpenEdxPublicFilter):
         active_order = super().run_pipeline(
             edx_lms_user_id=params['edx_lms_user_id'],
         )
-
+        # Transpose order data to the values frontend_app_payment expects
+        active_order['orderTotal'] = float(active_order.pop('total'))
+        # TODO: Do we still need this waffle flag? Normally from ecommerce
+        # and was used from cybersource to stripe migration.
+        active_order['enableStripePaymentProcessor'] = True
+        active_order['products'] = active_order.pop('lineItems')
+        active_order['basketId'] = active_order.pop('uuid')
         return active_order

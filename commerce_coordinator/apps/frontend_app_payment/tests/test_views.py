@@ -240,6 +240,7 @@ class GetPaymentViewTests(APITestCase):
         response_json = response.json()
         self.assertIn(response_json['detail'], 'Your requested payment does not belong to this payment')
 
+
 @ddt.ddt
 class GetActiveOrderViewTests(APITestCase):
     """
@@ -284,3 +285,77 @@ class GetActiveOrderViewTests(APITestCase):
         response = self.client.get(self.url)
         # Error HTTP_401_UNAUTHORIZED
         self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
+
+    @patch('commerce_coordinator.apps.titan.clients.TitanAPIClient.get_active_order')
+    def test_get_active_order(self, mock_get_active_order):
+        """
+        Ensure data validation and success scenarios for get payment.
+        """
+        mock_get_active_order.return_value = {
+            "edxLmsUserId": 1,
+            "itemTotal": "100.0",
+            "total": "100.0",
+            "adjustmentTotal": "0.0",
+            "createdAt": "2023-05-25T14:45:18.711Z",
+            "updatedAt": "2023-05-25T15:12:07.168Z",
+            "completedAt": "null",
+            "currency": "USD",
+            "state": "complete",
+            "email": "test@2u.com",
+            "uuid": "272705e3-9ffb-4a42-a23b-afbbc18f173b",
+            "promoTotal": "0.0",
+            "itemCount": 1,
+            "paymentState": "null",
+            "paymentTotal": "0.0",
+            "user": {
+                "firstName": "test",
+                "lastName": "test",
+                "email": "test@2u.com"
+            },
+            "billingAddress": {
+                "address1": "test",
+                "address2": " test",
+                "city": "test",
+                "company": "Test",
+                "countryIso": "ZA",
+                "firstName": "test",
+                "lastName": "test",
+                "phone": "n/a",
+                "stateName": "null",
+                "zipcode": "50000"
+            },
+            "lineItems": [
+                {
+                    "quantity": 1,
+                    "price": "100.0",
+                    "currency": "USD",
+                    "sku": "64411FA",
+                    "title": "Accounting Essentials",
+                    "courseMode": "verified"
+                }
+            ],
+            "payments": [
+                {
+                    "amount": "228.0",
+                    "number": "PDHB22WS",
+                    "orderUuid": "272705e3-9ffb-4a42-a23b-afbbc18f173b",
+                    "paymentDate": "2023-05-24T08:45:26.388Z",
+                    "paymentMethodName": "Stripe",
+                    "reference": "TestOrder-58",
+                    "responseCode": "ch_3MebJMAa00oRYTAV1C26pHmmj572",
+                    "state": "checkout",
+                    "createdAt": "2023-05-25T15:12:07.165Z",
+                    "updatedAt": "2023-05-25T15:12:07.165Z"
+                }
+            ],
+            "orderType": "order",
+        }
+
+        self.client.force_authenticate(user=self.user)
+
+        response = self.client.get(self.url)
+        response_json = response.json()
+        self.assertEqual(response_json['edxLmsUserId'], self.test_lms_user_id)
+        self.assertTrue(mock_get_active_order.called)
+        kwargs = mock_get_active_order.call_args.kwargs
+        self.assertEqual(kwargs['edx_lms_user_id'], self.test_lms_user_id)

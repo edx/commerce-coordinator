@@ -5,9 +5,9 @@ from unittest.mock import patch
 
 from requests import HTTPError
 
-from commerce_coordinator.apps.titan.pipeline import CreateTitanOrder, GetTitanPayment, GetTitanActiveOrder
+from commerce_coordinator.apps.titan.pipeline import CreateTitanOrder, GetTitanActiveOrder, GetTitanPayment
 
-from ..exceptions import PaymentNotFound
+from ..exceptions import NoActiveOrder, PaymentNotFound
 from .test_clients import ORDER_CREATE_DATA_WITH_CURRENCY, TitanClientMock
 
 
@@ -100,6 +100,7 @@ class TestGetTitanPaymentPipelineStep(TestCase):
         # ensure our input data arrives as expected
         mock_get_payment.assert_called_once_with(**get_payment_data)
 
+
 class TestGetTitanActiveOrderPipelineStep(TestCase):
     """A pytest Test case for the GetTitanActiveOrder Pipeline Step"""
     @patch('commerce_coordinator.apps.titan.clients.TitanAPIClient.get_active_order', new_callable=TitanClientMock)
@@ -112,3 +113,21 @@ class TestGetTitanActiveOrderPipelineStep(TestCase):
 
         mock_get_active_order.assert_called_once_with(**get_active_order_data)
         self.assertIn('data', result)
+
+    @patch('commerce_coordinator.apps.titan.clients.TitanAPIClient.get_active_order', side_effect=HTTPError)
+    def test_pipeline_step_raises_exception(self, mock_get_active_order):
+        active_order_pipe = GetTitanActiveOrder("test_pipe", None)
+        get_active_order_data = {
+            'edx_lms_user_id': 1,
+        }
+        with self.assertRaises(NoActiveOrder) as ex:
+            active_order_pipe.run_filter(
+                **get_active_order_data,
+            )
+
+        self.assertEqual(
+            str(ex.exception),
+            'The user with the specified edx_lms_user_id does not have an active order'
+        )
+        # ensure our input data arrives as expected
+        mock_get_active_order.assert_called_once_with(**get_active_order_data)

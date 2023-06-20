@@ -11,8 +11,8 @@ from rest_framework.views import APIView
 
 from commerce_coordinator.apps.frontend_app_payment.exceptions import InvalidOrderPayment
 
-from .filters import PaymentRequested, ActiveOrderRequested
-from .serializers import GetPaymentInputSerializer, GetPaymentOutputSerializer, GetActiveOrderInputSerializer, GetActiveOrderOutputSerializer
+from .filters import ActiveOrderRequested, PaymentRequested
+from .serializers import GetActiveOrderInputSerializer, GetPaymentInputSerializer, GetPaymentOutputSerializer
 
 logger = logging.getLogger(__name__)
 
@@ -43,12 +43,12 @@ class PaymentGetView(APIView):
 
 
 class GetActiveOrderView(APIView):
-    # authentication_classes = (JwtAuthentication,)
-    # permission_classes = (IsAuthenticated,)
+    """Get Active Order View"""
+    authentication_classes = (JwtAuthentication,)
+    permission_classes = (IsAuthenticated,)
 
-    def get(self, request):
+    def get(self, request):  # pylint: disable=inconsistent-return-statements
         """return the user's current active order"""
-        logger.info('here')
         params = {
             'edx_lms_user_id': request.user.lms_user_id
         }
@@ -56,9 +56,4 @@ class GetActiveOrderView(APIView):
         if input_serializer.is_valid(raise_exception=True):
             params = input_serializer.data
             order_data = ActiveOrderRequested.run_filter(params)
-            print('*******************************')
-            print(order_data)
             return Response(order_data)
-            # output_serializer = GetPaymentOutputSerializer(data=order_data)
-            # if output_serializer.is_valid(raise_exception=True):
-            #     return Response(output_serializer.data)

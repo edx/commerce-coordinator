@@ -18,13 +18,8 @@ class GetPaymentOutputSerializer(serializers.Serializer):  # pylint: disable=abs
     state = serializers.CharField(allow_null=False)
 
 
-class GetActiveOrderInputSerializer(serializers.Serializer):
+class GetActiveOrderInputSerializer(serializers.Serializer):  # pylint: disable=abstract-method
     """
     Serializer for GetActiveOrderView input validation
     """
     edx_lms_user_id = serializers.IntegerField(allow_null=False)
-
-class GetActiveOrderOutputSerializer(serializers.Serializer):
-    """
-    Serializer for GetActiveOrderView output validation
-    """

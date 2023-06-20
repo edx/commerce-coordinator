@@ -23,8 +23,8 @@ CACHES = {
 
 # CORS CONFIGURATION
 CORS_ORIGIN_WHITELIST = [
-    'http://localhost:1996', # frontend-app-ecommerce
-    'http://localhost:1998', # frontend-app-payment
+    'http://localhost:1996',  # frontend-app-ecommerce
+    'http://localhost:1998',  # frontend-app-payment
 ]
 # END CORS CONFIGURATION
 
