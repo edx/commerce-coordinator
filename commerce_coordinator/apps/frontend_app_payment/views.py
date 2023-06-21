@@ -75,7 +75,7 @@ class GetActiveOrderView(APIView):
             'edx_lms_user_id': request.user.lms_user_id
         }
         input_serializer = GetActiveOrderInputSerializer(data=params)
-        if input_serializer.is_valid(raise_exception=True):
-            params = input_serializer.data
-            order_data = ActiveOrderRequested.run_filter(params)
-            return Response(order_data)
+        input_serializer.is_valid(raise_exception=True)
+        params = input_serializer.data
+        order_data = ActiveOrderRequested.run_filter(params)
+        return Response(order_data)
