@@ -9,10 +9,7 @@ from openedx_filters.tooling import OpenEdxPublicFilter
 
 from commerce_coordinator.apps.core.cache import CachePaymentStates, get_payment_state_cache_key
 from commerce_coordinator.apps.core.constants import PaymentState
-from commerce_coordinator.apps.frontend_app_payment.serializers import (
-    DraftPaymentCreateViewOutputSerializer,
-    GetActiveOrderOutputSerializer
-)
+from commerce_coordinator.apps.frontend_app_payment.serializers import DraftPaymentCreateViewOutputSerializer
 
 logger = logging.getLogger(__name__)
 
@@ -103,10 +100,7 @@ class ActiveOrderRequested(OpenEdxPublicFilter):
         active_order = super().run_pipeline(
             edx_lms_user_id=params['edx_lms_user_id'],
         )
-        # Transpose order data to the values frontend_app_payment expects
         # TODO: Do we still need this waffle flag? Normally from ecommerce
         # and was used from cybersource to stripe migration.
         active_order['enable_stripe_payment_processor'] = True
-        active_order_output = GetActiveOrderOutputSerializer(data=active_order)
-        active_order_output.is_valid(raise_exception=True)
-        return active_order_output.data
+        return active_order

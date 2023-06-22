@@ -8,7 +8,12 @@ from requests import HTTPError
 from commerce_coordinator.apps.titan.pipeline import CreateTitanOrder, GetTitanActiveOrder, GetTitanPayment
 
 from ..exceptions import NoActiveOrder, PaymentNotFound
-from .test_clients import ORDER_CREATE_DATA_WITH_CURRENCY, TitanClientMock, TitanPaymentClientMock
+from .test_clients import (
+    ORDER_CREATE_DATA_WITH_CURRENCY,
+    TitanActiveOrderClientMock,
+    TitanClientMock,
+    TitanPaymentClientMock
+)
 
 
 class TestCreateTitanOrderPipelineStep(TestCase):
@@ -106,7 +111,8 @@ class TestGetTitanPaymentPipelineStep(TestCase):
 
 class TestGetTitanActiveOrderPipelineStep(TestCase):
     """A pytest Test case for the GetTitanActiveOrder Pipeline Step"""
-    @patch('commerce_coordinator.apps.titan.clients.TitanAPIClient.get_active_order', new_callable=TitanClientMock)
+    @patch('commerce_coordinator.apps.titan.clients.TitanAPIClient.get_active_order',
+           new_callable=TitanActiveOrderClientMock)
     def test_pipeline_step(self, mock_get_active_order):
         active_order_pipe = GetTitanActiveOrder("test_pipe", None)
         get_active_order_data = {
@@ -115,7 +121,7 @@ class TestGetTitanActiveOrderPipelineStep(TestCase):
         result: dict = active_order_pipe.run_filter(**get_active_order_data)
 
         mock_get_active_order.assert_called_once_with(**get_active_order_data)
-        self.assertIn('data', result)
+        self.assertIn('basket_id', result)
 
     @patch('commerce_coordinator.apps.titan.clients.TitanAPIClient.get_active_order', side_effect=HTTPError)
     def test_pipeline_step_raises_exception(self, mock_get_active_order):

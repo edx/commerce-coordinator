@@ -9,7 +9,7 @@ from requests import HTTPError
 
 from commerce_coordinator.apps.titan.clients import TitanAPIClient
 from commerce_coordinator.apps.titan.exceptions import NoActiveOrder, PaymentNotFound
-from commerce_coordinator.apps.titan.serializers import PaymentSerializer
+from commerce_coordinator.apps.titan.serializers import PaymentSerializer, TitanActiveOrderSerializer
 
 logger = logging.getLogger(__name__)
 
@@ -86,4 +86,6 @@ class GetTitanActiveOrder(PipelineStep):
             logger.exception("[GetTitanActiveOrder] The specified user %s does not have an active order",
                              edx_lms_user_id)
             raise NoActiveOrder from e
-        return order
+        active_order_output = TitanActiveOrderSerializer(data=order)
+        active_order_output.is_valid(raise_exception=True)
+        return active_order_output.data
