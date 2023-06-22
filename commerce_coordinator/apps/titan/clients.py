@@ -185,10 +185,7 @@ class TitanAPIClient(Client):
             request_method='GET',
             resource_path=f'accounts/{edx_lms_user_id}/active_order'
         )
-        order_type = response['data']['type'] if response['data']['type'] else ''
-        order_response = response['data']['attributes'] if response['data']['attributes'] else []
-        order_response['orderType'] = order_type
-        return order_response
+        return response['data']['attributes']
 
     def get_payment(self, edx_lms_user_id=None, payment_number=None):
         """

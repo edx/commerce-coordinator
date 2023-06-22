@@ -478,7 +478,6 @@ class TestTitanAPIClient(CoordinatorClientTestCase):
                             "updatedAt": "2023-05-25T15:12:07.165Z"
                         }
                     ],
-                    "orderType": "order",
                 }
             }
         }

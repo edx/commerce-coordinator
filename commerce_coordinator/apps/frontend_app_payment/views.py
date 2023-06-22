@@ -15,6 +15,7 @@ from .filters import ActiveOrderRequested, DraftPaymentRequested, PaymentRequest
 from .serializers import (
     DraftPaymentCreateViewInputSerializer,
     GetActiveOrderInputSerializer,
+    GetActiveOrderOutputSerializer,
     GetPaymentInputSerializer,
     GetPaymentOutputSerializer
 )
@@ -69,7 +70,7 @@ class GetActiveOrderView(APIView):
     authentication_classes = (JwtAuthentication,)
     permission_classes = (IsAuthenticated,)
 
-    def get(self, request):  # pylint: disable=inconsistent-return-statements
+    def get(self, request):
         """return the user's current active order"""
         params = {
             'edx_lms_user_id': request.user.lms_user_id
@@ -78,4 +79,6 @@ class GetActiveOrderView(APIView):
         input_serializer.is_valid(raise_exception=True)
         params = input_serializer.data
         order_data = ActiveOrderRequested.run_filter(params)
-        return Response(order_data)
+        output_serializer = GetActiveOrderOutputSerializer(data=order_data)
+        output_serializer.is_valid(raise_exception=True)
+        return Response(output_serializer.data)

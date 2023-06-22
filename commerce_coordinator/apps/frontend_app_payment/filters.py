@@ -101,10 +101,10 @@ class ActiveOrderRequested(OpenEdxPublicFilter):
             edx_lms_user_id=params['edx_lms_user_id'],
         )
         # Transpose order data to the values frontend_app_payment expects
-        active_order['orderTotal'] = float(active_order.pop('total'))
+        active_order['order_total'] = float(active_order.pop('total'))
         # TODO: Do we still need this waffle flag? Normally from ecommerce
         # and was used from cybersource to stripe migration.
-        active_order['enableStripePaymentProcessor'] = True
+        active_order['enable_stripe_payment_processor'] = True
         active_order['products'] = active_order.pop('lineItems')
-        active_order['basketId'] = active_order.pop('uuid')
+        active_order['basket_id'] = active_order.pop('uuid')
         return active_order

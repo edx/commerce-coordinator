@@ -128,9 +128,9 @@ LMS_URL_ROOT = "http://localhost:18000"
 
 PAYMENT_MICROFRONTEND_URL = "http://localhost:1998"
 
-TITAN_URL = "https://theseus.staging.getsmarter.com/"
+TITAN_URL = "http://example.com"
 
-TITAN_OAUTH2_PROVIDER_URL = "https://theseus.staging.getsmarter.com/"
+TITAN_OAUTH2_PROVIDER_URL = "http://example.com"
 
 FULFILLMENT_TIMEOUT = 15  # Devstack is slow!
 

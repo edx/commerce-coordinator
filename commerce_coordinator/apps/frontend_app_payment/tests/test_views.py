@@ -245,7 +245,7 @@ class DraftPaymentCreateViewTests(APITestCase):
     test_user_email = 'test@example.com'
     test_user_password = 'secret'
     test_lms_user_id = 1
-    url = reverse('frontend_app_payment:creat_draft_payment')
+    url = reverse('frontend_app_payment:create_draft_payment')
 
     def setUp(self):
         """Create test user before test starts."""
@@ -341,7 +341,7 @@ class GetActiveOrderViewTests(APITestCase):
     test_user_email = 'test@example.com'
     test_user_password = 'test'
     test_lms_user_id = 1
-    url = reverse('frontend_app_payment:order')
+    url = reverse('frontend_app_payment:get_active_order')
 
     def setUp(self):
         """Create test user before test starts."""
@@ -382,20 +382,19 @@ class GetActiveOrderViewTests(APITestCase):
         Ensure data validation and success scenarios for get payment.
         """
         mock_get_active_order.return_value = {
-            "edxLmsUserId": 1,
             "itemTotal": "100.0",
             "total": "100.0",
             "adjustmentTotal": "0.0",
             "createdAt": "2023-05-25T14:45:18.711Z",
             "updatedAt": "2023-05-25T15:12:07.168Z",
-            "completedAt": "null",
+            "completedAt": None,
             "currency": "USD",
             "state": "complete",
             "email": "test@2u.com",
             "uuid": "272705e3-9ffb-4a42-a23b-afbbc18f173b",
             "promoTotal": "0.0",
             "itemCount": 1,
-            "paymentState": "null",
+            "paymentState": None,
             "paymentTotal": "0.0",
             "user": {
                 "firstName": "test",
@@ -411,7 +410,7 @@ class GetActiveOrderViewTests(APITestCase):
                 "firstName": "test",
                 "lastName": "test",
                 "phone": "n/a",
-                "stateName": "null",
+                "stateName": None,
                 "zipcode": "50000"
             },
             "lineItems": [
@@ -438,14 +437,12 @@ class GetActiveOrderViewTests(APITestCase):
                     "updatedAt": "2023-05-25T15:12:07.165Z"
                 }
             ],
-            "orderType": "order",
         }
 
         self.client.force_authenticate(user=self.user)
-
         response = self.client.get(self.url)
         response_json = response.json()
-        self.assertEqual(response_json['edxLmsUserId'], self.test_lms_user_id)
+        self.assertEqual(response_json['basket_id'], '272705e3-9ffb-4a42-a23b-afbbc18f173b')
         self.assertTrue(mock_get_active_order.called)
         kwargs = mock_get_active_order.call_args.kwargs
         self.assertEqual(kwargs['edx_lms_user_id'], self.test_lms_user_id)
