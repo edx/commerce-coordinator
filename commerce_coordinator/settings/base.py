@@ -381,6 +381,12 @@ OPEN_EDX_FILTERS_CONFIG = {
             'commerce_coordinator.apps.titan.pipeline.GetTitanPayment',
         ]
     },
+    "org.edx.coordinator.frontend_app_payment.active.order.requested.v1": {
+        "fail_silently": False,
+        "pipeline": [
+            'commerce_coordinator.apps.titan.pipeline.GetTitanActiveOrder',
+        ]
+    },
 }
 
 # Carry fields from the JWT token and LMS user into the local user
