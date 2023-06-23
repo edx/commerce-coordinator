@@ -47,6 +47,68 @@ class TitanPaymentClientMock(MagicMock):
     }
 
 
+class TitanActiveOrderClientMock(MagicMock):
+    """A mock TitanClient"""
+    return_value = {
+        'edxLmsUserId': '1',
+        'itemTotal': '100.0',
+        'total': '100.0',
+        'adjustmentTotal': '0.0',
+        'createdAt': '2023-05-25T14:45:18.711Z',
+        'updatedAt': '2023-05-25T15:12:07.168Z',
+        'completedAt': None,
+        'currency': 'USD',
+        'state': 'complete',
+        'email': 'test@2u.com',
+        'uuid': ORDER_UUID,
+        'promoTotal': '0.0',
+        'itemCount': 1,
+        'paymentState': None,
+        'paymentTotal': '0.0',
+        'user': {
+            'firstName': 'test',
+            'lastName': 'test',
+            'email': 'test@2u.com'
+        },
+        'billingAddress': {
+            'address1': 'test',
+            'address2': ' test',
+            'city': 'test',
+            'company': 'Test',
+            'countryIso': 'ZA',
+            'firstName': 'test',
+            'lastName': 'test',
+            'phone': 'n/a',
+            'stateName': None,
+            'zipcode': '50000'
+        },
+        'lineItems': [
+            {
+                'quantity': 1,
+                'price': '100.0',
+                'currency': 'USD',
+                'sku': '64411FA',
+                'title': 'Accounting Essentials',
+                'courseMode': 'verified'
+            }
+        ],
+        'payments': [
+            {
+                'amount': '228.0',
+                'number': 'PDHB22WS',
+                'orderUuid': ORDER_UUID,
+                'paymentDate': '2023-05-24T08:45:26.388Z',
+                'paymentMethodName': 'Stripe',
+                'reference': 'TestOrder-58',
+                'responseCode': 'ch_3MebJMAa00oRYTAV1C26pHmmj572',
+                'state': 'checkout',
+                'createdAt': '2023-05-25T15:12:07.165Z',
+                'updatedAt': '2023-05-25T15:12:07.165Z'
+            }
+        ],
+    }
+
+
 @override_settings(
     TITAN_URL=TITAN_URL,
     TITAN_API_KEY=TITAN_API_KEY
@@ -410,6 +472,86 @@ class TestTitanAPIClient(CoordinatorClientTestCase):
             },
             expected_headers=self.expected_headers,
             mock_method='POST',
+            mock_url=url,
+            mock_response=mock_response,
+            expected_output=expected_output,
+        )
+
+    def test_get_active_order(self):
+        edx_lms_user_id = 1
+        url = urljoin_directory(self.api_base_url, f'/accounts/{edx_lms_user_id}/active_order')
+        mock_response = {
+            "data": {
+                "type": "order",
+                "attributes": {
+                    "edxLmsUserId": '1',
+                    "itemTotal": "100.0",
+                    "total": "100.0",
+                    "adjustmentTotal": "0.0",
+                    "createdAt": "2023-05-25T14:45:18.711Z",
+                    "updatedAt": "2023-05-25T15:12:07.168Z",
+                    "completedAt": "null",
+                    "currency": "USD",
+                    "state": "complete",
+                    "email": "test@2u.com",
+                    "uuid": "272705e3-9ffb-4a42-a23b-afbbc18f173b",
+                    "promoTotal": "0.0",
+                    "itemCount": 1,
+                    "paymentState": "null",
+                    "paymentTotal": "0.0",
+                    "user": {
+                        "firstName": "test",
+                        "lastName": "test",
+                        "email": "test@2u.com"
+                    },
+                    "billingAddress": {
+                        "address1": "test",
+                        "address2": " test",
+                        "city": "test",
+                        "company": "Test",
+                        "countryIso": "ZA",
+                        "firstName": "test",
+                        "lastName": "test",
+                        "phone": "n/a",
+                        "stateName": "null",
+                        "zipcode": "50000"
+                    },
+                    "lineItems": [
+                        {
+                            "quantity": 1,
+                            "price": "100.0",
+                            "currency": "USD",
+                            "sku": "64411FA",
+                            "title": "Accounting Essentials",
+                            "courseMode": "verified"
+                        }
+                    ],
+                    "payments": [
+                        {
+                            "amount": "228.0",
+                            "number": "PDHB22WS",
+                            "orderUuid": "272705e3-9ffb-4a42-a23b-afbbc18f173b",
+                            "paymentDate": "2023-05-24T08:45:26.388Z",
+                            "paymentMethodName": "Stripe",
+                            "reference": "TestOrder-58",
+                            "responseCode": "ch_3MebJMAa00oRYTAV1C26pHmmj572",
+                            "state": "checkout",
+                            "createdAt": "2023-05-25T15:12:07.165Z",
+                            "updatedAt": "2023-05-25T15:12:07.165Z"
+                        }
+                    ],
+                }
+            }
+        }
+
+        expected_output = mock_response['data']['attributes']
+        self.assertJSONClientResponse(
+            uut=self.client.get_active_order,
+            input_kwargs={
+                'edx_lms_user_id': edx_lms_user_id,
+            },
+            expected_headers=self.expected_headers,
+            mock_method='GET',
             mock_url=url,
             mock_response=mock_response,
             expected_output=expected_output,

@@ -172,6 +172,21 @@ class TitanAPIClient(Client):
             },
         )
 
+    def get_active_order(self, edx_lms_user_id):
+        """
+        Request Titan for the user's current open order
+
+        Args:
+            edx_lms_user_id: the edx.org LMS user ID of the user receiving the order
+        """
+
+        logger.info(f'TitanAPIClient.get_active_order called using {locals()}.')
+        response = self._request(
+            request_method='GET',
+            resource_path=f'accounts/{edx_lms_user_id}/active_order'
+        )
+        return response['data']['attributes']
+
     def get_payment(self, edx_lms_user_id=None, payment_number=None):
         """
         Request Titan to get payment details.

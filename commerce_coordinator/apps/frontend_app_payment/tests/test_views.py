@@ -245,7 +245,7 @@ class DraftPaymentCreateViewTests(APITestCase):
     test_user_email = 'test@example.com'
     test_user_password = 'secret'
     test_lms_user_id = 1
-    url = reverse('frontend_app_payment:creat_draft_payment')
+    url = reverse('frontend_app_payment:create_draft_payment')
 
     def setUp(self):
         """Create test user before test starts."""
@@ -329,3 +329,120 @@ class DraftPaymentCreateViewTests(APITestCase):
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
         response_json = response.json()
         self.assertIn('This field is required.', response_json['orderUuid'])
+
+
+@ddt.ddt
+class GetActiveOrderViewTests(APITestCase):
+    """
+    Tests for get active order view.
+    """
+    # Define test user properties
+    test_user_username = 'test'
+    test_user_email = 'test@example.com'
+    test_user_password = 'test'
+    test_lms_user_id = 1
+    url = reverse('frontend_app_payment:get_active_order')
+
+    def setUp(self):
+        """Create test user before test starts."""
+        super().setUp()
+        self.user = User.objects.create_user(
+            self.test_user_username,
+            self.test_user_email,
+            self.test_user_password,
+            lms_user_id=self.test_lms_user_id,
+        )
+
+    def tearDown(self):
+        """Log out any user from client after test ends."""
+        super().tearDown()
+        self.client.logout()
+
+    def test_view_rejects_session_auth(self):
+        """Check Session Auth Not Allowed."""
+        # Login
+        self.client.login(username=self.test_user_username, password=self.test_user_password)
+        # Request get payment
+        response = self.client.get(self.url)
+        # Error HTTP_401_UNAUTHORIZED
+        self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
+
+    def test_view_rejects_unauthorized(self):
+        """Check unauthorized users querying payments are getting error"""
+        # Logout user
+        self.client.logout()
+        # Request payment
+        response = self.client.get(self.url)
+        # Error HTTP_401_UNAUTHORIZED
+        self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
+
+    @patch('commerce_coordinator.apps.titan.clients.TitanAPIClient.get_active_order')
+    def test_get_active_order(self, mock_get_active_order):
+        """
+        Ensure data validation and success scenarios for get payment.
+        """
+        mock_get_active_order.return_value = {
+            "itemTotal": "100.0",
+            "total": "100.0",
+            "adjustmentTotal": "0.0",
+            "createdAt": "2023-05-25T14:45:18.711Z",
+            "updatedAt": "2023-05-25T15:12:07.168Z",
+            "completedAt": None,
+            "currency": "USD",
+            "state": "complete",
+            "email": "test@2u.com",
+            "uuid": "272705e3-9ffb-4a42-a23b-afbbc18f173b",
+            "promoTotal": "0.0",
+            "itemCount": 1,
+            "paymentState": None,
+            "paymentTotal": "0.0",
+            "user": {
+                "firstName": "test",
+                "lastName": "test",
+                "email": "test@2u.com"
+            },
+            "billingAddress": {
+                "address1": "test",
+                "address2": " test",
+                "city": "test",
+                "company": "Test",
+                "countryIso": "ZA",
+                "firstName": "test",
+                "lastName": "test",
+                "phone": "n/a",
+                "stateName": None,
+                "zipcode": "50000"
+            },
+            "lineItems": [
+                {
+                    "quantity": 1,
+                    "price": "100.0",
+                    "currency": "USD",
+                    "sku": "64411FA",
+                    "title": "Accounting Essentials",
+                    "courseMode": "verified"
+                }
+            ],
+            "payments": [
+                {
+                    "amount": "228.0",
+                    "number": "PDHB22WS",
+                    "orderUuid": "272705e3-9ffb-4a42-a23b-afbbc18f173b",
+                    "paymentDate": "2023-05-24T08:45:26.388Z",
+                    "paymentMethodName": "Stripe",
+                    "reference": "TestOrder-58",
+                    "responseCode": "ch_3MebJMAa00oRYTAV1C26pHmmj572",
+                    "state": "checkout",
+                    "createdAt": "2023-05-25T15:12:07.165Z",
+                    "updatedAt": "2023-05-25T15:12:07.165Z"
+                }
+            ],
+        }
+
+        self.client.force_authenticate(user=self.user)
+        response = self.client.get(self.url)
+        response_json = response.json()
+        self.assertEqual(response_json['basket_id'], '272705e3-9ffb-4a42-a23b-afbbc18f173b')
+        self.assertTrue(mock_get_active_order.called)
+        kwargs = mock_get_active_order.call_args.kwargs
+        self.assertEqual(kwargs['edx_lms_user_id'], self.test_lms_user_id)

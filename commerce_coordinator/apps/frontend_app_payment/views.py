@@ -1,5 +1,5 @@
 """
-Views for the frontend_app_ecommerce app
+Views for the frontend_app_payment app
 """
 import logging
 
@@ -11,8 +11,13 @@ from rest_framework.views import APIView
 
 from commerce_coordinator.apps.frontend_app_payment.exceptions import InvalidOrderPayment
 
-from .filters import DraftPaymentRequested, PaymentRequested
-from .serializers import DraftPaymentCreateViewInputSerializer, GetPaymentInputSerializer, GetPaymentOutputSerializer
+from .filters import ActiveOrderRequested, DraftPaymentRequested, PaymentRequested
+from .serializers import (
+    DraftPaymentCreateViewInputSerializer,
+    GetActiveOrderInputSerializer,
+    GetPaymentInputSerializer,
+    GetPaymentOutputSerializer
+)
 
 logger = logging.getLogger(__name__)
 
@@ -57,3 +62,20 @@ class DraftPaymentCreateView(APIView):
         params = input_serializer.data
         payment_details = DraftPaymentRequested.run_filter(params)
         return Response(payment_details)
+
+
+class GetActiveOrderView(APIView):
+    """Get Active Order View"""
+    authentication_classes = (JwtAuthentication,)
+    permission_classes = (IsAuthenticated,)
+
+    def get(self, request):
+        """return the user's current active order"""
+        params = {
+            'edx_lms_user_id': request.user.lms_user_id
+        }
+        input_serializer = GetActiveOrderInputSerializer(data=params)
+        input_serializer.is_valid(raise_exception=True)
+        params = input_serializer.data
+        order_data = ActiveOrderRequested.run_filter(params)
+        return Response(order_data)
