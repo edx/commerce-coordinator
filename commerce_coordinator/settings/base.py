@@ -380,6 +380,12 @@ OPEN_EDX_FILTERS_CONFIG = {
             'commerce_coordinator.apps.titan.pipeline.GetTitanPayment',
         ]
     },
+    "org.edx.coordinator.frontend_app_payment.active.order.requested.v1": {
+        "fail_silently": False,
+        "pipeline": [
+            'commerce_coordinator.apps.titan.pipeline.GetTitanActiveOrder',
+        ]
+    },
 }
 
 # Setting to keep using deperecated pytz with Django>4

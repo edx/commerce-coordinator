@@ -8,8 +8,8 @@ from openedx_filters import PipelineStep
 from requests import HTTPError
 
 from commerce_coordinator.apps.titan.clients import TitanAPIClient
-from commerce_coordinator.apps.titan.exceptions import PaymentNotFond
-from commerce_coordinator.apps.titan.serializers import PaymentSerializer
+from commerce_coordinator.apps.titan.exceptions import NoActiveOrder, PaymentNotFound
+from commerce_coordinator.apps.titan.serializers import PaymentSerializer, TitanActiveOrderSerializer
 
 logger = logging.getLogger(__name__)
 
@@ -59,7 +59,33 @@ class GetTitanPayment(PipelineStep):
             )
         except HTTPError as exc:
             logger.exception("[GetTitanPayment] Payment %s not found for user: %s", payment_number, edx_lms_user_id)
-            raise PaymentNotFond from exc
+            raise PaymentNotFound from exc
         payment_serializer = PaymentSerializer(data=payment)
         payment_serializer.is_valid(raise_exception=True)
         return payment_serializer.data
+
+
+class GetTitanActiveOrder(PipelineStep):
+    """
+    Adds Titan's active order in payment data list
+    """
+
+    def run_filter(self, edx_lms_user_id):  # pylint: disable=arguments-differ
+        """
+        Execute a filter with the signature specified.
+        Args:
+            edx_lms_user_id: The edx.org LMS user ID of the user receiving the order.
+
+        """
+        api_client = TitanAPIClient()
+        try:
+            order = api_client.get_active_order(
+                edx_lms_user_id=edx_lms_user_id
+            )
+        except HTTPError as e:
+            logger.exception("[GetTitanActiveOrder] The specified user %s does not have an active order",
+                             edx_lms_user_id)
+            raise NoActiveOrder from e
+        active_order_output = TitanActiveOrderSerializer(data=order)
+        active_order_output.is_valid(raise_exception=True)
+        return active_order_output.data
