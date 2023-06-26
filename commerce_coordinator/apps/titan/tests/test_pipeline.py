@@ -121,7 +121,7 @@ class TestGetTitanActiveOrderPipelineStep(TestCase):
         result: dict = active_order_pipe.run_filter(**get_active_order_data)
 
         mock_get_active_order.assert_called_once_with(**get_active_order_data)
-        self.assertIn('basket_id', result)
+        self.assertIn('basket_id', result.get('order_data'))
 
     @patch('commerce_coordinator.apps.titan.clients.TitanAPIClient.get_active_order', side_effect=HTTPError)
     def test_pipeline_step_raises_exception(self, mock_get_active_order):

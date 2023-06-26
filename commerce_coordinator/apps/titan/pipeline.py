@@ -6,6 +6,7 @@ import logging
 
 from openedx_filters import PipelineStep
 from requests import HTTPError
+from rest_framework.exceptions import APIException
 
 from commerce_coordinator.apps.titan.clients import TitanAPIClient
 from commerce_coordinator.apps.titan.exceptions import NoActiveOrder, PaymentNotFound
@@ -65,6 +66,47 @@ class GetTitanPayment(PipelineStep):
         return payment_serializer.data
 
 
+class CreateDraftPayment(PipelineStep):
+    """
+    Creates and Adds Titan's payment in payment data list.
+    """
+
+    def run_filter(
+        self,
+        order_uuid,
+        response_code,
+        payment_method_name,
+        provider_response_body,
+    ):  # pylint: disable=arguments-differ
+        """
+        Execute a filter with the signature specified.
+        Args:
+            Args:
+            order_uuid(str): Order UUID related to this order.
+            response_code(str): Payment attempt response code (payment intent id) provided by stripe.
+            payment_method_name(str): The name of the payment method used for this payment. See enums for valid values.
+            provider_response_body(str): The response JSON dump from a request to the payment provider.
+
+        """
+
+        api_client = TitanAPIClient()
+        try:
+            payment = api_client.create_payment(
+                order_uuid=order_uuid,
+                response_code=response_code,
+                payment_method_name=payment_method_name,
+                provider_response_body=provider_response_body,
+
+            )
+        except HTTPError as exc:
+            logger.exception('[CreateTitanPayment] Failed to create pyment for order_uuid: %s', order_uuid)
+            raise APIException("Error while creating payment on titan's system") from exc
+
+        payment_serializer = PaymentSerializer(data=payment)
+        payment_serializer.is_valid(raise_exception=True)
+        return payment_serializer.data
+
+
 class GetTitanActiveOrder(PipelineStep):
     """
     Adds Titan's active order in payment data list
@@ -88,4 +130,6 @@ class GetTitanActiveOrder(PipelineStep):
             raise NoActiveOrder from e
         active_order_output = TitanActiveOrderSerializer(data=order)
         active_order_output.is_valid(raise_exception=True)
-        return active_order_output.data
+        return {
+            'order_data': active_order_output.data,
+        }
