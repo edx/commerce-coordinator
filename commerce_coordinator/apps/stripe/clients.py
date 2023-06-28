@@ -56,6 +56,12 @@ class StripeAPIClient:
                     f'amount_in_cents: [{amount_in_cents}], '
                     f'currency: [{currency}].')
 
+        if not order_uuid or not amount_in_cents or not currency:
+            raise ValueError('Missing parameter or amount_in_cents is zero.')
+
+        if not isinstance(amount_in_cents, int) or not amount_in_cents > 0:
+            raise ValueError('amount_in_cents must be a positive, non-zero int.')
+
         try:
             stripe_response = stripe.PaymentIntent.create(
                 amount=amount_in_cents,
