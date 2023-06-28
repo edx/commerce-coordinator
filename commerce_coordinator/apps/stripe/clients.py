@@ -51,7 +51,7 @@ class StripeAPIClient:
             https://stripe.com/docs/api/payment_intents/create
         """
 
-        logger.info('StripeAPIClient.create_or_get_payment_intent called with '
+        logger.info('StripeAPIClient.create_payment_intent called with '
                     f'order_uuid: [{order_uuid}], '
                     f'amount_in_cents: [{amount_in_cents}], '
                     f'currency: [{currency}].')
@@ -77,7 +77,7 @@ class StripeAPIClient:
                 idempotency_key=f'order_number_pi_create_v1_{order_uuid}',
             )
         except stripe.error.IdempotencyError as exc:
-            logger.error('StripeAPIClient.create_or_get_payment_intent threw '
+            logger.error('StripeAPIClient.create_payment_intent threw '
                          f'[{exc}] with '
                          f'order_uuid: [{order_uuid}], '
                          f'amount_in_cents: [{amount_in_cents}], '
@@ -92,15 +92,49 @@ class StripeAPIClient:
             # behavior here.
             raise
         except stripe.error.StripeError as exc:
-            logger.error('StripeAPIClient.create_or_get_payment_intent threw '
+            logger.error('StripeAPIClient.create_payment_intent threw '
                          f'[{exc}] with '
                          f'order_uuid: [{order_uuid}], '
                          f'amount_in_cents: [{amount_in_cents}], '
                          f'currency: [{currency}].')
             raise
 
-        logger.debug('StripeAPIClient.create_or_get_payment_intent called for '
+        logger.debug('StripeAPIClient.create_payment_intent called with '
                      f'order_uuid: [{order_uuid}] '
+                     f'amount_in_cents: [{amount_in_cents}], '
+                     f'currency: [{currency}] '
+                     'returned stripe_response: '
+                     f'[{stripe_response}].')
+
+        return stripe_response
+
+    def retrieve_payment_intent(self, payment_intent_id):
+        """
+        Retrieve a Stripe PaymentIntent.
+
+        Args:
+            order_uuid (str): The Stripe PaymentIntent id to look up.
+
+        Returns:
+            The response from Stripe.
+
+        See:
+            https://stripe.com/docs/api/payment_intents/retrieve
+        """
+
+        logger.info('StripeAPIClient.retrieve_payment_intent called with '
+                    f'payment_intent_id: [{payment_intent_id}].')
+
+        try:
+            stripe_response = stripe.PaymentIntent.retrieve(payment_intent_id)
+        except stripe.error.StripeError as exc:
+            logger.error('StripeAPIClient.retrieve_payment_intent threw '
+                         f'[{exc}] with '
+                         f'payment_intent_id: [{payment_intent_id}].')
+            raise
+
+        logger.debug('StripeAPIClient.retrieve_payment_intent called with '
+                     f'payment_intent_id: [{payment_intent_id}], '
                      'returned stripe_response: '
                      f'[{stripe_response}].')
 

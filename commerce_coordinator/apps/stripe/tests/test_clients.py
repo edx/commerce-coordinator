@@ -12,6 +12,7 @@ from commerce_coordinator.apps.stripe.clients import StripeAPIClient
 
 # Sentinel value for order_uuid.
 TEST_ORDER_UUID = 'abcdef01-1234-5678-90ab-cdef01234567'
+TEST_PAYMENT_INTENT_ID = 'pi_AbCdEfGhIjKlMnOpQ1234567'
 
 # Build test PAYMENT_PROCESSOR_CONFIG with sentinel value for Stripe's secret_key.
 TEST_SECRET = 'TEST_SECRET'
@@ -113,7 +114,7 @@ class TestStripeAPIClient(CoordinatorClientTestCase):
     def test_create_payment_intent_idempotency_key_in_use(self):
         """
         Check StripeAPIClient.create_payment_intent() throws
-        stripe.error.IdempotencyError when it returns a response indicating
+        stripe.error.APIError when it returns a response indicating
         there is another request in-flight with the same idempotency key.
         """
         # Add Idempotency-Key to expected headers:
@@ -222,4 +223,51 @@ class TestStripeAPIClient(CoordinatorClientTestCase):
             self.assertEqual(
                 self.client.create_payment_intent(**input_args),
                 sentinel.RESULT
+            )
+
+    def test_retrieve_payment_intent_success(self):
+        """
+        Check successful call of StripeAPIClient.retrieve_payment_intent().
+        """
+        self.assertJSONClientResponse(
+            uut=self.client.retrieve_payment_intent,
+            input_kwargs={
+                'payment_intent_id': TEST_PAYMENT_INTENT_ID,
+            },
+            request_type='query_string',
+            expected_headers=self.expected_headers,
+            mock_method='GET',
+            mock_url=f'https://api.stripe.com/v1/payment_intents/{TEST_PAYMENT_INTENT_ID}',
+            mock_response={
+                'mock_stripe_response': 'mock_value'
+            },
+            expected_output={
+                'mock_stripe_response': 'mock_value'
+            },
+        )
+
+    def test_retrieve_payment_intent_failure(self):
+        """
+        Check failed call of StripeAPIClient.retrieve_payment_intent() throws an error.
+        """
+        with self.assertRaises(stripe.error.InvalidRequestError):
+            self.assertJSONClientResponse(
+                uut=self.client.retrieve_payment_intent,
+                input_kwargs={
+                    'payment_intent_id': TEST_PAYMENT_INTENT_ID,
+                },
+                request_type='query_string',
+                expected_headers=self.expected_headers,
+                mock_method='GET',
+                mock_url=f'https://api.stripe.com/v1/payment_intents/{TEST_PAYMENT_INTENT_ID}',
+                mock_response={
+                    "error": {
+                        "code": "resource_missing",
+                        "doc_url": "https://stripe.com/docs/error-codes/resource-missing",
+                        "message": f"No such payment_intent: '{TEST_PAYMENT_INTENT_ID}'",
+                        "param": "intent",
+                        "type": "invalid_request_error",
+                    },
+                },
+                mock_status=404,
             )
