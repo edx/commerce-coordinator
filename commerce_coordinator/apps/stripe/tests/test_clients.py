@@ -1,5 +1,8 @@
 """Tests for stripe app clients.py."""
 
+from unittest.mock import patch, sentinel
+
+import ddt
 import stripe
 from django.conf import settings
 from django.test import override_settings
@@ -16,6 +19,7 @@ TEST_PAYMENT_PROCESSOR_CONFIG = settings.PAYMENT_PROCESSOR_CONFIG
 TEST_PAYMENT_PROCESSOR_CONFIG['edx']['stripe']['secret_key'] = TEST_SECRET
 
 
+@ddt.ddt
 @override_settings(PAYMENT_PROCESSOR_CONFIG=TEST_PAYMENT_PROCESSOR_CONFIG)
 class TestStripeAPIClient(CoordinatorClientTestCase):
     """Tests for StripeAPIClient."""
@@ -29,6 +33,10 @@ class TestStripeAPIClient(CoordinatorClientTestCase):
         self.client = StripeAPIClient()
 
     def test_create_payment_intent_success(self):
+        """
+        Check successful call of StripeAPIClient.create_payment_intent() using
+        order number as idempotency key.
+        """
         # Add Idempotency-Key to expected headers:
         expected_idempotency_key = 'order_number_pi_create_v1_' + TEST_ORDER_UUID
         expected_headers_with_idempot_key = self.expected_headers.copy()
@@ -61,6 +69,11 @@ class TestStripeAPIClient(CoordinatorClientTestCase):
         )
 
     def test_create_payment_intent_idempotency_error(self):
+        """
+        Check StripeAPIClient.create_payment_intent() throws
+        stripe.error.IdempotencyError when it returns a response indicating the
+        previous request used different arguments.
+        """
         # Add Idempotency-Key to expected headers:
         expected_idempotency_key = 'order_number_pi_create_v1_' + TEST_ORDER_UUID
         expected_headers_with_idempot_key = self.expected_headers.copy()
@@ -87,14 +100,22 @@ class TestStripeAPIClient(CoordinatorClientTestCase):
                 mock_url='https://api.stripe.com/v1/payment_intents',
                 mock_status=400,
                 mock_response={
-                    "error": {
-                        "message": "Keys for idempotent requests can only be used...",
-                        "type": "idempotency_error",
+                    'error': {
+                        'message':
+                            'Keys for idempotent requests can only be used with'
+                            'the same parameters they were first used with...',
+                        'type':
+                            'idempotency_error',
                     },
                 },
             )
 
     def test_create_payment_intent_idempotency_key_in_use(self):
+        """
+        Check StripeAPIClient.create_payment_intent() throws
+        stripe.error.IdempotencyError when it returns a response indicating
+        there is another request in-flight with the same idempotency key.
+        """
         # Add Idempotency-Key to expected headers:
         expected_idempotency_key = 'order_number_pi_create_v1_' + TEST_ORDER_UUID
         expected_headers_with_idempot_key = self.expected_headers.copy()
@@ -128,4 +149,77 @@ class TestStripeAPIClient(CoordinatorClientTestCase):
                         "type": "invalid_request_error"
                     },
                 },
+            )
+
+    @patch("commerce_coordinator.apps.stripe.clients.stripe.PaymentIntent.create")
+    @ddt.data(
+        (
+            {
+                "order_uuid": "mock_uuid",
+                "amount_in_cents": 1,
+                "currency": "mock_currency"
+            },
+            None
+        ),
+        (
+            {
+                "order_uuid": "mock_uuid",
+                "amount_in_cents": 0,
+                "currency": "mock_currency"
+            },
+            "Missing parameter or amount_in_cents is zero."
+        ),
+        (
+            {
+                "order_uuid": None,
+                "amount_in_cents": 1,
+                "currency": "mock_currency"
+            },
+            "Missing parameter or amount_in_cents is zero."
+        ),
+        (
+            {
+                "order_uuid": "mock_uuid",
+                "amount_in_cents": None,
+                "currency": "mock_currency"
+            },
+            "Missing parameter or amount_in_cents is zero."
+        ),
+        (
+            {
+                "order_uuid": "mock_uuid",
+                "amount_in_cents": 1,
+                "currency": None
+            },
+            "Missing parameter or amount_in_cents is zero."
+        ),
+        (
+            {
+                "order_uuid": "mock_uuid",
+                "amount_in_cents": -1,
+                "currency": "mock_currency"
+            },
+            "amount_in_cents must be a positive, non-zero int."
+        ),
+    )
+    @ddt.unpack
+    def test_create_payment_intent_arguments(
+        self,
+        input_args,
+        value_error_expected_regex,
+        mock_stripe,
+    ):
+        """
+        Check ValueError is appropriately raised when
+        StripeAPIClient.create_payment_intent() is called with bad arguments.
+        """
+        mock_stripe.return_value = sentinel.RESULT
+
+        if value_error_expected_regex:
+            with self.assertRaisesRegex(ValueError, value_error_expected_regex):
+                self.client.create_payment_intent(**input_args)
+        else:
+            self.assertEqual(
+                self.client.create_payment_intent(**input_args),
+                sentinel.RESULT
             )
