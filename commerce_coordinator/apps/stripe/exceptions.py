@@ -19,3 +19,9 @@ class UnhandledStripeEventAPIError(APIException):
     status_code = 422
     default_detail = 'Webhook received a Stripe event that is not handled.'
     default_code = 'unhandled_stripe_event'
+
+
+class StripeIntentCreateAPIError(APIException):
+    status_code = 502
+    default_detail = 'Error while creating payment intent on payment gateway.'
+    default_code = 'stripe_intent_create_error'

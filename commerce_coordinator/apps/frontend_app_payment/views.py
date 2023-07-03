@@ -60,7 +60,7 @@ class DraftPaymentCreateView(APIView):
         input_serializer = DraftPaymentCreateViewInputSerializer(data=params)
         input_serializer.is_valid(raise_exception=True)
         params = input_serializer.data
-        payment_details = DraftPaymentRequested.run_filter(params)
+        payment_details = DraftPaymentRequested.run_filter(**params)
         return Response(payment_details)
 
 

@@ -69,16 +69,16 @@ class DraftPaymentRequested(OpenEdxPublicFilter):
     filter_type = "org.edx.coordinator.frontend_app_payment.payment.draft.requested.v1"
 
     @classmethod
-    def run_filter(cls, params):
+    def run_filter(cls, **kwargs):
         """
         Call the PipelineStep(s) defined for this filter, to gather payment draft payment details.
         Arguments:
-            params (dict): Arguments passed through from the original get payment url querystring
+            kwargs (dict): Arguments passed through from the original get payment url querystring
         """
-        payment = super().run_pipeline(
-            edx_lms_user_id=params['edx_lms_user_id'],
+        pipeline_output = super().run_pipeline(
+            edx_lms_user_id=kwargs['edx_lms_user_id'],
         )
-        payment_output = DraftPaymentCreateViewOutputSerializer(data=payment)
+        payment_output = DraftPaymentCreateViewOutputSerializer(data=pipeline_output.get('payment_data'))
         payment_output.is_valid(raise_exception=True)
         return payment_output.data
 
@@ -97,9 +97,10 @@ class ActiveOrderRequested(OpenEdxPublicFilter):
         Arguments:
             params: arguments passed through from the original get active order url querystring
         """
-        active_order = super().run_pipeline(
+        pipeline_output = super().run_pipeline(
             edx_lms_user_id=params['edx_lms_user_id'],
         )
+        active_order = pipeline_output.get('order_data')
         # TODO: Do we still need this waffle flag? Normally from ecommerce
         # and was used from cybersource to stripe migration.
         active_order['enable_stripe_payment_processor'] = True
