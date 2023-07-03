@@ -314,9 +314,9 @@ class TitanAPIClient(Client):
                 'email': email,
             },
         )
-    
-    def update_billing_address(self, 
-                               order_uuid, 
+
+    def update_billing_address(self,
+                               order_uuid,
                                address_1=None,
                                address_2=None,
                                city=None,
@@ -331,7 +331,7 @@ class TitanAPIClient(Client):
         Request Titan to update the billing address for an order
 
         Args:
-            order_uuid (str): UUID of the order associated to the billing address being updated	
+            order_uuid (str): UUID of the order associated to the billing address being updated
             address_1 (str): Optional: First address line of the billing address
             address_2 (str): Optional: Second address line of the billing address
             city (str): Optional: City name of the billing address
@@ -344,42 +344,32 @@ class TitanAPIClient(Client):
             zipcode (str): Optional: Zipcode of the billing address
         """
         payload_attributes = {
-            'order_uuid': order_uuid,
-            'address_1': address_1,
-            'address_2': address_2,
-            'city': city,
-            'company': company,
-            'country_iso': country_iso,
-            'first_name': first_name,
-            'last_name': last_name,
-            'phone': phone,
-            'state_name': state_name,
-            'zipcode': zipcode,
+            'orderUuid': order_uuid,
         }
         if address_1 is not None:
-            payload_attributes['address_1'] = address_1
+            payload_attributes['address1'] = address_1
         if address_2 is not None:
-            payload_attributes['address_2'] = address_2
+            payload_attributes['address2'] = address_2
         if city is not None:
             payload_attributes['city'] = city
         if company is not None:
             payload_attributes['company'] = company
         if country_iso is not None:
-            payload_attributes['country_iso'] = country_iso
+            payload_attributes['countryIso'] = country_iso
         if first_name is not None:
-            payload_attributes['first_name'] = first_name
+            payload_attributes['firstName'] = first_name
         if last_name is not None:
-            payload_attributes['last_name'] = last_name
+            payload_attributes['lastName'] = last_name
         if phone is not None:
             payload_attributes['phone'] = phone
         if state_name is not None:
-            payload_attributes['state_name'] = state_name
+            payload_attributes['stateName'] = state_name
         if zipcode is not None:
             payload_attributes['zipcode'] = zipcode
 
         response = self._request(
             request_method='PATCH',
-            resource_path='update_billing_address',
+            resource_path='checkout/update_billing_address',
             json={
                 'data': {
                     'attributes': payload_attributes,

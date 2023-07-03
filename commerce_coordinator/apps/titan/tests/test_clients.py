@@ -354,6 +354,77 @@ class TestTitanAPIClient(CoordinatorClientTestCase):
             expected_output=expected_output,
         )
 
+    def test_update_billing_address(self):
+        url = urljoin_directory(self.api_base_url, '/checkout/update_billing_address')
+        order_uuid = ORDER_UUID
+        address_1 = 'test address'
+        address_2 = '1'
+        city = 'a place'
+        company = 'a company'
+        country_iso = 'US'
+        first_name = 'test'
+        last_name = 'mctester'
+        phone = '5558675309'
+        state_name = 'MA'
+        zipcode = '55555'
+
+        mock_response = {
+            'data': {
+                'attributes': {
+                    'address1': address_1,
+                    'address2': address_2,
+                    'city': city,
+                    'company': company,
+                    'countryIso': country_iso,
+                    'firstName': first_name,
+                    'lastName': last_name,
+                    'phone': phone,
+                    'stateName': state_name,
+                    'zipcode': zipcode,
+                }
+            }
+        }
+        expected_output = mock_response['data']['attributes']
+
+        self.assertJSONClientResponse(
+            uut=self.client.update_billing_address,
+            input_kwargs={
+                'order_uuid': order_uuid,
+                'address_1': address_1,
+                'address_2': address_2,
+                'city': city,
+                'company': company,
+                'country_iso': country_iso,
+                'first_name': first_name,
+                'last_name': last_name,
+                'phone': phone,
+                'state_name': state_name,
+                'zipcode': zipcode,
+            },
+            expected_request={
+                'data': {
+                    'attributes': {
+                        'orderUuid': order_uuid,
+                        'address1': address_1,
+                        'address2': address_2,
+                        'city': city,
+                        'company': company,
+                        'countryIso': country_iso,
+                        'firstName': first_name,
+                        'lastName': last_name,
+                        'phone': phone,
+                        'stateName': state_name,
+                        'zipcode': zipcode,
+                    }
+                }
+            },
+            expected_headers=self.expected_headers,
+            mock_method='PATCH',
+            mock_url=url,
+            mock_response=mock_response,
+            expected_output=expected_output,
+        )
+
     def test_update_payment(self):
         url = urljoin_directory(self.api_base_url, '/payments')
         payment_number = '1234'
