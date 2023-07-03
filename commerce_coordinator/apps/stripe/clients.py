@@ -5,6 +5,8 @@ import stripe
 from celery.utils.log import get_task_logger
 from django.conf import settings
 
+from commerce_coordinator.apps.core import serializers
+
 # Use special Celery logger for tasks client calls.
 logger = get_task_logger(__name__)
 
@@ -16,7 +18,8 @@ class StripeAPIClient:
 
     def __init__(self):
         configuration = settings.PAYMENT_PROCESSOR_CONFIG['edx']['stripe']
-
+        # Add the following string to the metadata of updated or created PaymentIntents.
+        self.source_system_identifier = configuration['source_system_identifier']
         # The secret API key used by the backend to communicate with Stripe. Private/secret.
         stripe.api_key = configuration['secret_key']
         # Stripe API version to use. Will use latest allowed in Stripe Dashboard if None.
@@ -69,7 +72,7 @@ class StripeAPIClient:
                 description=order_uuid,
                 metadata={
                     'order_number': order_uuid,
-                    'source_system': 'edx/commerce_coordinator?v=1',
+                    'source_system': self.source_system_identifier,
                 },
                 # Disallow confirmation from client for server-side embargo check.
                 secret_key_confirmation='required',
