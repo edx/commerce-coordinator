@@ -59,11 +59,13 @@ class StripeAPIClient:
                     f'amount_in_cents: [{amount_in_cents}], '
                     f'currency: [{currency}].')
 
-        if not order_uuid or not amount_in_cents or not currency:
-            raise ValueError('Missing parameter or amount_in_cents is zero.')
+        class CreatePaymentIntentInputSerializer(serializers.CoordinatorSerializer):
+            '''Serializer for StripeAPIClient.create_payment_intent'''
+            order_uuid = serializers.UUIDField()
+            amount_in_cents = serializers.IntegerField(min_value=1)
+            currency = serializers.CharField(min_length=3, max_length=3)
 
-        if not isinstance(amount_in_cents, int) or not amount_in_cents > 0:
-            raise ValueError('amount_in_cents must be a positive, non-zero int.')
+        CreatePaymentIntentInputSerializer(data=initial_locals).is_valid(raise_exception=True)
 
         try:
             stripe_response = stripe.PaymentIntent.create(
@@ -127,6 +129,12 @@ class StripeAPIClient:
 
         logger.info('StripeAPIClient.retrieve_payment_intent called with '
                     f'payment_intent_id: [{payment_intent_id}].')
+
+        class RetrievePaymentIntentInputSerializer(serializers.CoordinatorSerializer):
+            '''Serializer for StripeAPIClient.retrieve_payment_intent.'''
+            payment_intent_id = serializers.CharField()
+
+        RetrievePaymentIntentInputSerializer(data=initial_locals).is_valid(raise_exception=True)
 
         try:
             stripe_response = stripe.PaymentIntent.retrieve(payment_intent_id)
