@@ -11,9 +11,10 @@ from rest_framework.exceptions import ValidationError
 from commerce_coordinator.apps.core.tests.utils import CoordinatorClientTestCase
 from commerce_coordinator.apps.stripe.clients import StripeAPIClient
 
-# Sentinel value for order_uuid.
+# Sentinel values.
 TEST_ORDER_UUID = 'abcdef01-1234-5678-90ab-cdef01234567'
 TEST_PAYMENT_INTENT_ID = 'pi_AbCdEfGhIjKlMnOpQ1234567'
+TEST_CURRENCY_SYMBOL = 'mok'
 
 # Build test PAYMENT_PROCESSOR_CONFIG with sentinel value for Stripe's secret_key.
 TEST_SECRET = 'TEST_SECRET'
@@ -63,9 +64,11 @@ class TestStripeAPIClient(CoordinatorClientTestCase):
             expected_headers=expected_headers_with_idempot_key,
             mock_url='https://api.stripe.com/v1/payment_intents',
             mock_response={
+                'id': 'mock_id',
                 'mock_stripe_response': 'mock_value'
             },
             expected_output={
+                'id': 'mock_id',
                 'mock_stripe_response': 'mock_value'
             },
         )
@@ -157,51 +160,51 @@ class TestStripeAPIClient(CoordinatorClientTestCase):
     @ddt.data(
         (
             {
-                "order_uuid": "mock_uuid",
+                "order_uuid": TEST_ORDER_UUID,
                 "amount_in_cents": 1,
-                "currency": "mock_currency"
+                "currency": TEST_CURRENCY_SYMBOL
             },
             None
         ),
         (
             {
-                "order_uuid": "mock_uuid",
+                "order_uuid": TEST_ORDER_UUID,
                 "amount_in_cents": 0,
-                "currency": "mock_currency"
+                "currency": TEST_CURRENCY_SYMBOL
             },
-            "Missing parameter or amount_in_cents is zero."
+            "Ensure this value is greater than or equal to 1."
         ),
         (
             {
                 "order_uuid": None,
                 "amount_in_cents": 1,
-                "currency": "mock_currency"
+                "currency": TEST_CURRENCY_SYMBOL
             },
-            "Missing parameter or amount_in_cents is zero."
+            "This field may not be null."
         ),
         (
             {
-                "order_uuid": "mock_uuid",
+                "order_uuid": TEST_ORDER_UUID,
                 "amount_in_cents": None,
-                "currency": "mock_currency"
+                "currency": TEST_CURRENCY_SYMBOL
             },
-            "Missing parameter or amount_in_cents is zero."
+            "This field may not be null."
         ),
         (
             {
-                "order_uuid": "mock_uuid",
+                "order_uuid": TEST_ORDER_UUID,
                 "amount_in_cents": 1,
                 "currency": None
             },
-            "Missing parameter or amount_in_cents is zero."
+            "This field may not be null."
         ),
         (
             {
-                "order_uuid": "mock_uuid",
+                "order_uuid": TEST_ORDER_UUID,
                 "amount_in_cents": -1,
-                "currency": "mock_currency"
+                "currency": TEST_CURRENCY_SYMBOL
             },
-            "amount_in_cents must be a positive, non-zero int."
+            "Ensure this value is greater than or equal to 1."
         ),
     )
     @ddt.unpack
@@ -240,9 +243,11 @@ class TestStripeAPIClient(CoordinatorClientTestCase):
             mock_method='GET',
             mock_url=f'https://api.stripe.com/v1/payment_intents/{TEST_PAYMENT_INTENT_ID}',
             mock_response={
+                'id': 'mock_id',
                 'mock_stripe_response': 'mock_value'
             },
             expected_output={
+                'id': 'mock_id',
                 'mock_stripe_response': 'mock_value'
             },
         )
