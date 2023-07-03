@@ -53,11 +53,12 @@ class StripeAPIClient:
         See:
             https://stripe.com/docs/api/payment_intents/create
         """
+        # Save arguments.
+        initial_locals = dict(locals())
+        del initial_locals['self']
 
         logger.info('StripeAPIClient.create_payment_intent called with '
-                    f'order_uuid: [{order_uuid}], '
-                    f'amount_in_cents: [{amount_in_cents}], '
-                    f'currency: [{currency}].')
+                    f'args: [{initial_locals}].')
 
         class CreatePaymentIntentInputSerializer(serializers.CoordinatorSerializer):
             '''Serializer for StripeAPIClient.create_payment_intent'''
@@ -81,6 +82,14 @@ class StripeAPIClient:
                 # Don't create a new intent for the same order_number.
                 idempotency_key=f'order_number_pi_create_v1_{order_uuid}',
             )
+            logger.debug('StripeAPIClient.create_payment_intent called with '
+                         f'args: [{initial_locals}] '
+                         'returned stripe_response: '
+                         f'[{stripe_response}].')
+            logger.info('StripeAPIClient.create_payment_intent called with '
+                        f'args: [{initial_locals}] '
+                        'created payment intent id: '
+                        f'[{stripe_response.id}].')
         except stripe.error.IdempotencyError as exc:
             logger.error('StripeAPIClient.create_payment_intent threw '
                          f'[{exc}] with '
@@ -99,17 +108,8 @@ class StripeAPIClient:
         except stripe.error.StripeError as exc:
             logger.error('StripeAPIClient.create_payment_intent threw '
                          f'[{exc}] with '
-                         f'order_uuid: [{order_uuid}], '
-                         f'amount_in_cents: [{amount_in_cents}], '
-                         f'currency: [{currency}].')
+                         f'args: [{initial_locals}].')
             raise
-
-        logger.debug('StripeAPIClient.create_payment_intent called with '
-                     f'order_uuid: [{order_uuid}] '
-                     f'amount_in_cents: [{amount_in_cents}], '
-                     f'currency: [{currency}] '
-                     'returned stripe_response: '
-                     f'[{stripe_response}].')
 
         return stripe_response
 
@@ -126,9 +126,12 @@ class StripeAPIClient:
         See:
             https://stripe.com/docs/api/payment_intents/retrieve
         """
+        # Save arguments.
+        initial_locals = dict(locals())
+        del initial_locals['self']
 
         logger.info('StripeAPIClient.retrieve_payment_intent called with '
-                    f'payment_intent_id: [{payment_intent_id}].')
+                    f'args: [{initial_locals}].')
 
         class RetrievePaymentIntentInputSerializer(serializers.CoordinatorSerializer):
             '''Serializer for StripeAPIClient.retrieve_payment_intent.'''
@@ -138,15 +141,18 @@ class StripeAPIClient:
 
         try:
             stripe_response = stripe.PaymentIntent.retrieve(payment_intent_id)
+            logger.debug('StripeAPIClient.retrieve_payment_intent called with '
+                         f'args: [{initial_locals}] '
+                         'returned stripe_response: '
+                         f'[{stripe_response}].')
+            logger.info('StripeAPIClient.retrieve_payment_intent called with '
+                        f'args: [{initial_locals}] '
+                        f'retrieived payment intent id: [{stripe_response.id}].')
         except stripe.error.StripeError as exc:
             logger.error('StripeAPIClient.retrieve_payment_intent threw '
                          f'[{exc}] with '
-                         f'payment_intent_id: [{payment_intent_id}].')
+                         f'args: [{initial_locals}].')
             raise
 
-        logger.debug('StripeAPIClient.retrieve_payment_intent called with '
-                     f'payment_intent_id: [{payment_intent_id}], '
-                     'returned stripe_response: '
-                     f'[{stripe_response}].')
 
         return stripe_response
