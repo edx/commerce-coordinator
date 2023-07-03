@@ -8,3 +8,7 @@ class StripeEventType(str, Enum):
     """
     PAYMENT_SUCCESS = 'payment_intent.succeeded'
     PAYMENT_FAILED = 'payment_intent.payment_failed'
+
+
+class Currency(str, Enum):
+    USD = 'usd'
