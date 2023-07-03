@@ -7,6 +7,23 @@ from django.utils.translation import gettext_lazy as _
 from rest_framework.serializers import *  # pylint: disable=wildcard-import; this module extends DRF serializers
 
 
+class CoordinatorSerializer(Serializer):
+    """
+    Suppress lint messages about lack of create() or update().
+    """
+    # create() and update() are optional. See:
+    # https://www.django-rest-framework.org/api-guide/serializers/#saving-instances
+    type_error = TypeError(
+        'CoordinatorSerializer is for model-less validation only.'
+    )
+
+    def create(self, validated_data):
+        raise self.type_error
+
+    def update(self, instance, validated_data):
+        raise self.type_error
+
+
 class UnixDateTimeField(DateTimeField):
     """
     Serializer that accepts a POSIX time value.
