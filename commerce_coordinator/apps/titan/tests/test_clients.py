@@ -47,9 +47,7 @@ class TitanPaymentClientMock(MagicMock):
     }
 
 
-class TitanActiveOrderClientMock(MagicMock):
-    """A mock TitanClient"""
-    return_value = {
+titan_active_order_response = {
         'edxLmsUserId': '1',
         'itemTotal': '100.0',
         'total': '100.0',
@@ -98,15 +96,20 @@ class TitanActiveOrderClientMock(MagicMock):
                 'number': 'PDHB22WS',
                 'orderUuid': ORDER_UUID,
                 'paymentDate': '2023-05-24T08:45:26.388Z',
-                'paymentMethodName': 'Stripe',
+                'paymentMethodName': PaymentMethod.STRIPE.value,
                 'reference': 'TestOrder-58',
                 'responseCode': 'ch_3MebJMAa00oRYTAV1C26pHmmj572',
-                'state': 'checkout',
+                'state': PaymentState.CHECKOUT.value,
                 'createdAt': '2023-05-25T15:12:07.165Z',
                 'updatedAt': '2023-05-25T15:12:07.165Z'
             }
         ],
     }
+
+
+class TitanActiveOrderClientMock(MagicMock):
+    """A mock TitanClient"""
+    return_value = titan_active_order_response
 
 
 @override_settings(
