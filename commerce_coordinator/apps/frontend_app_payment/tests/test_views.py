@@ -1,6 +1,8 @@
 """
 Tests for the frontend_app_payment views.
 """
+import copy
+
 import ddt
 from django.conf import settings
 from django.contrib.auth import get_user_model
@@ -13,7 +15,11 @@ from rest_framework.test import APITestCase
 from commerce_coordinator.apps.core.cache import CachePaymentStates, get_payment_state_cache_key
 from commerce_coordinator.apps.core.constants import PaymentState
 from commerce_coordinator.apps.core.tests.utils import name_test
-from commerce_coordinator.apps.titan.tests.test_clients import ORDER_UUID, TitanPaymentClientMock
+from commerce_coordinator.apps.titan.tests.test_clients import (
+    ORDER_UUID,
+    TitanPaymentClientMock,
+    titan_active_order_response
+)
 
 User = get_user_model()
 
@@ -280,28 +286,52 @@ class DraftPaymentCreateViewTests(APITestCase):
         # Error HTTP_401_UNAUTHORIZED
         self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
 
-    @patch('commerce_coordinator.apps.titan.clients.TitanAPIClient.get_payment', new_callable=TitanPaymentClientMock)
-    def test_create_payment(self, mock_get_payment):
-        """
-        Ensure data validation and success scenarios for create draft payment.
-        """
-        expected_response = {
-            'payment_number': 'test-number',
-            'order_uuid': ORDER_UUID,
-            'key_id': 'test-code',
-            'state': PaymentState.PROCESSING.value
-        }
+    def _assert_draft_payment_create_request(self, expected_response, mock_get_active_order):
+        """Asset get"""
         self.client.force_authenticate(user=self.user)
         response = self.client.put(self.url)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         response_json = response.json()
         self.assertEqual(response_json, expected_response)
-        self.assertTrue(mock_get_payment.called)
-        kwargs = mock_get_payment.call_args.kwargs
+        self.assertTrue(mock_get_active_order.called)
+        kwargs = mock_get_active_order.call_args.kwargs
         self.assertEqual(kwargs['edx_lms_user_id'], self.test_lms_user_id)
 
-    @patch('commerce_coordinator.apps.titan.clients.TitanAPIClient.get_payment', new_callable=TitanPaymentClientMock)
-    def test_create_payment_missing_user_id(self, __):
+    @patch('commerce_coordinator.apps.titan.clients.TitanAPIClient.get_active_order')
+    @patch('commerce_coordinator.apps.titan.clients.TitanAPIClient.create_payment')
+    @patch('commerce_coordinator.apps.stripe.clients.StripeAPIClient.create_payment_intent')
+    def test_create_payment(self, mock_create_payment_intent, mock_create_payment, mock_get_active_order):
+        """
+        Ensure data validation and success scenarios for create draft payment.
+        """
+
+        intent_id = 'ch_3MebJMAa00oRYTAV1C26pHmmj572'
+        mock_get_active_order_response = copy.deepcopy(titan_active_order_response)
+        mock_get_active_order.return_value = mock_get_active_order_response
+        mock_create_payment_intent.return_value = {
+            'id': intent_id,
+        }
+        mock_create_payment.return_value = {**mock_get_active_order_response['payments'][0]}
+
+        expected_response = {
+            'payment_number': 'PDHB22WS',
+            'order_uuid': ORDER_UUID,
+            'key_id': intent_id,
+            'state': PaymentState.CHECKOUT.value
+        }
+
+        # Test when existing payment exists.
+        self._assert_draft_payment_create_request(expected_response, mock_get_active_order)
+
+        # Test when existing payment is Failed.
+        mock_get_active_order_response['payments'][0]['state'] = PaymentState.FAILED.value
+        self._assert_draft_payment_create_request(expected_response, mock_get_active_order)
+
+        # Test when existing payment does not exist.
+        mock_get_active_order_response['payments'] = []
+        self._assert_draft_payment_create_request(expected_response, mock_get_active_order)
+
+    def test_create_payment_missing_user_id(self):
         """
         Ensure data validation and success scenarios for create draft payment.
         """
@@ -313,22 +343,19 @@ class DraftPaymentCreateViewTests(APITestCase):
         response_json = response.json()
         self.assertIn('This field may not be null.', response_json['edx_lms_user_id'])
 
-    @patch('commerce_coordinator.apps.titan.clients.TitanAPIClient.get_payment')
-    def test_create_payment_for_unexpected_payment(self, mock_get_payment):
+    @patch('commerce_coordinator.apps.titan.clients.TitanAPIClient.get_active_order')
+    def test_create_payment_for_unexpected_payment(self, mock_get_active_order):
         """
         Ensure data validation and success scenarios for create draft payment.
         """
-        mock_get_payment.return_value = {
-            # orderUuid missing.
-            'state': PaymentState.PROCESSING.value,
-            'responseCode': 'test-code',
-            'number': 'test-number'
-        }
+        mock_get_active_order_response = copy.deepcopy(titan_active_order_response)
+        mock_get_active_order.return_value = mock_get_active_order_response
+        del mock_get_active_order_response['payments'][0]['orderUuid']
         self.client.force_authenticate(user=self.user)
         response = self.client.put(self.url)
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
         response_json = response.json()
-        self.assertIn('This field is required.', response_json['orderUuid'])
+        self.assertIn('This field is required.', response_json['payments'][0]['orderUuid'])
 
 
 @ddt.ddt
