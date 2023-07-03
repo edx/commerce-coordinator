@@ -139,5 +139,78 @@ class StripeAPIClient:
                          f'args: [{initial_locals}].')
             raise
 
+        return stripe_response
+
+    def update_payment_intent(
+        self,
+        payment_intent_id,
+        order_uuid,
+        current_payment_number,
+        amount_in_cents,
+        currency,
+    ):
+        """
+        Update a Stripe PaymentIntent.
+
+        Args:
+            payment_intent_id (str): The Stripe PaymentIntent id to look up.
+            order_uuid (str): The identifier of the order. There should be only
+                one Stripe PaymentIntent for this identifier.
+            current_payment_number (str): The payment number. When Stripe's
+                webhook says a PaymentIntent was paid, we record this payment
+                number as paid and error if it's not the latest payment.
+            amount_in_cents (int): The number of cents of the order.
+            currency (str): ISO currency code. Must be Stripe-supported.
+
+        Returns:
+            The response from Stripe.
+
+        See:
+            https://stripe.com/docs/api/payment_intents/update
+        """
+        # Save arguments.
+        initial_locals = dict(locals())
+        del initial_locals['self']
+
+        logger.info('StripeAPIClient.update_payment_intent called with '
+                    f'args: [{initial_locals}].')
+
+        class UpdatePaymentIntentInputSerializer(serializers.CoordinatorSerializer):
+            '''Serializer for StripeAPIClient.update_payment_intent.'''
+            payment_intent_id = serializers.CharField()
+            order_uuid = serializers.UUIDField()
+            current_payment_number = serializers.CharField()
+            amount_in_cents = serializers.IntegerField(min_value=1)
+            currency = serializers.CharField(min_length=3, max_length=3)
+
+        UpdatePaymentIntentInputSerializer(data=initial_locals).is_valid(raise_exception=True)
+
+        try:
+            stripe_response = stripe.PaymentIntent.modify(
+                payment_intent_id,
+                amount=amount_in_cents,
+                currency=currency,
+                description=order_uuid,
+                metadata={
+                    'order_number': order_uuid,
+                    'payment_number': current_payment_number,
+                    'source_system': self.source_system_identifier,
+                },
+                # Disallow confirmation from client for server-side embargo check.
+                secret_key_confirmation='required',
+            )
+            logger.debug('StripeAPIClient.update_payment_intent called with '
+                         f'args: [{initial_locals}] '
+                         'returned stripe_response: '
+                         f'[{stripe_response}].')
+            logger.info('StripeAPIClient.update_payment_intent called with '
+                        f'args: [{initial_locals}] '
+                        'updated payment intent id: '
+                        f'[{stripe_response.id}].')
+        except stripe.error.StripeError as exc:
+            logger.error('StripeAPIClient.update_payment_intent threw '
+                         f'[{exc}] with '
+                         f'args: [{initial_locals}].')
+            raise
 
         return stripe_response
