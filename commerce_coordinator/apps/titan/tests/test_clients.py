@@ -388,7 +388,7 @@ class TestTitanAPIClient(CoordinatorClientTestCase):
             }
         }
         expected_output = mock_response['data']['attributes']
-
+        # test with all params
         self.assertJSONClientResponse(
             uut=self.client.update_billing_address,
             input_kwargs={
@@ -418,6 +418,25 @@ class TestTitanAPIClient(CoordinatorClientTestCase):
                         'phone': phone,
                         'stateName': state_name,
                         'zipcode': zipcode,
+                    }
+                }
+            },
+            expected_headers=self.expected_headers,
+            mock_method='PATCH',
+            mock_url=url,
+            mock_response=mock_response,
+            expected_output=expected_output,
+        )
+        # test with only required params
+        self.assertJSONClientResponse(
+            uut=self.client.update_billing_address,
+            input_kwargs={
+                'order_uuid': order_uuid,
+            },
+            expected_request={
+                'data': {
+                    'attributes': {
+                        'orderUuid': order_uuid,
                     }
                 }
             },
