@@ -1,11 +1,12 @@
 """Tests for stripe app clients.py."""
 
-from unittest.mock import patch, sentinel
+from unittest.mock import MagicMock, patch
 
 import ddt
 import stripe
 from django.conf import settings
 from django.test import override_settings
+from rest_framework.exceptions import ValidationError
 
 from commerce_coordinator.apps.core.tests.utils import CoordinatorClientTestCase
 from commerce_coordinator.apps.stripe.clients import StripeAPIClient
@@ -211,18 +212,18 @@ class TestStripeAPIClient(CoordinatorClientTestCase):
         mock_stripe,
     ):
         """
-        Check ValueError is appropriately raised when
+        Check ValidationError is appropriately raised when
         StripeAPIClient.create_payment_intent() is called with bad arguments.
         """
-        mock_stripe.return_value = sentinel.RESULT
+        mock_stripe.return_value = MagicMock()
 
         if value_error_expected_regex:
-            with self.assertRaisesRegex(ValueError, value_error_expected_regex):
+            with self.assertRaisesRegex(ValidationError, value_error_expected_regex):
                 self.client.create_payment_intent(**input_args)
         else:
             self.assertEqual(
                 self.client.create_payment_intent(**input_args),
-                sentinel.RESULT
+                mock_stripe.return_value
             )
 
     def test_retrieve_payment_intent_success(self):

@@ -49,10 +49,12 @@ class CoordinatorClientTestCaseTests(CoordinatorClientTestCase):
 
     def test_expected_output_empty_on_exception(self):
         '''Check for raise when uut throws exception when expecting output.'''
-        with self.assertRaises(AssertionError):
+        with self.assertRaises(Exception) as cm:
             self.assertJSONClientResponse(
                 uut=MagicMock(side_effect=Exception('Unexpected')),
                 input_kwargs={},
                 mock_url='example.com',
                 expected_output='normal_output',  # This is the test.
             )
+        # Make sure it's our side effect, not just any exception.
+        self.assertEqual(cm.exception.args[0], 'Unexpected')
