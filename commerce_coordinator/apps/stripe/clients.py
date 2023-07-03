@@ -103,7 +103,7 @@ class StripeAPIClient:
         Retrieve a Stripe PaymentIntent.
 
         Args:
-            order_uuid (str): The Stripe PaymentIntent id to look up.
+            payment_intent_id (str): The Stripe PaymentIntent id to look up.
 
         Returns:
             The response from Stripe.
