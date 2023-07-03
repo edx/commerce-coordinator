@@ -181,18 +181,15 @@ class CoordinatorClientTestCase(TestCase):
                 expected_request,
                 'Check external API called with expected input'
             )
+        if exception_thrown:
+            raise exception_thrown
+        # We can't check expected_output if exception_thrown.
         if expected_output:
-            if exception_thrown:
-                self.fail('Cannot validate expected_output on exceptions.')
             self.assertEqual(
                 output,
                 expected_output,
                 'Check client returns expected output'
             )
-
-        # Re-throw exception after checks:
-        if exception_thrown:
-            raise exception_thrown
 
 
 class CoordinatorOAuthClientTestCase(CoordinatorClientTestCase):
