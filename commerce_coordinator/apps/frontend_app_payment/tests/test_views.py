@@ -9,10 +9,8 @@ from django.contrib.auth import get_user_model
 from django.urls import reverse
 from edx_django_utils.cache import TieredCache
 from mock import patch
-from requests import HTTPError
 from rest_framework import status
 from rest_framework.test import APITestCase
-from stripe.error import StripeError
 
 from commerce_coordinator.apps.core.cache import CachePaymentStates, get_payment_state_cache_key
 from commerce_coordinator.apps.core.constants import PaymentState
@@ -332,18 +330,6 @@ class DraftPaymentCreateViewTests(APITestCase):
         # Test when existing payment does not exist.
         mock_get_active_order_response['payments'] = []
         self._assert_draft_payment_create_request(expected_response, mock_get_active_order)
-
-        # Test Error while creating payment.
-        mock_create_payment.side_effect = HTTPError
-        response = self.client.put(self.url)
-        self.assertEqual(response.status_code, status.HTTP_500_INTERNAL_SERVER_ERROR)
-        self.assertIn("Error while creating payment on titan's system", response.json()['detail'])
-
-        # Test Error while creating payment intent
-        mock_create_payment_intent.side_effect = StripeError
-        response = self.client.put(self.url)
-        self.assertEqual(response.status_code, status.HTTP_502_BAD_GATEWAY)
-        self.assertIn('Error while creating payment intent on payment gateway.', response.json()['detail'])
 
     def test_create_payment_missing_user_id(self):
         """

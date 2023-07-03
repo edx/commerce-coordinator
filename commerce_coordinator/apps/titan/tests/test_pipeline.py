@@ -4,15 +4,24 @@ from unittest import TestCase
 from unittest.mock import patch
 
 from requests import HTTPError
+from rest_framework.exceptions import APIException
 
-from commerce_coordinator.apps.titan.pipeline import CreateTitanOrder, GetTitanActiveOrder, GetTitanPayment
+from commerce_coordinator.apps.titan.pipeline import (
+    CreateDraftPayment,
+    CreateTitanOrder,
+    GetTitanActiveOrder,
+    GetTitanPayment
+)
 
+from ...core.constants import PaymentMethod
 from ..exceptions import NoActiveOrder, PaymentNotFound
 from .test_clients import (
     ORDER_CREATE_DATA_WITH_CURRENCY,
+    ORDER_UUID,
     TitanActiveOrderClientMock,
     TitanClientMock,
-    TitanPaymentClientMock
+    TitanPaymentClientMock,
+    titan_active_order_response
 )
 
 
@@ -140,3 +149,42 @@ class TestGetTitanActiveOrderPipelineStep(TestCase):
         )
         # ensure our input data arrives as expected
         mock_get_active_order.assert_called_once_with(**get_active_order_data)
+
+
+class TestCreateDraftPaymentStep(TestCase):
+    """A pytest Test case for the CreateDraftPayment Pipeline Step"""
+
+    def setUp(self) -> None:
+        self.create_payment_data = {
+            'order_uuid': ORDER_UUID,
+            'response_code': 'test_code',
+            'payment_method_name': PaymentMethod.STRIPE.value,
+            'provider_response_body': {},
+        }
+
+    @patch('commerce_coordinator.apps.titan.clients.TitanAPIClient.create_payment')
+    def test_pipeline_step(self, mock_create_payment):
+        """
+        Test success.
+        """
+        mock_create_payment.return_value = titan_active_order_response['payments'][0]
+        create_draft_payment_pipe = CreateDraftPayment("test_pipe", None)
+        result: dict = create_draft_payment_pipe.run_filter(**self.create_payment_data)
+
+        mock_create_payment.assert_called_once_with(**self.create_payment_data)
+        self.assertIn('key_id', result)
+
+    @patch('commerce_coordinator.apps.titan.clients.TitanAPIClient.create_payment', side_effect=HTTPError)
+    def test_pipeline_step_raises_exception(self, mock_create_payment):
+        active_order_pipe = CreateDraftPayment("test_pipe", None)
+        with self.assertRaises(APIException) as ex:
+            active_order_pipe.run_filter(
+                **self.create_payment_data,
+            )
+
+        self.assertEqual(
+            str(ex.exception),
+            "Error while creating payment on titan's system"
+        )
+        # ensure our input data arrives as expected
+        mock_create_payment.assert_called()

@@ -130,6 +130,13 @@ class GetTitanActiveOrder(PipelineStep):
             raise NoActiveOrder from e
         active_order_output = TitanActiveOrderSerializer(data=order)
         active_order_output.is_valid(raise_exception=True)
+
+        recent_payment = None
+        order_data = active_order_output.data
+        payments = order_data['payments']
+        if payments:
+            recent_payment = payments[0]
         return {
-            'order_data': active_order_output.data,
+            'order_data': order_data,
+            'recent_payment': recent_payment
         }
