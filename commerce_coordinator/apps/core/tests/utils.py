@@ -3,6 +3,7 @@
 import json
 import random
 import string
+from traceback import print_exc
 from urllib.parse import parse_qs
 
 import responses
@@ -153,6 +154,7 @@ class CoordinatorClientTestCase(TestCase):
         try:
             output = uut(**input_kwargs)
         except Exception as exc:  # pylint: disable=broad-exception-caught
+            print_exc()
             # Will rethrow this exception later.
             exception_thrown = exc
 
