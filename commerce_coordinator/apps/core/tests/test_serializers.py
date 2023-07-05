@@ -11,6 +11,18 @@ from commerce_coordinator.apps.core import serializers
 utc = datetime.timezone.utc
 
 
+class CoordinatorSerializerTests(TestCase):
+    """Tests of the CoordinatorSerializer class."""
+
+    def test_create_exception(self):
+        with self.assertRaises(TypeError):
+            serializers.CoordinatorSerializer().create({})
+
+    def test_update_exception(self):
+        with self.assertRaises(TypeError):
+            serializers.CoordinatorSerializer().update({}, {})
+
+
 @ddt.ddt
 class UnixDateTimeFieldTests(TestCase):
     """Tests of UnixDateTimeField class."""
