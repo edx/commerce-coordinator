@@ -13,6 +13,7 @@ from commerce_coordinator.apps.stripe.clients import StripeAPIClient
 
 # Sentinel values.
 TEST_ORDER_UUID = 'abcdef01-1234-5678-90ab-cdef01234567'
+TEST_PAYMENT_NUMBER = 12345
 TEST_PAYMENT_INTENT_ID = 'pi_AbCdEfGhIjKlMnOpQ1234567'
 TEST_CURRENCY_SYMBOL = 'mok'
 
@@ -276,4 +277,81 @@ class TestStripeAPIClient(CoordinatorClientTestCase):
                     },
                 },
                 mock_status=404,
+            )
+
+    def test_update_payment_intent_success(self):
+        """
+        Check successful call of StripeAPIClient.update_payment_intent().
+        """
+        self.assertJSONClientResponse(
+            uut=self.client.update_payment_intent,
+            input_kwargs={
+                'payment_intent_id': TEST_PAYMENT_INTENT_ID,
+                'order_uuid': TEST_ORDER_UUID,
+                'current_payment_number': TEST_PAYMENT_NUMBER,
+                'amount_in_cents': 10000,
+                'currency': 'USD',
+            },
+            expected_request={
+                'amount': ['10000'],
+                'currency': ['USD'],
+                'description': [TEST_ORDER_UUID],
+                'metadata[order_number]': [TEST_ORDER_UUID],
+                'metadata[payment_number]': [str(TEST_PAYMENT_NUMBER)],
+                'metadata[source_system]': ['edx/commerce_coordinator?v=1'],
+                'secret_key_confirmation': ['required'],
+            },
+            request_type='query_string',
+            expected_headers=self.expected_headers,
+            mock_url=f'https://api.stripe.com/v1/payment_intents/{TEST_PAYMENT_INTENT_ID}',
+            mock_response={
+                'id': 'mock_id',
+                'mock_stripe_response': 'mock_value'
+            },
+            expected_output={
+                'id': 'mock_id',
+                'mock_stripe_response': 'mock_value'
+            },
+        )
+
+    def test_update_payment_intent_idempotency_error(self):
+        """
+        Check StripeAPIClient.update_payment_intent() throws
+        stripe.error.InvalidRequestError when it returns a response indicating
+        the update is on an already confirmed payment.
+        """
+        with self.assertRaises(stripe.error.InvalidRequestError):
+            self.assertJSONClientResponse(
+                uut=self.client.update_payment_intent,
+                input_kwargs={
+                    'payment_intent_id': TEST_PAYMENT_INTENT_ID,
+                    'order_uuid': TEST_ORDER_UUID,
+                    'current_payment_number': TEST_PAYMENT_NUMBER,
+                    'amount_in_cents': 10000,
+                    'currency': 'USD',
+                },
+                expected_request={
+                    'amount': ['10000'],
+                    'currency': ['USD'],
+                    'description': [TEST_ORDER_UUID],
+                    'metadata[order_number]': [TEST_ORDER_UUID],
+                    'metadata[payment_number]': [str(TEST_PAYMENT_NUMBER)],
+                    'metadata[source_system]': ['edx/commerce_coordinator?v=1'],
+                    'secret_key_confirmation': ['required'],
+                },
+                request_type='query_string',
+                expected_headers=self.expected_headers,
+                mock_url=f'https://api.stripe.com/v1/payment_intents/{TEST_PAYMENT_INTENT_ID}',
+                mock_status=400,
+                mock_response={
+                    'error': {
+                        'code': 'payment_intent_unexpected_state',
+                        'doc_url': 'https://stripe.com/docs/error-codes/payment-intent-unexpected-state',
+                        'message':
+                            'This PaymentIntent''s amount could not be '
+                            'updated because it has a status of succeeded. You '
+                            'may only update the amount of a PaymentIntent...',
+                        'param': 'amount',
+                    },
+                },
             )
