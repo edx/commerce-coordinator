@@ -41,3 +41,17 @@ class GetActiveOrderInputSerializer(serializers.Serializer):  # pylint: disable=
     Serializer for GetActiveOrderView input validation
     """
     edx_lms_user_id = serializers.IntegerField(allow_null=False)
+
+
+class PaymentProcessInputSerializer(serializers.Serializer):  # pylint: disable=abstract-method
+
+    """
+    Serializer for PaymentProcessView input validation
+    """
+    payment_number = serializers.CharField(allow_null=False)
+    order_uuid = serializers.UUIDField(allow_null=False)
+    payment_intent_id = serializers.CharField(allow_null=False)
+    edx_lms_user_id = serializers.IntegerField(allow_null=False)
+    skus = serializers.ListField(
+        child=serializers.CharField(), allow_empty=False
+    )
