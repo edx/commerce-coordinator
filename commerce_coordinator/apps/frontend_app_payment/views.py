@@ -11,12 +11,13 @@ from rest_framework.views import APIView
 
 from commerce_coordinator.apps.frontend_app_payment.exceptions import InvalidOrderPayment
 
-from .filters import ActiveOrderRequested, DraftPaymentRequested, PaymentRequested
+from .filters import ActiveOrderRequested, DraftPaymentRequested, PaymentProcessingRequested, PaymentRequested
 from .serializers import (
     DraftPaymentCreateViewInputSerializer,
     GetActiveOrderInputSerializer,
     GetPaymentInputSerializer,
-    GetPaymentOutputSerializer
+    GetPaymentOutputSerializer,
+    PaymentProcessInputSerializer
 )
 
 logger = logging.getLogger(__name__)
@@ -79,3 +80,25 @@ class GetActiveOrderView(APIView):
         params = input_serializer.data
         order_data = ActiveOrderRequested.run_filter(params)
         return Response(order_data)
+
+
+class PaymentProcessView(APIView):
+    """
+    Responsible for start processing payment for user.
+    """
+    authentication_classes = (JwtAuthentication,)
+    permission_classes = (IsAuthenticated,)
+
+    def post(self, request):
+        """
+        method for receiving a request to mark a payment as ready for processing by the payment processor.
+        """
+        input_data = {
+            **request.data,
+            'edx_lms_user_id': request.user.lms_user_id
+        }
+        input_serializer = PaymentProcessInputSerializer(data=input_data)
+        input_serializer.is_valid(raise_exception=True)
+        params = input_serializer.data
+        response_data = PaymentProcessingRequested.run_filter(**params)
+        return Response(response_data)
