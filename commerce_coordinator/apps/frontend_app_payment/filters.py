@@ -105,3 +105,23 @@ class ActiveOrderRequested(OpenEdxPublicFilter):
         # and was used from cybersource to stripe migration.
         active_order['enable_stripe_payment_processor'] = True
         return active_order
+
+
+class PaymentProcessingRequested(OpenEdxPublicFilter):
+    """
+    Filter pipeline results for marking the current payment as ready for processing.
+    """
+
+    filter_type = "org.edx.coordinator.frontend_app_payment.payment.processing.requested.v1"
+
+    @classmethod
+    def run_filter(cls, **kwargs):
+        """
+        Call the PipelineStep(s) defined for this filter
+        Arguments:
+            kwargs: arguments passed through from the payment process.
+        """
+        pipeline_output = super().run_pipeline(
+            **kwargs,
+        )
+        return pipeline_output
