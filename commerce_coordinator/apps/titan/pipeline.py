@@ -43,7 +43,7 @@ class GetTitanPayment(PipelineStep):
     Adds Titan's payment in payment data list.
     """
 
-    def run_filter(self, edx_lms_user_id, payment_number=None):  # pylint: disable=arguments-differ
+    def run_filter(self, edx_lms_user_id, payment_number=None, **kwargs):  # pylint: disable=arguments-differ
         """
         Execute a filter with the signature specified.
         Args:
