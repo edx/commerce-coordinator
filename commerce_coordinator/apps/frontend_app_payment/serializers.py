@@ -1,4 +1,5 @@
 """Serializers for frontend_app_payment service"""
+from rest_framework.exceptions import ValidationError
 
 from commerce_coordinator.apps.core import serializers
 
@@ -52,6 +53,10 @@ class PaymentProcessInputSerializer(serializers.Serializer):  # pylint: disable=
     order_uuid = serializers.UUIDField(allow_null=False)
     payment_intent_id = serializers.CharField(allow_null=False)
     edx_lms_user_id = serializers.IntegerField(allow_null=False)
-    skus = serializers.ListField(
-        child=serializers.CharField(), allow_empty=False
-    )
+    skus = serializers.SerializerMethodField()
+
+    def get_skus(self, __):
+        skus = self.initial_data.get('skus')
+        if skus and isinstance(skus, str):
+            return skus.split(',')
+        raise ValidationError({'skus': 'Comma seperated `skus` required.'})

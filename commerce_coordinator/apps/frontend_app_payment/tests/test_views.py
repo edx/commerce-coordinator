@@ -537,6 +537,20 @@ class PaymentProcessViewTests(APITestCase):
             {}, 'payment_number', status.HTTP_400_BAD_REQUEST,
             {'error_key': 'payment_number', 'error_message': 'This field is required.'}
         )),
+        name_test("test skus in required.", (
+            {}, 'skus', status.HTTP_400_BAD_REQUEST,
+            {
+                'error_key': 'skus',
+                'error_message': 'Comma seperated `skus` required.'
+            }
+        )),
+        name_test("test skus by passing it in list format.", (
+            {'skus': ['skus-1', 'sku-2']}, None, status.HTTP_400_BAD_REQUEST,
+            {
+                'error_key': 'skus',
+                'error_message': 'Comma seperated `skus` required.'
+            }
+        )),
     )
     @ddt.unpack
     @patch('commerce_coordinator.apps.frontend_app_payment.views.PaymentProcessingRequested.run_filter')
@@ -550,7 +564,7 @@ class PaymentProcessViewTests(APITestCase):
             'order_uuid': ORDER_UUID,
             'payment_number': 'test-payment-number',
             'payment_intent_id': 'test-intent-id',
-            'skus': ['test-sku'],
+            'skus': 'test-sku-1,test-sku-2',
         }
         query_params.update(update_params)
 
@@ -566,6 +580,7 @@ class PaymentProcessViewTests(APITestCase):
             self.assertTrue(mock_processing_requested.called)
             kwargs = mock_processing_requested.call_args.kwargs
             query_params['edx_lms_user_id'] = self.test_lms_user_id
+            query_params['skus'] = query_params['skus'].split(',')
             self.assertEqual(kwargs, query_params)
         else:
             expected_error_key = expected_error['error_key']
