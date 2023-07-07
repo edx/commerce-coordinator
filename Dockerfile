@@ -27,6 +27,7 @@ RUN apt-get update && apt-get -qy install --no-install-recommends \
  python3.8 \
  python3-pip \
  libmysqlclient-dev \
+ pkg-config \
  libssl-dev \
  python3-dev \
  gcc
