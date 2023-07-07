@@ -10,7 +10,11 @@ from rest_framework.exceptions import APIException
 
 from commerce_coordinator.apps.titan.clients import TitanAPIClient
 from commerce_coordinator.apps.titan.exceptions import NoActiveOrder, PaymentNotFound
-from commerce_coordinator.apps.titan.serializers import PaymentSerializer, TitanActiveOrderSerializer
+from commerce_coordinator.apps.titan.serializers import (
+    BillingAddressSerializer,
+    PaymentSerializer,
+    TitanActiveOrderSerializer
+)
 
 logger = logging.getLogger(__name__)
 
@@ -159,5 +163,6 @@ class UpdateBillingAddress(PipelineStep):
                 order_uuid
             )
             raise APIException("Error updating the order's billing address details in titan") from exc
-
-        return response
+        update_billing_address_output = BillingAddressSerializer(data=response)
+        update_billing_address_output.is_valid(raise_exception=True)
+        return update_billing_address_output.data

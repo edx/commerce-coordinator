@@ -216,8 +216,8 @@ class TestUpdateBillingAddressStep(TestCase):
             ORDER_UUID,
             **self.billing_details_data,
         )
-        self.assertIn('address1', result)
-        self.assertEqual(result['address1'], 'test address')
+        self.assertIn('address_1', result)
+        self.assertEqual(result['address_1'], 'test address')
 
     @patch('commerce_coordinator.apps.titan.clients.TitanAPIClient.update_billing_address', side_effect=HTTPError)
     def test_pipeline_step_with_exception(self, mock_update_billing_address):
