@@ -10,7 +10,8 @@ from commerce_coordinator.apps.titan.pipeline import (
     CreateDraftPayment,
     CreateTitanOrder,
     GetTitanActiveOrder,
-    GetTitanPayment
+    GetTitanPayment,
+    UpdateBillingAddress
 )
 
 from ...core.constants import PaymentMethod
@@ -188,3 +189,48 @@ class TestCreateDraftPaymentStep(TestCase):
         )
         # ensure our input data arrives as expected
         mock_create_payment.assert_called()
+
+
+class TestUpdateBillingAddressStep(TestCase):
+    """A pytest Test case for the UpdateBillinAddress Pipeline Step"""
+
+    def setUp(self) -> None:
+        self.billing_details_data = {
+            'address1': 'test address',
+            'address2': '1',
+            'city': 'a place',
+            'company': 'a company',
+            'countryIso': 'US',
+            'firstName': 'test',
+            'lastName': 'mctester',
+            'phone': '5558675309',
+            'stateName': 'MA',
+            'zipcode': '55555',
+        }
+
+    @patch('commerce_coordinator.apps.titan.clients.TitanAPIClient.update_billing_address')
+    def test_pipeline_step(self, mock_update_billing_address):
+        update_billing_address_pipe = UpdateBillingAddress("test_pipe", None)
+        mock_update_billing_address.return_value = self.billing_details_data
+        result: dict = update_billing_address_pipe.run_filter(
+            ORDER_UUID,
+            **self.billing_details_data,
+        )
+        self.assertIn('address1', result)
+        self.assertEqual(result['address1'], 'test address')
+
+    @patch('commerce_coordinator.apps.titan.clients.TitanAPIClient.update_billing_address', side_effect=HTTPError)
+    def test_pipeline_step_with_exception(self, mock_update_billing_address):
+        update_billing_address_pipe = UpdateBillingAddress("test_pipe", None)
+        mock_update_billing_address.return_value = self.billing_details_data
+        with self.assertRaises(APIException) as exc:
+            update_billing_address_pipe.run_filter(
+                ORDER_UUID,
+                **self.billing_details_data,
+            )
+            self.assertEqual(
+                str(exc.exception),
+                "Error updating the order's billing address details in titan"
+            )
+            # ensure our input data arrives as expected
+            mock_update_billing_address.assert_called()
