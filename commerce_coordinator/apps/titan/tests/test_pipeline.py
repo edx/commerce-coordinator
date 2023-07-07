@@ -228,9 +228,9 @@ class TestUpdateBillingAddressStep(TestCase):
                 ORDER_UUID,
                 **self.billing_details_data,
             )
-            self.assertEqual(
-                str(exc.exception),
-                "Error updating the order's billing address details in titan"
-            )
-            # ensure our input data arrives as expected
-            mock_update_billing_address.assert_called()
+        self.assertEqual(
+            str(exc.exception),
+            "Error updating the order's billing address details in titan"
+        )
+        # ensure our input data arrives as expected
+        mock_update_billing_address.assert_called()
