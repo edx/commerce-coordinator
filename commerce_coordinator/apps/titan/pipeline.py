@@ -165,4 +165,4 @@ class UpdateBillingAddress(PipelineStep):
             raise APIException("Error updating the order's billing address details in titan") from exc
         update_billing_address_output = BillingAddressSerializer(data=response)
         update_billing_address_output.is_valid(raise_exception=True)
-        return update_billing_address_output.data
+        return {'billing_address_data': update_billing_address_output.data}
