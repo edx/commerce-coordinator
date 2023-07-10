@@ -10,7 +10,11 @@ from rest_framework.exceptions import APIException
 
 from commerce_coordinator.apps.titan.clients import TitanAPIClient
 from commerce_coordinator.apps.titan.exceptions import NoActiveOrder, PaymentNotFound
-from commerce_coordinator.apps.titan.serializers import PaymentSerializer, TitanActiveOrderSerializer
+from commerce_coordinator.apps.titan.serializers import (
+    BillingAddressSerializer,
+    PaymentSerializer,
+    TitanActiveOrderSerializer
+)
 
 logger = logging.getLogger(__name__)
 
@@ -99,7 +103,7 @@ class CreateDraftPayment(PipelineStep):
 
             )
         except HTTPError as exc:
-            logger.exception('[CreateTitanPayment] Failed to create pyment for order_uuid: %s', order_uuid)
+            logger.exception('[CreateTitanPayment] Failed to create payment for order_uuid: %s', order_uuid)
             raise APIException("Error while creating payment on titan's system") from exc
 
         payment_serializer = PaymentSerializer(data=payment)
@@ -140,3 +144,25 @@ class GetTitanActiveOrder(PipelineStep):
             'order_data': order_data,
             'recent_payment': recent_payment
         }
+
+
+class UpdateBillingAddress(PipelineStep):
+    """
+    Updates the user's billing address info on an order in Titan
+    """
+
+    def run_filter(self, order_uuid, **kwargs):  # pylint: disable=arguments-differ
+
+        api_client = TitanAPIClient()
+        try:
+            response = api_client.update_billing_address(order_uuid, **kwargs)
+
+        except HTTPError as exc:
+            logger.exception(
+                "[UpdateBillingAddress] Failed to update the billing address for the specified order: %s",
+                order_uuid
+            )
+            raise APIException("Error updating the order's billing address details in titan") from exc
+        update_billing_address_output = BillingAddressSerializer(data=response)
+        update_billing_address_output.is_valid(raise_exception=True)
+        return {'billing_address_data': update_billing_address_output.data}

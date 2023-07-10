@@ -393,6 +393,12 @@ OPEN_EDX_FILTERS_CONFIG = {
             'commerce_coordinator.apps.titan.pipeline.GetTitanActiveOrder',
         ]
     },
+    "org.edx.coordinator.frontend_app_payment.payment.processing.requested.v1": {
+        "fail_silently": False,  # TODO: Coordinator filters should NEVER be allowed to fail silently
+        "pipeline": [  # TODO: Add remaining pipeline steps from THES-202, THES-203, THES-204
+            'commerce_coordinator.apps.titan.pipeline.UpdateBillingAddress',
+        ]
+    }
 }
 
 # Setting to keep using deperecated pytz with Django>4
