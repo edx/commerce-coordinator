@@ -157,6 +157,15 @@ class TestGetTitanPaymentPipelineStep(TestCase):
             AlreadyPaid,
             'Requested payment "test-number" for processing is already paid.'
         ),
+        (
+            PaymentState.CHECKOUT.value, None, None
+        ),
+        (
+            PaymentState.FAILED.value, None, None
+        ),
+        (
+            PaymentState.PROCESSING.value, None, None
+        ),
     )
     @ddt.unpack
     @patch('commerce_coordinator.apps.titan.clients.TitanAPIClient.get_payment')
@@ -171,15 +180,21 @@ class TestGetTitanPaymentPipelineStep(TestCase):
             'validate_payment_processing_state': 'True',
         }
 
-        with self.assertRaises(expected_error) as ex:
-            self.payment_pipe.run_filter(
+        if expected_error:
+            with self.assertRaises(expected_error) as ex:
+                self.payment_pipe.run_filter(
+                    **query_params,
+                )
+
+            self.assertEqual(
+                str(ex.exception),
+                expected_mesg
+            )
+        else:
+            result = self.payment_pipe.run_filter(
                 **query_params,
             )
-
-        self.assertEqual(
-            str(ex.exception),
-            expected_mesg
-        )
+            self.assertIn('payment_data', result)
 
     @patch('commerce_coordinator.apps.titan.clients.TitanAPIClient.get_payment', side_effect=HTTPError)
     def test_pipeline_step_raises_exception(self, mock_get_payment):

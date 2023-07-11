@@ -213,7 +213,8 @@ class GetPaymentViewTests(APITestCase):
                 payment_number, CachePaymentStates.PAID.value
             )
             TieredCache.set_all_tiers(payment_state_paid_cache_key, payment, settings.DEFAULT_TIMEOUT)
-        elif payment_final_state == PaymentState.FAILED.value:
+        else:
+            #  here payment_final_state is PaymentState.FAILED
             TieredCache.set_all_tiers(payment_state_processing_cache_key, payment, settings.DEFAULT_TIMEOUT)
         self._assert_get_payment_api_response(query_params, expected_state=payment_final_state)
         self.assertFalse(mock_pipeline.called)
