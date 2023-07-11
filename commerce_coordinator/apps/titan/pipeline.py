@@ -8,8 +8,16 @@ from openedx_filters import PipelineStep
 from requests import HTTPError
 from rest_framework.exceptions import APIException
 
+from commerce_coordinator.apps.core.constants import PaymentState
 from commerce_coordinator.apps.titan.clients import TitanAPIClient
-from commerce_coordinator.apps.titan.exceptions import NoActiveOrder, PaymentNotFound
+from commerce_coordinator.apps.titan.exceptions import (
+    AlreadyPaid,
+    InvalidOrderPayment,
+    NoActiveOrder,
+    PaymentMismatch,
+    PaymentNotFound,
+    ProcessingAlreadyRequested
+)
 from commerce_coordinator.apps.titan.serializers import (
     BillingAddressSerializer,
     PaymentSerializer,
@@ -60,14 +68,39 @@ class GetTitanPayment(PipelineStep):
         try:
             payment = api_client.get_payment(
                 edx_lms_user_id=edx_lms_user_id,
-                payment_number=payment_number
             )
         except HTTPError as exc:
             logger.exception("[GetTitanPayment] Payment %s not found for user: %s", payment_number, edx_lms_user_id)
             raise PaymentNotFound from exc
         payment_serializer = PaymentSerializer(data=payment)
         payment_serializer.is_valid(raise_exception=True)
-        return payment_serializer.data
+        payment = payment_serializer.data
+
+        order_uuid = kwargs.get('order_uuid')
+        if order_uuid and payment['order_uuid'] != kwargs['order_uuid']:
+            raise InvalidOrderPayment(
+                f'Requested order_uuid "{order_uuid}" does not match with '
+                f'order_uuid "{payment["order_uuid"]}" in Spree system.'
+            )
+
+        if payment_number and payment['payment_number'] != payment_number:
+            raise PaymentMismatch(
+                f'Requested payment number "{payment_number}" does not match with '
+                f'payment number "{payment["payment_number"]}" in Spree system.'
+            )
+
+        if kwargs.get('validate_payment_processing_state'):
+            # make sure fetch payment is processable.
+            if payment['state'] == PaymentState.COMPLETED.value:
+                raise AlreadyPaid(f'Requested payment "{payment_number}" for processing is already paid.')
+            if payment['state'] == PaymentState.PENDING.value:
+                raise ProcessingAlreadyRequested(
+                    f'Requested payment "{payment_number}" for processing is already processing.'
+                )
+
+        return {
+            'payment_data': payment
+        }
 
 
 class CreateDraftPayment(PipelineStep):

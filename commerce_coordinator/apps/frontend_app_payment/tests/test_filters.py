@@ -65,10 +65,12 @@ class TestPaymentProcessingRequestedFilter(TestCase):
         """
 
         mock_payment = {
-            'payment_number': 'test-payment-number',
-            'order_uuid': ORDER_UUID,
-            'key_id': 'test-intent-id',
-            'state': PaymentState.PROCESSING.value
+            'payment_data': {
+                'payment_number': 'test-payment-number',
+                'order_uuid': ORDER_UUID,
+                'key_id': 'test-intent-id',
+                'state': PaymentState.PROCESSING.value
+            }
         }
         mock_pipeline.return_value = mock_payment
         filter_params = {
@@ -78,5 +80,5 @@ class TestPaymentProcessingRequestedFilter(TestCase):
             'skus': ['test-sku'],
         }
         payment_details = PaymentProcessingRequested.run_filter(**filter_params)
-        expected_payment = {**mock_payment, **filter_params}
+        expected_payment = {**mock_payment, **filter_params, 'validate_payment_processing_state': True}
         self.assertEqual(expected_payment, payment_details)
