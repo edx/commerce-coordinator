@@ -31,14 +31,6 @@ commerce\_coordinator.apps.frontend\_app\_payment.apps module
    :undoc-members:
    :show-inheritance:
 
-commerce\_coordinator.apps.frontend\_app\_payment.exceptions module
--------------------------------------------------------------------
-
-.. automodule:: commerce_coordinator.apps.frontend_app_payment.exceptions
-   :members:
-   :undoc-members:
-   :show-inheritance:
-
 commerce\_coordinator.apps.frontend\_app\_payment.filters module
 ----------------------------------------------------------------
 

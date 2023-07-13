@@ -96,7 +96,7 @@ class GetPaymentViewTests(APITestCase):
         self.client.force_authenticate(user=self.user)
         query_params = {
             'order_uuid': ORDER_UUID,
-            'payment_number': '1234',
+            'payment_number': 'test-number',
         }
         query_params.update(update_params)
 
@@ -112,7 +112,6 @@ class GetPaymentViewTests(APITestCase):
             self.assertTrue(mock_get_payment.called)
             kwargs = mock_get_payment.call_args.kwargs
             self.assertEqual(kwargs['edx_lms_user_id'], self.test_lms_user_id)
-            self.assertEqual(kwargs['payment_number'], query_params['payment_number'])
         else:
             expected_error_key = expected_error['error_key']
             expected_error_message = expected_error['error_message']
@@ -136,10 +135,12 @@ class GetPaymentViewTests(APITestCase):
         TieredCache.dangerous_clear_all_tiers()
         self.client.force_authenticate(user=self.user)
         mock_pipeline.return_value = {
-            'payment_number': '12345',
-            'order_uuid': ORDER_UUID,
-            'key_id': 'test-code',
-            'state': payment_state
+            'payment_data': {
+                'payment_number': '12345',
+                'order_uuid': ORDER_UUID,
+                'key_id': 'test-code',
+                'state': payment_state
+            }
         }
         query_params = {
             'order_uuid': ORDER_UUID,
@@ -197,7 +198,7 @@ class GetPaymentViewTests(APITestCase):
         TieredCache.delete_all_tiers(payment_state_processing_cache_key)
         cached_response = TieredCache.get_cached_response(payment_state_processing_cache_key)
         self.assertFalse(cached_response.is_found)
-        mock_pipeline.return_value = payment
+        mock_pipeline.return_value = {'payment_data': payment}
         self._assert_get_payment_api_response(query_params, PaymentState.PROCESSING.value)
         self.assertTrue(mock_pipeline.called)
         cached_response = TieredCache.get_cached_response(payment_state_processing_cache_key)
@@ -212,7 +213,8 @@ class GetPaymentViewTests(APITestCase):
                 payment_number, CachePaymentStates.PAID.value
             )
             TieredCache.set_all_tiers(payment_state_paid_cache_key, payment, settings.DEFAULT_TIMEOUT)
-        elif payment_final_state == PaymentState.FAILED.value:
+        else:
+            #  here payment_final_state is PaymentState.FAILED
             TieredCache.set_all_tiers(payment_state_processing_cache_key, payment, settings.DEFAULT_TIMEOUT)
         self._assert_get_payment_api_response(query_params, expected_state=payment_final_state)
         self.assertFalse(mock_pipeline.called)
@@ -221,24 +223,6 @@ class GetPaymentViewTests(APITestCase):
         TieredCache.dangerous_clear_all_tiers()
         self._assert_get_payment_api_response(query_params, expected_state=payment_final_state)
         self.assertTrue(mock_pipeline.called)
-
-    @patch('commerce_coordinator.apps.titan.clients.TitanAPIClient.get_payment',  new_callable=TitanPaymentClientMock)
-    def test_get_payment_order_mismatch(self, __):
-        """
-        Ensure data validation if we try to send wrong Order ID that does not belong to that payment number.
-        """
-        self.client.force_authenticate(user=self.user)
-        query_params = {
-            # this order id is different form what we will get from titan
-            'order_uuid': '321e7654-e89b-12d3-a456-426614174111',
-            'payment_number': '1234',
-        }
-
-        response = self.client.get(self.url, data=query_params)
-        self.assertEqual(response.status_code, status.HTTP_409_CONFLICT)
-
-        response_json = response.json()
-        self.assertIn(response_json['detail'], 'Your requested payment does not belong to this payment')
 
 
 @ddt.ddt
