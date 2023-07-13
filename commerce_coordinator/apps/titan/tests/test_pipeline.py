@@ -12,7 +12,8 @@ from commerce_coordinator.apps.titan.pipeline import (
     CreateTitanOrder,
     GetTitanActiveOrder,
     GetTitanPayment,
-    UpdateBillingAddress
+    UpdateBillingAddress,
+    ValidatePaymentReadyForProcessing
 )
 
 from ...core.constants import PaymentMethod, PaymentState
@@ -146,6 +147,39 @@ class TestGetTitanPaymentPipelineStep(TestCase):
             'with payment number "test-number" in Spree system.'
         )
 
+    @patch('commerce_coordinator.apps.titan.clients.TitanAPIClient.get_payment', side_effect=HTTPError)
+    def test_pipeline_step_raises_exception(self, mock_get_payment):
+        """
+        A test to red/green whether our pipeline step accepts data, invokes right, and sends things off as coded
+
+        Args:
+            mock_get_payment(MagicMock): stand in for Titan API Client `get_payment`
+        """
+        payment_pipe = GetTitanPayment("test_pipe", None)
+        get_payment_data = {
+            'edx_lms_user_id': 1,
+        }
+
+        with self.assertRaises(PaymentNotFound) as ex:
+            payment_pipe.run_filter(
+                **get_payment_data,
+            )
+
+        self.assertEqual(
+            str(ex.exception),
+            'Requested payment not found. Please make sure you are passing active payment number.'
+        )
+        # ensure our input data arrives as expected
+        mock_get_payment.assert_called_once_with(**get_payment_data)
+
+
+@ddt.ddt
+class TestValidatePaymentReadyForProcessingStep(TestCase):
+    """ A pytest Test Case for then `ValidatePaymentReadyForProcessing(PipelineStep)` """
+
+    def setUp(self) -> None:
+        self.validate_payment_pipe = ValidatePaymentReadyForProcessing("test_pipe", None)
+
     @ddt.data(
         (
             PaymentState.PENDING.value,
@@ -173,16 +207,16 @@ class TestGetTitanPaymentPipelineStep(TestCase):
         """
         Ensure data validation if we try to send wrong Order ID that does not belong to that payment.
         """
-        mock_get_payment.return_value = {**TitanPaymentClientMock.return_value, 'state': payment_state}
+        payment = {**TitanPaymentClientMock.return_value, 'state': payment_state}
+        mock_get_payment.return_value = payment
         query_params = {
-            'edx_lms_user_id': 1,
+            'payment_data': payment,
             'payment_number': 'test-number',
-            'validate_payment_processing_state': 'True',
         }
 
         if expected_error:
             with self.assertRaises(expected_error) as ex:
-                self.payment_pipe.run_filter(
+                self.validate_payment_pipe.run_filter(
                     **query_params,
                 )
 
@@ -191,35 +225,10 @@ class TestGetTitanPaymentPipelineStep(TestCase):
                 expected_mesg
             )
         else:
-            result = self.payment_pipe.run_filter(
+            result = self.validate_payment_pipe.run_filter(
                 **query_params,
             )
             self.assertIn('payment_data', result)
-
-    @patch('commerce_coordinator.apps.titan.clients.TitanAPIClient.get_payment', side_effect=HTTPError)
-    def test_pipeline_step_raises_exception(self, mock_get_payment):
-        """
-        A test to red/green whether our pipeline step accepts data, invokes right, and sends things off as coded
-
-        Args:
-            mock_get_payment(MagicMock): stand in for Titan API Client `get_payment`
-        """
-        payment_pipe = GetTitanPayment("test_pipe", None)
-        get_payment_data = {
-            'edx_lms_user_id': 1,
-        }
-
-        with self.assertRaises(PaymentNotFound) as ex:
-            payment_pipe.run_filter(
-                **get_payment_data,
-            )
-
-        self.assertEqual(
-            str(ex.exception),
-            'Requested payment not found. Please make sure you are passing active payment number.'
-        )
-        # ensure our input data arrives as expected
-        mock_get_payment.assert_called_once_with(**get_payment_data)
 
 
 class TestGetTitanActiveOrderPipelineStep(TestCase):

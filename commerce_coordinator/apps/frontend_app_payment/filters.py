@@ -118,7 +118,5 @@ class PaymentProcessingRequested(OpenEdxPublicFilter):
         Arguments:
             kwargs: arguments passed through from the payment process.
         """
-        pipeline_output = super().run_pipeline(
-            validate_payment_processing_state=True, **kwargs,
-        )
+        pipeline_output = super().run_pipeline(**kwargs)
         return pipeline_output

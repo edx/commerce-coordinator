@@ -54,6 +54,7 @@ class TestPaymentProcessingRequestedFilter(TestCase):
                 "fail_silently": False,
                 "pipeline": [
                     'commerce_coordinator.apps.titan.pipeline.GetTitanPayment',
+                    'commerce_coordinator.apps.titan.pipeline.ValidatePaymentReadyForProcessing',
                 ]
             },
         },
@@ -80,5 +81,5 @@ class TestPaymentProcessingRequestedFilter(TestCase):
             'skus': ['test-sku'],
         }
         payment_details = PaymentProcessingRequested.run_filter(**filter_params)
-        expected_payment = {**mock_payment, **filter_params, 'validate_payment_processing_state': True}
+        expected_payment = {**mock_payment, **filter_params}
         self.assertEqual(expected_payment, payment_details)

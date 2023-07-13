@@ -398,6 +398,7 @@ OPEN_EDX_FILTERS_CONFIG = {
         "fail_silently": False,  # TODO: Coordinator filters should NEVER be allowed to fail silently
         "pipeline": [  # TODO: Add remaining pipeline steps from THES-202, THES-204
             'commerce_coordinator.apps.titan.pipeline.GetTitanPayment',
+            'commerce_coordinator.apps.titan.pipeline.ValidatePaymentReadyForProcessing'
             'commerce_coordinator.apps.titan.pipeline.UpdateBillingAddress',
         ]
     }
