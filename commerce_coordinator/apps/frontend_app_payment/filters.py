@@ -47,10 +47,7 @@ class PaymentRequested(OpenEdxPublicFilter):
             return cached_response.value
 
         # PROCESSING cache not found as well. We have to call Titan to fetch Payment information
-        payment = super().run_pipeline(
-            edx_lms_user_id=params['edx_lms_user_id'],
-            payment_number=params['payment_number']
-        )
+        payment = super().run_pipeline(**params)['payment_data']
         # Set cache for future use
         payment_state = payment["state"]
         if payment_state == PaymentState.COMPLETED.value:
@@ -121,7 +118,5 @@ class PaymentProcessingRequested(OpenEdxPublicFilter):
         Arguments:
             kwargs: arguments passed through from the payment process.
         """
-        pipeline_output = super().run_pipeline(
-            **kwargs,
-        )
+        pipeline_output = super().run_pipeline(**kwargs)
         return pipeline_output

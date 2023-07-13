@@ -3,6 +3,7 @@
 from unittest import TestCase
 from unittest.mock import patch
 
+import ddt
 from requests import HTTPError
 from rest_framework.exceptions import APIException
 
@@ -11,11 +12,19 @@ from commerce_coordinator.apps.titan.pipeline import (
     CreateTitanOrder,
     GetTitanActiveOrder,
     GetTitanPayment,
-    UpdateBillingAddress
+    UpdateBillingAddress,
+    ValidatePaymentReadyForProcessing
 )
 
-from ...core.constants import PaymentMethod
-from ..exceptions import NoActiveOrder, PaymentNotFound
+from ...core.constants import PaymentMethod, PaymentState
+from ..exceptions import (
+    AlreadyPaid,
+    InvalidOrderPayment,
+    NoActiveOrder,
+    PaymentMismatch,
+    PaymentNotFound,
+    ProcessingAlreadyRequested
+)
 from .test_clients import (
     ORDER_CREATE_DATA_WITH_CURRENCY,
     ORDER_UUID,
@@ -64,8 +73,12 @@ class TestCreateTitanOrderPipelineStep(TestCase):
         self.assertEqual(TitanClientMock.return_value, input_web_response_order_data)
 
 
+@ddt.ddt
 class TestGetTitanPaymentPipelineStep(TestCase):
     """ A pytest Test Case for then `GetTitanPayment(PipelineStep)` """
+
+    def setUp(self) -> None:
+        self.payment_pipe = GetTitanPayment("test_pipe", None)
 
     @patch('commerce_coordinator.apps.titan.clients.TitanAPIClient.get_payment', new_callable=TitanPaymentClientMock)
     def test_pipeline_step(self, mock_get_payment):
@@ -75,15 +88,13 @@ class TestGetTitanPaymentPipelineStep(TestCase):
         Args:
             mock_get_payment(MagicMock): stand in for Titan API Client `get_payment`
         """
-        payment_pipe = GetTitanPayment("test_pipe", None)
         get_payment_data = {
             'edx_lms_user_id': 1,
-            'payment_number': '1234',
         }
 
-        result: dict = payment_pipe.run_filter(
+        result: dict = self.payment_pipe.run_filter(
             **get_payment_data,
-        )
+        )['payment_data']
 
         # ensure our input data arrives as expected
         mock_get_payment.assert_called_once_with(**get_payment_data)
@@ -91,6 +102,50 @@ class TestGetTitanPaymentPipelineStep(TestCase):
         self.assertIn('order_uuid', result)
         self.assertIn('key_id', result)
         self.assertIn('state', result)
+
+    @patch('commerce_coordinator.apps.titan.clients.TitanAPIClient.get_payment',  new_callable=TitanPaymentClientMock)
+    def test_get_payment_order_mismatch(self, __):
+        """
+        Ensure data validation if we try to send wrong Order ID that does not belong to that payment.
+        """
+        query_params = {
+            # this order id is different form what we will get from titan
+            'edx_lms_user_id': 1,
+            'order_uuid': '321e7654-e89b-12d3-a456-426614174111',
+        }
+
+        with self.assertRaises(InvalidOrderPayment) as ex:
+            self.payment_pipe.run_filter(
+                **query_params,
+            )
+
+        self.assertEqual(
+            str(ex.exception),
+            'Requested order_uuid "321e7654-e89b-12d3-a456-426614174111" does not match '
+            'with order_uuid "123e4567-e89b-12d3-a456-426614174000" in Spree system.'
+        )
+
+    @patch('commerce_coordinator.apps.titan.clients.TitanAPIClient.get_payment',  new_callable=TitanPaymentClientMock)
+    def test_get_payment_mismatch(self, __):
+        """
+        Ensure data validation if we try to send wrong Order ID that does not belong to that payment.
+        """
+        query_params = {
+            # this payment_number is different form what we will get from titan
+            'edx_lms_user_id': 1,
+            'payment_number': 'an-other-payment-number',
+        }
+
+        with self.assertRaises(PaymentMismatch) as ex:
+            self.payment_pipe.run_filter(
+                **query_params,
+            )
+
+        self.assertEqual(
+            str(ex.exception),
+            'Requested payment number "an-other-payment-number" does not match '
+            'with payment number "test-number" in Spree system.'
+        )
 
     @patch('commerce_coordinator.apps.titan.clients.TitanAPIClient.get_payment', side_effect=HTTPError)
     def test_pipeline_step_raises_exception(self, mock_get_payment):
@@ -103,7 +158,6 @@ class TestGetTitanPaymentPipelineStep(TestCase):
         payment_pipe = GetTitanPayment("test_pipe", None)
         get_payment_data = {
             'edx_lms_user_id': 1,
-            'payment_number': '1234',
         }
 
         with self.assertRaises(PaymentNotFound) as ex:
@@ -117,6 +171,64 @@ class TestGetTitanPaymentPipelineStep(TestCase):
         )
         # ensure our input data arrives as expected
         mock_get_payment.assert_called_once_with(**get_payment_data)
+
+
+@ddt.ddt
+class TestValidatePaymentReadyForProcessingStep(TestCase):
+    """ A pytest Test Case for then `ValidatePaymentReadyForProcessing(PipelineStep)` """
+
+    def setUp(self) -> None:
+        self.validate_payment_pipe = ValidatePaymentReadyForProcessing("test_pipe", None)
+
+    @ddt.data(
+        (
+            PaymentState.PENDING.value,
+            ProcessingAlreadyRequested,
+            'Requested payment "test-number" for processing is already processing.'
+        ),
+        (
+            PaymentState.COMPLETED.value,
+            AlreadyPaid,
+            'Requested payment "test-number" for processing is already paid.'
+        ),
+        (
+            PaymentState.CHECKOUT.value, None, None
+        ),
+        (
+            PaymentState.FAILED.value, None, None
+        ),
+        (
+            PaymentState.PROCESSING.value, None, None
+        ),
+    )
+    @ddt.unpack
+    @patch('commerce_coordinator.apps.titan.clients.TitanAPIClient.get_payment')
+    def test_get_payment_validate_processing(self, payment_state, expected_error, expected_mesg, mock_get_payment):
+        """
+        Ensure data validation if we try to send wrong Order ID that does not belong to that payment.
+        """
+        payment = {**TitanPaymentClientMock.return_value, 'state': payment_state}
+        mock_get_payment.return_value = payment
+        query_params = {
+            'payment_data': payment,
+            'payment_number': 'test-number',
+        }
+
+        if expected_error:
+            with self.assertRaises(expected_error) as ex:
+                self.validate_payment_pipe.run_filter(
+                    **query_params,
+                )
+
+            self.assertEqual(
+                str(ex.exception),
+                expected_mesg
+            )
+        else:
+            result = self.validate_payment_pipe.run_filter(
+                **query_params,
+            )
+            self.assertIn('payment_data', result)
 
 
 class TestGetTitanActiveOrderPipelineStep(TestCase):

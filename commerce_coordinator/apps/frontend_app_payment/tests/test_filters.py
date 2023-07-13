@@ -54,6 +54,7 @@ class TestPaymentProcessingRequestedFilter(TestCase):
                 "fail_silently": False,
                 "pipeline": [
                     'commerce_coordinator.apps.titan.pipeline.GetTitanPayment',
+                    'commerce_coordinator.apps.titan.pipeline.ValidatePaymentReadyForProcessing',
                 ]
             },
         },
@@ -65,10 +66,12 @@ class TestPaymentProcessingRequestedFilter(TestCase):
         """
 
         mock_payment = {
-            'payment_number': 'test-payment-number',
-            'order_uuid': ORDER_UUID,
-            'key_id': 'test-intent-id',
-            'state': PaymentState.PROCESSING.value
+            'payment_data': {
+                'payment_number': 'test-payment-number',
+                'order_uuid': ORDER_UUID,
+                'key_id': 'test-intent-id',
+                'state': PaymentState.PROCESSING.value
+            }
         }
         mock_pipeline.return_value = mock_payment
         filter_params = {

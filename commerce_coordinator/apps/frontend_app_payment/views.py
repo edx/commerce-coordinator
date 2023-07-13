@@ -9,8 +9,6 @@ from rest_framework.response import Response
 from rest_framework.throttling import ScopedRateThrottle
 from rest_framework.views import APIView
 
-from commerce_coordinator.apps.frontend_app_payment.exceptions import InvalidOrderPayment
-
 from .filters import ActiveOrderRequested, DraftPaymentRequested, PaymentProcessingRequested, PaymentRequested
 from .serializers import (
     DraftPaymentCreateViewInputSerializer,
@@ -41,8 +39,6 @@ class PaymentGetView(APIView):
         input_serializer.is_valid(raise_exception=True)
         params = input_serializer.data
         payment_details = PaymentRequested.run_filter(params)
-        if payment_details['order_uuid'] != params['order_uuid']:
-            raise InvalidOrderPayment
         output_serializer = GetPaymentOutputSerializer(data=payment_details)
         output_serializer.is_valid(raise_exception=True)
         return Response(output_serializer.data)
