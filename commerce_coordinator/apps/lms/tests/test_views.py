@@ -120,7 +120,7 @@ class OrderCreateViewTests(APITestCase):
         self.assertIn(TestOrderCreateRequestedFilterPipelineThatExplodes.get_fqtn(), configs)
 
         query_params = {
-            'coupon_code': 'test_code', 'product_sku': ['sku1'],
+            'coupon_code': 'test_code', 'sku': ['sku1'],
         }
 
         user_email = 'pass-by-param@example.com'
@@ -158,14 +158,14 @@ class OrderCreateViewTests(APITestCase):
                     'first_name': 'John', 'last_name': 'Doe'
                 },
                 {
-                    'coupon_code': 'test_code', 'product_sku': ['sku1'],
+                    'coupon_code': 'test_code', 'sku': ['sku1'],
                 },
                 status.HTTP_303_SEE_OTHER,
                 {
                     'order_data': None,
                     'params': {
                         'edx_lms_user_id': 1, 'email': 'pass-by-param@example.com',
-                        'first_name': 'John', 'last_name': 'Doe', 'product_sku': ['sku1'], 'coupon_code': 'test_code',
+                        'first_name': 'John', 'last_name': 'Doe', 'sku': ['sku1'], 'coupon_code': 'test_code',
                     }
                 }
             )
@@ -177,31 +177,31 @@ class OrderCreateViewTests(APITestCase):
                     'lms_user_id': 1, 'email': 'pass-by-param@example.com',
                     'first_name': 'John', 'last_name': 'Doe',
                 },
-                {'product_sku': ['sku1']},
+                {'sku': ['sku1']},
                 status.HTTP_303_SEE_OTHER,
                 {
                     'order_data': None,
                     'params': {
                         'edx_lms_user_id': 1, 'email': 'pass-by-param@example.com',
-                        'first_name': 'John', 'last_name': 'Doe', 'product_sku': ['sku1'], 'coupon_code': None
+                        'first_name': 'John', 'last_name': 'Doe', 'sku': ['sku1'], 'coupon_code': None
                     }
                 }
             )
         ),
         name_test(
-            "test failure, product_sku must have 1 value",
+            "test failure, sku must have 1 value",
             (
                 {
                     'lms_user_id': 1, 'email': 'pass-by-param@example.com',
                     'first_name': 'John', 'last_name': 'Doe'
                 },
-                {'coupon_code': 'test_code', 'product_sku': []},
+                {'coupon_code': 'test_code', 'sku': []},
                 status.HTTP_400_BAD_REQUEST,
-                {'error_key': 'product_sku', 'error_message': 'This list may not be empty.'}
+                {'error_key': 'sku', 'error_message': 'This list may not be empty.'}
             )
         ),
         name_test(
-            "test failure, product_sku must not be null",
+            "test failure, sku must not be null",
             (
                 {
                     'lms_user_id': 1, 'email': 'pass-by-param@example.com',
@@ -209,19 +209,19 @@ class OrderCreateViewTests(APITestCase):
                 },
                 {'coupon_code': 'test_code'},
                 status.HTTP_400_BAD_REQUEST,
-                {'error_key': 'product_sku', 'error_message': 'This list may not be empty.'}
+                {'error_key': 'sku', 'error_message': 'This list may not be empty.'}
             )
         ),
         name_test(
-            "test failure, product_sku must not be string",
+            "test failure, sku must not be string",
             (
                 {
                     'lms_user_id': 1, 'email': 'pass-by-param@example.com',
                     'first_name': 'John', 'last_name': 'Doe'
                 },
-                {'coupon_code': 'test_code', 'product_sku': ''},
+                {'coupon_code': 'test_code', 'sku': ''},
                 status.HTTP_400_BAD_REQUEST,
-                {'error_key': 'product_sku', 'error_message': 'This field may not be blank.'}
+                {'error_key': 'sku', 'error_message': 'This field may not be blank.'}
             )
         ),
         name_test(
@@ -231,7 +231,7 @@ class OrderCreateViewTests(APITestCase):
                     'email': 'pass-by-param@example.com',
                     'first_name': 'John', 'last_name': 'Doe'
                 },
-                {'coupon_code': 'test_code', 'product_sku': ['sku1']},
+                {'coupon_code': 'test_code', 'sku': ['sku1']},
                 status.HTTP_400_BAD_REQUEST,
                 {'error_key': 'edx_lms_user_id', 'error_message': 'This field may not be null.'}
             )
@@ -244,7 +244,7 @@ class OrderCreateViewTests(APITestCase):
                     'first_name': 'John', 'last_name': 'Doe'
                 },
                 {
-                    'coupon_code': 'test_code', 'product_sku': ['sku1'],
+                    'coupon_code': 'test_code', 'sku': ['sku1'],
                 },
                 status.HTTP_400_BAD_REQUEST,
                 {'error_key': 'email', 'error_message': 'This field may not be blank.'}
@@ -258,7 +258,7 @@ class OrderCreateViewTests(APITestCase):
                     'first_name': 'John', 'last_name': 'Doe'
                 },
                 {
-                    'coupon_code': 'test_code', 'product_sku': ['sku1'],
+                    'coupon_code': 'test_code', 'sku': ['sku1'],
                 },
                 status.HTTP_400_BAD_REQUEST,
                 {'error_key': 'email', 'error_message': 'Enter a valid email address.'}
