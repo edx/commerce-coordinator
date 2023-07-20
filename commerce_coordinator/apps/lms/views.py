@@ -31,7 +31,7 @@ class OrderCreateView(APIView):
             request (django.http.HttpRequest): django.http.HttpRequest
 
         Query Parameters:
-            product_sku: Array. An edx.org stock keeping units (SKUs) that the user would like to purchase.
+            sku: Array. An edx.org stock keeping units (SKUs) that the user would like to purchase.
             coupon_code: (Optional) A coupon code to initially apply to the order.
 
         Returns:
@@ -49,7 +49,7 @@ class OrderCreateView(APIView):
         logger.debug(f'{self.get.__qualname__} headers: {request.headers}.')
 
         order_created_signal_params = {
-            'product_sku': request.query_params.getlist('product_sku'),
+            'sku': request.query_params.getlist('sku'),
             'edx_lms_user_id': request.user.lms_user_id,
             'email': request.user.email,
             'first_name': request.user.first_name,

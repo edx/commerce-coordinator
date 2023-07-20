@@ -31,7 +31,7 @@ class TestOrderTasks(TestCase):
         ).get()
 
         mock_create_order.assert_called_with(
-            ORDER_CREATE_DATA['product_sku'],
+            ORDER_CREATE_DATA['sku'],
             ORDER_CREATE_DATA['edx_lms_user_id'],
             ORDER_CREATE_DATA['email'],
             ORDER_CREATE_DATA['first_name'],

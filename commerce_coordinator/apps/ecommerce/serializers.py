@@ -6,7 +6,7 @@ class OrderCreatedSignalInputSerializer(serializers.Serializer):  # pylint: disa
     """
     Serializer for order_created_signal input validation.
     """
-    product_sku = serializers.ListField(
+    sku = serializers.ListField(
         child=serializers.CharField(), allow_empty=False
     )
     edx_lms_user_id = serializers.IntegerField(allow_null=False)

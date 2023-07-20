@@ -37,7 +37,7 @@ def order_created_save(**kwargs):
     Create an order.
     """
     async_result = order_created_save_task.delay(
-        kwargs['product_sku'],
+        kwargs['sku'],
         kwargs['edx_lms_user_id'],
         kwargs['email'],
         kwargs['first_name'],
