@@ -15,7 +15,7 @@ ORDER_UUID = '123e4567-e89b-12d3-a456-426614174000'
 DEFAULT_CURRENCY = 'USD'
 
 ORDER_CREATE_DATA = {
-    'product_sku': ['sku1', 'sku_2'],
+    'sku': ['sku1', 'sku_2'],
     'edx_lms_user_id': 1,
     'email': 'edx@example.com',
     'first_name': 'John',
@@ -146,7 +146,7 @@ class TestTitanAPIClient(CoordinatorClientTestCase):
     @patch('commerce_coordinator.apps.titan.clients.TitanAPIClient.complete_order', new_callable=TitanClientMock)
     def test_create_order_success(self, mock_complete_order, mock_add_item, mock_create_cart):
         self.client.create_order(
-            ORDER_CREATE_DATA['product_sku'],
+            ORDER_CREATE_DATA['sku'],
             ORDER_CREATE_DATA['edx_lms_user_id'],
             ORDER_CREATE_DATA['email'],
             ORDER_CREATE_DATA['first_name'],
@@ -162,7 +162,7 @@ class TestTitanAPIClient(CoordinatorClientTestCase):
             DEFAULT_CURRENCY
         )
         mock_add_item.assert_called_with(
-            ORDER_UUID, ORDER_CREATE_DATA['product_sku'][-1]
+            ORDER_UUID, ORDER_CREATE_DATA['sku'][-1]
         )
         mock_complete_order.assert_called_with(
             ORDER_UUID, ORDER_CREATE_DATA['edx_lms_user_id']
