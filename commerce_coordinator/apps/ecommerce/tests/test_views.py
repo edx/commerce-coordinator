@@ -67,9 +67,9 @@ class OrderCreateViewTests(APITestCase):
             {}, 'coupon_code', status.HTTP_200_OK,
             {}
         )),
-        name_test("test product_sku in required", (
-            {}, 'product_sku', status.HTTP_400_BAD_REQUEST,
-            {'error_key': 'product_sku', 'error_message': 'This list may not be empty.'}
+        name_test("test sku in required", (
+            {}, 'sku', status.HTTP_400_BAD_REQUEST,
+            {'error_key': 'sku', 'error_message': 'This list may not be empty.'}
         )),
         name_test("test edx_lms_user_id in required.", (
             {}, 'edx_lms_user_id', status.HTTP_400_BAD_REQUEST,
@@ -109,7 +109,7 @@ class OrderCreateViewTests(APITestCase):
         self.client.force_authenticate(user=self.user)
         query_params = {
             'edx_lms_user_id': 1,
-            'product_sku': ['sku1'],
+            'sku': ['sku1'],
             'coupon_code': 'test_code',
             'email': 'pass-by-param@example.com',
         }
@@ -126,7 +126,7 @@ class OrderCreateViewTests(APITestCase):
             self.assertFalse(response_json['order_created_save']['error'])
             self.assertTrue(mock_create_order_task.called)
             args = mock_create_order_task.call_args.args
-            self.assertEqual(args[0], query_params['product_sku'])
+            self.assertEqual(args[0], query_params['sku'])
             self.assertEqual(args[1], query_params['edx_lms_user_id'])
             self.assertEqual(args[2], query_params['email'])
             self.assertEqual(args[3], 'John')

@@ -79,7 +79,7 @@ class OrderCreateView(APIView):
         Create orders for an authenticated user.
 
         Args:
-            product_sku: Array. An edx.org stock keeping units (SKUs) that the user would like to purchase.
+            sku: Array. An edx.org stock keeping units (SKUs) that the user would like to purchase.
             coupon_code: (Optional) A coupon code to initially apply to the order.
             edx_lms_user_id: (Temporary) Initially we will be calling this API from a server. this param is to bypass
                 the edx_lms_user_id from the calling server. later on, we will remove this param and extract
@@ -95,7 +95,7 @@ class OrderCreateView(APIView):
 
         """
         order_created_signal_params = {
-            'product_sku': request.query_params.getlist('product_sku'),
+            'sku': request.query_params.getlist('sku'),
             # TODO: edx_lms_user_id should be taken from request.user.lms_user_id once we go live.
             'edx_lms_user_id': request.query_params.get('edx_lms_user_id'),
             # TODO: email should be taken from request.user.email once we go live.
