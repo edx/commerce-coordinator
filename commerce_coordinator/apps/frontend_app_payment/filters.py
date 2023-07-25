@@ -126,6 +126,9 @@ class PaymentProcessingRequested(OpenEdxPublicFilter):
             payment_state_processing_cache_key = get_payment_state_cache_key(
                 payment_data['payment_number'],
                 CachePaymentStates.PROCESSING.value
-                )
+            )
             TieredCache.set_all_tiers(payment_state_processing_cache_key, payment_data, settings.DEFAULT_TIMEOUT)
+        else:
+            logger.info('frontend_app_payment.PaymentProcessingRequested pipeline did not return any payment_data. '
+                        'Unable to cache Payment data in Processing state')
         return pipeline_output

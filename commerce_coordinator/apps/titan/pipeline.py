@@ -240,6 +240,10 @@ class UpdateTitanPayment(PipelineStep):
                 response_code=response_code)
 
         except HTTPError as exc:
+            logger.exception(
+                "[UpdateTitanPayment] Failed to update the payment information in Titan for the specified payment: %s",
+                payment_number
+            )
             raise APIException("Error updating the payment details in titan") from exc
 
         update_payment_output = PaymentSerializer(data=response)
