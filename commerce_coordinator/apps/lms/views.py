@@ -52,8 +52,8 @@ class OrderCreateView(APIView):
             'sku': request.query_params.getlist('sku'),
             'edx_lms_user_id': request.user.lms_user_id,
             'email': request.user.email,
-            'first_name': request.user.first_name,
-            'last_name': request.user.last_name,
+            'first_name': request.user.first_name if len(str(request.user.first_name).strip()) > 1 else None,
+            'last_name': request.user.last_name if len(str(request.user.last_name).strip()) > 1 else None,
             'coupon_code': request.query_params.get('coupon_code'),
         }
         serializer = OrderCreatedSignalInputSerializer(data=order_created_signal_params)
