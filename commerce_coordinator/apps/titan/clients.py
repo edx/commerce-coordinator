@@ -244,6 +244,7 @@ class TitanAPIClient(Client):
         response_code,
         payment_method_name,
         provider_response_body,
+        edx_lms_user_id,
         reference=None,
         amount=None,
         payment_date=None,
@@ -269,6 +270,7 @@ class TitanAPIClient(Client):
             'responseCode': response_code,
             'paymentMethodName': payment_method_name,
             'providerResponseBody': provider_response_body,
+            'edxLmsUserId': edx_lms_user_id,
         }
         if reference is not None:
             payload_attributes['reference'] = reference

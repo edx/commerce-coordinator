@@ -52,6 +52,7 @@ class CreateOrGetStripeDraftPayment(PipelineStep):
             response_code=payment_intent['id'],
             payment_method_name=PaymentMethod.STRIPE.value,
             provider_response_body=payment_intent,
+            edx_lms_user_id=kwargs['edx_lms_user_id']
         )
         return {
             'payment_data': payment,

@@ -133,6 +133,7 @@ class CreateDraftPayment(PipelineStep):
         response_code,
         payment_method_name,
         provider_response_body,
+        edx_lms_user_id,
     ):  # pylint: disable=arguments-differ
         """
         Execute a filter with the signature specified.
@@ -152,7 +153,7 @@ class CreateDraftPayment(PipelineStep):
                 response_code=response_code,
                 payment_method_name=payment_method_name,
                 provider_response_body=provider_response_body,
-
+                edx_lms_user_id=edx_lms_user_id
             )
         except HTTPError as exc:
             logger.exception('[CreateTitanPayment] Failed to create payment for order_uuid: %s', order_uuid)

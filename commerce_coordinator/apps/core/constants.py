@@ -20,4 +20,4 @@ class PaymentState(Enum):
 
 
 class PaymentMethod(Enum):
-    STRIPE = 'Stripe No Capture'
+    STRIPE = 'edX Stripe'

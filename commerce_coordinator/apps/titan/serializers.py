@@ -26,7 +26,7 @@ class PaymentSerializer(serializers.Serializer):  # pylint: disable=abstract-met
     """
     number = serializers.CharField(allow_null=False)
     orderUuid = serializers.UUIDField(allow_null=False)
-    responseCode = serializers.CharField(allow_null=False)
+    referenceNumber = serializers.CharField(allow_null=False)
     state = serializers.CharField(allow_null=False)
 
     def to_representation(self, instance):
@@ -34,7 +34,7 @@ class PaymentSerializer(serializers.Serializer):  # pylint: disable=abstract-met
         ret = OrderedDict()
         ret['payment_number'] = representation['number']
         ret['order_uuid'] = representation['orderUuid']
-        ret['key_id'] = representation['responseCode']
+        ret['key_id'] = representation['referenceNumber']
         ret['state'] = representation['state']
         return ret
 
@@ -119,8 +119,8 @@ class OrderPaymentsSerializer(serializers.Serializer):  # pylint:disable=abstrac
     orderUuid = serializers.CharField()
     paymentDate = serializers.DateTimeField(allow_null=True)
     paymentMethodName = serializers.CharField()
-    reference = serializers.CharField()
-    responseCode = serializers.CharField(allow_null=True)
+    #reference = serializers.CharField()
+    referenceNumber = serializers.CharField(allow_null=True)
     state = serializers.CharField()
     createdAt = serializers.DateTimeField()
     updatedAt = serializers.DateTimeField()
@@ -133,8 +133,8 @@ class OrderPaymentsSerializer(serializers.Serializer):  # pylint:disable=abstrac
         ret['order_uuid'] = representation['orderUuid']
         ret['payment_date'] = representation['paymentDate']
         ret['payment_method_name'] = representation['paymentMethodName']
-        ret['reference'] = representation['reference']
-        ret['key_id'] = representation['responseCode']
+        #ret['reference'] = representation['reference']
+        ret['key_id'] = representation['referenceNumber']
         ret['state'] = representation['state']
         ret['created_at'] = representation['createdAt']
         ret['updated_at'] = representation['updatedAt']
@@ -160,7 +160,7 @@ class TitanActiveOrderSerializer(serializers.Serializer):  # pylint:disable=abst
     paymentState = serializers.CharField(allow_null=True)
     paymentTotal = serializers.CharField()
     user = UserSerializer()
-    billingAddress = BillingAddressSerializer()
+    billingAddress = BillingAddressSerializer(allow_null=True)
     lineItems = ProductsSerializer(many=True)
     payments = OrderPaymentsSerializer(many=True, allow_null=True)
 
