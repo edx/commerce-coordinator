@@ -28,13 +28,19 @@ class DraftPaymentCreateViewInputSerializer(serializers.Serializer):  # pylint: 
 
 
 class DraftPaymentCreateViewOutputSerializer(serializers.Serializer):  # pylint: disable=abstract-method
-    """
-    Serializer for DraftPaymentCreateView input validation.
-    """
-    payment_number = serializers.CharField(allow_null=False)
-    order_uuid = serializers.UUIDField(allow_null=False)
-    key_id = serializers.CharField(allow_null=False)
-    state = serializers.CharField(allow_null=False)
+    class CaptureContextInnerSerializer(serializers.Serializer): # pylint: disable=abstract-method
+        """
+        Serializer for DraftPaymentCreateView input validation.
+        """
+        order_id = serializers.UUIDField(allow_null=False)
+        key_id = serializers.CharField(allow_null=False)
+
+        # Currently these are returned but unused by f-a-Payment. (THES-235)
+
+        payment_number = serializers.CharField(allow_null=False)
+        state = serializers.CharField(allow_null=False)
+
+    capture_context = serializers.DictField(allow_null=False, allow_empty=False, child=CaptureContextInnerSerializer())
 
 
 class GetActiveOrderInputSerializer(serializers.Serializer):  # pylint: disable=abstract-method

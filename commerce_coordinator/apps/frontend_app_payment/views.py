@@ -49,7 +49,7 @@ class DraftPaymentCreateView(APIView):
     authentication_classes = (JwtAuthentication,)
     permission_classes = (IsAuthenticated,)
 
-    def put(self, request):
+    def get(self, request):
         """Gets initial information required to collect payment details on a basket."""
         params = {
             'edx_lms_user_id': request.user.lms_user_id,
@@ -58,7 +58,7 @@ class DraftPaymentCreateView(APIView):
         input_serializer.is_valid(raise_exception=True)
         params = input_serializer.data
         payment_details = DraftPaymentRequested.run_filter(**params)
-        return Response(payment_details)
+        return Response({'capture_context': payment_details})
 
 
 class GetActiveOrderView(APIView):
