@@ -7,12 +7,36 @@ from django.utils.translation import gettext_lazy as _
 from rest_framework.serializers import *  # pylint: disable=wildcard-import; this module extends DRF serializers
 
 
+class CoordinatorValidationException(Exception):
+    """
+    An exception to convert verious other caught exceptions to something useful. Currently DRF suppresses
+    ValidationErrors. This permits them to be thrown with all their original information intact.
+    """
+
+    innerException: Exception = None
+
+    def __init__(self, inner: Exception) -> None:
+        """
+        Initialize a new CoordinatorValidationException without loosing data from the original Exception
+
+        Args:
+            inner: Exception, and Exception we intend to wrap to ensure delivery.
+        """
+        super().__init__(*inner.args)
+        self.innerException = inner
+
+
 class CoordinatorSerializer(Serializer):
     """
-    Suppress lint messages about lack of create() or update().
+    A custom Coordinator Serializer that eases some basic issues with our hijacking of this mechanism.
+
+    - Suppress lint messages about lack of create() or update().
+    - Catch ValidationErrors and pass back CoordinatorValidationException
     """
+
     # create() and update() are optional. See:
     # https://www.django-rest-framework.org/api-guide/serializers/#saving-instances
+    
     type_error = TypeError(
         'CoordinatorSerializer is for model-less validation only.'
     )
@@ -22,6 +46,12 @@ class CoordinatorSerializer(Serializer):
 
     def update(self, instance, validated_data):
         raise self.type_error
+
+    def is_valid(self, *, raise_exception=False):
+        try:
+            return super().is_valid(raise_exception=raise_exception)
+        except ValidationError as inner:
+            raise CoordinatorValidationException(inner)
 
 
 class UnixDateTimeField(DateTimeField):
@@ -63,7 +93,6 @@ class UnixDateTimeField(DateTimeField):
 
         # Continue parsing as DateTimeField.
         return super().to_internal_value(datetime_value)
-
 
 # The code in UnixDateTimeField was adapted from encode/django-rest-framework,
 # which requires the redistribution of the following BSD 3-Clause License:
