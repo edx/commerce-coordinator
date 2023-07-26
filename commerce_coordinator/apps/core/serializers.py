@@ -9,7 +9,7 @@ from rest_framework.serializers import *  # pylint: disable=wildcard-import; thi
 
 class CoordinatorValidationException(Exception):
     """
-    An exception to convert verious other caught exceptions to something useful. Currently DRF suppresses
+    An exception to convert various other caught exceptions to something useful. Currently, DRF suppresses
     ValidationErrors. This permits them to be thrown with all their original information intact.
     """
 
@@ -36,7 +36,7 @@ class CoordinatorSerializer(Serializer):
 
     # create() and update() are optional. See:
     # https://www.django-rest-framework.org/api-guide/serializers/#saving-instances
-    
+
     type_error = TypeError(
         'CoordinatorSerializer is for model-less validation only.'
     )

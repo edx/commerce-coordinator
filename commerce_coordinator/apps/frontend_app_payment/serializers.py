@@ -2,6 +2,7 @@
 from rest_framework.exceptions import ValidationError
 
 from commerce_coordinator.apps.core import serializers
+from commerce_coordinator.apps.core.serializers import CoordinatorSerializer
 
 
 class GetPaymentInputSerializer(serializers.Serializer):  # pylint: disable=abstract-method
@@ -27,10 +28,13 @@ class DraftPaymentCreateViewInputSerializer(serializers.Serializer):  # pylint: 
     edx_lms_user_id = serializers.IntegerField(allow_null=False)
 
 
-class DraftPaymentCreateViewOutputSerializer(serializers.Serializer):  # pylint: disable=abstract-method
-    class CaptureContextInnerSerializer(serializers.Serializer): # pylint: disable=abstract-method
+class DraftPaymentCreateViewOutputSerializer(CoordinatorSerializer):  # pylint: disable=abstract-method
+    """
+    Serializer for DraftPaymentCreateView input validation.
+    """
+    class CaptureContextInnerSerializer(CoordinatorSerializer):  # pylint: disable=abstract-method
         """
-        Serializer for DraftPaymentCreateView input validation.
+        Serializer for DraftPaymentCreateView's inner dictionary
         """
         order_id = serializers.UUIDField(allow_null=False)
         key_id = serializers.CharField(allow_null=False)
@@ -40,7 +44,7 @@ class DraftPaymentCreateViewOutputSerializer(serializers.Serializer):  # pylint:
         payment_number = serializers.CharField(allow_null=False)
         state = serializers.CharField(allow_null=False)
 
-    capture_context = serializers.DictField(allow_null=False, allow_empty=False, child=CaptureContextInnerSerializer())
+    capture_context = CaptureContextInnerSerializer()
 
 
 class GetActiveOrderInputSerializer(serializers.Serializer):  # pylint: disable=abstract-method

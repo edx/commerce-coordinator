@@ -58,7 +58,7 @@ class DraftPaymentCreateView(APIView):
         input_serializer.is_valid(raise_exception=True)
         params = input_serializer.data
         payment_details = DraftPaymentRequested.run_filter(**params)
-        return Response({'capture_context': payment_details})
+        return Response(payment_details)
 
 
 class GetActiveOrderView(APIView):
