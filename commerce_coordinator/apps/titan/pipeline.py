@@ -218,3 +218,34 @@ class UpdateBillingAddress(PipelineStep):
         update_billing_address_output = BillingAddressSerializer(data=response)
         update_billing_address_output.is_valid(raise_exception=True)
         return {'billing_address_data': update_billing_address_output.data}
+
+
+class UpdateTitanPayment(PipelineStep):
+    """
+    Updates a payment in Titan
+    """
+
+    def run_filter(
+            self,
+            payment_number,
+            payment_state,
+            response_code
+    ):  # pylint: disable=arguments-differ
+
+        api_client = TitanAPIClient()
+        try:
+            response = api_client.update_payment(
+                payment_number=payment_number,
+                payment_state=payment_state,
+                response_code=response_code)
+
+        except HTTPError as exc:
+            logger.exception(
+                "[UpdateTitanPayment] Failed to update the payment information in Titan for the specified payment: %s",
+                payment_number
+            )
+            raise APIException("Error updating the payment details in titan") from exc
+
+        update_payment_output = PaymentSerializer(data=response)
+        update_payment_output.is_valid(raise_exception=True)
+        return {'payment_data': update_payment_output.data}
