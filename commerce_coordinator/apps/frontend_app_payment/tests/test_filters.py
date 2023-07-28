@@ -4,7 +4,9 @@ from unittest import TestCase
 from unittest.mock import patch
 
 from django.test import override_settings
+from edx_django_utils.cache import TieredCache
 
+from commerce_coordinator.apps.core.cache import CachePaymentStates, get_payment_state_cache_key
 from commerce_coordinator.apps.core.constants import PaymentState
 from commerce_coordinator.apps.frontend_app_payment.filters import DraftPaymentRequested, PaymentProcessingRequested
 from commerce_coordinator.apps.titan.tests.test_clients import ORDER_UUID
@@ -83,3 +85,69 @@ class TestPaymentProcessingRequestedFilter(TestCase):
         payment_details = PaymentProcessingRequested.run_filter(**filter_params)
         expected_payment = {**mock_payment, **filter_params}
         self.assertEqual(expected_payment, payment_details)
+
+    @override_settings(
+        OPEN_EDX_FILTERS_CONFIG={
+            "org.edx.coordinator.frontend_app_payment.payment.processing.requested.v1": {
+                "fail_silently": False,
+                "pipeline": [
+                    'commerce_coordinator.apps.titan.pipeline.UpdateTitanPayment',
+                ]
+            },
+        },
+    )
+    @patch('commerce_coordinator.apps.titan.pipeline.UpdateTitanPayment.run_filter')
+    def test_filter_stores_result(self, mock_pipeline):
+        """
+        Test updating a payment in Titan and stores result in cache
+        """
+        TieredCache.dangerous_clear_all_tiers()
+        payment_number = '1234'
+        mock_payment = {
+            'payment_data': {
+                'payment_number': payment_number,
+                'order_uuid': ORDER_UUID,
+                'response_code': 'a_stripe_response_code',
+                'state': PaymentState.PROCESSING.value,
+            }
+        }
+        mock_pipeline.return_value = mock_payment
+        filter_params = {
+            'number': payment_number,
+            'responseCode': 'a_stripe_response_code',
+            'state': PaymentState.PROCESSING.value,
+        }
+        payment_details = PaymentProcessingRequested.run_filter(**filter_params)
+        expected_payment = {**mock_payment, **filter_params}
+        self.assertEqual(expected_payment, payment_details)
+        payment_state_processing_cache_key = get_payment_state_cache_key(
+            payment_number, CachePaymentStates.PROCESSING.value
+        )
+        cached_response = TieredCache.get_cached_response(payment_state_processing_cache_key)
+        self.assertTrue(cached_response.is_found)
+
+    @override_settings(
+        OPEN_EDX_FILTERS_CONFIG={
+            "org.edx.coordinator.frontend_app_payment.payment.processing.requested.v1": {
+                "fail_silently": False,
+                "pipeline": [
+                    'commerce_coordinator.apps.titan.pipeline.UpdateTitanPayment',
+                ]
+            },
+        },
+    )
+    @patch('commerce_coordinator.apps.titan.pipeline.UpdateTitanPayment.run_filter')
+    def test_pipeline_no_result(self, mock_pipeline):
+        """
+        Test pipeline does not return payment
+        """
+        TieredCache.dangerous_clear_all_tiers()
+        payment_number = '1234'
+        mock_pipeline.return_value = {}
+        filter_params = {
+            'number': payment_number,
+            'responseCode': 'a_stripe_response_code',
+            'state': PaymentState.PROCESSING.value,
+        }
+        payment_details = PaymentProcessingRequested.run_filter(**filter_params)
+        self.assertEqual(filter_params, payment_details)

@@ -118,5 +118,17 @@ class PaymentProcessingRequested(OpenEdxPublicFilter):
         Arguments:
             kwargs: arguments passed through from the payment process.
         """
-        pipeline_output = super().run_pipeline(**kwargs)
+        pipeline_output = super().run_pipeline(
+            **kwargs,
+        )
+        if 'payment_data' in pipeline_output:
+            payment_data = pipeline_output['payment_data']
+            payment_state_processing_cache_key = get_payment_state_cache_key(
+                payment_data['payment_number'],
+                CachePaymentStates.PROCESSING.value
+            )
+            TieredCache.set_all_tiers(payment_state_processing_cache_key, payment_data, settings.DEFAULT_TIMEOUT)
+        else:
+            logger.info('frontend_app_payment.PaymentProcessingRequested pipeline did not return any payment_data. '
+                        'Unable to cache Payment data in Processing state')
         return pipeline_output
