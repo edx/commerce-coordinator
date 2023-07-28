@@ -13,6 +13,7 @@ from commerce_coordinator.apps.titan.pipeline import (
     GetTitanActiveOrder,
     GetTitanPayment,
     UpdateBillingAddress,
+    UpdateTitanPayment,
     ValidatePaymentReadyForProcessing
 )
 
@@ -347,3 +348,46 @@ class TestUpdateBillingAddressStep(TestCase):
         )
         # ensure our input data arrives as expected
         mock_update_billing_address.assert_called()
+
+
+class TestUpdateTitanPaymentStep(TestCase):
+    """A pytest Test case for the UpdateTitanPayment Pipeline Step"""
+
+    def setUp(self) -> None:
+        self.update_payment_data = {
+            'payment_number': '1234',
+            'payment_state': PaymentState.PROCESSING.value,
+            'response_code': 'a_stripe_response_code',
+        }
+        self.update_payment_response = {
+            'number': '1234',
+            'orderUuid': ORDER_UUID,
+            'responseCode': 'a_stripe_response_code',
+            'state': PaymentState.PROCESSING.value,
+        }
+
+    @patch('commerce_coordinator.apps.titan.clients.TitanAPIClient.update_payment')
+    def test_pipeline_step(self, mock_update_payment):
+        update_payment_pipe = UpdateTitanPayment("test_pipe", None)
+        mock_update_payment.return_value = self.update_payment_response
+        result: dict = update_payment_pipe.run_filter(
+            **self.update_payment_data,
+        )
+        result_data = result['payment_data']
+        self.assertIn('order_uuid', result_data)
+        self.assertEqual(result_data['order_uuid'], ORDER_UUID)
+
+    @patch('commerce_coordinator.apps.titan.clients.TitanAPIClient.update_payment', side_effect=HTTPError)
+    def test_pipeline_step_with_exception(self, mock_update_payment):
+        update_payment_pipe = UpdateTitanPayment("test_pipe", None)
+        mock_update_payment.return_value = self.update_payment_response
+        with self.assertRaises(APIException) as exc:
+            update_payment_pipe.run_filter(
+                **self.update_payment_data,
+            )
+        self.assertEqual(
+            str(exc.exception),
+            "Error updating the payment details in titan"
+        )
+        # ensure our input data arrives as expected
+        mock_update_payment.assert_called()
