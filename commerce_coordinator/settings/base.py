@@ -400,6 +400,7 @@ OPEN_EDX_FILTERS_CONFIG = {
             'commerce_coordinator.apps.titan.pipeline.GetTitanPayment',
             'commerce_coordinator.apps.titan.pipeline.ValidatePaymentReadyForProcessing'
             'commerce_coordinator.apps.titan.pipeline.UpdateBillingAddress',
+            'commerce_coordinator.apps.titan.pipeline.UpdateTitanPayment',
         ]
     }
 }
