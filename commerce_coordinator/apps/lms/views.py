@@ -6,22 +6,24 @@ from urllib.parse import unquote, urlencode
 
 from django.conf import settings
 from django.http import HttpResponseRedirect, HttpResponseServerError
-from edx_rest_framework_extensions.auth.jwt.authentication import JwtAuthentication
 from edx_rest_framework_extensions.permissions import IsAuthenticated
 from rest_framework.throttling import UserRateThrottle
 from rest_framework.views import APIView
 
 from .filters import OrderCreateRequested
 from .serializers import OrderCreatedSignalInputSerializer
+from ..core.auth import ForceCookieJwtAuthentication
+from ..core.content_negotiation import IgnoreClientContentNegotiation
 
 logger = logging.getLogger(__name__)
 
 
 class OrderCreateView(APIView):
     """Accept incoming request for creating a basket/order for a user."""
-    authentication_classes = (JwtAuthentication,)
+    authentication_classes = (ForceCookieJwtAuthentication,)
     permission_classes = (IsAuthenticated,)
     throttle_classes = (UserRateThrottle,)
+    content_negotiation_class = IgnoreClientContentNegotiation
 
     def get(self, request):  # pylint: disable=inconsistent-return-statements
         """
