@@ -21,14 +21,16 @@ class TestCreateOrGetStripeDraftPaymentStep(TestCase):
             'item_total': '100.0',
         }
         intent_id = 'ch_3MebJMAa00oRYTAV1C26pHmmj572'
+        client_sec_id = 'pi_hiya_secret_howsitgoing';
         mock_create_payment_intent.return_value = {
             'id': intent_id,
+            'client_secret': client_sec_id
         }
         recent_payment = {
             'amount': '228.0',
             'payment_number': 'PDHB22WS',
             'order_uuid': ORDER_UUID,
-            'key_id': intent_id,
+            'key_id': client_sec_id,
             'state': PaymentState.CHECKOUT.value,
         }
         mock_create_payment.return_value = {
@@ -40,20 +42,20 @@ class TestCreateOrGetStripeDraftPaymentStep(TestCase):
         }
 
         # Test when existing payment exists.
-        result: dict = create_draft_payment_pipe.run_filter(mock_active_order, recent_payment)
+        result: dict = create_draft_payment_pipe.run_filter(mock_active_order, recent_payment, edx_lms_user_id=12)
         mock_create_payment_intent.assert_not_called()
         mock_create_payment.assert_not_called()
         self.assertEqual(recent_payment['key_id'], result['payment_data']['key_id'])
 
         # Test when existing payment is in FAILED state.
         recent_payment['state'] = PaymentState.FAILED.value
-        result: dict = create_draft_payment_pipe.run_filter(mock_active_order, recent_payment)
+        result: dict = create_draft_payment_pipe.run_filter(mock_active_order, recent_payment, edx_lms_user_id=12)
         mock_create_payment_intent.assert_called()
         mock_create_payment.assert_called()
         self.assertEqual(recent_payment['key_id'], result['payment_data']['key_id'])
 
         # Test when existing payment does not exist.
-        result: dict = create_draft_payment_pipe.run_filter(mock_active_order, recent_payment=None)
+        result: dict = create_draft_payment_pipe.run_filter(mock_active_order, recent_payment=None, edx_lms_user_id=12)
         mock_create_payment_intent.assert_called()
         mock_create_payment.assert_called()
         self.assertEqual(recent_payment['key_id'], result['payment_data']['key_id'])
@@ -83,6 +85,7 @@ class TestUpdateStripeDraftPaymentStep(TestCase):
             'order_uuid': ORDER_UUID,
             'key_id': intent_id,
             'state': PaymentState.CHECKOUT.value,
+            'payment_intent_id': 'pi_somecode'
         }
 
         result: dict = create_update_payment_pipe.run_filter(mock_order_data, mock_payment_data)

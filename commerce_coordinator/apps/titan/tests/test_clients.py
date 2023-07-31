@@ -18,8 +18,6 @@ ORDER_CREATE_DATA = {
     'sku': ['sku1', 'sku_2'],
     'edx_lms_user_id': 1,
     'email': 'edx@example.com',
-    'first_name': 'John',
-    'last_name': 'Doe',
     'coupon_code': 'test_code',
 }
 
@@ -42,7 +40,7 @@ class TitanPaymentClientMock(MagicMock):
     return_value = {
         'orderUuid': ORDER_UUID,
         'state': PaymentState.PROCESSING.value,
-        'responseCode': 'test-code',
+        'referenceNumber': 'test-code',
         'number': 'test-number'
     }
 
@@ -149,16 +147,12 @@ class TestTitanAPIClient(CoordinatorClientTestCase):
             ORDER_CREATE_DATA['sku'],
             ORDER_CREATE_DATA['edx_lms_user_id'],
             ORDER_CREATE_DATA['email'],
-            ORDER_CREATE_DATA['first_name'],
-            ORDER_CREATE_DATA['last_name'],
             ORDER_CREATE_DATA['coupon_code'],
             DEFAULT_CURRENCY
         )
         mock_create_cart.assert_called_with(
             ORDER_CREATE_DATA['edx_lms_user_id'],
             ORDER_CREATE_DATA['email'],
-            ORDER_CREATE_DATA['first_name'],
-            ORDER_CREATE_DATA['last_name'],
             DEFAULT_CURRENCY
         )
         mock_add_item.assert_called_with(
@@ -175,8 +169,6 @@ class TestTitanAPIClient(CoordinatorClientTestCase):
             input_kwargs={
                 'edx_lms_user_id': 1,
                 'email': 'edx@example.com',
-                'first_name': 'John',
-                'last_name': 'Doe',
             },
             expected_request={
                 'data': {
@@ -184,8 +176,6 @@ class TestTitanAPIClient(CoordinatorClientTestCase):
                         'currency': 'USD',
                         'edxLmsUserId': 1,
                         'email': 'edx@example.com',
-                        'firstName': 'John',
-                        'lastName': 'Doe',
                     }
                 }
             },

@@ -271,9 +271,9 @@ class TestCreateDraftPaymentStep(TestCase):
     def setUp(self) -> None:
         self.create_payment_data = {
             'order_uuid': ORDER_UUID,
-            'response_code': 'test_code',
             'payment_method_name': PaymentMethod.STRIPE.value,
             'provider_response_body': {},
+            'edx_lms_user_id': '20230731'
         }
 
     @patch('commerce_coordinator.apps.titan.clients.TitanAPIClient.create_payment')
@@ -283,17 +283,31 @@ class TestCreateDraftPaymentStep(TestCase):
         """
         mock_create_payment.return_value = titan_active_order_response['payments'][0]
         create_draft_payment_pipe = CreateDraftPayment("test_pipe", None)
-        result: dict = create_draft_payment_pipe.run_filter(**self.create_payment_data)
 
-        mock_create_payment.assert_called_once_with(**self.create_payment_data)
+        filter_input = {
+            **self.create_payment_data,
+            'payment_intent_id': 'pi_something',
+            'client_secret': 'pi_something_secret_somethingelse'
+        }
+
+        result: dict = create_draft_payment_pipe.run_filter(**filter_input)
+
+        response_data = {**self.create_payment_data, 'response_code': filter_input['payment_intent_id']}
+
+        mock_create_payment.assert_called_once_with(**response_data)
         self.assertIn('key_id', result)
 
     @patch('commerce_coordinator.apps.titan.clients.TitanAPIClient.create_payment', side_effect=HTTPError)
     def test_pipeline_step_raises_exception(self, mock_create_payment):
         active_order_pipe = CreateDraftPayment("test_pipe", None)
         with self.assertRaises(APIException) as ex:
-            active_order_pipe.run_filter(
+            filter_input = {
                 **self.create_payment_data,
+                'payment_intent_id': 'pi_something',
+                'client_secret': 'pi_something_secret_somethingelse'
+            }
+            active_order_pipe.run_filter(
+                **filter_input
             )
 
         self.assertEqual(
@@ -305,7 +319,7 @@ class TestCreateDraftPaymentStep(TestCase):
 
 
 class TestUpdateBillingAddressStep(TestCase):
-    """A pytest Test case for the UpdateBillinAddress Pipeline Step"""
+    """A pytest Test case for the UpdateBillingAddress Pipeline Step"""
 
     def setUp(self) -> None:
         self.billing_details_data = {
@@ -362,7 +376,7 @@ class TestUpdateTitanPaymentStep(TestCase):
         self.update_payment_response = {
             'number': '1234',
             'orderUuid': ORDER_UUID,
-            'responseCode': 'a_stripe_response_code',
+            'referenceNumber': 'a_stripe_response_code',
             'state': PaymentState.PROCESSING.value,
         }
 

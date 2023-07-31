@@ -60,7 +60,7 @@ class OrderCreateView(APIView):
 
         if serializer.is_valid(raise_exception=True):
             try:
-                result = OrderCreateRequested.run_filter(order_created_signal_params, serializer.validated_data)
+                result = OrderCreateRequested.run_filter(serializer.validated_data)
                 logger.debug(f'{self.get.__qualname__} pipeline result: {result}.')
 
                 return self._redirect_response_payment(request)

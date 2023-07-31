@@ -47,11 +47,11 @@ class CoordinatorSerializer(Serializer):
     def update(self, instance, validated_data):
         raise self.type_error
 
-    def is_valid(self, *, raise_exception=False):
-        try:
-            return super().is_valid(raise_exception=raise_exception)
-        except ValidationError as inner:
-            raise CoordinatorValidationException(inner)
+    # def is_valid(self, *, raise_exception=False):
+    #     try:
+    #         return super().is_valid(raise_exception=raise_exception)
+    #     except ValidationError as inner:
+    #         raise CoordinatorValidationException(inner)
 
 
 class UnixDateTimeField(DateTimeField):

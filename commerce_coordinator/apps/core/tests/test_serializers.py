@@ -5,8 +5,10 @@ import sys
 
 import ddt
 from django.test import TestCase
+from rest_framework.exceptions import ValidationError
 
 from commerce_coordinator.apps.core import serializers
+from commerce_coordinator.apps.core.serializers import CoordinatorValidationException
 
 utc = datetime.timezone.utc
 
@@ -49,7 +51,7 @@ class UnixDateTimeFieldTests(TestCase):
     @ddt.unpack
     def test_invalid_values(self, input_value, expected_failure_message):
         """Check failures of conversion of internal representation of UnixDateTimeField produce expected errors."""
-        with self.assertRaises(serializers.ValidationError) as exc_info:
+        with self.assertRaises(ValidationError) as exc_info:
             serializers.UnixDateTimeField().run_validation(input_value)
 
         self.assertEqual(exc_info.exception.detail, expected_failure_message)

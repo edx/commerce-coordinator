@@ -91,11 +91,12 @@ class TitanAPIClient(Client):
         )
         order_uuid = order_created_response['data']['attributes']['uuid']
 
+        last_add_item = None
         # Adding courses in Cart/Basket
         for a_sku in sku:
-            self.add_item(order_uuid, a_sku, edx_lms_user_id)
+            last_add_item = self.add_item(order_uuid, a_sku, edx_lms_user_id)
 
-        return order_uuid
+        return last_add_item
 
     def create_cart(self, edx_lms_user_id, email, currency='USD'):
         """
