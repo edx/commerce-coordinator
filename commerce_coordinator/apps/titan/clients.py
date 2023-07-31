@@ -97,6 +97,8 @@ class TitanAPIClient(Client):
         for a_sku in sku:
             self.add_item(order_uuid, a_sku, edx_lms_user_id)
 
+        return order_uuid
+
     def create_cart(self, edx_lms_user_id, email, first_name, last_name, currency='USD'):
         """
         Request Titan to create a basket/cart for a user

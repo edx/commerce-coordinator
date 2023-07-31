@@ -76,7 +76,7 @@ class DraftPaymentRequested(OpenEdxPublicFilter):
             edx_lms_user_id=kwargs['edx_lms_user_id'],
         )
 
-        payment_data = pipeline_output.get('payment_data');
+        payment_data = pipeline_output.get('payment_data')
 
         payment_data['order_id'] = payment_data.pop('order_uuid')
 

@@ -43,7 +43,7 @@ class CreateTitanOrder(PipelineStep):
         titan_api_client = TitanAPIClient()
         titan_response = titan_api_client.create_order(**params)
 
-        order_data.append(titan_response)
+        order_data['order_uuid'] = titan_response
 
         return {
             "order_data": order_data
@@ -130,7 +130,8 @@ class CreateDraftPayment(PipelineStep):
     def run_filter(
         self,
         order_uuid,
-        response_code,
+        payment_intent_id,
+        client_secret,
         payment_method_name,
         provider_response_body,
         edx_lms_user_id,
@@ -150,7 +151,7 @@ class CreateDraftPayment(PipelineStep):
         try:
             payment = api_client.create_payment(
                 order_uuid=order_uuid,
-                response_code=response_code,
+                response_code=payment_intent_id,
                 payment_method_name=payment_method_name,
                 provider_response_body=provider_response_body,
                 edx_lms_user_id=edx_lms_user_id
@@ -158,6 +159,8 @@ class CreateDraftPayment(PipelineStep):
         except HTTPError as exc:
             logger.exception('[CreateTitanPayment] Failed to create payment for order_uuid: %s', order_uuid)
             raise APIException("Error while creating payment on titan's system") from exc
+
+        payment['referenceNumber'] = client_secret
 
         payment_serializer = PaymentSerializer(data=payment)
         payment_serializer.is_valid(raise_exception=True)
