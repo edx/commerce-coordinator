@@ -67,7 +67,7 @@ class TitanAPIClient(Client):
             raise
         return response.json()
 
-    def create_order(self, sku, edx_lms_user_id, email, first_name, last_name, coupon_code, currency='USD'):
+    def create_order(self, sku, edx_lms_user_id, email, coupon_code, currency='USD'):
         """
         Task to create a basket/order for a user in Titan.
 
@@ -75,8 +75,6 @@ class TitanAPIClient(Client):
             sku: List. An edx.org stock keeping units (SKUs) that the user would like to purchase.
             edx_lms_user_id: The edx.org LMS user ID of the user receiving the order.
             email: The edx.org profile email of the user receiving the order. Required by Spree to create a user.
-            first_name: The edx.org profile first name of the user receiving the order
-            last_name: The edx.org profile last name of the user receiving the order
             coupon_code: A coupon code to initially apply to the order.
             currency (str): Optional; The ISO code of the currency to use for the order (defaults to USD)
 
@@ -89,7 +87,7 @@ class TitanAPIClient(Client):
 
         # Creating Order (for Cart/Basket)
         order_created_response = self.create_cart(
-            edx_lms_user_id, email, first_name, last_name, currency
+            edx_lms_user_id, email, currency
         )
         order_uuid = order_created_response['data']['attributes']['uuid']
 
@@ -99,15 +97,13 @@ class TitanAPIClient(Client):
 
         return order_uuid
 
-    def create_cart(self, edx_lms_user_id, email, first_name, last_name, currency='USD'):
+    def create_cart(self, edx_lms_user_id, email, currency='USD'):
         """
         Request Titan to create a basket/cart for a user
 
         Args:
             edx_lms_user_id: The edx.org LMS user ID of the user receiving the order.
             email: The edx.org profile email of the user receiving the order. Required by Spree to create a user.
-            first_name: The edx.org profile first name of the user receiving the order
-            last_name: The edx.org profile last name of the user receiving the order
             currency: Optional; The ISO code of the currency to use for the order (defaults to USD)
         """
         logger.info(f'TitanAPIClient.create_cart called using {locals()}.')
@@ -120,8 +116,6 @@ class TitanAPIClient(Client):
                         'currency': currency,
                         'edxLmsUserId': edx_lms_user_id,
                         'email': email,
-                        'firstName': first_name,
-                        'lastName': last_name,
                     }
                 }
             },

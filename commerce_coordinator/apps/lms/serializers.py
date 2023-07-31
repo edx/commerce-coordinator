@@ -14,6 +14,4 @@ class OrderCreatedSignalInputSerializer(CoordinatorSerializer):  # pylint: disab
     )
     edx_lms_user_id = serializers.IntegerField(allow_null=False)
     email = serializers.EmailField(allow_null=False)
-    first_name = serializers.CharField(allow_null=True)
-    last_name = serializers.CharField(allow_null=True)
     coupon_code = serializers.CharField(allow_null=True)
