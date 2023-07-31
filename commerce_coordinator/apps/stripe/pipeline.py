@@ -10,7 +10,7 @@ from stripe.error import StripeError
 from commerce_coordinator.apps.core.constants import PaymentMethod, PaymentState
 from commerce_coordinator.apps.stripe.clients import StripeAPIClient
 from commerce_coordinator.apps.stripe.constants import Currency
-from commerce_coordinator.apps.stripe.exceptions import StripeIntentCreateAPIError
+from commerce_coordinator.apps.stripe.exceptions import StripeIntentCreateAPIError, StripeIntentUpdateAPIError
 from commerce_coordinator.apps.stripe.filters import PaymentDraftCreated
 from commerce_coordinator.apps.stripe.utils import convert_dollars_in_cents
 
@@ -55,4 +55,35 @@ class CreateOrGetStripeDraftPayment(PipelineStep):
         )
         return {
             'payment_data': payment,
+            'order_data': order_data,
+        }
+
+
+class UpdateStripeDraftPayment(PipelineStep):
+    """
+    Adds titan orders to the order data list.
+    """
+
+    def run_filter(self, order_data, payment_data, **kwargs):  # pylint: disable=arguments-differ
+        """
+        Execute a filter with the signature specified.
+        Arguments:
+            kwargs: arguments passed through from the filter.
+        """
+
+        stripe_api_client = StripeAPIClient()
+        try:
+            stripe_api_client.update_payment_intent(
+                payment_intent_id=payment_data['key_id'],
+                order_uuid=payment_data['order_uuid'],
+                current_payment_number=payment_data['payment_number'],
+                amount_in_cents=convert_dollars_in_cents(order_data['item_total']),
+                currency=Currency.USD.value,
+            )
+        except StripeError as ex:
+            raise StripeIntentUpdateAPIError from ex
+
+        return {
+            'payment_data': payment_data,
+            'order_data': order_data,
         }

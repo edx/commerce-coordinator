@@ -25,3 +25,9 @@ class StripeIntentCreateAPIError(APIException):
     status_code = 502
     default_detail = 'Error while creating payment intent on payment gateway.'
     default_code = 'stripe_intent_create_error'
+
+
+class StripeIntentUpdateAPIError(APIException):
+    status_code = 502
+    default_detail = 'Error while updating payment intent on payment gateway.'
+    default_code = 'stripe_intent_updated_error'
