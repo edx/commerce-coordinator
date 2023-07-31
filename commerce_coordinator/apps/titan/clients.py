@@ -95,10 +95,7 @@ class TitanAPIClient(Client):
 
         # Adding courses in Cart/Basket
         for a_sku in sku:
-            self.add_item(order_uuid, a_sku)
-
-        # Completing Cart/Basket
-        return self.complete_order(order_uuid, edx_lms_user_id)
+            self.add_item(order_uuid, a_sku, edx_lms_user_id)
 
     def create_cart(self, edx_lms_user_id, email, first_name, last_name, currency='USD'):
         """
@@ -128,7 +125,7 @@ class TitanAPIClient(Client):
             },
         )
 
-    def add_item(self, order_uuid, course_sku):
+    def add_item(self, order_uuid, course_sku, edx_lms_user_id):
         """
         Request Titan to add an item to a cart for a user
 
@@ -145,6 +142,7 @@ class TitanAPIClient(Client):
                     'attributes': {
                         'orderUuid': order_uuid,
                         'courseSku': course_sku,
+                        'edxLmsUserId': edx_lms_user_id
                     }
                 }
             },

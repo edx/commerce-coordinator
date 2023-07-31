@@ -10,7 +10,7 @@ class ForceCookieJwtAuthentication(JwtAuthentication):
 
     A good example of why to use this can be found in `THES-236`, however, the basic reason is this:
     LMS just FORWARDS to CC via a browser, it doesn't set a body, nor does it customize headers, and thus we are not
-    able to make ot use the `Use-Jwt-Cookie` (edx_rest_framework_extensions.auth.jwt.constants.USE_JWT_COOKIE_HEADER)
+    able to make it use the `Use-Jwt-Cookie` (edx_rest_framework_extensions.auth.jwt.constants.USE_JWT_COOKIE_HEADER)
     nor can we limit it from wanting an HTML resource.
     """
 
