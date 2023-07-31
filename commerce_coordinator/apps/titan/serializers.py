@@ -2,9 +2,10 @@
 from collections import OrderedDict
 
 from commerce_coordinator.apps.core import serializers
+from commerce_coordinator.apps.core.serializers import CoordinatorSerializer
 
 
-class OrderFulfillViewInputSerializer(serializers.Serializer):  # pylint: disable=abstract-method
+class OrderFulfillViewInputSerializer(CoordinatorSerializer):  # pylint: disable=abstract-method
     """
     Serializer for OrderFulfillView input validation.
     """
@@ -17,7 +18,7 @@ class OrderFulfillViewInputSerializer(serializers.Serializer):  # pylint: disabl
     provider_id = serializers.CharField(allow_null=True)
 
 
-class PaymentSerializer(serializers.Serializer):  # pylint: disable=abstract-method
+class PaymentSerializer(CoordinatorSerializer):  # pylint: disable=abstract-method
     """
     Serializer for Titan Payment object.
 
@@ -39,7 +40,7 @@ class PaymentSerializer(serializers.Serializer):  # pylint: disable=abstract-met
         return ret
 
 
-class UserSerializer(serializers.Serializer):  # pylint:disable=abstract-method
+class UserSerializer(CoordinatorSerializer):  # pylint:disable=abstract-method
     """
     Serializer for User object validation
     """
@@ -56,7 +57,7 @@ class UserSerializer(serializers.Serializer):  # pylint:disable=abstract-method
         return ret
 
 
-class BillingAddressSerializer(serializers.Serializer):  # pylint:disable=abstract-method
+class BillingAddressSerializer(CoordinatorSerializer):  # pylint:disable=abstract-method
     """
     Serializer for Billing Address object validation
     """
@@ -87,7 +88,7 @@ class BillingAddressSerializer(serializers.Serializer):  # pylint:disable=abstra
         return ret
 
 
-class ProductsSerializer(serializers.Serializer):  # pylint:disable=abstract-method
+class ProductsSerializer(CoordinatorSerializer):  # pylint:disable=abstract-method
     """
     Serializer for Products object validation
     """
@@ -110,7 +111,7 @@ class ProductsSerializer(serializers.Serializer):  # pylint:disable=abstract-met
         return ret
 
 
-class OrderPaymentsSerializer(serializers.Serializer):  # pylint:disable=abstract-method
+class OrderPaymentsSerializer(CoordinatorSerializer):  # pylint:disable=abstract-method
     """
     Serializer for Payments object validation
     """
@@ -141,7 +142,7 @@ class OrderPaymentsSerializer(serializers.Serializer):  # pylint:disable=abstrac
         return ret
 
 
-class TitanActiveOrderSerializer(serializers.Serializer):  # pylint:disable=abstract-method
+class TitanActiveOrderSerializer(CoordinatorSerializer):  # pylint:disable=abstract-method
     """
     Serializer for GetActiveOrderView output validation
     """

@@ -5,7 +5,7 @@ from commerce_coordinator.apps.core import serializers
 from commerce_coordinator.apps.core.serializers import CoordinatorSerializer
 
 
-class GetPaymentInputSerializer(serializers.Serializer):  # pylint: disable=abstract-method
+class GetPaymentInputSerializer(CoordinatorSerializer):  # pylint: disable=abstract-method
     """
     Serializer for OrderFulfillView input validation.
     """
@@ -14,14 +14,14 @@ class GetPaymentInputSerializer(serializers.Serializer):  # pylint: disable=abst
     edx_lms_user_id = serializers.IntegerField(allow_null=False)
 
 
-class GetPaymentOutputSerializer(serializers.Serializer):  # pylint: disable=abstract-method
+class GetPaymentOutputSerializer(CoordinatorSerializer):  # pylint: disable=abstract-method
     """
     Serializer for OrderFulfillView input validation.
     """
     state = serializers.CharField(allow_null=False)
 
 
-class DraftPaymentCreateViewInputSerializer(serializers.Serializer):  # pylint: disable=abstract-method
+class DraftPaymentCreateViewInputSerializer(CoordinatorSerializer):  # pylint: disable=abstract-method
     """
     Serializer for DraftPaymentCreateView input validation.
     """
@@ -47,14 +47,14 @@ class DraftPaymentCreateViewOutputSerializer(CoordinatorSerializer):  # pylint: 
     capture_context = CaptureContextInnerSerializer()
 
 
-class GetActiveOrderInputSerializer(serializers.Serializer):  # pylint: disable=abstract-method
+class GetActiveOrderInputSerializer(CoordinatorSerializer):  # pylint: disable=abstract-method
     """
     Serializer for GetActiveOrderView input validation
     """
     edx_lms_user_id = serializers.IntegerField(allow_null=False)
 
 
-class PaymentProcessInputSerializer(serializers.Serializer):  # pylint: disable=abstract-method
+class PaymentProcessInputSerializer(CoordinatorSerializer):  # pylint: disable=abstract-method
 
     """
     Serializer for PaymentProcessView input validation

@@ -1,8 +1,9 @@
 """Serializers for ecommerce service"""
 from commerce_coordinator.apps.core import serializers
+from commerce_coordinator.apps.core.serializers import CoordinatorSerializer
 
 
-class OrderCreatedSignalInputSerializer(serializers.Serializer):  # pylint: disable=abstract-method
+class OrderCreatedSignalInputSerializer(CoordinatorSerializer):  # pylint: disable=abstract-method
     """
     Serializer for order_created_signal input validation.
     """
@@ -16,7 +17,7 @@ class OrderCreatedSignalInputSerializer(serializers.Serializer):  # pylint: disa
     coupon_code = serializers.CharField(allow_null=True)
 
 
-class OrderFulfillViewInputSerializer(serializers.Serializer):  # pylint: disable=abstract-method
+class OrderFulfillViewInputSerializer(CoordinatorSerializer):  # pylint: disable=abstract-method
     """
     Serializer for OrderFulfillView input validation.
     """
