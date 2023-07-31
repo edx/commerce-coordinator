@@ -378,7 +378,9 @@ OPEN_EDX_FILTERS_CONFIG = {
         "fail_silently": False,  # TODO: Coordinator filters should NEVER be allowed to fail silently
         "pipeline": [
             'commerce_coordinator.apps.titan.pipeline.GetTitanActiveOrder',
-            'commerce_coordinator.apps.stripe.pipeline.CreateOrGetStripeDraftPayment'
+            'commerce_coordinator.apps.stripe.pipeline.CreateOrGetStripeDraftPayment',
+            'commerce_coordinator.apps.stripe.pipeline.UpdateStripeDraftPayment',
+
         ]
     },
     "org.edx.coordinator.stripe.payment.draft.created.v1": {
