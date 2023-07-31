@@ -43,7 +43,7 @@ class CreateTitanOrder(PipelineStep):
         titan_api_client = TitanAPIClient()
         titan_response = titan_api_client.create_order(**params)
 
-        order_data['order_uuid'] = titan_response
+        order_data['order_uuid'] = titan_response['data']['attributes']['uuid']
 
         return {
             "order_data": order_data

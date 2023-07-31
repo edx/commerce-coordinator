@@ -53,7 +53,7 @@ class TestCreateTitanOrderPipelineStep(TestCase):
 
         result: dict = order.run_filter(
             input_order_data,
-            [extra_order_data]
+            {'extra_stuff': extra_order_data}
         )
 
         # ensure our input data arrives as expected
@@ -61,17 +61,15 @@ class TestCreateTitanOrderPipelineStep(TestCase):
 
         self.assertIn('order_data', result)
 
-        order_data: list = result['order_data']
+        order_data: dict = result['order_data']
         self.assertEqual(2, len(order_data))
 
-        self.assertIn(extra_order_data, order_data)
+        self.assertIn(extra_order_data, order_data.values())
 
-        order_data.remove(extra_order_data)
+        order_data.pop('extra_stuff')
 
-        input_web_response_order_data = order_data[-1]
-
-        # Technically this isn't "order data" but the response to create order which is an order uuid.
-        self.assertEqual(TitanClientMock.return_value, input_web_response_order_data)
+        # Technically, this isn't "order data" but the response to create order which is an order uuid.
+        self.assertEqual({'order_uuid': TitanClientMock.return_value['data']['attributes']['uuid']}, order_data)
 
 
 @ddt.ddt

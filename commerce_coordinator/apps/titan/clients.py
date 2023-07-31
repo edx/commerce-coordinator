@@ -96,7 +96,7 @@ class TitanAPIClient(Client):
         for a_sku in sku:
             last_add_item = self.add_item(order_uuid, a_sku, edx_lms_user_id)
 
-        return last_add_item
+        return last_add_item['data']['attributes']
 
     def create_cart(self, edx_lms_user_id, email, currency='USD'):
         """

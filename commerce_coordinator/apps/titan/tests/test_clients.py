@@ -141,8 +141,7 @@ class TestTitanAPIClient(CoordinatorClientTestCase):
     #
     @patch('commerce_coordinator.apps.titan.clients.TitanAPIClient.create_cart', new_callable=TitanClientMock)
     @patch('commerce_coordinator.apps.titan.clients.TitanAPIClient.add_item', new_callable=TitanClientMock)
-    @patch('commerce_coordinator.apps.titan.clients.TitanAPIClient.complete_order', new_callable=TitanClientMock)
-    def test_create_order_success(self, mock_complete_order, mock_add_item, mock_create_cart):
+    def test_create_order_success(self, mock_add_item, mock_create_cart):
         self.client.create_order(
             ORDER_CREATE_DATA['sku'],
             ORDER_CREATE_DATA['edx_lms_user_id'],
@@ -156,10 +155,8 @@ class TestTitanAPIClient(CoordinatorClientTestCase):
             DEFAULT_CURRENCY
         )
         mock_add_item.assert_called_with(
-            ORDER_UUID, ORDER_CREATE_DATA['sku'][-1]
-        )
-        mock_complete_order.assert_called_with(
-            ORDER_UUID, ORDER_CREATE_DATA['edx_lms_user_id']
+            ORDER_UUID, ORDER_CREATE_DATA['sku'][-1],
+            ORDER_CREATE_DATA['edx_lms_user_id'],
         )
 
     def test_create_cart_success(self):
@@ -196,12 +193,14 @@ class TestTitanAPIClient(CoordinatorClientTestCase):
             input_kwargs={
                 'order_uuid': 'test-uuid',
                 'course_sku': 'test-sku',
+                'edx_lms_user_id': '147',
             },
             expected_request={
                 'data': {
                     'attributes': {
                         'orderUuid': 'test-uuid',
                         'courseSku': 'test-sku',
+                        'edxLmsUserId': '147',
                     }
                 }
             },
@@ -499,7 +498,7 @@ class TestTitanAPIClient(CoordinatorClientTestCase):
             }
         }
         expected_output = mock_response['data']['attributes']
-
+        edx_lms_user_id = '628'
         # test with all params
         self.assertJSONClientResponse(
             uut=self.client.create_payment,
@@ -512,6 +511,7 @@ class TestTitanAPIClient(CoordinatorClientTestCase):
                 'amount': amount,
                 'payment_date': payment_date,
                 'source': source,
+                'edx_lms_user_id': edx_lms_user_id
             },
             expected_request={
                 'data': {
@@ -524,6 +524,7 @@ class TestTitanAPIClient(CoordinatorClientTestCase):
                         'amount': amount,
                         'paymentDate': payment_date,
                         'source': source,
+                        'edxLmsUserId': edx_lms_user_id
                     }
                 }
             },
@@ -542,6 +543,7 @@ class TestTitanAPIClient(CoordinatorClientTestCase):
                 'response_code': response_code,
                 'payment_method_name': payment_method_name,
                 'provider_response_body': provider_response_body,
+                'edx_lms_user_id': edx_lms_user_id
             },
             expected_request={
                 'data': {
@@ -550,6 +552,7 @@ class TestTitanAPIClient(CoordinatorClientTestCase):
                         'responseCode': response_code,
                         'paymentMethodName': payment_method_name,
                         'providerResponseBody': provider_response_body,
+                        'edxLmsUserId': edx_lms_user_id
                     }
                 }
             },
