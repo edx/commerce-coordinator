@@ -284,7 +284,8 @@ class DraftPaymentCreateViewTests(APITestCase):
     @patch('commerce_coordinator.apps.titan.clients.TitanAPIClient.get_active_order')
     @patch('commerce_coordinator.apps.titan.clients.TitanAPIClient.create_payment')
     @patch('commerce_coordinator.apps.stripe.clients.StripeAPIClient.create_payment_intent')
-    def test_create_payment(self, mock_create_payment_intent, mock_create_payment, mock_get_active_order):
+    @patch('commerce_coordinator.apps.stripe.clients.StripeAPIClient.update_payment_intent')
+    def test_create_payment(self, __, mock_create_payment_intent, mock_create_payment, mock_get_active_order):
         """
         Ensure data validation and success scenarios for create draft payment.
         """
