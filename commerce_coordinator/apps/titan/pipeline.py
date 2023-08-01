@@ -43,7 +43,10 @@ class CreateTitanOrder(PipelineStep):
         titan_api_client = TitanAPIClient()
         titan_response = titan_api_client.create_order(**params)
 
-        order_data['order_uuid'] = titan_response['data']['attributes']['uuid']
+        if order_data is None:
+            order_data = {}
+
+        order_data['order_uuid'] = titan_response['uuid']
 
         return {
             "order_data": order_data
@@ -230,10 +233,10 @@ class UpdateTitanPayment(PipelineStep):
     """
 
     def run_filter(
-            self,
-            payment_number,
-            payment_state,
-            response_code
+        self,
+        payment_number,
+        payment_state,
+        response_code
     ):  # pylint: disable=arguments-differ
 
         api_client = TitanAPIClient()

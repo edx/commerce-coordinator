@@ -51,6 +51,8 @@ class TestCreateTitanOrderPipelineStep(TestCase):
         extra_order_data = 'order_detail_extra_val'
         input_order_data = ORDER_CREATE_DATA_WITH_CURRENCY
 
+        mock_create_order.return_value = mock_create_order.return_value['data']['attributes']
+
         result: dict = order.run_filter(
             input_order_data,
             {'extra_stuff': extra_order_data}
@@ -69,7 +71,7 @@ class TestCreateTitanOrderPipelineStep(TestCase):
         order_data.pop('extra_stuff')
 
         # Technically, this isn't "order data" but the response to create order which is an order uuid.
-        self.assertEqual({'order_uuid': TitanClientMock.return_value['data']['attributes']['uuid']}, order_data)
+        self.assertEqual({'order_uuid': mock_create_order.return_value['uuid']}, order_data)
 
 
 @ddt.ddt
