@@ -1,3 +1,5 @@
+""" Secondary Auth Classes """
+
 from django.http.request import HttpHeaders
 from edx_rest_framework_extensions.auth.jwt.authentication import JwtAuthentication
 from rest_framework.exceptions import AuthenticationFailed

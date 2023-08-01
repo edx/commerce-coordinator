@@ -21,7 +21,7 @@ class TestCreateOrGetStripeDraftPaymentStep(TestCase):
             'item_total': '100.0',
         }
         intent_id = 'ch_3MebJMAa00oRYTAV1C26pHmmj572'
-        client_sec_id = 'pi_hiya_secret_howsitgoing';
+        client_sec_id = 'pi_hiya_secret_howsitgoing'
         mock_create_payment_intent.return_value = {
             'id': intent_id,
             'client_secret': client_sec_id

@@ -5,7 +5,7 @@ from commerce_coordinator.apps.core.serializers import CoordinatorSerializer
 
 
 # Originally stolen verbatim from Ecomm
-class OrderCreatedSignalInputSerializer(CoordinatorSerializer):  # pylint: disable=abstract-method
+class OrderCreatedSignalInputSerializer(CoordinatorSerializer):
     """
     Serializer for order_created_signal input validation.
     """

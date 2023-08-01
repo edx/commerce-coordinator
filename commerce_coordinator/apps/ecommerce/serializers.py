@@ -3,7 +3,7 @@ from commerce_coordinator.apps.core import serializers
 from commerce_coordinator.apps.core.serializers import CoordinatorSerializer
 
 
-class OrderCreatedSignalInputSerializer(CoordinatorSerializer):  # pylint: disable=abstract-method
+class OrderCreatedSignalInputSerializer(CoordinatorSerializer):
     """
     Serializer for order_created_signal input validation.
     """
@@ -17,7 +17,7 @@ class OrderCreatedSignalInputSerializer(CoordinatorSerializer):  # pylint: disab
     coupon_code = serializers.CharField(allow_null=True)
 
 
-class OrderFulfillViewInputSerializer(CoordinatorSerializer):  # pylint: disable=abstract-method
+class OrderFulfillViewInputSerializer(CoordinatorSerializer):
     """
     Serializer for OrderFulfillView input validation.
     """

@@ -8,7 +8,6 @@ from django.test import TestCase
 from rest_framework.exceptions import ValidationError
 
 from commerce_coordinator.apps.core import serializers
-from commerce_coordinator.apps.core.serializers import CoordinatorValidationException
 
 utc = datetime.timezone.utc
 

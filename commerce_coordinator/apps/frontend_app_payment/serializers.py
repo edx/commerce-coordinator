@@ -5,7 +5,7 @@ from commerce_coordinator.apps.core import serializers
 from commerce_coordinator.apps.core.serializers import CoordinatorSerializer
 
 
-class GetPaymentInputSerializer(CoordinatorSerializer):  # pylint: disable=abstract-method
+class GetPaymentInputSerializer(CoordinatorSerializer):
     """
     Serializer for OrderFulfillView input validation.
     """
@@ -14,25 +14,25 @@ class GetPaymentInputSerializer(CoordinatorSerializer):  # pylint: disable=abstr
     edx_lms_user_id = serializers.IntegerField(allow_null=False)
 
 
-class GetPaymentOutputSerializer(CoordinatorSerializer):  # pylint: disable=abstract-method
+class GetPaymentOutputSerializer(CoordinatorSerializer):
     """
     Serializer for OrderFulfillView input validation.
     """
     state = serializers.CharField(allow_null=False)
 
 
-class DraftPaymentCreateViewInputSerializer(CoordinatorSerializer):  # pylint: disable=abstract-method
+class DraftPaymentCreateViewInputSerializer(CoordinatorSerializer):
     """
     Serializer for DraftPaymentCreateView input validation.
     """
     edx_lms_user_id = serializers.IntegerField(allow_null=False)
 
 
-class DraftPaymentCreateViewOutputSerializer(CoordinatorSerializer):  # pylint: disable=abstract-method
+class DraftPaymentCreateViewOutputSerializer(CoordinatorSerializer):
     """
     Serializer for DraftPaymentCreateView input validation.
     """
-    class CaptureContextInnerSerializer(CoordinatorSerializer):  # pylint: disable=abstract-method
+    class CaptureContextInnerSerializer(CoordinatorSerializer):
         """
         Serializer for DraftPaymentCreateView's inner dictionary
         """
@@ -47,14 +47,14 @@ class DraftPaymentCreateViewOutputSerializer(CoordinatorSerializer):  # pylint: 
     capture_context = CaptureContextInnerSerializer()
 
 
-class GetActiveOrderInputSerializer(CoordinatorSerializer):  # pylint: disable=abstract-method
+class GetActiveOrderInputSerializer(CoordinatorSerializer):
     """
     Serializer for GetActiveOrderView input validation
     """
     edx_lms_user_id = serializers.IntegerField(allow_null=False)
 
 
-class PaymentProcessInputSerializer(CoordinatorSerializer):  # pylint: disable=abstract-method
+class PaymentProcessInputSerializer(CoordinatorSerializer):
 
     """
     Serializer for PaymentProcessView input validation

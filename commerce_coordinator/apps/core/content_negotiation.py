@@ -1,3 +1,5 @@
+""" Content Negotiation Classes """
+
 from rest_framework.negotiation import BaseContentNegotiation
 
 
@@ -22,4 +24,3 @@ class IgnoreClientContentNegotiation(BaseContentNegotiation):
         Select the first renderer in the `.renderer_classes` list.
         """
         return renderers[0], renderers[0].media_type
-

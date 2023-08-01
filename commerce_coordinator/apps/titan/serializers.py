@@ -5,7 +5,7 @@ from commerce_coordinator.apps.core import serializers
 from commerce_coordinator.apps.core.serializers import CoordinatorSerializer
 
 
-class OrderFulfillViewInputSerializer(CoordinatorSerializer):  # pylint: disable=abstract-method
+class OrderFulfillViewInputSerializer(CoordinatorSerializer):
     """
     Serializer for OrderFulfillView input validation.
     """
@@ -18,7 +18,7 @@ class OrderFulfillViewInputSerializer(CoordinatorSerializer):  # pylint: disable
     provider_id = serializers.CharField(allow_null=True)
 
 
-class PaymentSerializer(CoordinatorSerializer):  # pylint: disable=abstract-method
+class PaymentSerializer(CoordinatorSerializer):
     """
     Serializer for Titan Payment object.
 
@@ -40,7 +40,7 @@ class PaymentSerializer(CoordinatorSerializer):  # pylint: disable=abstract-meth
         return ret
 
 
-class UserSerializer(CoordinatorSerializer):  # pylint:disable=abstract-method
+class UserSerializer(CoordinatorSerializer):
     """
     Serializer for User object validation
     """
@@ -57,7 +57,7 @@ class UserSerializer(CoordinatorSerializer):  # pylint:disable=abstract-method
         return ret
 
 
-class BillingAddressSerializer(CoordinatorSerializer):  # pylint:disable=abstract-method
+class BillingAddressSerializer(CoordinatorSerializer):
     """
     Serializer for Billing Address object validation
     """
@@ -88,7 +88,7 @@ class BillingAddressSerializer(CoordinatorSerializer):  # pylint:disable=abstrac
         return ret
 
 
-class ProductsSerializer(CoordinatorSerializer):  # pylint:disable=abstract-method
+class ProductsSerializer(CoordinatorSerializer):
     """
     Serializer for Products object validation
     """
@@ -111,7 +111,7 @@ class ProductsSerializer(CoordinatorSerializer):  # pylint:disable=abstract-meth
         return ret
 
 
-class OrderPaymentsSerializer(CoordinatorSerializer):  # pylint:disable=abstract-method
+class OrderPaymentsSerializer(CoordinatorSerializer):
     """
     Serializer for Payments object validation
     """
@@ -120,7 +120,7 @@ class OrderPaymentsSerializer(CoordinatorSerializer):  # pylint:disable=abstract
     orderUuid = serializers.CharField()
     paymentDate = serializers.DateTimeField(allow_null=True)
     paymentMethodName = serializers.CharField()
-    #reference = serializers.CharField()
+    # reference = serializers.CharField()
     referenceNumber = serializers.CharField(allow_null=True)
     state = serializers.CharField()
     createdAt = serializers.DateTimeField()
@@ -134,7 +134,7 @@ class OrderPaymentsSerializer(CoordinatorSerializer):  # pylint:disable=abstract
         ret['order_uuid'] = representation['orderUuid']
         ret['payment_date'] = representation['paymentDate']
         ret['payment_method_name'] = representation['paymentMethodName']
-        #ret['reference'] = representation['reference']
+        # ret['reference'] = representation['reference']
         ret['key_id'] = representation['referenceNumber']
         ret['state'] = representation['state']
         ret['created_at'] = representation['createdAt']
@@ -142,7 +142,7 @@ class OrderPaymentsSerializer(CoordinatorSerializer):  # pylint:disable=abstract
         return ret
 
 
-class TitanActiveOrderSerializer(CoordinatorSerializer):  # pylint:disable=abstract-method
+class TitanActiveOrderSerializer(CoordinatorSerializer):
     """
     Serializer for GetActiveOrderView output validation
     """
