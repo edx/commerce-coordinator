@@ -30,7 +30,11 @@ class CreateOrGetStripeDraftPayment(PipelineStep):
             order_data: any preliminary orders (from earlier pipeline step) we want to append to.
             kwargs: arguments passed through from the filter.
         """
+
         if recent_payment and recent_payment['state'] != PaymentState.FAILED.value:
+            # NOTE: GRM: I DONT THINK WE CAN LEAVE HERE LIKE THIS. WE NEED THE CLIENT SECRET...
+            #            IS IT EXPECTED TO BE STORED?
+
             # existing payment with any state other than failed found. No need to create new payment.
             return {
                 'payment_data': recent_payment,
