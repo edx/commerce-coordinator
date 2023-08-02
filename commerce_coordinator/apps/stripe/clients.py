@@ -196,8 +196,6 @@ class StripeAPIClient:
                     'payment_number': current_payment_number,
                     'source_system': self.source_system_identifier,
                 },
-                # Disallow confirmation from client for server-side embargo check.
-                secret_key_confirmation='required',
             )
             logger.debug('StripeAPIClient.update_payment_intent called with '
                          f'args: [{initial_locals}] '

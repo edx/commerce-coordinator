@@ -129,8 +129,6 @@ class OrderCreateViewTests(APITestCase):
             self.assertEqual(args[0], query_params['sku'])
             self.assertEqual(args[1], query_params['edx_lms_user_id'])
             self.assertEqual(args[2], query_params['email'])
-            self.assertEqual(args[3], 'John')
-            self.assertEqual(args[4], 'Doe')
         else:
             expected_error_key = expected_error['error_key']
             expected_error_message = expected_error['error_message']

@@ -30,7 +30,11 @@ class CreateOrGetStripeDraftPayment(PipelineStep):
             order_data: any preliminary orders (from earlier pipeline step) we want to append to.
             kwargs: arguments passed through from the filter.
         """
+
         if recent_payment and recent_payment['state'] != PaymentState.FAILED.value:
+            # NOTE: GRM: I DONT THINK WE CAN LEAVE HERE LIKE THIS. WE NEED THE CLIENT SECRET...
+            #            IS IT EXPECTED TO BE STORED?
+
             # existing payment with any state other than failed found. No need to create new payment.
             return {
                 'payment_data': recent_payment,
@@ -49,9 +53,11 @@ class CreateOrGetStripeDraftPayment(PipelineStep):
 
         payment = PaymentDraftCreated.run_filter(
             order_uuid=order_data['basket_id'],
-            response_code=payment_intent['id'],
+            payment_intent_id=payment_intent['id'],
+            client_secret=payment_intent['client_secret'],
             payment_method_name=PaymentMethod.STRIPE.value,
             provider_response_body=payment_intent,
+            edx_lms_user_id=kwargs['edx_lms_user_id']
         )
         return {
             'payment_data': payment,
@@ -74,7 +80,7 @@ class UpdateStripeDraftPayment(PipelineStep):
         stripe_api_client = StripeAPIClient()
         try:
             stripe_api_client.update_payment_intent(
-                payment_intent_id=payment_data['key_id'],
+                payment_intent_id=payment_data['payment_intent_id'],
                 order_uuid=payment_data['order_uuid'],
                 current_payment_number=payment_data['payment_number'],
                 amount_in_cents=convert_dollars_in_cents(order_data['item_total']),

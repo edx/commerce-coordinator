@@ -40,8 +40,6 @@ def order_created_save(**kwargs):
         kwargs['sku'],
         kwargs['edx_lms_user_id'],
         kwargs['email'],
-        kwargs['first_name'],
-        kwargs['last_name'],
         kwargs['coupon_code'],
     )
     return async_result.id

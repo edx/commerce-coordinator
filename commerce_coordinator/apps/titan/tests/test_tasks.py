@@ -34,8 +34,6 @@ class TestOrderTasks(TestCase):
             ORDER_CREATE_DATA['sku'],
             ORDER_CREATE_DATA['edx_lms_user_id'],
             ORDER_CREATE_DATA['email'],
-            ORDER_CREATE_DATA['first_name'],
-            ORDER_CREATE_DATA['last_name'],
             ORDER_CREATE_DATA['coupon_code']
         )
 

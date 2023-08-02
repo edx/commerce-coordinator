@@ -75,7 +75,12 @@ class DraftPaymentRequested(OpenEdxPublicFilter):
         pipeline_output = super().run_pipeline(
             edx_lms_user_id=kwargs['edx_lms_user_id'],
         )
-        payment_output = DraftPaymentCreateViewOutputSerializer(data=pipeline_output.get('payment_data'))
+
+        payment_data = pipeline_output.get('payment_data')
+
+        payment_data['order_id'] = payment_data.pop('order_uuid')
+
+        payment_output = DraftPaymentCreateViewOutputSerializer(data={'capture_context': payment_data})
         payment_output.is_valid(raise_exception=True)
         return payment_output.data
 
