@@ -142,12 +142,12 @@ class CreateDraftPayment(PipelineStep):
         """
         Execute a filter with the signature specified.
         Args:
-            Args:
             order_uuid(str): Order UUID related to this order.
-            response_code(str): Payment attempt response code (payment intent id) provided by stripe.
             payment_method_name(str): The name of the payment method used for this payment. See enums for valid values.
             provider_response_body(str): The response JSON dump from a request to the payment provider.
-
+            payment_intent_id(str): A Stripe Payment Intent ID (used to update payment intents)
+            client_secret(str): A Stripe client secret string used by the UI to load the Stripe payment form.
+            edx_lms_user_id(str): edC LMS User ID
         """
 
         api_client = TitanAPIClient()
