@@ -6,12 +6,11 @@ from urllib.parse import unquote, urlencode
 
 from django.conf import settings
 from django.http import HttpResponseRedirect, HttpResponseServerError
-from edx_rest_framework_extensions.permissions import IsAuthenticated
+from edx_rest_framework_extensions.permissions import LoginRedirectIfUnauthenticated
 from rest_framework.parsers import JSONParser
 from rest_framework.throttling import UserRateThrottle
 from rest_framework.views import APIView
 
-from ..core.auth import ForceCookieJwtAuthentication
 from .filters import OrderCreateRequested
 from .serializers import OrderCreatedSignalInputSerializer
 
@@ -20,8 +19,7 @@ logger = logging.getLogger(__name__)
 
 class OrderCreateView(APIView):
     """Accept incoming request for creating a basket/order for a user."""
-    authentication_classes = (ForceCookieJwtAuthentication,)
-    permission_classes = (IsAuthenticated,)
+    permission_classes = (LoginRedirectIfUnauthenticated,)
     throttle_classes = (UserRateThrottle,)
     parser_classes = [JSONParser]
 

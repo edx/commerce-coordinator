@@ -91,8 +91,8 @@ class OrderCreateViewTests(APITestCase):
         self.client.login(username=self.test_user_username, password=self.test_user_password)
         # Request Order create
         response = self.client.get(self.url)
-        # Error HTTP_401_UNAUTHORIZED
-        self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
+        # Error HTTP_400_BAD_REQUEST
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
 
     def test_view_rejects_unauthorized(self):
         """Check unauthorized users querying orders are redirected to login page."""
@@ -100,8 +100,8 @@ class OrderCreateViewTests(APITestCase):
         self.client.logout()
         # Request Order create
         response = self.client.get(self.url)
-        # Error HTTP_401_UNAUTHORIZED
-        self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
+        # Error HTTP_302_FOUND
+        self.assertEqual(response.status_code, status.HTTP_302_FOUND)
 
     @override_settings(
         OPEN_EDX_FILTERS_CONFIG={
