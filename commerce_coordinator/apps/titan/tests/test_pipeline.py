@@ -292,7 +292,7 @@ class TestCreateDraftPaymentStep(TestCase):
 
         result: dict = create_draft_payment_pipe.run_filter(**filter_input)
 
-        response_data = {**self.create_payment_data, 'response_code': filter_input['payment_intent_id']}
+        response_data = {**self.create_payment_data, 'reference_number': filter_input['payment_intent_id']}
 
         mock_create_payment.assert_called_once_with(**response_data)
         self.assertIn('key_id', result)

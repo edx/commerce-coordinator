@@ -154,7 +154,7 @@ class CreateDraftPayment(PipelineStep):
         try:
             payment = api_client.create_payment(
                 order_uuid=order_uuid,
-                response_code=payment_intent_id,
+                reference_number=payment_intent_id,
                 payment_method_name=payment_method_name,
                 provider_response_body=provider_response_body,
                 edx_lms_user_id=edx_lms_user_id

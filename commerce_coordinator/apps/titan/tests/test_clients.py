@@ -480,7 +480,7 @@ class TestTitanAPIClient(CoordinatorClientTestCase):
     def test_create_payment(self):
         url = urljoin_directory(self.api_base_url, '/payments')
         payment_method_name = PaymentMethod.STRIPE.value
-        response_code = 'a_stripe_response_code'
+        reference_number = 'a_stripe_response_code'
         provider_response_body = '{"test_key":"test_value"}'
         reference = 'test_reference'
         amount = 1000
@@ -491,7 +491,7 @@ class TestTitanAPIClient(CoordinatorClientTestCase):
             'data': {
                 'attributes': {
                     'orderUuid': ORDER_UUID,
-                    'responseCode': response_code,
+                    'referenceNumber': reference_number,
                     'paymentMethodName': payment_method_name,
                     'providerResponseBody': provider_response_body,
                 }
@@ -504,7 +504,7 @@ class TestTitanAPIClient(CoordinatorClientTestCase):
             uut=self.client.create_payment,
             input_kwargs={
                 'order_uuid': ORDER_UUID,
-                'response_code': response_code,
+                'reference_number': reference_number,
                 'payment_method_name': payment_method_name,
                 'provider_response_body': provider_response_body,
                 'reference': reference,
@@ -517,7 +517,7 @@ class TestTitanAPIClient(CoordinatorClientTestCase):
                 'data': {
                     'attributes': {
                         'orderUuid': ORDER_UUID,
-                        'responseCode': response_code,
+                        'referenceNumber': reference_number,
                         'paymentMethodName': payment_method_name,
                         'providerResponseBody': provider_response_body,
                         'reference': reference,
@@ -540,7 +540,7 @@ class TestTitanAPIClient(CoordinatorClientTestCase):
             uut=self.client.create_payment,
             input_kwargs={
                 'order_uuid': ORDER_UUID,
-                'response_code': response_code,
+                'reference_number': reference_number,
                 'payment_method_name': payment_method_name,
                 'provider_response_body': provider_response_body,
                 'edx_lms_user_id': edx_lms_user_id
@@ -549,7 +549,7 @@ class TestTitanAPIClient(CoordinatorClientTestCase):
                 'data': {
                     'attributes': {
                         'orderUuid': ORDER_UUID,
-                        'responseCode': response_code,
+                        'referenceNumber': reference_number,
                         'paymentMethodName': payment_method_name,
                         'providerResponseBody': provider_response_body,
                         'edxLmsUserId': edx_lms_user_id

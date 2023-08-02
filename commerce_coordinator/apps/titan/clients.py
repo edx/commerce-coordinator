@@ -236,7 +236,7 @@ class TitanAPIClient(Client):
     def create_payment(
         self,
         order_uuid,
-        response_code,
+        reference_number,
         payment_method_name,
         provider_response_body,
         edx_lms_user_id,
@@ -250,7 +250,7 @@ class TitanAPIClient(Client):
 
         Args:
             order_uuid(str): Order UUID related to this order.
-            response_code(str): Payment attempt response code (payment intent id) provided by stripe.
+            reference_number(str): Payment attempt response code (payment intent id) provided by stripe.
             payment_method_name(str): The name of the payment method used for this payment. See enums for valid values.
             provider_response_body(str): The response JSON dump from a request to the payment provider..
             reference(str): Optional. Reference to be saved against the payment.
@@ -262,7 +262,7 @@ class TitanAPIClient(Client):
         """
         payload_attributes = {
             'orderUuid': order_uuid,
-            'responseCode': response_code,
+            'referenceNumber': reference_number,
             'paymentMethodName': payment_method_name,
             'providerResponseBody': provider_response_body,
             'edxLmsUserId': edx_lms_user_id,
