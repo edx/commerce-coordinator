@@ -5,8 +5,16 @@ from unittest.mock import patch
 from stripe.error import StripeError
 
 from commerce_coordinator.apps.core.constants import PaymentState
-from commerce_coordinator.apps.stripe.exceptions import StripeIntentCreateAPIError, StripeIntentUpdateAPIError
-from commerce_coordinator.apps.stripe.pipeline import CreateOrGetStripeDraftPayment, UpdateStripeDraftPayment
+from commerce_coordinator.apps.stripe.exceptions import (
+    StripeIntentConfirmAPIError,
+    StripeIntentCreateAPIError,
+    StripeIntentUpdateAPIError
+)
+from commerce_coordinator.apps.stripe.pipeline import (
+    ConfirmPayment,
+    CreateOrGetStripeDraftPayment,
+    UpdateStripeDraftPayment
+)
 from commerce_coordinator.apps.titan.tests.test_clients import ORDER_UUID
 
 
@@ -93,3 +101,30 @@ class TestUpdateStripeDraftPaymentStep(TestCase):
         mock_update_payment_intent.side_effect = StripeError
         with self.assertRaises(StripeIntentUpdateAPIError):
             create_update_payment_pipe.run_filter(mock_order_data, mock_payment_data)
+
+
+class TestConfirmPaymentStep(TestCase):
+    """A pytest Test case for the ConfirmPayment Pipeline Step"""
+    @patch('commerce_coordinator.apps.stripe.clients.StripeAPIClient.confirm_payment_intent')
+    def test_pipeline_step(self, mock_confirm_payment_intent):
+        confirm_payment_pipe = ConfirmPayment("test_pipe", None)
+        intent_id = 'ch_3MebJMAa00oRYTAV1C26pHmmj572'
+        mock_confirm_payment_intent.return_value = {
+            'id': intent_id,
+        }
+        mock_payment_data = {
+            'amount': '228.0',
+            'payment_number': 'PDHB22WS',
+            'order_uuid': ORDER_UUID,
+            'key_id': intent_id,
+            'state': PaymentState.CHECKOUT.value,
+        }
+
+        result: dict = confirm_payment_pipe.run_filter(mock_payment_data)
+        mock_confirm_payment_intent.assert_called()
+        self.assertEqual(mock_payment_data['key_id'], result['payment_data']['key_id'])
+
+        # Test Error while updating payment intent
+        mock_confirm_payment_intent.side_effect = StripeError
+        with self.assertRaises(StripeIntentConfirmAPIError):
+            confirm_payment_pipe.run_filter(mock_payment_data)

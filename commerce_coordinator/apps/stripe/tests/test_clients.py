@@ -355,3 +355,56 @@ class TestStripeAPIClient(CoordinatorClientTestCase):
                     },
                 },
             )
+
+    def test_confirm_payment_intent_success(self):
+        """
+        Check successful call of StripeAPIClient.confirm_payment_intent().
+        """
+        self.assertJSONClientResponse(
+            uut=self.client.confirm_payment_intent,
+            input_kwargs={
+                'payment_intent_id': TEST_PAYMENT_INTENT_ID,
+            },
+            expected_request={
+                'error_on_requires_action': ['True'],
+                'expand[0]': ['payment_method'],
+            },
+            request_type='query_string',
+            expected_headers=self.expected_headers,
+            mock_url=f'https://api.stripe.com/v1/payment_intents/{TEST_PAYMENT_INTENT_ID}/confirm',
+            mock_response={
+                'id': 'mock_id',
+                'mock_stripe_response': 'mock_value'
+            },
+            expected_output={
+                'id': 'mock_id',
+                'mock_stripe_response': 'mock_value'
+            },
+        )
+
+    def test_confirm_payment_intent_idempotency_error(self):
+        """
+        Check StripeAPIClient.confirm_payment_intent() throws
+        stripe.error.InvalidRequestError when it returns a response indicating
+        the confirmation is on an already confirmed payment.
+        """
+        with self.assertRaises(stripe.error.InvalidRequestError):
+            self.assertJSONClientResponse(
+                uut=self.client.confirm_payment_intent,
+                input_kwargs={
+                    'payment_intent_id': TEST_PAYMENT_INTENT_ID,
+                },
+                expected_request={
+                    'error_on_requires_action': ['True'],
+                    'expand[0]': ['payment_method'],
+                },
+                request_type='query_string',
+                expected_headers=self.expected_headers,
+                mock_url=f'https://api.stripe.com/v1/payment_intents/{TEST_PAYMENT_INTENT_ID}/confirm',
+                mock_status=400,
+                mock_response={
+                    'error': {
+                        'code': 'payment_intent_unexpected_state',
+                    },
+                },
+            )

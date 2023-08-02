@@ -214,3 +214,39 @@ class StripeAPIClient:
             raise
 
         return stripe_response
+
+    def confirm_payment_intent(
+        self,
+        payment_intent_id,
+    ):
+        """
+        Confirm a Stripe PaymentIntent.
+
+        Args:
+            payment_intent_id (str): The Stripe PaymentIntent id to look up.
+
+        Returns:
+            The response from Stripe.
+
+        See:
+            https://stripe.com/docs/api/payment_intents/confirm
+        """
+
+        try:
+            confirm_api_response = stripe.PaymentIntent.confirm(
+                payment_intent_id,
+                # stop on complicated payments MFE can't handle yet
+                error_on_requires_action=True,
+                expand=['payment_method'],
+            )
+            logger.debug('StripeAPIClient.confirm_payment_intent called with '
+                         f'payment_intent_id: {payment_intent_id} '
+                         'returned stripe_response: '
+                         f'[{confirm_api_response}].')
+        except stripe.error.StripeError as exc:
+            logger.exception('StripeAPIClient.confirm_payment_intent threw '
+                             f'[{exc}] with '
+                             f'payment_intent_id: {payment_intent_id}.')
+            raise
+
+        return confirm_api_response
