@@ -120,7 +120,6 @@ class OrderPaymentsSerializer(CoordinatorSerializer):
     orderUuid = serializers.CharField()
     paymentDate = serializers.DateTimeField(allow_null=True)
     paymentMethodName = serializers.CharField()
-    # reference = serializers.CharField()
     referenceNumber = serializers.CharField(allow_null=True)
     state = serializers.CharField()
     createdAt = serializers.DateTimeField()
@@ -134,7 +133,6 @@ class OrderPaymentsSerializer(CoordinatorSerializer):
         ret['order_uuid'] = representation['orderUuid']
         ret['payment_date'] = representation['paymentDate']
         ret['payment_method_name'] = representation['paymentMethodName']
-        # ret['reference'] = representation['reference']
         ret['key_id'] = representation['referenceNumber']
         ret['state'] = representation['state']
         ret['created_at'] = representation['createdAt']

@@ -7,11 +7,11 @@ from urllib.parse import unquote, urlencode
 from django.conf import settings
 from django.http import HttpResponseRedirect, HttpResponseServerError
 from edx_rest_framework_extensions.permissions import IsAuthenticated
+from rest_framework.parsers import JSONParser
 from rest_framework.throttling import UserRateThrottle
 from rest_framework.views import APIView
 
 from ..core.auth import ForceCookieJwtAuthentication
-from ..core.content_negotiation import IgnoreClientContentNegotiation
 from .filters import OrderCreateRequested
 from .serializers import OrderCreatedSignalInputSerializer
 
@@ -23,7 +23,7 @@ class OrderCreateView(APIView):
     authentication_classes = (ForceCookieJwtAuthentication,)
     permission_classes = (IsAuthenticated,)
     throttle_classes = (UserRateThrottle,)
-    content_negotiation_class = IgnoreClientContentNegotiation
+    parser_classes = [JSONParser]
 
     def get(self, request):  # pylint: disable=inconsistent-return-statements
         """
