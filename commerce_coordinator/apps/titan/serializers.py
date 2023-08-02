@@ -2,9 +2,10 @@
 from collections import OrderedDict
 
 from commerce_coordinator.apps.core import serializers
+from commerce_coordinator.apps.core.serializers import CoordinatorSerializer
 
 
-class OrderFulfillViewInputSerializer(serializers.Serializer):  # pylint: disable=abstract-method
+class OrderFulfillViewInputSerializer(CoordinatorSerializer):
     """
     Serializer for OrderFulfillView input validation.
     """
@@ -17,7 +18,7 @@ class OrderFulfillViewInputSerializer(serializers.Serializer):  # pylint: disabl
     provider_id = serializers.CharField(allow_null=True)
 
 
-class PaymentSerializer(serializers.Serializer):  # pylint: disable=abstract-method
+class PaymentSerializer(CoordinatorSerializer):
     """
     Serializer for Titan Payment object.
 
@@ -26,7 +27,7 @@ class PaymentSerializer(serializers.Serializer):  # pylint: disable=abstract-met
     """
     number = serializers.CharField(allow_null=False)
     orderUuid = serializers.UUIDField(allow_null=False)
-    responseCode = serializers.CharField(allow_null=False)
+    referenceNumber = serializers.CharField(allow_null=False)
     state = serializers.CharField(allow_null=False)
 
     def to_representation(self, instance):
@@ -34,12 +35,12 @@ class PaymentSerializer(serializers.Serializer):  # pylint: disable=abstract-met
         ret = OrderedDict()
         ret['payment_number'] = representation['number']
         ret['order_uuid'] = representation['orderUuid']
-        ret['key_id'] = representation['responseCode']
+        ret['key_id'] = representation['referenceNumber']
         ret['state'] = representation['state']
         return ret
 
 
-class UserSerializer(serializers.Serializer):  # pylint:disable=abstract-method
+class UserSerializer(CoordinatorSerializer):
     """
     Serializer for User object validation
     """
@@ -56,7 +57,7 @@ class UserSerializer(serializers.Serializer):  # pylint:disable=abstract-method
         return ret
 
 
-class BillingAddressSerializer(serializers.Serializer):  # pylint:disable=abstract-method
+class BillingAddressSerializer(CoordinatorSerializer):
     """
     Serializer for Billing Address object validation
     """
@@ -87,7 +88,7 @@ class BillingAddressSerializer(serializers.Serializer):  # pylint:disable=abstra
         return ret
 
 
-class ProductsSerializer(serializers.Serializer):  # pylint:disable=abstract-method
+class ProductsSerializer(CoordinatorSerializer):
     """
     Serializer for Products object validation
     """
@@ -110,7 +111,7 @@ class ProductsSerializer(serializers.Serializer):  # pylint:disable=abstract-met
         return ret
 
 
-class OrderPaymentsSerializer(serializers.Serializer):  # pylint:disable=abstract-method
+class OrderPaymentsSerializer(CoordinatorSerializer):
     """
     Serializer for Payments object validation
     """
@@ -119,8 +120,7 @@ class OrderPaymentsSerializer(serializers.Serializer):  # pylint:disable=abstrac
     orderUuid = serializers.CharField()
     paymentDate = serializers.DateTimeField(allow_null=True)
     paymentMethodName = serializers.CharField()
-    reference = serializers.CharField()
-    responseCode = serializers.CharField(allow_null=True)
+    referenceNumber = serializers.CharField(allow_null=True)
     state = serializers.CharField()
     createdAt = serializers.DateTimeField()
     updatedAt = serializers.DateTimeField()
@@ -133,15 +133,14 @@ class OrderPaymentsSerializer(serializers.Serializer):  # pylint:disable=abstrac
         ret['order_uuid'] = representation['orderUuid']
         ret['payment_date'] = representation['paymentDate']
         ret['payment_method_name'] = representation['paymentMethodName']
-        ret['reference'] = representation['reference']
-        ret['key_id'] = representation['responseCode']
+        ret['key_id'] = representation['referenceNumber']
         ret['state'] = representation['state']
         ret['created_at'] = representation['createdAt']
         ret['updated_at'] = representation['updatedAt']
         return ret
 
 
-class TitanActiveOrderSerializer(serializers.Serializer):  # pylint:disable=abstract-method
+class TitanActiveOrderSerializer(CoordinatorSerializer):
     """
     Serializer for GetActiveOrderView output validation
     """
@@ -160,7 +159,7 @@ class TitanActiveOrderSerializer(serializers.Serializer):  # pylint:disable=abst
     paymentState = serializers.CharField(allow_null=True)
     paymentTotal = serializers.CharField()
     user = UserSerializer()
-    billingAddress = BillingAddressSerializer()
+    billingAddress = BillingAddressSerializer(allow_null=True)
     lineItems = ProductsSerializer(many=True)
     payments = OrderPaymentsSerializer(many=True, allow_null=True)
 

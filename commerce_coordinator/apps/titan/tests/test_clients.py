@@ -18,8 +18,6 @@ ORDER_CREATE_DATA = {
     'sku': ['sku1', 'sku_2'],
     'edx_lms_user_id': 1,
     'email': 'edx@example.com',
-    'first_name': 'John',
-    'last_name': 'Doe',
     'coupon_code': 'test_code',
 }
 
@@ -42,7 +40,7 @@ class TitanPaymentClientMock(MagicMock):
     return_value = {
         'orderUuid': ORDER_UUID,
         'state': PaymentState.PROCESSING.value,
-        'responseCode': 'test-code',
+        'referenceNumber': 'test-code',
         'number': 'test-number'
     }
 
@@ -98,7 +96,7 @@ titan_active_order_response = {
                 'paymentDate': '2023-05-24T08:45:26.388Z',
                 'paymentMethodName': PaymentMethod.STRIPE.value,
                 'reference': 'TestOrder-58',
-                'responseCode': 'ch_3MebJMAa00oRYTAV1C26pHmmj572',
+                'referenceNumber': 'ch_3MebJMAa00oRYTAV1C26pHmmj572',
                 'state': PaymentState.CHECKOUT.value,
                 'createdAt': '2023-05-25T15:12:07.165Z',
                 'updatedAt': '2023-05-25T15:12:07.165Z'
@@ -143,29 +141,22 @@ class TestTitanAPIClient(CoordinatorClientTestCase):
     #
     @patch('commerce_coordinator.apps.titan.clients.TitanAPIClient.create_cart', new_callable=TitanClientMock)
     @patch('commerce_coordinator.apps.titan.clients.TitanAPIClient.add_item', new_callable=TitanClientMock)
-    @patch('commerce_coordinator.apps.titan.clients.TitanAPIClient.complete_order', new_callable=TitanClientMock)
-    def test_create_order_success(self, mock_complete_order, mock_add_item, mock_create_cart):
+    def test_create_order_success(self, mock_add_item, mock_create_cart):
         self.client.create_order(
             ORDER_CREATE_DATA['sku'],
             ORDER_CREATE_DATA['edx_lms_user_id'],
             ORDER_CREATE_DATA['email'],
-            ORDER_CREATE_DATA['first_name'],
-            ORDER_CREATE_DATA['last_name'],
             ORDER_CREATE_DATA['coupon_code'],
             DEFAULT_CURRENCY
         )
         mock_create_cart.assert_called_with(
             ORDER_CREATE_DATA['edx_lms_user_id'],
             ORDER_CREATE_DATA['email'],
-            ORDER_CREATE_DATA['first_name'],
-            ORDER_CREATE_DATA['last_name'],
             DEFAULT_CURRENCY
         )
         mock_add_item.assert_called_with(
-            ORDER_UUID, ORDER_CREATE_DATA['sku'][-1]
-        )
-        mock_complete_order.assert_called_with(
-            ORDER_UUID, ORDER_CREATE_DATA['edx_lms_user_id']
+            ORDER_UUID, ORDER_CREATE_DATA['sku'][-1],
+            ORDER_CREATE_DATA['edx_lms_user_id'],
         )
 
     def test_create_cart_success(self):
@@ -175,8 +166,6 @@ class TestTitanAPIClient(CoordinatorClientTestCase):
             input_kwargs={
                 'edx_lms_user_id': 1,
                 'email': 'edx@example.com',
-                'first_name': 'John',
-                'last_name': 'Doe',
             },
             expected_request={
                 'data': {
@@ -184,8 +173,6 @@ class TestTitanAPIClient(CoordinatorClientTestCase):
                         'currency': 'USD',
                         'edxLmsUserId': 1,
                         'email': 'edx@example.com',
-                        'firstName': 'John',
-                        'lastName': 'Doe',
                     }
                 }
             },
@@ -206,12 +193,14 @@ class TestTitanAPIClient(CoordinatorClientTestCase):
             input_kwargs={
                 'order_uuid': 'test-uuid',
                 'course_sku': 'test-sku',
+                'edx_lms_user_id': '147',
             },
             expected_request={
                 'data': {
                     'attributes': {
                         'orderUuid': 'test-uuid',
                         'courseSku': 'test-sku',
+                        'edxLmsUserId': '147',
                     }
                 }
             },
@@ -491,7 +480,7 @@ class TestTitanAPIClient(CoordinatorClientTestCase):
     def test_create_payment(self):
         url = urljoin_directory(self.api_base_url, '/payments')
         payment_method_name = PaymentMethod.STRIPE.value
-        response_code = 'a_stripe_response_code'
+        reference_number = 'a_stripe_response_code'
         provider_response_body = '{"test_key":"test_value"}'
         reference = 'test_reference'
         amount = 1000
@@ -502,38 +491,40 @@ class TestTitanAPIClient(CoordinatorClientTestCase):
             'data': {
                 'attributes': {
                     'orderUuid': ORDER_UUID,
-                    'responseCode': response_code,
+                    'referenceNumber': reference_number,
                     'paymentMethodName': payment_method_name,
                     'providerResponseBody': provider_response_body,
                 }
             }
         }
         expected_output = mock_response['data']['attributes']
-
+        edx_lms_user_id = '628'
         # test with all params
         self.assertJSONClientResponse(
             uut=self.client.create_payment,
             input_kwargs={
                 'order_uuid': ORDER_UUID,
-                'response_code': response_code,
+                'reference_number': reference_number,
                 'payment_method_name': payment_method_name,
                 'provider_response_body': provider_response_body,
                 'reference': reference,
                 'amount': amount,
                 'payment_date': payment_date,
                 'source': source,
+                'edx_lms_user_id': edx_lms_user_id
             },
             expected_request={
                 'data': {
                     'attributes': {
                         'orderUuid': ORDER_UUID,
-                        'responseCode': response_code,
+                        'referenceNumber': reference_number,
                         'paymentMethodName': payment_method_name,
                         'providerResponseBody': provider_response_body,
                         'reference': reference,
                         'amount': amount,
                         'paymentDate': payment_date,
                         'source': source,
+                        'edxLmsUserId': edx_lms_user_id
                     }
                 }
             },
@@ -549,17 +540,19 @@ class TestTitanAPIClient(CoordinatorClientTestCase):
             uut=self.client.create_payment,
             input_kwargs={
                 'order_uuid': ORDER_UUID,
-                'response_code': response_code,
+                'reference_number': reference_number,
                 'payment_method_name': payment_method_name,
                 'provider_response_body': provider_response_body,
+                'edx_lms_user_id': edx_lms_user_id
             },
             expected_request={
                 'data': {
                     'attributes': {
                         'orderUuid': ORDER_UUID,
-                        'responseCode': response_code,
+                        'referenceNumber': reference_number,
                         'paymentMethodName': payment_method_name,
                         'providerResponseBody': provider_response_body,
+                        'edxLmsUserId': edx_lms_user_id
                     }
                 }
             },

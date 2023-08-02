@@ -6,8 +6,8 @@ from urllib.parse import unquote, urlencode
 
 from django.conf import settings
 from django.http import HttpResponseRedirect, HttpResponseServerError
-from edx_rest_framework_extensions.auth.jwt.authentication import JwtAuthentication
-from edx_rest_framework_extensions.permissions import IsAuthenticated
+from edx_rest_framework_extensions.permissions import LoginRedirectIfUnauthenticated
+from rest_framework.parsers import JSONParser
 from rest_framework.throttling import UserRateThrottle
 from rest_framework.views import APIView
 
@@ -19,9 +19,9 @@ logger = logging.getLogger(__name__)
 
 class OrderCreateView(APIView):
     """Accept incoming request for creating a basket/order for a user."""
-    authentication_classes = (JwtAuthentication,)
-    permission_classes = (IsAuthenticated,)
+    permission_classes = (LoginRedirectIfUnauthenticated,)
     throttle_classes = (UserRateThrottle,)
+    parser_classes = [JSONParser]
 
     def get(self, request):  # pylint: disable=inconsistent-return-statements
         """
@@ -52,8 +52,6 @@ class OrderCreateView(APIView):
             'sku': request.query_params.getlist('sku'),
             'edx_lms_user_id': request.user.lms_user_id,
             'email': request.user.email,
-            'first_name': request.user.first_name,
-            'last_name': request.user.last_name,
             'coupon_code': request.query_params.get('coupon_code'),
         }
         serializer = OrderCreatedSignalInputSerializer(data=order_created_signal_params)

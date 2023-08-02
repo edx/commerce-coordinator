@@ -49,7 +49,7 @@ class DraftPaymentCreateView(APIView):
     authentication_classes = (JwtAuthentication,)
     permission_classes = (IsAuthenticated,)
 
-    def put(self, request):
+    def get(self, request):
         """Gets initial information required to collect payment details on a basket."""
         params = {
             'edx_lms_user_id': request.user.lms_user_id,

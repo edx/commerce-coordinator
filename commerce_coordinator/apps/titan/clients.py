@@ -67,7 +67,7 @@ class TitanAPIClient(Client):
             raise
         return response.json()
 
-    def create_order(self, sku, edx_lms_user_id, email, first_name, last_name, coupon_code, currency='USD'):
+    def create_order(self, sku, edx_lms_user_id, email, coupon_code, currency='USD'):
         """
         Task to create a basket/order for a user in Titan.
 
@@ -75,8 +75,6 @@ class TitanAPIClient(Client):
             sku: List. An edx.org stock keeping units (SKUs) that the user would like to purchase.
             edx_lms_user_id: The edx.org LMS user ID of the user receiving the order.
             email: The edx.org profile email of the user receiving the order. Required by Spree to create a user.
-            first_name: The edx.org profile first name of the user receiving the order
-            last_name: The edx.org profile last name of the user receiving the order
             coupon_code: A coupon code to initially apply to the order.
             currency (str): Optional; The ISO code of the currency to use for the order (defaults to USD)
 
@@ -89,26 +87,24 @@ class TitanAPIClient(Client):
 
         # Creating Order (for Cart/Basket)
         order_created_response = self.create_cart(
-            edx_lms_user_id, email, first_name, last_name, currency
+            edx_lms_user_id, email, currency
         )
         order_uuid = order_created_response['data']['attributes']['uuid']
 
+        last_add_item = None
         # Adding courses in Cart/Basket
         for a_sku in sku:
-            self.add_item(order_uuid, a_sku)
+            last_add_item = self.add_item(order_uuid, a_sku, edx_lms_user_id)
 
-        # Completing Cart/Basket
-        return self.complete_order(order_uuid, edx_lms_user_id)
+        return last_add_item['data']['attributes']
 
-    def create_cart(self, edx_lms_user_id, email, first_name, last_name, currency='USD'):
+    def create_cart(self, edx_lms_user_id, email, currency='USD'):
         """
         Request Titan to create a basket/cart for a user
 
         Args:
             edx_lms_user_id: The edx.org LMS user ID of the user receiving the order.
             email: The edx.org profile email of the user receiving the order. Required by Spree to create a user.
-            first_name: The edx.org profile first name of the user receiving the order
-            last_name: The edx.org profile last name of the user receiving the order
             currency: Optional; The ISO code of the currency to use for the order (defaults to USD)
         """
         logger.info(f'TitanAPIClient.create_cart called using {locals()}.')
@@ -121,14 +117,12 @@ class TitanAPIClient(Client):
                         'currency': currency,
                         'edxLmsUserId': edx_lms_user_id,
                         'email': email,
-                        'firstName': first_name,
-                        'lastName': last_name,
                     }
                 }
             },
         )
 
-    def add_item(self, order_uuid, course_sku):
+    def add_item(self, order_uuid, course_sku, edx_lms_user_id):
         """
         Request Titan to add an item to a cart for a user
 
@@ -145,6 +139,7 @@ class TitanAPIClient(Client):
                     'attributes': {
                         'orderUuid': order_uuid,
                         'courseSku': course_sku,
+                        'edxLmsUserId': edx_lms_user_id
                     }
                 }
             },
@@ -241,9 +236,10 @@ class TitanAPIClient(Client):
     def create_payment(
         self,
         order_uuid,
-        response_code,
+        reference_number,
         payment_method_name,
         provider_response_body,
+        edx_lms_user_id,
         reference=None,
         amount=None,
         payment_date=None,
@@ -254,7 +250,7 @@ class TitanAPIClient(Client):
 
         Args:
             order_uuid(str): Order UUID related to this order.
-            response_code(str): Payment attempt response code (payment intent id) provided by stripe.
+            reference_number(str): Payment attempt response code (payment intent id) provided by stripe.
             payment_method_name(str): The name of the payment method used for this payment. See enums for valid values.
             provider_response_body(str): The response JSON dump from a request to the payment provider..
             reference(str): Optional. Reference to be saved against the payment.
@@ -266,9 +262,10 @@ class TitanAPIClient(Client):
         """
         payload_attributes = {
             'orderUuid': order_uuid,
-            'responseCode': response_code,
+            'referenceNumber': reference_number,
             'paymentMethodName': payment_method_name,
             'providerResponseBody': provider_response_body,
+            'edxLmsUserId': edx_lms_user_id,
         }
         if reference is not None:
             payload_attributes['reference'] = reference
