@@ -15,6 +15,7 @@ from rest_framework.test import APITestCase
 from commerce_coordinator.apps.core.cache import CachePaymentStates, get_payment_state_cache_key
 from commerce_coordinator.apps.core.constants import PaymentState
 from commerce_coordinator.apps.core.tests.utils import name_test
+from commerce_coordinator.apps.titan.exceptions import NoActiveOrder
 from commerce_coordinator.apps.titan.tests.test_clients import (
     ORDER_UUID,
     TitanPaymentClientMock,
@@ -298,10 +299,16 @@ class DraftPaymentCreateViewTests(APITestCase):
         mock_create_payment.return_value = {**mock_get_active_order_response['payments'][0]}
 
         expected_response = {
-            'payment_number': 'PDHB22WS',
-            'order_uuid': ORDER_UUID,
-            'key_id': intent_id,
-            'state': PaymentState.CHECKOUT.value
+            'capture_context': {
+                'payment_number': 'PDHB22WS',
+                'order_uuid': ORDER_UUID,
+                'key_id': intent_id,
+                'state': PaymentState.CHECKOUT.value
+            },
+        }
+
+        expected_empty_response = {
+            'capture_context': {},
         }
 
         # Test when existing payment exists.
@@ -311,9 +318,41 @@ class DraftPaymentCreateViewTests(APITestCase):
         mock_get_active_order_response['payments'][0]['state'] = PaymentState.FAILED.value
         self._assert_draft_payment_create_request(expected_response, mock_get_active_order)
 
+        # Test when existing payment is Completed.
+        mock_get_active_order_response['payments'][0]['state'] = PaymentState.COMPLETED.value
+        self._assert_draft_payment_create_request(expected_empty_response, mock_get_active_order)
+
         # Test when existing payment does not exist.
         mock_get_active_order_response['payments'] = []
         self._assert_draft_payment_create_request(expected_response, mock_get_active_order)
+
+    @patch('commerce_coordinator.apps.titan.clients.TitanAPIClient.get_active_order', side_effect=NoActiveOrder)
+    @patch('commerce_coordinator.apps.titan.clients.TitanAPIClient.create_payment')
+    @patch('commerce_coordinator.apps.stripe.clients.StripeAPIClient.create_payment_intent')
+    def test_create_payment_no_active_order(
+        self,
+        mock_create_payment_intent,
+        mock_create_payment,
+        mock_get_active_order
+    ):
+        """
+        Ensure data validation and success scenarios for create draft payment.
+        """
+
+        intent_id = 'ch_3MebJMAa00oRYTAV1C26pHmmj572'
+        mock_get_active_order_response = copy.deepcopy(titan_active_order_response)
+        mock_get_active_order.return_value = mock_get_active_order_response
+        mock_create_payment_intent.return_value = {
+            'id': intent_id,
+        }
+        mock_create_payment.return_value = {**mock_get_active_order_response['payments'][0]}
+
+        expected_empty_response = {
+            'capture_context': {},
+        }
+
+        # Test when existing payment exists.
+        self._assert_draft_payment_create_request(expected_empty_response, mock_get_active_order)
 
     def test_create_payment_missing_user_id(self):
         """
