@@ -6,7 +6,6 @@ import copy
 import ddt
 from django.conf import settings
 from django.contrib.auth import get_user_model
-from django.db.backends.dummy.base import ignore
 from django.urls import reverse
 from edx_django_utils.cache import TieredCache
 from mock import patch
@@ -283,12 +282,17 @@ class DraftPaymentCreateViewTests(APITestCase):
         kwargs = mock_get_active_order.call_args.kwargs
         self.assertEqual(kwargs['edx_lms_user_id'], self.test_lms_user_id)
 
-    @ignore
     @patch('commerce_coordinator.apps.titan.clients.TitanAPIClient.get_active_order')
     @patch('commerce_coordinator.apps.titan.clients.TitanAPIClient.create_payment')
     @patch('commerce_coordinator.apps.stripe.clients.StripeAPIClient.create_payment_intent')
     @patch('commerce_coordinator.apps.stripe.clients.StripeAPIClient.update_payment_intent')
-    def test_create_payment(self, _, mock_create_payment_intent, mock_create_payment, mock_get_active_order):
+    def test_create_payment(
+        self,
+        mock_update_payment_intent,
+        mock_create_payment_intent,
+        mock_create_payment,
+        mock_get_active_order
+    ):
         """
         Ensure data validation and success scenarios for create draft payment.
         """
@@ -298,13 +302,21 @@ class DraftPaymentCreateViewTests(APITestCase):
         mock_get_active_order.return_value = mock_get_active_order_response
         mock_create_payment_intent.return_value = {
             'id': intent_id,
+            'client_secret': intent_id
         }
+        mock_update_payment_intent.return_value = {
+            'number': 'PDHB22WS',
+            'orderUuid': ORDER_UUID,
+            'referenceNumber': intent_id,
+            'state': PaymentState.CHECKOUT.value,
+        }
+
         mock_create_payment.return_value = {**mock_get_active_order_response['payments'][0]}
 
         expected_response = {
             'capture_context': {
                 'payment_number': 'PDHB22WS',
-                'order_uuid': ORDER_UUID,
+                'order_id': ORDER_UUID,
                 'key_id': intent_id,
                 'state': PaymentState.CHECKOUT.value
             },

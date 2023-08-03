@@ -62,17 +62,13 @@ class DraftPaymentCreateView(APIView):
         params = input_serializer.data
         try:
             payment_details = DraftPaymentRequested.run_filter(**params)
-            if payment_details and payment_details['state'] == PaymentState.COMPLETED.value:
-                payment_details = {}
+            if payment_details and payment_details['capture_context']['state'] == PaymentState.COMPLETED.value:
+                payment_details['capture_context'] = {}
         except NoActiveOrder:
             logger.debug('[DraftPaymentCreateView] No active order found for user: %s, '
                          'returning empty caputre_context', request.user.lms_user_id)
-            payment_details = {}
-        payment_response = {
-            'capture_context':
-                payment_details
-        }
-        return Response(payment_response)
+            payment_details = {'capture_context': {}}
+        return Response(payment_details)
 
 
 class GetActiveOrderView(APIView):
