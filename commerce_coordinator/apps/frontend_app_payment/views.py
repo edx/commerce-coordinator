@@ -9,6 +9,9 @@ from rest_framework.response import Response
 from rest_framework.throttling import ScopedRateThrottle
 from rest_framework.views import APIView
 
+from commerce_coordinator.apps.core.constants import PaymentState
+from commerce_coordinator.apps.titan.exceptions import NoActiveOrder
+
 from .filters import ActiveOrderRequested, DraftPaymentRequested, PaymentProcessingRequested, PaymentRequested
 from .serializers import (
     DraftPaymentCreateViewInputSerializer,
@@ -57,7 +60,14 @@ class DraftPaymentCreateView(APIView):
         input_serializer = DraftPaymentCreateViewInputSerializer(data=params)
         input_serializer.is_valid(raise_exception=True)
         params = input_serializer.data
-        payment_details = DraftPaymentRequested.run_filter(**params)
+        try:
+            payment_details = DraftPaymentRequested.run_filter(**params)
+            if payment_details and payment_details['capture_context']['state'] == PaymentState.COMPLETED.value:
+                payment_details['capture_context'] = {}
+        except NoActiveOrder:
+            logger.debug('[DraftPaymentCreateView] No active order found for user: %s, '
+                         'returning empty caputre_context', request.user.lms_user_id)
+            payment_details = {'capture_context': {}}
         return Response(payment_details)
 
 
