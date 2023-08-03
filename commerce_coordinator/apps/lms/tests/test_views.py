@@ -91,8 +91,8 @@ class OrderCreateViewTests(APITestCase):
         self.client.login(username=self.test_user_username, password=self.test_user_password)
         # Request Order create
         response = self.client.get(self.url)
-        # Error HTTP_401_UNAUTHORIZED
-        self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
+        # Error HTTP_400_BAD_REQUEST
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
 
     def test_view_rejects_unauthorized(self):
         """Check unauthorized users querying orders are redirected to login page."""
@@ -100,8 +100,8 @@ class OrderCreateViewTests(APITestCase):
         self.client.logout()
         # Request Order create
         response = self.client.get(self.url)
-        # Error HTTP_401_UNAUTHORIZED
-        self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
+        # Error HTTP_302_FOUND
+        self.assertEqual(response.status_code, status.HTTP_302_FOUND)
 
     @override_settings(
         OPEN_EDX_FILTERS_CONFIG={
@@ -131,7 +131,7 @@ class OrderCreateViewTests(APITestCase):
             self.test_user_password,
             # TODO: Remove is_staff=True
             is_staff=True,
-            lms_user_id=1, first_name='John', last_name='Doe'
+            lms_user_id=1
         )
 
         self.client.force_authenticate(user=self.user)
@@ -155,7 +155,6 @@ class OrderCreateViewTests(APITestCase):
             (
                 {
                     'lms_user_id': 1, 'email': 'pass-by-param@example.com',
-                    'first_name': 'John', 'last_name': 'Doe'
                 },
                 {
                     'coupon_code': 'test_code', 'sku': ['sku1'],
@@ -165,7 +164,7 @@ class OrderCreateViewTests(APITestCase):
                     'order_data': None,
                     'params': {
                         'edx_lms_user_id': 1, 'email': 'pass-by-param@example.com',
-                        'first_name': 'John', 'last_name': 'Doe', 'sku': ['sku1'], 'coupon_code': 'test_code',
+                        'sku': ['sku1'], 'coupon_code': 'test_code',
                     }
                 }
             )
@@ -175,7 +174,6 @@ class OrderCreateViewTests(APITestCase):
             (
                 {
                     'lms_user_id': 1, 'email': 'pass-by-param@example.com',
-                    'first_name': 'John', 'last_name': 'Doe',
                 },
                 {'sku': ['sku1']},
                 status.HTTP_303_SEE_OTHER,
@@ -183,7 +181,7 @@ class OrderCreateViewTests(APITestCase):
                     'order_data': None,
                     'params': {
                         'edx_lms_user_id': 1, 'email': 'pass-by-param@example.com',
-                        'first_name': 'John', 'last_name': 'Doe', 'sku': ['sku1'], 'coupon_code': None
+                        'sku': ['sku1'], 'coupon_code': None
                     }
                 }
             )
@@ -193,7 +191,6 @@ class OrderCreateViewTests(APITestCase):
             (
                 {
                     'lms_user_id': 1, 'email': 'pass-by-param@example.com',
-                    'first_name': 'John', 'last_name': 'Doe'
                 },
                 {'coupon_code': 'test_code', 'sku': []},
                 status.HTTP_400_BAD_REQUEST,
@@ -205,7 +202,6 @@ class OrderCreateViewTests(APITestCase):
             (
                 {
                     'lms_user_id': 1, 'email': 'pass-by-param@example.com',
-                    'first_name': 'John', 'last_name': 'Doe'
                 },
                 {'coupon_code': 'test_code'},
                 status.HTTP_400_BAD_REQUEST,
@@ -217,7 +213,6 @@ class OrderCreateViewTests(APITestCase):
             (
                 {
                     'lms_user_id': 1, 'email': 'pass-by-param@example.com',
-                    'first_name': 'John', 'last_name': 'Doe'
                 },
                 {'coupon_code': 'test_code', 'sku': ''},
                 status.HTTP_400_BAD_REQUEST,
@@ -229,7 +224,6 @@ class OrderCreateViewTests(APITestCase):
             (
                 {
                     'email': 'pass-by-param@example.com',
-                    'first_name': 'John', 'last_name': 'Doe'
                 },
                 {'coupon_code': 'test_code', 'sku': ['sku1']},
                 status.HTTP_400_BAD_REQUEST,
@@ -241,7 +235,6 @@ class OrderCreateViewTests(APITestCase):
             (
                 {
                     'lms_user_id': 1, 'email': '',
-                    'first_name': 'John', 'last_name': 'Doe'
                 },
                 {
                     'coupon_code': 'test_code', 'sku': ['sku1'],
@@ -255,7 +248,6 @@ class OrderCreateViewTests(APITestCase):
             (
                 {
                     'lms_user_id': 1, 'email': '#^#$%^',
-                    'first_name': 'John', 'last_name': 'Doe'
                 },
                 {
                     'coupon_code': 'test_code', 'sku': ['sku1'],

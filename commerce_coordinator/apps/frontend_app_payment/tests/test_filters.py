@@ -44,7 +44,7 @@ class TestDraftPaymentRequestedFilter(TestCase):
             'edx_lms_user_id': 1,
         }
         payment_details = DraftPaymentRequested.run_filter(**filter_params)
-        self.assertEqual(mock_payment.get('payment_data'), payment_details)
+        self.assertEqual(mock_payment.get('payment_data'), payment_details['capture_context'])
 
 
 class TestPaymentProcessingRequestedFilter(TestCase):

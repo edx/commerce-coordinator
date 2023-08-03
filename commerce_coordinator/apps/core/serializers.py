@@ -9,10 +9,14 @@ from rest_framework.serializers import *  # pylint: disable=wildcard-import; thi
 
 class CoordinatorSerializer(Serializer):
     """
-    Suppress lint messages about lack of create() or update().
+    A custom Coordinator Serializer that eases some basic issues with our hijacking of this mechanism.
+
+    - Suppress lint messages about lack of create() or update().
     """
+
     # create() and update() are optional. See:
     # https://www.django-rest-framework.org/api-guide/serializers/#saving-instances
+
     type_error = TypeError(
         'CoordinatorSerializer is for model-less validation only.'
     )
@@ -63,7 +67,6 @@ class UnixDateTimeField(DateTimeField):
 
         # Continue parsing as DateTimeField.
         return super().to_internal_value(datetime_value)
-
 
 # The code in UnixDateTimeField was adapted from encode/django-rest-framework,
 # which requires the redistribution of the following BSD 3-Clause License:

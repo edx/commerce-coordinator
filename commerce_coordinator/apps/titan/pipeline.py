@@ -43,7 +43,10 @@ class CreateTitanOrder(PipelineStep):
         titan_api_client = TitanAPIClient()
         titan_response = titan_api_client.create_order(**params)
 
-        order_data.append(titan_response)
+        if order_data is None:
+            order_data = {}
+
+        order_data['order_uuid'] = titan_response['uuid']
 
         return {
             "order_data": order_data
@@ -130,33 +133,37 @@ class CreateDraftPayment(PipelineStep):
     def run_filter(
         self,
         order_uuid,
-        response_code,
+        payment_intent_id,
+        client_secret,
         payment_method_name,
         provider_response_body,
+        edx_lms_user_id,
     ):  # pylint: disable=arguments-differ
         """
         Execute a filter with the signature specified.
         Args:
-            Args:
             order_uuid(str): Order UUID related to this order.
-            response_code(str): Payment attempt response code (payment intent id) provided by stripe.
             payment_method_name(str): The name of the payment method used for this payment. See enums for valid values.
             provider_response_body(str): The response JSON dump from a request to the payment provider.
-
+            payment_intent_id(str): A Stripe Payment Intent ID (used to update payment intents)
+            client_secret(str): A Stripe client secret string used by the UI to load the Stripe payment form.
+            edx_lms_user_id(str): edC LMS User ID
         """
 
         api_client = TitanAPIClient()
         try:
             payment = api_client.create_payment(
                 order_uuid=order_uuid,
-                response_code=response_code,
+                reference_number=payment_intent_id,
                 payment_method_name=payment_method_name,
                 provider_response_body=provider_response_body,
-
+                edx_lms_user_id=edx_lms_user_id
             )
         except HTTPError as exc:
             logger.exception('[CreateTitanPayment] Failed to create payment for order_uuid: %s', order_uuid)
             raise APIException("Error while creating payment on titan's system") from exc
+
+        payment['referenceNumber'] = client_secret
 
         payment_serializer = PaymentSerializer(data=payment)
         payment_serializer.is_valid(raise_exception=True)
@@ -226,10 +233,10 @@ class UpdateTitanPayment(PipelineStep):
     """
 
     def run_filter(
-            self,
-            payment_number,
-            payment_state,
-            response_code
+        self,
+        payment_number,
+        payment_state,
+        response_code
     ):  # pylint: disable=arguments-differ
 
         api_client = TitanAPIClient()
