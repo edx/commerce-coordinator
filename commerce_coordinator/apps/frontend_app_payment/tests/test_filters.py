@@ -57,12 +57,24 @@ class TestPaymentProcessingRequestedFilter(TestCase):
                 "pipeline": [
                     'commerce_coordinator.apps.titan.pipeline.GetTitanPayment',
                     'commerce_coordinator.apps.titan.pipeline.ValidatePaymentReadyForProcessing',
+                    'commerce_coordinator.apps.titan.pipeline.UpdateBillingAddress',
+                    'commerce_coordinator.apps.stripe.pipeline.ConfirmPayment',
+                    'commerce_coordinator.apps.titan.pipeline.UpdateTitanPayment',
                 ]
             },
         },
     )
     @patch('commerce_coordinator.apps.titan.pipeline.GetTitanPayment.run_filter')
-    def test_filter_when_payment_exist_in_titan(self, mock_pipeline):
+    @patch('commerce_coordinator.apps.titan.pipeline.UpdateBillingAddress.run_filter')
+    @patch('commerce_coordinator.apps.stripe.pipeline.ConfirmPayment.run_filter')
+    @patch('commerce_coordinator.apps.titan.pipeline.UpdateTitanPayment.run_filter')
+    def test_filter_when_payment_exist_in_titan(
+        self,
+        mock_update_titan_payment_step,
+        mock_confirm_payment_step,
+        mock_update_billing_address_step,
+        mock_get_titan_payment_step,
+    ):
         """
         Test when Payment exists in Titan system.
         """
@@ -75,7 +87,25 @@ class TestPaymentProcessingRequestedFilter(TestCase):
                 'state': PaymentState.PROCESSING.value
             }
         }
-        mock_pipeline.return_value = mock_payment
+        mock_billing_details_data = {
+            'billing_address_data': {
+                'address1': 'test address',
+                'address2': '1',
+                'city': 'a place',
+                'company': 'a company',
+                'countryIso': 'US',
+                'firstName': 'test',
+                'lastName': 'mctester',
+                'phone': '5558675309',
+                'stateName': 'MA',
+                'zipcode': '55555',
+            }
+        }
+        mock_get_titan_payment_step.return_value = mock_payment
+        mock_update_billing_address_step.return_value = mock_billing_details_data
+        mock_confirm_payment_step.return_value = mock_payment
+        mock_update_titan_payment_step.return_value = mock_payment
+
         filter_params = {
             'order_uuid': ORDER_UUID,
             'payment_number': 'test-payment-number',
@@ -83,45 +113,10 @@ class TestPaymentProcessingRequestedFilter(TestCase):
             'skus': ['test-sku'],
         }
         payment_details = PaymentProcessingRequested.run_filter(**filter_params)
-        expected_payment = {**mock_payment, **filter_params}
-        self.assertEqual(expected_payment, payment_details)
-
-    @override_settings(
-        OPEN_EDX_FILTERS_CONFIG={
-            "org.edx.coordinator.frontend_app_payment.payment.processing.requested.v1": {
-                "fail_silently": False,
-                "pipeline": [
-                    'commerce_coordinator.apps.titan.pipeline.UpdateTitanPayment',
-                ]
-            },
-        },
-    )
-    @patch('commerce_coordinator.apps.titan.pipeline.UpdateTitanPayment.run_filter')
-    def test_filter_stores_result(self, mock_pipeline):
-        """
-        Test updating a payment in Titan and stores result in cache
-        """
-        TieredCache.dangerous_clear_all_tiers()
-        payment_number = '1234'
-        mock_payment = {
-            'payment_data': {
-                'payment_number': payment_number,
-                'order_uuid': ORDER_UUID,
-                'response_code': 'a_stripe_response_code',
-                'state': PaymentState.PROCESSING.value,
-            }
-        }
-        mock_pipeline.return_value = mock_payment
-        filter_params = {
-            'number': payment_number,
-            'responseCode': 'a_stripe_response_code',
-            'state': PaymentState.PROCESSING.value,
-        }
-        payment_details = PaymentProcessingRequested.run_filter(**filter_params)
-        expected_payment = {**mock_payment, **filter_params}
+        expected_payment = {**mock_payment, **mock_billing_details_data, **filter_params}
         self.assertEqual(expected_payment, payment_details)
         payment_state_processing_cache_key = get_payment_state_cache_key(
-            payment_number, CachePaymentStates.PROCESSING.value
+            filter_params['payment_number'], CachePaymentStates.PROCESSING.value
         )
         cached_response = TieredCache.get_cached_response(payment_state_processing_cache_key)
         self.assertTrue(cached_response.is_found)
