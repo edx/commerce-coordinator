@@ -74,7 +74,7 @@ class UpdateStripeDraftPayment(PipelineStep):
     Adds titan orders to the order data list.
     """
 
-    def run_filter(self, order_data, payment_data, **kwargs):  # pylint: disable=arguments-differ
+    def run_filter(self, edx_lms_user_id, order_data, payment_data, **kwargs):  # pylint: disable=arguments-differ
         """
         Execute a filter with the signature specified.
         Arguments:
@@ -84,6 +84,7 @@ class UpdateStripeDraftPayment(PipelineStep):
         stripe_api_client = StripeAPIClient()
         try:
             stripe_api_client.update_payment_intent(
+                edx_lms_user_id=edx_lms_user_id,
                 payment_intent_id=payment_data['key_id'],
                 order_uuid=payment_data['order_uuid'],
                 current_payment_number=payment_data['payment_number'],

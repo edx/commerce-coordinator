@@ -143,6 +143,7 @@ class StripeAPIClient:
 
     def update_payment_intent(
         self,
+        edx_lms_user_id,
         payment_intent_id,
         order_uuid,
         current_payment_number,
@@ -153,6 +154,7 @@ class StripeAPIClient:
         Update a Stripe PaymentIntent.
 
         Args:
+            edx_lms_user_id(int): The edx.org LMS user ID of the user making the payment.
             payment_intent_id (str): The Stripe PaymentIntent id to look up.
             order_uuid (str): The identifier of the order. There should be only
                 one Stripe PaymentIntent for this identifier.
@@ -177,6 +179,7 @@ class StripeAPIClient:
 
         class UpdatePaymentIntentInputSerializer(serializers.CoordinatorSerializer):
             '''Serializer for StripeAPIClient.update_payment_intent.'''
+            edx_lms_user_id = serializers.IntegerField(allow_null=False)
             payment_intent_id = serializers.CharField()
             order_uuid = serializers.UUIDField()
             current_payment_number = serializers.CharField()
@@ -192,6 +195,7 @@ class StripeAPIClient:
                 currency=currency,
                 description=order_uuid,
                 metadata={
+                    'edx_lms_user_id': edx_lms_user_id,
                     'order_number': order_uuid,
                     'payment_number': current_payment_number,
                     'source_system': self.source_system_identifier,
