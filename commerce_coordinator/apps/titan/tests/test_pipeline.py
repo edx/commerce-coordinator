@@ -371,7 +371,9 @@ class TestUpdateTitanPaymentStep(TestCase):
         self.update_payment_data = {
             'payment_number': '1234',
             'payment_state': PaymentState.PROCESSING.value,
-            'response_code': 'a_stripe_response_code',
+            'edx_lms_user_id': 1,
+            'order_uuid': ORDER_UUID,
+            'payment_intent_id': 'fake-intent',
         }
         self.update_payment_response = {
             'number': '1234',

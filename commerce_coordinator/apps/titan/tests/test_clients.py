@@ -1,6 +1,7 @@
 """Test Titan clients."""
 from unittest.mock import MagicMock, patch
 
+import ddt
 from django.test import override_settings
 from requests.exceptions import HTTPError
 
@@ -114,6 +115,7 @@ class TitanActiveOrderClientMock(MagicMock):
     TITAN_URL=TITAN_URL,
     TITAN_API_KEY=TITAN_API_KEY
 )
+@ddt.ddt
 class TestTitanAPIClient(CoordinatorClientTestCase):
     """TitanAPIClient tests."""
 
@@ -436,11 +438,40 @@ class TestTitanAPIClient(CoordinatorClientTestCase):
             expected_output=expected_output,
         )
 
-    def test_update_payment(self):
+    @ddt.data(
+        {'key': 'value'},
+        None
+    )
+    def test_update_payment(self, provider_response_body):
         url = urljoin_directory(self.api_base_url, '/payments')
+        edx_lms_user_id = 1
         payment_number = '1234'
         payment_state = PaymentState.COMPLETED.value
-        response_code = 'a_stripe_response_code'
+        reference_number = 'fake_payment_intent'
+
+        input_kwargs = {
+            'edx_lms_user_id': edx_lms_user_id,
+            'order_uuid': ORDER_UUID,
+            'payment_number': payment_number,
+            'payment_state': payment_state,
+            'reference_number': reference_number,
+        }
+
+        expected_request = {
+            'data': {
+                'attributes': {
+                    'edxLmsUserId': edx_lms_user_id,
+                    'orderUuid': ORDER_UUID,
+                    'paymentNumber': payment_number,
+                    'paymentState': payment_state,
+                    'referenceNumber': reference_number,
+                }
+            }
+        }
+
+        if provider_response_body:
+            input_kwargs['provider_response_body'] = provider_response_body
+            expected_request['data']['attributes']['providerResponseBody'] = provider_response_body
 
         mock_response = {
             'data': {
@@ -456,20 +487,8 @@ class TestTitanAPIClient(CoordinatorClientTestCase):
 
         self.assertJSONClientResponse(
             uut=self.client.update_payment,
-            input_kwargs={
-                'payment_number': payment_number,
-                'payment_state': payment_state,
-                'response_code': response_code,
-            },
-            expected_request={
-                'data': {
-                    'attributes': {
-                        'paymentNumber': payment_number,
-                        'paymentState': payment_state,
-                        'responseCode': response_code,
-                    }
-                }
-            },
+            input_kwargs=input_kwargs,
+            expected_request=expected_request,
             expected_headers=self.expected_headers,
             mock_method='PATCH',
             mock_url=url,

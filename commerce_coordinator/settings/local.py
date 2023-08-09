@@ -144,6 +144,7 @@ PAYMENT_PROCESSOR_CONFIG = {
             'proxy': None,
             'publishable_key': 'SET-ME-PLEASE',
             'secret_key': 'SET-ME-PLEASE',
+            'source_system_identifier': 'edx/commerce_coordinator?v=1',
             'webhook_endpoint_secret': 'SET-ME-PLEASE',
         },
     },

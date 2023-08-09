@@ -51,8 +51,11 @@ def payment_processed_save(**kwargs):
     Update an payment.
     """
     async_result = payment_processed_save_task.delay(
+        kwargs['edx_lms_user_id'],
+        kwargs['order_uuid'],
         kwargs['payment_number'],
         kwargs['payment_state'],
-        kwargs['response_code'],
+        kwargs['reference_number'],
+        kwargs['provider_response_body'],
     )
     return async_result.id
