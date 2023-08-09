@@ -208,25 +208,36 @@ class TitanAPIClient(Client):
 
         return response['data']['attributes']
 
-    def update_payment(self, payment_number, payment_state, response_code):
+    def update_payment(
+        self, edx_lms_user_id, order_uuid, payment_number, payment_state, reference_number, provider_response_body=None
+    ):
         """
         Request Titan to update payment.
 
         Args:
+            edx_lms_user_id: The edx.org LMS user ID of the user making the payment.
+            order_uuid: Order UUID related to this order.
             payment_number: The Payment identifier in Spree.
             payment_state: State to advance the payment to.
-            response_code: Payment attempt response code provided by stripe.
+            reference_number: Payment client intent key.
+            provider_response_body: Optional. The saved response from a request to the payment provider.
         """
+        data_attributes = {
+            'edxLmsUserId': edx_lms_user_id,
+            'orderUuid': order_uuid,
+            'paymentNumber': payment_number,
+            'paymentState': payment_state,
+            'referenceNumber': reference_number,
+        }
+        if provider_response_body is not None:
+            data_attributes['providerResponseBody'] = provider_response_body
+
         response = self._request(
             request_method='PATCH',
             resource_path='payments',
             json={
                 'data': {
-                    'attributes': {
-                        'paymentNumber': payment_number,
-                        'paymentState': payment_state,
-                        'responseCode': response_code,
-                    }
+                    'attributes': data_attributes
                 }
             },
         )

@@ -64,28 +64,37 @@ def order_created_save_task(sku, edx_lms_user_id, email, coupon_code):
 
 
 @shared_task()
-def payment_processed_save_task(payment_number, payment_state, response_code):
+def payment_processed_save_task(
+    edx_lms_user_id, order_uuid, payment_number, payment_state, reference_number, provider_response_body
+):
     """
     task to update payment in Titan.
 
     Args:
         Args:
+            edx_lms_user_id(int): The edx.org LMS user ID of the user making the payment.
+            order_uuid (str): The identifier of the order. There should be only
+                one Stripe PaymentIntent for this identifier.
             payment_number: The Payment identifier in Spree.
             payment_state: State to advance the payment to.
-            response_code: Payment attempt response code provided by stripe.
+            reference_number: Payment attempt response code provided by stripe.
+            provider_response_body: The saved response from a request to the payment provider.
 
     """
     logger.info('Titan payment_processed_save_task fired '
                 f'with payment_number: {payment_number}, payment_state: {payment_state},'
-                f'and response_code: {response_code}.')
+                f'and response_code: {reference_number}.')
 
     titan_api_client = TitanAPIClient()
 
     try:
         payment = titan_api_client.update_payment(
+            edx_lms_user_id=edx_lms_user_id,
+            order_uuid=order_uuid,
             payment_number=payment_number,
             payment_state=payment_state,
-            response_code=response_code
+            reference_number=reference_number,
+            provider_response_body=provider_response_body,
         )
         # Set cache after successfully updating payment state in Titan's system.
         payment_state = payment['state']
@@ -98,4 +107,4 @@ def payment_processed_save_task(payment_number, payment_state, response_code):
     except HTTPError as ex:
         logger.exception('Titan payment_processed_save_task Failed '
                          f'with payment_number: {payment_number}, payment_state: {payment_state},'
-                         f'and response_code: {response_code}. Exception: {ex}')
+                         f'and reference_number: {reference_number}. Exception: {ex}')
