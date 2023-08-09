@@ -62,9 +62,12 @@ class TestPaymentTasks(TestCase):
         }
         payment_number = '12345'
         payment_update_params = {
+            'edx_lms_user_id': 1,
+            'order_uuid': ORDER_UUID,
             'payment_number': payment_number,
             'payment_state': payment_state,
-            'response_code': 'g7h52545gavgatTh'
+            'reference_number': 'g7h52545gavgatTh',
+            'provider_response_body': {'key': 'value'}
          }
         payment_processed_save_task.apply(
             kwargs=payment_update_params
@@ -92,11 +95,14 @@ class TestPaymentTasks(TestCase):
         """
         TieredCache.dangerous_clear_all_tiers()
         payment_number = '12345'
-        response_code = 'g7h52545gavgatTh'
+        reference_number = 'g7h52545gavgatTh'
         payment_update_params = {
+            'edx_lms_user_id': 1,
+            'order_uuid': ORDER_UUID,
             'payment_number': payment_number,
             'payment_state': payment_state,
-            'response_code': response_code
+            'reference_number': reference_number,
+            'provider_response_body': {'key': 'value'}
         }
         with LogCapture(log_name) as log_capture:
             payment_processed_save_task.apply(
@@ -107,7 +113,7 @@ class TestPaymentTasks(TestCase):
                     log_name,
                     'ERROR',
                     f'Titan payment_processed_save_task Failed with payment_number: {payment_number}, '
-                    f'payment_state: {payment_state},and response_code: {response_code}. Exception: '
+                    f'payment_state: {payment_state},and reference_number: {reference_number}. Exception: '
                 )
             )
         mock_update_payment.assert_called_with(

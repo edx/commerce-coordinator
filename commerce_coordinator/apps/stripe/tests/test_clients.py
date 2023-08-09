@@ -286,6 +286,7 @@ class TestStripeAPIClient(CoordinatorClientTestCase):
         self.assertJSONClientResponse(
             uut=self.client.update_payment_intent,
             input_kwargs={
+                'edx_lms_user_id': 1,
                 'payment_intent_id': TEST_PAYMENT_INTENT_ID,
                 'order_uuid': TEST_ORDER_UUID,
                 'current_payment_number': TEST_PAYMENT_NUMBER,
@@ -296,6 +297,7 @@ class TestStripeAPIClient(CoordinatorClientTestCase):
                 'amount': ['10000'],
                 'currency': ['USD'],
                 'description': [TEST_ORDER_UUID],
+                'metadata[edx_lms_user_id]': ['1'],
                 'metadata[order_number]': [TEST_ORDER_UUID],
                 'metadata[payment_number]': [str(TEST_PAYMENT_NUMBER)],
                 'metadata[source_system]': ['edx/commerce_coordinator?v=1'],
@@ -323,6 +325,7 @@ class TestStripeAPIClient(CoordinatorClientTestCase):
             self.assertJSONClientResponse(
                 uut=self.client.update_payment_intent,
                 input_kwargs={
+                    'edx_lms_user_id': 1,
                     'payment_intent_id': TEST_PAYMENT_INTENT_ID,
                     'order_uuid': TEST_ORDER_UUID,
                     'current_payment_number': TEST_PAYMENT_NUMBER,
@@ -333,6 +336,7 @@ class TestStripeAPIClient(CoordinatorClientTestCase):
                     'amount': ['10000'],
                     'currency': ['USD'],
                     'description': [TEST_ORDER_UUID],
+                    'metadata[edx_lms_user_id]': ['1'],
                     'metadata[order_number]': [TEST_ORDER_UUID],
                     'metadata[payment_number]': [str(TEST_PAYMENT_NUMBER)],
                     'metadata[source_system]': ['edx/commerce_coordinator?v=1'],
