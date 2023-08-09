@@ -63,6 +63,8 @@ class TestCreateOrGetStripeDraftPaymentStep(TestCase):
         self.assertEqual(recent_payment['key_id'], result['payment_data']['key_id'])
 
         # Test when existing payment does not exist.
+        mock_create_payment_intent.reset_mock()
+        mock_create_payment.reset_mock()
         result: dict = create_draft_payment_pipe.run_filter(mock_active_order, recent_payment=None, edx_lms_user_id=12)
         mock_create_payment_intent.assert_called()
         mock_create_payment.assert_called()
