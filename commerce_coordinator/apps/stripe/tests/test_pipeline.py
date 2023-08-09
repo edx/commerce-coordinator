@@ -96,14 +96,14 @@ class TestUpdateStripeDraftPaymentStep(TestCase):
             'payment_intent_id': 'pi_somecode'
         }
 
-        result: dict = create_update_payment_pipe.run_filter(mock_order_data, mock_payment_data)
+        result: dict = create_update_payment_pipe.run_filter(1, mock_order_data, mock_payment_data)
         mock_update_payment_intent.assert_called()
         self.assertEqual(mock_payment_data['key_id'], result['payment_data']['key_id'])
 
         # Test Error while updating payment intent
         mock_update_payment_intent.side_effect = StripeError
         with self.assertRaises(StripeIntentUpdateAPIError):
-            create_update_payment_pipe.run_filter(mock_order_data, mock_payment_data)
+            create_update_payment_pipe.run_filter(1, mock_order_data, mock_payment_data)
 
 
 class TestConfirmPaymentStep(TestCase):

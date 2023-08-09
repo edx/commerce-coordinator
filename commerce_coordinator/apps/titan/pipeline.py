@@ -234,17 +234,23 @@ class UpdateTitanPayment(PipelineStep):
 
     def run_filter(
         self,
+        edx_lms_user_id,
+        order_uuid,
         payment_number,
         payment_state,
-        response_code
+        payment_intent_id,
+        **kwargs
     ):  # pylint: disable=arguments-differ
 
         api_client = TitanAPIClient()
         try:
             response = api_client.update_payment(
+                edx_lms_user_id=edx_lms_user_id,
+                order_uuid=order_uuid,
                 payment_number=payment_number,
                 payment_state=payment_state,
-                response_code=response_code)
+                reference_number=payment_intent_id
+            )
 
         except HTTPError as exc:
             logger.exception(

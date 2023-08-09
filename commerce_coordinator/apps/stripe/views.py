@@ -1,6 +1,7 @@
 """
 Views for the stripe app
 """
+import json
 import logging
 
 import stripe
@@ -24,6 +25,7 @@ logger = logging.getLogger(__name__)
 
 stripe.api_key = settings.PAYMENT_PROCESSOR_CONFIG['edx']['stripe']['secret_key']
 endpoint_secret = settings.PAYMENT_PROCESSOR_CONFIG['edx']['stripe']['webhook_endpoint_secret']
+source_system_identifier = settings.PAYMENT_PROCESSOR_CONFIG['edx']['stripe']['source_system_identifier']
 
 
 class WebhookView(APIView):
@@ -66,17 +68,32 @@ class WebhookView(APIView):
             raise UnhandledStripeEventAPIError
 
         payment_intent = event.data.object
+
+        event_source_system_identifier = payment_intent.metadata.get('source_system')
         logger.info(
-            '[Stripe webhooks] event %s with amount %d and payment intent ID [%s].',
+            '[Stripe webhooks] event %s with amount %d and payment intent ID [%s], source: [%s].',
             event.type,
             payment_intent.amount,
             payment_intent.id,
+            event_source_system_identifier,
         )
+
+        if event_source_system_identifier != source_system_identifier:
+            logger.info(
+                '[Stripe webhooks] Skipping event %s with payment intent ID [%s], source: [%s].',
+                event.type,
+                payment_intent.id,
+                event_source_system_identifier,
+            )
+            return Response(status=status.HTTP_200_OK)
 
         payment_processed_signal.send_robust(
             sender=self.__class__,
+            edx_lms_user_id=payment_intent.metadata.edx_lms_user_id,
+            order_uuid=payment_intent.metadata.order_uuid,
             payment_number=payment_intent.metadata.payment_number,
             payment_state=payment_state,
-            response_code=payment_intent.id,
+            reference_number=payment_intent.id,
+            provider_response_body=json.loads(payload),
         )
         return Response(status=status.HTTP_200_OK)
