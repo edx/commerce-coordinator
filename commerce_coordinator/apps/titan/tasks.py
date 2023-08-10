@@ -12,9 +12,8 @@ from commerce_coordinator.apps.core.cache import (
     get_paid_payment_state_cache_key,
     get_processing_payment_state_cache_key
 )
-from commerce_coordinator.apps.core.constants import PaymentState
-
-from .clients import TitanAPIClient
+from commerce_coordinator.apps.core.constants import PaymentMethod, PaymentState
+from commerce_coordinator.apps.titan.clients import TitanAPIClient
 
 logger = get_task_logger(__name__)
 
@@ -102,8 +101,22 @@ def payment_processed_save_task(
             payment_state_paid_cache_key = get_paid_payment_state_cache_key(payment_number)
             TieredCache.set_all_tiers(payment_state_paid_cache_key, payment, settings.DEFAULT_TIMEOUT)
         elif payment_state == PaymentState.FAILED.value:
+            if 'metadata' in provider_response_body:
+                if 'payment_number' in provider_response_body['metadata']:
+                    provider_response_body['metadata']['payment_number'] = ''
+                if 'order_number' in provider_response_body['metadata']:
+                    order_uuid = provider_response_body['metadata']['order_number']
+            titan_api_client.create_payment(
+                order_uuid=order_uuid,
+                reference_number=reference_number,
+                payment_method_name=PaymentMethod.STRIPE.value,
+                provider_response_body=provider_response_body,
+                edx_lms_user_id=edx_lms_user_id
+            )
+            #  TODO: update payment in stripe with new payment number
             payment_state_processing_cache_key = get_processing_payment_state_cache_key(payment_number)
             TieredCache.set_all_tiers(payment_state_processing_cache_key, payment, settings.DEFAULT_TIMEOUT)
+
     except HTTPError as ex:
         logger.exception('Titan payment_processed_save_task Failed '
                          f'with payment_number: {payment_number}, payment_state: {payment_state},'

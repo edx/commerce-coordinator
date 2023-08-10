@@ -21,6 +21,12 @@ class ProcessingAlreadyRequested(APIException):
     default_code = 'already_processing'
 
 
+class StaleOrder(APIException):
+    status_code = 409
+    default_detail = 'The supplied orderUuid does not match the latest active orderUuid for the supplied edxLmsUserId'
+    default_code = 'stale_order'
+
+
 class AlreadyPaid(APIException):
     status_code = 409
     default_detail = 'The payment was already paid.'
