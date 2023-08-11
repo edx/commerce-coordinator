@@ -50,7 +50,14 @@ class TestPaymentTasks(TestCase):
     @ddt.data(PaymentState.COMPLETED.value, PaymentState.FAILED.value)
     @patch('commerce_coordinator.apps.titan.clients.TitanAPIClient.update_payment')
     @patch('commerce_coordinator.apps.titan.clients.TitanAPIClient.create_payment')
-    def test_payment_processed_save_task(self, payment_state, mock_create_payment, mock_update_payment):
+    @patch('commerce_coordinator.apps.stripe.clients.StripeAPIClient.retrieve_payment_intent')
+    def test_payment_processed_save_task(
+        self,
+        payment_state,
+        mock_retrieve_payment_intent,
+        mock_create_payment,
+        mock_update_payment
+    ):
         """ Ensure that the `payment_processed_save_task` invokes create update_payment as expected.
 
         Args:
@@ -68,24 +75,18 @@ class TestPaymentTasks(TestCase):
             'payment_number': payment_number,
             'payment_state': payment_state,
             'reference_number': 'g7h52545gavgatTh',
-            'provider_response_body': {'key': 'value',
-                                       'metadata': {
-                                           'order_number': ORDER_UUID,
-                                           'payment_number': payment_number,
-                                       },
-                                       }
-         }
+            'provider_response_body': {'key': 'valuea'}
+        }
         payment_create_params = {
             'edx_lms_user_id': 1,
             'order_uuid': ORDER_UUID,
             'payment_method_name': PaymentMethod.STRIPE.value,
             'reference_number': 'g7h52545gavgatTh',
-            'provider_response_body': {'key': 'value',
-                                       'metadata': {
-                                           'order_number': ORDER_UUID,
-                                           'payment_number': '',
-                                       },
-                                       }
+            'provider_response_body': {'key': 'valueb'}
+        }
+        mock_retrieve_payment_intent.return_value = {
+            'key': 'valueb',
+            'client_secret': ''
         }
         payment_processed_save_task.apply(
             kwargs=payment_update_params
@@ -151,62 +152,3 @@ class TestPaymentTasks(TestCase):
             mock_create_payment.return_value = titan_active_order_response['payments'][0]
         cached_response = TieredCache.get_cached_response(payment_state_cache_key)
         self.assertFalse(cached_response.is_found)
-
-    @ddt.data(PaymentState.FAILED.value)
-    @patch('commerce_coordinator.apps.titan.clients.TitanAPIClient.update_payment')
-    @patch('commerce_coordinator.apps.titan.clients.TitanAPIClient.create_payment')
-    def test_payment_processed_save_task_missing_metadata(
-        self,
-        payment_state,
-        mock_create_payment,
-        mock_update_payment
-    ):
-        """
-        Args:
-            mock_create_payment (TitanClientMock): Titan Client Mock for its mock_create_payment command.
-            mock_update_payment (TitanClientMock): Titan Client Mock for its mock_update_payment command.
-        """
-        TieredCache.dangerous_clear_all_tiers()
-        mock_update_payment.return_value = {
-            'uuid': ORDER_UUID,
-            'state': payment_state
-        }
-        payment_number = '12345'
-        payment_update_params = {
-            'edx_lms_user_id': 1,
-            'order_uuid': ORDER_UUID,
-            'payment_number': payment_number,
-            'payment_state': payment_state,
-            'reference_number': 'g7h52545gavgatTh',
-            'provider_response_body': {'key': 'value'}
-         }
-        payment_create_params = {
-            'edx_lms_user_id': 1,
-            'order_uuid': ORDER_UUID,
-            'payment_method_name': PaymentMethod.STRIPE.value,
-            'reference_number': 'g7h52545gavgatTh',
-            'provider_response_body': {'key': 'value'}
-        }
-        payment_processed_save_task.apply(
-            kwargs=payment_update_params
-        ).get()
-
-        mock_update_payment.assert_called_with(
-            **payment_update_params
-        )
-
-        if payment_state == PaymentState.FAILED.value:
-            mock_create_payment.return_value = titan_active_order_response['payments'][0]
-            mock_create_payment.assert_called_with(
-                **payment_create_params
-            )
-        payment_update_params['provider_response_body']['metadata'] = {}
-        payment_create_params['provider_response_body']['metadata'] = {}
-
-        payment_processed_save_task.apply(
-            kwargs=payment_update_params
-        ).get()
-
-        mock_create_payment.assert_called_with(
-                **payment_create_params
-            )
