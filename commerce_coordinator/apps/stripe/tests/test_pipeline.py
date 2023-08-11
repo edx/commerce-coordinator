@@ -1,4 +1,4 @@
-""" Titan Pipeline Tests"""
+""" Stripe Pipeline Tests"""
 from unittest import TestCase
 from unittest.mock import patch
 
@@ -9,11 +9,13 @@ from commerce_coordinator.apps.stripe.constants import Currency
 from commerce_coordinator.apps.stripe.exceptions import (
     StripeIntentConfirmAPIError,
     StripeIntentCreateAPIError,
+    StripeIntentRetrieveAPIError,
     StripeIntentUpdateAPIError
 )
 from commerce_coordinator.apps.stripe.pipeline import (
     ConfirmPayment,
     CreateOrGetStripeDraftPayment,
+    GetStripeDraftPayment,
     UpdateStripeDraftPayment,
     UpdateStripePayment
 )
@@ -75,7 +77,44 @@ class TestCreateOrGetStripeDraftPaymentStep(TestCase):
         # Test Error while creating payment intent
         mock_create_payment_intent.side_effect = StripeError
         with self.assertRaises(StripeIntentCreateAPIError):
-            create_draft_payment_pipe.run_filter(mock_active_order, recent_payment=None)
+            create_draft_payment_pipe.run_filter(mock_active_order, recent_payment=None, edx_lms_user_id=12)
+
+
+class TestGetStripeDraftPaymentStep(TestCase):
+    """A pytest Test case for the GetStripeDraftPayment Pipeline Step"""
+    @patch('commerce_coordinator.apps.stripe.clients.StripeAPIClient.retrieve_payment_intent')
+    def test_pipeline_step(self, mock_retrieve_payment_intent):
+        get_draft_payment_pipe = GetStripeDraftPayment("test_pipe", None)
+        intent_id = 'pi_3MebJMAa00oRYTAV1C26pHmmj572'
+        mock_payment_data = {
+            'key_id': intent_id
+        }
+        client_sec_id = 'pi_3MebJMAa00oRYTAV1C26pHmmj572_secret_I1qcyrP4t9pxg5DuEDu4Cy4MS'
+        mock_payment_intent_data = {
+            'id': intent_id,
+            'client_secret': client_sec_id
+        }
+        mock_retrieve_payment_intent.return_value = mock_payment_intent_data
+
+        # Test when payment_intent_data does not exist.
+        result: dict = get_draft_payment_pipe.run_filter(payment_data=mock_payment_data)
+        mock_retrieve_payment_intent.assert_called_with(intent_id)
+        self.assertEqual(intent_id, result['payment_intent_data']['id'])
+        self.assertEqual(client_sec_id, result['payment_data']['key_id'])
+
+        # Test when payment_intent_data already exists.
+        mock_retrieve_payment_intent.reset_mock()
+        result: dict = get_draft_payment_pipe.run_filter(
+            payment_data=mock_payment_data,
+            payment_intent_data=mock_payment_intent_data,
+        )
+        mock_retrieve_payment_intent.assert_not_called()
+        self.assertDictEqual({}, result)
+
+        # Test when Stripe API gives error.
+        mock_retrieve_payment_intent.side_effect = StripeError
+        with self.assertRaises(StripeIntentRetrieveAPIError):
+            get_draft_payment_pipe.run_filter(payment_data=mock_payment_data)
 
 
 class TestUpdateStripeDraftPaymentStep(TestCase):

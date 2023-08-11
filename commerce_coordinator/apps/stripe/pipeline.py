@@ -13,6 +13,7 @@ from commerce_coordinator.apps.stripe.constants import Currency
 from commerce_coordinator.apps.stripe.exceptions import (
     StripeIntentConfirmAPIError,
     StripeIntentCreateAPIError,
+    StripeIntentRetrieveAPIError,
     StripeIntentUpdateAPIError
 )
 from commerce_coordinator.apps.stripe.filters import PaymentDraftCreated
@@ -66,6 +67,39 @@ class CreateOrGetStripeDraftPayment(PipelineStep):
         return {
             'payment_data': payment,
             'order_data': order_data,
+        }
+
+
+class GetStripeDraftPayment(PipelineStep):
+    """
+    Retrieve a PaymentIntent from Stripe.
+    """
+
+    def run_filter(self, payment_data, **kwargs):  # pylint: disable=arguments-differ
+        """
+        Executes a filter with the signature specified.
+
+        Args:
+            payment_data (dict): The payment object.
+        """
+        # Skip talking to Stripe if payment_intent_data is already populated.
+        if kwargs.get('payment_intent_data'):
+            return {}  # Keep pipeline unchanged.
+
+        payment_intent_id = payment_data['key_id']
+
+        stripe_api_client = StripeAPIClient()
+        try:
+            payment_intent = stripe_api_client.retrieve_payment_intent(payment_intent_id)
+        except StripeError as ex:
+            raise StripeIntentRetrieveAPIError from ex
+
+        # TODO: THES-260: Fix mixup of key_id and client_secret
+        payment_data['key_id'] = payment_intent['client_secret']
+
+        return {
+            'payment_data': payment_data,
+            'payment_intent_data': payment_intent,
         }
 
 
