@@ -84,7 +84,7 @@ class OrderCreateView(APIView):
         get_items = list(self.request.GET.items())
         get_items.append((f'{QueryParamPrefixes.WAFFLE_FLAG}{WaffleFlagNames.COORDINATOR_ENABLED}', '1'))
 
-        redirect_url = self._add_utm_and_waffle_flagx_params_to_url(
+        redirect_url = self._add_utm_and_waffle_flags_params_to_url(
             settings.PAYMENT_MICROFRONTEND_URL,
             get_items
         )
@@ -95,7 +95,7 @@ class OrderCreateView(APIView):
         return redirect
 
     @staticmethod
-    def _add_utm_and_waffle_flagx_params_to_url(url, params):
+    def _add_utm_and_waffle_flags_params_to_url(url, params):
         """
         Add UTM (Urchin Tracking/Google Analytics) flags to the URL for the MFE to use in its reporting,
         as well as any Waffle Flags
