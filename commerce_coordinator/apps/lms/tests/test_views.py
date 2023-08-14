@@ -13,6 +13,7 @@ from openedx_filters import PipelineStep
 from rest_framework import status
 from rest_framework.test import APITestCase
 
+from commerce_coordinator.apps.core.constants import QueryParamPrefixes, WaffleFlagNames
 from commerce_coordinator.apps.core.tests.utils import name_test
 from commerce_coordinator.apps.lms.filters import OrderCreateRequested
 
@@ -292,10 +293,13 @@ class OrderCreateViewTests(APITestCase):
             **user_params
         )
 
+        waffle_flag_get_param = f'{QueryParamPrefixes.WAFFLE_FLAG}{WaffleFlagNames.COORDINATOR_ENABLED}'
+
         if is_redirect_test:
             query_params.update({
                 'utm_source': uuid.uuid4(),
                 'utm_custom': uuid.uuid4(),
+                waffle_flag_get_param: '1'
             })
 
         self.client.force_authenticate(user=self.user)
@@ -317,6 +321,8 @@ class OrderCreateViewTests(APITestCase):
             self.assertIn("utm_", redirect_location, "No UTM Params Found")
             self.assertIn(f"utm_source={query_params['utm_source']}", redirect_location, "Std UTM Params Not Found")
             self.assertIn(f"utm_custom={query_params['utm_custom']}", redirect_location, "Custom UTM Params Not Found")
+            self.assertIn(f"{waffle_flag_get_param}={query_params[waffle_flag_get_param]}",
+                          redirect_location, "Waffle Flag was not passed through.")
         else:
             response_json = response.json()
             expected_error_key = expected_error_or_response['error_key']
