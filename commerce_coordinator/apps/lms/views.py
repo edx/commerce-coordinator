@@ -8,11 +8,13 @@ from django.conf import settings
 from django.http import HttpResponseRedirect, HttpResponseServerError
 from edx_rest_framework_extensions.permissions import LoginRedirectIfUnauthenticated
 from rest_framework.parsers import JSONParser
+from rest_framework.status import HTTP_303_SEE_OTHER
 from rest_framework.throttling import UserRateThrottle
 from rest_framework.views import APIView
 
 from .filters import OrderCreateRequested
 from .serializers import OrderCreatedSignalInputSerializer
+from ..core.constants import HttpHeadersNames, MediaTypes, QueryParamPrefixes, WaffleFlagNames
 
 logger = logging.getLogger(__name__)
 
@@ -71,7 +73,7 @@ class OrderCreateView(APIView):
 
     def _redirect_response_payment(self, request):
         """
-        Redirect to Payment MFE with its Adornments (like UTM).
+        Redirect to Payment MFE with its Adornments (like UTM or Waffle Flags).
 
         Args:
             request (django.HttpRequest):
@@ -79,20 +81,24 @@ class OrderCreateView(APIView):
             response (django.HttpResponse):
         """
 
-        redirect_url = self._add_utm_params_to_url(
+        get_items = list(self.request.GET.items())
+        get_items.append((f'{QueryParamPrefixes.WAFFLE_FLAG}{WaffleFlagNames.COORDINATOR_ENABLED}', '1'))
+
+        redirect_url = self._add_utm_and_waffle_flagx_params_to_url(
             settings.PAYMENT_MICROFRONTEND_URL,
-            list(self.request.GET.items())
+            get_items
         )
 
-        redirect = HttpResponseRedirect(redirect_url, status=303)
-        redirect.headers['Content-type'] = 'application/json'
+        redirect = HttpResponseRedirect(redirect_url, status=HTTP_303_SEE_OTHER)
+        redirect.headers[HttpHeadersNames.CONTENT_TYPE] = MediaTypes.JSON
         logger.debug(f'{self._redirect_response_payment.__qualname__} Redirecting 303 via {redirect}.')
         return redirect
 
     @staticmethod
-    def _add_utm_params_to_url(url, params):
+    def _add_utm_and_waffle_flagx_params_to_url(url, params):
         """
-        Add UTM (Urchin Tracking/Google Analytics) flags to the URL for the MFE to use in its reporting
+        Add UTM (Urchin Tracking/Google Analytics) flags to the URL for the MFE to use in its reporting,
+        as well as any Waffle Flags
 
         Args:
             params (list): Query Params from Req as an encoded list
@@ -100,8 +106,9 @@ class OrderCreateView(APIView):
             url (str): A URL asa Python String
         """
 
-        # utm_params is [(u'utm_content', u'course-v1:IDBx IDB20.1x 1T2017'),...
-        utm_params = [item for item in params if 'utm_' in item[0]]
+        # utm_params is [(u'utm_content', u'course-v1:IDBx IDB20.1x 1T2017'),... + waffles
+        utm_params = [item for item in params
+                      if QueryParamPrefixes.GOOGLE_ANALYTICS or QueryParamPrefixes.WAFFLE_FLAG in item[0]]
         # utm_params is utm_content=course-v1%3AIDBx+IDB20.1x+1T2017&...
         utm_params = urlencode(utm_params, True)
         # utm_params is utm_content=course-v1:IDBx+IDB20.1x+1T2017&...
