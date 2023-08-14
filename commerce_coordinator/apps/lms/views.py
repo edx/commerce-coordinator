@@ -12,9 +12,9 @@ from rest_framework.status import HTTP_303_SEE_OTHER
 from rest_framework.throttling import UserRateThrottle
 from rest_framework.views import APIView
 
+from ..core.constants import HttpHeadersNames, MediaTypes, QueryParamPrefixes, WaffleFlagNames
 from .filters import OrderCreateRequested
 from .serializers import OrderCreatedSignalInputSerializer
-from ..core.constants import HttpHeadersNames, MediaTypes, QueryParamPrefixes, WaffleFlagNames
 
 logger = logging.getLogger(__name__)
 
