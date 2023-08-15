@@ -24,7 +24,11 @@ logger = logging.getLogger(__name__)
 
 class CreateOrGetStripeDraftPayment(PipelineStep):
     """
-    Adds titan orders to the order data list.
+    Create or retrieve previous creation attempts of a Stripe PaymentIntent.
+
+    Use the order number as an idempotency key so Stripe will replay responses
+    for creation attempts of a PaymentIntent for the same order number in the
+    last 24 hours.
     """
 
     def run_filter(self, order_data, recent_payment, edx_lms_user_id, **kwargs):  # pylint: disable=arguments-differ
