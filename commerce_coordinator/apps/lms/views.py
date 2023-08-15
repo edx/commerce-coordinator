@@ -82,7 +82,7 @@ class OrderCreateView(APIView):
         """
 
         get_items = list(self.request.GET.items())
-        get_items.append((f'{QueryParamPrefixes.WAFFLE_FLAG}{WaffleFlagNames.COORDINATOR_ENABLED}', '1'))
+        get_items.append((f"{QueryParamPrefixes.WAFFLE_FLAG.value}{WaffleFlagNames.COORDINATOR_ENABLED.value}", '1'))
 
         redirect_url = self._add_utm_and_waffle_flags_params_to_url(
             settings.PAYMENT_MICROFRONTEND_URL,
@@ -90,7 +90,7 @@ class OrderCreateView(APIView):
         )
 
         redirect = HttpResponseRedirect(redirect_url, status=HTTP_303_SEE_OTHER)
-        redirect.headers[HttpHeadersNames.CONTENT_TYPE] = MediaTypes.JSON
+        redirect.headers[HttpHeadersNames.CONTENT_TYPE.value] = MediaTypes.JSON.value
         logger.debug(f'{self._redirect_response_payment.__qualname__} Redirecting 303 via {redirect}.')
         return redirect
 

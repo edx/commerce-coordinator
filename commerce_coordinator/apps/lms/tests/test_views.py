@@ -1,6 +1,7 @@
 """
 Tests for the LMS (edx-platform) views.
 """
+from urllib.parse import urlparse, parse_qs
 import uuid
 
 import ddt
@@ -293,13 +294,12 @@ class OrderCreateViewTests(APITestCase):
             **user_params
         )
 
-        waffle_flag_get_param = f'{QueryParamPrefixes.WAFFLE_FLAG}{WaffleFlagNames.COORDINATOR_ENABLED}'
+        waffle_flag_get_param = f'{QueryParamPrefixes.WAFFLE_FLAG.value}{WaffleFlagNames.COORDINATOR_ENABLED.value}'
 
         if is_redirect_test:
             query_params.update({
                 'utm_source': uuid.uuid4(),
                 'utm_custom': uuid.uuid4(),
-                waffle_flag_get_param: '1'
             })
 
         self.client.force_authenticate(user=self.user)
@@ -317,11 +317,13 @@ class OrderCreateViewTests(APITestCase):
                 expected_error_or_response
             )
 
+            query_params = parse_qs(urlparse(response.headers['Location']).query)
+
             self.assertTrue(redirect_location.startswith(django.conf.settings.PAYMENT_MICROFRONTEND_URL))
             self.assertIn("utm_", redirect_location, "No UTM Params Found")
-            self.assertIn(f"utm_source={query_params['utm_source']}", redirect_location, "Std UTM Params Not Found")
-            self.assertIn(f"utm_custom={query_params['utm_custom']}", redirect_location, "Custom UTM Params Not Found")
-            self.assertIn(f"{waffle_flag_get_param}={query_params[waffle_flag_get_param]}",
+            self.assertIn(f"utm_source={query_params['utm_source'][0]}", redirect_location, "Std UTM Params Not Found")
+            self.assertIn(f"utm_custom={query_params['utm_custom'][0]}", redirect_location, "Custom UTM Params Not Found")
+            self.assertIn(f"{waffle_flag_get_param}={query_params[waffle_flag_get_param][0]}",
                           redirect_location, "Waffle Flag was not passed through.")
         else:
             response_json = response.json()
