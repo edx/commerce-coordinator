@@ -321,8 +321,10 @@ class OrderCreateViewTests(APITestCase):
 
             self.assertTrue(redirect_location.startswith(django.conf.settings.PAYMENT_MICROFRONTEND_URL))
             self.assertIn("utm_", redirect_location, "No UTM Params Found")
-            self.assertIn(f"utm_source={query_params['utm_source'][0]}", redirect_location, "Std UTM Params Not Found")
-            self.assertIn(f"utm_custom={query_params['utm_custom'][0]}", redirect_location, "Custom UTM Params Not Found")
+            self.assertIn(f"utm_source={query_params['utm_source'][0]}",
+                          redirect_location, "Std UTM Params Not Found")
+            self.assertIn(f"utm_custom={query_params['utm_custom'][0]}",
+                          redirect_location, "Custom UTM Params Not Found")
             self.assertIn(f"{waffle_flag_get_param}={query_params[waffle_flag_get_param][0]}",
                           redirect_location, "Waffle Flag was not passed through.")
         else:
