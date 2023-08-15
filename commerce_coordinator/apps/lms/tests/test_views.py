@@ -1,8 +1,8 @@
 """
 Tests for the LMS (edx-platform) views.
 """
-from urllib.parse import urlparse, parse_qs
 import uuid
+from urllib.parse import urlparse, parse_qs
 
 import ddt
 import django.conf
