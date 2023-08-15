@@ -27,13 +27,13 @@ class CreateOrGetStripeDraftPayment(PipelineStep):
     Adds titan orders to the order data list.
     """
 
-    def run_filter(self, order_data, recent_payment, **kwargs):  # pylint: disable=arguments-differ
+    def run_filter(self, order_data, recent_payment, edx_lms_user_id, **kwargs):  # pylint: disable=arguments-differ
         """
         Execute a filter with the signature specified.
         Arguments:
             recent_payment: most recent payment from order (from earlier pipeline step).
             order_data: any preliminary orders (from earlier pipeline step) we want to append to.
-            kwargs: arguments passed through from the filter.
+            edx_lms_user_id: the user id requesting the draft payment.
         """
 
         if recent_payment and recent_payment['state'] != PaymentState.FAILED.value:
@@ -62,7 +62,7 @@ class CreateOrGetStripeDraftPayment(PipelineStep):
             client_secret=payment_intent['client_secret'],
             payment_method_name=PaymentMethod.STRIPE.value,
             provider_response_body=payment_intent,
-            edx_lms_user_id=kwargs['edx_lms_user_id']
+            edx_lms_user_id=edx_lms_user_id
         )
         return {
             'payment_data': payment,
