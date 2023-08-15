@@ -14,7 +14,10 @@ from commerce_coordinator.apps.core.cache import (
 )
 from commerce_coordinator.apps.core.constants import PaymentMethod, PaymentState
 from commerce_coordinator.apps.stripe.clients import StripeAPIClient
-from commerce_coordinator.apps.titan.clients import TitanAPIClient
+
+from ..stripe.utils import sanitize_provider_response_body
+from .clients import TitanAPIClient
+from .filters import PaymentSuperseded
 
 logger = get_task_logger(__name__)
 
@@ -65,7 +68,8 @@ def order_created_save_task(sku, edx_lms_user_id, email, coupon_code):
 
 @shared_task()
 def payment_processed_save_task(
-    edx_lms_user_id, order_uuid, payment_number, payment_state, reference_number, provider_response_body
+    edx_lms_user_id, order_uuid, payment_number, payment_state, reference_number, amount_in_cents, currency,
+    provider_response_body
 ):
     """
     task to update payment in Titan.
@@ -78,6 +82,8 @@ def payment_processed_save_task(
             payment_number: The Payment identifier in Spree.
             payment_state: State to advance the payment to.
             reference_number: Payment attempt response code provided by stripe.
+            amount_in_cents (int): The number of cents of the order.
+            currency (str): ISO currency code. Must be Stripe-supported.
             provider_response_body: The saved response from a request to the payment provider.
 
     """
@@ -104,16 +110,22 @@ def payment_processed_save_task(
         elif payment_state == PaymentState.FAILED.value:
             stripe_api_client = StripeAPIClient()
             provider_response_body = stripe_api_client.retrieve_payment_intent(reference_number)
-            if 'client_secret' in provider_response_body:  # remove client secret before saving in titan
-                del provider_response_body['client_secret']
-            titan_api_client.create_payment(
+            provider_response_body = sanitize_provider_response_body(provider_response_body)
+            payment = titan_api_client.create_payment(
                 order_uuid=order_uuid,
                 reference_number=reference_number,
                 payment_method_name=PaymentMethod.STRIPE.value,
                 provider_response_body=provider_response_body,
                 edx_lms_user_id=edx_lms_user_id
             )
-            #  TODO: update payment in stripe with new payment number
+            PaymentSuperseded.run_filter(
+                edx_lms_user_id=edx_lms_user_id,
+                payment_intent_id=reference_number,
+                order_uuid=order_uuid,
+                payment_number=payment['number'],
+                amount_in_cents=amount_in_cents,
+                currency=currency,
+            )
             payment_state_processing_cache_key = get_processing_payment_state_cache_key(payment_number)
             TieredCache.set_all_tiers(payment_state_processing_cache_key, payment, settings.DEFAULT_TIMEOUT)
 

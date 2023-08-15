@@ -90,10 +90,12 @@ class WebhookView(APIView):
         payment_processed_signal.send_robust(
             sender=self.__class__,
             edx_lms_user_id=payment_intent.metadata.edx_lms_user_id,
-            order_uuid=payment_intent.metadata.order_uuid,
+            order_uuid=payment_intent.metadata.order_number,
             payment_number=payment_intent.metadata.payment_number,
             payment_state=payment_state,
             reference_number=payment_intent.id,
+            amount_in_cents=payment_intent.amount,
+            currency=payment_intent.currency,
             provider_response_body=json.loads(payload),
         )
         return Response(status=status.HTTP_200_OK)

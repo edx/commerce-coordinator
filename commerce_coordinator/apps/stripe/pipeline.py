@@ -100,6 +100,47 @@ class UpdateStripeDraftPayment(PipelineStep):
         }
 
 
+class UpdateStripePayment(PipelineStep):
+    """
+    Update stripe payment with the latest information.
+    """
+
+    def run_filter(
+        self, edx_lms_user_id, payment_intent_id, order_uuid, payment_number, amount_in_cents, currency, **kwargs
+    ):  # pylint: disable=arguments-differ
+        """
+        Execute a filter with the signature specified.
+        Arguments:
+            edx_lms_user_id(int): The edx.org LMS user ID of the user making the payment.
+            payment_intent_id (str): The Stripe PaymentIntent id to look up.
+            order_uuid (str): The identifier of the order. There should be only
+                one Stripe PaymentIntent for this identifier.
+            payment_number (str): The payment number. When Stripe's
+                webhook says a PaymentIntent was paid, we record this payment
+                number as paid and error if it's not the latest payment.
+            amount_in_cents (int): The number of cents of the order.
+            currency (str): ISO currency code. Must be Stripe-supported.
+            kwargs: arguments passed through from the filter.
+        """
+
+        stripe_api_client = StripeAPIClient()
+        try:
+            provider_response_body = stripe_api_client.update_payment_intent(
+                edx_lms_user_id=edx_lms_user_id,
+                payment_intent_id=payment_intent_id,
+                order_uuid=order_uuid,
+                current_payment_number=payment_number,
+                amount_in_cents=amount_in_cents,
+                currency=currency,
+            )
+        except StripeError as ex:
+            raise StripeIntentUpdateAPIError from ex
+
+        return {
+            'provider_response_body': provider_response_body,
+        }
+
+
 class ConfirmPayment(PipelineStep):
     """
     Adds titan orders to the order data list.
