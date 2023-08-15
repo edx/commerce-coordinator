@@ -67,6 +67,7 @@ class CreateOrGetStripeDraftPayment(PipelineStep):
         return {
             'payment_data': payment,
             'order_data': order_data,
+            'payment_intent_data': payment_intent,
         }
 
 
@@ -117,7 +118,7 @@ class UpdateStripeDraftPayment(PipelineStep):
 
         stripe_api_client = StripeAPIClient()
         try:
-            stripe_api_client.update_payment_intent(
+            payment_intent = stripe_api_client.update_payment_intent(
                 edx_lms_user_id=edx_lms_user_id,
                 payment_intent_id=payment_data['key_id'],
                 order_uuid=payment_data['order_uuid'],
@@ -131,6 +132,7 @@ class UpdateStripeDraftPayment(PipelineStep):
         return {
             'payment_data': payment_data,
             'order_data': order_data,
+            'payment_intent_data': payment_intent,
         }
 
 
@@ -189,7 +191,7 @@ class ConfirmPayment(PipelineStep):
 
         stripe_api_client = StripeAPIClient()
         try:
-            stripe_api_client.confirm_payment_intent(
+            payment_intent = stripe_api_client.confirm_payment_intent(
                 payment_intent_id=payment_data['key_id'],
             )
         except StripeError as ex:
@@ -197,4 +199,5 @@ class ConfirmPayment(PipelineStep):
 
         return {
             'payment_data': payment_data,
+            'payment_intent_data': payment_intent,
         }
