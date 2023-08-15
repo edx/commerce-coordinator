@@ -66,7 +66,6 @@ class CreateOrGetStripeDraftPayment(PipelineStep):
         )
         return {
             'payment_data': payment,
-            'order_data': order_data,
             'payment_intent_data': payment_intent,
         }
 
@@ -130,8 +129,6 @@ class UpdateStripeDraftPayment(PipelineStep):
             raise StripeIntentUpdateAPIError from ex
 
         return {
-            'payment_data': payment_data,
-            'order_data': order_data,
             'payment_intent_data': payment_intent,
         }
 
@@ -198,6 +195,5 @@ class ConfirmPayment(PipelineStep):
             raise StripeIntentConfirmAPIError from ex
 
         return {
-            'payment_data': payment_data,
             'payment_intent_data': payment_intent,
         }
