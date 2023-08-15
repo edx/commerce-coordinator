@@ -131,7 +131,7 @@ class TestUpdateStripeDraftPaymentStep(TestCase):
             'id': intent_id,
         }
         mock_payment_data = {
-            'amount': '228.0',
+            'amount': '100.0',
             'payment_number': 'PDHB22WS',
             'order_uuid': ORDER_UUID,
             'key_id': intent_id,
@@ -139,14 +139,29 @@ class TestUpdateStripeDraftPaymentStep(TestCase):
             'payment_intent_id': 'pi_somecode'
         }
 
-        result: dict = create_update_payment_pipe.run_filter(1, mock_order_data, mock_payment_data)
-        mock_update_payment_intent.assert_called()
-        self.assertEqual(mock_payment_data['key_id'], result['payment_data']['key_id'])
+        result: dict = create_update_payment_pipe.run_filter(
+            edx_lms_user_id=1,
+            order_data=mock_order_data,
+            payment_data=mock_payment_data,
+        )
+        mock_update_payment_intent.assert_called_with(
+            edx_lms_user_id=1,
+            payment_intent_id=intent_id,
+            order_uuid=ORDER_UUID,
+            current_payment_number='PDHB22WS',
+            amount_in_cents=10000,
+            currency='usd',
+        )
+        self.assertEqual(intent_id, result['payment_intent_data']['id'])
 
         # Test Error while updating payment intent
         mock_update_payment_intent.side_effect = StripeError
         with self.assertRaises(StripeIntentUpdateAPIError):
-            create_update_payment_pipe.run_filter(1, mock_order_data, mock_payment_data)
+            create_update_payment_pipe.run_filter(
+                edx_lms_user_id=1,
+                order_data=mock_order_data,
+                payment_data=mock_payment_data,
+            )
 
 
 class TestUpdateStripePaymentStep(TestCase):
@@ -194,11 +209,11 @@ class TestConfirmPaymentStep(TestCase):
             'state': PaymentState.CHECKOUT.value,
         }
 
-        result: dict = confirm_payment_pipe.run_filter(mock_payment_data)
-        mock_confirm_payment_intent.assert_called()
-        self.assertEqual(mock_payment_data['key_id'], result['payment_data']['key_id'])
+        result: dict = confirm_payment_pipe.run_filter(payment_data=mock_payment_data)
+        mock_confirm_payment_intent.assert_called_with(payment_intent_id=intent_id)
+        self.assertEqual(intent_id, result['payment_intent_data']['id'])
 
         # Test Error while updating payment intent
         mock_confirm_payment_intent.side_effect = StripeError
         with self.assertRaises(StripeIntentConfirmAPIError):
-            confirm_payment_pipe.run_filter(mock_payment_data)
+            confirm_payment_pipe.run_filter(payment_data=mock_payment_data)
