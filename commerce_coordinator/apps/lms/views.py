@@ -108,7 +108,7 @@ class OrderCreateView(APIView):
 
         # utm_params is [(u'utm_content', u'course-v1:IDBx IDB20.1x 1T2017'),... + waffles
         utm_params = [item for item in params
-                      if QueryParamPrefixes.GOOGLE_ANALYTICS or QueryParamPrefixes.WAFFLE_FLAG in item[0]]
+                      if QueryParamPrefixes.GOOGLE_ANALYTICS.value or QueryParamPrefixes.WAFFLE_FLAG.value in item[0]]
         # utm_params is utm_content=course-v1%3AIDBx+IDB20.1x+1T2017&...
         utm_params = urlencode(utm_params, True)
         # utm_params is utm_content=course-v1:IDBx+IDB20.1x+1T2017&...
