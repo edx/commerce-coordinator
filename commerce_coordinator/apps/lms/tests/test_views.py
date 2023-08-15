@@ -2,7 +2,7 @@
 Tests for the LMS (edx-platform) views.
 """
 import uuid
-from urllib.parse import urlparse, parse_qs
+from urllib.parse import parse_qs, urlparse
 
 import ddt
 import django.conf
