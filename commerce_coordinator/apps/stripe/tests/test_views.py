@@ -15,7 +15,7 @@ from testfixtures import LogCapture
 
 from commerce_coordinator.apps.core.constants import PaymentState
 from commerce_coordinator.apps.core.tests.utils import name_test
-from commerce_coordinator.apps.stripe.constants import StripeEventType
+from commerce_coordinator.apps.stripe.constants import Currency, StripeEventType
 
 User = get_user_model()
 log = logging.getLogger(__name__)
@@ -122,9 +122,10 @@ class WebhooksViewTests(APITestCase):
         self.mock_stripe_event.type = event_type
         self.mock_stripe_event.data.object.id = payment_intent_id
         self.mock_stripe_event.data.object.amount = amount
+        self.mock_stripe_event.data.object.currency = Currency.USD.value
         metadata = {
             'payment_number': payment_number,
-            'order_uuid': order_uuid,
+            'order_number': order_uuid,
             'edx_lms_user_id': edx_lms_user_id,
             'source_system': source_system
         }
@@ -146,7 +147,8 @@ class WebhooksViewTests(APITestCase):
                 )
                 if expected_payment_state:
                     mock_payment_processed_save_task.assert_called_with(
-                        edx_lms_user_id, order_uuid, payment_number, expected_payment_state, payment_intent_id, body
+                        edx_lms_user_id, order_uuid, payment_number, expected_payment_state, payment_intent_id,
+                        amount, Currency.USD.value, body
                     )
             else:
                 mock_payment_processed_save_task.assert_not_called()
