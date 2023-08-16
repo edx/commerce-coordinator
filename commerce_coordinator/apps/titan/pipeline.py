@@ -147,7 +147,7 @@ class CreateDraftPayment(PipelineStep):
             provider_response_body(str): The response JSON dump from a request to the payment provider.
             payment_intent_id(str): A Stripe Payment Intent ID (used to update payment intents)
             client_secret(str): A Stripe client secret string used by the UI to load the Stripe payment form.
-            edx_lms_user_id(str): edC LMS User ID
+            edx_lms_user_id(str): edX LMS User ID
         """
 
         api_client = TitanAPIClient()
