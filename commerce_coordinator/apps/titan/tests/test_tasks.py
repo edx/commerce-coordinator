@@ -10,6 +10,7 @@ from commerce_coordinator.apps.titan.tasks import order_created_save_task, payme
 
 from ...core.cache import get_paid_payment_state_cache_key, get_processing_payment_state_cache_key
 from ...core.constants import PaymentMethod, PaymentState
+from ...stripe.constants import Currency
 from .test_clients import ORDER_CREATE_DATA, ORDER_UUID, TitanClientMock, titan_active_order_response
 
 log_name = 'commerce_coordinator.apps.titan.tasks'
@@ -51,9 +52,11 @@ class TestPaymentTasks(TestCase):
     @patch('commerce_coordinator.apps.titan.clients.TitanAPIClient.update_payment')
     @patch('commerce_coordinator.apps.titan.clients.TitanAPIClient.create_payment')
     @patch('commerce_coordinator.apps.stripe.clients.StripeAPIClient.retrieve_payment_intent')
+    @patch('commerce_coordinator.apps.stripe.clients.StripeAPIClient.update_payment_intent')
     def test_payment_processed_save_task(
         self,
         payment_state,
+        __,
         mock_retrieve_payment_intent,
         mock_create_payment,
         mock_update_payment
@@ -88,8 +91,9 @@ class TestPaymentTasks(TestCase):
             'key': 'valueb',
             'client_secret': ''
         }
+        mock_create_payment.return_value = titan_active_order_response['payments'][0]
         payment_processed_save_task.apply(
-            kwargs=payment_update_params
+            kwargs={'amount_in_cents': 100, 'currency': Currency.USD.value, **payment_update_params}
         ).get()
 
         mock_update_payment.assert_called_with(
@@ -100,7 +104,6 @@ class TestPaymentTasks(TestCase):
         if payment_state == PaymentState.COMPLETED.value:
             payment_state_cache_key = get_paid_payment_state_cache_key(payment_number)
         if payment_state == PaymentState.FAILED.value:
-            mock_create_payment.return_value = titan_active_order_response['payments'][0]
             mock_create_payment.assert_called_with(
                 **payment_create_params
             )
@@ -131,7 +134,11 @@ class TestPaymentTasks(TestCase):
         }
         with LogCapture(log_name) as log_capture:
             payment_processed_save_task.apply(
-                kwargs=payment_update_params
+                kwargs={
+                    'amount_in_cents': 100,
+                    'currency': Currency.USD.value,
+                    **payment_update_params
+                }
             ).get()
             log_capture.check_present(
                 (
