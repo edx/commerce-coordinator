@@ -198,9 +198,6 @@ class TestValidatePaymentReadyForProcessingStep(TestCase):
         (
             PaymentState.FAILED.value, None, None
         ),
-        (
-            PaymentState.PROCESSING.value, None, None
-        ),
     )
     @ddt.unpack
     @patch('commerce_coordinator.apps.titan.clients.TitanAPIClient.get_payment')
@@ -370,7 +367,7 @@ class TestUpdateTitanPaymentStep(TestCase):
     def setUp(self) -> None:
         self.update_payment_data = {
             'payment_number': '1234',
-            'payment_state': PaymentState.PROCESSING.value,
+            'payment_state': PaymentState.PENDING.value,
             'edx_lms_user_id': 1,
             'order_uuid': ORDER_UUID,
             'payment_intent_id': 'fake-intent',
@@ -379,7 +376,7 @@ class TestUpdateTitanPaymentStep(TestCase):
             'number': '1234',
             'orderUuid': ORDER_UUID,
             'referenceNumber': 'a_stripe_response_code',
-            'state': PaymentState.PROCESSING.value,
+            'state': PaymentState.PENDING.value,
         }
 
     @patch('commerce_coordinator.apps.titan.clients.TitanAPIClient.update_payment')

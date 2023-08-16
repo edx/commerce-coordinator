@@ -36,7 +36,7 @@ class TestDraftPaymentRequestedFilter(TestCase):
                 'payment_number': '12345',
                 'order_uuid': ORDER_UUID,
                 'key_id': 'test-code',
-                'state': PaymentState.PROCESSING.value
+                'state': PaymentState.PENDING.value
             },
         }
         mock_pipeline.return_value = mock_payment
@@ -84,7 +84,15 @@ class TestPaymentProcessingRequestedFilter(TestCase):
                 'payment_number': 'test-payment-number',
                 'order_uuid': ORDER_UUID,
                 'key_id': 'test-intent-id',
-                'state': PaymentState.PROCESSING.value
+                'state': PaymentState.CHECKOUT.value
+            }
+        }
+        mock_pending_payment = {
+            'payment_data': {
+                'payment_number': 'test-payment-number',
+                'order_uuid': ORDER_UUID,
+                'key_id': 'test-intent-id',
+                'state': PaymentState.PENDING.value
             }
         }
         mock_billing_details_data = {
@@ -103,8 +111,8 @@ class TestPaymentProcessingRequestedFilter(TestCase):
         }
         mock_get_titan_payment_step.return_value = mock_payment
         mock_update_billing_address_step.return_value = mock_billing_details_data
-        mock_confirm_payment_step.return_value = mock_payment
-        mock_update_titan_payment_step.return_value = mock_payment
+        mock_confirm_payment_step.return_value = mock_pending_payment
+        mock_update_titan_payment_step.return_value = mock_pending_payment
 
         filter_params = {
             'order_uuid': ORDER_UUID,
@@ -113,7 +121,7 @@ class TestPaymentProcessingRequestedFilter(TestCase):
             'skus': ['test-sku'],
         }
         payment_details = PaymentProcessingRequested.run_filter(**filter_params)
-        expected_payment = {**mock_payment, **mock_billing_details_data, **filter_params}
+        expected_payment = {**mock_pending_payment, **mock_billing_details_data, **filter_params}
         self.assertEqual(expected_payment, payment_details)
         payment_state_processing_cache_key = get_payment_state_cache_key(
             filter_params['payment_number'], CachePaymentStates.PROCESSING.value
@@ -142,7 +150,7 @@ class TestPaymentProcessingRequestedFilter(TestCase):
         filter_params = {
             'number': payment_number,
             'responseCode': 'a_stripe_response_code',
-            'state': PaymentState.PROCESSING.value,
+            'state': PaymentState.PENDING.value,
         }
         payment_details = PaymentProcessingRequested.run_filter(**filter_params)
         self.assertEqual(filter_params, payment_details)

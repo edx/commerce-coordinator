@@ -38,7 +38,6 @@ class PaymentState(Enum):
     COMPLETED = 'completed'
     FAILED = 'failed'
     PENDING = 'pending'
-    PROCESSING = 'processing'
 
 
 class PaymentMethod(Enum):

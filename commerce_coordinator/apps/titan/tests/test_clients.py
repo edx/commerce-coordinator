@@ -40,7 +40,7 @@ class TitanPaymentClientMock(MagicMock):
     """A mock TitanClient."""
     return_value = {
         'orderUuid': ORDER_UUID,
-        'state': PaymentState.PROCESSING.value,
+        'state': PaymentState.PENDING.value,
         'referenceNumber': 'test-code',
         'number': 'test-number'
     }
