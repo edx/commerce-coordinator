@@ -404,6 +404,12 @@ OPEN_EDX_FILTERS_CONFIG = {
             'commerce_coordinator.apps.stripe.pipeline.ConfirmPayment'
             'commerce_coordinator.apps.titan.pipeline.UpdateTitanPayment',
         ]
+    },
+    "org.edx.coordinator.titan.payment.superseded.v1": {
+        "fail_silently": False,  # TODO: Coordinator filters should NEVER be allowed to fail silently
+        "pipeline": [
+            'commerce_coordinator.apps.stripe.pipeline.UpdateStripePayment',
+        ]
     }
 }
 

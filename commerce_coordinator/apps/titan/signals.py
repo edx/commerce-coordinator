@@ -56,6 +56,8 @@ def payment_processed_save(**kwargs):
         kwargs['payment_number'],
         kwargs['payment_state'],
         kwargs['reference_number'],
+        kwargs['amount_in_cents'],
+        kwargs['currency'],
         kwargs['provider_response_body'],
     )
     return async_result.id
