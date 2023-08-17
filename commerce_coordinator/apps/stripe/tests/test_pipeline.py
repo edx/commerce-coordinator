@@ -4,7 +4,7 @@ from unittest.mock import patch
 
 from stripe.error import StripeError
 
-from commerce_coordinator.apps.core.constants import PaymentState
+from commerce_coordinator.apps.core.constants import OrderPaymentState, PaymentState
 from commerce_coordinator.apps.stripe.constants import Currency
 from commerce_coordinator.apps.stripe.exceptions import (
     StripeIntentConfirmAPIError,
@@ -31,6 +31,7 @@ class TestCreateOrGetStripeDraftPaymentStep(TestCase):
         mock_active_order = {
             'basket_id': ORDER_UUID,
             'item_total': '100.0',
+            'payment_state': OrderPaymentState.BALANCE_DUE.value
         }
         intent_id = 'ch_3MebJMAa00oRYTAV1C26pHmmj572'
         client_sec_id = 'pi_hiya_secret_howsitgoing'
@@ -38,7 +39,7 @@ class TestCreateOrGetStripeDraftPaymentStep(TestCase):
             'id': intent_id,
             'client_secret': client_sec_id
         }
-        recent_payment = {
+        mock_payment_data = {
             'amount': '228.0',
             'payment_number': 'PDHB22WS',
             'order_uuid': ORDER_UUID,
@@ -46,38 +47,38 @@ class TestCreateOrGetStripeDraftPaymentStep(TestCase):
             'state': PaymentState.CHECKOUT.value,
         }
         mock_create_payment.return_value = {
-            'amount': recent_payment['amount'],
-            'number': recent_payment['payment_number'],
-            'orderUuid': recent_payment['order_uuid'],
-            'responseCode': recent_payment['key_id'],
-            'state': recent_payment['state'],
+            'amount': mock_payment_data['amount'],
+            'number': mock_payment_data['payment_number'],
+            'orderUuid': mock_payment_data['order_uuid'],
+            'responseCode': mock_payment_data['key_id'],
+            'state': mock_payment_data['state'],
         }
 
-        # Test when existing payment exists.
-        result: dict = create_draft_payment_pipe.run_filter(mock_active_order, recent_payment, edx_lms_user_id=12)
+        # Test with payment_data.
+        result: dict = create_draft_payment_pipe.run_filter(
+            order_data=mock_active_order,
+            payment_data=mock_payment_data,
+            edx_lms_user_id=12,
+        )
         mock_create_payment_intent.assert_not_called()
         mock_create_payment.assert_not_called()
-        self.assertEqual(recent_payment['key_id'], result['payment_data']['key_id'])
+        self.assertIsNone(result)
 
-        # Test when existing payment is in FAILED state.
-        recent_payment['state'] = PaymentState.FAILED.value
-        result: dict = create_draft_payment_pipe.run_filter(mock_active_order, recent_payment, edx_lms_user_id=12)
-        mock_create_payment_intent.assert_called()
-        mock_create_payment.assert_called()
-        self.assertEqual(recent_payment['key_id'], result['payment_data']['key_id'])
-
-        # Test when existing payment does not exist.
+        # Test without payment_data.
         mock_create_payment_intent.reset_mock()
         mock_create_payment.reset_mock()
-        result: dict = create_draft_payment_pipe.run_filter(mock_active_order, recent_payment=None, edx_lms_user_id=12)
+        result: dict = create_draft_payment_pipe.run_filter(
+            order_data=mock_active_order,
+            edx_lms_user_id=12,
+        )
         mock_create_payment_intent.assert_called()
         mock_create_payment.assert_called()
-        self.assertEqual(recent_payment['key_id'], result['payment_data']['key_id'])
+        self.assertEqual(mock_payment_data['key_id'], result['payment_data']['key_id'])
 
         # Test Error while creating payment intent
         mock_create_payment_intent.side_effect = StripeError
         with self.assertRaises(StripeIntentCreateAPIError):
-            create_draft_payment_pipe.run_filter(mock_active_order, recent_payment=None, edx_lms_user_id=12)
+            create_draft_payment_pipe.run_filter(mock_active_order, mock_payment_data=None, edx_lms_user_id=12)
 
 
 class TestGetStripeDraftPaymentStep(TestCase):

@@ -5,7 +5,7 @@ import ddt
 from django.test import override_settings
 from requests.exceptions import HTTPError
 
-from commerce_coordinator.apps.core.constants import PaymentMethod, PaymentState
+from commerce_coordinator.apps.core.constants import OrderPaymentState, PaymentMethod, PaymentState
 from commerce_coordinator.apps.core.tests.utils import CoordinatorClientTestCase
 from commerce_coordinator.apps.titan.clients import TitanAPIClient, urljoin_directory
 
@@ -60,7 +60,7 @@ titan_active_order_response = {
         'uuid': ORDER_UUID,
         'promoTotal': '0.0',
         'itemCount': 1,
-        'paymentState': None,
+        'paymentState': OrderPaymentState.BALANCE_DUE.value,
         'paymentTotal': '0.0',
         'user': {
             'firstName': 'test',

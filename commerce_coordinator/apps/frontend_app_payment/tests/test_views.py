@@ -285,10 +285,12 @@ class DraftPaymentCreateViewTests(APITestCase):
     @patch('commerce_coordinator.apps.titan.clients.TitanAPIClient.get_active_order')
     @patch('commerce_coordinator.apps.titan.clients.TitanAPIClient.create_payment')
     @patch('commerce_coordinator.apps.stripe.clients.StripeAPIClient.create_payment_intent')
+    @patch('commerce_coordinator.apps.stripe.clients.StripeAPIClient.retrieve_payment_intent')
     @patch('commerce_coordinator.apps.stripe.clients.StripeAPIClient.update_payment_intent')
     def test_create_payment(
         self,
         mock_update_payment_intent,
+        mock_retrieve_payment_intent,
         mock_create_payment_intent,
         mock_create_payment,
         mock_get_active_order
@@ -301,6 +303,10 @@ class DraftPaymentCreateViewTests(APITestCase):
         mock_get_active_order_response = copy.deepcopy(titan_active_order_response)
         mock_get_active_order.return_value = mock_get_active_order_response
         mock_create_payment_intent.return_value = {
+            'id': intent_id,
+            'client_secret': intent_id
+        }
+        mock_retrieve_payment_intent.return_value = {
             'id': intent_id,
             'client_secret': intent_id
         }
