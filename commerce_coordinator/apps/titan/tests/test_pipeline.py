@@ -14,10 +14,11 @@ from commerce_coordinator.apps.titan.pipeline import (
     GetTitanPayment,
     UpdateBillingAddress,
     UpdateTitanPayment,
+    ValidateOrderReadyForDraftPayment,
     ValidatePaymentReadyForProcessing
 )
 
-from ...core.constants import PaymentMethod, PaymentState
+from ...core.constants import OrderPaymentState, PaymentMethod, PaymentState
 from ..exceptions import (
     AlreadyPaid,
     InvalidOrderPayment,
@@ -172,6 +173,83 @@ class TestGetTitanPaymentPipelineStep(TestCase):
         )
         # ensure our input data arrives as expected
         mock_get_payment.assert_called_once_with(**get_payment_data)
+
+
+@ddt.ddt
+class TestValidateOrderReadyForDraftPayment(TestCase):
+    """ A pytest Test Case for then `ValidateOrderReadyForDraftPayment(PipelineStep)` """
+
+    def setUp(self) -> None:
+        self.validate_draft_payment_pipe = ValidateOrderReadyForDraftPayment("test_pipe", None)
+
+    @ddt.data(
+        (
+            # New order.
+            {'payment_state': OrderPaymentState.BALANCE_DUE.value},
+            # No recent payment.
+            None,
+            # Pipeline continue.
+            {},
+        ),
+        (
+            # Failed payment.
+            {'payment_state': OrderPaymentState.FAILED.value},
+            # Failed recent payment.
+            {'state': PaymentState.FAILED.value},
+            # Pipeline continue.
+            {},
+        ),
+        (
+            # Paid order.
+            {'payment_state': OrderPaymentState.PAID.value},
+            # Completed recent payment.
+            {
+                'key_id': 'pi_3Nfj5LH4caH7G0X11nX8dj9v',
+                'state': PaymentState.COMPLETED.value,
+            },
+            # Pipeline halt.
+            None,
+        ),
+        (
+            # Order pending payment.
+            {'payment_state': OrderPaymentState.BALANCE_DUE.value},
+            # Recent payment pending.
+            {
+                'key_id': 'pi_3Nfj5LH4caH7G0X11nX8dj9v',
+                'state': PaymentState.PENDING.value,
+            },
+            # Pipeline halt.
+            None,
+        ),
+        (
+            # Order pending payment.
+            {'payment_state': OrderPaymentState.BALANCE_DUE.value},
+            # Recent payment exists.
+            {
+                'key_id': 'pi_3Nfj5LH4caH7G0X11nX8dj9v',
+                'state': PaymentState.CHECKOUT.value,
+            },
+            # Existing payment added to pipeline.
+            {
+                'payment_data': {
+                    'key_id': 'pi_3Nfj5LH4caH7G0X11nX8dj9v',
+                    'state': PaymentState.CHECKOUT.value,
+                }
+            },
+        ),
+    )
+    @ddt.unpack
+    def test_validate_order_ready_for_draft_payment(self, order_data, recent_payment, expected_output):
+        """
+        Check ValidateOrderReadyForDraftPayment produces expected output given
+        various combinations of OrderPaymentState and PaymentState.
+        """
+
+        output = self.validate_draft_payment_pipe.run_filter(
+            order_data=order_data,
+            recent_payment=recent_payment
+        )
+        self.assertEqual(expected_output, output)
 
 
 @ddt.ddt
