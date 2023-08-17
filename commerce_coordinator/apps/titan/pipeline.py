@@ -8,7 +8,7 @@ from openedx_filters import PipelineStep
 from requests import HTTPError
 from rest_framework.exceptions import APIException
 
-from commerce_coordinator.apps.core.constants import PaymentState
+from commerce_coordinator.apps.core.constants import OrderPaymentState, PaymentState
 from commerce_coordinator.apps.titan.clients import TitanAPIClient
 from commerce_coordinator.apps.titan.exceptions import (
     AlreadyPaid,
@@ -98,6 +98,45 @@ class GetTitanPayment(PipelineStep):
         return {
             'payment_data': payment
         }
+
+
+class ValidateOrderReadyForDraftPayment(PipelineStep):
+    """
+    Stops the pipeline if the current order is not eligible for a draft payment.
+
+    An order is not eligible for a draft payment when it has already been paid
+    or is currently processing.
+    """
+
+    def run_filter(self, order_data, **kwargs):  # pylint: disable=arguments-differ
+        """
+        Execute a filter with the signature specified.
+
+        Args:
+            order_data (dict): The active order for the user.
+            kwargs['recent_payment'] (dict): The latest payment of the user.
+        """
+        correct_order_payment_states = (
+            OrderPaymentState.BALANCE_DUE.value,
+            OrderPaymentState.FAILED.value,
+        )
+
+        recent_payment = kwargs.get('recent_payment')
+        order_payment_state = order_data['payment_state']
+
+        if order_payment_state not in correct_order_payment_states:
+            return None  # Order does not need draft payment. Halt pipeline.
+        elif not recent_payment:
+            return {}  # Continue. Will generate a new draft payment.
+        elif recent_payment['state'] == PaymentState.PENDING.value:
+            return None  # Order does not need draft payment. Halt pipeline.
+        elif recent_payment['state'] == PaymentState.FAILED.value:
+            return {}  # Continue. Will generate a new draft payment.
+        else:
+            # Inform pipeline that a draft payment already exists:
+            return {
+                'payment_data': recent_payment
+            }
 
 
 class ValidatePaymentReadyForProcessing(PipelineStep):

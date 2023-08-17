@@ -7,7 +7,7 @@ import logging
 from openedx_filters import PipelineStep
 from stripe.error import StripeError
 
-from commerce_coordinator.apps.core.constants import PaymentMethod, PaymentState
+from commerce_coordinator.apps.core.constants import PaymentMethod
 from commerce_coordinator.apps.stripe.clients import StripeAPIClient
 from commerce_coordinator.apps.stripe.constants import Currency
 from commerce_coordinator.apps.stripe.exceptions import (
@@ -31,25 +31,20 @@ class CreateOrGetStripeDraftPayment(PipelineStep):
     last 24 hours.
     """
 
-    def run_filter(self, order_data, recent_payment, edx_lms_user_id, **kwargs):  # pylint: disable=arguments-differ
+    def run_filter(self, order_data, edx_lms_user_id, **kwargs):  # pylint: disable=arguments-differ
         """
         Execute a filter with the signature specified.
         Arguments:
-            recent_payment: most recent payment from order (from earlier pipeline step).
             order_data: any preliminary orders (from earlier pipeline step) we want to append to.
             edx_lms_user_id: the user id requesting the draft payment.
+            kwargs['payment_intent_data']: optional. If present, skip this pipeline step.
+            kwargs['payment_data']: optional. If present, skip this pipeline step.
         """
+        if kwargs.get('payment_intent_data'):
+            return None  # Cancel rest of filter pipeline.
+        if kwargs.get('payment_data'):
+            return None  # Cancel rest of filter pipeline.
 
-        if recent_payment and recent_payment['state'] != PaymentState.FAILED.value:
-            # NOTE: GRM: I DONT THINK WE CAN LEAVE HERE LIKE THIS. WE NEED THE CLIENT SECRET...
-            #            IS IT EXPECTED TO BE STORED?
-
-            # existing payment with any state other than failed found. No need to create new payment.
-            return {
-                'payment_data': recent_payment,
-            }
-
-        # In case, there was not existing payment or existing payment failed, We need to create a new payment.
         stripe_api_client = StripeAPIClient()
         try:
             payment_intent = stripe_api_client.create_payment_intent(
@@ -79,16 +74,22 @@ class GetStripeDraftPayment(PipelineStep):
     Retrieve a PaymentIntent from Stripe.
     """
 
-    def run_filter(self, payment_data, **kwargs):  # pylint: disable=arguments-differ
+    def run_filter(self, **kwargs):
         """
         Executes a filter with the signature specified.
 
         Args:
-            payment_data (dict): The payment object.
+            kwargs['payment_data'] (dict): The payment object.
+            kwargs['payment_intent_data'] (dict): Optional. If truthy, skip this pipeline step.
         """
-        # Skip talking to Stripe if payment_intent_data is already populated.
+        # Payment intent already retrieved:
         if kwargs.get('payment_intent_data'):
-            return {}  # Keep pipeline unchanged.
+            return {}  # Skip pipeline step.
+
+        # No existing payment:
+        payment_data = kwargs.get('payment_data')
+        if not payment_data:
+            return {}  # Skip pipeline step.
 
         payment_intent_id = payment_data['key_id']
 
