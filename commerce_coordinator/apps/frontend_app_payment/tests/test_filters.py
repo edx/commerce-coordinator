@@ -1,5 +1,6 @@
 """ frontend_app_payment filter Tests"""
 
+from copy import deepcopy
 from unittest import TestCase
 from unittest.mock import patch
 
@@ -7,7 +8,7 @@ from django.test import override_settings
 from edx_django_utils.cache import TieredCache
 
 from commerce_coordinator.apps.core.cache import CachePaymentStates, get_payment_state_cache_key
-from commerce_coordinator.apps.core.constants import PaymentState
+from commerce_coordinator.apps.core.constants import OrderPaymentState, PaymentState
 from commerce_coordinator.apps.frontend_app_payment.filters import DraftPaymentRequested, PaymentProcessingRequested
 from commerce_coordinator.apps.titan.tests.test_clients import ORDER_UUID
 
@@ -21,30 +22,85 @@ class TestDraftPaymentRequestedFilter(TestCase):
                 "fail_silently": False,
                 "pipeline": [
                     'commerce_coordinator.apps.titan.pipeline.GetTitanActiveOrder',
+                    'commerce_coordinator.apps.titan.pipeline.ValidateOrderReadyForDraftPayment',
+                    'commerce_coordinator.apps.stripe.pipeline.GetStripeDraftPayment',
+                    'commerce_coordinator.apps.stripe.pipeline.CreateOrGetStripeDraftPayment',
+                    'commerce_coordinator.apps.stripe.pipeline.UpdateStripeDraftPayment',
                 ]
             },
         },
     )
     @patch('commerce_coordinator.apps.titan.pipeline.GetTitanActiveOrder.run_filter')
-    def test_filter_when_payment_exist_in_titan(self, mock_pipeline):
+    @patch('commerce_coordinator.apps.titan.pipeline.ValidateOrderReadyForDraftPayment.run_filter')
+    @patch('commerce_coordinator.apps.stripe.pipeline.GetStripeDraftPayment.run_filter')
+    @patch('commerce_coordinator.apps.stripe.pipeline.CreateOrGetStripeDraftPayment.run_filter')
+    @patch('commerce_coordinator.apps.stripe.pipeline.UpdateStripeDraftPayment.run_filter')
+    def test_filter_when_payment_exist_in_titan(
+        self,
+        mock_update_draft_payment_step,
+        mock_create_draft_payment_step,
+        mock_get_draft_payment_step,
+        mock_validate_draft_ready_step,
+        mock_get_active_order_step,
+    ):
         """
         Test when Payment exists in Titan system.
         """
 
-        mock_payment = {
-            'payment_data': {
-                'payment_number': '12345',
-                'order_uuid': ORDER_UUID,
-                'key_id': 'test-code',
-                'state': PaymentState.PENDING.value
+        mock_payment_intent_id = 'pi_123456789012345'
+
+        # Start with final output from UpdateDraftPayment, then morph each
+        # pipeline output mock:
+        mock_update_draft_payment_output = {
+            'order_data': {
+                'basket_id': ORDER_UUID,
+                'item_total': '100.0',
+                'payment_state': OrderPaymentState.BALANCE_DUE.value,
             },
+            'payment_data': {
+                'key_id': mock_payment_intent_id,
+                'order_uuid': ORDER_UUID,
+                'payment_number': '12345',
+                'state': PaymentState.CHECKOUT.value,
+            },
+            'payment_intent_data': {
+                'id': mock_payment_intent_id,
+                'client_secret': mock_payment_intent_id + 'secret_12345',
+            }
         }
-        mock_pipeline.return_value = mock_payment
+        mock_update_draft_payment_step.return_value = mock_update_draft_payment_output
+
+        # CreateOrGetStripeDraftPayment output is the same as UpdateStripeDraftPayment's.
+        mock_create_draft_payment_output = deepcopy(mock_update_draft_payment_output)
+        mock_create_draft_payment_step.return_value = mock_create_draft_payment_output
+
+        # GetStripeDraftPayment output won't have payment_intent_data.
+        mock_get_draft_payment_output = deepcopy(mock_update_draft_payment_output)
+        del mock_get_draft_payment_output['payment_intent_data']
+        mock_get_draft_payment_step.return_value = mock_get_draft_payment_output
+
+        # ValidateOrderReadyForDraftPayment output won't have payment_data.
+        mock_validate_draft_ready_output = deepcopy(mock_get_draft_payment_output)
+        del mock_validate_draft_ready_output['payment_data']
+        mock_validate_draft_ready_step.return_value = mock_validate_draft_ready_output
+
+        # GetTitanActiveOrder output is the same as ValidateOrderReadyForDraftPayment's.
+        mock_get_active_order_output = deepcopy(mock_validate_draft_ready_output)
+        mock_get_active_order_step.return_value = mock_get_active_order_output
+
+        # Build expected output:
+        expected_output = deepcopy(mock_update_draft_payment_output['payment_data'])
+        # order_uuid is renamed to order_id by filter:
+        expected_output['order_id'] = expected_output.pop('order_uuid')
+
+        # Run filter:
         filter_params = {
             'edx_lms_user_id': 1,
         }
-        payment_details = DraftPaymentRequested.run_filter(**filter_params)
-        self.assertEqual(mock_payment.get('payment_data'), payment_details['capture_context'])
+        output = DraftPaymentRequested.run_filter(**filter_params)
+
+        # Check output matches expected:
+        self.assertEqual(expected_output, output['capture_context'])
 
 
 class TestPaymentProcessingRequestedFilter(TestCase):
