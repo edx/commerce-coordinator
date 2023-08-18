@@ -132,11 +132,10 @@ class ValidateOrderReadyForDraftPayment(PipelineStep):
             return None  # Order does not need draft payment. Halt pipeline.
         elif recent_payment['state'] == PaymentState.FAILED.value:
             return {}  # Continue. Will generate a new draft payment.
-        else:
-            # Inform pipeline that a draft payment already exists:
-            return {
-                'payment_data': recent_payment
-            }
+        # Inform pipeline that a draft payment already exists:
+        return {
+            'payment_data': recent_payment
+        }
 
 
 class ValidatePaymentReadyForProcessing(PipelineStep):
