@@ -4,12 +4,17 @@ from copy import deepcopy
 from unittest import TestCase
 from unittest.mock import patch
 
+import ddt
 from django.test import override_settings
 from edx_django_utils.cache import TieredCache
 
 from commerce_coordinator.apps.core.cache import CachePaymentStates, get_payment_state_cache_key
 from commerce_coordinator.apps.core.constants import OrderPaymentState, PaymentState
-from commerce_coordinator.apps.frontend_app_payment.filters import DraftPaymentRequested, PaymentProcessingRequested
+from commerce_coordinator.apps.frontend_app_payment.filters import (
+    DraftPaymentRequested,
+    PaymentProcessingRequested,
+    PaymentRequested
+)
 from commerce_coordinator.apps.titan.tests.test_clients import ORDER_UUID
 
 
@@ -210,3 +215,53 @@ class TestPaymentProcessingRequestedFilter(TestCase):
         }
         payment_details = PaymentProcessingRequested.run_filter(**filter_params)
         self.assertEqual(filter_params, payment_details)
+
+
+@ddt.ddt
+class TestPaymentRequestedFilter(TestCase):
+    """ A pytest Test Case for `PaymentRequested` """
+
+    @ddt.data(
+        PaymentState.CHECKOUT.value,
+        PaymentState.COMPLETED.value,
+        PaymentState.FAILED.value,
+        PaymentState.PENDING.value,
+    )
+    @override_settings(
+        OPEN_EDX_FILTERS_CONFIG={
+            "org.edx.coordinator.frontend_app_payment.payment.get.requested.v1": {
+                "fail_silently": False,
+                "pipeline": [
+                    'commerce_coordinator.apps.titan.pipeline.GetTitanPayment',
+                ]
+            },
+        },
+    )
+    @patch('commerce_coordinator.apps.titan.pipeline.GetTitanPayment.run_filter')
+    def test_filter(self, payment_state, mock_get_payment_step):
+        """
+        Test when Payment exists in Titan system.
+        """
+        mock_payment_number = 'test-payment-number'
+        mock_get_payment_step_output = {
+            'payment_data': {
+                'payment_number': mock_payment_number,
+                'order_uuid': ORDER_UUID,
+                'key_id': 'test-intent-id',
+                'state': payment_state
+            }
+        }
+        mock_get_payment_step.return_value = mock_get_payment_step_output
+
+        # Build expected output:
+        expected_output = deepcopy(mock_get_payment_step_output['payment_data'])
+
+        # Run filter:
+        TieredCache.dangerous_clear_all_tiers()
+        filter_params = {
+            'payment_number': mock_payment_number,
+        }
+        output = PaymentRequested.run_filter(filter_params)
+
+        # Check output matches expected:
+        self.assertEqual(expected_output, output)
