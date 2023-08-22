@@ -7,12 +7,13 @@ import logging
 from openedx_filters import PipelineStep
 from stripe.error import StripeError
 
-from commerce_coordinator.apps.core.constants import PaymentMethod, PaymentState
+from commerce_coordinator.apps.core.constants import PaymentMethod
 from commerce_coordinator.apps.stripe.clients import StripeAPIClient
 from commerce_coordinator.apps.stripe.constants import Currency
 from commerce_coordinator.apps.stripe.exceptions import (
     StripeIntentConfirmAPIError,
     StripeIntentCreateAPIError,
+    StripeIntentRetrieveAPIError,
     StripeIntentUpdateAPIError
 )
 from commerce_coordinator.apps.stripe.filters import PaymentDraftCreated
@@ -23,28 +24,27 @@ logger = logging.getLogger(__name__)
 
 class CreateOrGetStripeDraftPayment(PipelineStep):
     """
-    Adds titan orders to the order data list.
+    Create or retrieve previous creation attempts of a Stripe PaymentIntent.
+
+    Use the order number as an idempotency key so Stripe will replay responses
+    for creation attempts of a PaymentIntent for the same order number in the
+    last 24 hours.
     """
 
-    def run_filter(self, order_data, recent_payment, **kwargs):  # pylint: disable=arguments-differ
+    def run_filter(self, order_data, edx_lms_user_id, **kwargs):  # pylint: disable=arguments-differ
         """
         Execute a filter with the signature specified.
         Arguments:
-            recent_payment: most recent payment from order (from earlier pipeline step).
             order_data: any preliminary orders (from earlier pipeline step) we want to append to.
-            kwargs: arguments passed through from the filter.
+            edx_lms_user_id: the user id requesting the draft payment.
+            kwargs['payment_intent_data']: optional. If present, skip this pipeline step.
+            kwargs['payment_data']: optional. If present, skip this pipeline step.
         """
+        if kwargs.get('payment_intent_data'):
+            return None  # Cancel rest of filter pipeline.
+        if kwargs.get('payment_data'):
+            return None  # Cancel rest of filter pipeline.
 
-        if recent_payment and recent_payment['state'] != PaymentState.FAILED.value:
-            # NOTE: GRM: I DONT THINK WE CAN LEAVE HERE LIKE THIS. WE NEED THE CLIENT SECRET...
-            #            IS IT EXPECTED TO BE STORED?
-
-            # existing payment with any state other than failed found. No need to create new payment.
-            return {
-                'payment_data': recent_payment,
-            }
-
-        # In case, there was not existing payment or existing payment failed, We need to create a new payment.
         stripe_api_client = StripeAPIClient()
         try:
             payment_intent = stripe_api_client.create_payment_intent(
@@ -61,11 +61,50 @@ class CreateOrGetStripeDraftPayment(PipelineStep):
             client_secret=payment_intent['client_secret'],
             payment_method_name=PaymentMethod.STRIPE.value,
             provider_response_body=payment_intent,
-            edx_lms_user_id=kwargs['edx_lms_user_id']
+            edx_lms_user_id=edx_lms_user_id
         )
         return {
             'payment_data': payment,
-            'order_data': order_data,
+            'payment_intent_data': payment_intent,
+        }
+
+
+class GetStripeDraftPayment(PipelineStep):
+    """
+    Retrieve a PaymentIntent from Stripe.
+    """
+
+    def run_filter(self, **kwargs):
+        """
+        Executes a filter with the signature specified.
+
+        Args:
+            kwargs['payment_data'] (dict): The payment object.
+            kwargs['payment_intent_data'] (dict): Optional. If truthy, skip this pipeline step.
+        """
+        # Payment intent already retrieved:
+        if kwargs.get('payment_intent_data'):
+            return {}  # Skip pipeline step.
+
+        # No existing payment:
+        payment_data = kwargs.get('payment_data')
+        if not payment_data:
+            return {}  # Skip pipeline step.
+
+        payment_intent_id = payment_data['key_id']
+
+        stripe_api_client = StripeAPIClient()
+        try:
+            payment_intent = stripe_api_client.retrieve_payment_intent(payment_intent_id)
+        except StripeError as ex:
+            raise StripeIntentRetrieveAPIError from ex
+
+        # TODO: THES-260: Fix mixup of key_id and client_secret
+        payment_data['key_id'] = payment_intent['client_secret']
+
+        return {
+            'payment_data': payment_data,
+            'payment_intent_data': payment_intent,
         }
 
 
@@ -83,7 +122,7 @@ class UpdateStripeDraftPayment(PipelineStep):
 
         stripe_api_client = StripeAPIClient()
         try:
-            stripe_api_client.update_payment_intent(
+            payment_intent = stripe_api_client.update_payment_intent(
                 edx_lms_user_id=edx_lms_user_id,
                 payment_intent_id=payment_data['key_id'],
                 order_uuid=payment_data['order_uuid'],
@@ -95,8 +134,7 @@ class UpdateStripeDraftPayment(PipelineStep):
             raise StripeIntentUpdateAPIError from ex
 
         return {
-            'payment_data': payment_data,
-            'order_data': order_data,
+            'payment_intent_data': payment_intent,
         }
 
 
@@ -155,12 +193,12 @@ class ConfirmPayment(PipelineStep):
 
         stripe_api_client = StripeAPIClient()
         try:
-            stripe_api_client.confirm_payment_intent(
+            payment_intent = stripe_api_client.confirm_payment_intent(
                 payment_intent_id=payment_data['key_id'],
             )
         except StripeError as ex:
             raise StripeIntentConfirmAPIError from ex
 
         return {
-            'payment_data': payment_data,
+            'payment_intent_data': payment_intent,
         }

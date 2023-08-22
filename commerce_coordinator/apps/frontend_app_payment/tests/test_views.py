@@ -109,7 +109,7 @@ class GetPaymentViewTests(APITestCase):
 
         response_json = response.json()
         if expected_status == status.HTTP_200_OK:
-            self.assertEqual(response_json['state'], PaymentState.PROCESSING.value)
+            self.assertEqual(response_json['state'], PaymentState.PENDING.value)
             self.assertTrue(mock_get_payment.called)
             kwargs = mock_get_payment.call_args.kwargs
             self.assertEqual(kwargs['edx_lms_user_id'], self.test_lms_user_id)
@@ -126,7 +126,7 @@ class GetPaymentViewTests(APITestCase):
         self.assertEqual(response_json['state'], expected_state)
 
     @ddt.data(
-        PaymentState.PROCESSING.value, PaymentState.COMPLETED.value, PaymentState.FAILED.value
+        PaymentState.PENDING.value, PaymentState.COMPLETED.value, PaymentState.FAILED.value
     )
     @patch('commerce_coordinator.apps.titan.pipeline.GetTitanPayment.run_filter')
     def test_get_payment_cache(self, payment_state, mock_pipeline):
@@ -179,7 +179,7 @@ class GetPaymentViewTests(APITestCase):
             'payment_number': payment_number,
             'order_uuid': ORDER_UUID,
             'key_id': 'test-code',
-            'state': PaymentState.PROCESSING.value
+            'state': PaymentState.PENDING.value
         }
         query_params = {
             'order_uuid': '123e4567-e89b-12d3-a456-426614174000',
@@ -192,7 +192,7 @@ class GetPaymentViewTests(APITestCase):
             payment_number, CachePaymentStates.PROCESSING.value
         )
         TieredCache.set_all_tiers(payment_state_processing_cache_key, payment, settings.DEFAULT_TIMEOUT)
-        self._assert_get_payment_api_response(query_params, PaymentState.PROCESSING.value)
+        self._assert_get_payment_api_response(query_params, PaymentState.PENDING.value)
 
         # Let's assume, Something happened, and we lost cache. We should get cache restored.
         mock_pipeline.reset_mock()
@@ -200,7 +200,7 @@ class GetPaymentViewTests(APITestCase):
         cached_response = TieredCache.get_cached_response(payment_state_processing_cache_key)
         self.assertFalse(cached_response.is_found)
         mock_pipeline.return_value = {'payment_data': payment}
-        self._assert_get_payment_api_response(query_params, PaymentState.PROCESSING.value)
+        self._assert_get_payment_api_response(query_params, PaymentState.PENDING.value)
         self.assertTrue(mock_pipeline.called)
         cached_response = TieredCache.get_cached_response(payment_state_processing_cache_key)
         self.assertTrue(cached_response.is_found)
@@ -285,10 +285,12 @@ class DraftPaymentCreateViewTests(APITestCase):
     @patch('commerce_coordinator.apps.titan.clients.TitanAPIClient.get_active_order')
     @patch('commerce_coordinator.apps.titan.clients.TitanAPIClient.create_payment')
     @patch('commerce_coordinator.apps.stripe.clients.StripeAPIClient.create_payment_intent')
+    @patch('commerce_coordinator.apps.stripe.clients.StripeAPIClient.retrieve_payment_intent')
     @patch('commerce_coordinator.apps.stripe.clients.StripeAPIClient.update_payment_intent')
     def test_create_payment(
         self,
         mock_update_payment_intent,
+        mock_retrieve_payment_intent,
         mock_create_payment_intent,
         mock_create_payment,
         mock_get_active_order
@@ -301,6 +303,10 @@ class DraftPaymentCreateViewTests(APITestCase):
         mock_get_active_order_response = copy.deepcopy(titan_active_order_response)
         mock_get_active_order.return_value = mock_get_active_order_response
         mock_create_payment_intent.return_value = {
+            'id': intent_id,
+            'client_secret': intent_id
+        }
+        mock_retrieve_payment_intent.return_value = {
             'id': intent_id,
             'client_secret': intent_id
         }
