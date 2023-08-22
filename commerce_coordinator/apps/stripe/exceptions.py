@@ -37,3 +37,9 @@ class StripeIntentConfirmAPIError(APIException):
     status_code = 502
     default_detail = 'Error while confirming payment intent on payment gateway.'
     default_code = 'stripe_intent_confirm_error'
+
+
+class StripeIntentRetrieveAPIError(APIException):
+    status_code = 502
+    default_detail = 'Error while retrieving payment intent on payment gateway.'
+    default_code = 'stripe_intent_retrieve_error'

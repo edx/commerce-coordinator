@@ -52,7 +52,7 @@ class PaymentRequested(OpenEdxPublicFilter):
         payment_state = payment["state"]
         if payment_state == PaymentState.COMPLETED.value:
             TieredCache.set_all_tiers(payment_state_paid_cache_key, payment, settings.DEFAULT_TIMEOUT)
-        elif payment_state in [PaymentState.PROCESSING.value, PaymentState.FAILED.value]:
+        elif payment_state in [PaymentState.PENDING.value, PaymentState.FAILED.value]:
             TieredCache.set_all_tiers(payment_state_processing_cache_key, payment, settings.DEFAULT_TIMEOUT)
 
         return payment

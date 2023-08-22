@@ -8,6 +8,28 @@ class Status:
     UNAVAILABLE = "UNAVAILABLE"
 
 
+class OrderState(Enum):
+    """
+    Enum for order states.
+    """
+    CART = 'cart'
+    ADDRESS = 'address'
+    PAYMENT = 'payment'
+    COMPLETE = 'complete'
+    CANCELED = 'canceled'
+
+
+class OrderPaymentState(Enum):
+    """
+    Enum for the state of payment of an order.
+    """
+    BALANCE_DUE = 'balance_due'
+    FAILED = 'failed'
+    PAID = 'paid'
+    VOID = 'void'
+    CREDIT_OWED = 'credit_owed'
+
+
 class PaymentState(Enum):
     """
     Enum for Payment states, Controlled by Titan's System.
@@ -16,7 +38,6 @@ class PaymentState(Enum):
     COMPLETED = 'completed'
     FAILED = 'failed'
     PENDING = 'pending'
-    PROCESSING = 'processing'
 
 
 class PaymentMethod(Enum):
