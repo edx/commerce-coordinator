@@ -2,7 +2,7 @@
 
 .PHONY: help clean clean_tox piptools requirements ci_requirements \
         dev_requirements validation_requirements doc_requirements \
-        prod_requirements static shell test coverage isort_check isort style \
+        production-requirements static shell test coverage isort_check isort style \
         lint quality pii_check validate migrate html_coverage upgrade \
         extract_translation dummy_translations compile_translations \
         fake_translations pull_translations push_translations start-devstack \
@@ -52,7 +52,7 @@ validation_requirements: ## sync to requirements for testing & code quality chec
 doc_requirements:
 	pip-sync -q requirements/doc.txt
 
-prod_requirements: ## install requirements for production
+production-requirements: piptools ## install requirements for production + Jenkins CreateSandbox
 	pip-sync -q requirements/production.txt
 
 static: ## generate static files
