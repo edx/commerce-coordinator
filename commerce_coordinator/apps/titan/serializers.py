@@ -32,12 +32,21 @@ class PaymentSerializer(CoordinatorSerializer):
 
     def to_representation(self, instance):
         representation = super().to_representation(instance)
-        ret = OrderedDict()
-        ret['payment_number'] = representation['number']
-        ret['order_uuid'] = representation['orderUuid']
-        ret['key_id'] = representation['referenceNumber']
-        ret['state'] = representation['state']
-        return ret
+        representation['payment_number'] = representation.pop('number')
+        representation['order_uuid'] = representation.pop('orderUuid')
+        representation['key_id'] = representation.pop('referenceNumber')
+        return representation
+
+
+class CachedPaymentSerializer(CoordinatorSerializer):
+    """
+    Serializer for Cached Payment object.
+    """
+    payment_number = serializers.CharField(allow_null=False)
+    order_uuid = serializers.UUIDField(allow_null=False)
+    key_id = serializers.CharField(allow_null=False)
+    state = serializers.CharField(allow_null=False)
+    new_payment_number = serializers.CharField(required=False)
 
 
 class UserSerializer(CoordinatorSerializer):

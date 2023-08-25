@@ -4,6 +4,7 @@ from unittest import TestCase
 from unittest.mock import patch
 
 import ddt
+from edx_django_utils.cache import TieredCache
 from requests import HTTPError
 from rest_framework.exceptions import APIException
 
@@ -12,12 +13,13 @@ from commerce_coordinator.apps.titan.pipeline import (
     CreateTitanOrder,
     GetTitanActiveOrder,
     GetTitanPayment,
+    MarkTitanPaymentPending,
     UpdateBillingAddress,
-    UpdateTitanPayment,
     ValidateOrderReadyForDraftPayment,
     ValidatePaymentReadyForProcessing
 )
 
+from ...core.cache import get_payment_processing_cache
 from ...core.constants import OrderPaymentState, PaymentMethod, PaymentState
 from ..exceptions import (
     AlreadyPaid,
@@ -439,13 +441,12 @@ class TestUpdateBillingAddressStep(TestCase):
         mock_update_billing_address.assert_called()
 
 
-class TestUpdateTitanPaymentStep(TestCase):
-    """A pytest Test case for the UpdateTitanPayment Pipeline Step"""
+class TestMarkTitanPaymentPendingStep(TestCase):
+    """A pytest Test case for the MarkTitanPaymentPending Pipeline Step"""
 
     def setUp(self) -> None:
         self.update_payment_data = {
             'payment_number': '1234',
-            'payment_state': PaymentState.PENDING.value,
             'edx_lms_user_id': 1,
             'order_uuid': ORDER_UUID,
             'payment_intent_id': 'fake-intent',
@@ -456,10 +457,18 @@ class TestUpdateTitanPaymentStep(TestCase):
             'referenceNumber': 'a_stripe_response_code',
             'state': PaymentState.PENDING.value,
         }
+        TieredCache.dangerous_clear_all_tiers()
+
+    def _assert_cache_found(self, payment_number, should_found):
+        """
+        Assert of cached payment found
+        """
+        payment = get_payment_processing_cache(payment_number)
+        self.assertEqual(bool(payment), should_found)
 
     @patch('commerce_coordinator.apps.titan.clients.TitanAPIClient.update_payment')
     def test_pipeline_step(self, mock_update_payment):
-        update_payment_pipe = UpdateTitanPayment("test_pipe", None)
+        update_payment_pipe = MarkTitanPaymentPending("test_pipe", None)
         mock_update_payment.return_value = self.update_payment_response
         result: dict = update_payment_pipe.run_filter(
             **self.update_payment_data,
@@ -467,10 +476,11 @@ class TestUpdateTitanPaymentStep(TestCase):
         result_data = result['payment_data']
         self.assertIn('order_uuid', result_data)
         self.assertEqual(result_data['order_uuid'], ORDER_UUID)
+        self._assert_cache_found(self.update_payment_data['payment_number'], should_found=True)
 
     @patch('commerce_coordinator.apps.titan.clients.TitanAPIClient.update_payment', side_effect=HTTPError)
     def test_pipeline_step_with_exception(self, mock_update_payment):
-        update_payment_pipe = UpdateTitanPayment("test_pipe", None)
+        update_payment_pipe = MarkTitanPaymentPending("test_pipe", None)
         mock_update_payment.return_value = self.update_payment_response
         with self.assertRaises(APIException) as exc:
             update_payment_pipe.run_filter(
@@ -482,3 +492,4 @@ class TestUpdateTitanPaymentStep(TestCase):
         )
         # ensure our input data arrives as expected
         mock_update_payment.assert_called()
+        self._assert_cache_found(self.update_payment_data['payment_number'], should_found=False)

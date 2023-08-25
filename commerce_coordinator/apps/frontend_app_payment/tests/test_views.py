@@ -4,7 +4,6 @@ Tests for the frontend_app_payment views.
 import copy
 
 import ddt
-from django.conf import settings
 from django.contrib.auth import get_user_model
 from django.urls import reverse
 from edx_django_utils.cache import TieredCache
@@ -12,7 +11,11 @@ from mock import patch
 from rest_framework import status
 from rest_framework.test import APITestCase
 
-from commerce_coordinator.apps.core.cache import CachePaymentStates, get_payment_state_cache_key
+from commerce_coordinator.apps.core.cache import (
+    get_payment_processing_cache,
+    set_payment_paid_cache,
+    set_payment_processing_cache
+)
 from commerce_coordinator.apps.core.constants import PaymentState
 from commerce_coordinator.apps.core.tests.utils import name_test
 from commerce_coordinator.apps.titan.exceptions import NoActiveOrder
@@ -135,9 +138,10 @@ class GetPaymentViewTests(APITestCase):
         """
         TieredCache.dangerous_clear_all_tiers()
         self.client.force_authenticate(user=self.user)
+        payment_number = '12345'
         mock_pipeline.return_value = {
             'payment_data': {
-                'payment_number': '12345',
+                'payment_number': payment_number,
                 'order_uuid': ORDER_UUID,
                 'key_id': 'test-code',
                 'state': payment_state
@@ -145,7 +149,7 @@ class GetPaymentViewTests(APITestCase):
         }
         query_params = {
             'order_uuid': ORDER_UUID,
-            'payment_number': '1234',
+            'payment_number': payment_number,
         }
 
         response = self.client.get(self.url, data=query_params)
@@ -163,6 +167,36 @@ class GetPaymentViewTests(APITestCase):
         response_json = response.json()
         self.assertEqual(response_json['state'], payment_state)
         self.assertFalse(mock_pipeline.called)
+
+        if payment_state == PaymentState.FAILED.value:
+            # there should be new payment number as well.
+            self.assertIn('new_payment_number', response_json)
+        else:
+            self.assertNotIn('new_payment_number', response_json)
+
+    @patch('commerce_coordinator.apps.titan.pipeline.GetTitanPayment.run_filter')
+    def test_error_on_unhandled_state(self, mock_pipeline):
+        """
+        Test scenario if we start getting payment state from titan that we are not expecting in this view.
+        """
+        TieredCache.dangerous_clear_all_tiers()
+        self.client.force_authenticate(user=self.user)
+        payment_number = '12345'
+        mock_pipeline.return_value = {
+            'payment_data': {
+                'payment_number': payment_number,
+                'order_uuid': ORDER_UUID,
+                'key_id': 'test-code',
+                'state': PaymentState.CHECKOUT.value
+            }
+        }
+        query_params = {
+            'order_uuid': ORDER_UUID,
+            'payment_number': payment_number,
+        }
+
+        response = self.client.get(self.url, data=query_params)
+        self.assertEqual(response.status_code, status.HTTP_422_UNPROCESSABLE_ENTITY)
 
     @ddt.data(
         PaymentState.COMPLETED.value, PaymentState.FAILED.value
@@ -186,41 +220,35 @@ class GetPaymentViewTests(APITestCase):
             'payment_number': payment_number,
         }
 
-        # let's assume payment is in processing state. So there should be PROCESSING cache. API should access it from
+        # let's assume payment is in pending state. So there should be PROCESSING cache. API should access it from
         # cache and Titan API should not be called.
-        payment_state_processing_cache_key = get_payment_state_cache_key(
-            payment_number, CachePaymentStates.PROCESSING.value
-        )
-        TieredCache.set_all_tiers(payment_state_processing_cache_key, payment, settings.DEFAULT_TIMEOUT)
+        set_payment_processing_cache(payment)
         self._assert_get_payment_api_response(query_params, PaymentState.PENDING.value)
 
         # Let's assume, Something happened, and we lost cache. We should get cache restored.
         mock_pipeline.reset_mock()
-        TieredCache.delete_all_tiers(payment_state_processing_cache_key)
-        cached_response = TieredCache.get_cached_response(payment_state_processing_cache_key)
-        self.assertFalse(cached_response.is_found)
+        TieredCache.dangerous_clear_all_tiers()
+        cached_response = get_payment_processing_cache(payment_number)
+        self.assertIsNone(cached_response)
         mock_pipeline.return_value = {'payment_data': payment}
         self._assert_get_payment_api_response(query_params, PaymentState.PENDING.value)
         self.assertTrue(mock_pipeline.called)
-        cached_response = TieredCache.get_cached_response(payment_state_processing_cache_key)
-        self.assertTrue(cached_response.is_found)
+        cached_response = get_payment_processing_cache(payment_number)
+        self.assertIsNotNone(cached_response)
 
-        # Now assume Stripe's webhook updated cache to a final state (COMPLETED or FAILED). Titan should not get call
-        # from Coordinator, instead we should get the final result from cache.
+        # Now assume Stripe's webhook updated cache to a final state (COMPLETED or FAILED).
+        # Coordinator should not call Titan, instead we should get the final result from cache.
         mock_pipeline.reset_mock()
         payment['state'] = payment_final_state
         if payment_final_state == PaymentState.COMPLETED.value:
-            payment_state_paid_cache_key = get_payment_state_cache_key(
-                payment_number, CachePaymentStates.PAID.value
-            )
-            TieredCache.set_all_tiers(payment_state_paid_cache_key, payment, settings.DEFAULT_TIMEOUT)
+            set_payment_paid_cache(payment)
         else:
             #  here payment_final_state is PaymentState.FAILED
-            TieredCache.set_all_tiers(payment_state_processing_cache_key, payment, settings.DEFAULT_TIMEOUT)
+            set_payment_processing_cache(payment)
         self._assert_get_payment_api_response(query_params, expected_state=payment_final_state)
         self.assertFalse(mock_pipeline.called)
 
-        # Let's assume we lost cache again, We get be able to fetch it from Titan's sytem.
+        # Let's assume we lost cache again, We should be able to get it from Titan.
         TieredCache.dangerous_clear_all_tiers()
         self._assert_get_payment_api_response(query_params, expected_state=payment_final_state)
         self.assertTrue(mock_pipeline.called)

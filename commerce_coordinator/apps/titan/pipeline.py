@@ -8,6 +8,7 @@ from openedx_filters import PipelineStep
 from requests import HTTPError
 from rest_framework.exceptions import APIException
 
+from commerce_coordinator.apps.core.cache import set_payment_processing_cache
 from commerce_coordinator.apps.core.constants import OrderPaymentState, PaymentState
 from commerce_coordinator.apps.titan.clients import TitanAPIClient
 from commerce_coordinator.apps.titan.exceptions import (
@@ -265,7 +266,7 @@ class UpdateBillingAddress(PipelineStep):
         return {'billing_address_data': update_billing_address_output.data}
 
 
-class UpdateTitanPayment(PipelineStep):
+class MarkTitanPaymentPending(PipelineStep):
     """
     Updates a payment in Titan
     """
@@ -275,28 +276,28 @@ class UpdateTitanPayment(PipelineStep):
         edx_lms_user_id,
         order_uuid,
         payment_number,
-        payment_state,
         payment_intent_id,
         **kwargs
     ):  # pylint: disable=arguments-differ
-
         api_client = TitanAPIClient()
         try:
-            response = api_client.update_payment(
+            payment = api_client.update_payment(
                 edx_lms_user_id=edx_lms_user_id,
                 order_uuid=order_uuid,
                 payment_number=payment_number,
-                payment_state=payment_state,
+                payment_state=PaymentState.PENDING.value,
                 reference_number=payment_intent_id
             )
 
         except HTTPError as exc:
             logger.exception(
-                "[UpdateTitanPayment] Failed to update the payment information in Titan for the specified payment: %s",
-                payment_number
+                f"[MarkTitanPaymentPending] Failed to mark the payment pending in Titan "
+                f"for the specified payment: {payment_number}",
             )
             raise APIException("Error updating the payment details in titan") from exc
 
-        update_payment_output = PaymentSerializer(data=response)
+        update_payment_output = PaymentSerializer(data=payment)
         update_payment_output.is_valid(raise_exception=True)
-        return {'payment_data': update_payment_output.data}
+        payment = update_payment_output.data
+        set_payment_processing_cache(payment)
+        return {'payment_data': payment}

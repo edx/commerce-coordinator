@@ -8,7 +8,7 @@ from testfixtures import LogCapture
 
 from commerce_coordinator.apps.titan.tasks import order_created_save_task, payment_processed_save_task
 
-from ...core.cache import get_paid_payment_state_cache_key, get_processing_payment_state_cache_key
+from ...core.cache import get_payment_paid_cache, get_payment_processing_cache
 from ...core.constants import PaymentMethod, PaymentState
 from ...stripe.constants import Currency
 from .test_clients import ORDER_CREATE_DATA, ORDER_UUID, TitanClientMock, titan_active_order_response
@@ -67,11 +67,13 @@ class TestPaymentTasks(TestCase):
             mock_update_payment (TitanClientMock): Titan Client Mock for its mock_update_payment command.
         """
         TieredCache.dangerous_clear_all_tiers()
-        mock_update_payment.return_value = {
-            'uuid': ORDER_UUID,
-            'state': payment_state
-        }
         payment_number = '12345'
+        mock_update_payment.return_value = {
+            'orderUuid': ORDER_UUID,
+            'state': payment_state,
+            'number': payment_number,
+            'referenceNumber': 'fake-referemce',
+        }
         payment_update_params = {
             'edx_lms_user_id': 1,
             'order_uuid': ORDER_UUID,
@@ -100,16 +102,15 @@ class TestPaymentTasks(TestCase):
             **payment_update_params
         )
 
-        payment_state_cache_key = None
+        cached_payment = None
         if payment_state == PaymentState.COMPLETED.value:
-            payment_state_cache_key = get_paid_payment_state_cache_key(payment_number)
+            cached_payment = get_payment_paid_cache(payment_number)
         if payment_state == PaymentState.FAILED.value:
             mock_create_payment.assert_called_with(
                 **payment_create_params
             )
-            payment_state_cache_key = get_processing_payment_state_cache_key(payment_number)
-        cached_response = TieredCache.get_cached_response(payment_state_cache_key)
-        self.assertTrue(cached_response.is_found)
+            cached_payment = get_payment_processing_cache(payment_number)
+        self.assertIsNotNone(cached_payment)
 
     @ddt.data(PaymentState.COMPLETED.value, PaymentState.FAILED.value)
     @patch('commerce_coordinator.apps.titan.clients.TitanAPIClient.update_payment', side_effect=HTTPError)
@@ -151,11 +152,10 @@ class TestPaymentTasks(TestCase):
         mock_update_payment.assert_called_with(
             **payment_update_params
         )
-        payment_state_cache_key = None
+        cached_payment = None
         if payment_state == PaymentState.COMPLETED.value:
-            payment_state_cache_key = get_paid_payment_state_cache_key(payment_number)
+            cached_payment = get_payment_paid_cache(payment_number)
         if payment_state == PaymentState.FAILED.value:
-            payment_state_cache_key = get_processing_payment_state_cache_key(payment_number)
+            cached_payment = get_payment_processing_cache(payment_number)
             mock_create_payment.return_value = titan_active_order_response['payments'][0]
-        cached_response = TieredCache.get_cached_response(payment_state_cache_key)
-        self.assertFalse(cached_response.is_found)
+        self.assertIsNone(cached_payment)
