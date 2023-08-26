@@ -19,7 +19,7 @@ from commerce_coordinator.apps.titan.pipeline import (
     ValidatePaymentReadyForProcessing
 )
 
-from ...core.cache import get_payment_processing_cache
+from ...core.cache import PaymentCache
 from ...core.constants import OrderPaymentState, PaymentMethod, PaymentState
 from ..exceptions import (
     AlreadyPaid,
@@ -463,7 +463,7 @@ class TestMarkTitanPaymentPendingStep(TestCase):
         """
         Assert of cached payment found
         """
-        payment = get_payment_processing_cache(payment_number)
+        payment = PaymentCache().get_processing_cache_payment(payment_number)
         self.assertEqual(bool(payment), should_found)
 
     @patch('commerce_coordinator.apps.titan.clients.TitanAPIClient.update_payment')

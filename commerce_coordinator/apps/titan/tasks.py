@@ -6,7 +6,7 @@ from celery import shared_task
 from celery.utils.log import get_task_logger
 from requests import HTTPError
 
-from commerce_coordinator.apps.core.cache import set_payment_paid_cache, set_payment_processing_cache
+from commerce_coordinator.apps.core.cache import PaymentCache
 from commerce_coordinator.apps.core.constants import PaymentMethod, PaymentState
 from commerce_coordinator.apps.stripe.clients import StripeAPIClient
 
@@ -105,7 +105,7 @@ def payment_processed_save_task(
         # Set cache after successfully updating payment state in Titan's system.
         payment_state = payment['state']
         if payment_state == PaymentState.COMPLETED.value:
-            set_payment_paid_cache(payment)
+            PaymentCache().set_paid_cache_payment(payment)
         elif payment_state == PaymentState.FAILED.value:
             stripe_api_client = StripeAPIClient()
             provider_response_body = stripe_api_client.retrieve_payment_intent(reference_number)
@@ -127,7 +127,7 @@ def payment_processed_save_task(
                 currency=currency,
             )
             payment['new_payment_number'] = new_payment_number
-            set_payment_processing_cache(payment)
+            PaymentCache().set_processing_cache_payment(payment)
 
     except HTTPError as ex:
         logger.exception('Titan payment_processed_save_task Failed '

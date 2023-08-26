@@ -8,7 +8,7 @@ from openedx_filters import PipelineStep
 from requests import HTTPError
 from rest_framework.exceptions import APIException
 
-from commerce_coordinator.apps.core.cache import set_payment_processing_cache
+from commerce_coordinator.apps.core.cache import PaymentCache
 from commerce_coordinator.apps.core.constants import OrderPaymentState, PaymentState
 from commerce_coordinator.apps.titan.clients import TitanAPIClient
 from commerce_coordinator.apps.titan.exceptions import (
@@ -299,5 +299,5 @@ class MarkTitanPaymentPending(PipelineStep):
         update_payment_output = PaymentSerializer(data=payment)
         update_payment_output.is_valid(raise_exception=True)
         payment = update_payment_output.data
-        set_payment_processing_cache(payment)
+        PaymentCache().set_processing_cache_payment(payment)
         return {'payment_data': payment}

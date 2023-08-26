@@ -9,11 +9,7 @@ from rest_framework.response import Response
 from rest_framework.throttling import ScopedRateThrottle
 from rest_framework.views import APIView
 
-from commerce_coordinator.apps.core.cache import (
-    get_cached_payment,
-    set_payment_paid_cache,
-    set_payment_processing_cache
-)
+from commerce_coordinator.apps.core.cache import PaymentCache
 from commerce_coordinator.apps.core.constants import PaymentState
 from commerce_coordinator.apps.frontend_app_payment.exceptions import UnhandledPaymentStateAPIError
 from commerce_coordinator.apps.titan.exceptions import NoActiveOrder
@@ -48,7 +44,7 @@ class PaymentGetView(APIView):
         input_serializer.is_valid(raise_exception=True)
         params = input_serializer.data
         payment_number = params['payment_number']
-        payment = get_cached_payment(payment_number)
+        payment = PaymentCache().get_cache_payment(payment_number)
 
         if not payment:
             # Cached payment not found. We have to call Titan to fetch Payment information
@@ -57,14 +53,14 @@ class PaymentGetView(APIView):
             # Set cache for future use
             payment_state = payment["state"]
             if payment_state == PaymentState.COMPLETED.value:
-                set_payment_paid_cache(payment)
+                PaymentCache().set_paid_cache_payment(payment)
             elif payment_state == PaymentState.PENDING.value:
-                set_payment_processing_cache(payment)
+                PaymentCache().set_processing_cache_payment(payment)
             elif payment_state == PaymentState.FAILED.value:
                 params.pop('payment_number')  # remove payment number to get any new payments.
                 new_payment = PaymentRequested.run_filter(**params)
                 payment['new_payment_number'] = new_payment['payment_number']
-                set_payment_processing_cache(payment)
+                PaymentCache().set_processing_cache_payment(payment)
             else:
                 logger.exception(f"[PaymentGetView] Received an unhandled payment state. payment: {payment}")
                 raise UnhandledPaymentStateAPIError

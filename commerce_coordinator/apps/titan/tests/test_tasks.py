@@ -8,7 +8,7 @@ from testfixtures import LogCapture
 
 from commerce_coordinator.apps.titan.tasks import order_created_save_task, payment_processed_save_task
 
-from ...core.cache import get_payment_paid_cache, get_payment_processing_cache
+from ...core.cache import PaymentCache
 from ...core.constants import PaymentMethod, PaymentState
 from ...stripe.constants import Currency
 from .test_clients import ORDER_CREATE_DATA, ORDER_UUID, TitanClientMock, titan_active_order_response
@@ -104,12 +104,12 @@ class TestPaymentTasks(TestCase):
 
         cached_payment = None
         if payment_state == PaymentState.COMPLETED.value:
-            cached_payment = get_payment_paid_cache(payment_number)
+            cached_payment = PaymentCache().get_paid_cache_payment(payment_number)
         if payment_state == PaymentState.FAILED.value:
             mock_create_payment.assert_called_with(
                 **payment_create_params
             )
-            cached_payment = get_payment_processing_cache(payment_number)
+            cached_payment = PaymentCache().get_processing_cache_payment(payment_number)
         self.assertIsNotNone(cached_payment)
 
     @ddt.data(PaymentState.COMPLETED.value, PaymentState.FAILED.value)
@@ -154,8 +154,8 @@ class TestPaymentTasks(TestCase):
         )
         cached_payment = None
         if payment_state == PaymentState.COMPLETED.value:
-            cached_payment = get_payment_paid_cache(payment_number)
+            cached_payment = PaymentCache().get_paid_cache_payment(payment_number)
         if payment_state == PaymentState.FAILED.value:
-            cached_payment = get_payment_processing_cache(payment_number)
+            cached_payment = PaymentCache().get_processing_cache_payment(payment_number)
             mock_create_payment.return_value = titan_active_order_response['payments'][0]
         self.assertIsNone(cached_payment)

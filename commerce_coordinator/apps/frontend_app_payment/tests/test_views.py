@@ -11,11 +11,7 @@ from mock import patch
 from rest_framework import status
 from rest_framework.test import APITestCase
 
-from commerce_coordinator.apps.core.cache import (
-    get_payment_processing_cache,
-    set_payment_paid_cache,
-    set_payment_processing_cache
-)
+from commerce_coordinator.apps.core.cache import PaymentCache
 from commerce_coordinator.apps.core.constants import PaymentState
 from commerce_coordinator.apps.core.tests.utils import name_test
 from commerce_coordinator.apps.titan.exceptions import NoActiveOrder
@@ -222,18 +218,18 @@ class GetPaymentViewTests(APITestCase):
 
         # let's assume payment is in pending state. So there should be PROCESSING cache. API should access it from
         # cache and Titan API should not be called.
-        set_payment_processing_cache(payment)
+        PaymentCache().set_processing_cache_payment(payment)
         self._assert_get_payment_api_response(query_params, PaymentState.PENDING.value)
 
         # Let's assume, Something happened, and we lost cache. We should get cache restored.
         mock_pipeline.reset_mock()
         TieredCache.dangerous_clear_all_tiers()
-        cached_response = get_payment_processing_cache(payment_number)
+        cached_response = PaymentCache().get_processing_cache_payment(payment_number)
         self.assertIsNone(cached_response)
         mock_pipeline.return_value = {'payment_data': payment}
         self._assert_get_payment_api_response(query_params, PaymentState.PENDING.value)
         self.assertTrue(mock_pipeline.called)
-        cached_response = get_payment_processing_cache(payment_number)
+        cached_response = PaymentCache().get_processing_cache_payment(payment_number)
         self.assertIsNotNone(cached_response)
 
         # Now assume Stripe's webhook updated cache to a final state (COMPLETED or FAILED).
@@ -241,10 +237,10 @@ class GetPaymentViewTests(APITestCase):
         mock_pipeline.reset_mock()
         payment['state'] = payment_final_state
         if payment_final_state == PaymentState.COMPLETED.value:
-            set_payment_paid_cache(payment)
+            PaymentCache().set_paid_cache_payment(payment)
         else:
             #  here payment_final_state is PaymentState.FAILED
-            set_payment_processing_cache(payment)
+            PaymentCache().set_processing_cache_payment(payment)
         self._assert_get_payment_api_response(query_params, expected_state=payment_final_state)
         self.assertFalse(mock_pipeline.called)
 
