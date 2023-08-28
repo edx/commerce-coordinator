@@ -4,20 +4,16 @@ Titan Celery tasks
 
 from celery import shared_task
 from celery.utils.log import get_task_logger
-from django.conf import settings
-from edx_django_utils.cache import TieredCache
 from requests import HTTPError
 
-from commerce_coordinator.apps.core.cache import (
-    get_paid_payment_state_cache_key,
-    get_processing_payment_state_cache_key
-)
+from commerce_coordinator.apps.core.cache import PaymentCache
 from commerce_coordinator.apps.core.constants import PaymentMethod, PaymentState
 from commerce_coordinator.apps.stripe.clients import StripeAPIClient
 
 from ..stripe.utils import sanitize_provider_response_body
 from .clients import TitanAPIClient
 from .filters import PaymentSuperseded
+from .serializers import PaymentSerializer
 
 logger = get_task_logger(__name__)
 
@@ -102,32 +98,36 @@ def payment_processed_save_task(
             reference_number=reference_number,
             provider_response_body=provider_response_body,
         )
+        payment_serializer = PaymentSerializer(data=payment)
+        payment_serializer.is_valid()
+        payment = payment_serializer.data
+
         # Set cache after successfully updating payment state in Titan's system.
         payment_state = payment['state']
         if payment_state == PaymentState.COMPLETED.value:
-            payment_state_paid_cache_key = get_paid_payment_state_cache_key(payment_number)
-            TieredCache.set_all_tiers(payment_state_paid_cache_key, payment, settings.DEFAULT_TIMEOUT)
+            PaymentCache().set_paid_cache_payment(payment)
         elif payment_state == PaymentState.FAILED.value:
             stripe_api_client = StripeAPIClient()
             provider_response_body = stripe_api_client.retrieve_payment_intent(reference_number)
             provider_response_body = sanitize_provider_response_body(provider_response_body)
-            payment = titan_api_client.create_payment(
+            new_payment = titan_api_client.create_payment(
                 order_uuid=order_uuid,
                 reference_number=reference_number,
                 payment_method_name=PaymentMethod.STRIPE.value,
                 provider_response_body=provider_response_body,
                 edx_lms_user_id=edx_lms_user_id
             )
+            new_payment_number = new_payment['number']
             PaymentSuperseded.run_filter(
                 edx_lms_user_id=edx_lms_user_id,
                 payment_intent_id=reference_number,
                 order_uuid=order_uuid,
-                payment_number=payment['number'],
+                payment_number=new_payment_number,
                 amount_in_cents=amount_in_cents,
                 currency=currency,
             )
-            payment_state_processing_cache_key = get_processing_payment_state_cache_key(payment_number)
-            TieredCache.set_all_tiers(payment_state_processing_cache_key, payment, settings.DEFAULT_TIMEOUT)
+            payment['new_payment_number'] = new_payment_number
+            PaymentCache().set_processing_cache_payment(payment)
 
     except HTTPError as ex:
         logger.exception('Titan payment_processed_save_task Failed '
