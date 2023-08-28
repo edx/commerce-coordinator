@@ -8,7 +8,6 @@ import ddt
 from django.test import override_settings
 from edx_django_utils.cache import TieredCache
 
-from commerce_coordinator.apps.core.cache import CachePaymentStates, get_payment_state_cache_key
 from commerce_coordinator.apps.core.constants import OrderPaymentState, PaymentState
 from commerce_coordinator.apps.frontend_app_payment.filters import (
     DraftPaymentRequested,
@@ -120,7 +119,7 @@ class TestPaymentProcessingRequestedFilter(TestCase):
                     'commerce_coordinator.apps.titan.pipeline.ValidatePaymentReadyForProcessing',
                     'commerce_coordinator.apps.titan.pipeline.UpdateBillingAddress',
                     'commerce_coordinator.apps.stripe.pipeline.ConfirmPayment',
-                    'commerce_coordinator.apps.titan.pipeline.UpdateTitanPayment',
+                    'commerce_coordinator.apps.titan.pipeline.MarkTitanPaymentPending',
                 ]
             },
         },
@@ -128,10 +127,10 @@ class TestPaymentProcessingRequestedFilter(TestCase):
     @patch('commerce_coordinator.apps.titan.pipeline.GetTitanPayment.run_filter')
     @patch('commerce_coordinator.apps.titan.pipeline.UpdateBillingAddress.run_filter')
     @patch('commerce_coordinator.apps.stripe.pipeline.ConfirmPayment.run_filter')
-    @patch('commerce_coordinator.apps.titan.pipeline.UpdateTitanPayment.run_filter')
+    @patch('commerce_coordinator.apps.titan.pipeline.MarkTitanPaymentPending.run_filter')
     def test_filter_when_payment_exist_in_titan(
         self,
-        mock_update_titan_payment_step,
+        mock_mark_titan_payment_pending_step,
         mock_confirm_payment_step,
         mock_update_billing_address_step,
         mock_get_titan_payment_step,
@@ -173,7 +172,7 @@ class TestPaymentProcessingRequestedFilter(TestCase):
         mock_get_titan_payment_step.return_value = mock_payment
         mock_update_billing_address_step.return_value = mock_billing_details_data
         mock_confirm_payment_step.return_value = mock_pending_payment
-        mock_update_titan_payment_step.return_value = mock_pending_payment
+        mock_mark_titan_payment_pending_step.return_value = mock_pending_payment
 
         filter_params = {
             'order_uuid': ORDER_UUID,
@@ -184,23 +183,18 @@ class TestPaymentProcessingRequestedFilter(TestCase):
         payment_details = PaymentProcessingRequested.run_filter(**filter_params)
         expected_payment = {**mock_pending_payment, **mock_billing_details_data, **filter_params}
         self.assertEqual(expected_payment, payment_details)
-        payment_state_processing_cache_key = get_payment_state_cache_key(
-            filter_params['payment_number'], CachePaymentStates.PROCESSING.value
-        )
-        cached_response = TieredCache.get_cached_response(payment_state_processing_cache_key)
-        self.assertTrue(cached_response.is_found)
 
     @override_settings(
         OPEN_EDX_FILTERS_CONFIG={
             "org.edx.coordinator.frontend_app_payment.payment.processing.requested.v1": {
                 "fail_silently": False,
                 "pipeline": [
-                    'commerce_coordinator.apps.titan.pipeline.UpdateTitanPayment',
+                    'commerce_coordinator.apps.titan.pipeline.MarkTitanPaymentPending',
                 ]
             },
         },
     )
-    @patch('commerce_coordinator.apps.titan.pipeline.UpdateTitanPayment.run_filter')
+    @patch('commerce_coordinator.apps.titan.pipeline.MarkTitanPaymentPending.run_filter')
     def test_pipeline_no_result(self, mock_pipeline):
         """
         Test pipeline does not return payment
@@ -261,7 +255,7 @@ class TestPaymentRequestedFilter(TestCase):
         filter_params = {
             'payment_number': mock_payment_number,
         }
-        output = PaymentRequested.run_filter(filter_params)
+        output = PaymentRequested.run_filter(**filter_params)
 
         # Check output matches expected:
         self.assertEqual(expected_output, output)

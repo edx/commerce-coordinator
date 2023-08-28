@@ -3,12 +3,8 @@ Filters used by the frontend_app_payment app
 """
 import logging
 
-from django.conf import settings
-from edx_django_utils.cache import TieredCache
 from openedx_filters.tooling import OpenEdxPublicFilter
 
-from commerce_coordinator.apps.core.cache import CachePaymentStates, get_payment_state_cache_key
-from commerce_coordinator.apps.core.constants import PaymentState
 from commerce_coordinator.apps.frontend_app_payment.serializers import DraftPaymentCreateViewOutputSerializer
 
 logger = logging.getLogger(__name__)
@@ -22,39 +18,13 @@ class PaymentRequested(OpenEdxPublicFilter):
     filter_type = "org.edx.coordinator.frontend_app_payment.payment.get.requested.v1"
 
     @classmethod
-    def run_filter(cls, params):
+    def run_filter(cls, **kwargs):
         """
         Call the PipelineStep(s) defined for this filter, to gather orders and return together
         Arguments:
-            params (dict): Arguments passed through from the original get payment url querystring
+            kwargs (dict): Arguments passed through from the original get payment url querystring
         """
-        payment_number = params['payment_number']
-
-        # check if we have PAID cache stored
-        payment_state_paid_cache_key = get_payment_state_cache_key(
-            payment_number, CachePaymentStates.PAID.value
-        )
-        cached_response = TieredCache.get_cached_response(payment_state_paid_cache_key)
-        if cached_response.is_found:
-            return cached_response.value
-
-        # PAID cache is not found, Try PROCESSING cache to see if payment is in processing or failed
-        payment_state_processing_cache_key = get_payment_state_cache_key(
-            payment_number, CachePaymentStates.PROCESSING.value
-        )
-        cached_response = TieredCache.get_cached_response(payment_state_processing_cache_key)
-        if cached_response.is_found:
-            return cached_response.value
-
-        # PROCESSING cache not found as well. We have to call Titan to fetch Payment information
-        payment = super().run_pipeline(**params)['payment_data']
-        # Set cache for future use
-        payment_state = payment["state"]
-        if payment_state == PaymentState.COMPLETED.value:
-            TieredCache.set_all_tiers(payment_state_paid_cache_key, payment, settings.DEFAULT_TIMEOUT)
-        elif payment_state in [PaymentState.PENDING.value, PaymentState.FAILED.value]:
-            TieredCache.set_all_tiers(payment_state_processing_cache_key, payment, settings.DEFAULT_TIMEOUT)
-
+        payment = super().run_pipeline(**kwargs)['payment_data']
         return payment
 
 
@@ -126,14 +96,4 @@ class PaymentProcessingRequested(OpenEdxPublicFilter):
         pipeline_output = super().run_pipeline(
             **kwargs,
         )
-        if 'payment_data' in pipeline_output:
-            payment_data = pipeline_output['payment_data']
-            payment_state_processing_cache_key = get_payment_state_cache_key(
-                payment_data['payment_number'],
-                CachePaymentStates.PROCESSING.value
-            )
-            TieredCache.set_all_tiers(payment_state_processing_cache_key, payment_data, settings.DEFAULT_TIMEOUT)
-        else:
-            logger.info('frontend_app_payment.PaymentProcessingRequested pipeline did not return any payment_data. '
-                        'Unable to cache Payment data in Processing state')
         return pipeline_output

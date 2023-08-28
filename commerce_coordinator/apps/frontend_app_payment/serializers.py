@@ -7,7 +7,7 @@ from commerce_coordinator.apps.core.serializers import CoordinatorSerializer
 
 class GetPaymentInputSerializer(CoordinatorSerializer):
     """
-    Serializer for OrderFulfillView input validation.
+    Serializer for PaymentGetView input validation.
     """
     payment_number = serializers.CharField(allow_null=False)
     order_uuid = serializers.UUIDField(allow_null=False)
@@ -16,9 +16,10 @@ class GetPaymentInputSerializer(CoordinatorSerializer):
 
 class GetPaymentOutputSerializer(CoordinatorSerializer):
     """
-    Serializer for OrderFulfillView input validation.
+    Serializer for PaymentGetView output validation.
     """
     state = serializers.CharField(allow_null=False)
+    new_payment_number = serializers.CharField(required=False)
 
 
 class DraftPaymentCreateViewInputSerializer(CoordinatorSerializer):
