@@ -7,7 +7,7 @@ import logging
 from openedx_filters import PipelineStep
 from stripe.error import StripeError
 
-from commerce_coordinator.apps.core.constants import PaymentMethod
+from commerce_coordinator.apps.core.constants import PaymentMethod, PipelineCommand
 from commerce_coordinator.apps.stripe.clients import StripeAPIClient
 from commerce_coordinator.apps.stripe.constants import Currency
 from commerce_coordinator.apps.stripe.exceptions import (
@@ -41,9 +41,9 @@ class CreateOrGetStripeDraftPayment(PipelineStep):
             kwargs['payment_data']: optional. If present, skip this pipeline step.
         """
         if kwargs.get('payment_intent_data'):
-            return None  # Cancel rest of filter pipeline.
+            return PipelineCommand.HALT.value
         if kwargs.get('payment_data'):
-            return None  # Cancel rest of filter pipeline.
+            return PipelineCommand.HALT.value
 
         stripe_api_client = StripeAPIClient()
         try:
@@ -84,12 +84,12 @@ class GetStripeDraftPayment(PipelineStep):
         """
         # Payment intent already retrieved:
         if kwargs.get('payment_intent_data'):
-            return {}  # Skip pipeline step.
+            return PipelineCommand.CONTINUE.value
 
         # No existing payment:
         payment_data = kwargs.get('payment_data')
         if not payment_data:
-            return {}  # Skip pipeline step.
+            return PipelineCommand.CONTINUE.value
 
         payment_intent_id = payment_data['key_id']
 
