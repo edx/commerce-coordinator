@@ -44,26 +44,45 @@ class PaymentMethod(Enum):
     STRIPE = 'edX Stripe'
 
 
+class PipelineCommand(Enum):
+    """
+    Special return values for openedx-filters PipelineStep.
+
+    https://github.com/openedx/openedx-filters/blob/2d6b87b5cc4263dd3577fb27c354ec36797979c9/openedx_filters/filters.py#L70-L75
+    """
+
+    CONTINUE = {}
+    """Pass unaltered inputs to next pipeline step."""
+
+    HALT = None
+    """Abort any remaining pipeline steps for filter."""
+
+
 class QueryParamPrefixes(Enum):
     """Query Param Prefixes"""
+
     WAFFLE_FLAG = 'dwft_'
     """Django Waffle Flag"""
+
     GOOGLE_ANALYTICS = 'utm_'
     """Google Analytics (Urchin Tracking Module)"""
 
 
 class WaffleFlagNames(Enum):
     """List of Waffle Flags"""
+
     COORDINATOR_ENABLED = 'transition_to_coordinator.order_create'
     """MFE Commerce Coordinator Flow Flag"""
 
 
 class MediaTypes(Enum):
     """IANA Media Types (used to be called Mime-Types)"""
+
     JSON = 'application/json'
 
 
 class HttpHeadersNames(Enum):
     """Standard HTTP Header Names"""
+
     CONTENT_TYPE = 'Content-type'
     """Set the Content Type of a Response"""
