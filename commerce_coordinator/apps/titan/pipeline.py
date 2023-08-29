@@ -126,14 +126,18 @@ class ValidateOrderReadyForDraftPayment(PipelineStep):
         order_payment_state = order_data['payment_state']
 
         if order_payment_state not in correct_order_payment_states:
-            return None  # Order does not need draft payment. Halt pipeline.
+            logger.debug('Order does not need draft payment. Halt pipeline.')
+            return None
         elif not recent_payment:
-            return {}  # Continue. Will generate a new draft payment.
+            logger.debug('No draft payment found. Continue pipeline...')
+            return {}
         elif recent_payment['state'] == PaymentState.PENDING.value:
-            return None  # Order does not need draft payment. Halt pipeline.
+            logger.debug('Order already in progress. Halt pipeline.')
+            return None
         elif recent_payment['state'] == PaymentState.FAILED.value:
-            return {}  # Continue. Will generate a new draft payment.
-        # Inform pipeline that a draft payment already exists:
+            logger.debug('Failed payment found. Continue pipeline...')
+            return {}
+        logger.debug('Draft payment exists. Add draft payment to pipeline.')
         return {
             'payment_data': recent_payment
         }
