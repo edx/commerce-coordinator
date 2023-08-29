@@ -9,7 +9,7 @@ from requests import HTTPError
 from rest_framework.exceptions import APIException
 
 from commerce_coordinator.apps.core.cache import PaymentCache
-from commerce_coordinator.apps.core.constants import OrderPaymentState, PaymentState
+from commerce_coordinator.apps.core.constants import OrderPaymentState, PaymentState, PipelineCommand
 from commerce_coordinator.apps.titan.clients import TitanAPIClient
 from commerce_coordinator.apps.titan.exceptions import (
     AlreadyPaid,
@@ -127,16 +127,16 @@ class ValidateOrderReadyForDraftPayment(PipelineStep):
 
         if order_payment_state not in correct_order_payment_states:
             logger.debug('Order does not need draft payment. Halt pipeline.')
-            return None
+            return PipelineCommand.HALT.value
         elif not recent_payment:
             logger.debug('No draft payment found. Continue pipeline...')
-            return {}
+            return PipelineCommand.CONTINUE.value
         elif recent_payment['state'] == PaymentState.PENDING.value:
             logger.debug('Order already in progress. Halt pipeline.')
-            return None
+            return PipelineCommand.HALT.value
         elif recent_payment['state'] == PaymentState.FAILED.value:
             logger.debug('Failed payment found. Continue pipeline...')
-            return {}
+            return PipelineCommand.CONTINUE.value
         logger.debug('Draft payment exists. Add draft payment to pipeline.')
         return {
             'payment_data': recent_payment
