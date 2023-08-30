@@ -187,7 +187,10 @@ class TestValidateOrderReadyForDraftPayment(TestCase):
     @ddt.data(
         (
             # New order.
-            {'payment_state': OrderPaymentState.BALANCE_DUE.value},
+            {
+                'basket_id': ORDER_UUID,
+                'payment_state': OrderPaymentState.BALANCE_DUE.value,
+            },
             # No recent payment.
             None,
             # Pipeline continue.
@@ -195,18 +198,27 @@ class TestValidateOrderReadyForDraftPayment(TestCase):
         ),
         (
             # Failed payment.
-            {'payment_state': OrderPaymentState.FAILED.value},
+            {
+                'basket_id': ORDER_UUID,
+                'payment_state': OrderPaymentState.FAILED.value,
+            },
             # Failed recent payment.
-            {'state': PaymentState.FAILED.value},
+            {
+                'payment_number': 1234,
+                'state': PaymentState.FAILED.value},
             # Pipeline continue.
             {},
         ),
         (
             # Paid order.
-            {'payment_state': OrderPaymentState.PAID.value},
+            {
+                'basket_id': ORDER_UUID,
+                'payment_state': OrderPaymentState.PAID.value,
+            },
             # Completed recent payment.
             {
                 'key_id': 'pi_3Nfj5LH4caH7G0X11nX8dj9v',
+                'payment_number': 1234,
                 'state': PaymentState.COMPLETED.value,
             },
             # Pipeline halt.
@@ -214,10 +226,14 @@ class TestValidateOrderReadyForDraftPayment(TestCase):
         ),
         (
             # Order pending payment.
-            {'payment_state': OrderPaymentState.BALANCE_DUE.value},
+            {
+                'basket_id': ORDER_UUID,
+                'payment_state': OrderPaymentState.BALANCE_DUE.value,
+            },
             # Recent payment pending.
             {
                 'key_id': 'pi_3Nfj5LH4caH7G0X11nX8dj9v',
+                'payment_number': 1234,
                 'state': PaymentState.PENDING.value,
             },
             # Pipeline halt.
@@ -225,16 +241,21 @@ class TestValidateOrderReadyForDraftPayment(TestCase):
         ),
         (
             # Order pending payment.
-            {'payment_state': OrderPaymentState.BALANCE_DUE.value},
+            {
+                'basket_id': ORDER_UUID,
+                'payment_state': OrderPaymentState.BALANCE_DUE.value,
+            },
             # Recent payment exists.
             {
                 'key_id': 'pi_3Nfj5LH4caH7G0X11nX8dj9v',
+                'payment_number': 1234,
                 'state': PaymentState.CHECKOUT.value,
             },
             # Existing payment added to pipeline.
             {
                 'payment_data': {
                     'key_id': 'pi_3Nfj5LH4caH7G0X11nX8dj9v',
+                    'payment_number': 1234,
                     'state': PaymentState.CHECKOUT.value,
                 }
             },
