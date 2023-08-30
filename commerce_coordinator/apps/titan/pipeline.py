@@ -124,20 +124,27 @@ class ValidateOrderReadyForDraftPayment(PipelineStep):
 
         recent_payment = kwargs.get('recent_payment')
         order_payment_state = order_data['payment_state']
+        basket_id = order_data['basket_id']
 
         if order_payment_state not in correct_order_payment_states:
-            logger.debug('Order does not need draft payment. Halt pipeline.')
+            logger.debug('Order does not need draft payment. Halt pipeline for order: [%s]', basket_id)
             return PipelineCommand.HALT.value
         elif not recent_payment:
-            logger.debug('No draft payment found. Continue pipeline...')
+            logger.debug('No draft payment found. Continue pipeline for order: [%s]', basket_id)
             return PipelineCommand.CONTINUE.value
         elif recent_payment['state'] == PaymentState.PENDING.value:
-            logger.debug('Order already in progress. Halt pipeline.')
+            logger.debug('Payment [%s] already in progress. Halt pipeline for order: [%s]',
+                         recent_payment['payment_number'],
+                         basket_id)
             return PipelineCommand.HALT.value
         elif recent_payment['state'] == PaymentState.FAILED.value:
-            logger.debug('Failed payment found. Continue pipeline...')
+            logger.debug('Failed payment [%s] found. Continue pipeline for order: [%s]',
+                         recent_payment['payment_number'],
+                         basket_id)
             return PipelineCommand.CONTINUE.value
-        logger.debug('Draft payment exists. Add draft payment to pipeline.')
+        logger.debug('Draft payment [%s] exists. Add draft payment to pipeline for order: [%s]',
+                     recent_payment['payment_number'],
+                     basket_id)
         return {
             'payment_data': recent_payment
         }
