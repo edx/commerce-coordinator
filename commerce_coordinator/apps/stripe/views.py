@@ -1,7 +1,6 @@
 """
 Views for the stripe app
 """
-import json
 import logging
 
 import stripe
@@ -96,6 +95,6 @@ class WebhookView(APIView):
             reference_number=payment_intent.id,
             amount_in_cents=payment_intent.amount,
             currency=payment_intent.currency,
-            provider_response_body=json.loads(payload),
+            provider_response_body=payload,
         )
         return Response(status=status.HTTP_200_OK)

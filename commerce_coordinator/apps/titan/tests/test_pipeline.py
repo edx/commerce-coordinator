@@ -32,6 +32,7 @@ from ..exceptions import (
 from .test_clients import (
     ORDER_CREATE_DATA_WITH_CURRENCY,
     ORDER_UUID,
+    PROVIDER_RESPONSE_BODY,
     TitanActiveOrderClientMock,
     TitanClientMock,
     TitanPaymentClientMock,
@@ -175,6 +176,26 @@ class TestGetTitanPaymentPipelineStep(TestCase):
         )
         # ensure our input data arrives as expected
         mock_get_payment.assert_called_once_with(**get_payment_data)
+
+    @ddt.data(
+         None, '', '{"key":"value"}'
+    )
+    @patch('commerce_coordinator.apps.titan.clients.TitanAPIClient.get_payment')
+    def test_provider_response(self, provider_response_body, mock_get_payment):
+        """
+        A test to red/green whether our pipeline step accepts providerResponseBody in all expected format.
+        """
+        mock_get_payment.return_value = {
+            **TitanPaymentClientMock.return_value,
+            'providerResponseBody': provider_response_body
+        }
+        get_payment_data = {'edx_lms_user_id': 1}
+
+        result: dict = self.payment_pipe.run_filter(**get_payment_data)['payment_data']
+
+        # ensure our input data arrives as expected
+        mock_get_payment.assert_called_once_with(**get_payment_data)
+        self.assertIn('provider_response_body', result)
 
 
 @ddt.ddt
@@ -456,6 +477,7 @@ class TestMarkTitanPaymentPendingStep(TestCase):
             'orderUuid': ORDER_UUID,
             'referenceNumber': 'a_stripe_response_code',
             'state': PaymentState.PENDING.value,
+            'providerResponseBody': PROVIDER_RESPONSE_BODY,
         }
         TieredCache.dangerous_clear_all_tiers()
 

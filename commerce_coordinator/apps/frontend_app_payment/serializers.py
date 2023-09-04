@@ -20,6 +20,7 @@ class GetPaymentOutputSerializer(CoordinatorSerializer):
     """
     state = serializers.CharField(allow_null=False)
     new_payment_number = serializers.CharField(required=False)
+    errors = serializers.JSONField(required=False)
 
 
 class DraftPaymentCreateViewInputSerializer(CoordinatorSerializer):
