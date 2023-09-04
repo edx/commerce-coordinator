@@ -1,5 +1,5 @@
 """ frontend_app_payment filter Tests"""
-
+import json
 from copy import deepcopy
 from unittest import TestCase
 from unittest.mock import patch
@@ -14,7 +14,7 @@ from commerce_coordinator.apps.frontend_app_payment.filters import (
     PaymentProcessingRequested,
     PaymentRequested
 )
-from commerce_coordinator.apps.titan.tests.test_clients import ORDER_UUID
+from commerce_coordinator.apps.titan.tests.test_clients import ORDER_UUID, PROVIDER_RESPONSE_BODY
 
 
 class TestDraftPaymentRequestedFilter(TestCase):
@@ -144,7 +144,8 @@ class TestPaymentProcessingRequestedFilter(TestCase):
                 'payment_number': 'test-payment-number',
                 'order_uuid': ORDER_UUID,
                 'key_id': 'test-intent-id',
-                'state': PaymentState.CHECKOUT.value
+                'state': PaymentState.CHECKOUT.value,
+                'provider_response_body': json.loads(PROVIDER_RESPONSE_BODY),
             }
         }
         mock_pending_payment = {
@@ -242,7 +243,8 @@ class TestPaymentRequestedFilter(TestCase):
                 'payment_number': mock_payment_number,
                 'order_uuid': ORDER_UUID,
                 'key_id': 'test-intent-id',
-                'state': payment_state
+                'state': payment_state,
+                'provider_response_body': json.loads(PROVIDER_RESPONSE_BODY),
             }
         }
         mock_get_payment_step.return_value = mock_get_payment_step_output

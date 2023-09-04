@@ -19,7 +19,7 @@ from commerce_coordinator.apps.stripe.pipeline import (
     UpdateStripeDraftPayment,
     UpdateStripePayment
 )
-from commerce_coordinator.apps.titan.tests.test_clients import ORDER_UUID
+from commerce_coordinator.apps.titan.tests.test_clients import ORDER_UUID, PROVIDER_RESPONSE_BODY
 
 
 class TestCreateOrGetStripeDraftPaymentStep(TestCase):
@@ -52,6 +52,7 @@ class TestCreateOrGetStripeDraftPaymentStep(TestCase):
             'orderUuid': mock_payment_data['order_uuid'],
             'responseCode': mock_payment_data['key_id'],
             'state': mock_payment_data['state'],
+            'providerResponseBody': PROVIDER_RESPONSE_BODY,
         }
 
         # Test with payment_data.
