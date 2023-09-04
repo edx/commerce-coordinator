@@ -1,6 +1,7 @@
 """
 Tests for the stripe views.
 """
+import json
 import logging
 
 import ddt
@@ -148,7 +149,7 @@ class WebhooksViewTests(APITestCase):
                 if expected_payment_state:
                     mock_payment_processed_save_task.assert_called_with(
                         edx_lms_user_id, order_uuid, payment_number, expected_payment_state, payment_intent_id,
-                        amount, Currency.USD.value, body
+                        amount, Currency.USD.value, json.dumps(body).replace(' ', '').encode('utf-8')
                     )
             else:
                 mock_payment_processed_save_task.assert_not_called()

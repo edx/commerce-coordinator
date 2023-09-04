@@ -12,3 +12,7 @@ class StripeEventType(str, Enum):
 
 class Currency(str, Enum):
     USD = 'usd'
+
+
+class StripeErrorCode(str, Enum):
+    CARD_DECLINED = 'card_declined'

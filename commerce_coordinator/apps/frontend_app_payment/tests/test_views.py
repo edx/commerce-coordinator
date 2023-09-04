@@ -2,6 +2,7 @@
 Tests for the frontend_app_payment views.
 """
 import copy
+import json
 
 import ddt
 from django.contrib.auth import get_user_model
@@ -14,9 +15,11 @@ from rest_framework.test import APITestCase
 from commerce_coordinator.apps.core.cache import PaymentCache
 from commerce_coordinator.apps.core.constants import PaymentState
 from commerce_coordinator.apps.core.tests.utils import name_test
+from commerce_coordinator.apps.stripe.constants import StripeErrorCode
 from commerce_coordinator.apps.titan.exceptions import NoActiveOrder
 from commerce_coordinator.apps.titan.tests.test_clients import (
     ORDER_UUID,
+    PROVIDER_RESPONSE_BODY,
     TitanPaymentClientMock,
     titan_active_order_response
 )
@@ -45,6 +48,7 @@ class GetPaymentViewTests(APITestCase):
             self.test_user_password,
             lms_user_id=self.test_lms_user_id,
         )
+        TieredCache.dangerous_clear_all_tiers()
 
     def tearDown(self):
         """Log out any user from client after test ends."""
@@ -132,7 +136,6 @@ class GetPaymentViewTests(APITestCase):
         """
         Ensure data validation and success scenarios for get payment.
         """
-        TieredCache.dangerous_clear_all_tiers()
         self.client.force_authenticate(user=self.user)
         payment_number = '12345'
         mock_pipeline.return_value = {
@@ -140,7 +143,8 @@ class GetPaymentViewTests(APITestCase):
                 'payment_number': payment_number,
                 'order_uuid': ORDER_UUID,
                 'key_id': 'test-code',
-                'state': payment_state
+                'state': payment_state,
+                'provider_response_body': json.loads(PROVIDER_RESPONSE_BODY),
             }
         }
         query_params = {
@@ -175,7 +179,6 @@ class GetPaymentViewTests(APITestCase):
         """
         Test scenario if we start getting payment state from titan that we are not expecting in this view.
         """
-        TieredCache.dangerous_clear_all_tiers()
         self.client.force_authenticate(user=self.user)
         payment_number = '12345'
         mock_pipeline.return_value = {
@@ -183,7 +186,8 @@ class GetPaymentViewTests(APITestCase):
                 'payment_number': payment_number,
                 'order_uuid': ORDER_UUID,
                 'key_id': 'test-code',
-                'state': PaymentState.CHECKOUT.value
+                'state': PaymentState.CHECKOUT.value,
+                'provider_response_body': json.loads(PROVIDER_RESPONSE_BODY),
             }
         }
         query_params = {
@@ -202,14 +206,15 @@ class GetPaymentViewTests(APITestCase):
         """
         Ensure success scenarios for get payment flow and make sure cache is working as expected.
         """
-        TieredCache.dangerous_clear_all_tiers()
         self.client.force_authenticate(user=self.user)
         payment_number = '12345'
         payment = {
             'payment_number': payment_number,
             'order_uuid': ORDER_UUID,
             'key_id': 'test-code',
-            'state': PaymentState.PENDING.value
+            'state': PaymentState.PENDING.value,
+            'provider_response_body': json.loads(PROVIDER_RESPONSE_BODY),
+            'new_payment_number': '56789',
         }
         query_params = {
             'order_uuid': '123e4567-e89b-12d3-a456-426614174000',
@@ -248,6 +253,41 @@ class GetPaymentViewTests(APITestCase):
         TieredCache.dangerous_clear_all_tiers()
         self._assert_get_payment_api_response(query_params, expected_state=payment_final_state)
         self.assertTrue(mock_pipeline.called)
+
+    @ddt.data(
+        StripeErrorCode.CARD_DECLINED.value, None, 'fake-error'
+    )
+    @patch('commerce_coordinator.apps.titan.pipeline.GetTitanPayment.run_filter')
+    def test_stripe_error_code(self, card_error, mock_pipeline):
+        """
+        Ensure error are returning as expected
+        """
+        self.client.force_authenticate(user=self.user)
+        payment_number = '12345'
+        provider_response_body = json.loads(PROVIDER_RESPONSE_BODY)
+        provider_response_body['data']['object']['last_payment_error']['code'] = card_error
+
+        payment = {
+            'payment_number': payment_number,
+            'order_uuid': ORDER_UUID,
+            'key_id': 'test-code',
+            'state': PaymentState.FAILED.value,
+            'provider_response_body': provider_response_body,
+        }
+        mock_pipeline.return_value = {
+            'payment_data': payment
+        }
+        query_params = {
+            'order_uuid': '123e4567-e89b-12d3-a456-426614174000',
+            'payment_number': payment_number,
+        }
+        response = self.client.get(self.url, data=query_params)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        response_json = response.json()
+        if card_error == StripeErrorCode.CARD_DECLINED.value:
+            self.assertIn('errors', response_json)
+        else:
+            self.assertNotIn('errors', response_json)
 
 
 @ddt.ddt
@@ -339,6 +379,7 @@ class DraftPaymentCreateViewTests(APITestCase):
             'orderUuid': ORDER_UUID,
             'referenceNumber': intent_id,
             'state': PaymentState.CHECKOUT.value,
+            'providerResponseBody': PROVIDER_RESPONSE_BODY,
         }
 
         mock_create_payment.return_value = {**mock_get_active_order_response['payments'][0]}

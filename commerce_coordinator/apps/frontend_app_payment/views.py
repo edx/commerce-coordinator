@@ -11,9 +11,13 @@ from rest_framework.views import APIView
 
 from commerce_coordinator.apps.core.cache import PaymentCache
 from commerce_coordinator.apps.core.constants import PaymentState
-from commerce_coordinator.apps.frontend_app_payment.exceptions import UnhandledPaymentStateAPIError
+from commerce_coordinator.apps.frontend_app_payment.exceptions import (
+    TransactionDeclinedAPIError,
+    UnhandledPaymentStateAPIError
+)
 from commerce_coordinator.apps.titan.exceptions import NoActiveOrder
 
+from ..stripe.constants import StripeErrorCode
 from .filters import ActiveOrderRequested, DraftPaymentRequested, PaymentProcessingRequested, PaymentRequested
 from .serializers import (
     DraftPaymentCreateViewInputSerializer,
@@ -33,37 +37,60 @@ class PaymentGetView(APIView):
     throttle_rate = (ScopedRateThrottle,)
     throttle_scope = 'get_payment'
 
+    @staticmethod
+    def extract_error_from_provider_response(payment):
+        """
+        Identify error based on Payment Provider Response for failed payments.
+        """
+        payment_state = payment["state"]
+        if payment_state == PaymentState.FAILED.value:
+            provider_response_body = payment["provider_response_body"]
+            payment_error = provider_response_body['data']['object']['last_payment_error']
+            if payment_error['code'] == StripeErrorCode.CARD_DECLINED.value:
+                return {'errors': [{'error_code': TransactionDeclinedAPIError.default_code}]}
+        return None
+
+    @staticmethod
+    def set_cache(payment, filter_params):
+        """
+        Sets payment cache based on payment current state.
+        """
+        payment_state = payment["state"]
+        if payment_state == PaymentState.COMPLETED.value:
+            PaymentCache().set_paid_cache_payment(payment)
+        elif payment_state == PaymentState.PENDING.value:
+            PaymentCache().set_processing_cache_payment(payment)
+        elif payment_state == PaymentState.FAILED.value:
+            filter_params.pop('payment_number')  # remove payment_number from filter input to get any new payments.
+            new_payment = PaymentRequested.run_filter(**filter_params)
+            # For failed payment, there should be new_payment_number.
+            payment['new_payment_number'] = new_payment['payment_number']
+            PaymentCache().set_processing_cache_payment(payment)
+        else:
+            logger.exception(f"[PaymentGetView] Received an unhandled payment state. payment: {payment}")
+            raise UnhandledPaymentStateAPIError
+
     def get(self, request):
         """Get Payment details including it's status"""
         params = {
-            'edx_lms_user_id': request.user.lms_user_id,
+            # 'edx_lms_user_id': request.user.lms_user_id,
+            'edx_lms_user_id': 1,
             'order_uuid': request.query_params.get('order_uuid'),
             'payment_number': request.query_params.get('payment_number'),
         }
         input_serializer = GetPaymentInputSerializer(data=params)
         input_serializer.is_valid(raise_exception=True)
-        params = input_serializer.data
-        payment_number = params['payment_number']
-        payment = PaymentCache().get_cache_payment(payment_number)
+        filter_params = input_serializer.data
 
+        payment = PaymentCache().get_cache_payment(filter_params['payment_number'])
         if not payment:
             # Cached payment not found. We have to call Titan to fetch Payment information
-            payment = PaymentRequested.run_filter(**params)
+            payment = PaymentRequested.run_filter(**filter_params)
+            self.set_cache(payment, filter_params)
 
-            # Set cache for future use
-            payment_state = payment["state"]
-            if payment_state == PaymentState.COMPLETED.value:
-                PaymentCache().set_paid_cache_payment(payment)
-            elif payment_state == PaymentState.PENDING.value:
-                PaymentCache().set_processing_cache_payment(payment)
-            elif payment_state == PaymentState.FAILED.value:
-                params.pop('payment_number')  # remove payment number to get any new payments.
-                new_payment = PaymentRequested.run_filter(**params)
-                payment['new_payment_number'] = new_payment['payment_number']
-                PaymentCache().set_processing_cache_payment(payment)
-            else:
-                logger.exception(f"[PaymentGetView] Received an unhandled payment state. payment: {payment}")
-                raise UnhandledPaymentStateAPIError
+        errors = self.extract_error_from_provider_response(payment)
+        if errors:
+            payment.update(errors)
 
         output_serializer = GetPaymentOutputSerializer(data=payment)
         output_serializer.is_valid(raise_exception=True)
