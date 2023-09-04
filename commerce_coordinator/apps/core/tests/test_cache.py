@@ -1,4 +1,5 @@
 """ Stripe Utils Tests"""
+import json
 import unittest
 from uuid import UUID
 
@@ -8,7 +9,9 @@ from edx_django_utils.cache import TieredCache
 from rest_framework.exceptions import ErrorDetail, ValidationError
 
 from commerce_coordinator.apps.core.cache import CacheBase, PaymentCache
+from commerce_coordinator.apps.core.constants import PaymentState
 from commerce_coordinator.apps.core.tests.utils import name_test
+from commerce_coordinator.apps.titan.tests.test_clients import PROVIDER_RESPONSE_BODY
 
 
 @ddt.ddt
@@ -25,6 +28,7 @@ class TestPaymentCache(unittest.TestCase):
             'key_id': 'test-code',
             'new_payment_number': '67890',
             'state': 'a-paid-state',
+            'provider_response_body': json.loads(PROVIDER_RESPONSE_BODY),
         }
         self.payment_cache = PaymentCache()
 
@@ -65,6 +69,25 @@ class TestPaymentCache(unittest.TestCase):
             {}, 'state',
             {'state': [ErrorDetail(string='This field is required.', code='required')]},
         )),
+        name_test("test new_payment_number is required for Failed State", (
+            {'state': PaymentState.FAILED.value}, 'new_payment_number',
+            {
+                'non_field_errors': [ErrorDetail(string='new_payment_number is required when Payment State is Failed',
+                                                 code='invalid')]
+            },
+        )),
+        name_test("test provider_response_body is required for Failed State", (
+            {'state': PaymentState.FAILED.value, 'provider_response_body': ''}, None,
+            {
+                'non_field_errors': [
+                    ErrorDetail(
+                        string='provider_response_body is required when Payment State is Failed',
+                        code='invalid'
+                    )
+                ]
+            },
+        )),
+
     )
     @ddt.unpack
     def test_cache_payment_error(self, update_params, skip_param, expected_error):

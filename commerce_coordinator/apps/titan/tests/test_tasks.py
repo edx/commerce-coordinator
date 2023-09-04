@@ -11,7 +11,13 @@ from commerce_coordinator.apps.titan.tasks import order_created_save_task, payme
 from ...core.cache import PaymentCache
 from ...core.constants import PaymentMethod, PaymentState
 from ...stripe.constants import Currency
-from .test_clients import ORDER_CREATE_DATA, ORDER_UUID, TitanClientMock, titan_active_order_response
+from .test_clients import (
+    ORDER_CREATE_DATA,
+    ORDER_UUID,
+    PROVIDER_RESPONSE_BODY,
+    TitanClientMock,
+    titan_active_order_response
+)
 
 log_name = 'commerce_coordinator.apps.titan.tasks'
 
@@ -73,6 +79,7 @@ class TestPaymentTasks(TestCase):
             'state': payment_state,
             'number': payment_number,
             'referenceNumber': 'fake-referemce',
+            'providerResponseBody': PROVIDER_RESPONSE_BODY,
         }
         payment_update_params = {
             'edx_lms_user_id': 1,

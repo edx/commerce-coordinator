@@ -24,6 +24,68 @@ ORDER_CREATE_DATA = {
 
 ORDER_CREATE_DATA_WITH_CURRENCY = {'currency': DEFAULT_CURRENCY, **ORDER_CREATE_DATA}
 
+PROVIDER_RESPONSE_BODY = '{"id": "evt_3Nl9sLIadiFyUl1x1xMstK38", "object": "event", "api_version": "2022-08-01", ' \
+                         '"created": 1693484490, "data": {"object": {"id": "pi_3Nl9sLIadiFyUl1x1d1nldRd",' \
+                         ' "object": "payment_intent", "amount": 2000, "amount_capturable": 0,' \
+                         ' "amount_details": {"tip": {}}, "amount_received": 0, "application": null,' \
+                         ' "application_fee_amount": null, "automatic_payment_methods": null, "canceled_at": null,' \
+                         ' "cancellation_reason": null, "capture_method": "automatic", "charges": ' \
+                         '{"object": "list", "data": [{"id": "ch_3Nl9sLIadiFyUl1x18KBGxmd", "object": "charge",' \
+                         ' "amount": 2000, "amount_captured": 0, "amount_refunded": 0, "application": null,' \
+                         ' "application_fee": null, "application_fee_amount": null, "balance_transaction": null,' \
+                         ' "billing_details": {"address": {"city": null, "country": null, "line1": null, "line2":' \
+                         ' null, "postal_code": null, "state": null}, "email": null, "name": null, "phone": null},' \
+                         ' "calculated_statement_descriptor": "EDX.ORG", "captured": false, "created": 1693484489,' \
+                         ' "currency": "usd", "customer": null, "description": "(created by Stripe CLI)", ' \
+                         '"destination": null, "dispute": null,"disputed": false,"failure_balance_transaction": null,' \
+                         ' "failure_code": "card_declined", "failure_message": "Your card was declined.",' \
+                         ' "fraud_details": {}, "invoice": null, "livemode": false, "metadata": {},' \
+                         ' "on_behalf_of": null, "order": null, "outcome": {"network_status": "declined_by_network", ' \
+                         '"reason": "generic_decline", "risk_level": "normal", "risk_score": 54, ' \
+                         '"seller_message": "The bank did not return any further details with this decline.", ' \
+                         '"type": "issuer_declined"}, "paid": false, "payment_intent": "pi_3Nl9sLIadiFyUl1x1d1nldRd",' \
+                         '"payment_method": "pm_1Nl9sLIadiFyUl1x41JSBGe9", "payment_method_details":' \
+                         ' {"card": {"brand": "visa", "checks": {"address_line1_check": null,' \
+                         ' "address_postal_code_check": null, "cvc_check": null}, "country": "US", "exp_month": 8,' \
+                         ' "exp_year": 2024, "fingerprint": "fwc0JXRYtd9HEVmu", "funding": "credit",' \
+                         ' "installments": null, "last4": "0002", "mandate": null, "network": "visa", ' \
+                         '"network_token": {"used": false}, "three_d_secure": null, "wallet": null}, "type": "card"},' \
+                         '"receipt_email": null, "receipt_number": null, "receipt_url": null, "refunded": false, ' \
+                         '"refunds": {"object": "list", "data": [], "has_more": false, "total_count": 0, "url":' \
+                         '"/v1/charges/ch_3Nl9sLIadiFyUl1x18KBGxmd/refunds"}, "review": null, "shipping": null,' \
+                         ' "source": null, "source_transfer": null, "statement_descriptor": null, ' \
+                         '"statement_descriptor_suffix": null, "status": "failed", "transfer_data": null,' \
+                         ' "transfer_group": null}], "has_more": false, "total_count": 1, ' \
+                         '"url": "/v1/charges?payment_intent=pi_3Nl9sLIadiFyUl1x1d1nldRd"}, "client_secret": ' \
+                         '"pi_3Nl9sLIadiFyUl1x1d1nldRd_secret_tWyMG2JX9Ly5ToLe6cgzQhom6", "confirmation_method":' \
+                         ' "automatic", "created": 1693484489, "currency": "usd", "customer": null, "description":' \
+                         ' "(created by Stripe CLI)", "invoice": null, "last_payment_error": ' \
+                         '{"charge": "ch_3Nl9sLIadiFyUl1x18KBGxmd", "code": "card_declined", "decline_code": ' \
+                         '"generic_decline", "doc_url": "https://stripe.com/docs/error-codes/card-declined",' \
+                         ' "message": "Your card was declined.", "payment_method": {"id":' \
+                         ' "pm_1Nl9sLIadiFyUl1x41JSBGe9", "object": "payment_method", "billing_details": ' \
+                         '{"address": {"city": null, "country": null, "line1": null, "line2": null, ' \
+                         '"postal_code": null, "state": null}, "email": null, "name": null, "phone": ' \
+                         'null}, "card": {"brand": "visa", "checks": {"address_line1_check": null, ' \
+                         '"address_postal_code_check": null, "cvc_check": null}, "country": "US", ' \
+                         '"exp_month": 8, "exp_year": 2024, "fingerprint": "fwc0JXRYtd9HEVmu", "funding": "credit",' \
+                         ' "generated_from": null, "last4": "0002", "networks": {"available": ["visa"], "preferred":' \
+                         ' null}, "three_d_secure_usage": {"supported": true}, "wallet": null}, "created": 1693484489' \
+                         ', "customer": null, "livemode": false, "metadata": {}, "type": "card"}, "type": "card_error' \
+                         '"}, "latest_charge": "ch_3Nl9sLIadiFyUl1x18KBGxmd", "livemode": false, "metadata": {}' \
+                         ', "next_action": null, "on_behalf_of": null, "payment_method": null, ' \
+                         '"payment_method_options": {"card": {"installments": null, "mandate_options":' \
+                         ' null, "network": null, "request_three_d_secure": "automatic"}}, ' \
+                         '"payment_method_types": ["card"], "processing": null, "receipt_email": null,' \
+                         '"review": null, "secret_key_confirmation": "optional",' \
+                         ' "setup_future_usage": null, "shipping": null, "source": null, ' \
+                         '"statement_descriptor": null,' \
+                         ' "statement_descriptor_suffix": null, "status": ' \
+                         '"requires_payment_method", "transfer_data": null, "transfer_group": null}}, ' \
+                         '"livemode": false, "pending_webhooks": 2, "request": {"id": "req_gHIsurN9YUYg47",' \
+                         ' "idempotency_key": "de1a3786-9450-4285-9041-a4e29683d5ae"}, "type":' \
+                         ' "payment_intent.payment_failed"}'
+
 
 class TitanClientMock(MagicMock):
     """A mock TitanClient."""
@@ -42,7 +104,8 @@ class TitanPaymentClientMock(MagicMock):
         'orderUuid': ORDER_UUID,
         'state': PaymentState.PENDING.value,
         'referenceNumber': 'test-code',
-        'number': 'test-number'
+        'number': 'test-number',
+        'providerResponseBody': PROVIDER_RESPONSE_BODY,
     }
 
 
@@ -98,6 +161,7 @@ titan_active_order_response = {
                 'paymentMethodName': PaymentMethod.STRIPE.value,
                 'reference': 'TestOrder-58',
                 'referenceNumber': 'ch_3MebJMAa00oRYTAV1C26pHmmj572',
+                'providerResponseBody': PROVIDER_RESPONSE_BODY,
                 'state': PaymentState.CHECKOUT.value,
                 'createdAt': '2023-05-25T15:12:07.165Z',
                 'updatedAt': '2023-05-25T15:12:07.165Z'
