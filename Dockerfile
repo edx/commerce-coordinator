@@ -66,7 +66,7 @@ RUN mkdir -p /edx/var/log
 USER app
 
 # Gunicorn 19 does not log to stdout or stderr by default. Once we are past gunicorn 19, the logging to STDOUT need not be specified.
-CMD gunicorn --workers=2 --name commerce-coordinator -c /edx/app/commerce-coordinator/commerce_coordinator/docker_gunicorn_configuration.py --log-file - --max-requests=1000 commerce_coordinator.wsgi:application
+CMD gunicorn --workers=2 --name commerce-coordinator -c /edx/app/commerce-coordinator/commerce_coordinator/docker_gunicorn_configuration.py --log-file - --max-requests=1000 commerce-coordinator.wsgi:application
 
 # This line is after the requirements so that changes to the code will not
 # bust the image cache
