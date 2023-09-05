@@ -9,4 +9,3 @@ edx_sphinx_theme          # edX theme for Sphinx output
 twine                     # Validates README.rst for usage on PyPI
 build                     # Needed to build the wheel for twine README check
 Sphinx                    # Documentation builder
-sphinxcontrib-applehelp==1.0.4 # Dropped support for Py3.8 in newer versions
