@@ -23,6 +23,7 @@ def test_receiver_exception(sender, **kwargs):
     how an exception could be handled.
     """
     logger.info(f"CORE TEST_RECEIVER_EXCEPTION CALLED with sender '{sender}'!")
+    # pylint: disable=broad-exception-raised
     raise Exception("Oh no, something went wrong!")
 
 
