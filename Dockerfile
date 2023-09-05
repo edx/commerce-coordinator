@@ -20,6 +20,8 @@ MAINTAINER sre@edx.org
 
 # gcc; for compiling python extensions distributed with python packages like mysql-client
 
+# pkg-config is now required for libmysqlclient-dev and its python dependencies
+
 # If you add a package here please include a comment above describing what it is used for
 RUN apt-get update && apt-get -qy install --no-install-recommends \
  language-pack-en \
@@ -27,6 +29,7 @@ RUN apt-get update && apt-get -qy install --no-install-recommends \
  python3.8 \
  python3-pip \
  libmysqlclient-dev \
+ pkg-config \
  libssl-dev \
  python3-dev \
  gcc
@@ -63,7 +66,7 @@ RUN mkdir -p /edx/var/log
 USER app
 
 # Gunicorn 19 does not log to stdout or stderr by default. Once we are past gunicorn 19, the logging to STDOUT need not be specified.
-CMD gunicorn --workers=2 --name commerce-coordinator -c /edx/app/commerce-coordinator/commerce_coordinator/docker_gunicorn_configuration.py --log-file - --max-requests=1000 commerce_coordinator.wsgi:application
+CMD gunicorn --workers=2 --name commerce-coordinator -c /edx/app/commerce-coordinator/commerce_coordinator/docker_gunicorn_configuration.py --log-file - --max-requests=1000 commerce-coordinator.wsgi:application
 
 # This line is after the requirements so that changes to the code will not
 # bust the image cache
