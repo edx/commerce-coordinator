@@ -20,6 +20,8 @@ MAINTAINER sre@edx.org
 
 # gcc; for compiling python extensions distributed with python packages like mysql-client
 
+# pkg-config is now required for libmysqlclient-dev and its python dependencies
+
 # If you add a package here please include a comment above describing what it is used for
 RUN apt-get update && apt-get -qy install --no-install-recommends \
  language-pack-en \
