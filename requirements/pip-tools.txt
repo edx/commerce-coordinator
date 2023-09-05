@@ -10,14 +10,14 @@ click==8.1.7
     # via pip-tools
 packaging==23.1
     # via build
-pip-tools==6.13.0
-    # via
-    #   -c requirements/constraints.txt
-    #   -r requirements/pip-tools.in
+pip-tools==7.3.0
+    # via -r requirements/pip-tools.in
 pyproject-hooks==1.0.0
     # via build
 tomli==2.0.1
-    # via build
+    # via
+    #   build
+    #   pip-tools
 wheel==0.41.2
     # via pip-tools
 

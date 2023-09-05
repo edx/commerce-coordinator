@@ -31,6 +31,8 @@ billiard==4.1.0
     #   celery
 bleach==6.0.0
     # via readme-renderer
+build==1.0.0
+    # via -r requirements/doc.in
 celery[redis]==5.3.4
     # via -r requirements/test.txt
 certifi==2023.7.22
@@ -95,6 +97,8 @@ cryptography==41.0.3
     #   -r requirements/test.txt
     #   pyjwt
     #   social-auth-core
+ddt==1.6.0
+    # via -r requirements/test.txt
 defusedxml==0.7.1
     # via
     #   -r requirements/test.txt
@@ -104,6 +108,10 @@ dill==0.3.7
     # via
     #   -r requirements/test.txt
     #   pylint
+distlib==0.3.7
+    # via
+    #   -r requirements/test.txt
+    #   virtualenv
 django==3.2.21
     # via
     #   -c https://raw.githubusercontent.com/edx/edx-lint/master/edx_lint/files/common_constraints.txt
@@ -180,12 +188,21 @@ exceptiongroup==1.1.3
     # via
     #   -r requirements/test.txt
     #   pytest
+filelock==3.12.3
+    # via
+    #   -r requirements/test.txt
+    #   tox
+    #   virtualenv
 idna==3.4
     # via
     #   -r requirements/test.txt
     #   requests
 imagesize==1.4.1
     # via sphinx
+importlib-metadata==6.8.0
+    # via
+    #   keyring
+    #   twine
 iniconfig==2.0.0
     # via
     #   -r requirements/test.txt
@@ -198,12 +215,16 @@ itypes==1.2.0
     # via
     #   -r requirements/test.txt
     #   coreapi
+jaraco-classes==3.3.0
+    # via keyring
 jinja2==3.1.2
     # via
     #   -r requirements/test.txt
     #   code-annotations
     #   coreschema
     #   sphinx
+keyring==24.2.0
+    # via twine
 kombu==5.3.2
     # via
     #   -r requirements/test.txt
@@ -212,6 +233,8 @@ lazy-object-proxy==1.9.0
     # via
     #   -r requirements/test.txt
     #   astroid
+markdown-it-py==3.0.0
+    # via rich
 markupsafe==2.1.3
     # via
     #   -r requirements/test.txt
@@ -220,8 +243,12 @@ mccabe==0.7.0
     # via
     #   -r requirements/test.txt
     #   pylint
+mdurl==0.1.2
+    # via markdown-it-py
 mock==5.1.0
     # via -r requirements/test.txt
+more-itertools==10.1.0
+    # via jaraco-classes
 mysqlclient==2.2.0
     # via -r requirements/test.txt
 newrelic==9.0.0
@@ -242,20 +269,26 @@ openedx-filters==1.6.0
 packaging==23.1
     # via
     #   -r requirements/test.txt
+    #   build
     #   pytest
     #   sphinx
+    #   tox
 pbr==5.11.1
     # via
     #   -r requirements/test.txt
     #   stevedore
+pkginfo==1.9.6
+    # via twine
 platformdirs==3.10.0
     # via
     #   -r requirements/test.txt
     #   pylint
+    #   virtualenv
 pluggy==1.3.0
     # via
     #   -r requirements/test.txt
     #   pytest
+    #   tox
 prompt-toolkit==3.0.39
     # via
     #   -r requirements/test.txt
@@ -264,6 +297,10 @@ psutil==5.9.5
     # via
     #   -r requirements/test.txt
     #   edx-django-utils
+py==1.11.0
+    # via
+    #   -r requirements/test.txt
+    #   tox
 pycparser==2.21
     # via
     #   -r requirements/test.txt
@@ -272,6 +309,7 @@ pygments==2.16.1
     # via
     #   doc8
     #   readme-renderer
+    #   rich
     #   sphinx
 pyjwt[crypto]==2.8.0
     # via
@@ -309,6 +347,8 @@ pynacl==1.5.0
     # via
     #   -r requirements/test.txt
     #   edx-django-utils
+pyproject-hooks==1.0.0
+    # via build
 pytest==7.4.1
     # via
     #   -r requirements/test.txt
@@ -341,8 +381,9 @@ pyyaml==6.0.1
     #   -r requirements/test.txt
     #   code-annotations
     #   edx-django-release-util
+    #   responses
 readme-renderer==41.0
-    # via -r requirements/doc.in
+    # via twine
 redis==4.6.0
     # via
     #   -r requirements/test.txt
@@ -354,15 +395,27 @@ requests==2.31.0
     #   edx-drf-extensions
     #   edx-rest-api-client
     #   requests-oauthlib
+    #   requests-toolbelt
+    #   responses
     #   slumber
     #   social-auth-core
     #   sphinx
+    #   stripe
+    #   twine
 requests-oauthlib==1.3.1
     # via
     #   -r requirements/test.txt
     #   social-auth-core
+requests-toolbelt==1.0.0
+    # via twine
+responses==0.23.3
+    # via -r requirements/test.txt
 restructuredtext-lint==1.4.0
     # via doc8
+rfc3986==2.0.0
+    # via twine
+rich==13.5.2
+    # via twine
 semantic-version==2.10.0
     # via
     #   -r requirements/test.txt
@@ -381,6 +434,7 @@ six==1.16.0
     #   edx-lint
     #   edx-sphinx-theme
     #   python-dateutil
+    #   tox
 slumber==0.7.1
     # via
     #   -r requirements/test.txt
@@ -428,6 +482,10 @@ stevedore==5.1.0
     #   doc8
     #   edx-django-utils
     #   edx-opaque-keys
+stripe==6.2.0
+    # via -r requirements/test.txt
+testfixtures==7.1.0
+    # via -r requirements/test.txt
 text-unidecode==1.3
     # via
     #   -r requirements/test.txt
@@ -435,20 +493,35 @@ text-unidecode==1.3
 tomli==2.0.1
     # via
     #   -r requirements/test.txt
+    #   build
     #   coverage
     #   doc8
     #   pylint
+    #   pyproject-hooks
     #   pytest
+    #   tox
 tomlkit==0.12.1
     # via
     #   -r requirements/test.txt
     #   pylint
+tox==3.28.0
+    # via
+    #   -c https://raw.githubusercontent.com/edx/edx-lint/master/edx_lint/files/common_constraints.txt
+    #   -r requirements/test.txt
+twine==4.0.2
+    # via -r requirements/doc.in
+types-pyyaml==6.0.12.11
+    # via
+    #   -r requirements/test.txt
+    #   responses
 typing-extensions==4.7.1
     # via
     #   -r requirements/test.txt
     #   asgiref
     #   astroid
     #   edx-opaque-keys
+    #   filelock
+    #   stripe
 tzdata==2023.3
     # via
     #   -r requirements/test.txt
@@ -461,12 +534,18 @@ urllib3==2.0.4
     # via
     #   -r requirements/test.txt
     #   requests
+    #   responses
+    #   twine
 vine==5.0.0
     # via
     #   -r requirements/test.txt
     #   amqp
     #   celery
     #   kombu
+virtualenv==20.24.4
+    # via
+    #   -r requirements/test.txt
+    #   tox
 wcwidth==0.2.6
     # via
     #   -r requirements/test.txt
@@ -477,3 +556,5 @@ wrapt==1.15.0
     # via
     #   -r requirements/test.txt
     #   astroid
+zipp==3.16.2
+    # via importlib-metadata
