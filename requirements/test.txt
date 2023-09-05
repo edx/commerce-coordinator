@@ -12,7 +12,7 @@ asgiref==3.7.2
     # via
     #   -r requirements/base.txt
     #   django
-astroid==2.15.5
+astroid==2.15.6
     # via
     #   pylint
     #   pylint-celery
@@ -23,10 +23,6 @@ async-timeout==4.0.3
 backports-zoneinfo[tzdata]==0.2.1
     # via
     #   -r requirements/base.txt
-    #   kombu
-billiard==3.6.4.0
-    # via
-    #   -r requirements/base.txt
     #   celery
     #   kombu
 billiard==4.1.0
@@ -35,7 +31,7 @@ billiard==4.1.0
     #   celery
 celery[redis]==5.3.4
     # via -r requirements/base.txt
-certifi==2023.5.7
+certifi==2023.7.22
     # via
     #   -r requirements/base.txt
     #   requests
@@ -44,7 +40,7 @@ cffi==1.15.1
     #   -r requirements/base.txt
     #   cryptography
     #   pynacl
-charset-normalizer==3.1.0
+charset-normalizer==3.2.0
     # via
     #   -r requirements/base.txt
     #   requests
@@ -86,11 +82,11 @@ coreschema==0.0.4
     # via
     #   -r requirements/base.txt
     #   coreapi
-coverage[toml]==7.2.7
+coverage[toml]==7.3.0
     # via
     #   -r requirements/test.in
     #   pytest-cov
-cryptography==41.0.1
+cryptography==41.0.3
     # via
     #   -r requirements/base.txt
     #   pyjwt
@@ -102,9 +98,9 @@ defusedxml==0.7.1
     #   -r requirements/base.txt
     #   python3-openid
     #   social-auth-core
-dill==0.3.6
+dill==0.3.7
     # via pylint
-distlib==0.3.6
+distlib==0.3.7
     # via virtualenv
     # via
     #   -c https://raw.githubusercontent.com/edx/edx-lint/master/edx_lint/files/common_constraints.txt
@@ -121,7 +117,7 @@ distlib==0.3.6
     #   edx-drf-extensions
     #   openedx-filters
     #   social-auth-app-django
-django-cors-headers==4.0.0
+django-cors-headers==4.2.0
     # via -r requirements/base.txt
 django-crum==0.7.9
     # via
@@ -129,11 +125,11 @@ django-crum==0.7.9
     #   edx-django-utils
 django-dynamic-fixture==4.0.0
     # via -r requirements/test.in
-django-extensions==3.2.1
+django-extensions==3.2.3
     # via -r requirements/base.txt
 django-rest-swagger==2.2.0
     # via -r requirements/base.txt
-django-waffle==3.0.0
+django-waffle==4.0.0
     # via
     #   -r requirements/base.txt
     #   edx-django-utils
@@ -152,12 +148,12 @@ edx-auth-backends==4.2.0
     # via -r requirements/base.txt
 edx-django-release-util==1.3.0
     # via -r requirements/base.txt
-edx-django-utils==5.5.0
+edx-django-utils==5.7.0
     # via
     #   -r requirements/base.txt
     #   edx-drf-extensions
     #   edx-rest-api-client
-edx-drf-extensions==8.8.0
+edx-drf-extensions==8.9.2
     # via -r requirements/base.txt
 edx-lint==5.3.4
     # via -r requirements/test.in
@@ -165,11 +161,11 @@ edx-opaque-keys==2.5.0
     # via
     #   -r requirements/base.txt
     #   edx-drf-extensions
-edx-rest-api-client==5.5.2
+edx-rest-api-client==5.6.0
     # via -r requirements/base.txt
-exceptiongroup==1.1.1
+exceptiongroup==1.1.3
     # via pytest
-filelock==3.12.0
+filelock==3.12.3
     # via
     #   tox
     #   virtualenv
@@ -190,7 +186,7 @@ jinja2==3.1.2
     #   -r requirements/base.txt
     #   code-annotations
     #   coreschema
-kombu==5.3.0
+kombu==5.3.2
     # via
     #   -r requirements/base.txt
     #   celery
@@ -202,11 +198,11 @@ markupsafe==2.1.3
     #   jinja2
 mccabe==0.7.0
     # via pylint
-mock==5.0.2
+mock==5.1.0
     # via -r requirements/test.in
 mysqlclient==2.2.0
     # via -r requirements/base.txt
-newrelic==8.8.0
+newrelic==9.0.0
     # via
     #   -r requirements/base.txt
     #   edx-django-utils
@@ -219,7 +215,7 @@ openapi-codec==1.3.2
     # via
     #   -r requirements/base.txt
     #   django-rest-swagger
-openedx-filters==1.3.0
+openedx-filters==1.6.0
     # via -r requirements/base.txt
 packaging==23.1
     # via
@@ -229,15 +225,15 @@ pbr==5.11.1
     # via
     #   -r requirements/base.txt
     #   stevedore
-platformdirs==3.5.1
+platformdirs==3.10.0
     # via
     #   pylint
     #   virtualenv
-pluggy==1.0.0
+pluggy==1.3.0
     # via
     #   pytest
     #   tox
-prompt-toolkit==3.0.38
+prompt-toolkit==3.0.39
     # via
     #   -r requirements/base.txt
     #   click-repl
@@ -251,7 +247,7 @@ pycparser==2.21
     # via
     #   -r requirements/base.txt
     #   cffi
-pyjwt[crypto]==2.7.0
+pyjwt[crypto]==2.8.0
     # via
     #   -r requirements/base.txt
     #   drf-jwt
@@ -259,7 +255,7 @@ pyjwt[crypto]==2.7.0
     #   edx-drf-extensions
     #   edx-rest-api-client
     #   social-auth-core
-pylint==2.17.4
+pylint==2.17.5
     # via
     #   edx-lint
     #   pylint-celery
@@ -281,7 +277,7 @@ pynacl==1.5.0
     # via
     #   -r requirements/base.txt
     #   edx-django-utils
-pytest==7.3.1
+pytest==7.4.1
     # via
     #   pytest-cov
     #   pytest-django
@@ -300,7 +296,7 @@ python3-openid==3.2.0
     # via
     #   -r requirements/base.txt
     #   social-auth-core
-pytz==2023.3
+pytz==2023.3.post1
     # via
     #   -r requirements/base.txt
     #   django
@@ -311,7 +307,7 @@ pyyaml==6.0.1
     #   code-annotations
     #   edx-django-release-util
     #   responses
-redis==4.5.5
+redis==4.6.0
     # via
     #   -r requirements/base.txt
     #   celery
@@ -330,7 +326,7 @@ requests-oauthlib==1.3.1
     # via
     #   -r requirements/base.txt
     #   social-auth-core
-responses==0.23.1
+responses==0.23.3
     # via -r requirements/test.in
 semantic-version==2.10.0
     # via
@@ -353,7 +349,7 @@ slumber==0.7.1
     # via
     #   -r requirements/base.txt
     #   edx-rest-api-client
-social-auth-app-django==5.2.0
+social-auth-app-django==5.3.0
     # via
     #   -r requirements/base.txt
     #   edx-auth-backends
@@ -372,7 +368,7 @@ stevedore==5.1.0
     #   code-annotations
     #   edx-django-utils
     #   edx-opaque-keys
-stripe==5.4.0
+stripe==6.3.0
     # via -r requirements/base.txt
 testfixtures==7.1.0
     # via -r requirements/test.in
@@ -384,30 +380,34 @@ tomli==2.0.1
     #   pylint
     #   pytest
     #   tox
-tomlkit==0.11.8
+tomlkit==0.12.1
     # via pylint
 tox==3.28.0
     # via
     #   -c https://raw.githubusercontent.com/edx/edx-lint/master/edx_lint/files/common_constraints.txt
     #   -r requirements/test.in
-types-pyyaml==6.0.12.10
+types-pyyaml==6.0.12.11
     # via responses
-typing-extensions==4.6.3
+typing-extensions==4.7.1
     # via
     #   -r requirements/base.txt
     #   asgiref
     #   astroid
+    #   edx-opaque-keys
+    #   filelock
     #   kombu
     #   pylint
+    #   stripe
 tzdata==2023.3
     # via
     #   -r requirements/base.txt
     #   backports-zoneinfo
+    #   celery
 uritemplate==4.1.1
     # via
     #   -r requirements/base.txt
     #   coreapi
-urllib3==2.0.2
+urllib3==2.0.4
     # via
     #   -r requirements/base.txt
     #   requests
@@ -418,7 +418,7 @@ vine==5.0.0
     #   amqp
     #   celery
     #   kombu
-virtualenv==20.23.0
+virtualenv==20.24.4
     # via tox
 wcwidth==0.2.6
     # via
