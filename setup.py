@@ -100,6 +100,16 @@ if sys.argv[-1] == 'tag':
     os.system("git push --tags")
     sys.exit()
 
+if sys.argv[-1] == 'ver_check':
+    REQ_MAJOR = 3
+    REQ_MINOR = 8
+    if sys.version_info.major != REQ_MAJOR or (sys.version_info.major == REQ_MAJOR and
+                                               sys.version_info.minor != REQ_MINOR):
+        print(f"This application only works on Python {REQ_MAJOR}.{REQ_MINOR}. Please check your environment.")
+        sys.exit(1)
+    else:
+        sys.exit(0)
+
 README = open(os.path.join(os.path.dirname(__file__), 'README.rst'), encoding="utf8").read()
 CHANGELOG = open(os.path.join(os.path.dirname(__file__), 'CHANGELOG.rst'), encoding="utf8").read()
 
