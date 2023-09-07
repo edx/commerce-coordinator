@@ -5,6 +5,7 @@ on:
     branches: 
       - main
       - 2u/project-theseus
+      - 2u/project-replatforming
   pull_request:
     branches:
       - '**'
