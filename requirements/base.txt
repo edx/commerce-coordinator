@@ -196,7 +196,7 @@ stevedore==5.1.0
     # via
     #   edx-django-utils
     #   edx-opaque-keys
-stripe==6.3.0
+stripe==6.4.0
     # via -r requirements/base.in
 typing-extensions==4.7.1
     # via

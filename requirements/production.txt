@@ -136,7 +136,7 @@ edx-opaque-keys==2.5.0
     #   edx-drf-extensions
 edx-rest-api-client==5.6.0
     # via -r requirements/base.txt
-gevent==23.9.0.post1
+gevent==23.9.1
     # via -r requirements/production.in
 greenlet==2.0.2
     # via gevent
@@ -291,7 +291,7 @@ stevedore==5.1.0
     #   -r requirements/base.txt
     #   edx-django-utils
     #   edx-opaque-keys
-stripe==6.3.0
+stripe==6.4.0
     # via -r requirements/base.txt
 typing-extensions==4.7.1
     # via

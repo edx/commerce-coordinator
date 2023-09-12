@@ -82,7 +82,7 @@ coreschema==0.0.4
     # via
     #   -r requirements/base.txt
     #   coreapi
-coverage[toml]==7.3.0
+coverage[toml]==7.3.1
     # via
     #   -r requirements/test.in
     #   pytest-cov
@@ -277,7 +277,7 @@ pynacl==1.5.0
     # via
     #   -r requirements/base.txt
     #   edx-django-utils
-pytest==7.4.1
+pytest==7.4.2
     # via
     #   pytest-cov
     #   pytest-django
@@ -368,7 +368,7 @@ stevedore==5.1.0
     #   code-annotations
     #   edx-django-utils
     #   edx-opaque-keys
-stripe==6.3.0
+stripe==6.4.0
     # via -r requirements/base.txt
 testfixtures==7.1.0
     # via -r requirements/test.in
@@ -418,7 +418,7 @@ vine==5.0.0
     #   amqp
     #   celery
     #   kombu
-virtualenv==20.24.4
+virtualenv==20.24.5
     # via tox
 wcwidth==0.2.6
     # via

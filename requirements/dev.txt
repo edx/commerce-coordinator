@@ -30,11 +30,7 @@ billiard==4.1.0
     # via
     #   -r requirements/validation.txt
     #   celery
-bleach==6.0.0
-    # via
-    #   -r requirements/validation.txt
-    #   readme-renderer
-build==1.0.0
+build==1.0.3
     # via
     #   -r requirements/pip-tools.txt
     #   pip-tools
@@ -97,7 +93,7 @@ coreschema==0.0.4
     # via
     #   -r requirements/validation.txt
     #   coreapi
-coverage[toml]==7.3.0
+coverage[toml]==7.3.1
     # via
     #   -r requirements/validation.txt
     #   pytest-cov
@@ -282,6 +278,10 @@ newrelic==9.0.0
     # via
     #   -r requirements/validation.txt
     #   edx-django-utils
+nh3==0.2.14
+    # via
+    #   -r requirements/validation.txt
+    #   readme-renderer
 oauthlib==3.2.2
     # via
     #   -r requirements/validation.txt
@@ -391,7 +391,7 @@ pyproject-hooks==1.0.0
     # via
     #   -r requirements/pip-tools.txt
     #   build
-pytest==7.4.1
+pytest==7.4.2
     # via
     #   -r requirements/validation.txt
     #   pytest-cov
@@ -425,7 +425,7 @@ pyyaml==6.0.1
     #   edx-django-release-util
     #   edx-i18n-tools
     #   responses
-readme-renderer==41.0
+readme-renderer==42.0
     # via
     #   -r requirements/validation.txt
     #   twine
@@ -475,7 +475,6 @@ simplejson==3.19.1
 six==1.16.0
     # via
     #   -r requirements/validation.txt
-    #   bleach
     #   edx-auth-backends
     #   edx-django-release-util
     #   edx-drf-extensions
@@ -510,7 +509,7 @@ stevedore==5.1.0
     #   code-annotations
     #   edx-django-utils
     #   edx-opaque-keys
-stripe==6.3.0
+stripe==6.4.0
     # via -r requirements/validation.txt
 testfixtures==7.1.0
     # via -r requirements/validation.txt
@@ -573,7 +572,7 @@ vine==5.0.0
     #   amqp
     #   celery
     #   kombu
-virtualenv==20.24.4
+virtualenv==20.24.5
     # via
     #   -r requirements/validation.txt
     #   tox
@@ -581,10 +580,6 @@ wcwidth==0.2.6
     # via
     #   -r requirements/validation.txt
     #   prompt-toolkit
-webencodings==0.5.1
-    # via
-    #   -r requirements/validation.txt
-    #   bleach
 wheel==0.41.2
     # via
     #   -r requirements/pip-tools.txt

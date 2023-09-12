@@ -52,6 +52,7 @@ PROJECT_APPS = (
     'commerce_coordinator.apps.lms.apps.LmsConfig',
     'commerce_coordinator.apps.stripe.apps.StripeConfig',
     'commerce_coordinator.apps.titan.apps.TitanConfig',
+    'commerce_coordinator.apps.commercetools',
 )
 
 INSTALLED_APPS += THIRD_PARTY_APPS
@@ -150,7 +151,6 @@ USE_TZ = True
 LOCALE_PATHS = (
     root('conf', 'locale'),
 )
-
 
 # MEDIA CONFIGURATION
 # See: https://docs.djangoproject.com/en/dev/ref/settings/#media-root
@@ -427,7 +427,6 @@ EDX_DRF_EXTENSIONS = {
     "ENABLE_SET_REQUEST_USER_FOR_JWT_COOKIE": True,
 }
 
-
 # PAYMENT PROCESSING
 PAYMENT_PROCESSOR_CONFIG = {
     'edx': {
@@ -445,3 +444,14 @@ PAYMENT_PROCESSOR_CONFIG = {
     },
 }
 # END PAYMENT PROCESSING
+
+_COMMERCETOOLS_CONFIG_GEO = 'us-central1.gcp'
+COMMERCETOOLS_CONFIG = {
+    'projectKey': '2u-dev',
+    'clientId': 'wdnYt1yvChl2Fug2V_7-Dyf_',
+    'clientSecret': 'zSJsfanSnqAV-CXRSOwKI03mroWUh3yF',
+    'authUrl': f"https://auth.{_COMMERCETOOLS_CONFIG_GEO}.commercetools.com",
+    'apiUrl': f"https://api.{_COMMERCETOOLS_CONFIG_GEO}.commercetools.com",
+    'importUrl': f"https://import.{_COMMERCETOOLS_CONFIG_GEO}.commercetools.com",
+    'scopes': 'manage_project:2u-dev'
+}
