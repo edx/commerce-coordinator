@@ -452,6 +452,6 @@ COMMERCETOOLS_CONFIG = {
     'clientSecret': 'zSJsfanSnqAV-CXRSOwKI03mroWUh3yF',
     'authUrl': f"https://auth.{_COMMERCETOOLS_CONFIG_GEO}.commercetools.com",
     'apiUrl': f"https://api.{_COMMERCETOOLS_CONFIG_GEO}.commercetools.com",
-    'importUrl': f"https://import.{_COMMERCETOOLS_CONFIG_GEO}.commercetools.com",
+    'importUrl': f"https://import.{_COMMERCETOOLS_CONFIG_GEO}.commercetools.com",  # Required for ImpEx
     'scopes': 'manage_project:2u-dev'
 }
