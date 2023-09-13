@@ -354,22 +354,6 @@ class Command(BaseCommand):
                         name='edX Single Course',
                         description='A single edX LMS Course with Verification/Certification',
                         attributes=[
-                            # Will Appear at Variant Level
-                            AttributeDefinition(
-                                type=AttributeType(name='text'),
-                                name=EdXAttributes.variant_course_run_uuid['name'],
-                                label=EdXAttributes.variant_course_run_uuid['label'],
-                                is_searchable=True,
-                                is_required=True
-                            ),
-                            AttributeDefinition(
-                                type=AttributeType(name='text'),
-                                name=EdXAttributes.variant_course_run_id['name'],
-                                label=EdXAttributes.variant_course_run_id['label'],
-                                is_searchable=True,
-                                is_required=True,
-                                attribute_constraint=AttributeConstraintEnum.UNIQUE
-                            ),
                             # Will appear at Product Level
                             AttributeDefinition(
                                 type=AttributeType(name='text'),
@@ -386,6 +370,23 @@ class Command(BaseCommand):
                                 is_searchable=True,
                                 is_required=True,
                                 attribute_constraint=AttributeConstraintEnum.SAME_FOR_ALL
+                            ),
+                            # Will Appear at Variant Level
+                            AttributeDefinition(
+                                type=AttributeType(name='text'),
+                                name=EdXAttributes.variant_course_run_id['name'],
+                                label=EdXAttributes.variant_course_run_id['label'],
+                                is_searchable=True,
+                                is_required=True,
+                                attribute_constraint=AttributeConstraintEnum.UNIQUE
+                            ),
+                            AttributeDefinition(
+                                type=AttributeType(name='text'),
+                                name=EdXAttributes.variant_course_run_uuid['name'],
+                                label=EdXAttributes.variant_course_run_uuid['label'],
+                                is_searchable=True,
+                                is_required=True,
+                                attribute_constraint=AttributeConstraintEnum.UNIQUE
                             )
                         ]
                     )
@@ -423,13 +424,13 @@ class Command(BaseCommand):
                         )
                     ],
                     attributes=[
+                        TextAttribute(name=EdXAttributes.product_type_course_id['name'], value=course_data['key']),
+                        TextAttribute(name=EdXAttributes.product_type_course_uuid['name'], value=course_data['uuid']),
+                        TextAttribute(name=EdXAttributes.variant_course_run_id['name'], value=course_run_data['key']),
                         TextAttribute(
                             name=EdXAttributes.variant_course_run_uuid['name'],
                             value=course_run_data['uuid']
                         ),
-                        TextAttribute(name=EdXAttributes.variant_course_run_id['name'], value=course_run_data['key']),
-                        TextAttribute(name=EdXAttributes.product_type_course_id['name'], value=course_data['key']),
-                        TextAttribute(name=EdXAttributes.product_type_course_uuid['name'], value=course_data['uuid']),
                     ]
                 ))
 
