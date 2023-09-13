@@ -1,9 +1,9 @@
-import json
+import pprint
 
 import django.conf
+from commercetools.importapi import Client
 from django.core.management.base import no_translations
 
-from commerce_coordinator.apps.commercetools.management.commands._arbitrary_api_client import ArbitraryApiClient
 from commerce_coordinator.apps.commercetools.management.commands._timed_command import TimedCommand
 
 JSON_INDENTATION = 2
@@ -23,24 +23,18 @@ class Command(TimedCommand):
 
         print(f'Using commercetools ImpEx config: {config["projectKey"]} / {config["importUrl"]}')
 
-        import_client = ArbitraryApiClient(
-            project_key=config["projectKey"],
+        import_client = Client(
             client_id=config["clientId"],
             client_secret=config["clientSecret"],
             scope=[config["scopes"]],
             url=config["importUrl"],
             token_url=config["authUrl"],
-        )
+        ).with_project_key_value(project_key=config["projectKey"])
 
         container_key_name = options['container_name'][0]
 
-        # This API isn't available in the SDK, but we can Hijack the SDK to make it so :D
-        result = import_client.delete(f'/{config["projectKey"]}/import-containers/{container_key_name}')
+        result = import_client.import_containers().with_import_container_key_value(container_key_name).delete()
 
-        if result.raw.status != 200:
-            print(f"Error communicating with server, status code: {result.raw.status}")
-            exit(1)
-
-        print(json.dumps(json.loads(result.content), indent=JSON_INDENTATION))
+        pprint.pp(result.serialize(), depth=500, indent=1)
 
         self.print_reporting_time()
