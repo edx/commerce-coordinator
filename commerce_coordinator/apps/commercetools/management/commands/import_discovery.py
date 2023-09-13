@@ -16,8 +16,10 @@ from commercetools.importapi.models import AssetDimensions, AttributeConstraintE
 # noinspection PyProtectedMember
 from commercetools.importapi.models.importcontainers import ImportContainerDraft, ImportResourceType
 from commercetools.importapi.models.importrequests import ProductDraftImportRequest, ProductTypeImportRequest
-from django.core.management.base import BaseCommand, no_translations
+from django.core.management.base import no_translations
 from PIL import Image as PILImage
+
+from commerce_coordinator.apps.commercetools.management.commands._timed_command import TimedCommand
 
 # Notes on 'keys':
 #   - Keys may only contain alphanumeric characters, underscores and hyphens and must have a minimum length of
@@ -196,18 +198,12 @@ class EdXAttributes:
     }
 
 
-class Command(BaseCommand):
+class Command(TimedCommand):
     help = "Import Discovery Courses to CommerceTools"
 
-    start = datetime.now()
     course_product_type_key = KeyGen.product_type('course_verified')
 
     # Helpers
-    def print_reporting_time(self):
-        delta = datetime.now() - self.start
-
-        print(f"Started at: {self.start.strftime('%Y-%m-%d, %H:%M:%S')}, took {str(delta)}\n")
-
     def handle_commercetools_error(self, error: CommercetoolsError, exit_code: int = 127):
         """
         Standardize CommerceTools error while revealing "why" (for example, what API values were invalid.

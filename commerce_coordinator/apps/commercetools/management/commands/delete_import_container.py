@@ -1,24 +1,16 @@
 import json
-from datetime import datetime
 
 import django.conf
-from django.core.management.base import BaseCommand, no_translations
+from django.core.management.base import no_translations
 
 from commerce_coordinator.apps.commercetools.management.commands._arbitrary_api_client import ArbitraryApiClient
+from commerce_coordinator.apps.commercetools.management.commands._timed_command import TimedCommand
 
 JSON_INDENTATION = 2
 
 
-class Command(BaseCommand):
+class Command(TimedCommand):
     help = "Delete an impot container in CommerceTools"
-
-    start = datetime.now()
-
-    # Helpers
-    def print_reporting_time(self):
-        delta = datetime.now() - self.start
-
-        print(f"Started at: {self.start.strftime('%Y-%m-%d, %H:%M:%S')}, took {str(delta)}\n")
 
     # Django Overrides
     def add_arguments(self, parser):
