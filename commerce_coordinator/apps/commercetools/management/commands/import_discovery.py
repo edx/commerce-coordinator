@@ -63,8 +63,9 @@ class IdentifierProtection:
 
     @staticmethod
     def fail_if_needed(message='Validation failed', force=False):
+        print(f'*** ERROR [Internal Script Validation]: {message}')
+
         if force or IdentifierProtection.FAILURE_IS_FATAL:
-            print(f'*** ERROR [Internal Script Validation]: {message}')
             exit(999)
 
     @staticmethod
@@ -321,7 +322,7 @@ class Command(BaseCommand):
 
     @no_translations
     def handle(self, *args, **options):
-        container_key = KeyGen.import_container(f'discovery_{self.start.strftime("%Y_%m_%d")}')
+        container_key = KeyGen.import_container(f'discovery_{self.start.strftime("%Y_%m_%d")}_2')
         config = django.conf.settings.COMMERCETOOLS_CONFIG
 
         print(f'Using commercetools ImpEx config: {config["projectKey"]} / {config["importUrl"]}')
