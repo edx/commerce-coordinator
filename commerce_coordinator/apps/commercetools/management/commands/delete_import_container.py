@@ -10,7 +10,7 @@ JSON_INDENTATION = 2
 
 
 class Command(TimedCommand):
-    help = "Delete an impot container in CommerceTools"
+    help = "Delete an import container in CommerceTools"
 
     # Django Overrides
     def add_arguments(self, parser):
@@ -36,5 +36,3 @@ class Command(TimedCommand):
         result = import_client.import_containers().with_import_container_key_value(container_key_name).delete()
 
         pprint.pp(result.serialize(), depth=500, indent=1)
-
-        self.print_reporting_time()

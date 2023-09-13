@@ -446,5 +446,3 @@ class Command(TimedCommand):
             )
         except CommercetoolsError as err:
             self.handle_commercetools_error(err, 2)
-
-        self.print_reporting_time()

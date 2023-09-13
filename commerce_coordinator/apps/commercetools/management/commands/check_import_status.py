@@ -34,12 +34,8 @@ class Command(TimedCommand):
 
         container_key_name = options['container_name']
 
-        # This API isn't available in the SDK, but we can Hijack the SDK to make it so :D
-
         result = import_client\
             .import_containers().with_import_container_key_value(container_key_name) \
             .import_operations().get()
 
         pprint.pp(result.serialize(), depth=500, indent=1)
-
-        self.print_reporting_time()
