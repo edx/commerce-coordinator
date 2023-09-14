@@ -182,7 +182,7 @@ def is_date_between(subject: datetime, start: datetime, end: datetime):
     return start.astimezone() < subject.astimezone() < end.astimezone()
 
 
-class EdXAttributes:
+class EdxCourseAttributes:
     """
     Our definitions of Product Type (Variant and Product) Attributes
 
@@ -190,36 +190,58 @@ class EdXAttributes:
     - if they start with product_type_ they are on the Product itself, but defines as unique per Product
       (all variants must supply this value and it must be 'SAME_FOR_ALL')
     """
-    product_type_course_id = {
-        'name': KeyGen.product_variant_attribute("parent_course_id"),
-        'label': ls({'en': 'edX Course ID'}),
-        'type': AttributeType(name='text'),
-        'input_hint': TextInputHint.SINGLE_LINE
-    }
-    product_type_course_uuid = {
-        'name': KeyGen.product_variant_attribute("parent_course_uuid"),
-        'label': ls({'en': 'edX Course UUID'}),
-        'type': AttributeType(name='text'),
-        'input_hint': TextInputHint.SINGLE_LINE
-    }
-    variant_course_run_uuid = {
-        'name': KeyGen.product_variant_attribute("uuid"),
-        'label': ls({'en': 'edX Course Run UUID'}),
-        'type': AttributeType(name='text'),
-        'input_hint': TextInputHint.SINGLE_LINE
-    }
-    variant_course_run_id = {
-        'name': KeyGen.product_variant_attribute("course_run_id"),
-        'label': ls({'en': 'edX Course Run ID'}),
-        'type': AttributeType(name='text'),
-        'input_hint': TextInputHint.SINGLE_LINE
-    }
-    variant_search_text = {
-        'name': KeyGen.product_variant_attribute("course_run_search_text"),
-        'label': ls({'en': 'edX Course Search Text'}),
-        'type': AttributeType(name='ltext'),
-        'input_hint': TextInputHint.MULTI_LINE
-    }
+
+    # Will appear at Product Level
+    product_type_course_id = AttributeDefinition(
+        type=AttributeType(name='text'),
+        name=KeyGen.product_variant_attribute("parent_course_id"),
+        label=ls({'en': 'edX Course ID'}),
+        is_searchable=True,
+        is_required=True,
+        attribute_constraint=AttributeConstraintEnum.SAME_FOR_ALL,
+        input_hint=TextInputHint.SINGLE_LINE
+    )
+
+    product_type_course_uuid = AttributeDefinition(
+        type=AttributeType(name='text'),
+        name=KeyGen.product_variant_attribute("parent_course_uuid"),
+        label=ls({'en': 'edX Course UUID'}),
+        is_searchable=True,
+        is_required=True,
+        attribute_constraint=AttributeConstraintEnum.SAME_FOR_ALL,
+        input_hint=TextInputHint.SINGLE_LINE
+    )
+
+    # Will Appear at Variant Level
+    variant_course_run_uuid = AttributeDefinition(
+        type=AttributeType(name='text'),
+        name=KeyGen.product_variant_attribute("uuid"),
+        label=ls({'en': 'edX Course Run UUID'}),
+        is_searchable=True,
+        is_required=True,
+        attribute_constraint=AttributeConstraintEnum.UNIQUE,
+        input_hint=TextInputHint.SINGLE_LINE
+    )
+
+    variant_course_run_id = AttributeDefinition(
+        type=AttributeType(name='text'),
+        name=KeyGen.product_variant_attribute("course_run_id"),
+        label=ls({'en': 'edX Course Run ID'}),
+        is_searchable=True,
+        is_required=True,
+        attribute_constraint=AttributeConstraintEnum.UNIQUE,
+        input_hint=TextInputHint.SINGLE_LINE
+    )
+
+    variant_search_text = AttributeDefinition(
+        type=AttributeType(name='ltext'),
+        name=KeyGen.product_variant_attribute("course_run_search_text"),
+        label=ls({'en': 'edX Course Search Text'}),
+        is_searchable=True,
+        is_required=True,
+        attribute_constraint=AttributeConstraintEnum.UNIQUE,
+        input_hint=TextInputHint.MULTI_LINE
+    )
 
 
 class Command(TimedCommand):
@@ -382,57 +404,16 @@ class Command(TimedCommand):
                         name='edX Single Course',
                         description='A single edX LMS Course with Verification/Certification',
                         attributes=[
-                            # Will appear at Product Level
-                            AttributeDefinition(
-                                type=EdXAttributes.product_type_course_id['type'],
-                                name=EdXAttributes.product_type_course_id['name'],
-                                label=EdXAttributes.product_type_course_id['label'],
-                                is_searchable=True,
-                                is_required=True,
-                                attribute_constraint=AttributeConstraintEnum.SAME_FOR_ALL,
-                                input_hint=EdXAttributes.product_type_course_id['input_hint']
-                            ),
-                            AttributeDefinition(
-                                type=EdXAttributes.product_type_course_uuid['type'],
-                                name=EdXAttributes.product_type_course_uuid['name'],
-                                label=EdXAttributes.product_type_course_uuid['label'],
-                                is_searchable=True,
-                                is_required=True,
-                                attribute_constraint=AttributeConstraintEnum.SAME_FOR_ALL,
-                                input_hint=EdXAttributes.product_type_course_uuid['input_hint']
-                            ),
-                            # Will Appear at Variant Level
-                            AttributeDefinition(
-                                type=EdXAttributes.variant_course_run_id['type'],
-                                name=EdXAttributes.variant_course_run_id['name'],
-                                label=EdXAttributes.variant_course_run_id['label'],
-                                is_searchable=True,
-                                is_required=True,
-                                attribute_constraint=AttributeConstraintEnum.UNIQUE,
-                                input_hint=EdXAttributes.variant_course_run_id['input_hint']
-                            ),
-                            AttributeDefinition(
-                                type=EdXAttributes.variant_course_run_uuid['type'],
-                                name=EdXAttributes.variant_course_run_uuid['name'],
-                                label=EdXAttributes.variant_course_run_uuid['label'],
-                                is_searchable=True,
-                                is_required=True,
-                                attribute_constraint=AttributeConstraintEnum.UNIQUE,
-                                input_hint=EdXAttributes.variant_course_run_uuid['input_hint']
-                            ),
-                            AttributeDefinition(
-                                type=EdXAttributes.variant_search_text['type'],
-                                name=EdXAttributes.variant_search_text['name'],
-                                label=EdXAttributes.variant_search_text['label'],
-                                is_searchable=True,
-                                is_required=True,
-                                attribute_constraint=AttributeConstraintEnum.UNIQUE,
-                                input_hint=EdXAttributes.variant_search_text['input_hint']
-                            )
+                            EdxCourseAttributes.product_type_course_id,
+                            EdxCourseAttributes.product_type_course_uuid,
+                            EdxCourseAttributes.variant_course_run_id,
+                            EdxCourseAttributes.variant_course_run_uuid,
+                            EdxCourseAttributes.variant_search_text
                         ]
                     )
                 ])
             )
+
         except CommercetoolsError as err:
             self.handle_commercetools_error(err, 1)
 
@@ -484,17 +465,17 @@ class Command(TimedCommand):
                         )
                     ],
                     attributes=[
-                        TextAttribute(name=EdXAttributes.product_type_course_id['name'], value=course_data['key']),
-                        TextAttribute(name=EdXAttributes.product_type_course_uuid['name'],
+                        TextAttribute(name=EdxCourseAttributes.product_type_course_id.name, value=course_data['key']),
+                        TextAttribute(name=EdxCourseAttributes.product_type_course_uuid.name,
                                       value=course_data['uuid']),
-                        TextAttribute(name=EdXAttributes.variant_course_run_id['name'],
+                        TextAttribute(name=EdxCourseAttributes.variant_course_run_id.name,
                                       value=course_run_data['key']),
                         TextAttribute(
-                            name=EdXAttributes.variant_course_run_uuid['name'],
+                            name=EdxCourseAttributes.variant_course_run_uuid.name,
                             value=course_run_data['uuid']
                         ),
                         LocalizableTextAttribute(
-                            name=EdXAttributes.variant_search_text['name'],
+                            name=EdxCourseAttributes.variant_search_text.name,
                             value=ls({'en': course_run_data['text']})
                         ),
                     ]
