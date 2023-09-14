@@ -519,7 +519,6 @@ class Command(TimedCommand):
                 master_variant=master_variant,
             ))
 
-        breakpoint()
         try:
             import_client.product_drafts().import_containers().with_import_container_key_value(container_key).post(
                 ProductDraftImportRequest(resources=product_drafts)
