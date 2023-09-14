@@ -1,7 +1,7 @@
+import datetime
 import inspect
 import json
 import re
-from datetime import datetime
 from enum import Enum
 from io import BytesIO
 
@@ -10,12 +10,16 @@ import urllib3
 from commercetools import CommercetoolsError
 from commercetools.importapi import Client
 from commercetools.importapi.models import AssetDimensions, AttributeConstraintEnum, \
-    AttributeDefinition, AttributeType, Image, LocalizedString, \
-    MoneyType, PriceDraftImport, ProductDraftImport, ProductTypeImport, \
-    ProductTypeKeyReference, ProductVariantDraftImport, TextAttribute, TypedMoney
+    AttributeDefinition, AttributeType, \
+    Image, LocalizableTextAttribute, LocalizedString, \
+    MoneyType, PriceDraftImport, ProductDraftImport, \
+    ProductTypeImport, ProductTypeKeyReference, \
+    ProductVariantDraftImport, TextAttribute, TypedMoney
 # noinspection PyProtectedMember
 from commercetools.importapi.models.importcontainers import ImportContainerDraft, ImportResourceType
 from commercetools.importapi.models.importrequests import ProductDraftImportRequest, ProductTypeImportRequest
+from commercetools.importapi.models.producttypes import TextInputHint
+from dateutil import parser as dateparser
 from django.core.management.base import no_translations
 from PIL import Image as PILImage
 
@@ -38,6 +42,7 @@ from commerce_coordinator.apps.commercetools.management.commands._timed_command 
 
 # ##  ssh grmartin@theseus.sandbox.edx.org -L 9200:127.0.0.1:9200
 
+DISCO_DEBUG_ES = True
 DISCO_MAX_PER_PAGE = 10
 COMMTOOLS_MAX_PER_BATCH = 180000
 
@@ -172,6 +177,11 @@ def ls(string_dict) -> LocalizedString:  # forced return typehint/coercion inten
     return string_dict
 
 
+def is_date_between(subject: datetime, start: datetime, end: datetime):
+    # You have convert TZ or else you may hit: TypeError: can't compare offset-naive and offset-aware datetimes
+    return start.astimezone() < subject.astimezone() < end.astimezone()
+
+
 class EdXAttributes:
     """
     Our definitions of Product Type (Variant and Product) Attributes
@@ -183,18 +193,32 @@ class EdXAttributes:
     product_type_course_id = {
         'name': KeyGen.product_variant_attribute("parent_course_id"),
         'label': ls({'en': 'edX Course ID'}),
+        'type': AttributeType(name='text'),
+        'input_hint': TextInputHint.SINGLE_LINE
     }
     product_type_course_uuid = {
         'name': KeyGen.product_variant_attribute("parent_course_uuid"),
         'label': ls({'en': 'edX Course UUID'}),
+        'type': AttributeType(name='text'),
+        'input_hint': TextInputHint.SINGLE_LINE
     }
     variant_course_run_uuid = {
         'name': KeyGen.product_variant_attribute("uuid"),
         'label': ls({'en': 'edX Course Run UUID'}),
+        'type': AttributeType(name='text'),
+        'input_hint': TextInputHint.SINGLE_LINE
     }
     variant_course_run_id = {
         'name': KeyGen.product_variant_attribute("course_run_id"),
         'label': ls({'en': 'edX Course Run ID'}),
+        'type': AttributeType(name='text'),
+        'input_hint': TextInputHint.SINGLE_LINE
+    }
+    variant_search_text = {
+        'name': KeyGen.product_variant_attribute("course_run_search_text"),
+        'label': ls({'en': 'edX Course Search Text'}),
+        'type': AttributeType(name='ltext'),
+        'input_hint': TextInputHint.MULTI_LINE
     }
 
 
@@ -260,7 +284,8 @@ class Command(TimedCommand):
 
             query['search_after'] = last_sort_proper
 
-        print(f"ES Query {index} => {json.dumps(query)}")
+        if DISCO_DEBUG_ES:
+            print(f"ES Query {index} => {json.dumps(query)}")
 
         return urllib3.request('GET', f"{options['discovery_host']}/{index}/_search",
                                headers={"Content-Type": "application/json"},
@@ -269,8 +294,14 @@ class Command(TimedCommand):
     @staticmethod
     def es_result_pagination_return(es_result, result_key_name):
         # TODO: Calculate Pagination
+
+        result = es_result.json()
+
+        if DISCO_DEBUG_ES:
+            print(f"ES Return => {result}")
+
         return {
-            result_key_name: es_result.json()['hits']['hits'],
+            result_key_name: result['hits']['hits'],
             'done': True,
             'pagination_control_value': 1
         }
@@ -353,37 +384,50 @@ class Command(TimedCommand):
                         attributes=[
                             # Will appear at Product Level
                             AttributeDefinition(
-                                type=AttributeType(name='text'),
+                                type=EdXAttributes.product_type_course_id['type'],
                                 name=EdXAttributes.product_type_course_id['name'],
                                 label=EdXAttributes.product_type_course_id['label'],
                                 is_searchable=True,
                                 is_required=True,
-                                attribute_constraint=AttributeConstraintEnum.SAME_FOR_ALL
+                                attribute_constraint=AttributeConstraintEnum.SAME_FOR_ALL,
+                                input_hint=EdXAttributes.product_type_course_id['input_hint']
                             ),
                             AttributeDefinition(
-                                type=AttributeType(name='text'),
+                                type=EdXAttributes.product_type_course_uuid['type'],
                                 name=EdXAttributes.product_type_course_uuid['name'],
                                 label=EdXAttributes.product_type_course_uuid['label'],
                                 is_searchable=True,
                                 is_required=True,
-                                attribute_constraint=AttributeConstraintEnum.SAME_FOR_ALL
+                                attribute_constraint=AttributeConstraintEnum.SAME_FOR_ALL,
+                                input_hint=EdXAttributes.product_type_course_uuid['input_hint']
                             ),
                             # Will Appear at Variant Level
                             AttributeDefinition(
-                                type=AttributeType(name='text'),
+                                type=EdXAttributes.variant_course_run_id['type'],
                                 name=EdXAttributes.variant_course_run_id['name'],
                                 label=EdXAttributes.variant_course_run_id['label'],
                                 is_searchable=True,
                                 is_required=True,
-                                attribute_constraint=AttributeConstraintEnum.UNIQUE
+                                attribute_constraint=AttributeConstraintEnum.UNIQUE,
+                                input_hint=EdXAttributes.variant_course_run_id['input_hint']
                             ),
                             AttributeDefinition(
-                                type=AttributeType(name='text'),
+                                type=EdXAttributes.variant_course_run_uuid['type'],
                                 name=EdXAttributes.variant_course_run_uuid['name'],
                                 label=EdXAttributes.variant_course_run_uuid['label'],
                                 is_searchable=True,
                                 is_required=True,
-                                attribute_constraint=AttributeConstraintEnum.UNIQUE
+                                attribute_constraint=AttributeConstraintEnum.UNIQUE,
+                                input_hint=EdXAttributes.variant_course_run_uuid['input_hint']
+                            ),
+                            AttributeDefinition(
+                                type=EdXAttributes.variant_search_text['type'],
+                                name=EdXAttributes.variant_search_text['name'],
+                                label=EdXAttributes.variant_search_text['label'],
+                                is_searchable=True,
+                                is_required=True,
+                                attribute_constraint=AttributeConstraintEnum.UNIQUE,
+                                input_hint=EdXAttributes.variant_search_text['input_hint']
                             )
                         ]
                     )
@@ -395,21 +439,38 @@ class Command(TimedCommand):
         course_key_ref = ProductTypeKeyReference(key=self.course_product_type_key)
 
         product_drafts = []
+
         for course in self.get_courses(**options)['courses']:
             course_data = course['_source']
 
+            master_variant = None
             variants = []
+
             for crun in self.get_course_runs(course_data['key'], **options)['runs']:
                 course_run_data = crun['_source']
-                variants.append(ProductVariantDraftImport(
+
+                # Using the script start date will be more efficient
+                script_start = self.start
+                # some dates from ES aren't formatted EXACTLY as the datetime.date.fromisostring() call wants.
+                crun_start = dateparser.parse(course_run_data['enrollment_start'])
+                crun_end = dateparser.parse(course_run_data['paid_seat_enrollment_end'])
+
+                images = []
+
+                # noinspection PyBroadException
+                try:
+                    images.append(Image(
+                        url=course_run_data['image_url'],
+                        dimensions=self.get_image_dimensions(course_run_data['image_url']),
+                        label="edX Course Tile Image"
+                    ))
+                except Exception as _:
+                    pass
+
+                variant_object = ProductVariantDraftImport(
                     key=KeyGen.product_variant(course_run_data['slug']),
                     sku=KeyGen.sku(course_run_data['first_enrollable_paid_seat_sku']),
-                    images=[
-                        Image(
-                            url=course_run_data['image_url'],
-                            dimensions=self.get_image_dimensions(course_run_data['image_url'])
-                        )
-                    ],
+                    images=images,
                     prices=[
                         PriceDraftImport(
                             value=TypedMoney(
@@ -417,19 +478,36 @@ class Command(TimedCommand):
                                 cent_amount=course_run_data['first_enrollable_paid_seat_price'] * 100,
                                 currency_code='USD'
                             ),
+                            valid_from=crun_start,
+                            valid_until=crun_end,
                             key=KeyGen.product_variant_price(course_run_data['first_enrollable_paid_seat_sku'])
                         )
                     ],
                     attributes=[
                         TextAttribute(name=EdXAttributes.product_type_course_id['name'], value=course_data['key']),
-                        TextAttribute(name=EdXAttributes.product_type_course_uuid['name'], value=course_data['uuid']),
-                        TextAttribute(name=EdXAttributes.variant_course_run_id['name'], value=course_run_data['key']),
+                        TextAttribute(name=EdXAttributes.product_type_course_uuid['name'],
+                                      value=course_data['uuid']),
+                        TextAttribute(name=EdXAttributes.variant_course_run_id['name'],
+                                      value=course_run_data['key']),
                         TextAttribute(
                             name=EdXAttributes.variant_course_run_uuid['name'],
                             value=course_run_data['uuid']
                         ),
+                        LocalizableTextAttribute(
+                            name=EdXAttributes.variant_search_text['name'],
+                            value=ls({'en': course_run_data['text']})
+                        ),
                     ]
-                ))
+                )
+
+                if is_date_between(script_start, crun_start, crun_end):
+                    master_variant = variant_object
+                else:
+                    variants.append(variant_object)
+
+            # We need a master variant, so if we cant determine one, let's just pop one off
+            if not master_variant:
+                master_variant = variants.pop()
 
             product_drafts.append(ProductDraftImport(
                 key=KeyGen.product(course_data['uuid']),
@@ -438,8 +516,10 @@ class Command(TimedCommand):
                 slug=ls({"en": KeyGen.product_slug(course_data['uuid'])}),
                 publish=True,
                 variants=variants,
+                master_variant=master_variant,
             ))
 
+        breakpoint()
         try:
             import_client.product_drafts().import_containers().with_import_container_key_value(container_key).post(
                 ProductDraftImportRequest(resources=product_drafts)
