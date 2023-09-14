@@ -177,6 +177,10 @@ def ls(string_dict) -> LocalizedString:  # forced return typehint/coercion inten
     return string_dict
 
 
+def clean_serch_text(text):
+    return re.sub(r'\n(\s*\n)+', '\n\n', text)
+
+
 def is_date_between(subject: datetime, start: datetime, end: datetime):
     # You have convert TZ or else you may hit: TypeError: can't compare offset-naive and offset-aware datetimes
     return start.astimezone() < subject.astimezone() < end.astimezone()
@@ -210,6 +214,16 @@ class EdxCourseAttributes:
         is_required=True,
         attribute_constraint=AttributeConstraintEnum.SAME_FOR_ALL,
         input_hint=TextInputHint.SINGLE_LINE
+    )
+
+    product_type_search_text = AttributeDefinition(
+        type=AttributeType(name='ltext'),
+        name=KeyGen.product_variant_attribute("parent_course_search_text"),
+        label=ls({'en': 'edX Course Search Text'}),
+        is_searchable=True,
+        is_required=True,
+        attribute_constraint=AttributeConstraintEnum.SAME_FOR_ALL,
+        input_hint=TextInputHint.MULTI_LINE
     )
 
     # Will Appear at Variant Level
@@ -406,6 +420,7 @@ class Command(TimedCommand):
                         attributes=[
                             EdxCourseAttributes.product_type_course_id,
                             EdxCourseAttributes.product_type_course_uuid,
+                            EdxCourseAttributes.product_type_search_text,
                             EdxCourseAttributes.variant_course_run_id,
                             EdxCourseAttributes.variant_course_run_uuid,
                             EdxCourseAttributes.variant_search_text
@@ -424,6 +439,7 @@ class Command(TimedCommand):
         for course in self.get_courses(**options)['courses']:
             course_data = course['_source']
 
+            course_search_text = ls({'en': clean_serch_text(course_data['text'])})
             master_variant = None
             variants = []
 
@@ -465,18 +481,29 @@ class Command(TimedCommand):
                         )
                     ],
                     attributes=[
-                        TextAttribute(name=EdxCourseAttributes.product_type_course_id.name, value=course_data['key']),
-                        TextAttribute(name=EdxCourseAttributes.product_type_course_uuid.name,
-                                      value=course_data['uuid']),
-                        TextAttribute(name=EdxCourseAttributes.variant_course_run_id.name,
-                                      value=course_run_data['key']),
+                        TextAttribute(
+                            name=EdxCourseAttributes.product_type_course_id.name,
+                            value=course_data['key']
+                        ),
+                        TextAttribute(
+                            name=EdxCourseAttributes.product_type_course_uuid.name,
+                            value=course_data['uuid']
+                        ),
+                        LocalizableTextAttribute(
+                            name=EdxCourseAttributes.product_type_search_text.name,
+                            value=course_search_text
+                        ),
+                        TextAttribute(
+                            name=EdxCourseAttributes.variant_course_run_id.name,
+                            value=course_run_data['key']
+                        ),
                         TextAttribute(
                             name=EdxCourseAttributes.variant_course_run_uuid.name,
                             value=course_run_data['uuid']
                         ),
                         LocalizableTextAttribute(
                             name=EdxCourseAttributes.variant_search_text.name,
-                            value=ls({'en': course_run_data['text']})
+                            value=ls({'en': clean_serch_text(course_run_data['text'])})
                         ),
                     ]
                 )
