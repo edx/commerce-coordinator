@@ -3,6 +3,7 @@
 
 celery
 celery[redis]
+commercetools
 Django>=2.2          # Web application framework
 django-cors-headers
 django-extensions
