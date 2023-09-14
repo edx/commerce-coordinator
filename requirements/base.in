@@ -17,5 +17,6 @@ edx-drf-extensions
 edx-rest-api-client
 mysqlclient
 openedx-filters
+Pillow
 pytz
 stripe
