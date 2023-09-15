@@ -226,6 +226,16 @@ class EdxCourseAttributes:
         input_hint=TextInputHint.MULTI_LINE
     )
 
+    product_type_es_json = AttributeDefinition(
+        type=AttributeType(name='text'),
+        name=KeyGen.product_variant_attribute("course_json"),
+        label=ls({'en': 'edX Course JSON'}),
+        is_searchable=False,
+        is_required=True,
+        attribute_constraint=AttributeConstraintEnum.SAME_FOR_ALL,
+        input_hint=TextInputHint.MULTI_LINE
+    )
+
     # Will Appear at Variant Level
     variant_course_run_uuid = AttributeDefinition(
         type=AttributeType(name='text'),
@@ -250,8 +260,18 @@ class EdxCourseAttributes:
     variant_search_text = AttributeDefinition(
         type=AttributeType(name='ltext'),
         name=KeyGen.product_variant_attribute("course_run_search_text"),
-        label=ls({'en': 'edX Course Search Text'}),
+        label=ls({'en': 'edX Course Run Search Text'}),
         is_searchable=True,
+        is_required=True,
+        attribute_constraint=AttributeConstraintEnum.UNIQUE,
+        input_hint=TextInputHint.MULTI_LINE
+    )
+
+    variant_es_json = AttributeDefinition(
+        type=AttributeType(name='text'),
+        name=KeyGen.product_variant_attribute("course_run_json"),
+        label=ls({'en': 'edX Course Run JSON'}),
+        is_searchable=False,
         is_required=True,
         attribute_constraint=AttributeConstraintEnum.UNIQUE,
         input_hint=TextInputHint.MULTI_LINE
@@ -421,9 +441,11 @@ class Command(TimedCommand):
                             EdxCourseAttributes.product_type_course_id,
                             EdxCourseAttributes.product_type_course_uuid,
                             EdxCourseAttributes.product_type_search_text,
+                            EdxCourseAttributes.product_type_es_json,
                             EdxCourseAttributes.variant_course_run_id,
                             EdxCourseAttributes.variant_course_run_uuid,
-                            EdxCourseAttributes.variant_search_text
+                            EdxCourseAttributes.variant_search_text,
+                            EdxCourseAttributes.variant_es_json
                         ]
                     )
                 ])
@@ -494,6 +516,10 @@ class Command(TimedCommand):
                             value=course_search_text
                         ),
                         TextAttribute(
+                            name=EdxCourseAttributes.product_type_es_json.name,
+                            value=json.dumps(course_data)
+                        ),
+                        TextAttribute(
                             name=EdxCourseAttributes.variant_course_run_id.name,
                             value=course_run_data['key']
                         ),
@@ -504,6 +530,10 @@ class Command(TimedCommand):
                         LocalizableTextAttribute(
                             name=EdxCourseAttributes.variant_search_text.name,
                             value=ls({'en': clean_serch_text(course_run_data['text'])})
+                        ),
+                        TextAttribute(
+                            name=EdxCourseAttributes.variant_es_json.name,
+                            value=json.dumps(course_run_data)
                         ),
                     ]
                 )
