@@ -199,7 +199,7 @@ class KeyGen:
 
 
 class BatchAccumulator:
-    ALLOW_TIMED_CONTAINERS = True  # This is for debugging, and shouldnt be used in production
+    ALLOW_TIMED_CONTAINERS = True  # This is for debugging and shouldn't be used in production
 
     num_items = 0
     num_containers = 0
@@ -362,8 +362,11 @@ class Command(TimedCommand):
                          (you can modify all parts of the query except pagination control)
             **options: Options (CLI input options) from the main method (`Command.handle`)
 
-        Returns: urllib3.BaseHTTPResponse
+        Returns: {'expected_num_records':int ,'response':urllib3.BaseHTTPResponse}
 
+        Notes: This uses the N+1/N-1 mechanism for pagination... But it works like this: If we want 20 results, we
+               request 21... if the original result count is bigger than 20, toss the last, and we now know there is
+               more.
         """
         query_template = """
         {
@@ -376,7 +379,7 @@ class Command(TimedCommand):
 
         query = json.loads(query_template)
 
-        query['size'] = DISCO_MAX_PER_PAGE
+        query['size'] = DISCO_MAX_PER_PAGE + 1  # We have to use the n-1 trick to determine if end of search.
 
         if alter_query:
             query = alter_query(query)
@@ -392,23 +395,35 @@ class Command(TimedCommand):
         if DISCO_DEBUG_ES:
             print(f"ES Query {index} => {json.dumps(query)}")
 
-        return urllib3.request('GET', f"{options['discovery_host']}/{index}/_search",
-                               headers={"Content-Type": "application/json"},
-                               body=json.dumps(query))
+        return {
+            'expected_num_records': query['size'] - 1,  # adjust for N-1
+            'response': urllib3.request(
+                'GET',
+                f"{options['discovery_host']}/{index}/_search",
+                headers={"Content-Type": "application/json"},  # Req'd if ES ver >= 6
+                body=json.dumps(query)
+            )
+        }
 
     @staticmethod
-    def es_result_pagination_return(es_result, result_key_name):
-        # TODO: Calculate Pagination
+    def es_result_pagination_return(combined_es_result, result_key_name):
+        expected_size = combined_es_result['expected_num_records'];
+        es_result = combined_es_result['response'];
 
         result = es_result.json()
 
         if DISCO_DEBUG_ES:
             print(f"ES Return => {result}")
 
+        data_records = result['hits']['hits']
+        num_original_recs = len(data_records)
+
+        data_records = data_records[0:expected_size]
+
         return {
-            result_key_name: result['hits']['hits'],
-            'done': True,
-            'pagination_control_value': 1
+            result_key_name: data_records,
+            'done': num_original_recs <= expected_size,
+            'pagination_control_value': data_records[-1]['sort']
         }
 
     @staticmethod
@@ -639,7 +654,8 @@ class Command(TimedCommand):
 
                 try:
                     print(f'Posting Product (Course): {course_key} / {course_data["title"]} in {container_key}')
-                    import_client.product_drafts().import_containers().with_import_container_key_value(container_key).post(
+                    import_client.product_drafts().import_containers().with_import_container_key_value(
+                        container_key).post(
                         ProductDraftImportRequest(resources=product_drafts)
                     )
                 except CommercetoolsError as err:
