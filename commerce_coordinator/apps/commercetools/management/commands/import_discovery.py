@@ -38,13 +38,43 @@ from commerce_coordinator.apps.commercetools.management.commands._timed_command 
 #       - mm: MicroMasters
 
 # TODO: Paginate?
-# TODO: Split between 180,000 items (limit is 200,000 but i like margins for error)
+# TODO: Limit to 100 variants, (not even sure if this is an issue)
 
 # ##  ssh grmartin@theseus.sandbox.edx.org -L 9200:127.0.0.1:9200
 
-DISCO_DEBUG_ES = True
-DISCO_MAX_PER_PAGE = 10
-COMMTOOLS_MAX_PER_BATCH = 180000
+DISCO_DEBUG_ES = True  # Should we print query ans results to the console?, This is diagnostic
+DISCO_MAX_PER_PAGE = 10  # Max ES Results per page
+
+COMMTOOLS_MAX_PER_BATCH = 180000  # Split between 180,000 items (limit is 200,000 but i like margins for error)
+
+
+def ls(string_dict) -> LocalizedString:  # forced return typehint/coercion intentional to avoid bad IDE warnings
+    """ Make a LocalizedString that doesn't freak out type checking, assign en to en-US as well. """
+    if 'en' in string_dict:
+        # Keys are CASE sensitive. String matching the pattern ^[a-z]{2}(-[A-Z]{2})?$ representing an IETF language tag
+        string_dict['en-US'] = string_dict['en']
+
+    return string_dict
+
+
+def clean_search_text(text):
+    return re.sub(r'\n(\s*\n)+', '\n\n', text)
+
+
+def is_date_between(subject: datetime, start: datetime, end: datetime):
+    # You have convert TZ or else you may hit: TypeError: can't compare offset-naive and offset-aware datetimes
+    return start.astimezone() < subject.astimezone() < end.astimezone()
+
+
+class ExitCode:
+    SUCCESS = 0
+
+    BAD_PROD_TYPE_BATCH = 1
+    BAD_FIRST_CONTAINER = 2
+    BAD_DRAFT_POST = 3
+    BAD_BATCH_CONTAINER = 4
+
+    IDENTIFIER_PROTECTION_FAILURE = 127
 
 
 class DiscoIndex(Enum):
@@ -73,7 +103,7 @@ class IdentifierProtection:
         print(f'*** ERROR [Internal Script Validation]: {message}')
 
         if force or IdentifierProtection.FAILURE_IS_FATAL:
-            exit(999)
+            exit(ExitCode.IDENTIFIER_PROTECTION_FAILURE)
 
     @staticmethod
     def must_prefix(x: str):
@@ -168,22 +198,39 @@ class KeyGen:
         return KeyGen.check.key_or_name(f"edx-sku-{sku}")  # sku
 
 
-def ls(string_dict) -> LocalizedString:  # forced return typehint/coercion intentional to avoid bad IDE warnings
-    """ Make a LocalizedString that doesn't freak out type checking, assign en to en-US as well. """
-    if 'en' in string_dict:
-        # Keys are CASE sensitive. String matching the pattern ^[a-z]{2}(-[A-Z]{2})?$ representing an IETF language tag
-        string_dict['en-US'] = string_dict['en']
+class BatchAccumulator:
+    ALLOW_TIMED_CONTAINERS = True  # This is for debugging, and shouldnt be used in production
 
-    return string_dict
+    num_items = 0
+    num_containers = 0
+    start = None
 
+    def __init__(self, start):
+        self.start = start
 
-def clean_serch_text(text):
-    return re.sub(r'\n(\s*\n)+', '\n\n', text)
+    def generate_container_name(self):
+        suffix = ''
 
+        if self.num_containers > 0:
+            suffix = f'_{self.num_containers}'
 
-def is_date_between(subject: datetime, start: datetime, end: datetime):
-    # You have convert TZ or else you may hit: TypeError: can't compare offset-naive and offset-aware datetimes
-    return start.astimezone() < subject.astimezone() < end.astimezone()
+        time_format = "%Y_%m_%d"
+
+        if self.ALLOW_TIMED_CONTAINERS:
+            time_format = "%Y_%m_%d_%H_%M_%S"
+
+        result = KeyGen.import_container(f'discovery_{self.start.strftime(time_format)}{suffix}')
+        self.num_containers = self.num_containers + 1
+        self.num_items = 0
+        return result
+
+    def increment(self):
+        self.num_items = self.num_items + 1
+
+    def need_new_container(self):
+        if self.num_items >= COMMTOOLS_MAX_PER_BATCH:
+            return True
+        return False
 
 
 class EdxCourseAttributes:
@@ -283,6 +330,8 @@ class Command(TimedCommand):
 
     course_product_type_key = KeyGen.product_type('course_verified')
 
+    accumulator = None
+
     # Helpers
     def handle_commercetools_error(self, error: CommercetoolsError, exit_code: int = 127):
         """
@@ -298,7 +347,7 @@ class Command(TimedCommand):
 
         self.print_reporting_time()
 
-        if exit_code != 0:
+        if exit_code != ExitCode.SUCCESS:
             exit(exit_code)
 
     @staticmethod
@@ -363,7 +412,7 @@ class Command(TimedCommand):
         }
 
     @staticmethod
-    def get_course_runs(parent_course_key, **options):
+    def get_course_runs(parent_course_key, last_sort_index=None, **options):
         def _mutator(es_query):
             """ Let's ensure were only getting the pertinent subset of course_runs for the subject """
 
@@ -372,7 +421,7 @@ class Command(TimedCommand):
             return es_query
 
         return Command.es_result_pagination_return(Command.fetch_from_discovery(
-            DiscoIndex.COURSE_RUNS.value, None, alter_query=_mutator, **options
+            DiscoIndex.COURSE_RUNS.value, last_sort_index, alter_query=_mutator, **options
         ), 'runs')
 
     @staticmethod
@@ -405,7 +454,8 @@ class Command(TimedCommand):
 
     @no_translations
     def handle(self, *args, **options):
-        container_key = KeyGen.import_container(f'discovery_{self.start.strftime("%Y_%m_%d")}')
+        self.accumulator = BatchAccumulator(self.start)
+        container_key = self.accumulator.generate_container_name()
         config = django.conf.settings.COMMERCETOOLS_CONFIG
 
         print(f'Using commercetools ImpEx config: {config["projectKey"]} / {config["importUrl"]}')
@@ -419,18 +469,21 @@ class Command(TimedCommand):
         ).with_project_key_value(config["projectKey"])
 
         try:
+            print(f'Batching to new container (future items): {container_key}')
+
             import_client.import_containers().post(
                 body=ImportContainerDraft(key=container_key,
                                           resource_type=ImportResourceType.PRODUCT_DRAFT)
             )
-        except CommercetoolsError as _:
-            pass
+        except CommercetoolsError as err:
+            self.handle_commercetools_error(err, ExitCode.BAD_FIRST_CONTAINER)
 
         container = import_client.import_containers().with_import_container_key_value(container_key).get()
 
         print(container)
 
         try:
+            print(f'Importing Product Type: {self.course_product_type_key}')
             import_client.product_types().import_containers().with_import_container_key_value(container_key).post(
                 ProductTypeImportRequest(resources=[
                     ProductTypeImport(
@@ -450,116 +503,159 @@ class Command(TimedCommand):
                     )
                 ])
             )
-
+            self.accumulator.increment()
         except CommercetoolsError as err:
-            self.handle_commercetools_error(err, 1)
-
-        course_key_ref = ProductTypeKeyReference(key=self.course_product_type_key)
+            self.handle_commercetools_error(err, ExitCode.BAD_PROD_TYPE_BATCH)
 
         product_drafts = []
 
-        for course in self.get_courses(**options)['courses']:
-            course_data = course['_source']
+        continue_courses = True
+        es_course_tracking_last_sort = None
+        while continue_courses:
+            es_course_tracking = self.get_courses(es_course_tracking_last_sort, **options)
+            es_course_tracking_last_sort = es_course_tracking['pagination_control_value']
 
-            course_search_text = ls({'en': clean_serch_text(course_data['text'])})
-            master_variant = None
-            variants = []
+            for course in es_course_tracking['courses']:
+                course_data = course['_source']
 
-            for crun in self.get_course_runs(course_data['key'], **options)['runs']:
-                course_run_data = crun['_source']
+                course_search_text = ls({'en': clean_search_text(course_data['text'])})
+                master_variant = None
+                variants = []
 
-                # Using the script start date will be more efficient
-                script_start = self.start
-                # some dates from ES aren't formatted EXACTLY as the datetime.date.fromisostring() call wants.
-                crun_start = dateparser.parse(course_run_data['enrollment_start'])
-                crun_end = dateparser.parse(course_run_data['paid_seat_enrollment_end'])
+                course_key = KeyGen.product(course_data['uuid'])
 
-                images = []
+                print(f'Processing Product (Course): {course_key} / {course_data["title"]}')
 
-                # noinspection PyBroadException
-                try:
-                    images.append(Image(
-                        url=course_run_data['image_url'],
-                        dimensions=self.get_image_dimensions(course_run_data['image_url']),
-                        label="edX Course Tile Image"
-                    ))
-                except Exception as _:
-                    pass
+                continue_course_runs = True
+                es_course_run_tracking_last_sort = None
 
-                variant_object = ProductVariantDraftImport(
-                    key=KeyGen.product_variant(course_run_data['slug']),
-                    sku=KeyGen.sku(course_run_data['first_enrollable_paid_seat_sku']),
-                    images=images,
-                    prices=[
-                        PriceDraftImport(
-                            value=TypedMoney(
-                                type=MoneyType.CENT_PRECISION,
-                                cent_amount=course_run_data['first_enrollable_paid_seat_price'] * 100,
-                                currency_code='USD'
-                            ),
-                            valid_from=crun_start,
-                            valid_until=crun_end,
-                            key=KeyGen.product_variant_price(course_run_data['first_enrollable_paid_seat_sku'])
+                while continue_course_runs:
+
+                    es_course_run_tracking = self.get_course_runs(
+                        course_data['key'], es_course_run_tracking_last_sort, **options)
+
+                    es_course_tracking_last_sort = es_course_run_tracking['pagination_control_value']
+
+                    continue_course_runs = not es_course_run_tracking['done']
+
+                    for crun in es_course_run_tracking['runs']:
+                        course_run_data = crun['_source']
+
+                        # Using the script start date will be more efficient
+                        script_start = self.start
+                        # some dates from ES aren't formatted EXACTLY as the datetime.date.fromisostring() call wants.
+                        crun_start = dateparser.parse(course_run_data['enrollment_start'])
+                        crun_end = dateparser.parse(course_run_data['paid_seat_enrollment_end'])
+
+                        images = []
+
+                        variant_key = KeyGen.product_variant(course_run_data['slug'])
+                        variant_sku = KeyGen.sku(course_run_data['first_enrollable_paid_seat_sku'])
+
+                        print(f'Processing Product Variant (Course Run): {variant_key} / {variant_sku}')
+
+                        # noinspection PyBroadException
+                        try:
+                            images.append(Image(
+                                url=course_run_data['image_url'],
+                                dimensions=self.get_image_dimensions(course_run_data['image_url']),
+                                label="edX Course Tile Image"
+                            ))
+                        except Exception as _:
+                            pass
+
+                        variant_object = ProductVariantDraftImport(
+                            key=variant_key,
+                            sku=variant_sku,
+                            images=images,
+                            prices=[
+                                PriceDraftImport(
+                                    value=TypedMoney(
+                                        type=MoneyType.CENT_PRECISION,
+                                        cent_amount=course_run_data['first_enrollable_paid_seat_price'] * 100,
+                                        currency_code='USD'
+                                    ),
+                                    valid_from=crun_start,
+                                    valid_until=crun_end,
+                                    key=KeyGen.product_variant_price(course_run_data['first_enrollable_paid_seat_sku'])
+                                )
+                            ],
+                            attributes=[
+                                TextAttribute(
+                                    name=EdxCourseAttributes.product_type_course_id.name,
+                                    value=course_data['key']
+                                ),
+                                TextAttribute(
+                                    name=EdxCourseAttributes.product_type_course_uuid.name,
+                                    value=course_data['uuid']
+                                ),
+                                LocalizableTextAttribute(
+                                    name=EdxCourseAttributes.product_type_search_text.name,
+                                    value=course_search_text
+                                ),
+                                TextAttribute(
+                                    name=EdxCourseAttributes.product_type_es_json.name,
+                                    value=json.dumps(course_data)
+                                ),
+                                TextAttribute(
+                                    name=EdxCourseAttributes.variant_course_run_id.name,
+                                    value=course_run_data['key']
+                                ),
+                                TextAttribute(
+                                    name=EdxCourseAttributes.variant_course_run_uuid.name,
+                                    value=course_run_data['uuid']
+                                ),
+                                LocalizableTextAttribute(
+                                    name=EdxCourseAttributes.variant_search_text.name,
+                                    value=ls({'en': clean_search_text(course_run_data['text'])})
+                                ),
+                                TextAttribute(
+                                    name=EdxCourseAttributes.variant_es_json.name,
+                                    value=json.dumps(course_run_data)
+                                ),
+                            ]
                         )
-                    ],
-                    attributes=[
-                        TextAttribute(
-                            name=EdxCourseAttributes.product_type_course_id.name,
-                            value=course_data['key']
-                        ),
-                        TextAttribute(
-                            name=EdxCourseAttributes.product_type_course_uuid.name,
-                            value=course_data['uuid']
-                        ),
-                        LocalizableTextAttribute(
-                            name=EdxCourseAttributes.product_type_search_text.name,
-                            value=course_search_text
-                        ),
-                        TextAttribute(
-                            name=EdxCourseAttributes.product_type_es_json.name,
-                            value=json.dumps(course_data)
-                        ),
-                        TextAttribute(
-                            name=EdxCourseAttributes.variant_course_run_id.name,
-                            value=course_run_data['key']
-                        ),
-                        TextAttribute(
-                            name=EdxCourseAttributes.variant_course_run_uuid.name,
-                            value=course_run_data['uuid']
-                        ),
-                        LocalizableTextAttribute(
-                            name=EdxCourseAttributes.variant_search_text.name,
-                            value=ls({'en': clean_serch_text(course_run_data['text'])})
-                        ),
-                        TextAttribute(
-                            name=EdxCourseAttributes.variant_es_json.name,
-                            value=json.dumps(course_run_data)
-                        ),
-                    ]
-                )
+                        self.accumulator.increment()
 
-                if is_date_between(script_start, crun_start, crun_end):
-                    master_variant = variant_object
-                else:
-                    variants.append(variant_object)
+                        if is_date_between(script_start, crun_start, crun_end):
+                            master_variant = variant_object
+                        else:
+                            variants.append(variant_object)
 
-            # We need a master variant, so if we cant determine one, let's just pop one off
-            if not master_variant:
-                master_variant = variants.pop()
+                # We need a master variant, so if we cant determine one, let's just pop one off
+                if not master_variant:
+                    master_variant = variants.pop()
 
-            product_drafts.append(ProductDraftImport(
-                key=KeyGen.product(course_data['uuid']),
-                product_type=course_key_ref,
-                name=ls({"en": course_data['title']}),
-                slug=ls({"en": KeyGen.product_slug(course_data['uuid'])}),
-                publish=True,
-                variants=variants,
-                master_variant=master_variant,
-            ))
+                self.accumulator.increment()
+                product_drafts.append(ProductDraftImport(
+                    key=course_key,
+                    product_type=ProductTypeKeyReference(key=self.course_product_type_key),
+                    name=ls({"en": course_data['title']}),
+                    slug=ls({"en": KeyGen.product_slug(course_data['uuid'])}),
+                    publish=True,
+                    variants=variants,
+                    master_variant=master_variant,
+                ))
 
-        try:
-            import_client.product_drafts().import_containers().with_import_container_key_value(container_key).post(
-                ProductDraftImportRequest(resources=product_drafts)
-            )
-        except CommercetoolsError as err:
-            self.handle_commercetools_error(err, 2)
+                try:
+                    print(f'Posting Product (Course): {course_key} / {course_data["title"]} in {container_key}')
+                    import_client.product_drafts().import_containers().with_import_container_key_value(container_key).post(
+                        ProductDraftImportRequest(resources=product_drafts)
+                    )
+                except CommercetoolsError as err:
+                    self.handle_commercetools_error(err, ExitCode.BAD_DRAFT_POST)
+
+                if self.accumulator.need_new_container():
+                    container_key = self.accumulator.generate_container_name()
+
+                    print(f'Batching to new container (future items): {container_key}')
+
+                    try:
+                        import_client.import_containers().post(
+                            body=ImportContainerDraft(key=container_key,
+                                                      resource_type=ImportResourceType.PRODUCT_DRAFT)
+                        )
+                    except CommercetoolsError as err:
+                        self.handle_commercetools_error(err, ExitCode.BAD_BATCH_CONTAINER)
+
+            continue_courses = not es_course_tracking['done']
