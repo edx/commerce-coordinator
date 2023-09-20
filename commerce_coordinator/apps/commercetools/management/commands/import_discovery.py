@@ -37,13 +37,13 @@ from commerce_coordinator.apps.commercetools.management.commands._timed_command 
 #       - gs: GetSmarter
 #       - mm: MicroMasters
 
-# TODO: Paginate?
 # TODO: Limit to 100 variants, (not even sure if this is an issue)
 
 # ##  ssh grmartin@theseus.sandbox.edx.org -L 9200:127.0.0.1:9200
 
-DISCO_DEBUG_ES = True  # Should we print query ans results to the console?, This is diagnostic
-DISCO_MAX_PER_PAGE = 10  # Max ES Results per page
+DISCO_DEBUG_ES = True  # Should we print query the query/results/pagination to the console?, This is diagnostic
+DISCO_OUTPUT_CURL = True  # Should ES Calls Output Curl Representations for debugging?
+DISCO_MAX_PER_PAGE = 1  # Max ES Results per page
 
 COMMTOOLS_MAX_PER_BATCH = 180000  # Split between 180,000 items (limit is 200,000 but i like margins for error)
 
@@ -64,6 +64,16 @@ def clean_search_text(text):
 def is_date_between(subject: datetime, start: datetime, end: datetime):
     # You have convert TZ or else you may hit: TypeError: can't compare offset-naive and offset-aware datetimes
     return start.astimezone() < subject.astimezone() < end.astimezone()
+
+
+def console_indent_multiline_text(string, skip=1):
+    """ Output a CLI Compatible Multi-line string with lines after the skip indented with a space. """
+    lines = string.expandtabs().split('\n')
+
+    for line in enumerate(lines[skip:]):
+        lines[line[0] + skip] = f" {line[1].lstrip()}"
+
+    return "\n".join(lines)
 
 
 class ExitCode:
@@ -395,6 +405,11 @@ class Command(TimedCommand):
         if DISCO_DEBUG_ES:
             print(f"ES Query {index} => {json.dumps(query)}")
 
+        if DISCO_OUTPUT_CURL:
+            print(console_indent_multiline_text(f"""ES cURL: curl "{options['discovery_host']}/{index}/_search?pretty=true"\\
+            -H 'Content-Type: application/json'\\
+            -d '{json.dumps(query)}' """))
+
         return {
             'expected_num_records': query['size'] - 1,  # adjust for N-1
             'response': urllib3.request(
@@ -402,29 +417,41 @@ class Command(TimedCommand):
                 f"{options['discovery_host']}/{index}/_search",
                 headers={"Content-Type": "application/json"},  # Req'd if ES ver >= 6
                 body=json.dumps(query)
-            )
+            ),
+            'index': index  # debug info
         }
 
     @staticmethod
     def es_result_pagination_return(combined_es_result, result_key_name):
         expected_size = combined_es_result['expected_num_records'];
         es_result = combined_es_result['response'];
+        index = combined_es_result['index']
 
         result = es_result.json()
 
         if DISCO_DEBUG_ES:
-            print(f"ES Return => {result}")
+            print(f"ES Return {index} => {result}")
 
         data_records = result['hits']['hits']
         num_original_recs = len(data_records)
 
         data_records = data_records[0:expected_size]
 
-        return {
+        pagination_control_value = None
+
+        if len(data_records) > 0:
+            pagination_control_value = data_records[-1]['sort']
+
+        return_value = {
             result_key_name: data_records,
             'done': num_original_recs <= expected_size,
-            'pagination_control_value': data_records[-1]['sort']
+            'pagination_control_value': pagination_control_value
         }
+
+        if DISCO_DEBUG_ES:
+            print(f"ES Pagination Result {index} => {return_value}")
+
+        return return_value
 
     @staticmethod
     def get_course_runs(parent_course_key, last_sort_index=None, **options):
@@ -524,11 +551,30 @@ class Command(TimedCommand):
 
         product_drafts = []
 
+        def _post_product_drafts(drafts):
+            try:
+                print(f'Posting Products to {container_key}')
+
+                breakpoint()
+
+                # How to debug: put a brakepoint() here and execute the following in PDB:
+                #   Or, y'know just uncomment below and comment out or bp before the post... Your call.
+                # print(json.dumps(ProductDraftImportRequest(resources=product_drafts).serialize()))
+
+                import_client.product_drafts().import_containers().with_import_container_key_value(container_key).post(
+                    ProductDraftImportRequest(resources=drafts)
+                )
+            except CommercetoolsError as error:
+                self.handle_commercetools_error(error, ExitCode.BAD_DRAFT_POST)
+
         continue_courses = True
         es_course_tracking_last_sort = None
+
         while continue_courses:
             es_course_tracking = self.get_courses(es_course_tracking_last_sort, **options)
             es_course_tracking_last_sort = es_course_tracking['pagination_control_value']
+
+            continue_courses = not es_course_tracking['done']  # next run
 
             for course in es_course_tracking['courses']:
                 course_data = course['_source']
@@ -549,9 +595,9 @@ class Command(TimedCommand):
                     es_course_run_tracking = self.get_course_runs(
                         course_data['key'], es_course_run_tracking_last_sort, **options)
 
-                    es_course_tracking_last_sort = es_course_run_tracking['pagination_control_value']
+                    es_course_run_tracking_last_sort = es_course_run_tracking['pagination_control_value']
 
-                    continue_course_runs = not es_course_run_tracking['done']
+                    continue_course_runs = not es_course_run_tracking['done']  # next run
 
                     for crun in es_course_run_tracking['runs']:
                         course_run_data = crun['_source']
@@ -637,8 +683,16 @@ class Command(TimedCommand):
                         else:
                             variants.append(variant_object)
 
+                should_publish = True
+
+                if len(variants) == 0 and not master_variant:
+                    should_publish = False
+
+                if not should_publish:
+                    continue  # This explodes... as the blank variant it creates has no data. So lets skip for now.
+
                 # We need a master variant, so if we cant determine one, let's just pop one off
-                if not master_variant:
+                if not master_variant and len(variants) >= 1:
                     master_variant = variants.pop()
 
                 self.accumulator.increment()
@@ -647,21 +701,20 @@ class Command(TimedCommand):
                     product_type=ProductTypeKeyReference(key=self.course_product_type_key),
                     name=ls({"en": course_data['title']}),
                     slug=ls({"en": KeyGen.product_slug(course_data['uuid'])}),
-                    publish=True,
+                    publish=should_publish,
                     variants=variants,
                     master_variant=master_variant,
                 ))
 
-                try:
-                    print(f'Posting Product (Course): {course_key} / {course_data["title"]} in {container_key}')
-                    import_client.product_drafts().import_containers().with_import_container_key_value(
-                        container_key).post(
-                        ProductDraftImportRequest(resources=product_drafts)
-                    )
-                except CommercetoolsError as err:
-                    self.handle_commercetools_error(err, ExitCode.BAD_DRAFT_POST)
+                if not continue_courses:  # were done, and we dont need a new container
+                    _post_product_drafts(product_drafts)
 
                 if self.accumulator.need_new_container():
+                    # were not done yet, but we cant add more, so post, clear and build a new container
+                    _post_product_drafts(product_drafts)
+
+                    product_drafts = []
+
                     container_key = self.accumulator.generate_container_name()
 
                     print(f'Batching to new container (future items): {container_key}')
@@ -673,5 +726,3 @@ class Command(TimedCommand):
                         )
                     except CommercetoolsError as err:
                         self.handle_commercetools_error(err, ExitCode.BAD_BATCH_CONTAINER)
-
-            continue_courses = not es_course_tracking['done']
