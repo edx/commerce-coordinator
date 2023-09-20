@@ -42,7 +42,7 @@ from commerce_coordinator.apps.commercetools.management.commands._timed_command 
 # ##  ssh grmartin@theseus.sandbox.edx.org -L 9200:127.0.0.1:9200
 
 DISCO_DEBUG_ES = True  # Should we print query the query/results/pagination to the console?, This is diagnostic
-DISCO_OUTPUT_CURL = True  # Should ES Calls Output Curl Representations for debugging?
+DISCO_OUTPUT_CURL = False  # Should ES Calls Output Curl Representations for debugging?
 DISCO_MAX_PER_PAGE = 1  # Max ES Results per page
 
 COMMTOOLS_MAX_PER_BATCH = 180000  # Split between 180,000 items (limit is 200,000 but i like margins for error)
