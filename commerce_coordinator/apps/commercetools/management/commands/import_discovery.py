@@ -46,6 +46,7 @@ DISCO_OUTPUT_CURL = False  # Should ES Calls Output Curl Representations for deb
 DISCO_MAX_PER_PAGE = 1  # Max ES Results per page
 
 COMMTOOLS_MAX_PER_BATCH = 180000  # Split between 180,000 items (limit is 200,000 but i like margins for error)
+COMMTOOLS_DRAFT_GRANULARITY = 25  # How many we send to a batch container in a granular fashion
 
 
 def ls(string_dict) -> LocalizedString:  # forced return typehint/coercion intentional to avoid bad IDE warnings
@@ -555,9 +556,7 @@ class Command(TimedCommand):
             try:
                 print(f'Posting Products to {container_key}')
 
-                breakpoint()
-
-                # How to debug: put a brakepoint() here and execute the following in PDB:
+                # How to debug: put a breakpoint() here and execute the following in PDB:
                 #   Or, y'know just uncomment below and comment out or bp before the post... Your call.
                 # print(json.dumps(ProductDraftImportRequest(resources=product_drafts).serialize()))
 
@@ -706,8 +705,9 @@ class Command(TimedCommand):
                     master_variant=master_variant,
                 ))
 
-                if not continue_courses:  # were done, and we dont need a new container
+                if not continue_courses:  # were done, and we don't need a new container
                     _post_product_drafts(product_drafts)
+                    return  # were done
 
                 if self.accumulator.need_new_container():
                     # were not done yet, but we cant add more, so post, clear and build a new container
@@ -726,3 +726,9 @@ class Command(TimedCommand):
                         )
                     except CommercetoolsError as err:
                         self.handle_commercetools_error(err, ExitCode.BAD_BATCH_CONTAINER)
+
+                if len(product_drafts) == COMMTOOLS_DRAFT_GRANULARITY:
+                    # we have decided max payloads to the container should be COMMTOOLS_DRAFT_GRANULARITY
+                    _post_product_drafts(product_drafts)
+
+                    product_drafts = []
