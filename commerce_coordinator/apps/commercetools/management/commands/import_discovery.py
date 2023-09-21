@@ -244,6 +244,28 @@ class BatchAccumulator:
         return False
 
 
+class TwoUCourseAttributes:
+    product_type_2u_fulfillment_system = AttributeDefinition(
+        type=AttributeType(name='text'),
+        name='2u-fulfillment_system',
+        label=ls({'en': '2U Fulfillment System'}),
+        is_searchable=False,
+        is_required=True,
+        attribute_constraint=AttributeConstraintEnum.SAME_FOR_ALL,
+        input_hint=TextInputHint.SINGLE_LINE
+    )
+
+    product_type_2u_lob = AttributeDefinition(
+        type=AttributeType(name='text'),
+        name='2u-lob',
+        label=ls({'en': '2U Line of Business'}),
+        is_searchable=False,
+        is_required=True,
+        attribute_constraint=AttributeConstraintEnum.SAME_FOR_ALL,
+        input_hint=TextInputHint.SINGLE_LINE
+    )
+
+
 class EdxCourseAttributes:
     """
     Our definitions of Product Type (Variant and Product) Attributes
@@ -541,7 +563,9 @@ class Command(TimedCommand):
                             EdxCourseAttributes.variant_course_run_id,
                             EdxCourseAttributes.variant_course_run_uuid,
                             EdxCourseAttributes.variant_search_text,
-                            EdxCourseAttributes.variant_es_json
+                            EdxCourseAttributes.variant_es_json,
+                            TwoUCourseAttributes.product_type_2u_lob,
+                            TwoUCourseAttributes.product_type_2u_fulfillment_system
                         ]
                     )
                 ])
@@ -604,7 +628,10 @@ class Command(TimedCommand):
                         # Using the script start date will be more efficient
                         script_start = self.start
                         # some dates from ES aren't formatted EXACTLY as the datetime.date.fromisostring() call wants.
-                        crun_start = dateparser.parse(course_run_data['enrollment_start'])
+
+                        crun_start = dateparser.parse(
+                            course_run_data['enrollment_start'] or course_run_data['go_live_date']
+                        )
                         crun_end = dateparser.parse(course_run_data['paid_seat_enrollment_end'])
 
                         images = []
@@ -672,6 +699,14 @@ class Command(TimedCommand):
                                 TextAttribute(
                                     name=EdxCourseAttributes.variant_es_json.name,
                                     value=json.dumps(course_run_data)
+                                ),
+                                TextAttribute(
+                                    name=TwoUCourseAttributes.product_type_2u_fulfillment_system.name,
+                                    value="LMS"
+                                ),
+                                TextAttribute(
+                                    name=TwoUCourseAttributes.product_type_2u_lob.name,
+                                    value="edX"
                                 ),
                             ]
                         )
