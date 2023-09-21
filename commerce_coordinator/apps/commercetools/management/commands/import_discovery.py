@@ -51,6 +51,10 @@ COMMTOOLS_DRAFT_GRANULARITY = 25  # How many we send to a batch container in a g
 
 def ls(string_dict) -> LocalizedString:  # forced return typehint/coercion intentional to avoid bad IDE warnings
     """ Make a LocalizedString that doesn't freak out type checking, assign en to en-US as well. """
+    if len(string_dict) == 1 and 'en' not in string_dict:
+        # If we don't have english, this still needs to show for IT and Support in the UI
+        string_dict['en'] = string_dict[string_dict.keys()[0]]
+
     if 'en' in string_dict:
         # Keys are CASE sensitive. String matching the pattern ^[a-z]{2}(-[A-Z]{2})?$ representing an IETF language tag
         string_dict['en-US'] = string_dict['en']
@@ -643,14 +647,19 @@ class Command(TimedCommand):
                     for crun in es_course_run_tracking['runs']:
                         course_run_data = crun['_source']
 
+                        if not course_run_data['has_enrollable_paid_seats']:
+                            continue
+
                         # Using the script start date will be more efficient
                         script_start = self.start
                         # some dates from ES aren't formatted EXACTLY as the datetime.date.fromisostring() call wants.
 
                         crun_start = dateparser.parse(
-                            course_run_data['enrollment_start'] or course_run_data['go_live_date']
+                            course_run_data['enrollment_start'] or course_run_data['start']
                         )
-                        crun_end = dateparser.parse(course_run_data['paid_seat_enrollment_end'])
+                        crun_end = dateparser.parse(
+                            course_run_data['enrollment_end'] or course_run_data['paid_seat_enrollment_end']
+                        )
 
                         images = []
 
