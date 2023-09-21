@@ -253,7 +253,7 @@ class TwoUCourseAttributes:
     - if they start with variant_ they are on the variant level in the UI
     - if they start with product_type_ they are on the Product itself, but defines as unique per Product
       (all variants must supply this value and it must be 'SAME_FOR_ALL')
-    
+
     Notes: These are not checked by our Key Verifier
     """
 
@@ -443,9 +443,13 @@ class Command(TimedCommand):
             print(f"ES Query {index} => {json.dumps(query)}")
 
         if DISCO_OUTPUT_CURL:
-            print(console_indent_multiline_text(f"""ES cURL: curl "{options['discovery_host']}/{index}/_search?pretty=true"\\
-            -H 'Content-Type: application/json'\\
-            -d '{json.dumps(query)}' """))
+            print(
+                console_indent_multiline_text(
+                    f"""ES cURL: curl "{options['discovery_host']}/{index}/_search?pretty=true"\\
+                                        -H 'Content-Type: application/json'\\
+                                        -d '{json.dumps(query)}'"""
+                )
+            )
 
         return {
             'expected_num_records': query['size'] - 1,  # adjust for N-1
@@ -460,8 +464,8 @@ class Command(TimedCommand):
 
     @staticmethod
     def es_result_pagination_return(combined_es_result, result_key_name):
-        expected_size = combined_es_result['expected_num_records'];
-        es_result = combined_es_result['response'];
+        expected_size = combined_es_result['expected_num_records']
+        es_result = combined_es_result['response']
         index = combined_es_result['index']
 
         result = es_result.json()
