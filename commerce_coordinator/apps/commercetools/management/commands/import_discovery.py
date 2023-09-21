@@ -245,6 +245,18 @@ class BatchAccumulator:
 
 
 class TwoUCourseAttributes:
+    """
+    2U/Global Specific Attributes
+
+    Our definitions of Product Type (Variant and Product) Attributes
+
+    - if they start with variant_ they are on the variant level in the UI
+    - if they start with product_type_ they are on the Product itself, but defines as unique per Product
+      (all variants must supply this value and it must be 'SAME_FOR_ALL')
+    
+    Notes: These are not checked by our Key Verifier
+    """
+
     product_type_2u_fulfillment_system = AttributeDefinition(
         type=AttributeType(name='text'),
         name='2u-fulfillment_system',
@@ -268,6 +280,8 @@ class TwoUCourseAttributes:
 
 class EdxCourseAttributes:
     """
+    edX Specific Attributes
+
     Our definitions of Product Type (Variant and Product) Attributes
 
     - if they start with variant_ they are on the variant level in the UI
