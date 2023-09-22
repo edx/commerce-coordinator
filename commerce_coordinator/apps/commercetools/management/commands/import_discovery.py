@@ -9,12 +9,23 @@ import django.conf
 import urllib3
 from commercetools import CommercetoolsError
 from commercetools.importapi import Client
-from commercetools.importapi.models import AssetDimensions, AttributeConstraintEnum, \
-    AttributeDefinition, AttributeType, \
-    Image, LocalizableTextAttribute, LocalizedString, \
-    MoneyType, PriceDraftImport, ProductDraftImport, \
-    ProductTypeImport, ProductTypeKeyReference, \
-    ProductVariantDraftImport, TextAttribute, TypedMoney
+from commercetools.importapi.models import (
+    AssetDimensions,
+    AttributeConstraintEnum,
+    AttributeDefinition,
+    AttributeType,
+    Image,
+    LocalizableTextAttribute,
+    LocalizedString,
+    MoneyType,
+    PriceDraftImport,
+    ProductDraftImport,
+    ProductTypeImport,
+    ProductTypeKeyReference,
+    ProductVariantDraftImport,
+    TextAttribute,
+    TypedMoney
+)
 # noinspection PyProtectedMember
 from commercetools.importapi.models.importcontainers import ImportContainerDraft, ImportResourceType
 from commercetools.importapi.models.importrequests import ProductDraftImportRequest, ProductTypeImportRequest
