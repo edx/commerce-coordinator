@@ -4,6 +4,14 @@ commerce\_coordinator.apps.frontend\_app\_payment.tests package
 Submodules
 ----------
 
+commerce\_coordinator.apps.frontend\_app\_payment.tests.test\_filters module
+----------------------------------------------------------------------------
+
+.. automodule:: commerce_coordinator.apps.frontend_app_payment.tests.test_filters
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
 commerce\_coordinator.apps.frontend\_app\_payment.tests.test\_views module
 --------------------------------------------------------------------------
 
