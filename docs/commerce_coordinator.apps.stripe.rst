@@ -1,5 +1,3 @@
-:orphan:
-
 commerce\_coordinator.apps.stripe package
 =========================================
 
@@ -22,6 +20,14 @@ commerce\_coordinator.apps.stripe.apps module
    :undoc-members:
    :show-inheritance:
 
+commerce\_coordinator.apps.stripe.clients module
+------------------------------------------------
+
+.. automodule:: commerce_coordinator.apps.stripe.clients
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
 commerce\_coordinator.apps.stripe.constants module
 --------------------------------------------------
 
@@ -38,6 +44,22 @@ commerce\_coordinator.apps.stripe.exceptions module
    :undoc-members:
    :show-inheritance:
 
+commerce\_coordinator.apps.stripe.filters module
+------------------------------------------------
+
+.. automodule:: commerce_coordinator.apps.stripe.filters
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+commerce\_coordinator.apps.stripe.pipeline module
+-------------------------------------------------
+
+.. automodule:: commerce_coordinator.apps.stripe.pipeline
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
 commerce\_coordinator.apps.stripe.signals module
 ------------------------------------------------
 
@@ -50,6 +72,14 @@ commerce\_coordinator.apps.stripe.urls module
 ---------------------------------------------
 
 .. automodule:: commerce_coordinator.apps.stripe.urls
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+commerce\_coordinator.apps.stripe.utils module
+----------------------------------------------
+
+.. automodule:: commerce_coordinator.apps.stripe.utils
    :members:
    :undoc-members:
    :show-inheritance:

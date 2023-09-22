@@ -60,6 +60,8 @@ click-repl==0.3.0
     # via
     #   -r requirements/base.txt
     #   celery
+commercetools==2023.6.29
+    # via -r requirements/base.txt
 coreapi==2.3.3
     # via
     #   -r requirements/base.txt
@@ -128,7 +130,7 @@ edx-django-utils==5.7.0
     #   -r requirements/base.txt
     #   edx-drf-extensions
     #   edx-rest-api-client
-edx-drf-extensions==8.9.2
+edx-drf-extensions==8.9.3
     # via -r requirements/base.txt
 edx-opaque-keys==2.5.0
     # via
@@ -136,7 +138,7 @@ edx-opaque-keys==2.5.0
     #   edx-drf-extensions
 edx-rest-api-client==5.6.0
     # via -r requirements/base.txt
-gevent==23.9.0.post1
+gevent==23.9.1
     # via -r requirements/production.in
 greenlet==2.0.2
     # via gevent
@@ -162,6 +164,16 @@ markupsafe==2.1.3
     # via
     #   -r requirements/base.txt
     #   jinja2
+    #   werkzeug
+marshmallow==3.20.1
+    # via
+    #   -r requirements/base.txt
+    #   commercetools
+    #   marshmallow-enum
+marshmallow-enum==1.5.1
+    # via
+    #   -r requirements/base.txt
+    #   commercetools
 mysqlclient==2.2.0
     # via
     #   -r requirements/base.txt
@@ -182,11 +194,16 @@ openapi-codec==1.3.2
 openedx-filters==1.6.0
     # via -r requirements/base.txt
 packaging==23.1
-    # via gunicorn
+    # via
+    #   -r requirements/base.txt
+    #   gunicorn
+    #   marshmallow
 pbr==5.11.1
     # via
     #   -r requirements/base.txt
     #   stevedore
+pillow==10.0.0
+    # via -r requirements/base.txt
 prompt-toolkit==3.0.39
     # via
     #   -r requirements/base.txt
@@ -221,7 +238,6 @@ python-dateutil==2.8.2
     # via
     #   -r requirements/base.txt
     #   celery
-    #   edx-drf-extensions
 python3-openid==3.2.0
     # via
     #   -r requirements/base.txt
@@ -229,6 +245,7 @@ python3-openid==3.2.0
 pytz==2023.3.post1
     # via
     #   -r requirements/base.txt
+    #   commercetools
     #   django
     #   djangorestframework
 pyyaml==6.0.1
@@ -243,16 +260,23 @@ redis==4.6.0
 requests==2.31.0
     # via
     #   -r requirements/base.txt
+    #   commercetools
     #   coreapi
     #   edx-drf-extensions
     #   edx-rest-api-client
+    #   requests-mock
     #   requests-oauthlib
     #   slumber
     #   social-auth-core
     #   stripe
+requests-mock==1.11.0
+    # via
+    #   -r requirements/base.txt
+    #   commercetools
 requests-oauthlib==1.3.1
     # via
     #   -r requirements/base.txt
+    #   commercetools
     #   social-auth-core
 semantic-version==2.10.0
     # via
@@ -267,8 +291,8 @@ six==1.16.0
     #   -r requirements/base.txt
     #   edx-auth-backends
     #   edx-django-release-util
-    #   edx-drf-extensions
     #   python-dateutil
+    #   requests-mock
 slumber==0.7.1
     # via
     #   -r requirements/base.txt
@@ -291,7 +315,7 @@ stevedore==5.1.0
     #   -r requirements/base.txt
     #   edx-django-utils
     #   edx-opaque-keys
-stripe==6.3.0
+stripe==6.4.0
     # via -r requirements/base.txt
 typing-extensions==4.7.1
     # via
@@ -323,6 +347,18 @@ wcwidth==0.2.6
     # via
     #   -r requirements/base.txt
     #   prompt-toolkit
+webob==1.8.7
+    # via
+    #   -r requirements/base.txt
+    #   commercetools
+werkzeug==2.3.7
+    # via
+    #   -r requirements/base.txt
+    #   commercetools
+wrapt==1.15.0
+    # via
+    #   -r requirements/base.txt
+    #   commercetools
 zope-event==5.0
     # via gevent
 zope-interface==6.0

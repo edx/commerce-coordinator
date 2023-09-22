@@ -29,6 +29,14 @@ commerce\_coordinator.apps.core.apps module
    :undoc-members:
    :show-inheritance:
 
+commerce\_coordinator.apps.core.cache module
+--------------------------------------------
+
+.. automodule:: commerce_coordinator.apps.core.cache
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
 commerce\_coordinator.apps.core.clients module
 ----------------------------------------------
 
@@ -49,6 +57,14 @@ commerce\_coordinator.apps.core.context\_processors module
 ----------------------------------------------------------
 
 .. automodule:: commerce_coordinator.apps.core.context_processors
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+commerce\_coordinator.apps.core.memcache module
+-----------------------------------------------
+
+.. automodule:: commerce_coordinator.apps.core.memcache
    :members:
    :undoc-members:
    :show-inheritance:

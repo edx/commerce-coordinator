@@ -116,7 +116,11 @@ class UpdateStripeDraftPayment(PipelineStep):
     def run_filter(self, edx_lms_user_id, order_data, payment_data, **kwargs):  # pylint: disable=arguments-differ
         """
         Execute a filter with the signature specified.
-        Arguments:
+
+        Args:
+            edx_lms_user_id: LMS User ID
+            order_data: Order Data
+            payment_data: Payment Data
             kwargs: arguments passed through from the filter.
         """
 
@@ -148,7 +152,8 @@ class UpdateStripePayment(PipelineStep):
     ):  # pylint: disable=arguments-differ
         """
         Execute a filter with the signature specified.
-        Arguments:
+
+        Args:
             edx_lms_user_id(int): The edx.org LMS user ID of the user making the payment.
             payment_intent_id (str): The Stripe PaymentIntent id to look up.
             order_uuid (str): The identifier of the order. There should be only

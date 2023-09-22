@@ -3,6 +3,8 @@
 
 celery
 celery[redis]
+commercetools
+python-dateutil
 Django>=2.2          # Web application framework
 django-cors-headers
 django-extensions
@@ -16,5 +18,6 @@ edx-drf-extensions
 edx-rest-api-client
 mysqlclient
 openedx-filters
+Pillow
 pytz
 stripe
