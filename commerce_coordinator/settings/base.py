@@ -52,6 +52,7 @@ PROJECT_APPS = (
     'commerce_coordinator.apps.lms.apps.LmsConfig',
     'commerce_coordinator.apps.stripe.apps.StripeConfig',
     'commerce_coordinator.apps.titan.apps.TitanConfig',
+    'commerce_coordinator.apps.commercetools',
 )
 
 INSTALLED_APPS += THIRD_PARTY_APPS
@@ -150,7 +151,6 @@ USE_TZ = True
 LOCALE_PATHS = (
     root('conf', 'locale'),
 )
-
 
 # MEDIA CONFIGURATION
 # See: https://docs.djangoproject.com/en/dev/ref/settings/#media-root

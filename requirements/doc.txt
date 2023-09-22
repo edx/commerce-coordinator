@@ -88,6 +88,8 @@ code-annotations==1.5.0
     # via
     #   -r requirements/test.txt
     #   edx-lint
+commercetools==2023.6.29
+    # via -r requirements/test.txt
 coreapi==2.3.3
     # via
     #   -r requirements/test.txt
@@ -251,6 +253,16 @@ markupsafe==2.1.3
     # via
     #   -r requirements/test.txt
     #   jinja2
+    #   werkzeug
+marshmallow==3.20.1
+    # via
+    #   -r requirements/test.txt
+    #   commercetools
+    #   marshmallow-enum
+marshmallow-enum==1.5.1
+    # via
+    #   -r requirements/test.txt
+    #   commercetools
 mccabe==0.7.0
     # via
     #   -r requirements/test.txt
@@ -284,6 +296,7 @@ packaging==23.1
     # via
     #   -r requirements/test.txt
     #   build
+    #   marshmallow
     #   pytest
     #   sphinx
     #   tox
@@ -291,6 +304,8 @@ pbr==5.11.1
     # via
     #   -r requirements/test.txt
     #   stevedore
+pillow==10.0.0
+    # via -r requirements/test.txt
 pkginfo==1.9.6
     # via twine
 platformdirs==3.10.0
@@ -404,9 +419,11 @@ redis==4.6.0
 requests==2.31.0
     # via
     #   -r requirements/test.txt
+    #   commercetools
     #   coreapi
     #   edx-drf-extensions
     #   edx-rest-api-client
+    #   requests-mock
     #   requests-oauthlib
     #   requests-toolbelt
     #   responses
@@ -415,9 +432,14 @@ requests==2.31.0
     #   sphinx
     #   stripe
     #   twine
+requests-mock==1.11.0
+    # via
+    #   -r requirements/test.txt
+    #   commercetools
 requests-oauthlib==1.3.1
     # via
     #   -r requirements/test.txt
+    #   commercetools
     #   social-auth-core
 requests-toolbelt==1.0.0
     # via twine
@@ -445,6 +467,7 @@ six==1.16.0
     #   edx-lint
     #   edx-sphinx-theme
     #   python-dateutil
+    #   requests-mock
     #   tox
 slumber==0.7.1
     # via
