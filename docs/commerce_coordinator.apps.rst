@@ -8,11 +8,14 @@ Subpackages
    :maxdepth: 4
 
    commerce_coordinator.apps.api
+   commerce_coordinator.apps.commercetools
    commerce_coordinator.apps.core
    commerce_coordinator.apps.demo_lms
    commerce_coordinator.apps.ecommerce
    commerce_coordinator.apps.frontend_app_ecommerce
+   commerce_coordinator.apps.frontend_app_payment
    commerce_coordinator.apps.lms
+   commerce_coordinator.apps.stripe
    commerce_coordinator.apps.titan
 
 Module contents

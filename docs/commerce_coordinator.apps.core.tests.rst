@@ -4,6 +4,14 @@ commerce\_coordinator.apps.core.tests package
 Submodules
 ----------
 
+commerce\_coordinator.apps.core.tests.test\_cache module
+--------------------------------------------------------
+
+.. automodule:: commerce_coordinator.apps.core.tests.test_cache
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
 commerce\_coordinator.apps.core.tests.test\_clients module
 ----------------------------------------------------------
 
@@ -16,6 +24,14 @@ commerce\_coordinator.apps.core.tests.test\_context\_processors module
 ----------------------------------------------------------------------
 
 .. automodule:: commerce_coordinator.apps.core.tests.test_context_processors
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+commerce\_coordinator.apps.core.tests.test\_memcache module
+-----------------------------------------------------------
+
+.. automodule:: commerce_coordinator.apps.core.tests.test_memcache
    :members:
    :undoc-members:
    :show-inheritance:
@@ -40,6 +56,14 @@ commerce\_coordinator.apps.core.tests.test\_signal\_helpers module
 ------------------------------------------------------------------
 
 .. automodule:: commerce_coordinator.apps.core.tests.test_signal_helpers
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+commerce\_coordinator.apps.core.tests.test\_tests\_utils module
+---------------------------------------------------------------
+
+.. automodule:: commerce_coordinator.apps.core.tests.test_tests_utils
    :members:
    :undoc-members:
    :show-inheritance:

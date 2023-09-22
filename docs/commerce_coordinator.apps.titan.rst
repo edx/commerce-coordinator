@@ -28,6 +28,22 @@ commerce\_coordinator.apps.titan.clients module
    :undoc-members:
    :show-inheritance:
 
+commerce\_coordinator.apps.titan.exceptions module
+--------------------------------------------------
+
+.. automodule:: commerce_coordinator.apps.titan.exceptions
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+commerce\_coordinator.apps.titan.filters module
+-----------------------------------------------
+
+.. automodule:: commerce_coordinator.apps.titan.filters
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
 commerce\_coordinator.apps.titan.pipeline module
 ------------------------------------------------
 
