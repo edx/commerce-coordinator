@@ -325,5 +325,5 @@ OPEN_EDX_FILTERS_CONFIG = {
     }
 }
 
-# disable indexing on history_date
+# Setting to keep using deperecated pytz with Django>4
 USE_DEPRECATED_PYTZ = True
