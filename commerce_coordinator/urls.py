@@ -28,10 +28,11 @@ from django.urls import include, re_path
 from rest_framework_swagger.views import get_swagger_view
 
 from commerce_coordinator.apps.api import urls as api_urls
+from commerce_coordinator.apps.commercetools import urls as orders_urls
 from commerce_coordinator.apps.core import views as core_views
 from commerce_coordinator.apps.demo_lms import urls as demo_lms_urls
 from commerce_coordinator.apps.ecommerce import urls as ecommerce_urls
-from commerce_coordinator.apps.frontend_app_ecommerce import urls as orders_urls
+from commerce_coordinator.apps.frontend_app_ecommerce import urls as unified_orders_urls
 from commerce_coordinator.apps.frontend_app_payment import urls as frontend_app_payment_urls
 from commerce_coordinator.apps.lms import urls as lms_urls
 from commerce_coordinator.apps.stripe import urls as stripe_urls
@@ -49,7 +50,8 @@ urlpatterns = oauth2_urlpatterns + [
     re_path('^health/', core_views.health, name='health'),
     re_path('^lms/', include(lms_urls), name='lms'),
     re_path('^titan/', include(titan_urls), name='titan'),
-    re_path('^orders/', include(orders_urls)),
+    re_path('^orders/', include(orders_urls), name='frontend-app-ecommerce'),
+    re_path('^orders/unified/', include(unified_orders_urls), name='commercetools'),
     re_path('^frontend-app-payment/', include(frontend_app_payment_urls)),
     re_path('^stripe/', include(stripe_urls)),
     # DEMO: Currently this is only test code, we may want to decouple LMS code here at some point...
