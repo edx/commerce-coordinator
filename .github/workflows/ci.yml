@@ -17,7 +17,7 @@ jobs:
       matrix:
         os: [ubuntu-20.04]
         python-version: ['3.8']
-        toxenv: [django32, django42, quality, docs, pii_check]
+        toxenv: [django32, django40, django42, quality, docs, pii_check]
 
     steps:
     - uses: actions/checkout@v2
