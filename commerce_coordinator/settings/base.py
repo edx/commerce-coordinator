@@ -324,3 +324,6 @@ OPEN_EDX_FILTERS_CONFIG = {
         ]
     }
 }
+
+# disable indexing on history_date
+USE_DEPRECATED_PYTZ = True
