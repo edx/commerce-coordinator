@@ -3,7 +3,7 @@
 
 celery
 celery[redis]
-Django>=2.2          # Web application framework
+Django
 django-cors-headers
 django-extensions
 django-rest-swagger
