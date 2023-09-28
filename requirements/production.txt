@@ -20,6 +20,7 @@ backports-zoneinfo[tzdata]==0.2.1
     # via
     #   -r requirements/base.txt
     #   celery
+    #   django
     #   kombu
 billiard==4.1.0
     # via
@@ -69,17 +70,17 @@ coreschema==0.0.4
     # via
     #   -r requirements/base.txt
     #   coreapi
-cryptography==41.0.3
+cryptography==41.0.4
     # via
     #   -r requirements/base.txt
     #   pyjwt
     #   social-auth-core
-defusedxml==0.7.1
+defusedxml==0.8.0rc1
     # via
     #   -r requirements/base.txt
     #   python3-openid
     #   social-auth-core
-django==3.2.21
+django==4.2.5
     # via
     #   -r requirements/base.txt
     #   django-cors-headers
@@ -128,15 +129,15 @@ edx-django-utils==5.7.0
     #   -r requirements/base.txt
     #   edx-drf-extensions
     #   edx-rest-api-client
-edx-drf-extensions==8.9.2
+edx-drf-extensions==8.10.0
     # via -r requirements/base.txt
-edx-opaque-keys==2.5.0
+edx-opaque-keys==2.5.1
     # via
     #   -r requirements/base.txt
     #   edx-drf-extensions
 edx-rest-api-client==5.6.0
     # via -r requirements/base.txt
-gevent==23.9.0.post1
+gevent==23.9.1
     # via -r requirements/production.in
 greenlet==2.0.2
     # via gevent
@@ -166,7 +167,7 @@ mysqlclient==2.2.0
     # via
     #   -r requirements/base.txt
     #   -r requirements/production.in
-newrelic==9.0.0
+newrelic==9.1.0
     # via
     #   -r requirements/base.txt
     #   edx-django-utils
@@ -221,7 +222,6 @@ python-dateutil==2.8.2
     # via
     #   -r requirements/base.txt
     #   celery
-    #   edx-drf-extensions
 python3-openid==3.2.0
     # via
     #   -r requirements/base.txt
@@ -229,7 +229,6 @@ python3-openid==3.2.0
 pytz==2023.3.post1
     # via
     #   -r requirements/base.txt
-    #   django
     #   djangorestframework
 pyyaml==6.0.1
     # via
@@ -267,7 +266,6 @@ six==1.16.0
     #   -r requirements/base.txt
     #   edx-auth-backends
     #   edx-django-release-util
-    #   edx-drf-extensions
     #   python-dateutil
 slumber==0.7.1
     # via
@@ -291,9 +289,9 @@ stevedore==5.1.0
     #   -r requirements/base.txt
     #   edx-django-utils
     #   edx-opaque-keys
-stripe==6.2.0
+stripe==6.6.0
     # via -r requirements/base.txt
-typing-extensions==4.7.1
+typing-extensions==4.8.0
     # via
     #   -r requirements/base.txt
     #   asgiref
@@ -309,7 +307,7 @@ uritemplate==4.1.1
     # via
     #   -r requirements/base.txt
     #   coreapi
-urllib3==2.0.4
+urllib3==2.0.5
     # via
     #   -r requirements/base.txt
     #   requests
