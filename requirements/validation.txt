@@ -14,7 +14,7 @@ asgiref==3.7.2
     #   -r requirements/quality.txt
     #   -r requirements/test.txt
     #   django
-astroid==2.15.6
+astroid==2.15.8
     # via
     #   -r requirements/quality.txt
     #   -r requirements/test.txt
@@ -30,16 +30,13 @@ backports-zoneinfo[tzdata]==0.2.1
     #   -r requirements/quality.txt
     #   -r requirements/test.txt
     #   celery
+    #   django
     #   kombu
 billiard==4.1.0
     # via
     #   -r requirements/quality.txt
     #   -r requirements/test.txt
     #   celery
-bleach==6.0.0
-    # via
-    #   -r requirements/quality.txt
-    #   readme-renderer
 celery[redis]==5.3.4
     # via
     #   -r requirements/quality.txt
@@ -108,12 +105,12 @@ coreschema==0.0.4
     #   -r requirements/quality.txt
     #   -r requirements/test.txt
     #   coreapi
-coverage[toml]==7.3.0
+coverage[toml]==7.3.1
     # via
     #   -r requirements/quality.txt
     #   -r requirements/test.txt
     #   pytest-cov
-cryptography==41.0.3
+cryptography==41.0.4
     # via
     #   -r requirements/quality.txt
     #   -r requirements/test.txt
@@ -123,7 +120,7 @@ ddt==1.6.0
     # via
     #   -r requirements/quality.txt
     #   -r requirements/test.txt
-defusedxml==0.7.1
+defusedxml==0.8.0rc1
     # via
     #   -r requirements/quality.txt
     #   -r requirements/test.txt
@@ -139,7 +136,7 @@ distlib==0.3.7
     #   -r requirements/quality.txt
     #   -r requirements/test.txt
     #   virtualenv
-django==3.2.21
+django==4.2.5
     # via
     #   -r requirements/quality.txt
     #   -r requirements/test.txt
@@ -167,7 +164,7 @@ django-crum==0.7.9
     #   edx-django-utils
 django-debug-toolbar==4.2.0
     # via -r requirements/quality.txt
-django-dynamic-fixture==4.0.0
+django-dynamic-fixture==4.0.1
     # via
     #   -r requirements/quality.txt
     #   -r requirements/test.txt
@@ -215,7 +212,7 @@ edx-django-utils==5.7.0
     #   -r requirements/test.txt
     #   edx-drf-extensions
     #   edx-rest-api-client
-edx-drf-extensions==8.9.2
+edx-drf-extensions==8.10.0
     # via
     #   -r requirements/quality.txt
     #   -r requirements/test.txt
@@ -223,7 +220,7 @@ edx-lint==5.3.4
     # via
     #   -r requirements/quality.txt
     #   -r requirements/test.txt
-edx-opaque-keys==2.5.0
+edx-opaque-keys==2.5.1
     # via
     #   -r requirements/quality.txt
     #   -r requirements/test.txt
@@ -237,7 +234,7 @@ exceptiongroup==1.1.3
     #   -r requirements/quality.txt
     #   -r requirements/test.txt
     #   pytest
-filelock==3.12.3
+filelock==3.12.4
     # via
     #   -r requirements/quality.txt
     #   -r requirements/test.txt
@@ -253,7 +250,7 @@ importlib-metadata==6.8.0
     #   -r requirements/quality.txt
     #   keyring
     #   twine
-importlib-resources==6.0.1
+importlib-resources==6.1.0
     # via
     #   -r requirements/quality.txt
     #   keyring
@@ -326,11 +323,15 @@ mysqlclient==2.2.0
     # via
     #   -r requirements/quality.txt
     #   -r requirements/test.txt
-newrelic==9.0.0
+newrelic==9.1.0
     # via
     #   -r requirements/quality.txt
     #   -r requirements/test.txt
     #   edx-django-utils
+nh3==0.2.14
+    # via
+    #   -r requirements/quality.txt
+    #   readme-renderer
 oauthlib==3.2.2
     # via
     #   -r requirements/quality.txt
@@ -411,7 +412,7 @@ pyjwt[crypto]==2.8.0
     #   edx-drf-extensions
     #   edx-rest-api-client
     #   social-auth-core
-pylint==2.17.5
+pylint==2.17.6
     # via
     #   -r requirements/quality.txt
     #   -r requirements/test.txt
@@ -445,7 +446,7 @@ pynacl==1.5.0
     #   -r requirements/quality.txt
     #   -r requirements/test.txt
     #   edx-django-utils
-pytest==7.4.1
+pytest==7.4.2
     # via
     #   -r requirements/quality.txt
     #   -r requirements/test.txt
@@ -464,7 +465,6 @@ python-dateutil==2.8.2
     #   -r requirements/quality.txt
     #   -r requirements/test.txt
     #   celery
-    #   edx-drf-extensions
 python-slugify==8.0.1
     # via
     #   -r requirements/quality.txt
@@ -479,7 +479,6 @@ pytz==2023.3.post1
     # via
     #   -r requirements/quality.txt
     #   -r requirements/test.txt
-    #   django
     #   djangorestframework
 pyyaml==6.0.1
     # via
@@ -488,7 +487,7 @@ pyyaml==6.0.1
     #   code-annotations
     #   edx-django-release-util
     #   responses
-readme-renderer==41.0
+readme-renderer==42.0
     # via
     #   -r requirements/quality.txt
     #   twine
@@ -528,7 +527,7 @@ rfc3986==2.0.0
     # via
     #   -r requirements/quality.txt
     #   twine
-rich==13.5.2
+rich==13.5.3
     # via
     #   -r requirements/quality.txt
     #   twine
@@ -546,10 +545,8 @@ six==1.16.0
     # via
     #   -r requirements/quality.txt
     #   -r requirements/test.txt
-    #   bleach
     #   edx-auth-backends
     #   edx-django-release-util
-    #   edx-drf-extensions
     #   edx-lint
     #   python-dateutil
     #   tox
@@ -586,11 +583,11 @@ stevedore==5.1.0
     #   code-annotations
     #   edx-django-utils
     #   edx-opaque-keys
-stripe==6.2.0
+stripe==6.6.0
     # via
     #   -r requirements/quality.txt
     #   -r requirements/test.txt
-testfixtures==7.1.0
+testfixtures==7.2.0
     # via
     #   -r requirements/quality.txt
     #   -r requirements/test.txt
@@ -618,19 +615,18 @@ tox==3.28.0
     #   -r requirements/test.txt
 twine==4.0.2
     # via -r requirements/quality.txt
-types-pyyaml==6.0.12.11
+types-pyyaml==6.0.12.12
     # via
     #   -r requirements/quality.txt
     #   -r requirements/test.txt
     #   responses
-typing-extensions==4.7.1
+typing-extensions==4.8.0
     # via
     #   -r requirements/quality.txt
     #   -r requirements/test.txt
     #   asgiref
     #   astroid
     #   edx-opaque-keys
-    #   filelock
     #   kombu
     #   pylint
     #   rich
@@ -646,7 +642,7 @@ uritemplate==4.1.1
     #   -r requirements/quality.txt
     #   -r requirements/test.txt
     #   coreapi
-urllib3==2.0.4
+urllib3==2.0.5
     # via
     #   -r requirements/quality.txt
     #   -r requirements/test.txt
@@ -660,7 +656,7 @@ vine==5.0.0
     #   amqp
     #   celery
     #   kombu
-virtualenv==20.24.4
+virtualenv==20.24.5
     # via
     #   -r requirements/quality.txt
     #   -r requirements/test.txt
@@ -670,16 +666,12 @@ wcwidth==0.2.6
     #   -r requirements/quality.txt
     #   -r requirements/test.txt
     #   prompt-toolkit
-webencodings==0.5.1
-    # via
-    #   -r requirements/quality.txt
-    #   bleach
 wrapt==1.15.0
     # via
     #   -r requirements/quality.txt
     #   -r requirements/test.txt
     #   astroid
-zipp==3.16.2
+zipp==3.17.0
     # via
     #   -r requirements/quality.txt
     #   importlib-metadata
