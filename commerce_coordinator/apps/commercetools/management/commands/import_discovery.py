@@ -101,6 +101,7 @@ class ExitCode:
     BAD_BATCH_CONTAINER = 4
 
     IDENTIFIER_PROTECTION_FAILURE = 127
+    ABEND = 100
 
 
 class DiscoIndex(Enum):
@@ -550,8 +551,15 @@ class Command(TimedCommand):
         parser.add_argument("discovery_host", nargs="?", type=str, default="http://127.0.0.1:9200")
         pass
 
+    # noinspection PyUnreachableCode
     @no_translations
     def handle(self, *args, **options):
+
+        print("This command has been disabled as another team is building this. The file is being retained as a "
+              "reference implementation.")
+
+        exit(ExitCode.ABEND)
+
         self.accumulator = BatchAccumulator(self.start)
         container_key = self.accumulator.generate_container_name()
         config = django.conf.settings.COMMERCETOOLS_CONFIG
