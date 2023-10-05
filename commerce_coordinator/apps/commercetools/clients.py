@@ -98,24 +98,60 @@ class CommercetoolsAPIClient:  # (BaseEdxOAuthClient): ???
 
         return ret
 
+    def get_customer_by_lms_user_id(self, lms_user_id: int) -> Optional[CTCustomer]:
         """
-        Call ecommerce API overview endpoint for data about an order.
+        Get a Commercetools Customer by their LMS User ID
 
-        Arguments:
-            edx_lms_user_id: restrict to orders by this username
+        Args:
+            lms_user_id: edX LMS User ID
+
         Returns:
-            dict: Dictionary represention of JSON returned from API
+            Optional[CTCustomer], A Commercetools Customer Object, or None if not found, may throw if more than one user
+             is returned.
+        """
+
+        edx_lms_user_id_key = EdXFieldNames.LMS_USER_ID
+
+        # NOTE: I have a question to CT of if we can use parameter binding here. (Row 41)
+        results = self.base_client.customers.query(
+            where=f'custom(fields({edx_lms_user_id_key}={lms_user_id}))',
+            limit=2
+        )
+
+        if results.count > 1:
+            # We are unable due to CT Limitations to enforce this on the catalog side, so lets do a backhanded check
+            #   by trying to pull 2 users and erroring if we find a discrepancy.
+            raise ValueError("More than one user was returned from the catalog with this edX LMS User ID, these must "
+                             "be unique.")
+        elif results.count == 0:
+            return None
+        else:
+            return results.results[0]
+
+    def get_orders(self, edx_lms_user_id: int, offset=0, limit=10) -> PaginatedResult[CTOrder]:
+        """
+        Call commercetools API overview endpoint for data about an order.
+
+        Keyword Args:
+            edx_lms_user_id: restrict to orders by this username
+
+        Returns:
+            PaginatedResult[CTOrder]: Dictionary representation of JSON returned from API
 
         See sample response in tests.py
 
         """
-        return None
-        # try:
-        #     resource_url = urljoin_directory(self.api_base_url, '/orders')
-        #     response = self.client.get(resource_url, params=query_params)
-        #     response.raise_for_status()
-        #     self.log_request_response(logger, response)
-        # except RequestException as exc:
-        #     self.log_request_exception(logger, exc)
-        #     raise
-        # return response.json()
+        customer = self.get_customer_by_lms_user_id(edx_lms_user_id)
+
+        if customer is None:
+            raise ValueError(f'Unable to locate customer with ID #{edx_lms_user_id}')
+
+        values = self.base_client.orders.query(
+            where="customerId=:cid",
+            predicate_var={'cid': customer.id},
+            sort="completedAt desc",
+            limit=limit,
+            offset=offset
+        )
+
+        return PaginatedResult(values.results, values.total, values.offset)
