@@ -1,6 +1,6 @@
 import django.conf
-from commercetools import Client as CTClient
 
+from commerce_coordinator.apps.commercetools.clients import CommercetoolsAPIClient
 from commerce_coordinator.apps.commercetools.management.commands._timed_command import TimedCommand
 
 
@@ -16,11 +16,4 @@ class CommercetoolsAPIClientCommand(TimedCommand):
 
         print(f'Using commercetools API config: {config["projectKey"]} / {config["importUrl"]}')
 
-        self.ct_api_client = CTClient(
-            client_id=config["clientId"],
-            client_secret=config["clientSecret"],
-            scope=[config["scopes"]],
-            url=config["apiUrl"],
-            token_url=config["authUrl"],
-            project_key=config["projectKey"]
-        )
+        self.ct_api_client = CommercetoolsAPIClient()
