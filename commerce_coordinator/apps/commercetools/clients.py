@@ -57,7 +57,7 @@ class CommercetoolsAPIClient:  # (BaseEdxOAuthClient): ???
             project_key=config["projectKey"]
         )
 
-    def ensure_custom_type_exists(self, type_def: CTTypeDraft) -> CTType:
+    def ensure_custom_type_exists(self, type_def: CTTypeDraft) -> Optional[CTType]:
         type_object = None
         type_exists = False
         try:
@@ -75,7 +75,7 @@ class CommercetoolsAPIClient:  # (BaseEdxOAuthClient): ???
     def tag_customer_with_lms_user_ud(self, customer: CTCustomer, lms_user_id: int) -> CTCustomer:
 
         # All updates to CT Core require the version of the object you are working on as protection from out of band
-        #   updates, this does mean we have to fetch every (primary) object we want to chain.
+        #   updates; this does mean we have to fetch every (primary) object we want to chain.
 
         type_object = self.ensure_custom_type_exists(TwoUCustomTypes.CUSTOMER_TYPE_DRAFT)
 
@@ -120,8 +120,8 @@ class CommercetoolsAPIClient:  # (BaseEdxOAuthClient): ???
         )
 
         if results.count > 1:
-            # We are unable due to CT Limitations to enforce this on the catalog side, so lets do a backhanded check
-            #   by trying to pull 2 users and erroring if we find a discrepancy.
+            # We are unable due to CT Limitations to enforce unique LMS ID values on Customers on the catalog side, so
+            #   let's do a backhanded check by trying to pull 2 users and erroring if we find a discrepancy.
             raise ValueError("More than one user was returned from the catalog with this edX LMS User ID, these must "
                              "be unique.")
         elif results.count == 0:
