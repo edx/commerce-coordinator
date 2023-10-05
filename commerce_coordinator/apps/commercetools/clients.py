@@ -8,11 +8,12 @@ from typing import Generic, List, Optional, TypeVar
 from commercetools import Client as CTClient
 from commercetools import CommercetoolsError
 from commercetools.platform.models import Customer as CTCustomer
-from commercetools.platform.models import CustomerSetCustomTypeAction, FieldContainer
+from commercetools.platform.models import CustomerSetCustomTypeAction as CTCustomerSetCustomTypeAction
+from commercetools.platform.models import FieldContainer as CTFieldContainer
 from commercetools.platform.models import Order as CTOrder
 from commercetools.platform.models import Type as CTType
 from commercetools.platform.models import TypeDraft as CTTypeDraft
-from commercetools.platform.models import TypeResourceIdentifier
+from commercetools.platform.models import TypeResourceIdentifier as CTTypeResourceIdentifier
 from django.conf import settings
 
 from commerce_coordinator.apps.commercetools.catalog_info.constants import EdXFieldNames
@@ -88,11 +89,11 @@ class CommercetoolsAPIClient:  # (BaseEdxOAuthClient): ???
                              "Custom Type)")
 
         ret = self.base_client.customers.update_by_id(customer.id, customer.version, actions=[
-            CustomerSetCustomTypeAction(
-                type=TypeResourceIdentifier(
+            CTCustomerSetCustomTypeAction(
+                type=CTTypeResourceIdentifier(
                     key=TwoUCustomTypes.CUSTOMER_TYPE_DRAFT.key,
                 ),
-                fields=FieldContainer({EdXFieldNames.LMS_USER_ID: lms_user_id})
+                fields=CTFieldContainer({EdXFieldNames.LMS_USER_ID: lms_user_id})
             ),
         ])
 
