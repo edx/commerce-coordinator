@@ -2,8 +2,9 @@ import json
 
 from django.core.management.base import no_translations
 
-from commerce_coordinator.apps.commercetools.management.commands._ct_api_client_command import \
+from commerce_coordinator.apps.commercetools.management.commands._ct_api_client_command import (
     CommercetoolsAPIClientCommand
+)
 
 MAX_RESULTS = 200
 
@@ -18,7 +19,7 @@ class Command(CommercetoolsAPIClientCommand):
     @no_translations
     def handle(self, *args, **options):
         offset = options['offset']
-        ret = self.ct_api_client.types.query(limit=MAX_RESULTS + 1, offset=offset)
+        ret = self.ct_api_client.base_client.types.query(limit=MAX_RESULTS + 1, offset=offset)
 
         types = ret.results
 
