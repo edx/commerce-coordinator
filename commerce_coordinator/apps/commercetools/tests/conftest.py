@@ -1,7 +1,9 @@
+import json
 import typing
 
 import requests_mock
 from commercetools import Client
+from commercetools.platform.models import Customer as CTCustomer
 from commercetools.testing import BackendRepository
 
 from commerce_coordinator.apps.commercetools.clients import CommercetoolsAPIClient
@@ -15,6 +17,58 @@ TESTING_COMMERCETOOLS_CONFIG = {
     'authUrl': "https://auth.europe-west1.gcp.commercetools.com/oauth/token",
     'projectKey': "unittest",
 }
+
+EXAMPLE_CUSTOMER = CTCustomer.deserialize(json.loads(
+    """
+    {
+      "id": "f7f54eef-3ece-4bd2-a432-ffc3b3398507",
+      "version": 17,
+      "createdAt": "2023-09-25T16:21:19.698000+00:00",
+      "lastModifiedAt": "2023-10-05T17:48:27.495000+00:00",
+      "customerNumber": "raisinets",
+      "lastModifiedBy": {
+        "clientId": "wdnYt1yvChl2Fug2V_7-Dyf_"
+      },
+      "createdBy": {
+        "clientId": "zUJB9Qh3BIc7wMABr38piyuN"
+      },
+      "email": "test35@example.com",
+      "password": "****gCk=",
+      "firstName": "Glenns",
+      "lastName": "User",
+      "middleName": "Testing",
+      "title": "",
+      "addresses": [
+        {
+          "id": "G6cbqTeY",
+          "country": "US",
+          "postalCode": "54000",
+          "city": "New Jersey"
+        }
+      ],
+      "defaultShippingAddressId": "G6cbqTeY",
+      "shippingAddressIds": [
+        "G6cbqTeY"
+      ],
+      "billingAddressIds": [
+      ],
+      "isEmailVerified": false,
+      "custom": {
+        "type": {
+          "typeId": "type",
+          "id": "52dc06db-07be-458e-80db-253c5d6c7e59"
+        },
+        "fields": {
+          "edx-lms_user_id": 17
+        }
+      },
+      "salutation": "",
+      "stores": [
+      ],
+      "authenticationMode": "Password"
+    }
+    """
+))
 
 
 def _default_client_factory() -> CommercetoolsAPIClient:

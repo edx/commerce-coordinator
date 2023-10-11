@@ -90,7 +90,7 @@ class CommercetoolsAPIClient:  # (BaseEdxOAuthClient): ???
 
         return type_object
 
-    def tag_customer_with_lms_user_ud(self, customer: CTCustomer, lms_user_id: int) -> CTCustomer:
+    def tag_customer_with_lms_user_id(self, customer: CTCustomer, lms_user_id: int) -> CTCustomer:
 
         # All updates to CT Core require the version of the object you are working on as protection from out of band
         #   updates; this does mean we have to fetch every (primary) object we want to chain.

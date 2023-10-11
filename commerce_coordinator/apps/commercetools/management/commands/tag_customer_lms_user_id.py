@@ -23,7 +23,7 @@ class Command(CommercetoolsAPIClientCommand):
         customer = self.ct_api_client.base_client.customers.get_by_id(customer_uuid)
 
         try:
-            result_customer = self.ct_api_client.tag_customer_with_lms_user_ud(customer, edx_lms_user_id)
+            result_customer = self.ct_api_client.tag_customer_with_lms_user_id(customer, edx_lms_user_id)
             print(json.dumps(result_customer.serialize()))
         except ValueError as error:
             print(error)
