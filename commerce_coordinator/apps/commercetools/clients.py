@@ -3,6 +3,7 @@ API clients for commercetools app.
 """
 
 import logging
+import typing
 from typing import Generic, List, Optional, TypeVar
 
 import requests
@@ -19,6 +20,7 @@ from django.conf import settings
 
 from commerce_coordinator.apps.commercetools.catalog_info.constants import EdXFieldNames
 from commerce_coordinator.apps.commercetools.catalog_info.foundational_types import TwoUCustomTypes
+from commerce_coordinator.apps.core import is_under_test
 from commerce_coordinator.apps.core.constants import ORDER_HISTORY_PER_SYSTEM_REQ_LIMIT
 
 logger = logging.getLogger(__name__)
@@ -47,18 +49,20 @@ class PaginatedResult(Generic[T]):
 class CommercetoolsAPIClient:  # (BaseEdxOAuthClient): ???
     base_client = None
 
-    def __init__(self, client=None):
+    def __init__(self, client: typing.Optional[CTClient] = None):
         """
         Initialize CommercetoolsAPIClient, for use in an application, or (with an arg) testing.
 
         Args:
-             client(object): A mock client for testing (ONLY).
+             client(CTClient): A mock client for testing (ONLY).
         """
         super().__init__()
 
-        if client:
+        if client and not is_under_test():  # guard client
+            raise RuntimeError('You must be invoking this through a test runner to supply a client.')
+        elif client:  # we're under test so let's accept it
             self.base_client = client
-        else:
+        else:  # were not testing, let's build our own
             config = settings.COMMERCETOOLS_CONFIG
             self.base_client = CTClient(
                 client_id=config["clientId"],
