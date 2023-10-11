@@ -2,6 +2,8 @@
 import pytest
 from commercetools import Client as CTClient
 from commercetools.platform.models import Customer, CustomerDraft, Type, TypeDraft
+
+from commerce_coordinator.apps.commercetools.catalog_info.constants import EdXFieldNames
 from conftest import EXAMPLE_CUSTOMER, TESTING_COMMERCETOOLS_CONFIG, APITestingSet
 from django.test import TestCase, override_settings
 
@@ -67,3 +69,19 @@ class ClientTests(TestCase):
         # the test suite cant properly update custom fields... so we should expect it to match the draft, its more
         # important we didnt throw an exception
         self.assertEqual(ret_val.custom.fields, customer_draft.custom.fields)
+        # Atleast we know a change was tracked, even if the testing utils ignore the actual one
+        self.assertEqual(ret_val.version, customer.version + 1)
+
+    def test_get_customer_by_lms_user_id(self):
+        id_num = 127
+        type_val = self.client_set.client.ensure_custom_type_exists(TwoUCustomTypes.CUSTOMER_TYPE_DRAFT)
+        customer = EXAMPLE_CUSTOMER
+        customer.custom.fields[EdXFieldNames.LMS_USER_ID] = id_num
+
+        # The Draft converter, changes the ID so lets update our customer and draft.
+        customer.custom.type.id = type_val.id
+
+        self.client_set.backend_repo.customers.add_existing(customer)
+        ret_val = self.client_set.client.get_customer_by_lms_user_id(id_num)
+
+        self.assertEqual(ret_val.custom.fields[EdXFieldNames.LMS_USER_ID], id_num)
