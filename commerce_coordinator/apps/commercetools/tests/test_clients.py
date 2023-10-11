@@ -4,7 +4,7 @@ from commercetools.platform.models import Type
 from django.test import TestCase
 
 from commerce_coordinator.apps.commercetools.catalog_info.foundational_types import TwoUCustomTypes
-from conftest import APITestingSet, commercetools_client_set
+from conftest import APITestingSet
 
 
 class ClientTests(TestCase):
@@ -12,7 +12,7 @@ class ClientTests(TestCase):
 
     def setUp(self) -> None:
         super().setUp()
-        self.client_set = commercetools_client_set()
+        self.client_set = APITestingSet.new_instance()
 
     def test_ensure_custom_type_exists(self):
         draft = TwoUCustomTypes.CUSTOMER_TYPE_DRAFT

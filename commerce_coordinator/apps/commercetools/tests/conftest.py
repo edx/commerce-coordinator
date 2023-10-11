@@ -13,7 +13,7 @@ class APITestingSet:
     def __init__(self, mocker: requests_mock.Mocker, repo: BackendRepository):
         self.mocker = mocker
         self.backend_repo = repo
-        mocker.start()
+        mocker.start()  # Creating a client calls oauth, so Mocker needs to be live first.
         self.client = CommercetoolsAPIClient(Client(
             project_key="unittest",
             client_id="client-id",
@@ -26,9 +26,9 @@ class APITestingSet:
     def __del__(self):
         self.mocker.stop()
 
-
-def commercetools_client_set() -> APITestingSet:
-    m = requests_mock.Mocker(real_http=True, case_sensitive=False)
-    repo = BackendRepository()
-    repo.register(m)
-    return APITestingSet(m, repo)
+    @staticmethod
+    def new_instance():
+        m = requests_mock.Mocker(real_http=True, case_sensitive=False)
+        repo = BackendRepository()
+        repo.register(m)
+        return APITestingSet(m, repo)
