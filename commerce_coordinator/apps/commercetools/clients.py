@@ -5,6 +5,7 @@ API clients for commercetools app.
 import logging
 from typing import Generic, List, Optional, TypeVar
 
+import requests
 from commercetools import Client as CTClient
 from commercetools import CommercetoolsError
 from commercetools.platform.models import Customer as CTCustomer
@@ -18,6 +19,7 @@ from django.conf import settings
 
 from commerce_coordinator.apps.commercetools.catalog_info.constants import EdXFieldNames
 from commerce_coordinator.apps.commercetools.catalog_info.foundational_types import TwoUCustomTypes
+from commerce_coordinator.apps.core.constants import ORDER_HISTORY_PER_SYSTEM_REQ_LIMIT
 
 logger = logging.getLogger(__name__)
 
@@ -45,17 +47,27 @@ class PaginatedResult(Generic[T]):
 class CommercetoolsAPIClient:  # (BaseEdxOAuthClient): ???
     base_client = None
 
-    def __init__(self):
+    def __init__(self, client=None):
+        """
+        Initialize CommercetoolsAPIClient, for use in an application, or (with an arg) testing.
+
+        Args:
+             client(object): A mock client for testing (ONLY).
+        """
         super().__init__()
-        config = settings.COMMERCETOOLS_CONFIG
-        self.base_client = CTClient(
-            client_id=config["clientId"],
-            client_secret=config["clientSecret"],
-            scope=[config["scopes"]],
-            url=config["apiUrl"],
-            token_url=config["authUrl"],
-            project_key=config["projectKey"]
-        )
+
+        if client:
+            self.base_client = client
+        else:
+            config = settings.COMMERCETOOLS_CONFIG
+            self.base_client = CTClient(
+                client_id=config["clientId"],
+                client_secret=config["clientSecret"],
+                scope=[config["scopes"]],
+                url=config["apiUrl"],
+                token_url=config["authUrl"],
+                project_key=config["projectKey"]
+            )
 
     def ensure_custom_type_exists(self, type_def: CTTypeDraft) -> Optional[CTType]:
         type_object = None
@@ -65,6 +77,8 @@ class CommercetoolsAPIClient:  # (BaseEdxOAuthClient): ???
             type_exists = True
         except CommercetoolsError as _:
             # commercetools.exceptions.CommercetoolsError: The Resource with key 'edx-user_information' was not found.
+            pass
+        except requests.exceptions.HTTPError as _:  # The test framework doesn't wrap to CommercetoolsError
             pass
 
         if not type_exists:
@@ -129,7 +143,9 @@ class CommercetoolsAPIClient:  # (BaseEdxOAuthClient): ???
         else:
             return results.results[0]
 
-    def get_orders(self, edx_lms_user_id: int, offset=0, limit=10) -> PaginatedResult[CTOrder]:
+    def get_orders(self, edx_lms_user_id: int, offset=0,
+                   limit=ORDER_HISTORY_PER_SYSTEM_REQ_LIMIT) -> PaginatedResult[CTOrder]:
+
         """
         Call commercetools API overview endpoint for data about an order.
 
