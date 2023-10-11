@@ -86,3 +86,7 @@ class HttpHeadersNames(Enum):
 
     CONTENT_TYPE = 'Content-type'
     """Set the Content Type of a Response"""
+
+
+ORDER_HISTORY_PER_SYSTEM_REQ_LIMIT = 200
+"""The number of Order History items to pull per Catalog/Ordering System"""
