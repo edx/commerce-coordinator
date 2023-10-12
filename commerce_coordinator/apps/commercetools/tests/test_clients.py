@@ -4,11 +4,10 @@ import uuid
 import pytest
 from commercetools import Client as CTClient
 from commercetools.platform.models import Customer, CustomerDraft, Type, TypeDraft
-
-from commerce_coordinator.apps.commercetools.catalog_info.constants import EdXFieldNames
-from conftest import gen_example_customer, TESTING_COMMERCETOOLS_CONFIG, APITestingSet
+from conftest import TESTING_COMMERCETOOLS_CONFIG, APITestingSet, gen_example_customer
 from django.test import TestCase, override_settings
 
+from commerce_coordinator.apps.commercetools.catalog_info.constants import EdXFieldNames
 from commerce_coordinator.apps.commercetools.catalog_info.foundational_types import TwoUCustomTypes
 from commerce_coordinator.apps.commercetools.clients import CommercetoolsAPIClient, PaginatedResult
 

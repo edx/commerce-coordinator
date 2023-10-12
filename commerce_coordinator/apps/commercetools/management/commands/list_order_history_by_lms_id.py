@@ -11,28 +11,31 @@ MAX_RESULTS = ORDER_HISTORY_PER_SYSTEM_REQ_LIMIT
 
 
 class Command(CommercetoolsAPIClientCommand):
-    help = "List the custom types defined in Commercetools (as this isn't available via the Merchant Center)"
+    help = "Get Order History from Commercetools by LMS User ID"
 
     # Django Overrides
     def add_arguments(self, parser):
+        parser.add_argument("edx_lms_user_id", nargs='?', type=int)
         parser.add_argument("--offset", nargs='?', type=int, default=0)
 
     @no_translations
     def handle(self, *args, **options):
+        edx_lms_user_id = options['edx_lms_user_id']
+
         offset = options['offset']
-        ret = self.ct_api_client.base_client.types.query(limit=MAX_RESULTS + 1, offset=offset)
+        ret = self.ct_api_client.get_orders(edx_lms_user_id=edx_lms_user_id, limit=MAX_RESULTS + 1, offset=offset)
 
-        types = ret.results
+        orders = ret.results
 
-        if len(types) > MAX_RESULTS:
-            types.pop()  # +1 not needed
+        if len(orders) > MAX_RESULTS:
+            orders.pop()  # +1 not needed
 
         print(json.dumps(
-            [x.serialize() for x in types],
+            [x.serialize() for x in orders],
             indent=2
         ))
 
-        if ret.count <= MAX_RESULTS:
+        if ret.total <= MAX_RESULTS:
             print("No More Results Available")
         else:
             print(f"There are more results, paginating at {MAX_RESULTS}, current offset: {offset}")
