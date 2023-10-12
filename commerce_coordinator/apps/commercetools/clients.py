@@ -58,7 +58,8 @@ class CommercetoolsAPIClient:  # (BaseEdxOAuthClient): ???
         """
         super().__init__()
 
-        if client and not is_under_test():  # guard client
+        if client and not is_under_test():  # pragma: no cover
+            # guard client
             raise RuntimeError('You must be invoking this through a test runner to supply a client.')
         elif client:  # we're under test so let's accept it
             self.base_client = client
@@ -79,7 +80,7 @@ class CommercetoolsAPIClient:  # (BaseEdxOAuthClient): ???
         try:
             type_object = self.base_client.types.get_by_key(type_def.key)
             type_exists = True
-        except CommercetoolsError as _:
+        except CommercetoolsError as _:  # pragma: no cover
             # commercetools.exceptions.CommercetoolsError: The Resource with key 'edx-user_information' was not found.
             pass
         except requests.exceptions.HTTPError as _:  # The test framework doesn't wrap to CommercetoolsError
@@ -90,7 +91,7 @@ class CommercetoolsAPIClient:  # (BaseEdxOAuthClient): ???
 
         return type_object
 
-    def tag_customer_with_lms_user_id(self, customer: CTCustomer, lms_user_id: int) -> CTCustomer:
+    def tag_customer_with_lms_user_info(self, customer: CTCustomer, lms_user_id: int, lms_user_name: str) -> CTCustomer:
 
         # All updates to CT Core require the version of the object you are working on as protection from out of band
         #   updates; this does mean we have to fetch every (primary) object we want to chain.
@@ -111,7 +112,10 @@ class CommercetoolsAPIClient:  # (BaseEdxOAuthClient): ???
                 type=CTTypeResourceIdentifier(
                     key=TwoUCustomTypes.CUSTOMER_TYPE_DRAFT.key,
                 ),
-                fields=CTFieldContainer({EdXFieldNames.LMS_USER_ID: lms_user_id})
+                fields=CTFieldContainer({
+                    EdXFieldNames.LMS_USER_ID: f"{lms_user_id}",
+                    EdXFieldNames.LMS_USER_NAME: lms_user_name
+                })
             ),
         ])
 
@@ -131,10 +135,10 @@ class CommercetoolsAPIClient:  # (BaseEdxOAuthClient): ???
 
         edx_lms_user_id_key = EdXFieldNames.LMS_USER_ID
 
-        # NOTE: I have a question to CT of if we can use parameter binding here. (Row 41)
         results = self.base_client.customers.query(
-            where=f'custom(fields({edx_lms_user_id_key}={lms_user_id}))',
-            limit=2
+            where=f'custom(fields({edx_lms_user_id_key}=:id))',
+            limit=2,
+            predicate_var={'id': f"{lms_user_id}"}
         )
 
         if results.count > 1:

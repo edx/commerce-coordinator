@@ -34,6 +34,14 @@ def _default_client_factory() -> CommercetoolsAPIClient:
     ))
 
 
+StorageKey = typing.Literal[  # So people don't have to guess the storage keys
+    'cart', 'category', 'channel', 'cart-discounts', 'custom-object', 'customer-group',
+    'customer', 'discount-code', 'extension', 'inventory-entry', 'order', 'payment',
+    'project', 'product', 'product-discount', 'product-type', 'review', 'shipping-method',
+    'shopping-list', 'state', 'store', 'tax-category', 'type', 'subscription', 'zones'
+]
+
+
 class APITestingSet:
     """
     Coordinator API Testing Set
@@ -76,6 +84,30 @@ class APITestingSet:
         """ Deconstructor """
         self._mocker.stop()
 
+    # We have to hack the SDK a small bit to make some things work, these are helpers to keep this uniform
+    def fetch_from_storage(self, singular_item_name: StorageKey, klass: type = None):
+        """
+        Fetch a set of objects from internal backing store storage, these are in raw form and need to be deserialized
+
+        Args:
+            singular_item_name: Storage Key
+            klass (type): (As Class Name, not __class__) if supplied, we will give you instances of an object and not
+                just dictionaries
+        """
+        # noinspection PyProtectedMember
+        raw_objs = list(self.backend_repo._storage._stores[singular_item_name].values())
+
+        if klass:
+            # noinspection PyUnresolvedReferences
+            return [klass.deserialize(o) for o in raw_objs]
+
+        return raw_objs
+
+    def get_base_url_from_client(self) -> str:
+        # noinspection PyProtectedMember
+        return self.client.base_client._base_url
+
+    # Instance Creators
     @staticmethod
     def new_instance(
         client_builder: typing.Optional[typing.Callable[[], CommercetoolsAPIClient]] = _default_client_factory
@@ -93,7 +125,7 @@ class APITestingSet:
 
 
 # Data Blobs
-def gen_order(uuid):
+def gen_order(uuid_id):
     obj = json.loads(
         """
           {
@@ -324,7 +356,7 @@ def gen_order(uuid):
           }
         """
     )
-    obj['id'] = uuid
+    obj['id'] = uuid_id
     return CTOrder.deserialize(obj)
 
 

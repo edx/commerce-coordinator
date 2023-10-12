@@ -16,6 +16,8 @@ async-timeout==4.0.3
     # via
     #   -r requirements/base.txt
     #   redis
+attrs==23.1.0
+    # via -r requirements/base.txt
 backports-zoneinfo[tzdata]==0.2.1
     # via
     #   -r requirements/base.txt
@@ -76,6 +78,8 @@ cryptography==41.0.3
     #   -r requirements/base.txt
     #   pyjwt
     #   social-auth-core
+currencies==2020.12.12
+    # via -r requirements/base.txt
 defusedxml==0.7.1
     # via
     #   -r requirements/base.txt
