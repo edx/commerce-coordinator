@@ -4,7 +4,7 @@ import uuid
 import pytest
 from commercetools import Client as CTClient
 from commercetools.platform.models import Customer, CustomerDraft, Type, TypeDraft
-from conftest import TESTING_COMMERCETOOLS_CONFIG, APITestingSet, gen_example_customer
+from conftest import gen_order_history, TESTING_COMMERCETOOLS_CONFIG, APITestingSet, gen_example_customer
 from django.test import TestCase, override_settings
 
 from commerce_coordinator.apps.commercetools.catalog_info.constants import EdXFieldNames
@@ -86,6 +86,14 @@ class ClientTests(TestCase):
         # Atleast we know a change was tracked, even if the testing utils ignore the actual one
         self.assertEqual(ret_val.version, customer.version + 1)
 
+    def test_get_customer_by_lms_user_id_user_missing(self):
+        id_num = 127
+        _ = self.client_set.client.ensure_custom_type_exists(TwoUCustomTypes.CUSTOMER_TYPE_DRAFT)
+
+        ret_val = self.client_set.client.get_customer_by_lms_user_id(id_num)
+
+        self.assertIsNone(ret_val)
+
     def test_get_customer_by_lms_user_id(self):
         id_num = 127
         type_val = self.client_set.client.ensure_custom_type_exists(TwoUCustomTypes.CUSTOMER_TYPE_DRAFT)
@@ -118,6 +126,10 @@ class ClientTests(TestCase):
         # the query/where in the test cases doesnt support custom field names so it returns everything.
         with pytest.raises(ValueError) as _:
             _ = self.client_set.client.get_customer_by_lms_user_id(id_num)
+
+    def test_order_history_throws_if_user_not_found(self):
+        with pytest.raises(ValueError) as _:
+            _ = self.client_set.client.get_orders(995)
 
 
 class PaginatedResultsTest(TestCase):
