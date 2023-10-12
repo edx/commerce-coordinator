@@ -10,7 +10,7 @@ from conftest import gen_example_customer, TESTING_COMMERCETOOLS_CONFIG, APITest
 from django.test import TestCase, override_settings
 
 from commerce_coordinator.apps.commercetools.catalog_info.foundational_types import TwoUCustomTypes
-from commerce_coordinator.apps.commercetools.clients import CommercetoolsAPIClient
+from commerce_coordinator.apps.commercetools.clients import CommercetoolsAPIClient, PaginatedResult
 
 
 class ClientTests(TestCase):
@@ -119,3 +119,19 @@ class ClientTests(TestCase):
         # the query/where in the test cases doesnt support custom field names so it returns everything.
         with pytest.raises(ValueError) as _:
             _ = self.client_set.client.get_customer_by_lms_user_id(id_num)
+
+
+class PaginatedResultsTest(TestCase):
+    def test_data_class_does_have_more(self):
+        data = [i for i in range(0, 11)]
+        paginated = PaginatedResult(data[:10], len(data), 0)
+
+        self.assertEqual(paginated.has_more(), True)
+        self.assertEqual(paginated.next_offset(), 10)
+
+    def test_data_class_doesnt_have_more(self):
+        data = [i for i in range(0, 10)]
+        paginated = PaginatedResult(data, len(data), 0)
+
+        self.assertEqual(paginated.has_more(), False)
+        self.assertEqual(paginated.next_offset(), 10)
