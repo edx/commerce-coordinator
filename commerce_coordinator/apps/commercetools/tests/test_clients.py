@@ -4,7 +4,15 @@ import uuid
 import pytest
 import requests_mock
 from commercetools import Client as CTClient
-from commercetools.platform.models import CustomerDraft, Order, OrderPagedQueryResponse, Type, TypeDraft
+from commercetools.platform.models import (
+    Customer,
+    CustomerDraft,
+    CustomerPagedQueryResponse,
+    Order,
+    OrderPagedQueryResponse,
+    Type,
+    TypeDraft
+)
 from conftest import TESTING_COMMERCETOOLS_CONFIG, APITestingSet, gen_example_customer, gen_order_history
 from django.test import TestCase, override_settings
 
@@ -102,26 +110,56 @@ class ClientTests(TestCase):
         self.assertEqual(ret_val.version, customer.version + 1)
 
     def test_get_customer_by_lms_user_id_user_missing(self):
+        base_url = self.client_set.get_base_url_from_client()
         id_num = 127
         _ = self.client_set.client.ensure_custom_type_exists(TwoUCustomTypes.CUSTOMER_TYPE_DRAFT)
 
-        ret_val = self.client_set.client.get_customer_by_lms_user_id(id_num)
+        limit = 2
+        # Because the base mocker can't do param binding, we have to intercept.
+        with requests_mock.Mocker(real_http=True, case_sensitive=False) as mocker:
+            mocker.get(
+                f"{base_url}customers?"
+                f"where=custom%28fields%28edx-lms_user_id%3D%3Aid%29%29"
+                f"&limit={limit}"
+                f"&var.id={id_num}",
+                json=CustomerPagedQueryResponse(
+                    limit=limit, count=0, total=0, offset=0,
+                    results=[],
+                ).serialize()
+            )
+            ret_val = self.client_set.client.get_customer_by_lms_user_id(id_num)
 
-        self.assertIsNone(ret_val)
+            self.assertIsNone(ret_val)
 
     def test_get_customer_by_lms_user_id(self):
+        base_url = self.client_set.get_base_url_from_client()
         id_num = 127
         type_val = self.client_set.client.ensure_custom_type_exists(TwoUCustomTypes.CUSTOMER_TYPE_DRAFT)
         customer = gen_example_customer()
-        customer.custom.fields[EdXFieldNames.LMS_USER_ID] = id_num
+        customer.custom.fields[EdXFieldNames.LMS_USER_ID] = f"{id_num}"
 
         # The Draft converter changes the ID, so let's update our customer and draft.
         customer.custom.type.id = type_val.id
 
         self.client_set.backend_repo.customers.add_existing(customer)
-        ret_val = self.client_set.client.get_customer_by_lms_user_id(id_num)
 
-        self.assertEqual(ret_val.custom.fields[EdXFieldNames.LMS_USER_ID], id_num)
+        limit = 2
+        # Because the base mocker can't do param binding, we have to intercept.
+        with requests_mock.Mocker(real_http=True, case_sensitive=False) as mocker:
+            mocker.get(
+                f"{base_url}customers?"
+                f"where=custom%28fields%28edx-lms_user_id%3D%3Aid%29%29"
+                f"&limit={limit}"
+                f"&var.id={id_num}",
+                json=CustomerPagedQueryResponse(
+                    limit=limit, count=1, total=1, offset=0,
+                    results=self.client_set.fetch_from_storage('customer', Customer),
+                ).serialize()
+            )
+
+            ret_val = self.client_set.client.get_customer_by_lms_user_id(id_num)
+
+            self.assertEqual(ret_val.custom.fields[EdXFieldNames.LMS_USER_ID], f"{id_num}")
 
     def test_get_customer_by_lms_user_id_should_fail_on_more_than_1(self):
         id_num = 127
@@ -168,6 +206,16 @@ class ClientTests(TestCase):
         # Because the base mocker can't do param binding, we have to intercept.
         with requests_mock.Mocker(real_http=True, case_sensitive=False) as mocker:
             mocker.get(
+                f"{base_url}customers?"
+                f"where=custom%28fields%28edx-lms_user_id%3D%3Aid%29%29"
+                f"&limit=2"
+                f"&var.id={id_num}",
+                json=CustomerPagedQueryResponse(
+                    limit=limit, count=1, total=1, offset=0,
+                    results=self.client_set.fetch_from_storage('customer', Customer),
+                ).serialize()
+            )
+            mocker.get(
                 f"{base_url}orders?"
                 f"where=customerId%3D%3Acid&"
                 f"limit={limit}&"
@@ -209,6 +257,16 @@ class ClientTests(TestCase):
 
         # Because the base mocker can't do param binding, we have to intercept.
         with requests_mock.Mocker(real_http=True, case_sensitive=False) as mocker:
+            mocker.get(
+                f"{base_url}customers?"
+                f"where=custom%28fields%28edx-lms_user_id%3D%3Aid%29%29"
+                f"&limit=2"
+                f"&var.id={id_num}",
+                json=CustomerPagedQueryResponse(
+                    limit=2, count=1, total=1, offset=0,
+                    results=self.client_set.fetch_from_storage('customer', Customer),
+                ).serialize()
+            )
             mocker.get(
                 f"{base_url}orders?"
                 f"where=customerId%3D%3Acid&"

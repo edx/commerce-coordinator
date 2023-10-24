@@ -406,7 +406,8 @@ def gen_example_customer():
               "id": "52dc06db-07be-458e-80db-253c5d6c7e59"
             },
             "fields": {
-              "edx-lms_user_id": 17
+              "edx-lms_user_id": "17",
+              "edx-lms_user_name": "some_un"
             }
           },
           "salutation": "",
