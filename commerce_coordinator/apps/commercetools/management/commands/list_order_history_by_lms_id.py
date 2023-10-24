@@ -23,7 +23,11 @@ class Command(CommercetoolsAPIClientCommand):
         edx_lms_user_id = options['edx_lms_user_id']
 
         offset = options['offset']
-        ret = self.ct_api_client.get_orders(edx_lms_user_id=edx_lms_user_id, limit=MAX_RESULTS + 1, offset=offset)
+        ret = self.ct_api_client.get_orders_for_customer(
+            edx_lms_user_id=edx_lms_user_id,
+            limit=MAX_RESULTS + 1,
+            offset=offset
+        )[0]
 
         orders = ret.results
 

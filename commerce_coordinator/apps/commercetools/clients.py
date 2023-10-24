@@ -173,7 +173,8 @@ class CommercetoolsAPIClient:  # (BaseEdxOAuthClient): ???
             predicate_var={'cid': customer.id},
             sort="completedAt desc",
             limit=limit,
-            offset=offset
+            offset=offset,
+            expand=["Payment"]
         )
 
         return PaginatedResult(values.results, values.total, values.offset)

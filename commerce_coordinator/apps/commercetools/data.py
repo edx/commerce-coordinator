@@ -7,7 +7,8 @@ from commercetools.platform.models import DiscountCodeInfo as CTDiscountCodeInfo
 from commercetools.platform.models import LineItem as CTLineItem
 from commercetools.platform.models import Order as CTOrder
 
-from commerce_coordinator.apps.commercetools.catalog_info.utils import price_to_string, un_ls
+from commerce_coordinator.apps.commercetools.catalog_info.constants import EdXFieldNames
+from commerce_coordinator.apps.commercetools.catalog_info.utils import price_to_string, typed_money_to_string, un_ls
 from commerce_coordinator.apps.ecommerce.data import BillingAddress, Line
 from commerce_coordinator.apps.ecommerce.data import Order as LegacyOrder
 from commerce_coordinator.apps.ecommerce.data import User, Voucher
@@ -54,12 +55,22 @@ def convert_direct_discount(dd: Optional[CTDirectDiscount]) -> Optional[Voucher]
 def convert_customer(customer: CTCustomer) -> User:
     return User(
         email=customer.email,
-        username=customer.email  # pending response from CT, see: https://tinyurl.com/ykpwhbxt
+        username=customer.custom.fields[EdXFieldNames.LMS_USER_NAME]
     )
 
 
-def order_from_commercetools(order: CTOrder) -> LegacyOrder:
+def order_from_commercetools(order: CTOrder, customer: CTCustomer) -> LegacyOrder:
     print(order)
     return LegacyOrder(
-
+        user=convert_customer(customer),
+        lines=[convert_line_item(x) for x in order.line_items],
+        billing_address=convert_address(order.billing_address),
+        date_placed=order.completed_at.isoformat(),
+        total_excl_tax=typed_money_to_string(order.total_price),
+        # in dev systems, this isn't set... so let's use UUID, otherwise, lets rely on order number
+        number=order.order_number or order.id,
+        currency=order.total_price.currency_code,
+        payment_processor="stripe via commercetools",
+        status=order.order_state.CONFIRMED.value
+        #payment_method=order.payment_info.payments[0].type_id
     )
