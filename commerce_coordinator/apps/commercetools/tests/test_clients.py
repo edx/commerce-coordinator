@@ -182,7 +182,7 @@ class ClientTests(TestCase):
 
     def test_order_history_throws_if_user_not_found(self):
         with pytest.raises(ValueError) as _:
-            _ = self.client_set.client.get_orders(995)
+            _ = self.client_set.client.get_orders_for_customer(995)
 
     def test_order_history(self):
         base_url = self.client_set.get_base_url_from_client()
@@ -228,9 +228,9 @@ class ClientTests(TestCase):
                 ).serialize()
             )
 
-            ret_orders = self.client_set.client.get_orders(id_num)
-            self.assertEqual(ret_orders.total, len(orders))
-            self.assertEqual(ret_orders.offset, 0)
+            ret_orders = self.client_set.client.get_orders_for_customer(id_num)
+            self.assertEqual(ret_orders[0].total, len(orders))
+            self.assertEqual(ret_orders[0].offset, 0)
 
     def test_order_history_with_limits(self):
         base_url = self.client_set.get_base_url_from_client()
@@ -280,12 +280,12 @@ class ClientTests(TestCase):
                 ).serialize()
             )
 
-            ret_orders = self.client_set.client.get_orders(id_num, limit=params['limit'], offset=params['offset'])
+            ret_orders = self.client_set.client.get_orders_for_customer(id_num, limit=params['limit'], offset=params['offset'])
 
-            self.assertEqual(ret_orders.total, len(orders))
-            self.assertEqual(ret_orders.has_more(), True)
-            self.assertEqual(ret_orders.next_offset(), params['limit'])
-            self.assertEqual(ret_orders.offset, params['offset'])
+            self.assertEqual(ret_orders[0].total, len(orders))
+            self.assertEqual(ret_orders[0].has_more(), True)
+            self.assertEqual(ret_orders[0].next_offset(), params['limit'])
+            self.assertEqual(ret_orders[0].offset, params['offset'])
 
 
 class PaginatedResultsTest(TestCase):

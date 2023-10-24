@@ -151,14 +151,16 @@ class CommercetoolsAPIClient:  # (BaseEdxOAuthClient): ???
         else:
             return results.results[0]
 
-    def get_orders(self, edx_lms_user_id: int, offset=0,
+    def get_orders(self, customer: CTCustomer, offset=0,
                    limit=ORDER_HISTORY_PER_SYSTEM_REQ_LIMIT) -> PaginatedResult[CTOrder]:
 
         """
-        Call commercetools API overview endpoint for data about an order.
+        Call commercetools API overview endpoint for data about historical orders.
 
-        Keyword Args:
-            edx_lms_user_id: restrict to orders by this username
+        Args:
+            customer (CTCustomer): Commerce Tools Customer to look up orders for
+            offset (int): Pagination Offset
+            limit (int): Maximum number of results
 
         Returns:
             PaginatedResult[CTOrder]: Dictionary representation of JSON returned from API
@@ -166,11 +168,6 @@ class CommercetoolsAPIClient:  # (BaseEdxOAuthClient): ???
         See sample response in tests.py
 
         """
-        customer = self.get_customer_by_lms_user_id(edx_lms_user_id)
-
-        if customer is None:
-            raise ValueError(f'Unable to locate customer with ID #{edx_lms_user_id}')
-
         values = self.base_client.orders.query(
             where="customerId=:cid",
             predicate_var={'cid': customer.id},
@@ -180,3 +177,21 @@ class CommercetoolsAPIClient:  # (BaseEdxOAuthClient): ???
         )
 
         return PaginatedResult(values.results, values.total, values.offset)
+
+    def get_orders_for_customer(self, edx_lms_user_id: int, offset=0,
+                                limit=ORDER_HISTORY_PER_SYSTEM_REQ_LIMIT) -> (PaginatedResult[CTOrder], CTCustomer):
+        """
+
+        Args:
+            edx_lms_user_id (object):
+            offset:
+            limit:
+        """
+        customer = self.get_customer_by_lms_user_id(edx_lms_user_id)
+
+        if customer is None:
+            raise ValueError(f'Unable to locate customer with ID #{edx_lms_user_id}')
+
+        orders = self.get_orders(customer, offset, limit)
+
+        return orders, customer
