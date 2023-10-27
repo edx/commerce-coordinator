@@ -1,5 +1,6 @@
-from typing import Dict, Optional, Union
+from typing import Dict, List, Optional, Union
 
+from commercetools.platform.models import Attribute
 from commercetools.platform.models import CentPrecisionMoney as CTCentPrecisionMoney
 from commercetools.platform.models import HighPrecisionMoney as CTHighPrecisionMoney
 from commercetools.platform.models import LocalizedString as CTLocalizedString
@@ -116,3 +117,34 @@ def typed_money_to_string(money: CTTypedMoney) -> str:
         return _format(total)
     else:
         return _format(total / pow(10, money.fraction_digits))
+
+
+def _typed_money_op(a: CTTypedMoney, b: CTTypedMoney, op):
+    if a.type == b.type and a.currency_code == b.currency_code and \
+        a.fraction_digits == b.fraction_digits:
+        if isinstance(a, CTHighPrecisionMoney):
+            # noinspection PyUnresolvedReferences
+            return CTHighPrecisionMoney(
+                currency_code=a.currency_code,
+                fraction_digits=a.fraction_digits,
+                cent_amount=a.cent_amount,
+                precise_amount=op(a.precise_amount, b.precise_amount)
+            )
+        return CTCentPrecisionMoney(
+            currency_code=a.currency_code,
+            fraction_digits=a.fraction_digits,
+            cent_amount=op(a.cent_amount, b.cent_amount),
+        )
+
+    raise ValueError("This utility cannot convert between currencies, fractional digits nor TypedMoney types.")
+
+
+def typed_money_add(a: CTTypedMoney, b: CTTypedMoney):
+    return _typed_money_op(a, b, lambda aint, bint: aint + bint)
+
+def attribute_dict(attr_list: Optional[List[Attribute]]) -> Optional[dict]:
+    if attr_list is None:
+        return None
+    if len(attr_list) >= 1:
+        return dict([(d.name, d.value) for d in attr_list])
+    return None

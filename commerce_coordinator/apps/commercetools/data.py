@@ -1,4 +1,4 @@
-from typing import Optional
+from typing import List, Optional
 
 from commercetools.platform.models import Address as CTAddress
 from commercetools.platform.models import Customer as CTCustomer
@@ -6,12 +6,20 @@ from commercetools.platform.models import DirectDiscount as CTDirectDiscount
 from commercetools.platform.models import DiscountCodeInfo as CTDiscountCodeInfo
 from commercetools.platform.models import LineItem as CTLineItem
 from commercetools.platform.models import Order as CTOrder
+from commercetools.platform.models import PaymentInfo as CTPaymentInfo
+from django.conf import settings
 
 from commerce_coordinator.apps.commercetools.catalog_info.constants import EdXFieldNames
-from commerce_coordinator.apps.commercetools.catalog_info.utils import price_to_string, typed_money_to_string, un_ls
+from commerce_coordinator.apps.commercetools.catalog_info.utils import (
+    attribute_dict,
+    price_to_string,
+    typed_money_add,
+    typed_money_to_string,
+    un_ls
+)
 from commerce_coordinator.apps.ecommerce.data import BillingAddress, Line
 from commerce_coordinator.apps.ecommerce.data import Order as LegacyOrder
-from commerce_coordinator.apps.ecommerce.data import User, Voucher
+from commerce_coordinator.apps.ecommerce.data import User
 
 
 def convert_address(address: Optional[CTAddress]) -> Optional[BillingAddress]:
@@ -37,19 +45,34 @@ def convert_line_item(li: CTLineItem) -> Line:
         # TODO: course_organization=
         # TODO: description=
         # TODO: status=
+        course_organization="",
+        description=un_ls(li.name),
+        status="PAID",
         line_price_excl_tax=price_to_string(li.price),
         unit_price_excl_tax=price_to_string(li.price)
     )
 
 
-def convert_discount_code_info(dci: Optional[CTDiscountCodeInfo]) -> Optional[Voucher]:
-    print(dci)
-    return None
+def convert_line_item_prod_id(li: CTLineItem) -> str:
+    key_name = 'edx-course_run_id'  # this could be wrong and will likely change when the catalog is 'fixed'
+    attrs = attribute_dict(li.variant.attributes)
+
+    if attrs and key_name in attrs and attrs[key_name]:
+        return attrs[key_name] or li.product_id
+    return li.product_id
 
 
-def convert_direct_discount(dd: Optional[CTDirectDiscount]) -> Optional[Voucher]:
-    print(dd)
-    return None
+# TODO: Coupons
+def convert_discount_code_info(dcis: Optional[List[CTDiscountCodeInfo]]) -> Optional[str]:
+    if not dcis or len(dcis) < 1:
+        return None
+    return ", ".join([x.discount_code.obj.code for x in dcis])
+
+
+def convert_direct_discount(dds: Optional[List[CTDirectDiscount]]) -> Optional[str]:
+    if not dds or len(dds) < 1:
+        return None
+    return ", ".join([x.id for x in dds])  # idk how to format this one. We may have to wait till we have an example.
 
 
 def convert_customer(customer: CTCustomer) -> User:
@@ -59,18 +82,41 @@ def convert_customer(customer: CTCustomer) -> User:
     )
 
 
+def convert_payment_info(payment_info: CTPaymentInfo) -> str:
+    if len(payment_info.payments) > 0:
+        return un_ls(payment_info.payments[-1].obj.payment_method_info.name)
+    return "Unknown"
+
+
 def order_from_commercetools(order: CTOrder, customer: CTCustomer) -> LegacyOrder:
-    print(order)
     return LegacyOrder(
         user=convert_customer(customer),
         lines=[convert_line_item(x) for x in order.line_items],
         billing_address=convert_address(order.billing_address),
-        date_placed=order.completed_at.isoformat(),
+        date_placed=(order.completed_at or order.last_modified_at),
         total_excl_tax=typed_money_to_string(order.total_price),
         # in dev systems, this isn't set... so let's use UUID, otherwise, lets rely on order number
         number=order.order_number or order.id,
         currency=order.total_price.currency_code,
         payment_processor="stripe via commercetools",
-        status=order.order_state.CONFIRMED.value
-        #payment_method=order.payment_info.payments[0].type_id
+        status=order.order_state.CONFIRMED.value,
+        dashboard_url=settings.LMS_DASHBOARD_URL,
+        order_product_ids=", ".join([convert_line_item_prod_id(x) for x in order.line_items]),
+        basket_discounts=convert_direct_discount(order.direct_discounts),
+        contains_credit_seat="True",
+        discount=typed_money_to_string(order.discount_on_total_price.discounted_amount),  # NYI
+        enable_hoist_order_history="False",  # ?
+        enterprise_learner_portal_url="about:blank",
+        product_tracking=None,
+        total_before_discounts_incl_tax=typed_money_to_string(
+            typed_money_add(
+                typed_money_add(
+                    order.total_price,
+                    order.discount_on_total_price.discounted_amount
+                ),
+                order.taxed_price.total_tax
+            )
+        ),
+        vouchers=convert_discount_code_info(order.discount_codes) or convert_direct_discount(order.direct_discounts),
+        payment_method=convert_payment_info(order.payment_info)
     )

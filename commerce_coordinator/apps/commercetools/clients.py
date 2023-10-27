@@ -171,10 +171,14 @@ class CommercetoolsAPIClient:  # (BaseEdxOAuthClient): ???
         values = self.base_client.orders.query(
             where="customerId=:cid",
             predicate_var={'cid': customer.id},
-            sort="completedAt desc",
+            sort=["completedAt desc", "lastModifiedAt desc"],
             limit=limit,
             offset=offset,
-            expand=["Payment"]
+            expand=[
+                "paymentInfo.payments[*]",
+                "discountCodes[*].discountCode",
+                "directDiscounts[*]"
+            ]
         )
 
         return PaginatedResult(values.results, values.total, values.offset)

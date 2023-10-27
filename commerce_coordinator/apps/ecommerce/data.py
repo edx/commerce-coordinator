@@ -130,7 +130,7 @@ class User:
 @mutable
 class Voucher:
     """
-    Voucher
+    Voucher, This may not be used.
     """
     id: Optional[int]
     start_datetime: datetime
