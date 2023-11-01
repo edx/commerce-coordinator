@@ -458,12 +458,13 @@ PAYMENT_PROCESSOR_CONFIG = {
 # END PAYMENT PROCESSING
 
 _COMMERCETOOLS_CONFIG_GEO = 'us-central1.gcp'
+
 COMMERCETOOLS_CONFIG = {
-    'projectKey': '2u-dev',
-    'clientId': 'wdnYt1yvChl2Fug2V_7-Dyf_',
-    'clientSecret': 'zSJsfanSnqAV-CXRSOwKI03mroWUh3yF',
+    'projectKey': 'SET_ME',
+    'clientId': 'SET_ME',
+    'clientSecret': 'SET_ME',
     'authUrl': f"https://auth.{_COMMERCETOOLS_CONFIG_GEO}.commercetools.com",
     'apiUrl': f"https://api.{_COMMERCETOOLS_CONFIG_GEO}.commercetools.com",
     'importUrl': f"https://import.{_COMMERCETOOLS_CONFIG_GEO}.commercetools.com",  # Required for ImpEx
-    'scopes': 'manage_project:2u-dev'
+    'scopes': 'some_scope'
 }

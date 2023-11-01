@@ -13,16 +13,20 @@ class GetCommercetoolsOrders(PipelineStep):
     """
 
     def run_filter(self, params, order_data):  # pylint: disable=arguments-differ
-        # TODO: GRM: Implement
         """
         Execute a filter with the signature specified.
         Arguments:
             params: arguments passed through from the original order history url querystring
-            order_data: any preliminary orders (from earlier pipeline step) we want to append to
+            order_data: any preliminary orders (from an earlier pipeline step) we want to append to
+        Returns:
         """
 
         ct_api_client = CommercetoolsAPIClient()
-        ct_orders = ct_api_client.get_orders(params)
+        ct_orders = ct_api_client.get_orders_for_customer(
+            edx_lms_user_id=params["edx_lms_user_id"],
+            limit=params["page_size"],
+            offset= params["page"] * params["page_size"]
+        )
 
         order_data.append(ct_orders)
 
