@@ -569,7 +569,7 @@ class Command(TimedCommand):
         import_client = Client(
             client_id=config["clientId"],
             client_secret=config["clientSecret"],
-            scope=[config["scopes"]],
+            scope=config["scopes"].split(' '),
             url=config["importUrl"],
             token_url=config["authUrl"],
         ).with_project_key_value(config["projectKey"])

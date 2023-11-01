@@ -68,7 +68,7 @@ class CommercetoolsAPIClient:  # (BaseEdxOAuthClient): ???
             self.base_client = CTClient(
                 client_id=config["clientId"],
                 client_secret=config["clientSecret"],
-                scope=[config["scopes"]],
+                scope=config["scopes"].split(' '),
                 url=config["apiUrl"],
                 token_url=config["authUrl"],
                 project_key=config["projectKey"]
