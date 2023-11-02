@@ -3,11 +3,11 @@ from typing import List, Optional
 
 import requests_mock
 from commercetools.platform.models import Customer, CustomerPagedQueryResponse, Order, OrderPagedQueryResponse
+from conftest import APITestingSet, gen_example_customer, gen_order_history
 
 from commerce_coordinator.apps.commercetools.catalog_info.constants import EdXFieldNames
 from commerce_coordinator.apps.commercetools.catalog_info.foundational_types import TwoUCustomTypes
 from commerce_coordinator.apps.core.constants import ORDER_HISTORY_PER_SYSTEM_REQ_LIMIT
-from conftest import APITestingSet, gen_example_customer, gen_order_history
 
 
 class PipelineMocker:
