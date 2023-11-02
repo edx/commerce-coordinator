@@ -72,7 +72,8 @@ def convert_discount_code_info(dcis: Optional[List[CTDiscountCodeInfo]]) -> Opti
 def convert_direct_discount(dds: Optional[List[CTDirectDiscount]]) -> Optional[str]:
     if not dds or len(dds) < 1:
         return None
-    return ", ".join([x.id for x in dds])  # idk how to format this one. We may have to wait till we have an example.
+    # idk how to format this one. We may have to wait till we have an example.
+    return ", ".join([x.value.type for x in dds])
 
 
 def convert_customer(customer: CTCustomer) -> User:

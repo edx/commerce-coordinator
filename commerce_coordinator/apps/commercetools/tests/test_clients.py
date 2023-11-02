@@ -15,6 +15,7 @@ from commercetools.platform.models import (
 )
 from conftest import TESTING_COMMERCETOOLS_CONFIG, APITestingSet, gen_example_customer, gen_order_history
 from django.test import TestCase, override_settings
+from utils import uuid4_str
 
 from commerce_coordinator.apps.commercetools.catalog_info.constants import EdXFieldNames
 from commerce_coordinator.apps.commercetools.catalog_info.foundational_types import TwoUCustomTypes
@@ -171,7 +172,7 @@ class ClientTests(TestCase):
         customer.custom.type.id = type_val.id
 
         self.client_set.backend_repo.customers.add_existing(customer)
-        customer.id = str(uuid.uuid4())
+        customer.id = uuid4_str()
         customer.email = "someone@somesite.text"
         customer.customer_number = "blah"
         self.client_set.backend_repo.customers.add_existing(customer)

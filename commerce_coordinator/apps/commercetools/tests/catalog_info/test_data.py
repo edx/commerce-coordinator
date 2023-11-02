@@ -5,7 +5,7 @@ from typing import List, Optional
 from unittest import TestCase
 
 import ddt
-from commercetools.platform.models import Address as CTAddress
+from commercetools.platform.models import Address as CTAddress, CartDiscountValue as CTCartDiscountValue
 from commercetools.platform.models import CartDiscountReference as CTCartDiscountReference
 from commercetools.platform.models import Customer as CTCustomer
 from commercetools.platform.models import DirectDiscount as CTDirectDiscount
@@ -19,7 +19,7 @@ from commercetools.platform.models import PaymentInfo as CTPaymentInfo
 from commercetools.platform.models import Reference as CTReference
 from commercetools.platform.models import ReferenceTypeId as CTReferenceTypeId
 from conftest import gen_order
-from utils import name_test
+from utils import name_test, uuid4_str
 
 from commerce_coordinator.apps.commercetools.catalog_info.constants import EdXFieldNames
 from commerce_coordinator.apps.commercetools.catalog_info.utils import (
@@ -46,18 +46,28 @@ from commerce_coordinator.apps.ecommerce.data import User
 
 def gen_dci(code: str) -> CTDiscountCodeInfo:
     # 'id', 'version', 'created_at', 'last_modified_at', 'cart_discounts', 'is_active', 'references', and 'groups'
-    dc_id = str(uuid.uuid4())
+    dc_id = uuid4_str()
     return CTDiscountCodeInfo(
         discount_code=CTDiscountCodeReference(
             id=dc_id,
             obj=CTDiscountCode(
                 code=code, id=dc_id, version=7, created_at=datetime.now(), last_modified_at=datetime.now(),
-                is_active=True, references=[CTReference(type_id=CTReferenceTypeId.DISCOUNT_CODE, id=str(uuid.uuid4()))],
-                groups=["xyzzy"], cart_discounts=[CTCartDiscountReference(id=str(uuid.uuid4()))]
+                is_active=True, references=[CTReference(type_id=CTReferenceTypeId.DISCOUNT_CODE, id=uuid4_str())],
+                groups=["xyzzy"], cart_discounts=[CTCartDiscountReference(id=uuid4_str())]
             )
         ),
         state=CTDiscountCodeState.MATCHES_CART
     )
+
+
+def gen_dd(code: str) -> CTDirectDiscount:
+    return CTDirectDiscount(
+        id=uuid4_str(),
+        value=CTCartDiscountValue(
+            type=code
+        )
+    )
+
 
 @ddt.ddt
 class TestCTOrderConversionToLegacyOrders(TestCase):
@@ -65,7 +75,7 @@ class TestCTOrderConversionToLegacyOrders(TestCase):
 
     def setUp(self):
         super().setUp()
-        self.order = gen_order(str(uuid.uuid4()))
+        self.order = gen_order(uuid4_str())
 
     @ddt.data(
         name_test(
@@ -190,11 +200,50 @@ class TestCTOrderConversionToLegacyOrders(TestCase):
         ),
     )
     @ddt.unpack
-    def test_convert_discount_code_info(self, code_set:Optional[List[CTDiscountCodeInfo]], ret_string:Optional[str]):
+    def test_convert_discount_code_info(self, code_set: Optional[List[CTDiscountCodeInfo]], ret_string: Optional[str]):
         ret = convert_discount_code_info(code_set)
         self.assertEqual(ret, ret_string)
 
-    # def test_convert_direct_discount(self):
+    @ddt.data(
+        name_test(
+            "None",
+            (
+                None,
+                None
+            )
+        ),
+        name_test(
+            "Empty",
+            (
+                [],
+                None
+            )
+        ),
+        name_test(
+            "One",
+            (
+                [
+                    gen_dd("Hiya")
+                ],
+                "Hiya"
+            )
+        ),
+        name_test(
+            "Two",
+            (
+                [
+                    gen_dd("Hiya1"),
+                    gen_dd("Hiya2")
+                ],
+                "Hiya1, Hiya2"
+            )
+        ),
+    )
+    @ddt.unpack
+    def test_convert_direct_discount(self, code_set: Optional[List[CTDirectDiscount]], ret_string: Optional[str]):
+        ret = convert_direct_discount(code_set)
+        self.assertEqual(ret, ret_string)
+    
     # def test_convert_customer(self):
     # def test_convert_payment_info(self):
     # def test_order_from_commercetools(self):

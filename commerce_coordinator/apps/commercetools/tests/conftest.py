@@ -7,6 +7,7 @@ from commercetools import Client
 from commercetools.platform.models import Customer as CTCustomer
 from commercetools.platform.models import Order as CTOrder
 from commercetools.testing import BackendRepository
+from utils import uuid4_str
 
 from commerce_coordinator.apps.commercetools.clients import CommercetoolsAPIClient
 
@@ -361,7 +362,7 @@ def gen_order(uuid_id):
 
 
 def gen_order_history(num=1):
-    return [gen_order(str(uuid.uuid4())) for _ in range(0, num)]
+    return [gen_order(uuid4_str()) for _ in range(0, num)]
 
 
 def gen_example_customer():

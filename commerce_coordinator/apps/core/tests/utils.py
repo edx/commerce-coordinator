@@ -3,6 +3,7 @@
 import json
 import random
 import string
+import uuid
 from traceback import print_exc
 from typing import Dict, List, Tuple, Union
 from urllib.parse import parse_qs
@@ -310,3 +311,7 @@ def random_unicode_str(ln: int, limit_unicode=True, weight_divisor=2):
 
     assert len(retval) == ln
     return retval
+
+
+def uuid4_str() -> str:
+    return str(uuid.uuid4())
