@@ -1,7 +1,7 @@
 from datetime import datetime
 from typing import List, Optional
 
-from attr.validators import and_, gt, instance_of, lt, max_len, min_len, optional
+from attr.validators import gt, instance_of, lt, max_len, min_len, optional
 from attrs import field, frozen, mutable
 
 # More Information:
@@ -14,7 +14,7 @@ class BillingAddress:
     """
     first_name: Optional[str] = field(validator=optional([instance_of(str), max_len(255)]))
     last_name: Optional[str] = field(validator=optional([instance_of(str), max_len(255)]))
-    line1: str = field(validator=and_([instance_of(str), max_len(255), min_len(1)]))
+    line1: str = field(validator=[instance_of(str), max_len(255), min_len(1)])
     line2: Optional[str] = field(validator=optional([instance_of(str), max_len(255)]))
     city: str = field(validator=optional([instance_of(str), max_len(255), min_len(1)]))
     state: Optional[str] = field(validator=optional([instance_of(str), max_len(255)]))
@@ -94,7 +94,7 @@ class StockRecord:
     id: Optional[int]
     product: int
     partner: int
-    partner_sku: str = field(validator=and_([instance_of(str), max_len(128), min_len(1)]))
+    partner_sku: str = field(validator=[instance_of(str), max_len(128), min_len(1)])
     price_currency: Optional[str] = field(validator=optional([instance_of(str), max_len(12), min_len(1)]))
     price_excl_tax: Optional[str] = field(validator=optional(instance_of(str)))
 
