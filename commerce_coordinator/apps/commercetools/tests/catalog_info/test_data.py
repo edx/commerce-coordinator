@@ -1,34 +1,30 @@
-import json
-import uuid
 from datetime import datetime
 from typing import List, Optional
 from unittest import TestCase
 
 import ddt
-from commercetools.platform.models import Address as CTAddress, CartDiscountValue as CTCartDiscountValue
+from commercetools.platform.models import Address as CTAddress
+from commercetools.platform.models import AuthenticationMode as CTAuthenticationMode
 from commercetools.platform.models import CartDiscountReference as CTCartDiscountReference
+from commercetools.platform.models import CartDiscountValue as CTCartDiscountValue
 from commercetools.platform.models import Customer as CTCustomer
+from commercetools.platform.models import CustomFields as CTCustomFields
 from commercetools.platform.models import DirectDiscount as CTDirectDiscount
 from commercetools.platform.models import DiscountCode as CTDiscountCode
 from commercetools.platform.models import DiscountCodeInfo as CTDiscountCodeInfo
 from commercetools.platform.models import DiscountCodeReference as CTDiscountCodeReference
 from commercetools.platform.models import DiscountCodeState as CTDiscountCodeState
+from commercetools.platform.models import FieldContainer as CTFieldContainer
 from commercetools.platform.models import LineItem as CTLineItem
 from commercetools.platform.models import Order as CTOrder
-from commercetools.platform.models import PaymentInfo as CTPaymentInfo
 from commercetools.platform.models import Reference as CTReference
 from commercetools.platform.models import ReferenceTypeId as CTReferenceTypeId
+from commercetools.platform.models import TypeReference as CTTypeReference
 from conftest import gen_order
 from utils import name_test, uuid4_str
 
 from commerce_coordinator.apps.commercetools.catalog_info.constants import EdXFieldNames
-from commerce_coordinator.apps.commercetools.catalog_info.utils import (
-    attribute_dict,
-    price_to_string,
-    typed_money_add,
-    typed_money_to_string,
-    un_ls
-)
+from commerce_coordinator.apps.commercetools.catalog_info.utils import attribute_dict, price_to_string, un_ls
 from commerce_coordinator.apps.commercetools.data import (
     convert_address,
     convert_customer,
@@ -41,7 +37,6 @@ from commerce_coordinator.apps.commercetools.data import (
 )
 from commerce_coordinator.apps.ecommerce.data import BillingAddress, Line
 from commerce_coordinator.apps.ecommerce.data import Order as LegacyOrder
-from commerce_coordinator.apps.ecommerce.data import User
 
 
 def gen_dci(code: str) -> CTDiscountCodeInfo:
@@ -68,6 +63,23 @@ def gen_dd(code: str) -> CTDirectDiscount:
         )
     )
 
+def gen_customer(email:str, un: str):
+    return CTCustomer(
+        email=email,
+        custom=CTCustomFields(
+            type=CTTypeReference(
+                id=uuid4_str()
+            ),
+            fields=CTFieldContainer({EdXFieldNames.LMS_USER_NAME: un})
+        ),
+        version=3,
+        addresses=[],
+        authentication_mode=CTAuthenticationMode.PASSWORD,
+        created_at=datetime.now(),
+        id=uuid4_str(),
+        is_email_verified=True,
+        last_modified_at=datetime.now()
+    )
 
 @ddt.ddt
 class TestCTOrderConversionToLegacyOrders(TestCase):
@@ -243,7 +255,44 @@ class TestCTOrderConversionToLegacyOrders(TestCase):
     def test_convert_direct_discount(self, code_set: Optional[List[CTDirectDiscount]], ret_string: Optional[str]):
         ret = convert_direct_discount(code_set)
         self.assertEqual(ret, ret_string)
-    
-    # def test_convert_customer(self):
-    # def test_convert_payment_info(self):
-    # def test_order_from_commercetools(self):
+
+    def test_convert_customer(self):
+        email = "someon@something.example"
+        un = "steve_5"
+        ret = convert_customer(CTCustomer(
+            email=email,
+            custom=CTCustomFields(
+                type=CTTypeReference(
+                    id=uuid4_str()
+                ),
+                fields=CTFieldContainer({EdXFieldNames.LMS_USER_NAME: un})
+            ),
+            version=3,
+            addresses=[],
+            authentication_mode=CTAuthenticationMode.PASSWORD,
+            created_at=datetime.now(),
+            id=uuid4_str(),
+            is_email_verified=True,
+            last_modified_at=datetime.now()
+        ))
+
+        self.assertEqual(ret.email, email)
+        self.assertEqual(ret.username, un)
+
+    def test_convert_payment_info(self):
+        order = gen_order(uuid4_str())
+        ret = convert_payment_info(order.payment_info)
+        self.assertEqual(ret, "Mastercard")
+
+    def test_convert_payment_info_when_empty(self):
+        order = gen_order(uuid4_str())
+        order.payment_info.payments = []
+        ret = convert_payment_info(order.payment_info)
+        self.assertEqual(ret, "Unknown")
+
+    def test_order_from_commercetools(self):
+        order = gen_order(uuid4_str())
+        ret = order_from_commercetools(order, gen_customer("hiya@text.example", "jim_34"))
+
+        self.assertIsInstance(ret, LegacyOrder)
+        self.assertEqual(ret.currency, order.total_price.currency_code)

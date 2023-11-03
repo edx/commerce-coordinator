@@ -119,7 +119,9 @@ def typed_money_to_string(money: CTTypedMoney) -> str:
         return _format(total / pow(10, money.fraction_digits))
 
 
-def _typed_money_op(a: CTTypedMoney, b: CTTypedMoney, op):
+def _typed_money_op(a: CTTypedMoney, b: Optional[CTTypedMoney], op):
+    if b is None:
+        return a
     if a.type == b.type and a.currency_code == b.currency_code and \
         a.fraction_digits == b.fraction_digits:
         if isinstance(a, CTHighPrecisionMoney):
@@ -139,8 +141,9 @@ def _typed_money_op(a: CTTypedMoney, b: CTTypedMoney, op):
     raise ValueError("This utility cannot convert between currencies, fractional digits nor TypedMoney types.")
 
 
-def typed_money_add(a: CTTypedMoney, b: CTTypedMoney):
+def typed_money_add(a: CTTypedMoney, b: Optional[CTTypedMoney]):
     return _typed_money_op(a, b, lambda aint, bint: aint + bint)
+
 
 def attribute_dict(attr_list: Optional[List[Attribute]]) -> Optional[dict]:
     if attr_list is None:

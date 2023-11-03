@@ -105,7 +105,8 @@ def order_from_commercetools(order: CTOrder, customer: CTCustomer) -> LegacyOrde
         order_product_ids=", ".join([convert_line_item_prod_id(x) for x in order.line_items]),
         basket_discounts=convert_direct_discount(order.direct_discounts),
         contains_credit_seat="True",
-        discount=typed_money_to_string(order.discount_on_total_price.discounted_amount),  # NYI
+        discount=typed_money_to_string(order.discount_on_total_price.discounted_amount)
+        if order.discount_on_total_price else None,  # NYI
         enable_hoist_order_history="False",  # ?
         enterprise_learner_portal_url="about:blank",
         product_tracking=None,
@@ -113,7 +114,7 @@ def order_from_commercetools(order: CTOrder, customer: CTCustomer) -> LegacyOrde
             typed_money_add(
                 typed_money_add(
                     order.total_price,
-                    order.discount_on_total_price.discounted_amount
+                    order.discount_on_total_price.discounted_amount if order.discount_on_total_price else None
                 ),
                 order.taxed_price.total_tax
             )
