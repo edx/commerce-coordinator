@@ -16,7 +16,6 @@ from commercetools.platform.models import DiscountCodeReference as CTDiscountCod
 from commercetools.platform.models import DiscountCodeState as CTDiscountCodeState
 from commercetools.platform.models import FieldContainer as CTFieldContainer
 from commercetools.platform.models import LineItem as CTLineItem
-from commercetools.platform.models import Order as CTOrder
 from commercetools.platform.models import Reference as CTReference
 from commercetools.platform.models import ReferenceTypeId as CTReferenceTypeId
 from commercetools.platform.models import TypeReference as CTTypeReference
@@ -63,7 +62,8 @@ def gen_dd(code: str) -> CTDirectDiscount:
         )
     )
 
-def gen_customer(email:str, un: str):
+
+def gen_customer(email: str, un: str):
     return CTCustomer(
         email=email,
         custom=CTCustomFields(
@@ -81,14 +81,9 @@ def gen_customer(email:str, un: str):
         last_modified_at=datetime.now()
     )
 
+
 @ddt.ddt
 class TestCTOrderConversionToLegacyOrders(TestCase):
-    order: Optional[CTOrder] = None
-
-    def setUp(self):
-        super().setUp()
-        self.order = gen_order(uuid4_str())
-
     @ddt.data(
         name_test(
             "None",
@@ -136,7 +131,8 @@ class TestCTOrderConversionToLegacyOrders(TestCase):
             self.assertEqual(ret, bill_address)
 
     def test_convert_line_item(self):
-        li = self.order.line_items[0]
+        order = gen_order(uuid4_str())
+        li = order.line_items[0]
         ret = convert_line_item(li)
 
         self.assertEqual(
@@ -163,7 +159,8 @@ class TestCTOrderConversionToLegacyOrders(TestCase):
         )
     )
     def test_convert_line_item_prod_id(self, strip_custom_fields: bool):
-        li: CTLineItem = self.order.line_items[0]
+        order = gen_order(uuid4_str())
+        li: CTLineItem = order.line_items[0]
 
         if strip_custom_fields:
             li.variant.attributes = []
