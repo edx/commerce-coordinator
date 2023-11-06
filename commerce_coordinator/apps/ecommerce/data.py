@@ -2,7 +2,8 @@ from datetime import datetime
 from typing import List, Optional
 
 from attr.validators import gt, instance_of, lt, max_len, min_len, optional
-from attrs import field, frozen, mutable
+from attrs import field, mutable
+
 
 # More Information:
 #   https://open-edx-proposals.readthedocs.io/en/latest/best-practices/oep-0049-django-app-patterns.html#data-py
@@ -178,106 +179,3 @@ class Order:
     status: Optional[str] = field(validator=optional([instance_of(str), max_len(100)]))
     total_before_discounts_incl_tax: Optional[str] = field(validator=optional(instance_of(str)))
     vouchers: Optional[str] = field(validator=optional(instance_of(str)))
-
-
-@frozen
-class EcommerceOrder(Order):
-    """ A Frozen Ecommerce Order """
-    pass
-
-
-"""
-{
-  "count": 1,
-  "next": null,
-  "previous": null,
-  "results": [
-    {
-      "basket_discounts": [],
-      "billing_address": {
-        "first_name": "Glenn Martin",
-        "last_name": "",
-        "line1": "123 AnyStreet Ln",
-        "line2": "",
-        "postcode": "02000",
-        "state": "MA",
-        "country": "US",
-        "city": "Norwood"
-      },
-      "contains_credit_seat": false,
-      "currency": "USD",
-      "date_placed": "2023-03-23T17:08:43Z",
-      "dashboard_url": "https://theseusdemo.sandbox.edx.org/dashboard",
-      "discount": "0",
-      "enable_hoist_order_history": false,
-      "enterprise_learner_portal_url": null,
-      "lines": [
-        {
-          "title": "Seat in edX Demonstration Course with verified certificate",
-          "quantity": 1,
-          "course_organization": "edX",
-          "description": "Seat in edX Demonstration Course with verified certificate",
-          "status": "Complete",
-          "line_price_excl_tax": "149.00",
-          "unit_price_excl_tax": "149.00",
-          "product": {
-            "id": 3,
-            "url": "https://ecommerce-theseusdemo.sandbox.edx.org/api/v2/products/3/",
-            "structure": "child",
-            "product_class": "Seat",
-            "title": "Seat in edX Demonstration Course with verified certificate",
-            "price": "149.00",
-            "expires": "2024-03-13T14:12:05.024240Z",
-            "attribute_values": [
-              {
-                "name": "certificate_type",
-                "code": "certificate_type",
-                "value": "verified"
-              },
-              {
-                "name": "course_key",
-                "code": "course_key",
-                "value": "course-v1:edX+DemoX+Demo_Course"
-              },
-              {
-                "name": "id_verification_required",
-                "code": "id_verification_required",
-                "value": true
-              }
-            ],
-            "is_available_to_buy": true,
-            "is_enrollment_code_product": false,
-            "stockrecords": [
-              {
-                "id": 3,
-                "product": 3,
-                "partner": 1,
-                "partner_sku": "8CF08E5",
-                "price_currency": "USD",
-                "price_excl_tax": "149.00"
-              }
-            ]
-          }
-        }
-      ],
-      "number": "EDX-100029",
-      "order_product_ids": "3",
-      "payment_processor": "stripe",
-      "payment_method": "Visa 1111",
-      "product_tracking": null,
-      "status": "Complete",
-      "total_before_discounts_incl_tax": "149.00",
-      "total_excl_tax": "149.00",
-      "user": {
-        "email": "gmartin+glenn_6@2u.com",
-        "username": "glenn_6"
-      },
-      "vouchers": []
-    }
-  ]
-}
-"""
-
-"""
-
-"""
