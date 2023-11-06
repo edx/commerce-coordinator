@@ -185,6 +185,35 @@ class ClientTests(TestCase):
         with pytest.raises(ValueError) as _:
             _ = self.client_set.client.get_orders_for_customer(995)
 
+    def test_get_customer_by_lms_user_id_double(self):
+        base_url = self.client_set.get_base_url_from_client()
+        id_num = 127
+        type_val = self.client_set.client.ensure_custom_type_exists(TwoUCustomTypes.CUSTOMER_TYPE_DRAFT)
+        customer = gen_example_customer()
+        customer.custom.fields[EdXFieldNames.LMS_USER_ID] = id_num
+
+        # The Draft converter changes the ID, so let's update our customer and draft.
+        customer.custom.type.id = type_val.id
+
+        self.client_set.backend_repo.customers.add_existing(customer)
+
+        # Because the base mocker can't do param binding, we have to intercept.
+        with requests_mock.Mocker(real_http=True, case_sensitive=False) as mocker:
+            mocker.get(
+                f"{base_url}customers?"
+                f"where=custom%28fields%28edx-lms_user_id%3D%3Aid%29%29"
+                f"&limit=2"
+                f"&var.id={id_num}",
+                json=CustomerPagedQueryResponse(
+                    limit=2, count=2, total=2, offset=0,
+                    results=self.client_set.fetch_from_storage('customer', Customer) +
+                            self.client_set.fetch_from_storage('customer', Customer),
+                ).serialize()
+            )
+
+            with pytest.raises(ValueError) as _:
+                _ = self.client_set.client.get_customer_by_lms_user_id(id_num)
+
     def test_order_history(self):
         base_url = self.client_set.get_base_url_from_client()
         id_num = 127
@@ -281,7 +310,8 @@ class ClientTests(TestCase):
                 ).serialize()
             )
 
-            ret_orders = self.client_set.client.get_orders_for_customer(id_num, limit=params['limit'], offset=params['offset'])
+            ret_orders = self.client_set.client.get_orders_for_customer(id_num, limit=params['limit'],
+                                                                        offset=params['offset'])
 
             self.assertEqual(ret_orders[0].total, len(orders))
             self.assertEqual(ret_orders[0].has_more(), True)

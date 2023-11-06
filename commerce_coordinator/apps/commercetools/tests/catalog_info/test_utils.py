@@ -8,8 +8,8 @@ from utils import name_test
 
 from commerce_coordinator.apps.commercetools.catalog_info.constants import Languages
 from commerce_coordinator.apps.commercetools.catalog_info.utils import (
-    ls,
-    price_to_string,
+    attribute_dict, ls,
+    ls_eq, price_to_string,
     typed_money_add,
     typed_money_to_string,
     un_ls
@@ -67,6 +67,18 @@ class LocalizedStringsTests(TestCase):
         result = un_ls(ls_struct, pref)
         self.assertEqual(result, expected)
 
+    @ddt.data(
+        ({Languages.ENGLISH: "abc"}, {Languages.ENGLISH: "abc"}, True),
+        ({Languages.US_ENGLISH: "abc"}, {Languages.ENGLISH: "xyz"}, False),
+        (None, {Languages.ENGLISH: "xyz"}, False),
+        ({Languages.ENGLISH: "xyz"}, None, False),
+    )
+    @ddt.unpack
+    def test_ls_eq(self, a, b, is_same):
+        self.assertEqual(ls_eq(a, b), is_same)
+
+    def test_attribute_dict(self):
+        self.assertEqual(attribute_dict(None), None)
 
 @ddt.ddt
 class PriceAndMoneyTests(TestCase):

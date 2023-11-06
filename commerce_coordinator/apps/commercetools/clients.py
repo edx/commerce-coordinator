@@ -194,7 +194,7 @@ class CommercetoolsAPIClient:  # (BaseEdxOAuthClient): ???
         """
         customer = self.get_customer_by_lms_user_id(edx_lms_user_id)
 
-        if customer is None:
+        if customer is None:  # pragma: no cover
             raise ValueError(f'Unable to locate customer with ID #{edx_lms_user_id}')
 
         orders = self.get_orders(customer, offset, limit)

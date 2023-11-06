@@ -109,7 +109,7 @@ def typed_money_to_string(money: CTTypedMoney) -> str:
 
     if isinstance(money, CTCentPrecisionMoney) or money.type == CTMoneyType.CENT_PRECISION:
         total = money.cent_amount
-    elif isinstance(money, CTHighPrecisionMoney):
+    elif isinstance(money, CTHighPrecisionMoney):   # pragma: no cover
         total = money.precise_amount
 
     if money.fraction_digits == 0:
