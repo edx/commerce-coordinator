@@ -1,19 +1,22 @@
+""" Commcercetools API Utilities """
 from unittest import TestCase
 
 import ddt
 import pytest
 from commercetools.platform.models import CentPrecisionMoney, HighPrecisionMoney, Price
 from currencies import Currency
-from utils import name_test
 
 from commerce_coordinator.apps.commercetools.catalog_info.constants import Languages
 from commerce_coordinator.apps.commercetools.catalog_info.utils import (
-    attribute_dict, ls,
-    ls_eq, price_to_string,
+    attribute_dict,
+    ls,
+    ls_eq,
+    price_to_string,
     typed_money_add,
     typed_money_to_string,
     un_ls
 )
+from commerce_coordinator.apps.core.tests.utils import name_test
 
 # <Country>_<Currency>
 JAPAN_YEN = "JPY"  # 0 fractional digits
@@ -24,6 +27,8 @@ OMAN_RIAL = "OMR"  # 3 fractional digits
 
 @ddt.ddt
 class LocalizedStringsTests(TestCase):
+    """ Localized String Utility Tests"""
+
     # ls()
     def test_single_unknown_key_ls_creation(self):
         string = "test"
@@ -80,8 +85,11 @@ class LocalizedStringsTests(TestCase):
     def test_attribute_dict(self):
         self.assertEqual(attribute_dict(None), None)
 
+
 @ddt.ddt
 class PriceAndMoneyTests(TestCase):
+    """ Test the Price and Money utility functions """
+
     # price_to_string
     @ddt.data(
         name_test(US_DOLLAR,

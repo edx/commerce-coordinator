@@ -1,17 +1,52 @@
+""" Commercetools Client Testing Configuration and helper functions """
+
+# pylint: disable=protected-access
+
 import json
 import os
 import pathlib
 import typing
-import uuid
 
 import requests_mock
 from commercetools import Client
 from commercetools.platform.models import Customer as CTCustomer
 from commercetools.platform.models import Order as CTOrder
 from commercetools.testing import BackendRepository
-from utils import uuid4_str
 
 from commerce_coordinator.apps.commercetools.clients import CommercetoolsAPIClient
+from commerce_coordinator.apps.core.tests.utils import uuid4_str
+
+
+class MonkeyPatch:
+    """Monkeypath Utility Class"""
+    STORE_KEY = 'MonkeyPatch'
+
+    @staticmethod
+    def is_monkey(obj):
+        """Is the object monkey patched?"""
+        return hasattr(obj, MonkeyPatch.STORE_KEY)
+
+    @staticmethod
+    def monkey(obj, methods: dict):
+        """Monkey patch and object"""
+        old_attrs = {}
+        for key in methods.keys():
+            old_attrs[key] = getattr(obj, key)
+            setattr(obj, key, methods[key])
+        setattr(obj, MonkeyPatch.STORE_KEY, old_attrs)
+        return obj
+
+    @staticmethod
+    def unmonkey(obj):
+        """Remove monkey patches"""
+        old_attrs = getattr(obj, MonkeyPatch.STORE_KEY)
+
+        for key in old_attrs.keys():
+            setattr(obj, key, old_attrs[key])
+
+        delattr(obj, MonkeyPatch.STORE_KEY)
+        return obj
+
 
 TESTING_COMMERCETOOLS_CONFIG = {
     # These values have special meaning to the CT SDK Unit Testing, and will fail if changed.
@@ -129,14 +164,14 @@ class APITestingSet:
 
 # Data Blobs
 def gen_order(uuid_id):
-    with open(os.path.join(pathlib.Path(__file__).parent.resolve(),'raw_ct_order.json')) as f:
+    with open(os.path.join(pathlib.Path(__file__).parent.resolve(), 'raw_ct_order.json')) as f:
         obj = json.load(f)
         obj['id'] = uuid_id
         return CTOrder.deserialize(obj)
 
 
 def gen_order_history(num=1):
-    return [gen_order(uuid4_str()) for _ in range(0, num)]
+    return [gen_order(uuid4_str()) for _ in range(num)]
 
 
 def gen_example_customer():

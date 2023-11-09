@@ -1,3 +1,4 @@
+""" Commercetools data conversion tests """
 from datetime import datetime
 from typing import List, Optional
 from unittest import TestCase
@@ -19,8 +20,6 @@ from commercetools.platform.models import LineItem as CTLineItem
 from commercetools.platform.models import Reference as CTReference
 from commercetools.platform.models import ReferenceTypeId as CTReferenceTypeId
 from commercetools.platform.models import TypeReference as CTTypeReference
-from conftest import gen_order
-from utils import name_test, uuid4_str
 
 from commerce_coordinator.apps.commercetools.catalog_info.constants import EdXFieldNames
 from commerce_coordinator.apps.commercetools.catalog_info.utils import attribute_dict, price_to_string, un_ls
@@ -34,6 +33,8 @@ from commerce_coordinator.apps.commercetools.data import (
     convert_payment_info,
     order_from_commercetools
 )
+from commerce_coordinator.apps.commercetools.tests.conftest import gen_order
+from commerce_coordinator.apps.core.tests.utils import name_test, uuid4_str
 from commerce_coordinator.apps.ecommerce.data import BillingAddress, Line
 from commerce_coordinator.apps.ecommerce.data import Order as LegacyOrder
 
@@ -84,6 +85,7 @@ def gen_customer(email: str, un: str):
 
 @ddt.ddt
 class TestCTOrderConversionToLegacyOrders(TestCase):
+    """ Commercetools data conversion testcase to cover conversion functions in to legacy object formats """
     @ddt.data(
         name_test(
             "None",

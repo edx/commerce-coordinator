@@ -20,5 +20,3 @@ class Command(CommercetoolsAPIClientCommand):
         ret = self.ct_api_client.base_client.types.get_by_key(type_key)
         self.ct_api_client.base_client.types.delete_by_key(type_key, version=ret.version)
         print(json.dumps(ret.serialize()))
-
-

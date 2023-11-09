@@ -1,5 +1,4 @@
 """ Commercetools API Client(s) Testing """
-import uuid
 
 import pytest
 import requests_mock
@@ -13,14 +12,19 @@ from commercetools.platform.models import (
     Type,
     TypeDraft
 )
-from conftest import TESTING_COMMERCETOOLS_CONFIG, APITestingSet, gen_example_customer, gen_order_history
 from django.test import TestCase, override_settings
-from utils import uuid4_str
 
 from commerce_coordinator.apps.commercetools.catalog_info.constants import EdXFieldNames
 from commerce_coordinator.apps.commercetools.catalog_info.foundational_types import TwoUCustomTypes
 from commerce_coordinator.apps.commercetools.clients import CommercetoolsAPIClient, PaginatedResult
+from commerce_coordinator.apps.commercetools.tests.conftest import (
+    TESTING_COMMERCETOOLS_CONFIG,
+    APITestingSet,
+    gen_example_customer,
+    gen_order_history
+)
 from commerce_coordinator.apps.core.constants import ORDER_HISTORY_PER_SYSTEM_REQ_LIMIT
+from commerce_coordinator.apps.core.tests.utils import uuid4_str
 
 
 class ClientTests(TestCase):
@@ -59,6 +63,7 @@ class ClientTests(TestCase):
         del self.client_set
 
         # When this runs it shouldn't throw an exception
+        # pylint: disable-next=unnecessary-lambda # this is wrong. it is required.
         self.client_set = APITestingSet.new_instance(lambda: CommercetoolsAPIClient())
         self.assertIsNotNone(self.client_set.client)
         self.assertIsInstance(self.client_set.client, CommercetoolsAPIClient)
@@ -206,8 +211,8 @@ class ClientTests(TestCase):
                 f"&var.id={id_num}",
                 json=CustomerPagedQueryResponse(
                     limit=2, count=2, total=2, offset=0,
-                    results=self.client_set.fetch_from_storage('customer', Customer) +
-                            self.client_set.fetch_from_storage('customer', Customer),
+                    results=(self.client_set.fetch_from_storage('customer', Customer) +
+                             self.client_set.fetch_from_storage('customer', Customer)),
                 ).serialize()
             )
 
@@ -320,15 +325,17 @@ class ClientTests(TestCase):
 
 
 class PaginatedResultsTest(TestCase):
+    """Tests for the simple logic in our Paginated Results Class"""
+
     def test_data_class_does_have_more(self):
-        data = [i for i in range(0, 11)]
+        data = list(range(11))
         paginated = PaginatedResult(data[:10], len(data), 0)
 
         self.assertEqual(paginated.has_more(), True)
         self.assertEqual(paginated.next_offset(), 10)
 
     def test_data_class_doesnt_have_more(self):
-        data = [i for i in range(0, 10)]
+        data = list(range(10))
         paginated = PaginatedResult(data, len(data), 0)
 
         self.assertEqual(paginated.has_more(), False)

@@ -1,10 +1,11 @@
 """
 Commercetools filter pipelines
 """
-
+import attr
 from openedx_filters import PipelineStep
 
 from commerce_coordinator.apps.commercetools.clients import CommercetoolsAPIClient
+from commerce_coordinator.apps.commercetools.data import order_from_commercetools
 
 
 class GetCommercetoolsOrders(PipelineStep):
@@ -25,10 +26,14 @@ class GetCommercetoolsOrders(PipelineStep):
         ct_orders = ct_api_client.get_orders_for_customer(
             edx_lms_user_id=params["edx_lms_user_id"],
             limit=params["page_size"],
-            offset= params["page"] * params["page_size"]
+            offset=params["page"] * params["page_size"]
         )
 
-        order_data.append(ct_orders)
+        converted_orders = [attr.asdict(order_from_commercetools(x, ct_orders[1])) for x in ct_orders[0].results]
+
+        order_data.append(
+            ct_orders[0].rebuild(converted_orders)
+        )
 
         return {
             "order_data": order_data

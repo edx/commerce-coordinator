@@ -109,7 +109,7 @@ def typed_money_to_string(money: CTTypedMoney) -> str:
 
     if isinstance(money, CTCentPrecisionMoney) or money.type == CTMoneyType.CENT_PRECISION:
         total = money.cent_amount
-    elif isinstance(money, CTHighPrecisionMoney):   # pragma: no cover
+    elif isinstance(money, CTHighPrecisionMoney):  # pragma: no cover
         total = money.precise_amount
 
     if money.fraction_digits == 0:
@@ -122,8 +122,10 @@ def typed_money_to_string(money: CTTypedMoney) -> str:
 def _typed_money_op(a: CTTypedMoney, b: Optional[CTTypedMoney], op):
     if b is None:
         return a
-    if a.type == b.type and a.currency_code == b.currency_code and \
-        a.fraction_digits == b.fraction_digits:
+    if (
+        a.type == b.type and a.currency_code == b.currency_code and
+        a.fraction_digits == b.fraction_digits
+    ):
         if isinstance(a, CTHighPrecisionMoney):
             # noinspection PyUnresolvedReferences
             return CTHighPrecisionMoney(

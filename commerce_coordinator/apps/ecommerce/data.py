@@ -1,12 +1,15 @@
+"""
+Legacy Ecommerce Data Object Format
+"""
 from datetime import datetime
 from typing import List, Optional
 
 from attr.validators import gt, instance_of, lt, max_len, min_len, optional
 from attrs import field, mutable
 
-
 # More Information:
 #   https://open-edx-proposals.readthedocs.io/en/latest/best-practices/oep-0049-django-app-patterns.html#data-py
+
 
 @mutable
 class BillingAddress:

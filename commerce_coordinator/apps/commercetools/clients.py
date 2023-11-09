@@ -29,6 +29,7 @@ T = TypeVar("T")
 
 
 class PaginatedResult(Generic[T]):
+    """ Planned paginated response wrapper """
     results: List[T]
     total: int
     offset: int
@@ -45,8 +46,15 @@ class PaginatedResult(Generic[T]):
     def has_more(self) -> bool:
         return (self.next_offset()) < self.total
 
+    def __getitem__(self, item):
+        return getattr(self, item)
 
-class CommercetoolsAPIClient:  # (BaseEdxOAuthClient): ???
+    def rebuild(self, results: List[T]):
+        return PaginatedResult(results, total=self.total, offset=self.offset)
+
+
+class CommercetoolsAPIClient:
+    """ Commercetools API Client """
     base_client = None
 
     def __init__(self, client: typing.Optional[CTClient] = None):
@@ -61,7 +69,8 @@ class CommercetoolsAPIClient:  # (BaseEdxOAuthClient): ???
         if client and not is_under_test():  # pragma: no cover
             # guard client
             raise RuntimeError('You must be invoking this through a test runner to supply a client.')
-        elif client:  # we're under test so let's accept it
+
+        if client:  # we're under test so let's accept it
             self.base_client = client
         else:  # were not testing, let's build our own
             config = settings.COMMERCETOOLS_CONFIG
@@ -75,6 +84,14 @@ class CommercetoolsAPIClient:  # (BaseEdxOAuthClient): ???
             )
 
     def ensure_custom_type_exists(self, type_def: CTTypeDraft) -> Optional[CTType]:
+        """
+        Ensures a custom type exists within CoCo
+        Args:
+            type_def: The type definition draft.
+
+        Returns: The formal type with identifier or None
+
+        """
         type_object = None
         type_exists = False
         try:
@@ -92,7 +109,16 @@ class CommercetoolsAPIClient:  # (BaseEdxOAuthClient): ???
         return type_object
 
     def tag_customer_with_lms_user_info(self, customer: CTCustomer, lms_user_id: int, lms_user_name: str) -> CTCustomer:
+        """
+        Updates a CoCo Customer Object with what we are currently using for LMS Identifiers
+        Args:
+            customer: Customer Object from CoCo
+            lms_user_id: edX LMS User ID #
+            lms_user_name: edX LMS Username
 
+        Returns: Updated CoCo customer object
+
+        """
         # All updates to CT Core require the version of the object you are working on as protection from out of band
         #   updates; this does mean we have to fetch every (primary) object we want to chain.
 
@@ -146,7 +172,8 @@ class CommercetoolsAPIClient:  # (BaseEdxOAuthClient): ???
             #   let's do a backhanded check by trying to pull 2 users and erroring if we find a discrepancy.
             raise ValueError("More than one user was returned from the catalog with this edX LMS User ID, these must "
                              "be unique.")
-        elif results.count == 0:
+
+        if results.count == 0:
             return None
         else:
             return results.results[0]

@@ -21,4 +21,3 @@ class Command(CommercetoolsAPIClientCommand):
         ret = self.ct_api_client.base_client.customers.get_by_id(customer_uuid)
 
         print(json.dumps(ret.serialize()))
-

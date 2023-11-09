@@ -1,3 +1,5 @@
+""" Conversion methods to convert a Commercetools order in to a Legacy Ecommerce one """
+
 from typing import List, Optional
 
 from commercetools.platform.models import Address as CTAddress
@@ -54,6 +56,14 @@ def convert_line_item(li: CTLineItem) -> Line:
 
 
 def convert_line_item_prod_id(li: CTLineItem) -> str:
+    """
+    Convert a Commercetools Line Item to a String for Legacy Orders
+    Args:
+        li: Commercetools LineItem instance
+
+    Returns: Our best guess at the product line items id.
+
+    """
     key_name = 'edx-course_run_id'  # this could be wrong and will likely change when the catalog is 'fixed'
     attrs = attribute_dict(li.variant.attributes)
 
