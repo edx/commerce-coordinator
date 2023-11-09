@@ -1,6 +1,14 @@
 commerce\_coordinator.apps.commercetools package
 ================================================
 
+Subpackages
+-----------
+
+.. toctree::
+   :maxdepth: 4
+
+   commerce_coordinator.apps.commercetools.tests
+
 Submodules
 ----------
 
