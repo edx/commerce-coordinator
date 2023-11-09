@@ -2,7 +2,7 @@
 -c constraints.txt
 
 # The below will change as SONIC-30 is completed. This is a stop-gap, and an automated (generated) update of a OSS lib.
-git+ssh://git@github.com/grmartin/commercetools-python-sdk.git@6eb908798b26f48bca5a5c84237ee0de72452183#egg=commercetools
+git+https://github.com/grmartin/commercetools-python-sdk.git@6eb908798b26f48bca5a5c84237ee0de72452183#egg=commercetools
 
 asgiref==3.7.2       # Until we switch to Py 3.10, this has some serius issues with debuggers.
 attrs
