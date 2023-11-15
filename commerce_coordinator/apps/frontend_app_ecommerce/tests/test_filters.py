@@ -27,7 +27,6 @@ class TestFrontendAppEcommerceFilters(TestCase):
     """
 
     # Disable unused-argument due to global @patch
-    # pylint: disable=unused-argument
 
     def test_order_history_requested_filter(self, _mock_ctorders, _mock_ecommerce_client):
         """
