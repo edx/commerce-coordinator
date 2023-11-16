@@ -348,36 +348,36 @@ TITAN_URL = 'replace-me'
 # Needed to link to the payment micro-frontend
 PAYMENT_MICROFRONTEND_URL = 'replace-me'
 
-# Coordinator filters should NEVER be allowed to fail silently, we ensure that in post processing
+# Coordinator filters should NEVER be allowed to fail silently
 OPEN_EDX_FILTERS_CONFIG = {
     "org.edx.coordinator.demo_lms.sample_data.v1": {
+        "fail_silently": False,  # TODO: Coordinator filters should NEVER be allowed to fail silently
         "pipeline": [
             'commerce_coordinator.apps.demo_lms.pipeline.AddSomeData',
             'commerce_coordinator.apps.demo_lms.pipeline.AddSomeMoreData',
         ]
     },
     "org.edx.coordinator.frontend_app_ecommerce.order.history.requested.v1": {
-        "pipeline": [
-            'commerce_coordinator.apps.ecommerce.pipeline.GetEcommerceOrders',
-        ]
-    },
-    "org.edx.coordinator.commercetools.order.history.requested.v1": {
+        "fail_silently": False,  # TODO: Coordinator filters should NEVER be allowed to fail silently
         "pipeline": [
             'commerce_coordinator.apps.ecommerce.pipeline.GetEcommerceOrders',  # old system
             'commerce_coordinator.apps.commercetools.pipeline.GetCommercetoolsOrders',  # new system
         ]
     },
     "org.edx.coordinator.lms.order.create.requested.v1": {
+        "fail_silently": False,  # TODO: Coordinator filters should NEVER be allowed to fail silently
         "pipeline": [
             'commerce_coordinator.apps.titan.pipeline.CreateTitanOrder',
         ]
     },
     "org.edx.coordinator.frontend_app_payment.payment.get.requested.v1": {
+        "fail_silently": False,  # TODO: Coordinator filters should NEVER be allowed to fail silently
         "pipeline": [
             'commerce_coordinator.apps.titan.pipeline.GetTitanPayment',
         ]
     },
     "org.edx.coordinator.frontend_app_payment.payment.draft.requested.v1": {
+        "fail_silently": False,  # TODO: Coordinator filters should NEVER be allowed to fail silently
         "pipeline": [
             'commerce_coordinator.apps.titan.pipeline.GetTitanActiveOrder',
             'commerce_coordinator.apps.titan.pipeline.ValidateOrderReadyForDraftPayment',
@@ -388,16 +388,19 @@ OPEN_EDX_FILTERS_CONFIG = {
         ]
     },
     "org.edx.coordinator.stripe.payment.draft.created.v1": {
+        "fail_silently": False,  # TODO: Coordinator filters should NEVER be allowed to fail silently
         "pipeline": [
             'commerce_coordinator.apps.titan.pipeline.CreateDraftPayment',
         ]
     },
     "org.edx.coordinator.frontend_app_payment.active.order.requested.v1": {
+        "fail_silently": False,
         "pipeline": [
             'commerce_coordinator.apps.titan.pipeline.GetTitanActiveOrder',
         ]
     },
     "org.edx.coordinator.frontend_app_payment.payment.processing.requested.v1": {
+        "fail_silently": False,  # TODO: Coordinator filters should NEVER be allowed to fail silently
         "pipeline": [
             'commerce_coordinator.apps.titan.pipeline.GetTitanPayment',
             'commerce_coordinator.apps.titan.pipeline.ValidatePaymentReadyForProcessing'
@@ -407,26 +410,12 @@ OPEN_EDX_FILTERS_CONFIG = {
         ]
     },
     "org.edx.coordinator.titan.payment.superseded.v1": {
+        "fail_silently": False,  # TODO: Coordinator filters should NEVER be allowed to fail silently
         "pipeline": [
             'commerce_coordinator.apps.stripe.pipeline.UpdateStripePayment',
         ]
     }
 }
-
-
-def _set_fail_silently(inner_dict):
-    """
-    Filters should never fail silently, so let's ensure that's applied to all items.
-
-    Args:
-        inner_dict (dict): A filter configuration item
-    """
-    inner_dict["fail_silently"] = False
-    return inner_dict
-
-
-OPEN_EDX_FILTERS_CONFIG = {key: _set_fail_silently(OPEN_EDX_FILTERS_CONFIG[key])
-                           for key in OPEN_EDX_FILTERS_CONFIG.keys()}
 
 # Carry fields from the JWT token and LMS user into the local user
 EDX_DRF_EXTENSIONS = {

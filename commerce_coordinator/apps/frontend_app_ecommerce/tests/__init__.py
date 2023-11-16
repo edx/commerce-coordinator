@@ -1,7 +1,16 @@
 """Constants for frontend_app_ecommerce app tests."""
 
+from unittest.mock import MagicMock
+
+from django.contrib.auth import get_user_model
+
+from commerce_coordinator.apps.commercetools.clients import PaginatedResult
+from commerce_coordinator.apps.commercetools.tests.conftest import gen_order
+from commerce_coordinator.apps.commercetools.tests.test_data import gen_customer
+from commerce_coordinator.apps.core.tests.utils import uuid4_str
+
 # Test parameters used by order history endpoint
-ORDER_HISTORY_GET_PARAMETERS = {'username': 'TestUser', "page": 1, "page_size": 20}
+ORDER_HISTORY_GET_PARAMETERS = {'username': 'TestUser', "page": 1, "page_size": 20, 'edx_lms_user_id': 127}
 
 # Sample response from EcommerceAPIClient.get_orders
 ECOMMERCE_REQUEST_EXPECTED_RESPONSE = {
@@ -77,3 +86,21 @@ ECOMMERCE_REQUEST_EXPECTED_RESPONSE = {
         }
     ]
 }
+
+
+class EcommerceClientMock(MagicMock):
+    """A mock EcommerceAPIClient that always returns ECOMMERCE_REQUEST_EXPECTED_RESPONSE."""
+    return_value = ECOMMERCE_REQUEST_EXPECTED_RESPONSE
+
+
+User = get_user_model()
+
+orders = [gen_order(uuid4_str())]
+
+
+class CTOrdersForCustomerMock(MagicMock):
+    """A mock EcommerceAPIClient that always returns ECOMMERCE_REQUEST_EXPECTED_RESPONSE."""
+    return_value = (
+        PaginatedResult(orders, len(orders), 0),
+        gen_customer(email='test@example.com', un="test")
+    )
