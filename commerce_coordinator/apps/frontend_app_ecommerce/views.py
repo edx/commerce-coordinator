@@ -24,6 +24,7 @@ def date_conv(dt: Union[datetime, str]) -> datetime:
     else:
         return dt
 
+
 class UserOrdersView(APIView):
     """Get the order history for the authenticated user."""
     permission_classes = [LoginRedirectIfUnauthenticated]
@@ -55,7 +56,4 @@ class UserOrdersView(APIView):
         for order_set in order_data:
             output_orders.extend(order_set['results'])
 
-        return Response({
-            "order_data": sorted(output_orders, key=lambda item: date_conv(item["date_placed"]), reverse=True)
-        })
-
+        return Response(sorted(output_orders, key=lambda item: date_conv(item["date_placed"]), reverse=True))

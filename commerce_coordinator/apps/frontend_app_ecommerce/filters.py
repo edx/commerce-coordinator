@@ -26,4 +26,4 @@ class OrderHistoryRequested(OpenEdxPublicFilter):
         result = pipeline_data.get("order_data")
 
         # Note: OpenEdxPublicFilter run_pipeline returns an array with our dictionary inside
-        return result[0]
+        return result

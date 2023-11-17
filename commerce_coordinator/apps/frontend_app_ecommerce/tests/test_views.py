@@ -46,7 +46,10 @@ class OrdersViewTests(TestCase):
         super().setUp()
         User = get_user_model()
         User.objects.create_user(
-            self.test_user_username, self.test_user_email, self.test_user_password, lms_user_id=127
+            self.test_user_username,
+            self.test_user_email,
+            self.test_user_password,
+            lms_user_id=127
         )
 
     def tearDown(self):
@@ -98,7 +101,7 @@ class OrdersViewTests(TestCase):
         response = self.client.get(reverse('frontend_app_ecommerce:order_history'), ORDER_HISTORY_GET_PARAMETERS)
 
         # Check expected response
-        self.assertEqual(response.json(), ECOMMERCE_REQUEST_EXPECTED_RESPONSE)
+        self.assertEqual(response.json()[1], ECOMMERCE_REQUEST_EXPECTED_RESPONSE['results'][0])
 
     def test_view_passes_username(self, _mock_ctorders, mock_ecommerce_client):
         """Check logged in user's username is passed to the ecommerce client."""

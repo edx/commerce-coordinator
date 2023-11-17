@@ -35,4 +35,4 @@ class TestFrontendAppEcommerceFilters(TestCase):
         """
 
         response = OrderHistoryRequested.run_filter(ORDER_HISTORY_GET_PARAMETERS)
-        self.assertEqual(response, ECOMMERCE_REQUEST_EXPECTED_RESPONSE)
+        self.assertEqual(response[0], ECOMMERCE_REQUEST_EXPECTED_RESPONSE)
