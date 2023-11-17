@@ -78,7 +78,7 @@ code-annotations==1.5.0
     # via
     #   -r requirements/test.txt
     #   edx-lint
-commercetools @ git+https://github.com/edx/commercetools-python-sdk.git@6eb908798b26f48bca5a5c84237ee0de72452183
+commercetools @ git+https://github.com/edx/commercetools-python-sdk.git@36639f4a196d7fc0daecf914ee46f42229087abb
     # via -r requirements/test.txt
 coreapi==2.3.3
     # via

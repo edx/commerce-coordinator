@@ -28,14 +28,6 @@ commerce\_coordinator.apps.commercetools.data module
    :undoc-members:
    :show-inheritance:
 
-commerce\_coordinator.apps.commercetools.filters module
--------------------------------------------------------
-
-.. automodule:: commerce_coordinator.apps.commercetools.filters
-   :members:
-   :undoc-members:
-   :show-inheritance:
-
 commerce\_coordinator.apps.commercetools.pipeline module
 --------------------------------------------------------
 
@@ -48,14 +40,6 @@ commerce\_coordinator.apps.commercetools.urls module
 ----------------------------------------------------
 
 .. automodule:: commerce_coordinator.apps.commercetools.urls
-   :members:
-   :undoc-members:
-   :show-inheritance:
-
-commerce\_coordinator.apps.commercetools.views module
------------------------------------------------------
-
-.. automodule:: commerce_coordinator.apps.commercetools.views
    :members:
    :undoc-members:
    :show-inheritance:
