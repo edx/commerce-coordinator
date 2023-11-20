@@ -20,7 +20,6 @@ from django.conf import settings
 
 from commerce_coordinator.apps.commercetools.catalog_info.constants import EdXFieldNames
 from commerce_coordinator.apps.commercetools.catalog_info.foundational_types import TwoUCustomTypes
-from commerce_coordinator.apps.core import is_under_test
 from commerce_coordinator.apps.core.constants import ORDER_HISTORY_PER_SYSTEM_REQ_LIMIT
 
 logger = logging.getLogger(__name__)
@@ -57,7 +56,7 @@ class CommercetoolsAPIClient:
     """ Commercetools API Client """
     base_client = None
 
-    def __init__(self, client: typing.Optional[CTClient] = None):
+    def __init__(self):
         """
         Initialize CommercetoolsAPIClient, for use in an application, or (with an arg) testing.
 
@@ -66,22 +65,15 @@ class CommercetoolsAPIClient:
         """
         super().__init__()
 
-        if client and not is_under_test():  # pragma: no cover
-            # guard client
-            raise RuntimeError('You must be invoking this through a test runner to supply a client.')
-
-        if client:  # we're under test so let's accept it
-            self.base_client = client
-        else:  # were not testing, let's build our own
-            config = settings.COMMERCETOOLS_CONFIG
-            self.base_client = CTClient(
-                client_id=config["clientId"],
-                client_secret=config["clientSecret"],
-                scope=config["scopes"].split(' '),
-                url=config["apiUrl"],
-                token_url=config["authUrl"],
-                project_key=config["projectKey"]
-            )
+        config = settings.COMMERCETOOLS_CONFIG
+        self.base_client = CTClient(
+            client_id=config["clientId"],
+            client_secret=config["clientSecret"],
+            scope=config["scopes"].split(' '),
+            url=config["apiUrl"],
+            token_url=config["authUrl"],
+            project_key=config["projectKey"]
+        )
 
     def ensure_custom_type_exists(self, type_def: CTTypeDraft) -> Optional[CTType]:
         """

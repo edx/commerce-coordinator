@@ -8,7 +8,6 @@ import pathlib
 import typing
 
 import requests_mock
-from commercetools import Client
 from commercetools.platform.models import Customer as CTCustomer
 from commercetools.platform.models import Order as CTOrder
 from commercetools.testing import BackendRepository
@@ -61,15 +60,7 @@ TESTING_COMMERCETOOLS_CONFIG = {
 
 def _default_client_factory() -> CommercetoolsAPIClient:
     """Create a default API Client using the CT Test Config Settings"""
-    cfg = TESTING_COMMERCETOOLS_CONFIG
-    return CommercetoolsAPIClient(Client(
-        project_key=cfg['projectKey'],
-        client_id=cfg['clientId'],
-        client_secret=cfg['clientSecret'],
-        scope=[],
-        url=cfg['apiUrl'],
-        token_url=cfg['authUrl'],
-    ))
+    return CommercetoolsAPIClient()
 
 
 StorageKey = typing.Literal[  # So people don't have to guess the storage keys

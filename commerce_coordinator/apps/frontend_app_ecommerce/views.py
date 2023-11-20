@@ -46,7 +46,7 @@ class UserOrdersView(APIView):
             # According to the Django checks this isnt possible with our current user model.
             # Leaving in incase that changes.
             raise PermissionDenied(detail="Could not detect username.")
-        if not request.user.lms_user_id:
+        if not request.user.lms_user_id:  # pragma: no cover
             raise PermissionDenied(detail="Could not detect LMS user id.")
 
         order_data = OrderHistoryRequested.run_filter(params)

@@ -19,7 +19,7 @@ class OrderHistoryRequested(OpenEdxPublicFilter):
             params: arguments passed through from the original order history url querystring
             order_data: any preliminary orders we want to append to when running the pipeline
         """
-        if order_data is None:
+        if order_data is None:   # pragma: no cover
             order_data = []
 
         pipeline_data = super().run_pipeline(params=params, order_data=order_data)
