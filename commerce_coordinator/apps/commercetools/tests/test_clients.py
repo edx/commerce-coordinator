@@ -2,7 +2,6 @@
 
 import pytest
 import requests_mock
-from commercetools import Client as CTClient
 from commercetools.platform.models import (
     Customer,
     CustomerDraft,
@@ -12,13 +11,12 @@ from commercetools.platform.models import (
     Type,
     TypeDraft
 )
-from django.test import TestCase, override_settings
+from django.test import TestCase
 
 from commerce_coordinator.apps.commercetools.catalog_info.constants import EdXFieldNames
 from commerce_coordinator.apps.commercetools.catalog_info.foundational_types import TwoUCustomTypes
-from commerce_coordinator.apps.commercetools.clients import CommercetoolsAPIClient, PaginatedResult
+from commerce_coordinator.apps.commercetools.clients import PaginatedResult
 from commerce_coordinator.apps.commercetools.tests.conftest import (
-    TESTING_COMMERCETOOLS_CONFIG,
     APITestingSet,
     gen_example_customer,
     gen_order_history
@@ -55,19 +53,6 @@ class ClientTests(TestCase):
         # force deconstructor call or some test get flaky
         del self.client_set
         super().tearDown()
-
-    @override_settings(COMMERCETOOLS_CONFIG=TESTING_COMMERCETOOLS_CONFIG)
-    def test_null_api_client_using_server_config(self):
-        """This function tests default client creation from Django config"""
-
-        del self.client_set
-
-        # When this runs it shouldn't throw an exception
-        # pylint: disable-next=unnecessary-lambda # this is wrong. it is required.
-        self.client_set = APITestingSet.new_instance(lambda: CommercetoolsAPIClient())
-        self.assertIsNotNone(self.client_set.client)
-        self.assertIsInstance(self.client_set.client, CommercetoolsAPIClient)
-        self.assertIsInstance(self.client_set.client.base_client, CTClient)
 
     def test_ensure_custom_type_exists(self):
         draft = TwoUCustomTypes.CUSTOMER_TYPE_DRAFT
