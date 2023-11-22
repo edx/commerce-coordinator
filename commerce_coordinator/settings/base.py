@@ -347,7 +347,7 @@ TITAN_URL = 'replace-me'
 # Needed to link to the payment micro-frontend
 PAYMENT_MICROFRONTEND_URL = 'replace-me'
 
-# Filters PoC
+# Coordinator filters should NEVER be allowed to fail silently
 OPEN_EDX_FILTERS_CONFIG = {
     "org.edx.coordinator.demo_lms.sample_data.v1": {
         "fail_silently": False,  # TODO: Coordinator filters should NEVER be allowed to fail silently
@@ -359,7 +359,8 @@ OPEN_EDX_FILTERS_CONFIG = {
     "org.edx.coordinator.frontend_app_ecommerce.order.history.requested.v1": {
         "fail_silently": False,  # TODO: Coordinator filters should NEVER be allowed to fail silently
         "pipeline": [
-            'commerce_coordinator.apps.ecommerce.pipeline.GetEcommerceOrders',
+            'commerce_coordinator.apps.ecommerce.pipeline.GetEcommerceOrders',  # old system
+            'commerce_coordinator.apps.commercetools.pipeline.GetCommercetoolsOrders',  # new system
         ]
     },
     "org.edx.coordinator.lms.order.create.requested.v1": {

@@ -125,6 +125,7 @@ EDX_API_KEY = 'PUT_YOUR_API_KEY_HERE'  # This is the actual API key in devstack.
 ECOMMERCE_URL = "http://localhost:18130"
 
 LMS_URL_ROOT = "http://localhost:18000"
+LMS_DASHBOARD_URL = "http://localhost:18000"  # fix me
 
 PAYMENT_MICROFRONTEND_URL = "http://localhost:1998"
 

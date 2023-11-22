@@ -3,7 +3,6 @@ This module provides a KEY_FUNCTION suitable for use with a memcache backend
 so that we can cache any keys, not just ones that memcache would ordinarily accept
 """
 
-
 import hashlib
 from urllib.parse import quote_plus
 
@@ -14,7 +13,7 @@ def fasthash(string):
     """
     Hashes `string` into a string representation of a 128-bit digest.
     """
-    md4 = hashlib.new("md4")
+    md4 = hashlib.new("md5")  # md4 is no longer supported.
     md4.update(string.encode('utf-8'))
     return md4.hexdigest()
 

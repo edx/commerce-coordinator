@@ -85,7 +85,7 @@ code-annotations==1.5.0
     # via
     #   -r requirements/validation.txt
     #   edx-lint
-commercetools==2023.6.29
+commercetools @ git+https://github.com/edx/commercetools-python-sdk.git@36639f4a196d7fc0daecf914ee46f42229087abb
     # via -r requirements/validation.txt
 coreapi==2.3.3
     # via
@@ -105,6 +105,8 @@ cryptography==41.0.4
     #   -r requirements/validation.txt
     #   pyjwt
     #   social-auth-core
+currencies==2020.12.12
+    # via -r requirements/validation.txt
 ddt==1.6.0
     # via -r requirements/validation.txt
 defusedxml==0.8.0rc1
