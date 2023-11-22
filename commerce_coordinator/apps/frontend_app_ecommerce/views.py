@@ -2,16 +2,27 @@
 Views for the frontend_app_ecommerce app
 """
 import logging
+from datetime import datetime
+from typing import Union
 
+from dateutil import parser as dateparser
 from edx_rest_framework_extensions.permissions import LoginRedirectIfUnauthenticated
 from rest_framework.exceptions import PermissionDenied
 from rest_framework.response import Response
 from rest_framework.throttling import UserRateThrottle
 from rest_framework.views import APIView
 
-from .filters import OrderHistoryRequested
+from commerce_coordinator.apps.core.constants import ORDER_HISTORY_PER_SYSTEM_REQ_LIMIT
+from commerce_coordinator.apps.frontend_app_ecommerce.filters import OrderHistoryRequested
 
 logger = logging.getLogger(__name__)
+
+
+def date_conv(dt: Union[datetime, str]) -> datetime:
+    if isinstance(dt, str):
+        return dateparser.parse(dt)
+    else:
+        return dt
 
 
 class UserOrdersView(APIView):
@@ -23,13 +34,26 @@ class UserOrdersView(APIView):
         """Return paginated response of user's order history."""
 
         # build parameters
-        page = request.query_params.get("page")
-        page_size = request.query_params.get("page_size")
-        params = {'username': request.user.username, "page": page, "page_size": page_size}
+        params = {
+            'username': request.user.username,
+            "edx_lms_user_id": request.user.lms_user_id,
+            "page": 0,
+            "page_size": ORDER_HISTORY_PER_SYSTEM_REQ_LIMIT
+        }
 
         # deny global queries
-        if not request.user.username:
+        if not request.user.username:  # pragma: no cover
+            # According to the Django checks this isnt possible with our current user model.
+            # Leaving in incase that changes.
             raise PermissionDenied(detail="Could not detect username.")
+        if not request.user.lms_user_id:  # pragma: no cover
+            raise PermissionDenied(detail="Could not detect LMS user id.")
+
         order_data = OrderHistoryRequested.run_filter(params)
 
-        return Response(order_data)
+        output_orders = []
+
+        for order_set in order_data:
+            output_orders.extend(order_set['results'])
+
+        return Response(sorted(output_orders, key=lambda item: date_conv(item["date_placed"]), reverse=True))

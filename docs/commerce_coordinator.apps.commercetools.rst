@@ -1,6 +1,49 @@
 commerce\_coordinator.apps.commercetools package
 ================================================
 
+Subpackages
+-----------
+
+.. toctree::
+   :maxdepth: 4
+
+   commerce_coordinator.apps.commercetools.tests
+
+Submodules
+----------
+
+commerce\_coordinator.apps.commercetools.clients module
+-------------------------------------------------------
+
+.. automodule:: commerce_coordinator.apps.commercetools.clients
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+commerce\_coordinator.apps.commercetools.data module
+----------------------------------------------------
+
+.. automodule:: commerce_coordinator.apps.commercetools.data
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+commerce\_coordinator.apps.commercetools.pipeline module
+--------------------------------------------------------
+
+.. automodule:: commerce_coordinator.apps.commercetools.pipeline
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+commerce\_coordinator.apps.commercetools.urls module
+----------------------------------------------------
+
+.. automodule:: commerce_coordinator.apps.commercetools.urls
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
 Module contents
 ---------------
 

@@ -2,7 +2,6 @@
 Tests for the frontend_app_ecommerce app views.
 """
 import logging
-from unittest.mock import MagicMock
 
 from django.contrib.auth import get_user_model
 from django.test import TestCase
@@ -12,19 +11,20 @@ from rest_framework.test import APIClient
 
 from commerce_coordinator.apps.frontend_app_ecommerce.tests import (
     ECOMMERCE_REQUEST_EXPECTED_RESPONSE,
-    ORDER_HISTORY_GET_PARAMETERS
+    ORDER_HISTORY_GET_PARAMETERS,
+    CTOrdersForCustomerMock,
+    EcommerceClientMock
 )
 
 logger = logging.getLogger(__name__)
 
 
-class EcommerceClientMock(MagicMock):
-    """A mock EcommerceAPIClient that always returns ECOMMERCE_REQUEST_EXPECTED_RESPONSE."""
-    return_value = ECOMMERCE_REQUEST_EXPECTED_RESPONSE
-
-
 @patch('commerce_coordinator.apps.ecommerce.clients.EcommerceAPIClient.get_orders',
        new_callable=EcommerceClientMock)
+@patch(
+    'commerce_coordinator.apps.commercetools.clients.CommercetoolsAPIClient.get_orders_for_customer',
+    new_callable=CTOrdersForCustomerMock
+)
 class OrdersViewTests(TestCase):
     """
     Tests for order views.
@@ -45,7 +45,12 @@ class OrdersViewTests(TestCase):
 
         super().setUp()
         User = get_user_model()
-        User.objects.create_user(self.test_user_username, self.test_user_email, self.test_user_password)
+        User.objects.create_user(
+            self.test_user_username,
+            self.test_user_email,
+            self.test_user_password,
+            lms_user_id=127
+        )
 
     def tearDown(self):
         """Log out any user from client after test ends."""
@@ -53,7 +58,7 @@ class OrdersViewTests(TestCase):
         super().tearDown()
         self.client.logout()
 
-    def test_view_rejects_post(self, mock_ecommerce_client):
+    def test_view_rejects_post(self, _mock_ctorders, _mock_ecommerce_client):
         """Check POST from authorized user receives a 405 Method Not Allowed."""
 
         # Login
@@ -65,7 +70,7 @@ class OrdersViewTests(TestCase):
         # Check 405 Method Not Allowed
         self.assertEqual(response.status_code, 405)
 
-    def test_view_rejects_unauthorized(self, mock_ecommerce_client):
+    def test_view_rejects_unauthorized(self, _mock_ctorders, _mock_ecommerce_client):
         """Check unauthorized users querying orders are redirected to login page."""
 
         # Perform GET without logging in.
@@ -75,7 +80,7 @@ class OrdersViewTests(TestCase):
         self.assertEqual(response.status_code, 302)
         self.assertIn("/login", response.url)
 
-    def test_view_returns_ok(self, mock_ecommerce_client):
+    def test_view_returns_ok(self, _mock_ctorders, _mock_ecommerce_client):
         """Check authorized user querying orders receives an HTTP 200 OK."""
 
         # Login
@@ -86,7 +91,7 @@ class OrdersViewTests(TestCase):
         # Check 200 OK
         self.assertEqual(response.status_code, 200)
 
-    def test_view_returns_expected_ecommerce_response(self, mock_ecommerce_client):
+    def test_view_returns_expected_ecommerce_response(self, _mock_ctorders, _mock_ecommerce_client):
         """Check authorized user querying orders receive an expected response."""
 
         # Login
@@ -96,9 +101,9 @@ class OrdersViewTests(TestCase):
         response = self.client.get(reverse('frontend_app_ecommerce:order_history'), ORDER_HISTORY_GET_PARAMETERS)
 
         # Check expected response
-        self.assertEqual(response.json(), ECOMMERCE_REQUEST_EXPECTED_RESPONSE)
+        self.assertEqual(response.json()[1], ECOMMERCE_REQUEST_EXPECTED_RESPONSE['results'][0])
 
-    def test_view_passes_username(self, mock_ecommerce_client):
+    def test_view_passes_username(self, _mock_ctorders, mock_ecommerce_client):
         """Check logged in user's username is passed to the ecommerce client."""
 
         # Login
