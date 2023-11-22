@@ -21,6 +21,8 @@ async-timeout==4.0.3
     # via
     #   -r requirements/test.txt
     #   redis
+attrs==23.1.0
+    # via -r requirements/test.txt
 backports-zoneinfo[tzdata]==0.2.1
     # via
     #   -r requirements/test.txt
@@ -76,7 +78,7 @@ code-annotations==1.5.0
     # via
     #   -r requirements/test.txt
     #   edx-lint
-commercetools==2023.6.29
+commercetools @ git+https://github.com/edx/commercetools-python-sdk.git@36639f4a196d7fc0daecf914ee46f42229087abb
     # via -r requirements/test.txt
 coreapi==2.3.3
     # via
@@ -96,6 +98,8 @@ cryptography==41.0.3
     #   -r requirements/test.txt
     #   pyjwt
     #   social-auth-core
+currencies==2020.12.12
+    # via -r requirements/test.txt
 ddt==1.6.0
     # via -r requirements/test.txt
 defusedxml==0.7.1
@@ -290,6 +294,7 @@ pkginfo==1.9.6
     # via twine
 platformdirs==3.10.0
     # via
+    #   -c https://raw.githubusercontent.com/edx/edx-lint/master/edx_lint/files/common_constraints.txt
     #   -r requirements/test.txt
     #   pylint
     #   virtualenv
@@ -492,9 +497,7 @@ tomlkit==0.12.1
     #   -r requirements/test.txt
     #   pylint
 tox==3.28.0
-    # via
-    #   -c https://raw.githubusercontent.com/edx/edx-lint/master/edx_lint/files/common_constraints.txt
-    #   -r requirements/test.txt
+    # via -r requirements/test.txt
 twine==4.0.2
     # via -r requirements/quality.in
 types-pyyaml==6.0.12.11

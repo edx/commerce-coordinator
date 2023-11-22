@@ -3,7 +3,9 @@
 import json
 import random
 import string
+import uuid
 from traceback import print_exc
+from typing import Dict, List, Tuple, Union
 from urllib.parse import parse_qs
 
 import responses
@@ -246,7 +248,7 @@ class CoordinatorOAuthClientTestCase(CoordinatorClientTestCase):
         )
 
 
-def name_test(name: str, test_packed_params):
+def name_test(name: str, test_packed_params: Union[Tuple, List, Dict]):
     """
     Permits the naming of simple ddt packed tests in common collection containers
 
@@ -309,3 +311,7 @@ def random_unicode_str(ln: int, limit_unicode=True, weight_divisor=2):
 
     assert len(retval) == ln
     return retval
+
+
+def uuid4_str() -> str:
+    return str(uuid.uuid4())

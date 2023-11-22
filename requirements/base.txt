@@ -7,9 +7,13 @@
 amqp==5.1.1
     # via kombu
 asgiref==3.7.2
-    # via django
+    # via
+    #   -r requirements/base.in
+    #   django
 async-timeout==4.0.3
     # via redis
+attrs==23.1.0
+    # via -r requirements/base.in
 backports-zoneinfo[tzdata]==0.2.1
     # via
     #   celery
@@ -39,7 +43,7 @@ click-plugins==1.1.1
     # via celery
 click-repl==0.3.0
     # via celery
-commercetools==2023.6.29
+commercetools @ git+https://github.com/edx/commercetools-python-sdk.git@36639f4a196d7fc0daecf914ee46f42229087abb
     # via -r requirements/base.in
 coreapi==2.3.3
     # via
@@ -51,6 +55,8 @@ cryptography==41.0.3
     # via
     #   pyjwt
     #   social-auth-core
+currencies==2020.12.12
+    # via -r requirements/base.in
 defusedxml==0.7.1
     # via
     #   python3-openid

@@ -15,7 +15,7 @@ from rest_framework import status
 from rest_framework.test import APITestCase
 
 from commerce_coordinator.apps.core.constants import QueryParamPrefixes, WaffleFlagNames
-from commerce_coordinator.apps.core.tests.utils import name_test
+from commerce_coordinator.apps.core.tests.utils import name_test, uuid4_str
 from commerce_coordinator.apps.lms.filters import OrderCreateRequested
 
 User = get_user_model()
@@ -128,7 +128,7 @@ class OrderCreateViewTests(APITestCase):
         user_email = 'pass-by-param@example.com'
 
         self.user = User.objects.create_user(
-            self.test_user_username + str(uuid.uuid4()),  # User IDs must be Unique.
+            self.test_user_username + uuid4_str(),  # User IDs must be Unique.
             user_email,
             self.test_user_password,
             # TODO: Remove is_staff=True
@@ -286,7 +286,7 @@ class OrderCreateViewTests(APITestCase):
             del user_params['email']
 
         self.user = User.objects.create_user(
-            self.test_user_username + str(uuid.uuid4()),  # User IDs must be Unique.
+            self.test_user_username + uuid4_str(),  # User IDs must be Unique.
             user_email,
             self.test_user_password,
             # TODO: Remove is_staff=True

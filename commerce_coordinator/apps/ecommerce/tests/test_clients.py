@@ -42,6 +42,7 @@ class EcommerceAPIClientTests(CoordinatorOAuthClientTestCase):
                 'username': 'TestUser',
                 'page': 1,
                 'page_size': 20,
+                'edx_lms_user_id': 127,
             },
             mock_method='GET',
             mock_url=url,

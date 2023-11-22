@@ -348,7 +348,7 @@ TITAN_URL = 'replace-me'
 # Needed to link to the payment micro-frontend
 PAYMENT_MICROFRONTEND_URL = 'replace-me'
 
-# Filters PoC
+# Coordinator filters should NEVER be allowed to fail silently
 OPEN_EDX_FILTERS_CONFIG = {
     "org.edx.coordinator.demo_lms.sample_data.v1": {
         "fail_silently": False,  # TODO: Coordinator filters should NEVER be allowed to fail silently
@@ -360,7 +360,8 @@ OPEN_EDX_FILTERS_CONFIG = {
     "org.edx.coordinator.frontend_app_ecommerce.order.history.requested.v1": {
         "fail_silently": False,  # TODO: Coordinator filters should NEVER be allowed to fail silently
         "pipeline": [
-            'commerce_coordinator.apps.ecommerce.pipeline.GetEcommerceOrders',
+            'commerce_coordinator.apps.ecommerce.pipeline.GetEcommerceOrders',  # old system
+            'commerce_coordinator.apps.commercetools.pipeline.GetCommercetoolsOrders',  # new system
         ]
     },
     "org.edx.coordinator.lms.order.create.requested.v1": {
@@ -445,13 +446,16 @@ PAYMENT_PROCESSOR_CONFIG = {
 }
 # END PAYMENT PROCESSING
 
+LMS_DASHBOARD_URL = "http://localhost:18000"  # fix me
+
 _COMMERCETOOLS_CONFIG_GEO = 'us-central1.gcp'
+
 COMMERCETOOLS_CONFIG = {
-    'projectKey': '2u-dev',
-    'clientId': 'wdnYt1yvChl2Fug2V_7-Dyf_',
-    'clientSecret': 'zSJsfanSnqAV-CXRSOwKI03mroWUh3yF',
+    'projectKey': 'SET_ME',
+    'clientId': 'SET_ME',
+    'clientSecret': 'SET_ME',
     'authUrl': f"https://auth.{_COMMERCETOOLS_CONFIG_GEO}.commercetools.com",
     'apiUrl': f"https://api.{_COMMERCETOOLS_CONFIG_GEO}.commercetools.com",
     'importUrl': f"https://import.{_COMMERCETOOLS_CONFIG_GEO}.commercetools.com",  # Required for ImpEx
-    'scopes': 'manage_project:2u-dev'
+    'scopes': 'some_scope'
 }
