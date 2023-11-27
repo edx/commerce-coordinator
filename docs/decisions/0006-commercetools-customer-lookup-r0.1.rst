@@ -28,7 +28,6 @@ This has lead to the creation of the following is the CoCo type definition:
         resource_type_ids=[ResourceTypeId.CUSTOMER],
         description=ls({'en': '2U Cross System User Information, shared among all LOBs and '
                               'by various LMS and backend systems.'}),
-        
         field_definitions=[
             FieldDefinition(
                 type=CustomFieldStringType(),
