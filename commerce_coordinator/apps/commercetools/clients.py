@@ -3,7 +3,6 @@ API clients for commercetools app.
 """
 
 import logging
-import typing
 from typing import Generic, List, Optional, TypeVar
 
 import requests
