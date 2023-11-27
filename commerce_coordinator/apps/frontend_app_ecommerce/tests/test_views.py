@@ -30,7 +30,6 @@ class OrdersViewTests(TestCase):
     Tests for order views.
     """
     # Disable unused-argument due to global @patch
-    # pylint: disable=unused-argument
 
     # Use Django Rest Framework client for self.client
     client_class = APIClient
