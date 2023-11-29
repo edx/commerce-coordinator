@@ -1,0 +1,321 @@
+{
+  "id": "7506b6f1-8fe2-440d-ac76-4f62dfbd3775",
+  "version": 7,
+  "createdAt": "2023-10-31T19:51:46.791000+00:00",
+  "lastModifiedAt": "2023-10-31T19:56:36.957000+00:00",
+  "customerId": "ea421ddf-22ef-43b1-b97b-f06e5a5b8b49",
+  "customerEmail": "test_customer_6@example.com",
+  "lineItems": [
+    {
+      "id": "69579965-2597-4347-b34d-43bc8c45dce4",
+      "productId": "7de413b2-8f69-472b-8c9a-d64abe212b82",
+      "productKey": "edx-prod-142765f0-7c1e-4ac4-93fe-8516d87f985e",
+      "name": {
+        "en": "Demonstration Course (Deprecated)",
+        "en-US": "Demonstration Course (Deprecated)"
+      },
+      "productSlug": {
+        "en": "edx-142765f0-7c1e-4ac4-93fe-8516d87f985e",
+        "en-US": "edx-142765f0-7c1e-4ac4-93fe-8516d87f985e"
+      },
+      "productType": {
+        "typeId": "product-type",
+        "id": "f62c0733-4c32-47f1-8feb-cea9c316c9cc"
+      },
+      "variant": {
+        "id": 1,
+        "sku": "edx-sku-8CF08E5",
+        "key": "edx-var-demonstration-course-course-v1-edx-demox-demo-course",
+        "prices": [
+          {
+            "id": "e15bef02-0b32-4936-8f32-36524f058164",
+            "key": "edx-usd_price-8CF08E5",
+            "value": {
+              "centAmount": 14900,
+              "currencyCode": "USD",
+              "type": "centPrecision",
+              "fractionDigits": 2
+            },
+            "validFrom": "2013-02-05T00:00:00+00:00",
+            "validUntil": "2024-03-19T17:52:43.355000+00:00"
+          }
+        ],
+        "attributes": [
+          {
+            "name": "edx-parent_course_id",
+            "value": "edX+DemoX"
+          },
+          {
+            "name": "edx-parent_course_uuid",
+            "value": "142765f0-7c1e-4ac4-93fe-8516d87f985e"
+          },
+          {
+            "name": "edx-parent_course_search_text",
+            "value": {
+              "en": "142765f0-7c1e-4ac4-93fe-8516d87f985e\nDemonstration Course\n\nhttp://edx.devstack.lms:18000/course/None\n\n    edX: \n\n    course-v1:edX+DemoX+Demo_Course: Demonstration Course\n\n",
+              "en-US": "142765f0-7c1e-4ac4-93fe-8516d87f985e\nDemonstration Course\n\nhttp://edx.devstack.lms:18000/course/None\n\n    edX: \n\n    course-v1:edX+DemoX+Demo_Course: Demonstration Course\n\n"
+            }
+          },
+          {
+            "name": "edx-course_json",
+            "value": "{\"availability\": [\"Current\"], \"card_image_url\": \"https://theseus.sandbox.edx.org/asset-v1:edX+DemoX+Demo_Course+type@asset+block@images_course_image.jpg\", \"course_runs\": [\"course-v1:edX+DemoX+Demo_Course\"], \"expected_learning_items\": [], \"end\": [null], \"course_ends\": \"Future\", \"end_date\": null, \"enrollment_start\": [\"2013-02-05T00:00:00+00:00\"], \"enrollment_end\": [null], \"first_enrollable_paid_seat_price\": null, \"languages\": [], \"modified\": \"2023-03-20T17:57:21.994755+00:00\", \"prerequisites\": [], \"skill_names\": [], \"skills\": [], \"status\": [\"published\"], \"start\": [\"2013-02-05T05:00:00+00:00\"], \"course_type\": \"verified-audit\", \"enterprise_subscription_inclusion\": false, \"course_length\": \"\", \"external_course_marketing_type\": null, \"product_source\": null, \"authoring_organizations\": [\"edX: \"], \"authoring_organization_bodies\": [\"{\\\"uuid\\\": \\\"09b980e7-6bcc-4687-9dce-44adeae36710\\\", \\\"key\\\": \\\"edX\\\", \\\"name\\\": \\\"\\\", \\\"auto_generate_course_run_keys\\\": true, \\\"certificate_logo_image_url\\\": null, \\\"logo_image_url\\\": null, \\\"organization_hex_color\\\": null, \\\"description\\\": null, \\\"description_es\\\": \\\"\\\", \\\"homepage_url\\\": null, \\\"tags\\\": [], \\\"marketing_url\\\": \\\"http://edx.devstack.lms:18000/school/edx\\\", \\\"slug\\\": \\\"edx\\\", \\\"banner_image_url\\\": null, \\\"enterprise_subscription_inclusion\\\": false}\"], \"key\": \"edX+DemoX\", \"title\": \"Demonstration Course\", \"full_description\": null, \"image_url\": \"https://theseus.sandbox.edx.org/asset-v1:edX+DemoX+Demo_Course+type@asset+block@images_course_image.jpg\", \"logo_image_urls\": [], \"level_type\": null, \"partner\": \"edx\", \"outcome\": null, \"org\": \"edX\", \"subject_uuids\": [], \"short_description\": null, \"seat_types\": [\"verified\", \"audit\"], \"subjects\": [], \"sponsoring_organizations\": [], \"aggregation_key\": \"course:edX+DemoX\", \"content_type\": \"course\", \"id\": \"course_metadata.course.1\", \"organizations\": [\"edX: \"], \"pk\": 1, \"text\": \"142765f0-7c1e-4ac4-93fe-8516d87f985e\\nDemonstration Course\\n\\n\\n\\nhttp://edx.devstack.lms:18000/course/None\\n\\n\\n\\n\\n\\n\\n    edX: \\n\\n\\n\\n\\n\\n\\n\\n\\n\\n\\n\\n\\n\\n    course-v1:edX+DemoX+Demo_Course: Demonstration Course\\n\\n\", \"uuid\": \"142765f0-7c1e-4ac4-93fe-8516d87f985e\"}"
+          },
+          {
+            "name": "edx-course_run_id",
+            "value": "course-v1:edX+DemoX+Demo_Course"
+          },
+          {
+            "name": "edx-uuid",
+            "value": "05cfefe9-8eae-41e0-8e44-52a2144668af"
+          },
+          {
+            "name": "edx-course_run_search_text",
+            "value": {
+              "en": "05cfefe9-8eae-41e0-8e44-52a2144668af\nDemonstration Course\n\nhttp://edx.devstack.lms:18000/course/demonstration-course-course-v1-edx-demox-demo-course\n\n    edX: \n\ninstructor_paced\n\n",
+              "en-US": "05cfefe9-8eae-41e0-8e44-52a2144668af\nDemonstration Course\n\nhttp://edx.devstack.lms:18000/course/demonstration-course-course-v1-edx-demox-demo-course\n\n    edX: \n\ninstructor_paced\n\n"
+            }
+          },
+          {
+            "name": "edx-course_run_json",
+            "value": "{\"announcement\": null, \"availability\": \"Current\", \"authoring_organization_uuids\": [\"09b980e7-6bcc-4687-9dce-44adeae36710\"], \"course_key\": \"edX+DemoX\", \"end\": null, \"enrollment_start\": \"2013-02-05T00:00:00+00:00\", \"enrollment_end\": null, \"first_enrollable_paid_seat_sku\": \"8CF08E5\", \"go_live_date\": null, \"has_enrollable_seats\": true, \"has_enrollable_paid_seats\": true, \"hidden\": false, \"is_enrollable\": true, \"is_current_and_still_upgradeable\": true, \"language\": null, \"license\": \"\", \"marketing_url\": \"http://edx.devstack.lms:18000/course/demonstration-course-course-v1-edx-demox-demo-course\", \"min_effort\": null, \"max_effort\": null, \"mobile_available\": false, \"number\": \"DemoX\", \"paid_seat_enrollment_end\": \"2024-03-19T17:52:43.355363+00:00\", \"pacing_type\": \"instructor_paced\", \"program_types\": [], \"published\": true, \"skill_names\": [], \"skills\": [], \"status\": \"published\", \"start\": \"2013-02-05T05:00:00+00:00\", \"slug\": \"demonstration-course-course-v1-edx-demox-demo-course\", \"staff_uuids\": [], \"type\": \"verified\", \"transcript_languages\": [], \"weeks_to_complete\": null, \"authoring_organizations\": [\"edX: \"], \"authoring_organization_bodies\": [\"{\\\"uuid\\\": \\\"09b980e7-6bcc-4687-9dce-44adeae36710\\\", \\\"key\\\": \\\"edX\\\", \\\"name\\\": \\\"\\\", \\\"auto_generate_course_run_keys\\\": true, \\\"certificate_logo_image_url\\\": null, \\\"logo_image_url\\\": null, \\\"organization_hex_color\\\": null, \\\"description\\\": null, \\\"description_es\\\": \\\"\\\", \\\"homepage_url\\\": null, \\\"tags\\\": [], \\\"marketing_url\\\": \\\"http://edx.devstack.lms:18000/school/edx\\\", \\\"slug\\\": \\\"edx\\\", \\\"banner_image_url\\\": null, \\\"enterprise_subscription_inclusion\\\": false}\"], \"key\": \"course-v1:edX+DemoX+Demo_Course\", \"title\": \"Demonstration Course\", \"first_enrollable_paid_seat_price\": 149, \"full_description\": null, \"image_url\": \"https://theseus.sandbox.edx.org/asset-v1:edX+DemoX+Demo_Course+type@asset+block@images_course_image.jpg\", \"logo_image_urls\": [], \"level_type\": null, \"partner\": \"edx\", \"outcome\": null, \"org\": \"edX\", \"subject_uuids\": [], \"short_description\": null, \"seat_types\": [\"verified\", \"audit\"], \"subjects\": [], \"sponsoring_organizations\": [], \"aggregation_key\": \"courserun:edX+DemoX\", \"content_type\": \"courserun\", \"id\": \"course_metadata.courserun.1\", \"organizations\": [\"edX: \"], \"pk\": 1, \"text\": \"05cfefe9-8eae-41e0-8e44-52a2144668af\\nDemonstration Course\\n\\n\\n\\nhttp://edx.devstack.lms:18000/course/demonstration-course-course-v1-edx-demox-demo-course\\n\\n\\n\\n\\n\\n\\n    edX: \\n\\n\\n\\n\\n\\n\\n\\n\\n\\n\\n\\n\\ninstructor_paced\\n\\n\\n\\n\\n\\n\", \"uuid\": \"05cfefe9-8eae-41e0-8e44-52a2144668af\"}"
+          },
+          {
+            "name": "2u-fulfillment_system",
+            "value": "LMS"
+          },
+          {
+            "name": "2u-lob",
+            "value": "edX"
+          }
+        ],
+        "images": [
+          {
+            "url": "https://theseus.sandbox.edx.org/asset-v1:edX+DemoX+Demo_Course+type@asset+block@images_course_image.jpg",
+            "dimensions": {
+              "w": 375,
+              "h": 200
+            },
+            "label": "edX Course Tile Image"
+          }
+        ],
+        "assets": [
+        ]
+      },
+      "price": {
+        "id": "e15bef02-0b32-4936-8f32-36524f058164",
+        "key": "edx-usd_price-8CF08E5",
+        "value": {
+          "centAmount": 14900,
+          "currencyCode": "USD",
+          "type": "centPrecision",
+          "fractionDigits": 2
+        },
+        "validFrom": "2013-02-05T00:00:00+00:00",
+        "validUntil": "2024-03-19T17:52:43.355000+00:00"
+      },
+      "quantity": 1,
+      "totalPrice": {
+        "centAmount": 14900,
+        "currencyCode": "USD",
+        "type": "centPrecision",
+        "fractionDigits": 2
+      },
+      "discountedPricePerQuantity": [
+      ],
+      "taxedPrice": {
+        "totalNet": {
+          "centAmount": 14900,
+          "currencyCode": "USD",
+          "type": "centPrecision",
+          "fractionDigits": 2
+        },
+        "totalGross": {
+          "centAmount": 14900,
+          "currencyCode": "USD",
+          "type": "centPrecision",
+          "fractionDigits": 2
+        },
+        "totalTax": {
+          "centAmount": 0,
+          "currencyCode": "USD",
+          "type": "centPrecision",
+          "fractionDigits": 2
+        }
+      },
+      "taxedPricePortions": [
+      ],
+      "state": [
+        {
+          "quantity": 1,
+          "state": {
+            "typeId": "state",
+            "id": "de47c5ea-36df-4161-a232-7da0b0db49d1"
+          }
+        }
+      ],
+      "taxRate": {
+        "id": "ueRRT4gj",
+        "name": "None",
+        "amount": 0,
+        "includedInPrice": true,
+        "country": "US",
+        "subRates": [
+        ]
+      },
+      "perMethodTaxRate": [
+      ],
+      "priceMode": "Platform",
+      "lineItemMode": "Standard",
+      "addedAt": "2023-10-31T19:51:46.127000+00:00",
+      "lastModifiedAt": "2023-10-31T19:51:46.127000+00:00"
+    }
+  ],
+  "customLineItems": [
+  ],
+  "totalPrice": {
+    "centAmount": 14900,
+    "currencyCode": "USD",
+    "type": "centPrecision",
+    "fractionDigits": 2
+  },
+  "taxedPrice": {
+    "totalNet": {
+      "centAmount": 14900,
+      "currencyCode": "USD",
+      "type": "centPrecision",
+      "fractionDigits": 2
+    },
+    "totalGross": {
+      "centAmount": 14900,
+      "currencyCode": "USD",
+      "type": "centPrecision",
+      "fractionDigits": 2
+    },
+    "taxPortions": [
+      {
+        "name": "None",
+        "rate": 0,
+        "amount": {
+          "centAmount": 0,
+          "currencyCode": "USD",
+          "type": "centPrecision",
+          "fractionDigits": 2
+        }
+      }
+    ],
+    "totalTax": {
+      "centAmount": 0,
+      "currencyCode": "USD",
+      "type": "centPrecision",
+      "fractionDigits": 2
+    }
+  },
+  "taxMode": "Platform",
+  "taxRoundingMode": "HalfEven",
+  "taxCalculationMode": "LineItemLevel",
+  "inventoryMode": "None",
+  "shippingAddress": {
+    "country": "US"
+  },
+  "shippingMode": "Single",
+  "shipping": [
+  ],
+  "itemShippingAddresses": [
+  ],
+  "discountCodes": [
+  ],
+  "directDiscounts": [
+  ],
+  "refusedGifts": [
+  ],
+  "paymentInfo": {
+    "payments": [
+      {
+        "typeId": "payment",
+        "id": "33766483-1428-41b0-81bb-c2ea565f7aeb",
+        "obj": {
+          "id": "33766483-1428-41b0-81bb-c2ea565f7aeb",
+          "version": 1,
+          "createdAt": "2023-10-31T19:56:36.798000+00:00",
+          "lastModifiedAt": "2023-10-31T19:56:36.798000+00:00",
+          "lastModifiedBy": {
+            "clientId": "E1UbNz9SHIG_n4nnSAUP1uW4"
+          },
+          "createdBy": {
+            "clientId": "E1UbNz9SHIG_n4nnSAUP1uW4"
+          },
+          "customer": {
+            "typeId": "customer",
+            "id": "ea421ddf-22ef-43b1-b97b-f06e5a5b8b49"
+          },
+          "interfaceId": "Stripe",
+          "amountPlanned": {
+            "centAmount": 14900,
+            "currencyCode": "USD",
+            "type": "centPrecision",
+            "fractionDigits": 2
+          },
+          "amountAuthorized": {
+            "centAmount": 14900,
+            "currencyCode": "USD",
+            "type": "centPrecision",
+            "fractionDigits": 2
+          },
+          "amountPaid": {
+            "centAmount": 14900,
+            "currencyCode": "USD",
+            "type": "centPrecision",
+            "fractionDigits": 2
+          },
+          "paymentMethodInfo": {
+            "paymentInterface": "Stripe",
+            "method": "credit card",
+            "name": {
+              "en": "Mastercard",
+              "en-US": "Mastercard"
+            }
+          },
+          "paymentStatus": {
+            "interfaceCode": "completed",
+            "interfaceText": "Completed"
+          },
+          "transactions": [
+            {
+              "id": "db34acf7-2022-40b1-97f4-fbaf71acba4f",
+              "type": "Charge",
+              "amount": {
+                "centAmount": 14900,
+                "currencyCode": "USD",
+                "type": "centPrecision",
+                "fractionDigits": 2
+              },
+              "state": "Initial"
+            }
+          ],
+          "interfaceInteractions": [
+          ]
+        }
+      }
+    ]
+  },
+  "country": "US",
+  "origin": "Customer",
+  "cart": {
+    "typeId": "cart",
+    "id": "b19d2a92-3a9a-449a-aa2a-4118f13f09ad"
+  },
+  "orderState": "Complete",
+  "shipmentState": "Shipped",
+  "paymentState": "Paid",
+  "syncInfo": [
+  ],
+  "returnInfo": [
+  ],
+  "lastMessageSequenceNumber": 7,
+  "lastModifiedBy": {
+    "clientId": "E1UbNz9SHIG_n4nnSAUP1uW4"
+  },
+  "createdBy": {
+    "clientId": "E1UbNz9SHIG_n4nnSAUP1uW4"
+  }
+}
