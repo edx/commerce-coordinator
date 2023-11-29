@@ -10,14 +10,8 @@ from commerce_coordinator.apps.core.tests.utils import name_test
 
 @ddt.ddt
 class OrderFulfillViewTests(APITestCase):
-
+    "Tests for order fulfill view"
     url = reverse('commercetools:fulfill')
-
-    def setUp(self):
-        super().setUp()
-
-    def tearDown(self):
-        super().tearDown()
 
     @ddt.data(
         name_test("test success", (
@@ -26,7 +20,7 @@ class OrderFulfillViewTests(APITestCase):
         )),
         name_test("test no details", (
             {}, 'detail', status.HTTP_400_BAD_REQUEST,
-            {'error_key': 'detail', 'error_message': 'This field may not be null.'}
+            {'error_key': 'detail', 'error_message': 'This field is required.'}
         ))
     )
     @ddt.unpack
@@ -81,7 +75,13 @@ class OrderFulfillViewTests(APITestCase):
 
         response = self.client.post(self.url, data=message, format="json")
         self.assertEqual(response.status_code, expected_status)
-        
+        if expected_status != status.HTTP_200_OK:
+            response_json = response.json()
+            expected_error_key = expected_error['error_key']
+            expected_error_message = expected_error['error_message']
+            self.assertIn(expected_error_key, response_json)
+            self.assertIn(expected_error_message, response_json[expected_error_key])
+
 # """ Commercetools Order History testcases """
 # from unittest.mock import MagicMock, patch
 #
