@@ -2,12 +2,24 @@ from commercetools.platform.models import (
     CustomFieldStringType,
     FieldDefinition,
     ResourceTypeId,
+    StateDraft,
+    StateTypeEnum,
     TypeDraft,
     TypeTextInputHint
 )
 
 from commerce_coordinator.apps.commercetools.catalog_info.constants import EdXFieldNames, TwoUKeys
 from commerce_coordinator.apps.commercetools.catalog_info.utils import ls
+
+
+class TwoUCustomStates:
+    """Global 2U Workflow Transition State Definitions in Commercetools"""
+    SANCTIONED_ORDER_STATE = StateDraft(
+        key=TwoUKeys.SDN_SANCTIONED_ORDER_STATE,
+        type=StateTypeEnum.ORDER_STATE,
+        name=ls({'en': 'Sanctioned'}),
+        description=ls({'en': 'This order has been sanctioned for an SDN hit'})
+    )
 
 
 class TwoUCustomTypes:
