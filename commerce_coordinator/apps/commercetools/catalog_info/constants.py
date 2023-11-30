@@ -2,7 +2,7 @@ class TwoUKeys:
     """Global 2U Object Keys for use in Commercetools"""
     CROSS_SYS_USER_INFO_TYPE = '2u-user_information'
 
-    SDN_SANCTIONED_ORDER_STATE= '2u-sdn-order-state'
+    SDN_SANCTIONED_ORDER_STATE = '2u-sdn-order-state'
 
 
 class EdXFieldNames:
