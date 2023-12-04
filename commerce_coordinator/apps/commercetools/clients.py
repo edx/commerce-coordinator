@@ -17,7 +17,7 @@ from commercetools.platform.models import TypeDraft as CTTypeDraft
 from commercetools.platform.models import TypeResourceIdentifier as CTTypeResourceIdentifier
 from django.conf import settings
 
-from commerce_coordinator.apps.commercetools.catalog_info.constants import EdXFieldNames
+from commerce_coordinator.apps.commercetools.catalog_info.constants import DEFAULT_ORDER_EXPANSION, EdXFieldNames
 from commerce_coordinator.apps.commercetools.catalog_info.foundational_types import TwoUCustomTypes
 from commerce_coordinator.apps.core.constants import ORDER_HISTORY_PER_SYSTEM_REQ_LIMIT
 
@@ -169,8 +169,21 @@ class CommercetoolsAPIClient:
         else:
             return results.results[0]
 
+    def get_order_by_id(self, order_id: str, expand: List[str] = DEFAULT_ORDER_EXPANSION) -> CTOrder:
+        """
+        Fetch an order by the Order ID (UUID)
+
+        Args:
+            order_id (str): Order ID (UUID)
+            expand: List of Order Parameters to expand
+
+        Returns (CTOrder): Order with Expanded Properties
+        """
+        return self.base_client.orders.get_by_id(order_id, expand=expand)
+
     def get_orders(self, customer: CTCustomer, offset=0,
-                   limit=ORDER_HISTORY_PER_SYSTEM_REQ_LIMIT) -> PaginatedResult[CTOrder]:
+                   limit=ORDER_HISTORY_PER_SYSTEM_REQ_LIMIT,
+                   expand: List[str] = DEFAULT_ORDER_EXPANSION) -> PaginatedResult[CTOrder]:
 
         """
         Call commercetools API overview endpoint for data about historical orders.
@@ -179,6 +192,7 @@ class CommercetoolsAPIClient:
             customer (CTCustomer): Commerce Tools Customer to look up orders for
             offset (int): Pagination Offset
             limit (int): Maximum number of results
+            expand: List of Order Parameters to expand
 
         Returns:
             PaginatedResult[CTOrder]: Dictionary representation of JSON returned from API
@@ -192,11 +206,7 @@ class CommercetoolsAPIClient:
             sort=["completedAt desc", "lastModifiedAt desc"],
             limit=limit,
             offset=offset,
-            expand=[
-                "paymentInfo.payments[*]",
-                "discountCodes[*].discountCode",
-                "directDiscounts[*]"
-            ]
+            expand=expand
         )
 
         return PaginatedResult(values.results, values.total, values.offset)
@@ -218,3 +228,6 @@ class CommercetoolsAPIClient:
         orders = self.get_orders(customer, offset, limit)
 
         return orders, customer
+
+    def get_customer_by_id(self, customer_id: str) -> CTCustomer:
+        return self.base_client.customers.get_by_id(customer_id)

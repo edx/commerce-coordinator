@@ -1,6 +1,6 @@
 from typing import Dict, List, Optional, Union
 
-from commercetools.platform.models import Attribute
+from commercetools.platform.models import Attribute as CTAttribute
 from commercetools.platform.models import CentPrecisionMoney as CTCentPrecisionMoney
 from commercetools.platform.models import HighPrecisionMoney as CTHighPrecisionMoney
 from commercetools.platform.models import LocalizedString as CTLocalizedString
@@ -147,9 +147,10 @@ def typed_money_add(a: CTTypedMoney, b: Optional[CTTypedMoney]):
     return _typed_money_op(a, b, lambda aint, bint: aint + bint)
 
 
-def attribute_dict(attr_list: Optional[List[Attribute]]) -> Optional[dict]:
+def attribute_dict(attr_list: Optional[List[CTAttribute]]) -> Optional[dict]:
     if attr_list is None:
         return None
     if len(attr_list) >= 1:
         return dict([(d.name, d.value) for d in attr_list])
     return None
+

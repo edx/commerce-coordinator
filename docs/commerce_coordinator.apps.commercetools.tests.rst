@@ -28,6 +28,14 @@ commerce\_coordinator.apps.commercetools.tests.test\_clients module
    :undoc-members:
    :show-inheritance:
 
+commerce\_coordinator.apps.commercetools.tests.test\_clients\_new module
+------------------------------------------------------------------------
+
+.. automodule:: commerce_coordinator.apps.commercetools.tests.test_clients_new
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
 commerce\_coordinator.apps.commercetools.tests.test\_data module
 ----------------------------------------------------------------
 
