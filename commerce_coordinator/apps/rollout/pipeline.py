@@ -16,7 +16,7 @@ class GetActiveOrderManagementSystem(PipelineStep):
     and waffle flag's value.
     """
 
-    def run_filter(self, request, active_order_management_system):
+    def run_filter(self, request):
         """
         Execute a filter with the signature specified.
         Arguments:
@@ -25,7 +25,6 @@ class GetActiveOrderManagementSystem(PipelineStep):
                             redirect_to_commercetools_checkout flag is on and course_run_key
                             query param exists & dictact which checkout to redirect to
         """
-
         sku = request.query_params.get('sku', '').strip()
         course_run = request.query_params.get('course_run_key', '').strip()
 

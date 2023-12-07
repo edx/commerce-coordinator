@@ -4,9 +4,9 @@ LMS (edx-platform) app URLS
 
 from django.urls import path
 
-from commerce_coordinator.apps.lms.views import OrderCreateView
+from commerce_coordinator.apps.lms.views import PaymentPageRedirectView
 
 app_name = 'lms'
 urlpatterns = [
-    path('order/', OrderCreateView.as_view(), name='create_order'),
+    path('payment_page_redirect', PaymentPageRedirectView.as_view(), name='payment_page_redirect'),
 ]
