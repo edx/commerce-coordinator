@@ -5,21 +5,21 @@ Filters for LMS
 from openedx_filters.tooling import OpenEdxPublicFilter
 
 
-class OrderCreateRequested(OpenEdxPublicFilter):
+class PaymentPageRedirectRequested(OpenEdxPublicFilter):
     """
-    Filter to gather order data from the defined PipelineStep(s)
+    Filter to gather payment page redirect urls.
     """
     # See pipeline step configuration OPEN_EDX_FILTERS_CONFIG dict in `settings/base.py`
-    filter_type = "org.edx.coordinator.lms.order.create.requested.v1"
+    filter_type = "org.edx.coordinator.lms.payment.page.redirect.requested.v1"
 
     @classmethod
-    def run_filter(cls, params, order_data=None):
+    def run_filter(cls, request):
         """
-        Call the PipelineStep(s) defined for this filter, to gather orders and return together
+        Execute the filter pipeline with the desired signature.
         Arguments:
-            params: arguments passed through from the original order history url querystring
-            order_data: any preliminary orders we want to append to when running the pipeline
+            request: django.http.HttpRequest object passed through from lms views.py
         """
 
-        # super op
-        return super().run_pipeline(params=params, order_data=order_data)
+        redirect_url = super().run_pipeline(request=request)
+
+        return redirect_url

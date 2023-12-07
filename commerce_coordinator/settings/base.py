@@ -347,7 +347,11 @@ TITAN_URL = 'replace-me'
 # Needed to link to the payment micro-frontend
 PAYMENT_MICROFRONTEND_URL = 'replace-me'
 
-# Coordinator filters should NEVER be allowed to fail silently
+# Checkout view urls
+COMMERCETOOLS_FRONTEND_URL = 'https://commerce_tools_frontend_url'
+FRONTEND_APP_PAYMENT_URL = 'https://payment_page_url'
+
+# Filters
 OPEN_EDX_FILTERS_CONFIG = {
     "org.edx.coordinator.demo_lms.sample_data.v1": {
         "fail_silently": False,  # TODO: Coordinator filters should NEVER be allowed to fail silently
@@ -367,6 +371,14 @@ OPEN_EDX_FILTERS_CONFIG = {
         "fail_silently": False,  # TODO: Coordinator filters should NEVER be allowed to fail silently
         "pipeline": [
             'commerce_coordinator.apps.titan.pipeline.CreateTitanOrder',
+        ]
+    },
+    "org.edx.coordinator.lms.payment.page.redirect.requested.v1": {
+        "fail_silently": False,  # TODO: Coordinator filters should NEVER be allowed to fail silently
+        "pipeline": [
+            'commerce_coordinator.apps.rollout.pipeline.GetActiveOrderManagementSystem',
+            'commerce_coordinator.apps.commercetools_frontend.pipeline.GetCommercetoolsRedirectUrl',
+            'commerce_coordinator.apps.frontend_app_payment.pipeline.GetPaymentMFERedirectUrl'
         ]
     },
     "org.edx.coordinator.frontend_app_payment.payment.get.requested.v1": {
