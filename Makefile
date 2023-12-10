@@ -99,6 +99,9 @@ migrate: ## apply database migrations
 html_coverage: ## generate and view HTML coverage report
 	coverage html && open htmlcov/index.html
 
+# Define PIP_COMPILE_OPTS=-v to get more information during make upgrade.
+PIP_COMPILE = pip-compile --upgrade $(PIP_COMPILE_OPTS)
+
 COMMON_CONSTRAINTS_TXT=requirements/common_constraints.txt
 .PHONY: $(COMMON_CONSTRAINTS_TXT)
 $(COMMON_CONSTRAINTS_TXT):
