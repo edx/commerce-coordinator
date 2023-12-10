@@ -428,5 +428,48 @@ OPEN_EDX_FILTERS_CONFIG = {
     }
 }
 
+# Carry fields from the JWT token and LMS user into the local user
+EDX_DRF_EXTENSIONS = {
+    "JWT_PAYLOAD_USER_ATTRIBUTE_MAPPING": {
+        "administrator": "is_staff",
+        "email": "email",
+        "full_name": "full_name",
+        "user_id": "lms_user_id",
+    },
+    "ENABLE_SET_REQUEST_USER_FOR_JWT_COOKIE": True,
+}
+
+# PAYMENT PROCESSING
+PAYMENT_PROCESSOR_CONFIG = {
+    'edx': {
+        'stripe': {
+            'api_version': '2022-08-01; server_side_confirmation_beta=v1',
+            'enable_telemetry': None,
+            'log_level': 'info',
+            'max_network_retries': 0,
+            'proxy': None,
+            'publishable_key': 'SET-ME-PLEASE',
+            'secret_key': 'SET-ME-PLEASE',
+            'source_system_identifier': 'edx/commerce_coordinator?v=1',
+            'webhook_endpoint_secret': 'SET-ME-PLEASE',
+        },
+    },
+}
+# END PAYMENT PROCESSING
+
+LMS_DASHBOARD_URL = "http://localhost:18000"  # fix me
+
+_COMMERCETOOLS_CONFIG_GEO = 'us-central1.gcp'
+
+COMMERCETOOLS_CONFIG = {
+    'projectKey': 'SET_ME',
+    'clientId': 'SET_ME',
+    'clientSecret': 'SET_ME',
+    'authUrl': f"https://auth.{_COMMERCETOOLS_CONFIG_GEO}.commercetools.com",
+    'apiUrl': f"https://api.{_COMMERCETOOLS_CONFIG_GEO}.commercetools.com",
+    'importUrl': f"https://import.{_COMMERCETOOLS_CONFIG_GEO}.commercetools.com",  # Required for ImpEx
+    'scopes': 'some_scope'
+}
+
 # Setting to keep using deperecated pytz with Django>4
 USE_DEPRECATED_PYTZ = True
