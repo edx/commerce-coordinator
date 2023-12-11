@@ -4,15 +4,18 @@
 #
 #    make upgrade
 #
-amqp==5.1.1
+amqp==5.2.0
     # via
     #   -r requirements/base.txt
     #   kombu
+annotated-types==0.6.0
+    # via pydantic
 asgiref==3.7.2
     # via
     #   -r requirements/base.txt
     #   django
-astroid==2.15.8
+    #   django-cors-headers
+astroid==3.0.1
     # via
     #   pylint
     #   pylint-celery
@@ -25,25 +28,34 @@ attrs==23.1.0
 backports-zoneinfo[tzdata]==0.2.1
     # via
     #   -r requirements/base.txt
+    #   backports-zoneinfo
     #   celery
     #   django
     #   kombu
-billiard==4.1.0
+billiard==4.2.0
     # via
     #   -r requirements/base.txt
     #   celery
-celery[redis]==5.3.4
-    # via -r requirements/base.txt
-certifi==2023.7.22
+cachetools==5.3.2
+    # via tox
+celery[redis]==5.3.6
+    # via
+    #   -r requirements/base.txt
+    #   celery
+cerberus==1.3.5
+    # via plette
+certifi==2023.11.17
     # via
     #   -r requirements/base.txt
     #   requests
-cffi==1.15.1
+cffi==1.16.0
     # via
     #   -r requirements/base.txt
     #   cryptography
     #   pynacl
-charset-normalizer==3.2.0
+chardet==5.2.0
+    # via tox
+charset-normalizer==3.3.2
     # via
     #   -r requirements/base.txt
     #   requests
@@ -76,6 +88,8 @@ code-annotations==1.5.0
     # via
     #   -r requirements/test.in
     #   edx-lint
+colorama==0.4.6
+    # via tox
 commercetools @ git+https://github.com/edx/commercetools-python-sdk.git@36639f4a196d7fc0daecf914ee46f42229087abb
     # via -r requirements/base.txt
 coreapi==2.3.3
@@ -87,20 +101,20 @@ coreschema==0.0.4
     # via
     #   -r requirements/base.txt
     #   coreapi
-coverage[toml]==7.3.1
+coverage[toml]==7.3.2
     # via
     #   -r requirements/test.in
     #   pytest-cov
-cryptography==41.0.4
+cryptography==41.0.7
     # via
     #   -r requirements/base.txt
     #   pyjwt
     #   social-auth-core
 currencies==2020.12.12
     # via -r requirements/base.txt
-ddt==1.6.0
+ddt==1.7.0
     # via -r requirements/test.in
-defusedxml==0.8.0rc1
+defusedxml==0.8.0rc2
     # via
     #   -r requirements/base.txt
     #   python3-openid
@@ -108,7 +122,9 @@ defusedxml==0.8.0rc1
 dill==0.3.7
     # via pylint
 distlib==0.3.7
-    # via virtualenv
+    # via
+    #   requirementslib
+    #   virtualenv
     # via
     #   -c requirements/constraints.txt
     #   -r requirements/base.txt
@@ -124,7 +140,7 @@ distlib==0.3.7
     #   edx-drf-extensions
     #   openedx-filters
     #   social-auth-app-django
-django-cors-headers==4.2.0
+django-cors-headers==4.3.1
     # via -r requirements/base.txt
 django-crum==0.7.9
     # via
@@ -147,6 +163,8 @@ djangorestframework==3.14.0
     #   django-rest-swagger
     #   drf-jwt
     #   edx-drf-extensions
+docopt==0.6.2
+    # via pipreqs
 drf-jwt==1.19.2
     # via
     #   -r requirements/base.txt
@@ -155,34 +173,34 @@ edx-auth-backends==4.2.0
     # via -r requirements/base.txt
 edx-django-release-util==1.3.0
     # via -r requirements/base.txt
-edx-django-utils==5.7.0
+edx-django-utils==5.9.0
     # via
     #   -r requirements/base.txt
     #   edx-drf-extensions
     #   edx-rest-api-client
-edx-drf-extensions==8.10.0
+edx-drf-extensions==9.0.1
     # via -r requirements/base.txt
-edx-lint==5.3.4
+edx-lint==5.3.6
     # via -r requirements/test.in
 edx-opaque-keys==2.5.1
     # via
     #   -r requirements/base.txt
     #   edx-drf-extensions
-edx-rest-api-client==5.6.0
+edx-rest-api-client==5.6.1
     # via -r requirements/base.txt
-exceptiongroup==1.1.3
+exceptiongroup==1.2.0
     # via pytest
-filelock==3.12.4
+filelock==3.13.1
     # via
-    #   -r requirements/base.txt
-    #   pyjwkest
-idna==3.4
+    #   tox
+    #   virtualenv
+idna==3.6
     # via
     #   -r requirements/base.txt
     #   requests
 iniconfig==2.0.0
     # via pytest
-isort==5.12.0
+isort==5.13.0
     # via pylint
 itypes==1.2.0
     # via
@@ -193,12 +211,10 @@ jinja2==3.1.2
     #   -r requirements/base.txt
     #   code-annotations
     #   coreschema
-kombu==5.3.2
+kombu==5.3.4
     # via
     #   -r requirements/base.txt
     #   celery
-lazy-object-proxy==1.9.0
-    # via astroid
 markupsafe==2.1.3
     # via
     #   -r requirements/base.txt
@@ -219,7 +235,7 @@ mock==5.1.0
     # via -r requirements/test.in
 mysqlclient==2.2.0
     # via -r requirements/base.txt
-newrelic==9.1.0
+newrelic==9.3.0
     # via
     #   -r requirements/base.txt
     #   edx-django-utils
@@ -234,41 +250,53 @@ openapi-codec==1.3.2
     #   django-rest-swagger
 openedx-filters==1.6.0
     # via -r requirements/base.txt
-packaging==23.1
+packaging==23.2
     # via
     #   -r requirements/base.txt
     #   marshmallow
+    #   pyproject-api
     #   pytest
     #   tox
-pbr==5.11.1
+pbr==6.0.0
     # via
     #   -r requirements/base.txt
     #   stevedore
-pillow==10.0.0
+pep517==0.13.1
+    # via requirementslib
+pillow==10.1.0
     # via -r requirements/base.txt
-platformdirs==3.10.0
+pip-api==0.0.30
+    # via isort
+pipreqs==0.4.13
+    # via isort
+platformdirs==4.1.0
     # via
-    #   -c https://raw.githubusercontent.com/edx/edx-lint/master/edx_lint/files/common_constraints.txt
     #   pylint
+    #   requirementslib
+    #   tox
     #   virtualenv
+plette[validation]==0.4.4
+    # via requirementslib
 pluggy==1.3.0
     # via
     #   pytest
     #   tox
-prompt-toolkit==3.0.39
+prompt-toolkit==3.0.41
     # via
     #   -r requirements/base.txt
     #   click-repl
-psutil==5.9.5
+psutil==5.9.6
     # via
     #   -r requirements/base.txt
     #   edx-django-utils
-py==1.11.0
-    # via tox
 pycparser==2.21
     # via
     #   -r requirements/base.txt
     #   cffi
+pydantic==2.5.2
+    # via requirementslib
+pydantic-core==2.14.5
+    # via pydantic
 pyjwt[crypto]==2.8.0
     # via
     #   -r requirements/base.txt
@@ -276,8 +304,9 @@ pyjwt[crypto]==2.8.0
     #   edx-auth-backends
     #   edx-drf-extensions
     #   edx-rest-api-client
+    #   pyjwt
     #   social-auth-core
-pylint==2.17.6
+pylint==3.0.2
     # via
     #   edx-lint
     #   pylint-celery
@@ -285,7 +314,7 @@ pylint==2.17.6
     #   pylint-plugin-utils
 pylint-celery==0.3
     # via edx-lint
-pylint-django==2.5.3
+pylint-django==2.5.5
     # via edx-lint
 pylint-plugin-utils==0.8.2
     # via
@@ -299,14 +328,16 @@ pynacl==1.5.0
     # via
     #   -r requirements/base.txt
     #   edx-django-utils
-pytest==7.4.2
+pyproject-api==1.6.1
+    # via tox
+pytest==7.4.3
     # via
     #   -r requirements/test.in
     #   pytest-cov
     #   pytest-django
 pytest-cov==4.1.0
     # via -r requirements/test.in
-pytest-django==4.5.2
+pytest-django==4.7.0
     # via -r requirements/test.in
 python-dateutil==2.8.2
     # via
@@ -321,6 +352,7 @@ python3-openid==3.2.0
 pytz==2023.3.post1
     # via
     #   -r requirements/base.txt
+    #   commercetools
     #   djangorestframework
 pyyaml==6.0.1
     # via
@@ -328,7 +360,7 @@ pyyaml==6.0.1
     #   code-annotations
     #   edx-django-release-util
     #   responses
-redis==4.6.0
+redis==5.0.1
     # via
     #   -r requirements/base.txt
     #   celery
@@ -341,10 +373,12 @@ requests==2.31.0
     #   edx-rest-api-client
     #   requests-mock
     #   requests-oauthlib
+    #   requirementslib
     #   responses
     #   slumber
     #   social-auth-core
     #   stripe
+    #   yarg
 requests-mock==1.11.0
     # via
     #   -r requirements/base.txt
@@ -354,13 +388,15 @@ requests-oauthlib==1.3.1
     #   -r requirements/base.txt
     #   commercetools
     #   social-auth-core
-responses==0.23.3
+requirementslib==3.0.0
+    # via isort
+responses==0.24.1
     # via -r requirements/test.in
 semantic-version==2.10.0
     # via
     #   -r requirements/base.txt
     #   edx-drf-extensions
-simplejson==3.19.1
+simplejson==3.19.2
     # via
     #   -r requirements/base.txt
     #   django-rest-swagger
@@ -372,16 +408,15 @@ six==1.16.0
     #   edx-lint
     #   python-dateutil
     #   requests-mock
-    #   tox
 slumber==0.7.1
     # via
     #   -r requirements/base.txt
     #   edx-rest-api-client
-social-auth-app-django==5.3.0
+social-auth-app-django==5.4.0
     # via
     #   -r requirements/base.txt
     #   edx-auth-backends
-social-auth-core==4.4.2
+social-auth-core==4.5.1
     # via
     #   -r requirements/base.txt
     #   edx-auth-backends
@@ -396,37 +431,37 @@ stevedore==5.1.0
     #   code-annotations
     #   edx-django-utils
     #   edx-opaque-keys
-stripe==6.6.0
+stripe==7.8.1
     # via -r requirements/base.txt
-testfixtures==7.2.0
+testfixtures==7.2.2
     # via -r requirements/test.in
 text-unidecode==1.3
     # via python-slugify
 tomli==2.0.1
     # via
     #   coverage
+    #   pep517
     #   pylint
+    #   pyproject-api
     #   pytest
     #   tox
-tomlkit==0.12.1
-    # via pylint
-tox==3.28.0
-    # via -r requirements/test.in
-types-pyyaml==6.0.12.11
-    # via responses
-typing-extensions==4.5.0
+tomlkit==0.12.3
     # via
-    #   -c requirements/common_constraints.txt
-    #   -r requirements/test.in
-types-pyyaml==6.0.12.12
-    # via responses
-typing-extensions==4.8.0
+    #   plette
+    #   pylint
+    #   requirementslib
+tox==4.11.4
+    # via -r requirements/test.in
+typing-extensions==4.9.0
     # via
     #   -r requirements/base.txt
+    #   annotated-types
     #   asgiref
     #   astroid
     #   edx-opaque-keys
     #   kombu
+    #   pydantic
+    #   pydantic-core
     #   pylint
     #   stripe
 tzdata==2023.3
@@ -438,20 +473,20 @@ uritemplate==4.1.1
     # via
     #   -r requirements/base.txt
     #   coreapi
-urllib3==2.0.5
+urllib3==2.1.0
     # via
     #   -r requirements/base.txt
     #   requests
     #   responses
-vine==5.0.0
+vine==5.1.0
     # via
     #   -r requirements/base.txt
     #   amqp
     #   celery
     #   kombu
-virtualenv==20.24.5
+virtualenv==20.25.0
     # via tox
-wcwidth==0.2.6
+wcwidth==0.2.12
     # via
     #   -r requirements/base.txt
     #   prompt-toolkit
@@ -459,12 +494,17 @@ webob==1.8.7
     # via
     #   -r requirements/base.txt
     #   commercetools
-werkzeug==2.3.7
+werkzeug==3.0.1
     # via
     #   -r requirements/base.txt
     #   commercetools
-wrapt==1.15.0
+wrapt==1.16.0
     # via
     #   -r requirements/base.txt
-    #   astroid
     #   commercetools
+yarg==0.1.9
+    # via pipreqs
+
+# The following packages are considered to be unsafe in a requirements file:
+# pip
+# setuptools
