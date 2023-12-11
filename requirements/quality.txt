@@ -4,15 +4,20 @@
 #
 #    make upgrade
 #
-amqp==5.1.1
+amqp==5.2.0
     # via
     #   -r requirements/test.txt
     #   kombu
+annotated-types==0.6.0
+    # via
+    #   -r requirements/test.txt
+    #   pydantic
 asgiref==3.7.2
     # via
     #   -r requirements/test.txt
     #   django
-astroid==2.15.8
+    #   django-cors-headers
+astroid==3.0.1
     # via
     #   -r requirements/test.txt
     #   pylint
@@ -21,28 +26,45 @@ async-timeout==4.0.3
     # via
     #   -r requirements/test.txt
     #   redis
-attrs==22.2.0
+attrs==23.1.0
+    # via -r requirements/test.txt
+backports-zoneinfo[tzdata]==0.2.1
     # via
     #   -r requirements/test.txt
+    #   backports-zoneinfo
     #   celery
     #   django
     #   kombu
-billiard==4.1.0
+billiard==4.2.0
     # via
     #   -r requirements/test.txt
     #   celery
-celery[redis]==5.3.4
-    # via -r requirements/test.txt
-certifi==2023.7.22
+cachetools==5.3.2
+    # via
+    #   -r requirements/test.txt
+    #   tox
+celery[redis]==5.3.6
+    # via
+    #   -r requirements/test.txt
+    #   celery
+cerberus==1.3.5
+    # via
+    #   -r requirements/test.txt
+    #   plette
+certifi==2023.11.17
     # via
     #   -r requirements/test.txt
     #   requests
-cffi==1.15.1
+cffi==1.16.0
     # via
     #   -r requirements/test.txt
     #   cryptography
     #   pynacl
-charset-normalizer==3.2.0
+chardet==5.2.0
+    # via
+    #   -r requirements/test.txt
+    #   tox
+charset-normalizer==3.3.2
     # via
     #   -r requirements/test.txt
     #   requests
@@ -77,6 +99,10 @@ code-annotations==1.5.0
     # via
     #   -r requirements/test.txt
     #   edx-lint
+colorama==0.4.6
+    # via
+    #   -r requirements/test.txt
+    #   tox
 commercetools @ git+https://github.com/edx/commercetools-python-sdk.git@36639f4a196d7fc0daecf914ee46f42229087abb
     # via -r requirements/test.txt
 coreapi==2.3.3
@@ -88,20 +114,21 @@ coreschema==0.0.4
     # via
     #   -r requirements/test.txt
     #   coreapi
-coverage[toml]==7.3.1
+coverage[toml]==7.3.2
     # via
     #   -r requirements/test.txt
+    #   coverage
     #   pytest-cov
-cryptography==41.0.4
+cryptography==41.0.7
     # via
     #   -r requirements/test.txt
     #   pyjwt
     #   social-auth-core
 currencies==2020.12.12
     # via -r requirements/test.txt
-ddt==1.6.0
+ddt==1.7.0
     # via -r requirements/test.txt
-defusedxml==0.8.0rc1
+defusedxml==0.8.0rc2
     # via
     #   -r requirements/test.txt
     #   python3-openid
@@ -113,8 +140,9 @@ dill==0.3.7
 distlib==0.3.7
     # via
     #   -r requirements/test.txt
+    #   requirementslib
     #   virtualenv
-django==4.2.5
+django==4.2.8
     # via
     #   -c requirements/constraints.txt
     #   -r requirements/test.txt
@@ -131,7 +159,7 @@ django==4.2.5
     #   edx-drf-extensions
     #   openedx-filters
     #   social-auth-app-django
-django-cors-headers==4.2.0
+django-cors-headers==4.3.1
     # via -r requirements/test.txt
 django-crum==0.7.9
     # via
@@ -156,6 +184,10 @@ djangorestframework==3.14.0
     #   django-rest-swagger
     #   drf-jwt
     #   edx-drf-extensions
+docopt==0.6.2
+    # via
+    #   -r requirements/test.txt
+    #   pipreqs
 docutils==0.20.1
     # via readme-renderer
 drf-jwt==1.19.2
@@ -166,14 +198,14 @@ edx-auth-backends==4.2.0
     # via -r requirements/test.txt
 edx-django-release-util==1.3.0
     # via -r requirements/test.txt
-edx-django-utils==5.7.0
+edx-django-utils==5.9.0
     # via
     #   -r requirements/test.txt
     #   edx-drf-extensions
     #   edx-rest-api-client
-edx-drf-extensions==8.10.0
+edx-drf-extensions==9.0.1
     # via -r requirements/test.txt
-edx-lint==5.3.4
+edx-lint==5.3.6
     # via
     #   -r requirements/quality.in
     #   -r requirements/test.txt
@@ -181,31 +213,32 @@ edx-opaque-keys==2.5.1
     # via
     #   -r requirements/test.txt
     #   edx-drf-extensions
-edx-rest-api-client==5.6.0
+edx-rest-api-client==5.6.1
     # via -r requirements/test.txt
-exceptiongroup==1.1.3
+exceptiongroup==1.2.0
     # via
     #   -r requirements/test.txt
     #   pytest
-filelock==3.12.4
+filelock==3.13.1
     # via
     #   -r requirements/test.txt
-    #   pyjwkest
-idna==3.4
+    #   tox
+    #   virtualenv
+idna==3.6
     # via
     #   -r requirements/test.txt
     #   requests
-importlib-metadata==6.8.0
+importlib-metadata==7.0.0
     # via
     #   keyring
     #   twine
-importlib-resources==6.1.0
+importlib-resources==6.1.1
     # via keyring
 iniconfig==2.0.0
     # via
     #   -r requirements/test.txt
     #   pytest
-isort==5.12.0
+isort==5.13.0
     # via
     #   -r requirements/quality.in
     #   -r requirements/test.txt
@@ -221,16 +254,12 @@ jinja2==3.1.2
     #   -r requirements/test.txt
     #   code-annotations
     #   coreschema
-keyring==24.2.0
+keyring==24.3.0
     # via twine
-kombu==5.3.2
+kombu==5.3.4
     # via
     #   -r requirements/test.txt
     #   celery
-lazy-object-proxy==1.9.0
-    # via
-    #   -r requirements/test.txt
-    #   astroid
 markdown-it-py==3.0.0
     # via rich
 markupsafe==2.1.3
@@ -259,11 +288,11 @@ more-itertools==10.1.0
     # via jaraco-classes
 mysqlclient==2.2.0
     # via -r requirements/test.txt
-newrelic==9.1.0
+newrelic==9.3.0
     # via
     #   -r requirements/test.txt
     #   edx-django-utils
-nh3==0.2.14
+nh3==0.2.15
     # via readme-renderer
 oauthlib==3.2.2
     # via
@@ -276,52 +305,75 @@ openapi-codec==1.3.2
     #   django-rest-swagger
 openedx-filters==1.6.0
     # via -r requirements/test.txt
-packaging==23.1
+packaging==23.2
     # via
     #   -r requirements/test.txt
     #   marshmallow
+    #   pyproject-api
     #   pytest
     #   tox
-pbr==5.11.1
+pbr==6.0.0
     # via
     #   -r requirements/test.txt
     #   stevedore
-pillow==10.0.0
+pep517==0.13.1
+    # via
+    #   -r requirements/test.txt
+    #   requirementslib
+pillow==10.1.0
     # via -r requirements/test.txt
+pip-api==0.0.30
+    # via
+    #   -r requirements/test.txt
+    #   isort
+pipreqs==0.4.13
+    # via
+    #   -r requirements/test.txt
+    #   isort
 pkginfo==1.9.6
     # via twine
-platformdirs==3.10.0
+platformdirs==4.1.0
     # via
-    #   -c https://raw.githubusercontent.com/edx/edx-lint/master/edx_lint/files/common_constraints.txt
     #   -r requirements/test.txt
     #   pylint
+    #   requirementslib
+    #   tox
     #   virtualenv
+plette[validation]==0.4.4
+    # via
+    #   -r requirements/test.txt
+    #   plette
+    #   requirementslib
 pluggy==1.3.0
     # via
     #   -r requirements/test.txt
     #   pytest
     #   tox
-prompt-toolkit==3.0.39
+prompt-toolkit==3.0.41
     # via
     #   -r requirements/test.txt
     #   click-repl
-psutil==5.9.5
+psutil==5.9.6
     # via
     #   -r requirements/test.txt
     #   edx-django-utils
-py==1.11.0
-    # via
-    #   -r requirements/test.txt
-    #   tox
-pycodestyle==2.11.0
+pycodestyle==2.11.1
     # via -r requirements/quality.in
 pycparser==2.21
     # via
     #   -r requirements/test.txt
     #   cffi
+pydantic==2.5.2
+    # via
+    #   -r requirements/test.txt
+    #   requirementslib
+pydantic-core==2.14.5
+    # via
+    #   -r requirements/test.txt
+    #   pydantic
 pydocstyle==6.3.0
     # via -r requirements/quality.in
-pygments==2.16.1
+pygments==2.17.2
     # via
     #   readme-renderer
     #   rich
@@ -332,8 +384,9 @@ pyjwt[crypto]==2.8.0
     #   edx-auth-backends
     #   edx-drf-extensions
     #   edx-rest-api-client
+    #   pyjwt
     #   social-auth-core
-pylint==2.17.6
+pylint==3.0.2
     # via
     #   -r requirements/test.txt
     #   edx-lint
@@ -344,7 +397,7 @@ pylint-celery==0.3
     # via
     #   -r requirements/test.txt
     #   edx-lint
-pylint-django==2.5.3
+pylint-django==2.5.5
     # via
     #   -r requirements/test.txt
     #   edx-lint
@@ -361,14 +414,18 @@ pynacl==1.5.0
     # via
     #   -r requirements/test.txt
     #   edx-django-utils
-pytest==7.4.2
+pyproject-api==1.6.1
+    # via
+    #   -r requirements/test.txt
+    #   tox
+pytest==7.4.3
     # via
     #   -r requirements/test.txt
     #   pytest-cov
     #   pytest-django
 pytest-cov==4.1.0
     # via -r requirements/test.txt
-pytest-django==4.5.2
+pytest-django==4.7.0
     # via -r requirements/test.txt
 python-dateutil==2.8.2
     # via
@@ -385,6 +442,7 @@ python3-openid==3.2.0
 pytz==2023.3.post1
     # via
     #   -r requirements/test.txt
+    #   commercetools
     #   djangorestframework
 pyyaml==6.0.1
     # via
@@ -394,7 +452,7 @@ pyyaml==6.0.1
     #   responses
 readme-renderer==42.0
     # via twine
-redis==4.6.0
+redis==5.0.1
     # via
     #   -r requirements/test.txt
     #   celery
@@ -408,11 +466,13 @@ requests==2.31.0
     #   requests-mock
     #   requests-oauthlib
     #   requests-toolbelt
+    #   requirementslib
     #   responses
     #   slumber
     #   social-auth-core
     #   stripe
     #   twine
+    #   yarg
 requests-mock==1.11.0
     # via
     #   -r requirements/test.txt
@@ -424,17 +484,21 @@ requests-oauthlib==1.3.1
     #   social-auth-core
 requests-toolbelt==1.0.0
     # via twine
-responses==0.23.3
+requirementslib==3.0.0
+    # via
+    #   -r requirements/test.txt
+    #   isort
+responses==0.24.1
     # via -r requirements/test.txt
 rfc3986==2.0.0
     # via twine
-rich==13.5.3
+rich==13.7.0
     # via twine
 semantic-version==2.10.0
     # via
     #   -r requirements/test.txt
     #   edx-drf-extensions
-simplejson==3.19.1
+simplejson==3.19.2
     # via
     #   -r requirements/test.txt
     #   django-rest-swagger
@@ -446,18 +510,17 @@ six==1.16.0
     #   edx-lint
     #   python-dateutil
     #   requests-mock
-    #   tox
 slumber==0.7.1
     # via
     #   -r requirements/test.txt
     #   edx-rest-api-client
 snowballstemmer==2.2.0
     # via pydocstyle
-social-auth-app-django==5.3.0
+social-auth-app-django==5.4.0
     # via
     #   -r requirements/test.txt
     #   edx-auth-backends
-social-auth-core==4.4.2
+social-auth-core==4.5.1
     # via
     #   -r requirements/test.txt
     #   edx-auth-backends
@@ -473,9 +536,9 @@ stevedore==5.1.0
     #   code-annotations
     #   edx-django-utils
     #   edx-opaque-keys
-stripe==6.6.0
+stripe==7.8.1
     # via -r requirements/test.txt
-testfixtures==7.2.0
+testfixtures==7.2.2
     # via -r requirements/test.txt
 text-unidecode==1.3
     # via
@@ -485,30 +548,31 @@ tomli==2.0.1
     # via
     #   -r requirements/test.txt
     #   coverage
+    #   pep517
     #   pylint
+    #   pyproject-api
     #   pytest
     #   tox
-tomlkit==0.12.1
+tomlkit==0.12.3
     # via
     #   -r requirements/test.txt
+    #   plette
     #   pylint
-tox==3.28.0
-    # via
-    #   -c requirements/common_constraints.txt
-    #   -r requirements/test.txt
+    #   requirementslib
+tox==4.11.4
+    # via -r requirements/test.txt
 twine==4.0.2
     # via -r requirements/quality.in
-types-pyyaml==6.0.12.12
+typing-extensions==4.9.0
     # via
     #   -r requirements/test.txt
-    #   responses
-typing-extensions==4.8.0
-    # via
-    #   -r requirements/test.txt
+    #   annotated-types
     #   asgiref
     #   astroid
     #   edx-opaque-keys
     #   kombu
+    #   pydantic
+    #   pydantic-core
     #   pylint
     #   rich
     #   stripe
@@ -521,31 +585,47 @@ uritemplate==4.1.1
     # via
     #   -r requirements/test.txt
     #   coreapi
-urllib3==2.0.5
+urllib3==2.1.0
     # via
     #   -r requirements/test.txt
     #   requests
     #   responses
     #   twine
-vine==5.0.0
+vine==5.1.0
     # via
     #   -r requirements/test.txt
     #   amqp
     #   celery
     #   kombu
-virtualenv==20.24.5
+virtualenv==20.25.0
     # via
     #   -r requirements/test.txt
     #   tox
-wcwidth==0.2.6
+wcwidth==0.2.12
     # via
     #   -r requirements/test.txt
     #   prompt-toolkit
-wrapt==1.15.0
+webob==1.8.7
     # via
     #   -r requirements/test.txt
-    #   astroid
+    #   commercetools
+werkzeug==3.0.1
+    # via
+    #   -r requirements/test.txt
+    #   commercetools
+wrapt==1.16.0
+    # via
+    #   -r requirements/test.txt
+    #   commercetools
+yarg==0.1.9
+    # via
+    #   -r requirements/test.txt
+    #   pipreqs
 zipp==3.17.0
     # via
     #   importlib-metadata
     #   importlib-resources
+
+# The following packages are considered to be unsafe in a requirements file:
+# pip
+# setuptools
