@@ -8,7 +8,9 @@ asgiref==3.7.2       # Until we switch to Py 3.10, this has some serius issues w
 attrs
 celery
 celery[redis]
-Django
+currencies           # Currency Formatting
+python-dateutil
+Django>=2.2          # Web application framework
 django-cors-headers
 django-extensions
 django-rest-swagger
