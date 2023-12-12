@@ -4,35 +4,28 @@ MAINTAINER sre@edx.org
 
 # Packages installed:
 
-# language-pack-en locales; ubuntu locale support so that system utilities have a consistent
-# language and time zone.
-
-# python; ubuntu doesnt ship with python, so this is the python we will use to run the application
-
-# python3-pip; install pip to install application requirements.txt files
-
-# libmysqlclient-dev; to install header files needed to use native C implementation for
-# MySQL-python for performance gains.
-
-# libssl-dev; # mysqlclient wont install without this.
-
-# python3-dev; to install header files for python extensions; much wheel-building depends on this
-
 # gcc; for compiling python extensions distributed with python packages like mysql-client
-
+# git; for pulling requirements from GitHub.
+# language-pack-en locales; ubuntu locale support so that system utilities have a consistent language and time zone.
+# libmysqlclient-dev; to install header files needed to use native C implementation for MySQL-python for performance gains.
+# libssl-dev; # mysqlclient wont install without this.
 # pkg-config is now required for libmysqlclient-dev and its python dependencies
+# python3-dev; to install header files for python extensions; much wheel-building depends on this
+# python3-pip; install pip to install application requirements.txt files
+# python; ubuntu doesnt ship with python, so this is the python we will use to run the application
 
 # If you add a package here please include a comment above describing what it is used for
 RUN apt-get update && apt-get -qy install --no-install-recommends \
+ gcc \
+ git \
  language-pack-en \
- locales \
- python3.8 \
- python3-pip \
  libmysqlclient-dev \
- pkg-config \
  libssl-dev \
+ locales \
+ pkg-config \
  python3-dev \
- gcc
+ python3-pip \
+ python3.8 \
 
 
 RUN pip install --upgrade pip setuptools
