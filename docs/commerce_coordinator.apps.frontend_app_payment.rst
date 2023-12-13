@@ -29,6 +29,14 @@ commerce\_coordinator.apps.frontend\_app\_payment.apps module
    :undoc-members:
    :show-inheritance:
 
+commerce\_coordinator.apps.frontend\_app\_payment.constants module
+------------------------------------------------------------------
+
+.. automodule:: commerce_coordinator.apps.frontend_app_payment.constants
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
 commerce\_coordinator.apps.frontend\_app\_payment.exceptions module
 -------------------------------------------------------------------
 
@@ -49,6 +57,14 @@ commerce\_coordinator.apps.frontend\_app\_payment.models module
 ---------------------------------------------------------------
 
 .. automodule:: commerce_coordinator.apps.frontend_app_payment.models
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+commerce\_coordinator.apps.frontend\_app\_payment.pipeline module
+-----------------------------------------------------------------
+
+.. automodule:: commerce_coordinator.apps.frontend_app_payment.pipeline
    :members:
    :undoc-members:
    :show-inheritance:
