@@ -14,6 +14,7 @@ from commercetools.platform.models import Customer as CTCustomer
 from commercetools.platform.models import CustomFields as CTCustomFields
 from commercetools.platform.models import FieldContainer as CTFieldContainer
 from commercetools.platform.models import Order as CTOrder
+from commercetools.platform.models import ProductProjectionPagedSearchResponse as CTProductProjectionPagedSearchResponse
 from commercetools.platform.models import TypeReference as CTTypeReference
 from commercetools.testing import BackendRepository
 
@@ -131,28 +132,31 @@ class APITestingSet:
         """
         Create a new instance of the API Set with full lifecycle management
         """
-        mocker = requests_mock.Mocker(real_http=True, case_sensitive=False)
+        mocker = requests_mock.Mocker(real_http=True, case_sensitive=True)
         repo = BackendRepository()
         repo.register(mocker)
         return APITestingSet(mocker, repo)
 
 
 # Data Blobs
-DEFAULT_ORDER_VARIANT_SKU = "course-v1:edX+DemoX+Demo_Course"
-
-
-def gen_order(uuid_id):
+def gen_order(uuid_id) -> CTOrder:
     with open(os.path.join(pathlib.Path(__file__).parent.resolve(), 'raw_ct_order.json')) as f:
         obj = json.load(f)
         obj['id'] = uuid_id
         return CTOrder.deserialize(obj)
 
 
-def gen_order_history(num=1):
+def gen_variant_search_result() -> CTProductProjectionPagedSearchResponse:
+    with open(os.path.join(pathlib.Path(__file__).parent.resolve(), 'raw_variant_search.json')) as f:
+        obj = json.load(f)
+        return CTProductProjectionPagedSearchResponse.deserialize(obj)
+
+
+def gen_order_history(num=1) -> typing.List[CTOrder]:
     return [gen_order(uuid4_str()) for _ in range(num)]
 
 
-def gen_example_customer():
+def gen_example_customer() -> CTCustomer:
     return CTCustomer.deserialize(json.loads(
         """
         {
