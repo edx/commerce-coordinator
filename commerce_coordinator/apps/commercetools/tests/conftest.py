@@ -7,11 +7,18 @@ import os
 import pathlib
 import typing
 
+from datetime import datetime
+
 import requests_mock
+from commercetools.platform.models import AuthenticationMode as CTAuthenticationMode
 from commercetools.platform.models import Customer as CTCustomer
+from commercetools.platform.models import CustomFields as CTCustomFields
+from commercetools.platform.models import FieldContainer as CTFieldContainer
 from commercetools.platform.models import Order as CTOrder
+from commercetools.platform.models import TypeReference as CTTypeReference
 from commercetools.testing import BackendRepository
 
+from commerce_coordinator.apps.commercetools.catalog_info.constants import EdXFieldNames
 from commerce_coordinator.apps.commercetools.clients import CommercetoolsAPIClient
 from commerce_coordinator.apps.core.tests.utils import uuid4_str
 
@@ -132,6 +139,9 @@ class APITestingSet:
 
 
 # Data Blobs
+DEFAULT_ORDER_VARIANT_SKU = "course-v1:edX+DemoX+Demo_Course"
+
+
 def gen_order(uuid_id):
     with open(os.path.join(pathlib.Path(__file__).parent.resolve(), 'raw_ct_order.json')) as f:
         obj = json.load(f)
@@ -196,3 +206,28 @@ def gen_example_customer():
         }
         """
     ))
+
+
+DEFAULT_EDX_LMS_USER_ID = 127
+
+
+def gen_customer(email: str, un: str):
+    return CTCustomer(
+        email=email,
+        custom=CTCustomFields(
+            type=CTTypeReference(
+                id=uuid4_str()
+            ),
+            fields=CTFieldContainer({
+                EdXFieldNames.LMS_USER_NAME: un,
+                EdXFieldNames.LMS_USER_ID: DEFAULT_EDX_LMS_USER_ID
+            })
+        ),
+        version=3,
+        addresses=[],
+        authentication_mode=CTAuthenticationMode.PASSWORD,
+        created_at=datetime.now(),
+        id=uuid4_str(),
+        is_email_verified=True,
+        last_modified_at=datetime.now()
+    )
