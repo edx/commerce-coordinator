@@ -153,4 +153,3 @@ def attribute_dict(attr_list: Optional[List[CTAttribute]]) -> Optional[dict]:
     if len(attr_list) >= 1:
         return dict([(d.name, d.value) for d in attr_list])
     return None
-

@@ -1,3 +1,4 @@
+"""Tests for edX Customization handlers for CoCo"""
 import json
 import unittest
 from typing import Union
@@ -21,6 +22,7 @@ _TEST_USER_NAME = "jdoe22"
 
 
 class TestEdXFunctions(unittest.TestCase):
+    """Test for edx_utils"""
     order: Union[CTOrder, None]
     user: Union[CTCustomer, None]
 
@@ -74,7 +76,7 @@ class TestEdXFunctions(unittest.TestCase):
                   "categoryOrderHints": {
                   },
                   "description": {
-                    "en-US": "<p>Injuries, such as motor vehicle crash, youth violence, and suicide, are the leading cause of child and adolescent death. However, almost all of these injuries can be prevented through the widespread application of evidence-based practices and policies.</p> <p>Public health experts, nurses, physicians, social workers, teachers, child care providers, and parents all play a vital role in pediatric injury prevention. Despite its impact, very little training on injury prevention science currently exists.</p> <p>This course lays a broad foundation for pediatric injury prevention and will increase your understanding of this major public health issue through powerful, concise, up-to-date lectures, interviews, and demonstrations from a multidisciplinary panel of nationally-recognized injury prevention experts.</p> <p>This course is designed for multiple fields and levels of training, including healthcare, kinesiology, public policy, social work, pharmacy, dentistry, and psychology.The course is also appropriate for educators, coaches, child care providers, and parents.</p> <p>Asa learner, you will have the ability to select all modules or individual topics that interest you most. Comprised of 8 modules, this course may be taken from the comfort of your home or office, and you can learn at your own pace.</p> <p><strong>Obtaining Credit for Continuing Education</strong></p> <p>Learners may apply for Continuing Medical Education (CME), American Board of Pediatrics’ (ABP) Maintenance of Certification (MOC) Part II, or Certified Health Education Specialist (CHES) credit. See the FAQ for more information on each offering.</p>"
+                    "en-US": "<p>Injuries, such as motor vehicle crash, youth violence, and suicide, are the leading ca"
                   },
                   "slug": {
                     "en-US": "injury-prevention-for-children-teens"
@@ -289,7 +291,7 @@ class TestEdXFunctions(unittest.TestCase):
                   "categoryOrderHints": {
                   },
                   "description": {
-                    "en-US": "<p>Injuries, such as motor vehicle crash, youth violence, and suicide, are the leading cause of child and adolescent death. However, almost all of these injuries can be prevented through the widespread application of evidence-based practices and policies.</p> <p>Public health experts, nurses, physicians, social workers, teachers, child care providers, and parents all play a vital role in pediatric injury prevention. Despite its impact, very little training on injury prevention science currently exists.</p> <p>This course lays a broad foundation for pediatric injury prevention and will increase your understanding of this major public health issue through powerful, concise, up-to-date lectures, interviews, and demonstrations from a multidisciplinary panel of nationally-recognized injury prevention experts.</p> <p>This course is designed for multiple fields and levels of training, including healthcare, kinesiology, public policy, social work, pharmacy, dentistry, and psychology.The course is also appropriate for educators, coaches, child care providers, and parents.</p> <p>Asa learner, you will have the ability to select all modules or individual topics that interest you most. Comprised of 8 modules, this course may be taken from the comfort of your home or office, and you can learn at your own pace.</p> <p><strong>Obtaining Credit for Continuing Education</strong></p> <p>Learners may apply for Continuing Medical Education (CME), American Board of Pediatrics’ (ABP) Maintenance of Certification (MOC) Part II, or Certified Health Education Specialist (CHES) credit. See the FAQ for more information on each offering.</p>"
+                    "en-US": "<p>Injuries, such as motor vehicle crash, youth violence, and suicide, are the leading ca"
                   },
                   "slug": {
                     "en-US": "injury-prevention-for-children-teens"

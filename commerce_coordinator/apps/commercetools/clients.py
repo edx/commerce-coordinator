@@ -3,7 +3,7 @@ API clients for commercetools app.
 """
 
 import logging
-from typing import Generic, List, Optional, TypeVar
+from typing import Generic, List, Optional, Tuple, TypeVar, Union
 
 import requests
 from commercetools import Client as CTClient
@@ -24,6 +24,8 @@ from commerce_coordinator.apps.core.constants import ORDER_HISTORY_PER_SYSTEM_RE
 logger = logging.getLogger(__name__)
 
 T = TypeVar("T")
+
+ExpandList = Union[Tuple[str], List[str]]
 
 
 class PaginatedResult(Generic[T]):
@@ -169,7 +171,7 @@ class CommercetoolsAPIClient:
         else:
             return results.results[0]
 
-    def get_order_by_id(self, order_id: str, expand: List[str] = DEFAULT_ORDER_EXPANSION) -> CTOrder:
+    def get_order_by_id(self, order_id: str, expand: ExpandList = DEFAULT_ORDER_EXPANSION) -> CTOrder:
         """
         Fetch an order by the Order ID (UUID)
 
@@ -179,11 +181,11 @@ class CommercetoolsAPIClient:
 
         Returns (CTOrder): Order with Expanded Properties
         """
-        return self.base_client.orders.get_by_id(order_id, expand=expand)
+        return self.base_client.orders.get_by_id(order_id, expand=list(expand))
 
     def get_orders(self, customer: CTCustomer, offset=0,
                    limit=ORDER_HISTORY_PER_SYSTEM_REQ_LIMIT,
-                   expand: List[str] = DEFAULT_ORDER_EXPANSION) -> PaginatedResult[CTOrder]:
+                   expand: ExpandList = DEFAULT_ORDER_EXPANSION) -> PaginatedResult[CTOrder]:
 
         """
         Call commercetools API overview endpoint for data about historical orders.
@@ -206,7 +208,7 @@ class CommercetoolsAPIClient:
             sort=["completedAt desc", "lastModifiedAt desc"],
             limit=limit,
             offset=offset,
-            expand=expand
+            expand=list(expand)
         )
 
         return PaginatedResult(values.results, values.total, values.offset)
