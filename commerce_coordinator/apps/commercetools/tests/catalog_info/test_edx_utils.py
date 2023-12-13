@@ -5,7 +5,6 @@ from typing import Union
 from commercetools.platform.models import Customer as CTCustomer
 from commercetools.platform.models import Order as CTOrder
 from commercetools.platform.models import Product as CTProduct
-from utils import uuid4_str
 
 from commerce_coordinator.apps.commercetools.catalog_info.edx_utils import (
     get_edx_items,
@@ -16,6 +15,7 @@ from commerce_coordinator.apps.commercetools.catalog_info.edx_utils import (
     is_edx_lms_order
 )
 from commerce_coordinator.apps.commercetools.tests.conftest import DEFAULT_EDX_LMS_USER_ID, gen_customer, gen_order
+from commerce_coordinator.apps.core.tests.utils import uuid4_str
 
 _TEST_USER_NAME = "jdoe22"
 
