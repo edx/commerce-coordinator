@@ -11,9 +11,9 @@ from commerce_coordinator.apps.commercetools.catalog_info.constants import EdXFi
 
 def get_edx_product_course_run_key(prodvar_or_li: Union[CTProductVariant, CTLineItem]) -> str:
     if isinstance(prodvar_or_li, CTProductVariant):
-        return prodvar_or_li.key
+        return prodvar_or_li.sku
     else:
-        return prodvar_or_li.variant.key
+        return prodvar_or_li.variant.sku
 
 
 def get_edx_product_course_key(prod_or_li: Union[CTProduct, CTLineItem]) -> str:

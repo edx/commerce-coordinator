@@ -2,12 +2,17 @@ import json
 import unittest
 from typing import Union
 
-from commercetools.platform.models import CreatedBy, Customer as CTCustomer, LastModifiedBy, ProductTypeReference, \
-    ReferenceTypeId
+from commercetools.platform.models import CreatedBy
+from commercetools.platform.models import Customer as CTCustomer
+from commercetools.platform.models import LastModifiedBy
 from commercetools.platform.models import LineItem as CTLineItem
 from commercetools.platform.models import Order as CTOrder
 from commercetools.platform.models import Product as CTProduct
+from commercetools.platform.models import ProductTypeReference
 from commercetools.platform.models import ProductVariant as CTProductVariant
+from commercetools.platform.models import ReferenceTypeId
+from conftest import DEFAULT_EDX_LMS_USER_ID, gen_customer, gen_order
+from utils import uuid4_str
 
 from commerce_coordinator.apps.commercetools.catalog_info.edx_utils import (
     get_edx_items,
@@ -17,14 +22,13 @@ from commerce_coordinator.apps.commercetools.catalog_info.edx_utils import (
     get_edx_product_course_run_key,
     is_edx_lms_order
 )
-from conftest import DEFAULT_EDX_LMS_USER_ID, gen_customer, gen_order
-from utils import uuid4_str
 
 _TEST_USER_NAME = "jdoe22"
 
+
 class TestEdXFunctions(unittest.TestCase):
     order: Union[CTOrder, None]
-    user:  Union[CTCustomer, None]
+    user: Union[CTCustomer, None]
 
     def setUp(self):
         self.order = gen_order(uuid4_str())
@@ -44,7 +48,7 @@ class TestEdXFunctions(unittest.TestCase):
         self.assertEqual(get_edx_product_course_run_key(li), prodvar.sku)
 
     def test_get_edx_product_course_key(self):
-        li = CTLineItem(key="li_key")
+        li = self.order.line_items[0]
         prod = CTProduct.deserialize(json.loads(
             """
             {
