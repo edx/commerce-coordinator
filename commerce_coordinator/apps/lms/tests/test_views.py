@@ -30,8 +30,7 @@ class GetActiveManagementSystemTests(APITestCase):
         # noinspection PyUnusedLocal
         # pylint: disable=unused-argument # needed for kwargs
         def _get_product_variant_by_course_run(
-            _, cr_name: int, offset=0,
-                limit=ORDER_HISTORY_PER_SYSTEM_REQ_LIMIT
+            _, cr_name: str
         ) -> CTProductProjectionPagedSearchResponse:
             return self.variant_search_results
         # pylint: enable=unused-argument # needed for kwargs
