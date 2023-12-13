@@ -41,7 +41,6 @@ TEST_ECOMMERCE_URL = 'https://testserver.com'
 class GetActiveManagementSystemTests(APITestCase):
     url = reverse('lms:payment_page_redirect')
 
-
     def setupVariantSearch(self):
         self.variant_search_results = gen_variant_search_result()
         pass
@@ -57,8 +56,10 @@ class GetActiveManagementSystemTests(APITestCase):
 
         return _get_product_variant_by_course_run
 
-    def setUp(self):
+    def setUp(self) -> None:
         super().setUp()
+        self.client_set = APITestingSet.new_instance()
+
         self.setupVariantSearch()
         MonkeyPatch.monkey(
             CommercetoolsAPIClient,
@@ -68,7 +69,8 @@ class GetActiveManagementSystemTests(APITestCase):
             }
         )
 
-    def tearDown(self):
+    def tearDown(self) -> None:
+        del self.client_set
         super().tearDown()
         if MonkeyPatch.is_monkey(CommercetoolsAPIClient):
             MonkeyPatch.unmonkey(CommercetoolsAPIClient)
@@ -133,7 +135,6 @@ class GetActiveManagementSystemTests(APITestCase):
     #     is_redirect_mock.return_value = False
     #     response = self.client.get(self.url, {'sku': ['sku1']})
     #     self.assertTrue(response.headers['Location'].startswith(settings.FRONTEND_APP_PAYMENT_URL))
-
 
 
 @ddt.ddt
