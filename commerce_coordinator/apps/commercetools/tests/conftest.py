@@ -6,7 +6,6 @@ import json
 import os
 import pathlib
 import typing
-
 from datetime import datetime
 
 import requests_mock

@@ -2,16 +2,9 @@ import json
 import unittest
 from typing import Union
 
-from commercetools.platform.models import CreatedBy
 from commercetools.platform.models import Customer as CTCustomer
-from commercetools.platform.models import LastModifiedBy
-from commercetools.platform.models import LineItem as CTLineItem
 from commercetools.platform.models import Order as CTOrder
 from commercetools.platform.models import Product as CTProduct
-from commercetools.platform.models import ProductTypeReference
-from commercetools.platform.models import ProductVariant as CTProductVariant
-from commercetools.platform.models import ReferenceTypeId
-from conftest import DEFAULT_EDX_LMS_USER_ID, gen_customer, gen_order
 from utils import uuid4_str
 
 from commerce_coordinator.apps.commercetools.catalog_info.edx_utils import (
@@ -22,6 +15,7 @@ from commerce_coordinator.apps.commercetools.catalog_info.edx_utils import (
     get_edx_product_course_run_key,
     is_edx_lms_order
 )
+from commerce_coordinator.apps.commercetools.tests.conftest import DEFAULT_EDX_LMS_USER_ID, gen_customer, gen_order
 
 _TEST_USER_NAME = "jdoe22"
 
