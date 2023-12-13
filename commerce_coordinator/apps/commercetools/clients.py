@@ -11,8 +11,8 @@ from commercetools import CommercetoolsError
 from commercetools.platform.models import Customer as CTCustomer
 from commercetools.platform.models import CustomerSetCustomTypeAction as CTCustomerSetCustomTypeAction
 from commercetools.platform.models import FieldContainer as CTFieldContainer
-from commercetools.platform.models import ProductVariant as CTProductVariant
 from commercetools.platform.models import Order as CTOrder
+from commercetools.platform.models import ProductVariant as CTProductVariant
 from commercetools.platform.models import Type as CTType
 from commercetools.platform.models import TypeDraft as CTTypeDraft
 from commercetools.platform.models import TypeResourceIdentifier as CTTypeResourceIdentifier
@@ -219,7 +219,7 @@ class CommercetoolsAPIClient:
         orders = self.get_orders(customer, offset, limit)
 
         return orders, customer
-    
+
     def get_product_variant_by_course_run(self, cr_id: str) -> Optional[CTProductVariant]:
         results = self.base_client.product_projections.search(False, filter=f"variants.sku:\"{cr_id}\"").results
 
@@ -238,7 +238,7 @@ class CommercetoolsAPIClient:
 
         matching_variant_list = list(
             filter(
-                lambda v: v.sku == cr_id, 
+                lambda v: v.sku == cr_id,
                 all_variants
             )
         )

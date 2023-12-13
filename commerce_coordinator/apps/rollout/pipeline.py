@@ -1,15 +1,14 @@
 import logging
-from requests import HTTPError
-from rest_framework.exceptions import APIException
 
 from openedx_filters import PipelineStep
 from openedx_filters.exceptions import OpenEdxFilterException
+from requests import HTTPError
+from rest_framework.exceptions import APIException
 
+from commerce_coordinator.apps.commercetools.clients import CommercetoolsAPIClient
 from commerce_coordinator.apps.commercetools_frontend.constants import COMMERCETOOLS_FRONTEND
 from commerce_coordinator.apps.frontend_app_payment.constants import FRONTEND_APP_PAYMENT_CHECKOUT
 from commerce_coordinator.apps.rollout.waffle import is_redirect_to_commercetools_enabled_for_user
-
-from commerce_coordinator.apps.commercetools.clients import CommercetoolsAPIClient
 
 logger = logging.getLogger(__name__)
 

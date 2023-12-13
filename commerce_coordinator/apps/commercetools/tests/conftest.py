@@ -10,6 +10,7 @@ import typing
 import requests_mock
 from commercetools.platform.models import Customer as CTCustomer
 from commercetools.platform.models import Order as CTOrder
+from commercetools.platform.models import ProductProjectionPagedSearchResponse as CTProductProjectionPagedSearchResponse
 from commercetools.testing import BackendRepository
 
 from commerce_coordinator.apps.commercetools.clients import CommercetoolsAPIClient
@@ -132,18 +133,24 @@ class APITestingSet:
 
 
 # Data Blobs
-def gen_order(uuid_id):
+def gen_order(uuid_id) -> CTOrder:
     with open(os.path.join(pathlib.Path(__file__).parent.resolve(), 'raw_ct_order.json')) as f:
         obj = json.load(f)
         obj['id'] = uuid_id
         return CTOrder.deserialize(obj)
 
 
-def gen_order_history(num=1):
+def gen_variant_search_result() -> CTProductProjectionPagedSearchResponse:
+    with open(os.path.join(pathlib.Path(__file__).parent.resolve(), 'raw_variant_search.json')) as f:
+        obj = json.load(f)
+        return CTProductProjectionPagedSearchResponse.deserialize(obj)
+
+
+def gen_order_history(num=1) -> typing.List[CTOrder]:
     return [gen_order(uuid4_str()) for _ in range(num)]
 
 
-def gen_example_customer():
+def gen_example_customer() -> CTCustomer:
     return CTCustomer.deserialize(json.loads(
         """
         {

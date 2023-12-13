@@ -1,28 +1,24 @@
 """
 Tests for the LMS (edx-platform) views.
 """
-from django.conf import settings
-import requests_mock
-from commerce_coordinator.apps.commercetools.catalog_info.constants import EdXFieldNames
-from commerce_coordinator.apps.commercetools.catalog_info.foundational_types import TwoUCustomTypes
-from commercetools.platform.models import (
-    Customer,
-    CustomerPagedQueryResponse,
-    Order,
-    OrderPagedQueryResponse,
-)
-from commerce_coordinator.apps.commercetools.tests.conftest import (
-    APITestingSet,
-    gen_example_customer, 
-    gen_order_history,
-)
-from commerce_coordinator.apps.core.constants import ORDER_HISTORY_PER_SYSTEM_REQ_LIMIT
 import ddt
+import requests_mock
+from commercetools.platform.models import Customer, CustomerPagedQueryResponse, Order, OrderPagedQueryResponse
+from django.conf import settings
 from django.contrib.auth import get_user_model
 from django.urls import reverse
 from mock import patch
 from rest_framework import status
 from rest_framework.test import APITestCase
+
+from commerce_coordinator.apps.commercetools.catalog_info.constants import EdXFieldNames
+from commerce_coordinator.apps.commercetools.catalog_info.foundational_types import TwoUCustomTypes
+from commerce_coordinator.apps.commercetools.tests.conftest import (
+    APITestingSet,
+    gen_example_customer,
+    gen_order_history
+)
+from commerce_coordinator.apps.core.constants import ORDER_HISTORY_PER_SYSTEM_REQ_LIMIT
 
 User = get_user_model()
 
