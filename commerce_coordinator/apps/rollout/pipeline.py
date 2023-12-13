@@ -1,4 +1,6 @@
 import logging
+from requests import HTTPError
+from rest_framework.exceptions import APIException
 
 from openedx_filters import PipelineStep
 from openedx_filters.exceptions import OpenEdxFilterException
@@ -6,6 +8,8 @@ from openedx_filters.exceptions import OpenEdxFilterException
 from commerce_coordinator.apps.commercetools_frontend.constants import COMMERCETOOLS_FRONTEND
 from commerce_coordinator.apps.frontend_app_payment.constants import FRONTEND_APP_PAYMENT_CHECKOUT
 from commerce_coordinator.apps.rollout.waffle import is_redirect_to_commercetools_enabled_for_user
+
+from commerce_coordinator.apps.commercetools.clients import CommercetoolsAPIClient
 
 logger = logging.getLogger(__name__)
 
@@ -28,7 +32,18 @@ class GetActiveOrderManagementSystem(PipelineStep):
         sku = request.query_params.get('sku', '').strip()
         course_run = request.query_params.get('course_run_key', '').strip()
 
-        if is_redirect_to_commercetools_enabled_for_user(request) and course_run:
+        ct_api_client = CommercetoolsAPIClient()
+        # breakpoint()
+        try:
+            commercetools_available_course =  ct_api_client.get_product_variant_by_course_run(course_run)
+        except HTTPError as exc:
+            logger.exception(
+                '[get_product_variant_by_course_run] Failed to get Commercetools course for course_run: %s', course_run
+            )
+            raise APIException("Error while fetching course variant from Commercetools") from exc
+
+        
+        if is_redirect_to_commercetools_enabled_for_user(request) and commercetools_available_course:
             active_order_management_system = COMMERCETOOLS_FRONTEND
         elif sku:
             active_order_management_system = FRONTEND_APP_PAYMENT_CHECKOUT
