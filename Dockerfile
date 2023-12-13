@@ -25,7 +25,7 @@ RUN apt-get update && apt-get -qy install --no-install-recommends \
  pkg-config \
  python3-dev \
  python3-pip \
- python3.8 \
+ python3.8
 
 
 RUN pip install --upgrade pip setuptools
