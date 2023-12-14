@@ -22,3 +22,9 @@ LS_OUT_PREFERENCES = [Languages.ENGLISH, Languages.US_ENGLISH]
 
 HIDE_CODE_FOR_CURRENCIES = ['USD', 'EUR', 'INR', 'JPY']
 """Currencies to hide the code on, so $12 isn't $12 USD."""
+
+DEFAULT_ORDER_EXPANSION = (
+    "paymentInfo.payments[*]",
+    "discountCodes[*].discountCode",
+    "directDiscounts[*]"
+)

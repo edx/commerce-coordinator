@@ -33,7 +33,7 @@ from commerce_coordinator.apps.commercetools.data import (
     convert_payment_info,
     order_from_commercetools
 )
-from commerce_coordinator.apps.commercetools.tests.conftest import gen_order
+from commerce_coordinator.apps.commercetools.tests.conftest import gen_customer, gen_order
 from commerce_coordinator.apps.core.tests.utils import name_test, uuid4_str
 from commerce_coordinator.apps.ecommerce.data import BillingAddress, Line
 from commerce_coordinator.apps.ecommerce.data import Order as LegacyOrder
@@ -64,28 +64,10 @@ def gen_dd(code: str) -> CTDirectDiscount:
     )
 
 
-def gen_customer(email: str, un: str):
-    return CTCustomer(
-        email=email,
-        custom=CTCustomFields(
-            type=CTTypeReference(
-                id=uuid4_str()
-            ),
-            fields=CTFieldContainer({EdXFieldNames.LMS_USER_NAME: un})
-        ),
-        version=3,
-        addresses=[],
-        authentication_mode=CTAuthenticationMode.PASSWORD,
-        created_at=datetime.now(),
-        id=uuid4_str(),
-        is_email_verified=True,
-        last_modified_at=datetime.now()
-    )
-
-
 @ddt.ddt
 class TestCTOrderConversionToLegacyOrders(TestCase):
     """ Commercetools data conversion testcase to cover conversion functions in to legacy object formats """
+
     @ddt.data(
         name_test(
             "None",

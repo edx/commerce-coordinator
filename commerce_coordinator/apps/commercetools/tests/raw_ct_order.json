@@ -24,7 +24,7 @@
       },
       "variant": {
         "id": 1,
-        "sku": "edx-sku-8CF08E5",
+        "sku": "course-v1:edX+DemoX+Demo_Course",
         "key": "edx-var-demonstration-course-course-v1-edx-demox-demo-course",
         "prices": [
           {

@@ -30,3 +30,16 @@ class OrderFulfillMessageInputSerializer(CoordinatorSerializer):
         representation = super().to_representation(instance)
         representation = representation.pop('detail')
         return representation
+
+
+class OrderFulfillViewInputSerializer(CoordinatorSerializer):
+    """
+    Serializer for OrderFulfillView input validation.
+    """
+    course_id = serializers.CharField(allow_null=False)
+    course_mode = serializers.CharField(allow_null=False)
+    date_placed = serializers.UnixDateTimeField(allow_null=False)
+    email_opt_in = serializers.BooleanField(allow_null=False)
+    order_number = serializers.CharField(allow_null=False)
+    provider_id = serializers.CharField(allow_null=True)
+    edx_lms_user_id = serializers.IntegerField(allow_null=False)
