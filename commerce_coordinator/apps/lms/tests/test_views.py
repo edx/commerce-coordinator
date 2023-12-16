@@ -15,6 +15,7 @@ User = get_user_model()
 
 TEST_ECOMMERCE_URL = 'https://testserver.com'
 
+
 @ddt.ddt
 class PaymentPageRedirectViewTests(APITestCase):
     """
