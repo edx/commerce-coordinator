@@ -19,5 +19,4 @@ class GetCommercetoolsRedirectUrl(PipelineStep):
             return {
                 'redirect_url': settings.COMMERCETOOLS_FRONTEND_URL
             }
-        else:
-            return PipelineCommand.CONTINUE.value
+        return PipelineCommand.CONTINUE.value

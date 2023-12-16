@@ -5,6 +5,7 @@ Tests for the LMS (edx-platform) views.
 import ddt
 from django.conf import settings
 from django.contrib.auth import get_user_model
+from django.test import override_settings
 from django.urls import reverse
 from mock import patch
 from rest_framework import status
@@ -12,6 +13,7 @@ from rest_framework.test import APITestCase
 
 User = get_user_model()
 
+TEST_ECOMMERCE_URL = 'https://testserver.com'
 
 @ddt.ddt
 class PaymentPageRedirectViewTests(APITestCase):
@@ -66,13 +68,14 @@ class PaymentPageRedirectViewTests(APITestCase):
         response = self.client.get(self.url, {'sku': ['sku1'], 'course_run_key': 'course_run_key1'})
         self.assertTrue(response.headers['Location'].startswith(settings.COMMERCETOOLS_FRONTEND_URL))
 
+    @override_settings(ECOMMERCE_URL=TEST_ECOMMERCE_URL)
     @patch('commerce_coordinator.apps.rollout.pipeline.is_redirect_to_commercetools_enabled_for_user')
     def test_run_filter_only_sku_available(self, is_redirect_mock):
         self.client.login(username=self.test_user_username, password=self.test_user_password)
         self.client.force_authenticate(user=self.user)
         is_redirect_mock.return_value = False
         response = self.client.get(self.url, {'sku': ['sku1']})
-        self.assertTrue(response.headers['Location'].startswith(settings.FRONTEND_APP_PAYMENT_URL))
+        self.assertTrue(response.headers['Location'].startswith(settings.ECOMMERCE_URL))
 
     @ddt.unpack
     @patch('commerce_coordinator.apps.rollout.pipeline.is_redirect_to_commercetools_enabled_for_user')

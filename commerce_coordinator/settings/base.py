@@ -342,14 +342,15 @@ FULFILLMENT_TIMEOUT = 7
 
 # API URLs
 ECOMMERCE_URL = 'replace-me'
+ECOMMERCE_ADD_TO_BASKET_API_PATH = '/basket/add/'
 TITAN_URL = 'replace-me'
 
 # Needed to link to the payment micro-frontend
 PAYMENT_MICROFRONTEND_URL = 'replace-me'
 
 # Checkout view urls
-COMMERCETOOLS_FRONTEND_URL = 'https://commerce_tools_frontend_url'
-FRONTEND_APP_PAYMENT_URL = 'https://payment_page_url'
+COMMERCETOOLS_FRONTEND_URL = 'https://commerce_tools_frontend_url/'
+FRONTEND_APP_PAYMENT_URL = 'https://payment_page_url/'
 
 # Filters
 OPEN_EDX_FILTERS_CONFIG = {

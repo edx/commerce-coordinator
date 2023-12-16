@@ -21,9 +21,11 @@ class GetActiveOrderManagementSystem(PipelineStep):
         Execute a filter with the signature specified.
         Arguments:
             request: request object passed through from the lms filter
-            active_order_management_system: result from pipeline steps to determine if
-                            redirect_to_commercetools_checkout flag is on and course_run_key
-                            query param exists & dictact which checkout to redirect to
+        Returns:
+            dict:
+                active_order_management_system: result from pipeline steps to determine if
+                            redirect_to_commercetools_checkout flag is enabled and course_run_key
+                            and sku query params exist and detect which checkout to redirect to
         """
         sku = request.query_params.get('sku', '').strip()
         course_run = request.query_params.get('course_run_key', '').strip()

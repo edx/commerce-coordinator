@@ -6,6 +6,7 @@ from urllib.parse import unquote, urlencode
 
 from django.http import HttpResponseBadRequest, HttpResponseRedirect
 from edx_rest_framework_extensions.permissions import LoginRedirectIfUnauthenticated
+from openedx_filters.exceptions import OpenEdxFilterException
 from rest_framework.status import HTTP_303_SEE_OTHER
 from rest_framework.throttling import UserRateThrottle
 from rest_framework.views import APIView
@@ -44,7 +45,7 @@ class PaymentPageRedirectView(APIView):
 
         try:
             return self._redirect_response_payment(request)
-        except Exception as e:  # pylint: disable=broad-except
+        except OpenEdxFilterException as e:
             logger.exception(f"Something went wrong! Exception raised in {self.get.__name__} with error {repr(e)}")
             return HttpResponseBadRequest('Something went wrong.')
 
