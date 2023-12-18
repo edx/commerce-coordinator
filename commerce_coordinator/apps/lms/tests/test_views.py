@@ -120,13 +120,11 @@ class GetActiveManagementSystemTests(APITestCase):
                 ).serialize()
             )
 
-        ret_variant = self.client_set.client.get_product_variant_by_course_run('course-v1:MichiganX+InjuryPreventionX+1T2021')
-        breakpoint()
-        is_redirect_mock.return_value = True
-        response = self.client.get(self.url,
-                                   {'sku': ['sku1'], 'course_run_key': 'course-v1:MichiganX+InjuryPreventionX+1T2021'})
-        # self.assertIn(ret_variant, response.url)
-        self.assertTrue(response.headers['Location'].startswith(settings.COMMERCETOOLS_FRONTEND_URL))
+            ret_variant = self.client_set.client.get_product_variant_by_course_run('course-v1:MichiganX+InjuryPreventionX+1T2021')
+            is_redirect_mock.return_value = True
+            response = self.client.get(self.url, {'sku': ['sku1'], 'course_run_key': 'course-v1:MichiganX+InjuryPreventionX+1T2021'})
+            # self.assertIn(ret_variant, response.url)
+            self.assertTrue(response.headers['Location'].startswith(settings.COMMERCETOOLS_FRONTEND_URL))
 
     # @patch('commerce_coordinator.apps.rollout.pipeline.is_redirect_to_commercetools_enabled_for_user')
     # def test_run_filter_only_sku_available(self, is_redirect_mock):
