@@ -85,7 +85,6 @@ class PaymentPageRedirectView(APIView):
 
         query_params = list(params)
         query_params = urlencode(query_params, True)
-        query_params = unquote(query_params)
         url = url + '?' + query_params if query_params else url
 
         return url
