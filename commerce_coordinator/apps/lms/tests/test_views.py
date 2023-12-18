@@ -48,7 +48,6 @@ class GetActiveManagementSystemTests(APITestCase):
             )
 
             ret_variant = self.client_set.client.get_product_variant_by_course_run('course-v1:MichiganX+InjuryPreventionX+1T2021')
-            breakpoint()
             is_redirect_mock.return_value = True
             response = self.client.get(self.url, {'sku': ['sku1'], 'course_run_key': 'course-v1:MichiganX+InjuryPreventionX+1T2021'})
             # self.assertIn(ret_variant, response.url)

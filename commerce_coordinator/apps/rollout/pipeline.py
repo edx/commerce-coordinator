@@ -34,7 +34,6 @@ class GetActiveOrderManagementSystem(PipelineStep):
         course_run = request.query_params.get('course_run_key', '').strip()
 
         ct_api_client = CommercetoolsAPIClient()
-        # breakpoint()
         try:
             commercetools_available_course =  ct_api_client.get_product_variant_by_course_run(course_run)
         except HTTPError as exc:
@@ -43,7 +42,7 @@ class GetActiveOrderManagementSystem(PipelineStep):
             )
             raise APIException("Error while fetching course variant from Commercetools") from exc
 
-        
+
         if is_redirect_to_commercetools_enabled_for_user(request) and commercetools_available_course:
             active_order_management_system = COMMERCETOOLS_FRONTEND
         elif sku:
