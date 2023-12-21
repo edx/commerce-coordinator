@@ -209,6 +209,8 @@ drf-jwt==1.19.2
     #   edx-drf-extensions
 edx-auth-backends==4.2.0
     # via -r requirements/validation.txt
+edx-braze-client==0.1.8
+    # via -r requirements/validation.txt
 edx-django-release-util==1.3.0
     # via -r requirements/validation.txt
 edx-django-utils==5.9.0

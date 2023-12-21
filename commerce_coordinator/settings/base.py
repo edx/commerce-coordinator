@@ -471,3 +471,7 @@ COMMERCETOOLS_CONFIG = {
 
 # Setting to keep using deperecated pytz with Django>4
 USE_DEPRECATED_PYTZ = True
+
+# BRAZE API SETTINGS
+BRAZE_API_KEY = None
+BRAZE_API_SERVER = None
