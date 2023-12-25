@@ -87,7 +87,7 @@ django-extensions==3.2.3
     # via -r requirements/base.in
 django-rest-swagger==2.2.0
     # via -r requirements/base.in
-django-waffle==4.0.0
+django-waffle==4.1.0
     # via
     #   -r requirements/base.in
     #   edx-django-utils
@@ -133,7 +133,7 @@ marshmallow==3.20.1
     #   marshmallow-enum
 marshmallow-enum==1.5.1
     # via commercetools
-mysqlclient==2.2.0
+mysqlclient==2.2.1
     # via -r requirements/base.in
 newrelic==9.3.0
     # via edx-django-utils
@@ -151,9 +151,9 @@ pbr==6.0.0
     # via stevedore
 pillow==10.1.0
     # via -r requirements/base.in
-prompt-toolkit==3.0.41
+prompt-toolkit==3.0.43
     # via click-repl
-psutil==5.9.6
+psutil==5.9.7
     # via edx-django-utils
 pycparser==2.21
     # via cffi
@@ -225,7 +225,7 @@ stevedore==5.1.0
     # via
     #   edx-django-utils
     #   edx-opaque-keys
-stripe==7.8.1
+stripe==7.10.0
     # via -r requirements/base.in
 typing-extensions==4.9.0
     # via

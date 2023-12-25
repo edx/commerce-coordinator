@@ -8,16 +8,12 @@ amqp==5.2.0
     # via
     #   -r requirements/validation.txt
     #   kombu
-annotated-types==0.6.0
-    # via
-    #   -r requirements/validation.txt
-    #   pydantic
 asgiref==3.7.2
     # via
     #   -r requirements/validation.txt
     #   django
     #   django-cors-headers
-astroid==3.0.1
+astroid==3.0.2
     # via
     #   -r requirements/validation.txt
     #   pylint
@@ -51,10 +47,6 @@ celery[redis]==5.3.6
     # via
     #   -r requirements/validation.txt
     #   celery
-cerberus==1.3.5
-    # via
-    #   -r requirements/validation.txt
-    #   plette
 certifi==2023.11.17
     # via
     #   -r requirements/validation.txt
@@ -121,7 +113,7 @@ coreschema==0.0.4
     # via
     #   -r requirements/validation.txt
     #   coreapi
-coverage[toml]==7.3.2
+coverage[toml]==7.3.4
     # via
     #   -r requirements/validation.txt
     #   coverage
@@ -130,6 +122,7 @@ cryptography==41.0.7
     # via
     #   -r requirements/validation.txt
     #   pyjwt
+    #   secretstorage
     #   social-auth-core
 currencies==2020.12.12
     # via -r requirements/validation.txt
@@ -140,16 +133,15 @@ defusedxml==0.8.0rc2
     #   -r requirements/validation.txt
     #   python3-openid
     #   social-auth-core
-diff-cover==8.0.1
+diff-cover==8.0.2
     # via -r requirements/dev.in
 dill==0.3.7
     # via
     #   -r requirements/validation.txt
     #   pylint
-distlib==0.3.7
+distlib==0.3.8
     # via
     #   -r requirements/validation.txt
-    #   requirementslib
     #   virtualenv
 django==4.2.8
     # via
@@ -184,7 +176,7 @@ django-extensions==3.2.3
     # via -r requirements/validation.txt
 django-rest-swagger==2.2.0
     # via -r requirements/validation.txt
-django-waffle==4.0.0
+django-waffle==4.1.0
     # via
     #   -r requirements/validation.txt
     #   edx-django-utils
@@ -195,10 +187,6 @@ djangorestframework==3.14.0
     #   django-rest-swagger
     #   drf-jwt
     #   edx-drf-extensions
-docopt==0.6.2
-    # via
-    #   -r requirements/validation.txt
-    #   pipreqs
 docutils==0.20.1
     # via
     #   -r requirements/validation.txt
@@ -241,7 +229,7 @@ idna==3.6
     # via
     #   -r requirements/validation.txt
     #   requests
-importlib-metadata==7.0.0
+importlib-metadata==7.0.1
     # via
     #   -r requirements/pip-tools.txt
     #   -r requirements/validation.txt
@@ -256,7 +244,7 @@ iniconfig==2.0.0
     # via
     #   -r requirements/validation.txt
     #   pytest
-isort==5.13.0
+isort==5.13.2
     # via
     #   -r requirements/validation.txt
     #   pylint
@@ -268,6 +256,11 @@ jaraco-classes==3.3.0
     # via
     #   -r requirements/validation.txt
     #   keyring
+jeepney==0.8.0
+    # via
+    #   -r requirements/validation.txt
+    #   keyring
+    #   secretstorage
 jinja2==3.1.2
     # via
     #   -r requirements/validation.txt
@@ -282,7 +275,7 @@ kombu==5.3.4
     # via
     #   -r requirements/validation.txt
     #   celery
-lxml==4.9.3
+lxml==4.9.4
     # via edx-i18n-tools
 markdown-it-py==3.0.0
     # via
@@ -316,7 +309,7 @@ more-itertools==10.1.0
     # via
     #   -r requirements/validation.txt
     #   jaraco-classes
-mysqlclient==2.2.0
+mysqlclient==2.2.1
     # via -r requirements/validation.txt
 newrelic==9.3.0
     # via
@@ -352,22 +345,10 @@ pbr==6.0.0
     # via
     #   -r requirements/validation.txt
     #   stevedore
-pep517==0.13.1
-    # via
-    #   -r requirements/validation.txt
-    #   requirementslib
 pillow==10.1.0
     # via -r requirements/validation.txt
-pip-api==0.0.30
-    # via
-    #   -r requirements/validation.txt
-    #   isort
 pip-tools==7.3.0
     # via -r requirements/pip-tools.txt
-pipreqs==0.4.13
-    # via
-    #   -r requirements/validation.txt
-    #   isort
 pkginfo==1.9.6
     # via
     #   -r requirements/validation.txt
@@ -376,14 +357,8 @@ platformdirs==4.1.0
     # via
     #   -r requirements/validation.txt
     #   pylint
-    #   requirementslib
     #   tox
     #   virtualenv
-plette[validation]==0.4.4
-    # via
-    #   -r requirements/validation.txt
-    #   plette
-    #   requirementslib
 pluggy==1.3.0
     # via
     #   -r requirements/validation.txt
@@ -392,11 +367,11 @@ pluggy==1.3.0
     #   tox
 polib==1.2.0
     # via edx-i18n-tools
-prompt-toolkit==3.0.41
+prompt-toolkit==3.0.43
     # via
     #   -r requirements/validation.txt
     #   click-repl
-psutil==5.9.6
+psutil==5.9.7
     # via
     #   -r requirements/validation.txt
     #   edx-django-utils
@@ -406,14 +381,6 @@ pycparser==2.21
     # via
     #   -r requirements/validation.txt
     #   cffi
-pydantic==2.5.2
-    # via
-    #   -r requirements/validation.txt
-    #   requirementslib
-pydantic-core==2.14.5
-    # via
-    #   -r requirements/validation.txt
-    #   pydantic
 pydocstyle==6.3.0
     # via -r requirements/validation.txt
 pygments==2.17.2
@@ -431,7 +398,7 @@ pyjwt[crypto]==2.8.0
     #   edx-rest-api-client
     #   pyjwt
     #   social-auth-core
-pylint==3.0.2
+pylint==3.0.3
     # via
     #   -r requirements/validation.txt
     #   edx-lint
@@ -518,13 +485,11 @@ requests==2.31.0
     #   requests-mock
     #   requests-oauthlib
     #   requests-toolbelt
-    #   requirementslib
     #   responses
     #   slumber
     #   social-auth-core
     #   stripe
     #   twine
-    #   yarg
 requests-mock==1.11.0
     # via
     #   -r requirements/validation.txt
@@ -538,10 +503,6 @@ requests-toolbelt==1.0.0
     # via
     #   -r requirements/validation.txt
     #   twine
-requirementslib==3.0.0
-    # via
-    #   -r requirements/validation.txt
-    #   isort
 responses==0.24.1
     # via -r requirements/validation.txt
 rfc3986==2.0.0
@@ -552,6 +513,10 @@ rich==13.7.0
     # via
     #   -r requirements/validation.txt
     #   twine
+secretstorage==3.3.3
+    # via
+    #   -r requirements/validation.txt
+    #   keyring
 semantic-version==2.10.0
     # via
     #   -r requirements/validation.txt
@@ -596,7 +561,7 @@ stevedore==5.1.0
     #   code-annotations
     #   edx-django-utils
     #   edx-opaque-keys
-stripe==7.8.1
+stripe==7.10.0
     # via -r requirements/validation.txt
 testfixtures==7.2.2
     # via -r requirements/validation.txt
@@ -610,7 +575,6 @@ tomli==2.0.1
     #   -r requirements/validation.txt
     #   build
     #   coverage
-    #   pep517
     #   pip-tools
     #   pylint
     #   pyproject-api
@@ -620,9 +584,7 @@ tomli==2.0.1
 tomlkit==0.12.3
     # via
     #   -r requirements/validation.txt
-    #   plette
     #   pylint
-    #   requirementslib
 tox==4.11.4
     # via -r requirements/validation.txt
 twine==4.0.2
@@ -630,13 +592,10 @@ twine==4.0.2
 typing-extensions==4.9.0
     # via
     #   -r requirements/validation.txt
-    #   annotated-types
     #   asgiref
     #   astroid
     #   edx-opaque-keys
     #   kombu
-    #   pydantic
-    #   pydantic-core
     #   pylint
     #   rich
     #   stripe
@@ -685,10 +644,6 @@ wrapt==1.16.0
     # via
     #   -r requirements/validation.txt
     #   commercetools
-yarg==0.1.9
-    # via
-    #   -r requirements/validation.txt
-    #   pipreqs
 zipp==3.17.0
     # via
     #   -r requirements/pip-tools.txt
