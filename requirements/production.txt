@@ -17,7 +17,7 @@ async-timeout==4.0.3
     # via
     #   -r requirements/base.txt
     #   redis
-attrs==23.1.0
+attrs==23.2.0
     # via -r requirements/base.txt
 backports-zoneinfo[tzdata]==0.2.1
     # via
@@ -115,7 +115,7 @@ django-extensions==3.2.3
     # via -r requirements/base.txt
 django-rest-swagger==2.2.0
     # via -r requirements/base.txt
-django-waffle==4.0.0
+django-waffle==4.1.0
     # via
     #   -r requirements/base.txt
     #   edx-django-utils
@@ -149,7 +149,7 @@ edx-rest-api-client==5.6.1
     # via -r requirements/base.txt
 gevent==23.9.1
     # via -r requirements/production.in
-greenlet==3.0.2
+greenlet==3.0.3
     # via gevent
 gunicorn==21.2.0
     # via -r requirements/production.in
@@ -183,7 +183,7 @@ marshmallow-enum==1.5.1
     # via
     #   -r requirements/base.txt
     #   commercetools
-mysqlclient==2.2.0
+mysqlclient==2.2.1
     # via
     #   -r requirements/base.txt
     #   -r requirements/production.in
@@ -213,11 +213,11 @@ pbr==6.0.0
     #   stevedore
 pillow==10.1.0
     # via -r requirements/base.txt
-prompt-toolkit==3.0.41
+prompt-toolkit==3.0.43
     # via
     #   -r requirements/base.txt
     #   click-repl
-psutil==5.9.6
+psutil==5.9.7
     # via
     #   -r requirements/base.txt
     #   edx-django-utils
@@ -324,7 +324,7 @@ stevedore==5.1.0
     #   -r requirements/base.txt
     #   edx-django-utils
     #   edx-opaque-keys
-stripe==7.8.1
+stripe==7.10.0
     # via -r requirements/base.txt
 typing-extensions==4.9.0
     # via
@@ -333,7 +333,7 @@ typing-extensions==4.9.0
     #   edx-opaque-keys
     #   kombu
     #   stripe
-tzdata==2023.3
+tzdata==2023.4
     # via
     #   -r requirements/base.txt
     #   backports-zoneinfo
