@@ -2,7 +2,7 @@
 -c constraints.txt
 
 # Our own rebuilt Commercetools SDK (see SONIC-30)
-git+https://github.com/edx/commercetools-python-sdk.git@36639f4a196d7fc0daecf914ee46f42229087abb#egg=commercetools
+commercetools @ git+https://github.com/edx/commercetools-python-sdk.git@main
 
 asgiref==3.7.2       # Until we switch to Py 3.10, this has some serius issues with debuggers.
 attrs

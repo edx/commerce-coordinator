@@ -42,10 +42,10 @@ CACHES = {
 
 COMMERCETOOLS_CONFIG = {
     # These values have special meaning to the CT SDK Unit Testing, and will fail if changed.
-    'clientId': "client-id",
-    'clientSecret': "client-secret",
-    'scopes': "manage_project:todo",
-    'apiUrl': "https://api.europe-west1.gcp.commercetools.com",
-    'authUrl': "https://auth.europe-west1.gcp.commercetools.com/oauth/token",
-    'projectKey': "unittest",
+    'clientId': "mock-client-id",
+    'clientSecret': "mock-client-secret",
+    'scopes': "manage_project:test",
+    'apiUrl': "https://localhost",
+    'authUrl': "https://localhost/oauth/token",
+    'projectKey': "test",
 }

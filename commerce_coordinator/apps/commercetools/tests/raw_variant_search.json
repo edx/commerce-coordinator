@@ -1,0 +1,241 @@
+{
+  "limit": 20,
+  "count": 1,
+  "total": 1,
+  "offset": 0,
+  "results": [
+    {
+      "id": "9895858a-2d43-471d-be25-7a5007d52b9f",
+      "version": 19,
+      "createdAt": "2023-10-29T15:42:41.126000+00:00",
+      "lastModifiedAt": "2023-12-13T12:15:25.460000+00:00",
+      "key": "MichiganX+InjuryPreventionX",
+      "productType": {
+        "typeId": "product-type",
+        "id": "b2aa56d2-7b98-4d51-9d70-81d675a45686"
+      },
+      "name": {
+        "en-US": "Injury Prevention for Children & Teens"
+      },
+      "description": {
+        "en-US": "<p>Injuries, such as motor vehicle crash, youth violence, and suicide, are the leading cause of child and adolescent death. However, almost all of these injuries can be prevented through the widespread application of evidence-based practices and policies.</p> <p>Public health experts, nurses, physicians, social workers, teachers, child care providers, and parents all play a vital role in pediatric injury prevention. Despite its impact, very little training on injury prevention science currently exists.</p> <p>This course lays a broad foundation for pediatric injury prevention and will increase your understanding of this major public health issue through powerful, concise, up-to-date lectures, interviews, and demonstrations from a multidisciplinary panel of nationally-recognized injury prevention experts.</p> <p>This course is designed for multiple fields and levels of training, including healthcare, kinesiology, public policy, social work, pharmacy, dentistry, and psychology.The course is also appropriate for educators, coaches, child care providers, and parents.</p> <p>Asa learner, you will have the ability to select all modules or individual topics that interest you most. Comprised of 8 modules, this course may be taken from the comfort of your home or office, and you can learn at your own pace.</p> <p><strong>Obtaining Credit for Continuing Education</strong></p> <p>Learners may apply for Continuing Medical Education (CME), American Board of Pediatrics’ (ABP) Maintenance of Certification (MOC) Part II, or Certified Health Education Specialist (CHES) credit. See the FAQ for more information on each offering.</p>"
+      },
+      "slug": {
+        "en-US": "injury-prevention-for-children-teens"
+      },
+      "categories": [
+        {
+          "typeId": "category",
+          "id": "5a79fdbc-d42a-4d88-a53f-926dbe9869ee"
+        }
+      ],
+      "categoryOrderHints": {
+      },
+      "metaTitle": {
+        "de-DE": "",
+        "en-US": ""
+      },
+      "metaDescription": {
+        "de-DE": "",
+        "en-US": ""
+      },
+      "searchKeywords": {
+      },
+      "hasStagedChanges": true,
+      "published": true,
+      "masterVariant": {
+        "id": 1,
+        "sku": "course-v1:MichiganX+InjuryPreventionX+1T2021",
+        "key": "course-v1:MichiganX+InjuryPreventionX+1T2021",
+        "prices": [
+        ],
+        "attributes": [
+          {
+            "name": "primarySubjectArea",
+            "value": {
+              "key": "business",
+              "label": "Business"
+            }
+          },
+          {
+            "name": "brand-text",
+            "value": "MichiganX"
+          },
+          {
+            "name": "date-created",
+            "value": "2019-08-21T00:02:00.000Z"
+          },
+          {
+            "name": "status",
+            "value": {
+              "key": "Published",
+              "label": "Published"
+            }
+          },
+          {
+            "name": "duration-low",
+            "value": 4
+          },
+          {
+            "name": "duration-high",
+            "value": 5
+          },
+          {
+            "name": "duration-unit",
+            "value": {
+              "key": "duration-weeks",
+              "label": "Weeks"
+            }
+          },
+          {
+            "name": "effort-low",
+            "value": 4
+          },
+          {
+            "name": "effort-high",
+            "value": 6
+          },
+          {
+            "name": "effort-unit",
+            "value": {
+              "key": "effot-per-week",
+              "label": "Hours per Week"
+            }
+          },
+          {
+            "name": "courserun-id",
+            "value": "32126"
+          },
+          {
+            "name": "courserun_start",
+            "value": "2021-04-19"
+          },
+          {
+            "name": "courserun-end",
+            "value": "2024-04-18"
+          },
+          {
+            "name": "courserun-status",
+            "value": {
+              "key": "courserun-status-published",
+              "label": "Published"
+            }
+          },
+          {
+            "name": "external-ids-product",
+            "value": "MichiganX+InjuryPreventionX"
+          },
+          {
+            "name": "external-ids-variant",
+            "value": "course-v1:MichiganX+InjuryPreventionX+1T2021"
+          }
+        ],
+        "images": [
+        ],
+        "assets": [
+        ]
+      },
+      "variants": [
+        {
+          "id": 2,
+          "sku": "course-v1:MichiganX+InjuryPreventionX+1T2018",
+          "key": "course-v1:MichiganX+InjuryPreventionX+1T2018",
+          "prices": [
+          ],
+          "attributes": [
+            {
+              "name": "primarySubjectArea",
+              "value": {
+                "key": "business",
+                "label": "Business"
+              }
+            },
+            {
+              "name": "brand-text",
+              "value": "MichiganX"
+            },
+            {
+              "name": "date-created",
+              "value": "2019-08-21T00:02:00.000Z"
+            },
+            {
+              "name": "status",
+              "value": {
+                "key": "Published",
+                "label": "Published"
+              }
+            },
+            {
+              "name": "duration-low",
+              "value": 4
+            },
+            {
+              "name": "duration-high",
+              "value": 5
+            },
+            {
+              "name": "duration-unit",
+              "value": {
+                "key": "duration-weeks",
+                "label": "Weeks"
+              }
+            },
+            {
+              "name": "effort-low",
+              "value": 4
+            },
+            {
+              "name": "effort-high",
+              "value": 6
+            },
+            {
+              "name": "effort-unit",
+              "value": {
+                "key": "effot-per-week",
+                "label": "Hours per Week"
+              }
+            },
+            {
+              "name": "courserun-id",
+              "value": "7115"
+            },
+            {
+              "name": "courserun_start",
+              "value": "2018-04-24"
+            },
+            {
+              "name": "courserun-end",
+              "value": "2021-04-24"
+            },
+            {
+              "name": "courserun-status",
+              "value": {
+                "key": "courserun-status-unpublished",
+                "label": "Unpublished"
+              }
+            },
+            {
+              "name": "external-ids-product",
+              "value": "MichiganX+InjuryPreventionX"
+            },
+            {
+              "name": "external-ids-variant",
+              "value": "course-v1:MichiganX+InjuryPreventionX+1T2018"
+            }
+          ],
+          "images": [
+          ],
+          "assets": [
+          ]
+        }
+      ],
+      "taxCategory": {
+        "typeId": "tax-category",
+        "id": "1ae3b4da-8e7c-4f36-b777-662007e41e88"
+      },
+      "priceMode": "Standalone"
+    }
+  ],
+  "facets": {
+  }
+}

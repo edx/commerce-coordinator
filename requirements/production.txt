@@ -67,7 +67,7 @@ click-repl==0.3.0
     # via
     #   -r requirements/base.txt
     #   celery
-commercetools @ git+https://github.com/edx/commercetools-python-sdk.git@36639f4a196d7fc0daecf914ee46f42229087abb
+commercetools @ git+https://github.com/edx/commercetools-python-sdk.git@main
     # via -r requirements/base.txt
 coreapi==2.3.3
     # via
@@ -115,7 +115,7 @@ django-extensions==3.2.3
     # via -r requirements/base.txt
 django-rest-swagger==2.2.0
     # via -r requirements/base.txt
-django-waffle==4.0.0
+django-waffle==4.1.0
     # via
     #   -r requirements/base.txt
     #   edx-django-utils
@@ -185,7 +185,7 @@ marshmallow-enum==1.5.1
     # via
     #   -r requirements/base.txt
     #   commercetools
-mysqlclient==2.2.0
+mysqlclient==2.2.1
     # via
     #   -r requirements/base.txt
     #   -r requirements/production.in
@@ -215,11 +215,11 @@ pbr==6.0.0
     #   stevedore
 pillow==10.1.0
     # via -r requirements/base.txt
-prompt-toolkit==3.0.41
+prompt-toolkit==3.0.43
     # via
     #   -r requirements/base.txt
     #   click-repl
-psutil==5.9.6
+psutil==5.9.7
     # via
     #   -r requirements/base.txt
     #   edx-django-utils
@@ -326,7 +326,7 @@ stevedore==5.1.0
     #   -r requirements/base.txt
     #   edx-django-utils
     #   edx-opaque-keys
-stripe==7.8.1
+stripe==7.9.0
     # via -r requirements/base.txt
 typing-extensions==4.9.0
     # via
