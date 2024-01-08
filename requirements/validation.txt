@@ -26,7 +26,7 @@ async-timeout==4.0.3
     #   -r requirements/quality.txt
     #   -r requirements/test.txt
     #   redis
-attrs==23.1.0
+attrs==23.2.0
     # via
     #   -r requirements/quality.txt
     #   -r requirements/test.txt
@@ -131,7 +131,7 @@ coreschema==0.0.4
     #   -r requirements/quality.txt
     #   -r requirements/test.txt
     #   coreapi
-coverage[toml]==7.3.4
+coverage[toml]==7.4.0
     # via
     #   -r requirements/quality.txt
     #   -r requirements/test.txt
@@ -142,12 +142,13 @@ cryptography==41.0.7
     #   -r requirements/quality.txt
     #   -r requirements/test.txt
     #   pyjwt
+    #   secretstorage
     #   social-auth-core
 currencies==2020.12.12
     # via
     #   -r requirements/quality.txt
     #   -r requirements/test.txt
-ddt==1.7.0
+ddt==1.7.1
     # via
     #   -r requirements/quality.txt
     #   -r requirements/test.txt
@@ -167,7 +168,7 @@ distlib==0.3.8
     #   -r requirements/quality.txt
     #   -r requirements/test.txt
     #   virtualenv
-django==4.2.8
+django==4.2.9
     # via
     #   -r requirements/quality.txt
     #   -r requirements/test.txt
@@ -247,7 +248,7 @@ edx-django-utils==5.9.0
     #   -r requirements/test.txt
     #   edx-drf-extensions
     #   edx-rest-api-client
-edx-drf-extensions==9.0.1
+edx-drf-extensions==9.1.1
     # via
     #   -r requirements/quality.txt
     #   -r requirements/test.txt
@@ -280,7 +281,7 @@ idna==3.6
     #   -r requirements/quality.txt
     #   -r requirements/test.txt
     #   requests
-importlib-metadata==7.0.0
+importlib-metadata==7.0.1
     # via
     #   -r requirements/quality.txt
     #   keyring
@@ -308,6 +309,11 @@ jaraco-classes==3.3.0
     # via
     #   -r requirements/quality.txt
     #   keyring
+jeepney==0.8.0
+    # via
+    #   -r requirements/quality.txt
+    #   keyring
+    #   secretstorage
 jinja2==3.1.2
     # via
     #   -r requirements/quality.txt
@@ -402,7 +408,7 @@ pbr==6.0.0
     #   -r requirements/quality.txt
     #   -r requirements/test.txt
     #   stevedore
-pillow==10.1.0
+pillow==10.2.0
     # via
     #   -r requirements/quality.txt
     #   -r requirements/test.txt
@@ -496,7 +502,7 @@ pyproject-api==1.6.1
     #   -r requirements/quality.txt
     #   -r requirements/test.txt
     #   tox
-pytest==7.4.3
+pytest==7.4.4
     # via
     #   -r requirements/quality.txt
     #   -r requirements/test.txt
@@ -590,6 +596,10 @@ rich==13.7.0
     # via
     #   -r requirements/quality.txt
     #   twine
+secretstorage==3.3.3
+    # via
+    #   -r requirements/quality.txt
+    #   keyring
 semantic-version==2.10.0
     # via
     #   -r requirements/quality.txt
@@ -642,7 +652,7 @@ stevedore==5.1.0
     #   code-annotations
     #   edx-django-utils
     #   edx-opaque-keys
-stripe==7.9.0
+stripe==7.11.0
     # via
     #   -r requirements/quality.txt
     #   -r requirements/test.txt
@@ -686,7 +696,7 @@ typing-extensions==4.9.0
     #   pylint
     #   rich
     #   stripe
-tzdata==2023.3
+tzdata==2023.4
     # via
     #   -r requirements/quality.txt
     #   -r requirements/test.txt
@@ -716,7 +726,7 @@ virtualenv==20.25.0
     #   -r requirements/quality.txt
     #   -r requirements/test.txt
     #   tox
-wcwidth==0.2.12
+wcwidth==0.2.13
     # via
     #   -r requirements/quality.txt
     #   -r requirements/test.txt
