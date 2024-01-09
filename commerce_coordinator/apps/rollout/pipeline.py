@@ -5,7 +5,6 @@ from openedx_filters.exceptions import OpenEdxFilterException
 from requests import HTTPError
 from rest_framework.exceptions import APIException
 
-from commerce_coordinator.apps.commercetools.catalog_info.edx_utils import get_edx_product_course_run_key
 from commerce_coordinator.apps.commercetools.clients import CommercetoolsAPIClient
 from commerce_coordinator.apps.commercetools_frontend.constants import COMMERCETOOLS_FRONTEND
 from commerce_coordinator.apps.frontend_app_payment.constants import FRONTEND_APP_PAYMENT_CHECKOUT
@@ -35,13 +34,14 @@ class GetActiveOrderManagementSystem(PipelineStep):
         course_run = request.query_params.get('course_run_key', '').strip()
 
         ct_api_client = CommercetoolsAPIClient()
+        commercetools_available_course = None
 
         if course_run:
             try:
                 commercetools_available_course = ct_api_client.get_product_variant_by_course_run(course_run)
             except HTTPError as exc:
                 logger.exception(
-                    '[get_product_variant_by_course_run] Failed to get CT course for course_run: %s', course_run
+                    f'[get_product_variant_by_course_run] Failed to get CT course for course_run: {course_run}'
                 )
                 raise APIException("Error while fetching course variant from CT") from exc
 
