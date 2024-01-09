@@ -43,7 +43,7 @@ class GetActiveOrderManagementSystem(PipelineStep):
                 logger.exception(
                     f'[get_product_variant_by_course_run] Failed to get CT course for course_run: {course_run}'
                 )
-                raise APIException("Error while fetching course variant from CommerceTools") from exc
+                raise APIException("Error while fetching course variant from CT") from exc
 
         if is_redirect_to_commercetools_enabled_for_user(request) and commercetools_available_course:
             active_order_management_system = COMMERCETOOLS_FRONTEND
