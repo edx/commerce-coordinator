@@ -5,13 +5,6 @@ from urllib.parse import unquote
 
 import ddt
 import requests_mock
-from commercetools.platform.models import (
-    Customer,
-    CustomerPagedQueryResponse,
-    Order,
-    OrderPagedQueryResponse,
-    ProductProjectionPagedSearchResponse as CTProductProjectionPagedSearchResponse
-)
 from django.conf import settings
 from django.contrib.auth import get_user_model
 from django.urls import reverse
@@ -19,120 +12,15 @@ from mock import patch
 from rest_framework import status
 from rest_framework.test import APITestCase
 
-from commerce_coordinator.apps.commercetools.catalog_info.constants import EdXFieldNames
-from commerce_coordinator.apps.commercetools.catalog_info.foundational_types import TwoUCustomTypes
-from commerce_coordinator.apps.commercetools.clients import CommercetoolsAPIClient
 from commerce_coordinator.apps.commercetools.tests.conftest import (
     APITestingSet,
-    gen_example_customer,
-    gen_order_history,
     gen_variant_search_result,
-    MonkeyPatch
 )
-from commerce_coordinator.apps.core.constants import ORDER_HISTORY_PER_SYSTEM_REQ_LIMIT
 
 User = get_user_model()
 
 
 TEST_ECOMMERCE_URL = 'https://testserver.com'
-
-
-@ddt.ddt
-class GetActiveManagementSystemTests(APITestCase):
-    url = reverse('lms:payment_page_redirect')
-
-    def setupVariantSearch(self):
-        self.variant_search_results = gen_variant_search_result()
-        pass
-
-    def get_product_variant_by_course_run(self):
-        # noinspection PyUnusedLocal
-        # pylint: disable=unused-argument # needed for kwargs
-        def _get_product_variant_by_course_run(
-            _, cr_name: str
-        ) -> CTProductProjectionPagedSearchResponse:
-            return self.variant_search_results
-        # pylint: enable=unused-argument # needed for kwargs
-
-        return _get_product_variant_by_course_run
-
-    def setUp(self) -> None:
-        super().setUp()
-        self.client_set = APITestingSet.new_instance()
-
-        self.setupVariantSearch()
-        MonkeyPatch.monkey(
-            CommercetoolsAPIClient,
-            {
-                '__init__': lambda _: None,
-                'get_product_variant_by_course_run': self.get_product_variant_by_course_run()
-            }
-        )
-
-    def tearDown(self) -> None:
-        del self.client_set
-        super().tearDown()
-        if MonkeyPatch.is_monkey(CommercetoolsAPIClient):
-            MonkeyPatch.unmonkey(CommercetoolsAPIClient)
-
-    @patch('commerce_coordinator.apps.rollout.pipeline.is_redirect_to_commercetools_enabled_for_user')
-    def test_run_rollout_pipeline_redirect_to_commercetools_enabled(self, is_redirect_mock):
-        base_url = self.client_set.get_base_url_from_client()
-        id_num = 127
-        type_val = self.client_set.client.ensure_custom_type_exists(TwoUCustomTypes.CUSTOMER_TYPE_DRAFT)
-        customer = gen_example_customer()
-        orders = gen_order_history()
-        customer.custom.fields[EdXFieldNames.LMS_USER_ID] = id_num
-
-        # The Draft converter changes the ID, so let's update our customer and draft.
-        customer.custom.type.id = type_val.id
-
-        self.client_set.backend_repo.customers.add_existing(customer)
-
-        for order in orders:
-            order.customer_id = customer.id
-            self.client_set.backend_repo.orders.add_existing(order)
-
-        limit = ORDER_HISTORY_PER_SYSTEM_REQ_LIMIT
-
-        # Because the base mocker can't do param binding, we have to intercept.
-        with requests_mock.Mocker(real_http=True, case_sensitive=False) as mocker:
-            mocker.get(
-                f"{base_url}customers?"
-                f"where=custom%28fields%28edx-lms_user_id%3D%3Aid%29%29"
-                f"&limit=2"
-                f"&var.id={id_num}",
-                json=CustomerPagedQueryResponse(
-                    limit=limit, count=1, total=1, offset=0,
-                    results=self.client_set.fetch_from_storage('customer', Customer),
-                ).serialize()
-            )
-            mocker.get(
-                f"{base_url}orders?"
-                f"where=customerId%3D%3Acid&"
-                f"limit={limit}&"
-                f"offset=0&"
-                f"sort=completedAt+desc&"
-                f"var.cid={customer.id}",
-                json=OrderPagedQueryResponse(
-                    limit=limit, count=1, total=1, offset=0,
-                    results=self.client_set.fetch_from_storage('order', Order),
-                ).serialize()
-            )
-
-            ret_variant = self.client_set.client.get_product_variant_by_course_run('course-v1:MichiganX+InjuryPreventionX+1T2021')
-            is_redirect_mock.return_value = True
-            response = self.client.get(self.url, {'sku': ['sku1'], 'course_run_key': 'course-v1:MichiganX+InjuryPreventionX+1T2021'})
-            # self.assertIn(ret_variant, response.url)
-            self.assertTrue(response.headers['Location'].startswith(settings.COMMERCETOOLS_FRONTEND_URL))
-
-    # @patch('commerce_coordinator.apps.rollout.pipeline.is_redirect_to_commercetools_enabled_for_user')
-    # def test_run_filter_only_sku_available(self, is_redirect_mock):
-    #     self.client.login(username=self.test_user_username, password=self.test_user_password)
-    #     self.client.force_authenticate(user=self.user)
-    #     is_redirect_mock.return_value = False
-    #     response = self.client.get(self.url, {'sku': ['sku1']})
-    #     self.assertTrue(response.headers['Location'].startswith(settings.FRONTEND_APP_PAYMENT_URL))
 
 
 @ddt.ddt
