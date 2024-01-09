@@ -1,6 +1,7 @@
 """
 LMS Celery tasks
 """
+
 from celery import shared_task
 from celery.utils.log import get_task_logger
 from requests import RequestException
@@ -49,7 +50,7 @@ def fulfill_order_placed_send_enroll_in_course_task(
             {
                 'namespace': 'order',
                 'name': 'order_placed',
-                'value': date_placed,
+                'value': date_placed.isoformat(),
             },
             {
                 'namespace': 'order',

@@ -1,12 +1,15 @@
 """
 LMS App Testing Data Constants
 """
+from datetime import datetime
 from typing import Dict, Union
+
+_INIT_DATE = datetime.now()
 
 EXAMPLE_FULFILLMENT_SIGNAL_PAYLOAD: Dict[str, Union[str, bool, int, None]] = {
     'course_id': 'course-v1:edX+DemoX+Demo_Course',
     'course_mode': 'verified',
-    'date_placed': '2023-04-17T13:30:33Z',
+    'date_placed': _INIT_DATE,
     'edx_lms_user_id': 4,
     'email_opt_in': False,
     'order_number': '61ec1afa-1b0e-4234-ae28-f997728054fa',
@@ -31,7 +34,7 @@ EXAMPLE_FULFILLMENT_REQUEST_PAYLOAD = {
         {
             'namespace': 'order',
             'name': 'order_placed',
-            'value': '2023-04-17T13:30:33Z'
+            'value': _INIT_DATE.isoformat()
         },
         {
             'namespace': 'order',
