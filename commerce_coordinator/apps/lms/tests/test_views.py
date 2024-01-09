@@ -12,10 +12,7 @@ from mock import patch
 from rest_framework import status
 from rest_framework.test import APITestCase
 
-from commerce_coordinator.apps.commercetools.tests.conftest import (
-    APITestingSet,
-    gen_variant_search_result,
-)
+from commerce_coordinator.apps.commercetools.tests.conftest import APITestingSet, gen_variant_search_result
 
 User = get_user_model()
 
