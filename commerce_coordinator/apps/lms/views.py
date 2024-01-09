@@ -2,7 +2,7 @@
 Views for the ecommerce app
 """
 import logging
-from urllib.parse import unquote, urlencode
+from urllib.parse import urlencode
 
 from django.http import HttpResponseBadRequest, HttpResponseRedirect
 from edx_rest_framework_extensions.permissions import LoginRedirectIfUnauthenticated
@@ -85,7 +85,6 @@ class PaymentPageRedirectView(APIView):
 
         query_params = list(params)
         query_params = urlencode(query_params, True)
-        query_params = unquote(query_params)
         url = url + '?' + query_params if query_params else url
 
         return url

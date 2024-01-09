@@ -344,13 +344,12 @@ REQUEST_READ_TIMEOUT_SECONDS = 5
 FULFILLMENT_TIMEOUT = 7
 
 # API URLs
-ECOMMERCE_URL = 'replace-me'
+ECOMMERCE_URL = 'https://ecommerce_url/'
 ECOMMERCE_ADD_TO_BASKET_API_PATH = '/basket/add/'
 TITAN_URL = 'replace-me'
 
 # Checkout view urls
 COMMERCETOOLS_FRONTEND_URL = 'https://commerce_tools_frontend_url/'
-FRONTEND_APP_PAYMENT_URL = 'https://payment_page_url/'
 
 # Filters
 OPEN_EDX_FILTERS_CONFIG = {
@@ -474,3 +473,7 @@ COMMERCETOOLS_CONFIG = {
 
 # Setting to keep using deperecated pytz with Django>4
 USE_DEPRECATED_PYTZ = True
+
+# BRAZE API SETTINGS
+BRAZE_API_KEY = None
+BRAZE_API_SERVER = None
