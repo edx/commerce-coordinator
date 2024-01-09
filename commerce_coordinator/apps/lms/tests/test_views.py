@@ -19,6 +19,47 @@ User = get_user_model()
 
 TEST_ECOMMERCE_URL = 'https://testserver.com'
 
+@ddt.ddt
+class GetActiveManagementSystemTests(APITestCase):
+
+    url = reverse('lms:payment_page_redirect')
+
+    def setUp(self) -> None:
+        super().setUp()
+        self.client_set = APITestingSet.new_instance()
+
+    def tearDownCTApiClient(self) -> None:
+        # force deconstructor call or some test get flaky
+        del self.client_set
+        super().tearDown()
+
+    @patch('commerce_coordinator.apps.rollout.pipeline.is_redirect_to_commercetools_enabled_for_user')
+    def test_run_rollout_pipeline_redirect_to_commercetools_enabled(self, is_redirect_mock):
+        base_url = self.client_set.get_base_url_from_client()
+
+        # Because the base mocker can't do param binding, we have to intercept.
+        with requests_mock.Mocker(real_http=True, case_sensitive=False) as mocker:
+            mocker.get(
+                f"{base_url}product-projections/search?"
+                f"markMatchingVariants=False"
+                f"&filter=variants.sku%3A%22course-v1%3AMichiganX%2BInjuryPreventionX%2B1T2021%22",
+                json=gen_variant_search_result().serialize()
+            )
+
+            ret_variant = self.client_set.client.get_product_variant_by_course_run('course-v1:MichiganX+InjuryPreventionX+1T2021')
+            is_redirect_mock.return_value = True
+            response = self.client.get(self.url, {'sku': ['sku1'], 'course_run_key': 'course-v1:MichiganX+InjuryPreventionX+1T2021'})
+            # self.assertIn(ret_variant, response.url)
+            self.assertTrue(response.headers['Location'].startswith(settings.COMMERCETOOLS_FRONTEND_URL))
+
+    # @patch('commerce_coordinator.apps.rollout.pipeline.is_redirect_to_commercetools_enabled_for_user')
+    # def test_run_filter_only_sku_available(self, is_redirect_mock):
+    #     self.client.login(username=self.test_user_username, password=self.test_user_password)
+    #     self.client.force_authenticate(user=self.user)
+    #     is_redirect_mock.return_value = False
+    #     response = self.client.get(self.url, {'sku': ['sku1']})
+    #     self.assertTrue(response.headers['Location'].startswith(settings.FRONTEND_APP_PAYMENT_URL))
+
 
 @ddt.ddt
 class PaymentPageRedirectViewTests(APITestCase):
@@ -46,7 +87,6 @@ class PaymentPageRedirectViewTests(APITestCase):
         # force deconstructor call or some test get flaky
         del self.client_set
         super().tearDown()
-        self.client.logout()
 
     def test_view_rejects_session_auth(self):
         """Check Session Auth Not Allowed."""
@@ -120,3 +160,4 @@ class PaymentPageRedirectViewTests(APITestCase):
                 {'sku': ['sku1'], 'course_run_key': 'course-v1:MichiganX+InjuryPreventionX+1T2021'}
             )
             self.assertEqual(response.status_code, status.HTTP_303_SEE_OTHER)
+

@@ -5,7 +5,6 @@ from openedx_filters.exceptions import OpenEdxFilterException
 from requests import HTTPError
 from rest_framework.exceptions import APIException
 
-from commerce_coordinator.apps.commercetools.catalog_info.edx_utils import get_edx_product_course_run_key
 from commerce_coordinator.apps.commercetools.clients import CommercetoolsAPIClient
 from commerce_coordinator.apps.commercetools_frontend.constants import COMMERCETOOLS_FRONTEND
 from commerce_coordinator.apps.frontend_app_payment.constants import FRONTEND_APP_PAYMENT_CHECKOUT

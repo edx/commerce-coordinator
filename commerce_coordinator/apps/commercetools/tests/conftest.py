@@ -139,6 +139,8 @@ class APITestingSet:
 
 
 # Data Blobs
+DEFAULT_ORDER_VARIANT_SKU = "course-v1:edX+DemoX+Demo_Course"
+
 def gen_order(uuid_id) -> CTOrder:
     with open(os.path.join(pathlib.Path(__file__).parent.resolve(), 'raw_ct_order.json')) as f:
         obj = json.load(f)
