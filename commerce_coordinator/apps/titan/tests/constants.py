@@ -14,6 +14,7 @@ EXAMPLE_FULFILLMENT_REQUEST_PAYLOAD = {
     'edx_lms_user_id': 4,
     'email_opt_in': 0,
     'order_number': '61ec1afa-1b0e-4234-ae28-f997728054fa',
+    'source_system': 'titan',
 }
 
 EXAMPLE_FULFILLMENT_SIGNAL_PAYLOAD = {
@@ -25,4 +26,5 @@ EXAMPLE_FULFILLMENT_SIGNAL_PAYLOAD = {
     'email_opt_in': False,
     'order_number': UUID('61ec1afa-1b0e-4234-ae28-f997728054fa'),
     'provider_id': None,
+    'source_system': 'titan',
 }

@@ -8,14 +8,15 @@ from rest_framework.response import Response
 from rest_framework.views import APIView
 
 from commerce_coordinator.apps.commercetools.serializers import OrderFulfillViewInputSerializer
+from commerce_coordinator.apps.commercetools.signals import fulfill_order_placed_signal
 from commerce_coordinator.apps.core.signal_helpers import format_signal_results
-from commerce_coordinator.apps.ecommerce.signals import fulfill_order_placed_signal
 
 from .catalog_info.edx_utils import get_edx_items, get_edx_lms_user_id, get_edx_product_course_run_key, is_edx_lms_order
 from .clients import CommercetoolsAPIClient
 from .serializers import OrderFulfillMessageInputSerializer
 
 logger = logging.getLogger(__name__)
+SOURCE_SYSTEM = 'commercetools'
 
 
 class OrderFulfillView(APIView):
@@ -26,7 +27,6 @@ class OrderFulfillView(APIView):
         input_data = {
             **request.data
         }
-
         logger.debug('[CT-OrderFulfillView] Message received from commercetools with details: %s', input_data)
 
         message_details = OrderFulfillMessageInputSerializer(data=input_data)
@@ -53,6 +53,7 @@ class OrderFulfillView(APIView):
             'edx_lms_user_id': lms_user_id,
             'course_mode': 'verified',
             'date_placed': (order.completed_at or order.last_modified_at).timestamp(),
+            'source_system': SOURCE_SYSTEM,
         }
 
         for item in get_edx_items(order):
@@ -65,7 +66,6 @@ class OrderFulfillView(APIView):
 
             if serializer.is_valid(raise_exception=True):
                 payload = serializer.validated_data
-
                 results = fulfill_order_placed_signal.send_robust(
                     sender=self.__class__,
                     **payload

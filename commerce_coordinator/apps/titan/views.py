@@ -15,6 +15,7 @@ from .serializers import OrderFulfillViewInputSerializer
 from .signals import fulfill_order_placed_signal
 
 logger = logging.getLogger(__name__)
+SOURCE_SYSTEM = 'titan'
 
 
 class OrderFulfillView(APIView):
@@ -56,6 +57,7 @@ class OrderFulfillView(APIView):
             'email_opt_in': request.data.get('email_opt_in'),
             'order_number': request.data.get('order_number'),
             'provider_id': request.data.get('provider'),
+            'source_system': SOURCE_SYSTEM,
         }
 
         # TODO: add enterprise data for enrollment API here
