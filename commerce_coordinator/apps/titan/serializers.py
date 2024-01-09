@@ -20,6 +20,7 @@ class OrderFulfillViewInputSerializer(CoordinatorSerializer):
     email_opt_in = serializers.BooleanField(allow_null=False)
     order_number = serializers.UUIDField(allow_null=False)
     provider_id = serializers.CharField(allow_null=True)
+    source_system = serializers.CharField(allow_null=False)
 
 
 class PaymentSerializer(CoordinatorSerializer):

@@ -37,7 +37,8 @@ class FulfillOrderPlacedSendEnrollInCourseTaskTest(TestCase):
             values['edx_lms_user_id'],
             values['email_opt_in'],
             values['order_number'],
-            values['provider_id']
+            values['provider_id'],
+            values['source_system']
         )
 
     def setUp(self):

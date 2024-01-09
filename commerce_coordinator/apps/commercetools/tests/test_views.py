@@ -1,86 +1,153 @@
 """Tests for the commercetools views"""
 
+from unittest.mock import MagicMock, patch
+
 import ddt
 from django.urls import reverse
-from rest_framework import status
-from rest_framework.test import APITestCase
+from rest_framework.test import APIClient, APITestCase
 
-from commerce_coordinator.apps.core.tests.utils import name_test
+from commerce_coordinator.apps.commercetools.tests.conftest import gen_customer, gen_order
+from commerce_coordinator.apps.commercetools.tests.constants import (
+    EXAMPLE_COMMERCETOOLS_ORDER_FULFILL_MESSAGE,
+    EXAMPLE_FULFILLMENT_SIGNAL_PAYLOAD
+)
+from commerce_coordinator.apps.core.models import User
+from commerce_coordinator.apps.core.signal_helpers import format_signal_results
+
+
+class FulfillOrderPlacedSignalMock(MagicMock):
+    """
+    A mock fulfill_order_placed_signal that always returns
+    EXAMPLE_FULFILLMENT_SIGNAL_PAYLOAD in the shape of format_signal_results.
+    """
+
+    def mock_receiver(self):
+        pass  # pragma: no cover
+
+    return_value = [
+        (mock_receiver, 'bogus_task_id'),
+    ]
+
+
+class CTOrderByIdMock(MagicMock):
+    """
+    A mock get_order_by_id call that always returns
+    EXAMPLE_FULFILLMENT_SIGNAL_PAYLOAD in the shape of format_signal_results.
+    """
+    return_value = gen_order(EXAMPLE_FULFILLMENT_SIGNAL_PAYLOAD['order_number'])
+
+
+class CTCustomerByIdMock(MagicMock):
+    """
+    A mock get_customer_by_id call that always returns
+    EXAMPLE_FULFILLMENT_SIGNAL_PAYLOAD in the shape of format_signal_results.
+    """
+    return_value = gen_customer("hiya@text.example", "jim_34")
 
 
 @ddt.ddt
+@patch('commerce_coordinator.apps.commercetools.views.fulfill_order_placed_signal.send_robust',
+       new_callable=FulfillOrderPlacedSignalMock)
+@patch(
+        'commerce_coordinator.apps.commercetools.clients.CommercetoolsAPIClient.get_order_by_id',
+        new_callable=CTOrderByIdMock
+    )
+@patch(
+        'commerce_coordinator.apps.commercetools.clients.CommercetoolsAPIClient.get_customer_by_id',
+        new_callable=CTCustomerByIdMock
+    )
 class OrderFulfillViewTests(APITestCase):
+    # Disable unused-argument due to global @patch
+    # pylint: disable=unused-argument
     "Tests for order fulfill view"
     url = reverse('commercetools:fulfill')
 
-    @ddt.data(
-        # name_test("test success", (
-        #     {}, None, status.HTTP_200_OK,
-        #     {}
-        # )),
-        name_test("test no details", (
-            {}, 'detail', status.HTTP_400_BAD_REQUEST,
-            {'error_key': 'detail', 'error_message': 'This field is required.'}
-        ))
-    )
-    @ddt.unpack
-    def test_fulfill_view(self, update_params, skip_params, expected_status, expected_error):
-        message = {
-            'version': '0',
-            'id': 'aaaaaaaa-8888-00ee-aaaa-aaaaaaaaaaaa',
-            'detail-type': 'OrderStateChanged',
-            'source': 'aws.partner/commercetools.com/2u-marketplace-dev-01/commerce-coordinator-eventbridge',
-            'account': '835688427423',
-            'time': '2023-11-21T13:21:11Z',
-            'region': 'us-east-2',
-            'resources': [],
-            'detail': {
-                'notificationType': 'Message',
-                'projectKey': '2u-marketplace-dev-01',
-                'id': '3cbbbbbb-ce15-4979-aaca-bb121bbbbbbb',
-                'version': 1,
-                'sequenceNumber': 57,
-                'resource': {
-                    'typeId': 'order',
-                    'id': '9e60e10b-861c-40b0-afa4-c769dcccccc1'
-                },
-                'resourceVersion': 58,
-                'type': 'OrderStateChanged',
-                'orderId': '9e60e10b-861c-40b0-afa4-c769dcccccc1',
-                'orderState': 'Complete',
-                'oldOrderState': 'Cancelled',
-                'createdAt': '2023-11-21T13:21:11.122Z',
-                'lastModifiedAt': '2023-11-21T13:21:11.122Z',
-                'createdBy': {
-                    'isPlatformClient': True,
-                    'user': {
-                        'typeId': 'user',
-                        'id': '5daf67fd-15a6-4d77-9149-01413dddddd3'
-                    },
-                },
-                'lastModifiedBy': {
-                    'isPlatformClient': True,
-                    'user': {
-                        'typeId': 'user',
-                        'id': '5daf67fd-15a6-4d77-9149-01413dddddd3'
-                    },
-                },
-            },
+    # Use Django Rest Framework client for self.client
+    client_class = APIClient
+
+    # Define test user properties
+    test_user_username = 'test_user'
+    test_staff_username = 'test_staff_user'
+    test_password = 'test_password'
+
+    def setUp(self):
+        """Create test user before test starts."""
+
+        super().setUp()
+
+        User.objects.create_user(username=self.test_user_username, password=self.test_password)
+        User.objects.create_user(username=self.test_staff_username, password=self.test_password,  is_staff=True)
+
+    def tearDown(self):
+        """Log out any user from client after test ends."""
+
+        super().tearDown()
+        self.client.logout()
+
+    def test_view_returns_ok(self, mock_customer, mock_order, mock_signal):
+        """Check authorized user requesting fulfillment receives a HTTP 200 OK."""
+
+        # Login
+        self.client.login(username=self.test_staff_username, password=self.test_password)
+
+        # Send request
+        response = self.client.post(self.url, data=EXAMPLE_COMMERCETOOLS_ORDER_FULFILL_MESSAGE, format='json')
+
+        # Check 200 OK
+        self.assertEqual(response.status_code, 200)
+
+    def test_view_sends_expected_signal_parameters(self, mock_customer, mock_order, mock_signal):
+        """Check view sends expected signal parameters."""
+        # Login
+        self.client.login(username=self.test_staff_username, password=self.test_password)
+
+        # Send request
+        self.client.post(self.url, data=EXAMPLE_COMMERCETOOLS_ORDER_FULFILL_MESSAGE, format='json')
+
+        # Check expected response
+        mock_signal.assert_called_once_with(**EXAMPLE_FULFILLMENT_SIGNAL_PAYLOAD)
+
+    def test_view_returns_expected_response(self, mock_customer, mock_order, mock_signal):
+        """Check authorized account requesting fulfillment receives an expected response."""
+
+        # Login
+        self.client.login(username=self.test_staff_username, password=self.test_password)
+
+        # Send request
+        response = self.client.post(self.url, data=EXAMPLE_COMMERCETOOLS_ORDER_FULFILL_MESSAGE, format='json')
+        # Check expected response
+        expected_response = format_signal_results(FulfillOrderPlacedSignalMock.return_value)
+        self.assertEqual(response.json(), expected_response)
+
+    def test_view_returns_expected_error(self, mock_customer, mock_order, mock_signal):
+        """Check authorized account requesting fulfillment with bad inputs receive an expected error."""
+
+        # Login
+        self.client.login(username=self.test_staff_username, password=self.test_password)
+
+        # Add errors to example request
+        payload_with_errors = EXAMPLE_COMMERCETOOLS_ORDER_FULFILL_MESSAGE.copy()
+        payload_with_errors.pop('detail')
+
+        # Send request
+        response = self.client.post(self.url, data=payload_with_errors, format='json')
+
+        # Check expected response
+        expected_response = {
+            'detail': ['This field is required.'],
         }
+        self.assertEqual(response.json(), expected_response)
 
-        message.update(update_params)
+    def test_view_returns_expected_error_no_order(self, mock_customer, mock_order, mock_signal):
+        """Check authorized account requesting fulfillment unable to get customer receive an expected error."""
+        mock_customer.return_value = None
+        # Login
+        self.client.login(username=self.test_staff_username, password=self.test_password)
 
-        if skip_params:
-            del message[skip_params]
+        # Send request
+        response = self.client.post(self.url, data=EXAMPLE_COMMERCETOOLS_ORDER_FULFILL_MESSAGE, format='json')
 
-        response = self.client.post(self.url, data=message, format="json")
-        self.assertEqual(response.status_code, expected_status)
-        if expected_status != status.HTTP_200_OK:
-            response_json = response.json()
-            expected_error_key = expected_error['error_key']
-            expected_error_message = expected_error['error_message']
-            self.assertIn(expected_error_key, response_json)
-            self.assertIn(expected_error_message, response_json[expected_error_key])
+        self.assertEqual(response.status_code, 200)
 
 # """ Commercetools Order History testcases """
 # from unittest.mock import MagicMock, patch

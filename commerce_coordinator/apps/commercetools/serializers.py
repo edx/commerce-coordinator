@@ -42,4 +42,5 @@ class OrderFulfillViewInputSerializer(CoordinatorSerializer):
     email_opt_in = serializers.BooleanField(allow_null=False)
     order_number = serializers.CharField(allow_null=False)
     provider_id = serializers.CharField(allow_null=True)
+    source_system = serializers.CharField(allow_null=False)
     edx_lms_user_id = serializers.IntegerField(allow_null=False)

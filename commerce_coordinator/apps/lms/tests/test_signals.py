@@ -29,6 +29,7 @@ class FulfillOrderPlacedSendEnrollInCourseTest(CoordinatorSignalReceiverTestCase
         'email_opt_in': 5,
         'order_number': 6,
         'provider_id': 7,
+        'source_system': 8,
     }
 
     def test_correct_arguments_passed(self, mock_task):

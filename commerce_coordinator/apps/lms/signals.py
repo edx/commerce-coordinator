@@ -24,5 +24,6 @@ def fulfill_order_placed_send_enroll_in_course(**kwargs):
         email_opt_in=kwargs['email_opt_in'],
         order_number=kwargs['order_number'],
         provider_id=kwargs['provider_id'],
+        source_system=kwargs['source_system'],
     )
     return async_result.id

@@ -11,6 +11,7 @@ EXAMPLE_FULFILLMENT_SIGNAL_PAYLOAD: Dict[str, Union[str, bool, int, None]] = {
     'email_opt_in': False,
     'order_number': '61ec1afa-1b0e-4234-ae28-f997728054fa',
     'provider_id': None,
+    'source_system': 'test',
 }
 
 EXAMPLE_FULFILLMENT_REQUEST_PAYLOAD = {
@@ -31,6 +32,11 @@ EXAMPLE_FULFILLMENT_REQUEST_PAYLOAD = {
             'namespace': 'order',
             'name': 'order_placed',
             'value': '2023-04-17T13:30:33Z'
+        },
+        {
+            'namespace': 'order',
+            'name': 'source_system',
+            'value': 'test'
         }
     ]
 }

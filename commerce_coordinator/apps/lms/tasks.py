@@ -3,6 +3,7 @@ LMS Celery tasks
 """
 from celery import shared_task
 from celery.utils.log import get_task_logger
+from requests import RequestException
 
 from commerce_coordinator.apps.core.models import User
 from commerce_coordinator.apps.lms.clients import LMSAPIClient
@@ -11,7 +12,7 @@ from commerce_coordinator.apps.lms.clients import LMSAPIClient
 logger = get_task_logger(__name__)
 
 
-@shared_task()
+@shared_task(autoretry_for=(RequestException,), retry_kwargs={'max_retries': 5, 'countdown': 3})
 def fulfill_order_placed_send_enroll_in_course_task(
     course_id,
     course_mode,
@@ -20,6 +21,7 @@ def fulfill_order_placed_send_enroll_in_course_task(
     email_opt_in,
     order_number,
     provider_id,
+    source_system,
 ):
     """
     Celery task for order placed fulfillment and enrollment via LMS Enrollment API.
@@ -48,7 +50,12 @@ def fulfill_order_placed_send_enroll_in_course_task(
                 'namespace': 'order',
                 'name': 'order_placed',
                 'value': date_placed,
-            }
+            },
+            {
+                'namespace': 'order',
+                'name': 'source_system',
+                'value': source_system,
+            },
         ]
     }
 
