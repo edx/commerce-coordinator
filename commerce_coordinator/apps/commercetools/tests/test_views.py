@@ -119,6 +119,35 @@ class OrderFulfillViewTests(APITestCase):
         expected_response = format_signal_results(FulfillOrderPlacedSignalMock.return_value)
         self.assertEqual(response.json(), expected_response)
 
+    def test_view_returns_expected_error(self, mock_customer, mock_order, mock_signal):
+        """Check authorized account requesting fulfillment with bad inputs receive an expected error."""
+
+        # Login
+        self.client.login(username=self.test_staff_username, password=self.test_password)
+
+        # Add errors to example request
+        payload_with_errors = EXAMPLE_COMMERCETOOLS_ORDER_FULFILL_MESSAGE.copy()
+        payload_with_errors.pop('detail')
+
+        # Send request
+        response = self.client.post(self.url, data=payload_with_errors, format='json')
+
+        # Check expected response
+        expected_response = {
+            'detail': ['This field is required.'],
+        }
+        self.assertEqual(response.json(), expected_response)
+
+    def test_view_returns_expected_error_no_order(self, mock_customer, mock_order, mock_signal):
+        """Check authorized account requesting fulfillment unable to get customer receive an expected error."""
+        mock_customer.return_value = None
+        # Login
+        self.client.login(username=self.test_staff_username, password=self.test_password)
+
+        # Send request
+        response = self.client.post(self.url, data=EXAMPLE_COMMERCETOOLS_ORDER_FULFILL_MESSAGE, format='json')
+
+        self.assertEqual(response.status_code, 200)
 
 # """ Commercetools Order History testcases """
 # from unittest.mock import MagicMock, patch
