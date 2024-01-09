@@ -5,6 +5,8 @@ from corsheaders.defaults import default_headers as corsheaders_default_headers
 
 from commerce_coordinator.settings.utils import get_logger_config
 
+# Settings not defined in this file are not overridden by ArgoCD on Deployment.
+
 # PATH vars
 PROJECT_ROOT = join(abspath(dirname(__file__)), "..")
 
@@ -457,6 +459,7 @@ PAYMENT_PROCESSOR_CONFIG = {
 }
 # END PAYMENT PROCESSING
 
+LMS_URL_ROOT = "http://localhost:18000"
 LMS_DASHBOARD_URL = "http://localhost:18000"  # fix me
 
 _COMMERCETOOLS_CONFIG_GEO = 'us-central1.gcp'
