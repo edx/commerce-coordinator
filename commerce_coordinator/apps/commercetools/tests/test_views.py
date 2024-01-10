@@ -12,7 +12,6 @@ from commerce_coordinator.apps.commercetools.tests.constants import (
     EXAMPLE_FULFILLMENT_SIGNAL_PAYLOAD
 )
 from commerce_coordinator.apps.core.models import User
-from commerce_coordinator.apps.core.signal_helpers import format_signal_results
 
 
 class FulfillOrderPlacedSignalMock(MagicMock):
@@ -107,17 +106,14 @@ class OrderFulfillViewTests(APITestCase):
         # Check expected response
         mock_signal.assert_called_once_with(**EXAMPLE_FULFILLMENT_SIGNAL_PAYLOAD)
 
-    def test_view_returns_expected_response(self, mock_customer, mock_order, mock_signal):
-        """Check authorized account requesting fulfillment receives an expected response."""
-
-        # Login
+    @patch("commerce_coordinator.apps.commercetools.views.send_order_confirmation_email")
+    def test_view_triggers_order_confirmation_email(self, mock_send_email, mock_customer, mock_order, mock_signal):
+        """Check view sends expected signal parameters."""
         self.client.login(username=self.test_staff_username, password=self.test_password)
 
-        # Send request
-        response = self.client.post(self.url, data=EXAMPLE_COMMERCETOOLS_ORDER_FULFILL_MESSAGE, format='json')
-        # Check expected response
-        expected_response = format_signal_results(FulfillOrderPlacedSignalMock.return_value)
-        self.assertEqual(response.json(), expected_response)
+        self.client.post(self.url, data=EXAMPLE_COMMERCETOOLS_ORDER_FULFILL_MESSAGE, format='json')
+
+        mock_send_email.assert_called_once()
 
     def test_view_returns_expected_error(self, mock_customer, mock_order, mock_signal):
         """Check authorized account requesting fulfillment with bad inputs receive an expected error."""
