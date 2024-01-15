@@ -139,8 +139,13 @@ class APITestingSet:
 
 
 # Data Blobs
-def gen_order(uuid_id) -> CTOrder:
-    with open(os.path.join(pathlib.Path(__file__).parent.resolve(), 'raw_ct_order.json')) as f:
+def gen_order(uuid_id, with_discount=True) -> CTOrder:
+    """
+    Generate a CTOrder object from a json file
+    """
+    order_json_file = ('raw_ct_order.json' if with_discount
+                       else 'raw_ct_order_without_discount.json')
+    with open(os.path.join(pathlib.Path(__file__).parent.resolve(), order_json_file)) as f:
         obj = json.load(f)
         obj['id'] = uuid_id
         return CTOrder.deserialize(obj)
