@@ -19,6 +19,8 @@ from .signals import enrollment_code_redemption_requested_signal, fulfill_order_
 
 logger = logging.getLogger(__name__)
 
+SOURCE_SYSTEM = 'legacy_ecommerce'
+
 
 class RedeemEnrollmentCodeView(APIView):
     """User requests to redeem enrollment code."""
@@ -159,6 +161,7 @@ class OrderFulfillView(APIView):
             'order_number': request.data.get('order_number'),
             'provider_id': request.data.get('provider'),
             'user': request.data.get('user'),
+            'source_system': SOURCE_SYSTEM,
         }
 
         logger.info(f'Ecommerce OrderFulfillView.post() called using {locals()}.')

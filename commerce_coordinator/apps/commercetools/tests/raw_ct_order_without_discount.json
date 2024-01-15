@@ -236,15 +236,7 @@
   "shippingMode": "Single",
   "shipping": [],
   "itemShippingAddresses": [],
-  "discountCodes": [
-    {
-      "discountCode": {
-        "obj": {
-          "code": "TEST_DISCOUNT_CODE"
-        }
-      }
-    }
-  ],
+  "discountCodes": [],
   "directDiscounts": [],
   "refusedGifts": [],
   "paymentInfo": {
@@ -333,13 +325,5 @@
   },
   "createdBy": {
     "clientId": "E1UbNz9SHIG_n4nnSAUP1uW4"
-  },
-  "discountOnTotalPrice": {
-    "discountedAmount": {
-      "centAmount": 2500,
-      "currencyCode": "USD",
-      "type": "centPrecision",
-      "fractionDigits": 2
-    }
   }
 }

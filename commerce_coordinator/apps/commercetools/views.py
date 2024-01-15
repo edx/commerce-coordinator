@@ -9,11 +9,15 @@ from rest_framework.views import APIView
 
 from commerce_coordinator.apps.commercetools.serializers import OrderFulfillViewInputSerializer
 from commerce_coordinator.apps.commercetools.signals import fulfill_order_placed_signal
-from commerce_coordinator.apps.core.signal_helpers import format_signal_results
 
 from .catalog_info.edx_utils import get_edx_items, get_edx_lms_user_id, get_edx_product_course_run_key, is_edx_lms_order
 from .clients import CommercetoolsAPIClient
 from .serializers import OrderFulfillMessageInputSerializer
+from .utils import (
+    extract_ct_order_information_for_braze_canvas,
+    extract_ct_product_information_for_braze_canvas,
+    send_order_confirmation_email
+)
 
 logger = logging.getLogger(__name__)
 SOURCE_SYSTEM = 'commercetools'
@@ -27,6 +31,7 @@ class OrderFulfillView(APIView):
         input_data = {
             **request.data
         }
+
         logger.debug('[CT-OrderFulfillView] Message received from commercetools with details: %s', input_data)
 
         message_details = OrderFulfillMessageInputSerializer(data=input_data)
@@ -48,13 +53,15 @@ class OrderFulfillView(APIView):
 
         default_params = {
             'email_opt_in': True,  # ?? Where?
-            'order_number': order.order_number or order.id,
+            'order_number': order.id,
             'provider_id': None,
             'edx_lms_user_id': lms_user_id,
             'course_mode': 'verified',
-            'date_placed': (order.completed_at or order.last_modified_at).timestamp(),
+            'date_placed': order.last_modified_at.strftime('%b %d, %Y'),
             'source_system': SOURCE_SYSTEM,
         }
+        canvas_entry_properties = {"products": []}
+        canvas_entry_properties.update(extract_ct_order_information_for_braze_canvas(customer, order))
 
         for item in get_edx_items(order):
             logger.debug('[CT-OrderFulfillView] processing edX order %s, line item %s', order_id, item.variant.sku)
@@ -66,11 +73,12 @@ class OrderFulfillView(APIView):
 
             if serializer.is_valid(raise_exception=True):
                 payload = serializer.validated_data
-                results = fulfill_order_placed_signal.send_robust(
+                fulfill_order_placed_signal.send_robust(
                     sender=self.__class__,
                     **payload
                 )
-
-                return Response(format_signal_results(results), status=status.HTTP_200_OK)
+                product_information = extract_ct_product_information_for_braze_canvas(item)
+                canvas_entry_properties["products"].append(product_information)
+        send_order_confirmation_email(lms_user_id, customer.email, canvas_entry_properties)
 
         return Response(status=status.HTTP_200_OK)

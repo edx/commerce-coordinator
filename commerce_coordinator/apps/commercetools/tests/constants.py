@@ -1,8 +1,4 @@
 '''Constants for commercetools tests'''
-from datetime import datetime
-
-import pytz
-
 from commerce_coordinator.apps.commercetools.views import OrderFulfillView
 
 EXAMPLE_COMMERCETOOLS_ORDER_FULFILL_MESSAGE = {
@@ -52,7 +48,7 @@ EXAMPLE_FULFILLMENT_SIGNAL_PAYLOAD = {
     'sender': OrderFulfillView,
     'course_id': 'course-v1:edX+DemoX+Demo_Course',
     'course_mode': 'verified',
-    'date_placed': datetime(2023, 10, 31, 19, 56, 36, 957000, tzinfo=pytz.utc),
+    'date_placed': 'Oct 31, 2023',
     'edx_lms_user_id': 127,
     'email_opt_in': True,
     'order_number': 'c1f1961f-7dac-4ec6-a0ff-364b71c082b6',
