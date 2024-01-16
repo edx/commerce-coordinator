@@ -12,15 +12,6 @@ INSTALLED_APPS += (
     'commerce_coordinator.apps.demo_lms.apps.DemoLmsConfig',
 )
 
-# CACHE CONFIGURATION
-# See: https://docs.djangoproject.com/en/dev/ref/settings/#caches
-CACHES = {
-    'default': {
-        'BACKEND': 'django.core.cache.backends.locmem.LocMemCache',
-    }
-}
-# END CACHE CONFIGURATION
-
 # CORS CONFIGURATION
 CORS_ORIGIN_WHITELIST = [
     'http://localhost:1996',  # frontend-app-ecommerce

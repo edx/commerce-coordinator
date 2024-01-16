@@ -7,6 +7,7 @@ import ddt
 import requests_mock
 from django.conf import settings
 from django.contrib.auth import get_user_model
+from django.test import override_settings
 from django.urls import reverse
 from mock import patch
 from rest_framework import status
@@ -91,10 +92,13 @@ class PaymentPageRedirectViewTests(APITestCase):
             self.assertTrue(response.headers['Location'].startswith(settings.COMMERCETOOLS_FRONTEND_URL))
             self.assertIn(ret_variant.sku, unquote(unquote(response.url)))
 
+    @override_settings(BACKEND_SERVICE_EDX_OAUTH2_PROVIDER_URL='https://testserver.com/auth')
+    @patch('commerce_coordinator.apps.rollout.pipeline.is_user_enterprise_learner')
     @patch('commerce_coordinator.apps.rollout.pipeline.is_redirect_to_commercetools_enabled_for_user')
-    def test_run_filter_only_sku_available(self, is_redirect_mock):
+    def test_run_filter_only_sku_available(self, is_redirect_mock, is_enterprise_mock):
         self.client.login(username=self.test_user_username, password=self.test_user_password)
         is_redirect_mock.return_value = False
+        is_enterprise_mock.return_value = True
         self.client.force_authenticate(user=self.user)
         response = self.client.get(self.url, {'sku': ['sku1']})
         self.assertTrue(response.headers['Location'].startswith(settings.ECOMMERCE_URL))
