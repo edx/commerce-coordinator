@@ -50,7 +50,7 @@ def fulfill_order_placed_send_enroll_in_course_task(
             {
                 'namespace': 'order',
                 'name': 'order_placed',
-                'value': date_placed.isoformat(),
+                'value': date_placed,
             },
             {
                 'namespace': 'order',

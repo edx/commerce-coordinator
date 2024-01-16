@@ -4,7 +4,7 @@ LMS App Testing Data Constants
 from datetime import datetime
 from typing import Dict, Union
 
-_INIT_DATE = datetime.now()
+_INIT_DATE = datetime.now().strftime('%b %d, %Y')
 
 EXAMPLE_FULFILLMENT_SIGNAL_PAYLOAD: Dict[str, Union[str, bool, int, None]] = {
     'course_id': 'course-v1:edX+DemoX+Demo_Course',
@@ -34,7 +34,7 @@ EXAMPLE_FULFILLMENT_REQUEST_PAYLOAD = {
         {
             'namespace': 'order',
             'name': 'order_placed',
-            'value': _INIT_DATE.isoformat()
+            'value': _INIT_DATE,
         },
         {
             'namespace': 'order',
