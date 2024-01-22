@@ -151,6 +151,11 @@ PAYMENT_PROCESSOR_CONFIG = {
     },
 }
 
+# Enable API Submission HTML Page, see: https://www.django-rest-framework.org/api-guide/renderers/#browsableapirenderer
+REST_FRAMEWORK['DEFAULT_RENDERER_CLASSES'] += (
+    'rest_framework.renderers.BrowsableAPIRenderer',
+)
+
 #####################################################################
 # Lastly, see if the developer has any local overrides.
 if os.path.isfile(join(dirname(abspath(__file__)), 'private.py')):

@@ -284,6 +284,9 @@ REST_FRAMEWORK = {
         'user': '75/minute',
         'get_payment': '1000/hour',
     },
+    'DEFAULT_RENDERER_CLASSES': (
+        'rest_framework.renderers.JSONRenderer',
+    ),
 }
 # END DRF CONFIGURATION
 
