@@ -49,6 +49,9 @@ def un_ls(string_dict: LSLike, preferred_lang: Optional[str] = None):
         format, as described in BCP 47.
         string_dict (dict|CTLocalizedString): a LocalizedString like value
     """
+    if string_dict is None:
+        return None
+
     preferred_langs = [*LS_OUT_PREFERENCES]
 
     if preferred_lang:
