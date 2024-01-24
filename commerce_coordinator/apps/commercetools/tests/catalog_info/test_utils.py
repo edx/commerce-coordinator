@@ -72,6 +72,10 @@ class LocalizedStringsTests(TestCase):
         result = un_ls(ls_struct, pref)
         self.assertEqual(result, expected)
 
+    def test_un_ls_with_none_string_dict(self):
+        result = un_ls(None)
+        self.assertIsNone(result)
+
     @ddt.data(
         ({Languages.ENGLISH: "abc"}, {Languages.ENGLISH: "abc"}, True),
         ({Languages.US_ENGLISH: "abc"}, {Languages.ENGLISH: "xyz"}, False),
