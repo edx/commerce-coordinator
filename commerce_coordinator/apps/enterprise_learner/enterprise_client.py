@@ -15,7 +15,7 @@ class EnterpriseApiClient(BaseEdxOAuthClient):
     """
     API client for calls to the Enterprise Service.
     """
-    enterprise_api_base_url = f"{settings.ENTERPRISE_URL}/enterprise/api/v1"
+    enterprise_api_base_url = f"{settings.LMS_URL_ROOT}/enterprise/api/v1"
     enterprise_customer_info_endpoint = f"{enterprise_api_base_url}/enterprise-learner"
 
     def check_user_is_enterprise_customer(self, username):

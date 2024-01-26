@@ -10,6 +10,7 @@ from django.contrib.auth import get_user_model
 from django.test import override_settings
 from django.urls import reverse
 from mock import patch
+from requests import HTTPError
 from rest_framework import status
 from rest_framework.test import APITestCase
 
@@ -21,6 +22,7 @@ User = get_user_model()
 TEST_ECOMMERCE_URL = 'https://testserver.com'
 
 
+@override_settings(BACKEND_SERVICE_EDX_OAUTH2_PROVIDER_URL='https://testserver.com/auth')
 @ddt.ddt
 class PaymentPageRedirectViewTests(APITestCase):
     """
@@ -67,8 +69,27 @@ class PaymentPageRedirectViewTests(APITestCase):
         # Error HTTP_302_FOUND
         self.assertEqual(response.status_code, status.HTTP_302_FOUND)
 
+    @patch('commerce_coordinator.apps.rollout.pipeline.logger')
+    @patch('commerce_coordinator.apps.commercetools.clients.CommercetoolsAPIClient')
+    def test_get_product_variant_by_course_run_failure(self, mock_ct_client, mock_logger):
+        self.client.login(username=self.test_user_username, password=self.test_user_password)
+        self.client.force_authenticate(user=self.user)
+
+        mock_ct_client.return_value.get_product_variant_by_course_run.side_effect = HTTPError('Error in CT search')
+        self.client.get(
+            self.url,
+            {'sku': ['sku1'], 'course_run_key': 'course-v1:MichiganX+InjuryPreventionX+1T2021'}
+        )
+
+        mock_logger.exception.assert_called_once_with(
+            '[get_product_variant_by_course_run] Failed to get CT course for course_run: '
+            'course-v1:MichiganX+InjuryPreventionX+1T2021 with exception: Error in CT search'
+        )
+        mock_ct_client.reset_mock(return_value=True, side_effect=True)
+
+    @patch('commerce_coordinator.apps.rollout.pipeline.is_user_enterprise_learner')
     @patch('commerce_coordinator.apps.rollout.pipeline.is_redirect_to_commercetools_enabled_for_user')
-    def test_run_rollout_pipeline_redirect_to_commercetools(self, is_redirect_mock):
+    def test_run_rollout_pipeline_redirect_to_commercetools(self, is_redirect_mock, is_enterprise_mock):
         base_url = self.client_set.get_base_url_from_client()
         self.client.login(username=self.test_user_username, password=self.test_user_password)
         # Because the base mocker can't do param binding, we have to intercept.
@@ -84,6 +105,7 @@ class PaymentPageRedirectViewTests(APITestCase):
                 'course-v1:MichiganX+InjuryPreventionX+1T2021'
             )
             is_redirect_mock.return_value = True
+            is_enterprise_mock.return_value = False
             self.client.force_authenticate(user=self.user)
             response = self.client.get(
                 self.url,
@@ -92,13 +114,10 @@ class PaymentPageRedirectViewTests(APITestCase):
             self.assertTrue(response.headers['Location'].startswith(settings.COMMERCETOOLS_FRONTEND_URL))
             self.assertIn(ret_variant.sku, unquote(unquote(response.url)))
 
-    @override_settings(BACKEND_SERVICE_EDX_OAUTH2_PROVIDER_URL='https://testserver.com/auth')
-    @patch('commerce_coordinator.apps.rollout.pipeline.is_user_enterprise_learner')
     @patch('commerce_coordinator.apps.rollout.pipeline.is_redirect_to_commercetools_enabled_for_user')
-    def test_run_filter_only_sku_available(self, is_redirect_mock, is_enterprise_mock):
+    def test_run_filter_only_sku_available(self, is_redirect_mock):
         self.client.login(username=self.test_user_username, password=self.test_user_password)
         is_redirect_mock.return_value = False
-        is_enterprise_mock.return_value = True
         self.client.force_authenticate(user=self.user)
         response = self.client.get(self.url, {'sku': ['sku1']})
         self.assertTrue(response.headers['Location'].startswith(settings.ECOMMERCE_URL))
