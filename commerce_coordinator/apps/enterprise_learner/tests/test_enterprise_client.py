@@ -80,9 +80,9 @@ class TestEnterpriseApiClient(TestCase):
                 assert is_enterprise_customer == (response_data['count'] > 0)
 
                 expected_url = (
-                    'http://enterprise.example.com/'
-                    'enterprise/api/v1/'
-                    'enterprise-learner'
+                    f'{settings.LMS_URL_ROOT}/'
+                    f'enterprise/api/v1/'
+                    f'enterprise-learner'
                 )
 
                 # Check that the API endpoint was only called once.

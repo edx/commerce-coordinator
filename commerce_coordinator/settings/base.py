@@ -349,14 +349,8 @@ ECOMMERCE_URL = 'https://ecommerce_url/'
 ECOMMERCE_ADD_TO_BASKET_API_PATH = '/basket/add/'
 TITAN_URL = 'replace-me'
 
-# Enterprise URL
-ENTERPRISE_URL = 'SET-ME-PLEASE'
-
 # Timeout for enterprise client
 ENTERPRISE_CLIENT_TIMEOUT = os.environ.get('ENTERPRISE_CLIENT_TIMEOUT', 15)
-ENTERPRISE_USER_CACHE_TIMEOUT = 600  # Value is in seconds
-
-SYSTEM_ENTERPRISE_LEARNER_ROLE = 'enterprise_learner'
 
 # Checkout view urls
 COMMERCETOOLS_FRONTEND_URL = 'https://commerce_tools_frontend_url/'

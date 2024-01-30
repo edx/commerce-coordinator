@@ -49,6 +49,3 @@ COMMERCETOOLS_CONFIG = {
     'authUrl': "https://localhost/oauth/token",
     'projectKey': "test",
 }
-
-# Test enterprise url
-ENTERPRISE_URL = 'http://enterprise.example.com'
