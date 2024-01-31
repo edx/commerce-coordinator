@@ -4,15 +4,22 @@ Views for the commercetools app
 import logging
 
 from rest_framework import status
+from rest_framework.permissions import IsAdminUser
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
 from commerce_coordinator.apps.commercetools.serializers import OrderFulfillViewInputSerializer
 from commerce_coordinator.apps.commercetools.signals import fulfill_order_placed_signal
 
-from .catalog_info.edx_utils import get_edx_items, get_edx_lms_user_id, get_edx_product_course_run_key, is_edx_lms_order
+from .catalog_info.edx_utils import (
+    get_edx_items,
+    get_edx_lms_user_id,
+    get_edx_lms_user_name,
+    get_edx_product_course_run_key,
+    is_edx_lms_order
+)
 from .clients import CommercetoolsAPIClient
-from .serializers import OrderFulfillMessageInputSerializer
+from .serializers import OrderMessageInputSerializer
 from .utils import (
     extract_ct_order_information_for_braze_canvas,
     extract_ct_product_information_for_braze_canvas,
@@ -34,7 +41,7 @@ class OrderFulfillView(APIView):
 
         logger.debug('[CT-OrderFulfillView] Message received from commercetools with details: %s', input_data)
 
-        message_details = OrderFulfillMessageInputSerializer(data=input_data)
+        message_details = OrderMessageInputSerializer(data=input_data)
         message_details.is_valid(raise_exception=True)
 
         client = CommercetoolsAPIClient()
@@ -80,5 +87,42 @@ class OrderFulfillView(APIView):
                 product_information = extract_ct_product_information_for_braze_canvas(item)
                 canvas_entry_properties["products"].append(product_information)
         send_order_confirmation_email(lms_user_id, customer.email, canvas_entry_properties)
+
+        return Response(status=status.HTTP_200_OK)
+
+
+class OrderSanctionedView(APIView):
+    """View to sanction an order and deactivate the lms user"""
+    permission_classes = [IsAdminUser]
+    # authentication_classes = [] TODO: Update this with OAuth authentication
+
+    def post(self, request):
+        """
+        Receive a message from commerce tools forwarded by aws event bridge
+        to sanction order and deactivate user through LMS
+        """
+        input_data = {
+            **request.data
+        }
+
+        logger.debug('[CT-OrderSanctionedView] Message received from commercetools with details: %s', input_data)
+
+        message_details = OrderMessageInputSerializer(data=input_data)
+        message_details.is_valid(raise_exception=True)
+
+        client = CommercetoolsAPIClient()
+        order_id = message_details.data['order_id']
+        order = client.get_order_by_id(order_id)
+        customer = client.get_customer_by_id(order.customer_id)
+
+        if not (customer and order and is_edx_lms_order(order)):
+            logger.debug('[CT-OrderSanctionedView] order %s is not an edX order', order_id)
+
+            return Response(status=status.HTTP_200_OK)
+
+        lms_user_name = get_edx_lms_user_name(customer)
+        logger.debug('[CT-OrderSanctionedView] calling lms to deactive user %s', lms_user_name)
+
+        # TODO: SONIC-155 use lms_user_name to call LMS endpoint to deactivate user
 
         return Response(status=status.HTTP_200_OK)

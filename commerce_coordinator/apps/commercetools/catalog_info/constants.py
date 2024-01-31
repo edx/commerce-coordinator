@@ -24,6 +24,7 @@ HIDE_CODE_FOR_CURRENCIES = ['USD', 'EUR', 'INR', 'JPY']
 """Currencies to hide the code on, so $12 isn't $12 USD."""
 
 DEFAULT_ORDER_EXPANSION = (
+    "state",
     "paymentInfo.payments[*]",
     "discountCodes[*].discountCode",
     "directDiscounts[*]"

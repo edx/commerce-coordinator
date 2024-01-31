@@ -4,7 +4,7 @@ from commerce_coordinator.apps.core import serializers
 from commerce_coordinator.apps.core.serializers import CoordinatorSerializer
 
 
-class OrderFulfillMessageDetailSerializer(CoordinatorSerializer):
+class OrderMessageDetailSerializer(CoordinatorSerializer):
     """
     Serializer for CommerceTools message 'detail'
     """
@@ -20,11 +20,11 @@ class OrderFulfillMessageDetailSerializer(CoordinatorSerializer):
         return representation
 
 
-class OrderFulfillMessageInputSerializer(CoordinatorSerializer):
+class OrderMessageInputSerializer(CoordinatorSerializer):
     """
     Serializer for commercetools message input
     """
-    detail = OrderFulfillMessageDetailSerializer(allow_null=False)
+    detail = OrderMessageDetailSerializer(allow_null=False)
 
     def to_representation(self, instance):
         representation = super().to_representation(instance)

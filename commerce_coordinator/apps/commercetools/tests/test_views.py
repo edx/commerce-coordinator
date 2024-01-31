@@ -9,6 +9,7 @@ from rest_framework.test import APIClient, APITestCase
 from commerce_coordinator.apps.commercetools.tests.conftest import gen_customer, gen_order
 from commerce_coordinator.apps.commercetools.tests.constants import (
     EXAMPLE_COMMERCETOOLS_ORDER_FULFILL_MESSAGE,
+    EXAMPLE_COMMERCETOOLS_ORDER_SANCTIONED_MESSAGE,
     EXAMPLE_FULFILLMENT_SIGNAL_PAYLOAD
 )
 from commerce_coordinator.apps.core.models import User
@@ -142,6 +143,85 @@ class OrderFulfillViewTests(APITestCase):
 
         # Send request
         response = self.client.post(self.url, data=EXAMPLE_COMMERCETOOLS_ORDER_FULFILL_MESSAGE, format='json')
+
+        self.assertEqual(response.status_code, 200)
+
+
+@ddt.ddt
+@patch(
+    'commerce_coordinator.apps.commercetools.clients.CommercetoolsAPIClient.get_order_by_id',
+    new_callable=CTOrderByIdMock
+)
+@patch(
+    'commerce_coordinator.apps.commercetools.clients.CommercetoolsAPIClient.get_customer_by_id',
+    new_callable=CTCustomerByIdMock
+)
+class OrderSanctionedViewTests(APITestCase):
+    # Disable unused-argument due to global @patch
+    # pylint: disable=unused-argument
+    "Tests for order sanctioned view"
+    url = reverse('commercetools:sanctioned')
+
+    # Use Django Rest Framework client for self.client
+    client_class = APIClient
+
+    test_user_username = 'test_user'
+    test_staff_username = 'test_staff_user'
+    test_password = 'test_password'
+
+    def setUp(self):
+        """Create test user before test starts."""
+
+        super().setUp()
+
+        User.objects.create_user(username=self.test_user_username, password=self.test_password)
+        User.objects.create_user(username=self.test_staff_username, password=self.test_password,  is_staff=True)
+
+    def tearDown(self):
+        """Log out any user from client after test ends."""
+
+        super().tearDown()
+        self.client.logout()
+
+    def test_view_returns_ok(self, mock_customer, mock_order):
+        """Check authorized user requesting sanction receives a HTTP 200 OK."""
+
+        # Login
+        self.client.login(username=self.test_staff_username, password=self.test_password)
+
+        # Send request
+        response = self.client.post(self.url, data=EXAMPLE_COMMERCETOOLS_ORDER_SANCTIONED_MESSAGE, format='json')
+
+        # Check 200 OK
+        self.assertEqual(response.status_code, 200)
+
+    def test_view_returns_expected_error(self, mock_customer, mock_order):
+        """Check authorized account requesting fulfillment with bad inputs receive an expected error."""
+
+        # Login
+        self.client.login(username=self.test_staff_username, password=self.test_password)
+
+        # Add errors to example request
+        payload_with_errors = EXAMPLE_COMMERCETOOLS_ORDER_SANCTIONED_MESSAGE.copy()
+        payload_with_errors.pop('detail')
+
+        # Send request
+        response = self.client.post(self.url, data=payload_with_errors, format='json')
+
+        # Check expected response
+        expected_response = {
+            'detail': ['This field is required.'],
+        }
+        self.assertEqual(response.json(), expected_response)
+
+    def test_view_returns_expected_error_no_order(self, mock_customer, mock_order):
+        """Check authorized account requesting fulfillment unable to get customer receive an expected error."""
+        mock_customer.return_value = None
+        # Login
+        self.client.login(username=self.test_staff_username, password=self.test_password)
+
+        # Send request
+        response = self.client.post(self.url, data=EXAMPLE_COMMERCETOOLS_ORDER_SANCTIONED_MESSAGE, format='json')
 
         self.assertEqual(response.status_code, 200)
 
