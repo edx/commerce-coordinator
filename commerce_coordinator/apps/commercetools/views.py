@@ -8,6 +8,7 @@ from rest_framework.permissions import IsAdminUser
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
+from commerce_coordinator.apps.commercetools.catalog_info.constants import TwoUKeys
 from commerce_coordinator.apps.commercetools.serializers import OrderFulfillViewInputSerializer
 from commerce_coordinator.apps.commercetools.signals import fulfill_order_placed_signal
 
@@ -113,6 +114,18 @@ class OrderSanctionedView(APIView):
         client = CommercetoolsAPIClient()
         order_id = message_details.data['order_id']
         order = client.get_order_by_id(order_id)
+        order_worfkflow_state = order.state
+
+        if not order_worfkflow_state == TwoUKeys.SDN_SANCTIONED_ORDER_STATE:
+            logger.debug(
+                '[CT-OrderSanctionedView] order state for order %s is not %s. Actual value is %s',
+                order_id,
+                TwoUKeys.SDN_SANCTIONED_ORDER_STATE,
+                order_worfkflow_state
+            )
+
+            return Response(status=status.HTTP_200_OK)
+
         customer = client.get_customer_by_id(order.customer_id)
 
         if not (customer and order and is_edx_lms_order(order)):
