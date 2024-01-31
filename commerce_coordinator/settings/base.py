@@ -60,6 +60,15 @@ PROJECT_APPS = (
 INSTALLED_APPS += THIRD_PARTY_APPS
 INSTALLED_APPS += PROJECT_APPS
 
+# CACHE CONFIGURATION
+# See: https://docs.djangoproject.com/en/dev/ref/settings/#caches
+CACHES = {
+    'default': {
+        'BACKEND': 'django.core.cache.backends.locmem.LocMemCache',
+    }
+}
+# END CACHE CONFIGURATION
+
 MIDDLEWARE = (
     # Resets RequestCache utility for added safety.
     'edx_django_utils.cache.middleware.RequestCacheMiddleware',
@@ -90,16 +99,6 @@ MIDDLEWARE = (
     'edx_rest_framework_extensions.auth.jwt.middleware.EnsureJWTAuthSettingsMiddleware',
 )
 
-# Cache Configuration
-CACHES = {
-    'default': {
-        'VERSION': '1',
-        'KEY_FUNCTION': 'commerce_coordinator.apps.core.memcache.safe_key',
-        'LOCATION': ['localhost:11211'],
-        'KEY_PREFIX': 'default',
-        'BACKEND': 'django.core.cache.backends.memcached.PyMemcacheCache',
-    },
-}
 DEFAULT_TIMEOUT = 30 * 60  # Value is in seconds
 # End Cache Configuration
 
@@ -349,6 +348,9 @@ FULFILLMENT_TIMEOUT = 7
 ECOMMERCE_URL = 'https://ecommerce_url/'
 ECOMMERCE_ADD_TO_BASKET_API_PATH = '/basket/add/'
 TITAN_URL = 'replace-me'
+
+# Timeout for enterprise client
+ENTERPRISE_CLIENT_TIMEOUT = os.environ.get('ENTERPRISE_CLIENT_TIMEOUT', 15)
 
 # Checkout view urls
 COMMERCETOOLS_FRONTEND_URL = 'https://commerce_tools_frontend_url/'

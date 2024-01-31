@@ -66,6 +66,7 @@ CELERY_BROKER_URL = "redis://:password@edx.devstack.redis:6379/0"
 # Application URLs in devstack.
 ECOMMERCE_URL = "http://edx.devstack.ecommerce:18130"
 TITAN_URL = os.environ.get('TITAN_URL_ROOT', 'http://titan_titan-app_1:3000')
+ENTERPRISE_URL = 'http://edx.devstack.lms:18000'
 
 # Set legacy credentials to access edX services.
 EDX_API_KEY = 'PUT_YOUR_API_KEY_HERE'  # This is the actual API key in devstack.
