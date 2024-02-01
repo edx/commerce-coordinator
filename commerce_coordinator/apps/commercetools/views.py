@@ -95,6 +95,7 @@ class OrderFulfillView(APIView):
 class OrderSanctionedView(APIView):
     """View to sanction an order and deactivate the lms user"""
     permission_classes = [IsAdminUser]
+
     # authentication_classes = [] TODO: Update this with OAuth authentication
 
     def post(self, request):
@@ -114,17 +115,7 @@ class OrderSanctionedView(APIView):
         client = CommercetoolsAPIClient()
         order_id = message_details.data['order_id']
         order = client.get_order_by_id(order_id)
-        order_worfkflow_state = order.state
-
-        if not order_worfkflow_state == TwoUKeys.SDN_SANCTIONED_ORDER_STATE:
-            logger.debug(
-                '[CT-OrderSanctionedView] order state for order %s is not %s. Actual value is %s',
-                order_id,
-                TwoUKeys.SDN_SANCTIONED_ORDER_STATE,
-                order_worfkflow_state
-            )
-
-            return Response(status=status.HTTP_200_OK)
+        order_workflow_state = order.state
 
         customer = client.get_customer_by_id(order.customer_id)
 
@@ -133,9 +124,17 @@ class OrderSanctionedView(APIView):
 
             return Response(status=status.HTTP_200_OK)
 
-        lms_user_name = get_edx_lms_user_name(customer)
-        logger.debug('[CT-OrderSanctionedView] calling lms to deactive user %s', lms_user_name)
+        if not order_workflow_state == TwoUKeys.SDN_SANCTIONED_ORDER_STATE:
+            logger.debug(
+                '[CT-OrderSanctionedView] order state for order %s is not %s. Actual value is %s',
+                order_id,
+                TwoUKeys.SDN_SANCTIONED_ORDER_STATE,
+                order_workflow_state
+            )
 
-        # TODO: SONIC-155 use lms_user_name to call LMS endpoint to deactivate user
+            lms_user_name = get_edx_lms_user_name(customer)
+            logger.debug('[CT-OrderSanctionedView] calling lms to deactive user %s', lms_user_name)
+
+            # TODO: SONIC-155 use lms_user_name to call LMS endpoint to deactivate user
 
         return Response(status=status.HTTP_200_OK)
