@@ -345,7 +345,7 @@ REQUEST_READ_TIMEOUT_SECONDS = 5
 FULFILLMENT_TIMEOUT = 7
 
 # API URLs
-ECOMMERCE_URL = 'https://ecommerce_url/'
+ECOMMERCE_URL = 'http://localhost:18130/'
 ECOMMERCE_ADD_TO_BASKET_API_PATH = '/basket/add/'
 TITAN_URL = 'replace-me'
 
@@ -399,7 +399,6 @@ OPEN_EDX_FILTERS_CONFIG = {
             'commerce_coordinator.apps.stripe.pipeline.GetStripeDraftPayment',
             'commerce_coordinator.apps.stripe.pipeline.CreateOrGetStripeDraftPayment',
             'commerce_coordinator.apps.stripe.pipeline.UpdateStripeDraftPayment',
-
         ]
     },
     "org.edx.coordinator.stripe.payment.draft.created.v1": {
@@ -428,6 +427,15 @@ OPEN_EDX_FILTERS_CONFIG = {
         "fail_silently": False,  # TODO: Coordinator filters should NEVER be allowed to fail silently
         "pipeline": [
             'commerce_coordinator.apps.stripe.pipeline.UpdateStripePayment',
+        ]
+    },
+    "org.edx.coordinator.frontend_app_ecommerce.order.receipt_url.requested.v1": {
+        "fail_silently": False,  # TODO: Coordinator filters should NEVER be allowed to fail silently
+        "pipeline": [
+            'commerce_coordinator.apps.ecommerce.pipeline.GetLegacyEcommerceReceiptRedirectUrl',
+            'commerce_coordinator.apps.core.pipeline.HaltIfRedirectUrlProvided',
+            'commerce_coordinator.apps.commercetools.pipeline.FetchOrderDetails',
+            'commerce_coordinator.apps.stripe.pipeline.GetPaymentIntentReceipt'
         ]
     }
 }
@@ -477,7 +485,12 @@ COMMERCETOOLS_CONFIG = {
     'scopes': 'some_scope'
 }
 
-# Setting to keep using deperecated pytz with Django>4
+
+# Will be suffixed with order numbers
+ECOMMERCE_RECEIPT_URL_BASE=f'{ECOMMERCE_URL}checkout/receipt/?order_number='
+COMMERCETOOLS_RECEIPT_URL_BASE='commercetools://setme/'
+
+# Setting to keep using deprecated pytz with Django>4
 USE_DEPRECATED_PYTZ = True
 
 # BRAZE API SETTINGS

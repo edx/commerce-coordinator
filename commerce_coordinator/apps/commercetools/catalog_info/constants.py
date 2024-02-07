@@ -29,3 +29,7 @@ DEFAULT_ORDER_EXPANSION = (
     "discountCodes[*].discountCode",
     "directDiscounts[*]"
 )
+
+PAYMENT_STATUS_INTERFACE_CODE_SUCCEEDED = "succeeded"
+
+EDX_STRIPE_PAYMENT_INTERFACE_NAME = "stripe_edx"

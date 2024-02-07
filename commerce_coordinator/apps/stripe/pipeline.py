@@ -207,3 +207,16 @@ class ConfirmPayment(PipelineStep):
         return {
             'payment_intent_data': payment_intent,
         }
+
+
+class GetPaymentIntentReceipt(PipelineStep):
+    """ Pull the receipt if the payment_intent is set """
+    def run_filter(self, payment_intent_id, **kwargs):
+        if payment_intent_id is None:
+            logger.debug('[GetPaymentIntentReceipt] payment_intent_id not set, skipping.')
+            return PipelineCommand.CONTINUE.value
+
+        stripe_api_client = StripeAPIClient()
+        # TODO: GRM: Implement
+
+        pass

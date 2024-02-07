@@ -13,7 +13,10 @@ from rest_framework.throttling import UserRateThrottle
 from rest_framework.views import APIView
 
 from commerce_coordinator.apps.core.constants import ORDER_HISTORY_PER_SYSTEM_REQ_LIMIT
-from commerce_coordinator.apps.frontend_app_ecommerce.filters import OrderHistoryRequested
+from commerce_coordinator.apps.frontend_app_ecommerce.filters import (
+    OrderHistoryRequested,
+    OrderReceiptRedirectionUrlRequested
+)
 
 logger = logging.getLogger(__name__)
 
@@ -24,6 +27,32 @@ def date_conv(dt: Union[datetime, str]) -> datetime:
     else:
         return dt
 
+class RedirectReceiptView(APIView):
+    """Get the order history for the authenticated user."""
+    permission_classes = [LoginRedirectIfUnauthenticated]
+    throttle_classes = [UserRateThrottle]
+
+    def get(self, request):
+
+        # build parameters
+        params = {
+            'username': request.user.username,
+            "edx_lms_user_id": request.user.lms_user_id,
+            "order_number": request.query_params.get('order_number', None),
+        }
+
+        # deny global queries
+        if not request.user.username:  # pragma: no cover
+            # According to the Django checks this isnt possible with our current user model.
+            # Leaving in incase that changes.
+            raise PermissionDenied(detail="Could not detect username.")
+        if not request.user.lms_user_id:  # pragma: no cover
+            raise PermissionDenied(detail="Could not detect LMS user id.")
+
+        order_data = OrderReceiptRedirectionUrlRequested.run_filter(params)
+
+        # TODO: GRM: Implement
+        return Response([])
 
 class UserOrdersView(APIView):
     """Get the order history for the authenticated user."""

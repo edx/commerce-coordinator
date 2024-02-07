@@ -48,14 +48,14 @@ class PipelineCommand(Enum):
     """
     Special return values for openedx-filters PipelineStep.
 
-    https://github.com/openedx/openedx-filters/blob/2d6b87b5cc4263dd3577fb27c354ec36797979c9/openedx_filters/filters.py#L70-L75
+    https://github.com/openedx/openedx-filters/blob/2d6b87b/openedx_filters/filters.py#L70-L75
     """
 
     CONTINUE = {}
     """Pass unaltered inputs to next pipeline step."""
 
     HALT = None
-    """Abort any remaining pipeline steps for filter."""
+    """Abort any remaining pipeline steps for filter, returning the result of the previous steps (if any)."""
 
 
 class QueryParamPrefixes(Enum):
@@ -90,3 +90,6 @@ class HttpHeadersNames(Enum):
 
 ORDER_HISTORY_PER_SYSTEM_REQ_LIMIT = 200
 """The number of Order History items to pull per Catalog/Ordering System"""
+
+UNIFIED_ORDER_HISTORY_RECEIPT_URL_KEY = 'receipt_url'
+UNIFIED_ORDER_HISTORY_SOURCE_SYSTEM_KEY = 'source_system'
