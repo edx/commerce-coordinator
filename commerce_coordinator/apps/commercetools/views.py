@@ -3,6 +3,7 @@ Views for the commercetools app
 """
 import logging
 
+from commercetools import CommercetoolsError
 from rest_framework import status
 from rest_framework.permissions import IsAdminUser
 from rest_framework.response import Response
@@ -31,6 +32,7 @@ logger = logging.getLogger(__name__)
 SOURCE_SYSTEM = 'commercetools'
 
 
+# noinspection DuplicatedCode
 class OrderFulfillView(APIView):
     """Order Fulfillment View"""
 
@@ -47,7 +49,13 @@ class OrderFulfillView(APIView):
 
         client = CommercetoolsAPIClient()
         order_id = message_details.data['order_id']
-        order = client.get_order_by_id(order_id)
+
+        try:
+            order = client.get_order_by_id(order_id)
+        except CommercetoolsError as _:  # pragma no cover
+            logger.error("Order not found: %s", order_id)
+            return Response(status=status.HTTP_404_NOT_FOUND)
+
         customer = client.get_customer_by_id(order.customer_id)
 
         if not (customer and order and is_edx_lms_order(order)):
@@ -92,11 +100,10 @@ class OrderFulfillView(APIView):
         return Response(status=status.HTTP_200_OK)
 
 
+# noinspection DuplicatedCode
 class OrderSanctionedView(APIView):
     """View to sanction an order and deactivate the lms user"""
     permission_classes = [IsAdminUser]
-
-    # authentication_classes = [] TODO: Update this with OAuth authentication
 
     def post(self, request):
         """
@@ -114,7 +121,13 @@ class OrderSanctionedView(APIView):
 
         client = CommercetoolsAPIClient()
         order_id = message_details.data['order_id']
-        order = client.get_order_by_id(order_id)
+
+        try:
+            order = client.get_order_by_id(order_id)
+        except CommercetoolsError as _:  # pragma no cover
+            logger.error("Order not found: %s", order_id)
+            return Response(status=status.HTTP_404_NOT_FOUND)
+
         order_workflow_state = order.state.obj.key
 
         customer = client.get_customer_by_id(order.customer_id)
