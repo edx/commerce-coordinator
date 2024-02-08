@@ -186,7 +186,8 @@ class CommercetoolsAPIClient:
 
     def get_orders(self, customer: CTCustomer, offset=0,
                    limit=ORDER_HISTORY_PER_SYSTEM_REQ_LIMIT,
-                   expand: ExpandList = DEFAULT_ORDER_EXPANSION) -> PaginatedResult[CTOrder]:
+                   expand: ExpandList = DEFAULT_ORDER_EXPANSION,
+                   order_state="Complete") -> PaginatedResult[CTOrder]:
 
         """
         Call commercetools API overview endpoint for data about historical orders.
@@ -203,8 +204,9 @@ class CommercetoolsAPIClient:
         See sample response in tests.py
 
         """
+        order_where_clause = f"orderState=\"{order_state}\""
         values = self.base_client.orders.query(
-            where="customerId=:cid",
+            where=["customerId=:cid", order_where_clause],
             predicate_var={'cid': customer.id},
             sort=["completedAt desc", "lastModifiedAt desc"],
             limit=limit,

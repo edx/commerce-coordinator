@@ -21,7 +21,9 @@ class GetEcommerceOrders(PipelineStep):
         """
 
         ecommerce_api_client = EcommerceAPIClient()
-        ecommerce_response = ecommerce_api_client.get_orders(params)
+        new_params = params.copy()
+        new_params['page'] = params['page'] + 1
+        ecommerce_response = ecommerce_api_client.get_orders(new_params)
 
         order_data.append(ecommerce_response)
 
