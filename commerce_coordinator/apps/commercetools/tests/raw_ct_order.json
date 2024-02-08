@@ -322,6 +322,36 @@
     "typeId": "cart",
     "id": "b19d2a92-3a9a-449a-aa2a-4118f13f09ad"
   },
+  "state": {
+    "id": "1DD2756E-1CDF-4F80-B0CA-9EE5040B0609",
+    "typeId": "state",
+    "obj": {
+      "id": "2e21a5e7-0636-4594-b1f7-617f306bf977",
+      "version": 4,
+      "createdAt": "2023-11-29T15:27:24.181000+00:00",
+      "lastModifiedAt": "2024-01-02T17:41:53.862000+00:00",
+      "lastModifiedBy": {
+        "clientId": "E1UbNz9SHIG_n4nnSAUP1uW4"
+      },
+      "createdBy": {
+        "clientId": "E1UbNz9SHIG_n4nnSAUP1uW4"
+      },
+      "key": "2u-sdn-order-state",
+      "type": "OrderState",
+      "name": {
+        "en": "Sanctioned",
+        "en-US": "Sanctioned"
+      },
+      "description": {
+        "en": "This order has been sanctioned for an SDN hit",
+        "en-US": "This order has been sanctioned for an SDN hit"
+      },
+      "initial": true,
+      "builtIn": false,
+      "roles": [],
+      "transitions": []
+    }
+  },
   "orderState": "Complete",
   "shipmentState": "Shipped",
   "paymentState": "Paid",
