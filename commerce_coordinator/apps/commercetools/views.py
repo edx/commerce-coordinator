@@ -115,7 +115,7 @@ class OrderSanctionedView(APIView):
         client = CommercetoolsAPIClient()
         order_id = message_details.data['order_id']
         order = client.get_order_by_id(order_id)
-        order_workflow_state = order.state
+        order_workflow_state = order.state.obj.key
 
         customer = client.get_customer_by_id(order.customer_id)
 

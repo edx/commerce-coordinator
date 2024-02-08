@@ -37,6 +37,20 @@ class CTOrderByIdMock(MagicMock):
     return_value = gen_order(EXAMPLE_FULFILLMENT_SIGNAL_PAYLOAD['order_number'])
 
 
+def get_order_with_bad_state():
+    """Modify a canned order to have a bad transition/workflow state key"""
+    order = gen_order(EXAMPLE_FULFILLMENT_SIGNAL_PAYLOAD['order_number'])
+    order.state.obj.key = "XXXXXXX"
+    return order
+
+
+class CTOrderBadStateKeyByIdMock(MagicMock):
+    """
+    A mock get_order_by_id call that always returns with a bad state
+    """
+    return_value = get_order_with_bad_state()
+
+
 class CTCustomerByIdMock(MagicMock):
     """
     A mock get_customer_by_id call that always returns
@@ -49,13 +63,13 @@ class CTCustomerByIdMock(MagicMock):
 @patch('commerce_coordinator.apps.commercetools.views.fulfill_order_placed_signal.send_robust',
        new_callable=FulfillOrderPlacedSignalMock)
 @patch(
-        'commerce_coordinator.apps.commercetools.clients.CommercetoolsAPIClient.get_order_by_id',
-        new_callable=CTOrderByIdMock
-    )
+    'commerce_coordinator.apps.commercetools.clients.CommercetoolsAPIClient.get_order_by_id',
+    new_callable=CTOrderByIdMock
+)
 @patch(
-        'commerce_coordinator.apps.commercetools.clients.CommercetoolsAPIClient.get_customer_by_id',
-        new_callable=CTCustomerByIdMock
-    )
+    'commerce_coordinator.apps.commercetools.clients.CommercetoolsAPIClient.get_customer_by_id',
+    new_callable=CTCustomerByIdMock
+)
 class OrderFulfillViewTests(APITestCase):
     # Disable unused-argument due to global @patch
     # pylint: disable=unused-argument
@@ -76,7 +90,7 @@ class OrderFulfillViewTests(APITestCase):
         super().setUp()
 
         User.objects.create_user(username=self.test_user_username, password=self.test_password)
-        User.objects.create_user(username=self.test_staff_username, password=self.test_password,  is_staff=True)
+        User.objects.create_user(username=self.test_staff_username, password=self.test_password, is_staff=True)
 
     def tearDown(self):
         """Log out any user from client after test ends."""
@@ -148,14 +162,6 @@ class OrderFulfillViewTests(APITestCase):
 
 
 @ddt.ddt
-@patch(
-    'commerce_coordinator.apps.commercetools.clients.CommercetoolsAPIClient.get_order_by_id',
-    new_callable=CTOrderByIdMock
-)
-@patch(
-    'commerce_coordinator.apps.commercetools.clients.CommercetoolsAPIClient.get_customer_by_id',
-    new_callable=CTCustomerByIdMock
-)
 class OrderSanctionedViewTests(APITestCase):
     # Disable unused-argument due to global @patch
     # pylint: disable=unused-argument
@@ -175,7 +181,7 @@ class OrderSanctionedViewTests(APITestCase):
         super().setUp()
 
         User.objects.create_user(username=self.test_user_username, password=self.test_password)
-        User.objects.create_user(username=self.test_staff_username, password=self.test_password,  is_staff=True)
+        User.objects.create_user(username=self.test_staff_username, password=self.test_password, is_staff=True)
 
     def tearDown(self):
         """Log out any user from client after test ends."""
@@ -183,6 +189,14 @@ class OrderSanctionedViewTests(APITestCase):
         super().tearDown()
         self.client.logout()
 
+    @patch(
+        'commerce_coordinator.apps.commercetools.clients.CommercetoolsAPIClient.get_order_by_id',
+        new_callable=CTOrderByIdMock
+    )
+    @patch(
+        'commerce_coordinator.apps.commercetools.clients.CommercetoolsAPIClient.get_customer_by_id',
+        new_callable=CTCustomerByIdMock
+    )
     def test_view_returns_ok(self, mock_customer, mock_order):
         """Check authorized user requesting sanction receives a HTTP 200 OK."""
 
@@ -195,6 +209,14 @@ class OrderSanctionedViewTests(APITestCase):
         # Check 200 OK
         self.assertEqual(response.status_code, 200)
 
+    @patch(
+        'commerce_coordinator.apps.commercetools.clients.CommercetoolsAPIClient.get_order_by_id',
+        new_callable=CTOrderByIdMock
+    )
+    @patch(
+        'commerce_coordinator.apps.commercetools.clients.CommercetoolsAPIClient.get_customer_by_id',
+        new_callable=CTCustomerByIdMock
+    )
     def test_view_returns_expected_error(self, mock_customer, mock_order):
         """Check authorized account requesting fulfillment with bad inputs receive an expected error."""
 
@@ -214,6 +236,14 @@ class OrderSanctionedViewTests(APITestCase):
         }
         self.assertEqual(response.json(), expected_response)
 
+    @patch(
+        'commerce_coordinator.apps.commercetools.clients.CommercetoolsAPIClient.get_order_by_id',
+        new_callable=CTOrderByIdMock
+    )
+    @patch(
+        'commerce_coordinator.apps.commercetools.clients.CommercetoolsAPIClient.get_customer_by_id',
+        new_callable=CTCustomerByIdMock
+    )
     def test_view_returns_expected_error_no_order(self, mock_customer, mock_order):
         """Check authorized account requesting fulfillment unable to get customer receive an expected error."""
         mock_customer.return_value = None
@@ -225,96 +255,22 @@ class OrderSanctionedViewTests(APITestCase):
 
         self.assertEqual(response.status_code, 200)
 
-# """ Commercetools Order History testcases """
-# from unittest.mock import MagicMock, patch
-#
-# from django.contrib.auth import get_user_model
-# from django.urls import reverse
-# from rest_framework.test import APITestCase
-#
-# from commerce_coordinator.apps.commercetools.clients import PaginatedResult
-# from commerce_coordinator.apps.commercetools.tests.conftest import gen_order
-# from commerce_coordinator.apps.commercetools.tests.test_data import gen_customer
-# from commerce_coordinator.apps.core.tests.utils import uuid4_str
-# from commerce_coordinator.apps.frontend_app_ecommerce.tests.test_views import EcommerceClientMock
-#
-# User = get_user_model()
-#
-# orders = [gen_order(uuid4_str())]
-#
-#
-# class CTOrdersForCustomerMock(MagicMock):
-#     """A mock EcommerceAPIClient that always returns ECOMMERCE_REQUEST_EXPECTED_RESPONSE."""
-#     return_value = (
-#         PaginatedResult(orders, len(orders), 0),
-#         gen_customer(email='test@example.com', un="test")
-#     )
-#
-#
-# class OrderHistoryViewTests(APITestCase):
-#     """
-#     Tests for order history view
-#     """
-#
-#     # Define test user properties
-#     test_user_username = 'test'
-#     test_user_email = 'test@example.com'
-#     test_user_password = 'secret'
-#     url = reverse('commercetools:order_history')
-#
-#     def setUp(self):
-#         """Create test user before test starts."""
-#         super().setUp()
-#         self.user = User.objects.create_user(
-#             self.test_user_username,
-#             self.test_user_email,
-#             self.test_user_password,
-#             lms_user_id=127,
-#             # TODO: Remove is_staff=True
-#             is_staff=True,
-#         )
-#
-#     def tearDown(self):
-#         """Log out any user from the client after test ends."""
-#         super().tearDown()
-#         self.client.logout()
-#
-#     @patch(
-#         'commerce_coordinator.apps.ecommerce.clients.EcommerceAPIClient.get_orders',
-#         new_callable=EcommerceClientMock
-#     )
-#     @patch(
-#         'commerce_coordinator.apps.commercetools.clients.CommercetoolsAPIClient.get_orders_for_customer',
-#         new_callable=CTOrdersForCustomerMock
-#     )
-#     def test_order_history_functional(self, _, __):
-#         """Happy path test function for CT Order History"""
-#         self.client.force_authenticate(user=self.user)
-#         query_params = {}  # we don't accept any rn
-#
-#         response = self.client.get(self.url, data=query_params)
-#         self.assertEqual(response.status_code, 200)
-#
-#         response_json: dict = response.json()
-#
-#         self.assertIn('order_data', response_json.keys())
-#         self.assertEqual(2, len(response_json['order_data']))
-#         # because of how the dates work within this test the old system value should be second as its date is older
-#         self.assertEqual(response_json['order_data'][1]['payment_processor'], 'cybersource-rest')
-#
-#     def test_order_history_denied(self):
-#         """bad/incomplete auth test function for CT Order History"""
-#
-#         self.client.force_authenticate(user=User.objects.create_user(
-#                 "joey",
-#                 "something@something.com",
-#                 "shh its @ secret!",
-#                 # TODO: Remove is_staff=True
-#                 is_staff=True,
-#             ))
-#         query_params = {}  # we don't accept any rn
-#
-#         response = self.client.get(self.url, data=query_params)
-#         self.assertEqual(response.status_code, 403)
-#
-#         self.client.logout()
+    @patch(
+        'commerce_coordinator.apps.commercetools.clients.CommercetoolsAPIClient.get_order_by_id',
+        new_callable=CTOrderBadStateKeyByIdMock
+    )
+    @patch(
+        'commerce_coordinator.apps.commercetools.clients.CommercetoolsAPIClient.get_customer_by_id',
+        new_callable=CTCustomerByIdMock
+    )
+    def test_view_returns_ok_bad_order_state(self, mock_customer, mock_order):
+        """Check authorized user requesting sanction receives a HTTP 200 OK."""
+
+        # Login
+        self.client.login(username=self.test_staff_username, password=self.test_password)
+
+        # Send request
+        response = self.client.post(self.url, data=EXAMPLE_COMMERCETOOLS_ORDER_SANCTIONED_MESSAGE, format='json')
+
+        # Check 200 OK
+        self.assertEqual(response.status_code, 200)
