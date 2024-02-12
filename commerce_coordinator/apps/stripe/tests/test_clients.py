@@ -3,6 +3,7 @@
 from unittest.mock import MagicMock, patch
 
 import ddt
+import mock
 import stripe
 from django.conf import settings
 from django.test import override_settings
@@ -409,4 +410,126 @@ class TestStripeAPIClient(CoordinatorClientTestCase):
                         'code': 'payment_intent_unexpected_state',
                     },
                 },
+            )
+
+    def test_refund_payment_intent_success(self):
+        self.assertJSONClientResponse(
+            uut=self.client.refund_payment_intent,
+            input_kwargs={
+                'order_uuid': '123',
+                'payment_intent_id': TEST_PAYMENT_INTENT_ID,
+                'amount': 100
+            },
+            expected_request={
+                'payment_intent': [TEST_PAYMENT_INTENT_ID],
+                'amount': ['10000']
+            },
+            request_type='query_string',
+            mock_url='https://api.stripe.com/v1/refunds',
+            mock_response={
+                'id': 'mock_id',
+                'status': 'succeeded'
+            },
+            expected_output='mock_id'
+        )
+
+    def test_refund_payment_intent_returns_none(self):
+        self.assertJSONClientResponse(
+            uut=self.client.refund_payment_intent,
+            input_kwargs={
+                'order_uuid': '123',
+                'payment_intent_id': TEST_PAYMENT_INTENT_ID,
+                'amount': 100
+            },
+            expected_request={
+                'payment_intent': [TEST_PAYMENT_INTENT_ID],
+                'amount': ['10000']
+            },
+            request_type='query_string',
+            mock_url='https://api.stripe.com/v1/refunds',
+            mock_response={
+                'id': 'mock_id',
+                'status': 'not_succeeded'
+            },
+            expected_output=None
+        )
+
+    def test_refund_payment_intent_error(self):
+        with self.assertRaises(stripe.error.APIError):
+            self.assertJSONClientResponse(
+                uut=self.client.refund_payment_intent,
+                input_kwargs={
+                    'order_uuid': '123',
+                    'payment_intent_id': TEST_PAYMENT_INTENT_ID,
+                    'amount': 100
+                },
+                expected_request={
+                    'payment_intent': [TEST_PAYMENT_INTENT_ID],
+                    'amount': ['10000']
+                },
+                request_type='query_string',
+                mock_url='https://api.stripe.com/v1/refunds',
+                mock_status=400
+            )
+
+    def test_refund_payment_intent_error_invalid_request(self):
+        """
+        Verify InvalidRequest errors with the charge_already_refunded code
+        return the id of the refund that already took place.
+        """
+        with mock.patch('stripe.Refund.list') as list_mock:
+            refund = stripe.Refund.construct_from({
+                'id': '946',
+                'status': 'succeeded'
+            }, 'fake-key')
+            list_mock.return_value = {
+                'data': [refund]
+            }
+            self.assertJSONClientResponse(
+                uut=self.client.refund_payment_intent,
+                input_kwargs={
+                    'order_uuid': '123',
+                    'payment_intent_id': TEST_PAYMENT_INTENT_ID,
+                    'amount': 100
+                },
+                expected_request={
+                    'payment_intent': [TEST_PAYMENT_INTENT_ID],
+                    'amount': ['10000']
+                },
+                request_type='query_string',
+                mock_url='https://api.stripe.com/v1/refunds',
+                mock_status=400,
+                mock_response={
+                    'error': {
+                        'code': 'charge_already_refunded',
+                    }
+                },
+                expected_output='946'
+            )
+
+    def test_refund_payment_intent_error_invalid_request_not_already_refunded(self):
+        """
+        Verify InvalidRequest errors with any non "already_refunded" codes
+        raise an error.
+        """
+        with self.assertRaises(stripe.error.InvalidRequestError):
+            self.assertJSONClientResponse(
+                uut=self.client.refund_payment_intent,
+                input_kwargs={
+                    'order_uuid': '123',
+                    'payment_intent_id': TEST_PAYMENT_INTENT_ID,
+                    'amount': 100
+                },
+                expected_request={
+                    'payment_intent': [TEST_PAYMENT_INTENT_ID],
+                    'amount': ['10000']
+                },
+                request_type='query_string',
+                mock_url='https://api.stripe.com/v1/refunds',
+                mock_status=400,
+                mock_response={
+                    'error': {
+                        'code': 'non_already_refunded',
+                    }
+                }
             )

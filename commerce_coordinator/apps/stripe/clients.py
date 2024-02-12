@@ -6,6 +6,7 @@ from celery.utils.log import get_task_logger
 from django.conf import settings
 
 from commerce_coordinator.apps.core import serializers
+from commerce_coordinator.apps.stripe.constants import StripeRefundStatus
 
 # Use special Celery logger for tasks client calls.
 logger = get_task_logger(__name__)
@@ -252,3 +253,50 @@ class StripeAPIClient:
             raise
 
         return confirm_api_response
+
+    def refund_payment_intent(
+            self,
+            order_uuid,
+            payment_intent_id,
+            amount
+    ):
+        """
+        Issues Stripe refund for desired order.
+
+        Args:
+            order_uuid (str): The identifier of the order.
+            payment_intent_id (str): The Stripe PaymentIntent id to look up.
+            amount (decimal): The amount to refund.
+
+        Returns:
+            The identifier of refund response from Stripe.
+
+        See:
+            https://stripe.com/docs/api/refunds/create
+        """
+        try:
+            # Stripe requires amount to be in cents. "amount" is a Decimal object to the hundredths place
+            amount_in_cents = int(amount * 100)
+            refund = stripe.Refund.create(payment_intent=payment_intent_id, amount=amount_in_cents)
+        except stripe.error.InvalidRequestError as err:
+            if err.code == 'charge_already_refunded':
+                refund = stripe.Refund.list(payment_intent=payment_intent_id, limit=1)['data'][0]
+                msg = 'Skipping issuing credit (via Stripe) for order [{}] because charge was already refunded.'.format(
+                    order_uuid)
+                logger.warning(msg)
+            else:
+                msg = 'An error occurred while attempting to issue a credit (via Stripe) for order [{}].'.format(
+                    order_uuid)
+                logger.exception(msg)
+                raise err
+        except Exception as err:
+            msg = 'An error occurred while attempting to issue a credit (via Stripe) for order [{}].'.format(
+                order_uuid)
+            logger.exception(msg)
+            raise err
+
+        if refund.status != StripeRefundStatus.REFUND_SUCCESS:
+            logger.exception('Refund for order [%s] was unsuccessful', order_uuid)
+            return None
+
+        return refund.id
