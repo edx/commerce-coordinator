@@ -289,22 +289,22 @@ class OrderSanctionedViewTests(APITestCase):
         # Check 200 OK
         self.assertEqual(response.status_code, 200)
 
-        @patch(
-            'commerce_coordinator.apps.commercetools.clients.CommercetoolsAPIClient.get_order_by_id',
-            new_callable=CTOrderMissingStateByIdMock
-        )
-        @patch(
-            'commerce_coordinator.apps.commercetools.clients.CommercetoolsAPIClient.get_customer_by_id',
-            new_callable=CTCustomerByIdMock
-        )
-        def test_view_returns_ok_missing_order_state(self, mock_customer, mock_order):
-            """Check authorized with missing order user requesting sanction receives a HTTP 200 OK."""
+    @patch(
+        'commerce_coordinator.apps.commercetools.clients.CommercetoolsAPIClient.get_order_by_id',
+        new_callable=CTOrderMissingStateByIdMock
+    )
+    @patch(
+        'commerce_coordinator.apps.commercetools.clients.CommercetoolsAPIClient.get_customer_by_id',
+        new_callable=CTCustomerByIdMock
+    )
+    def test_view_returns_ok_missing_order_state(self, mock_customer, mock_order):
+        """Check authorized with missing order user requesting sanction receives a HTTP 200 OK."""
 
-            # Login
-            self.client.login(username=self.test_staff_username, password=self.test_password)
+        # Login
+        self.client.login(username=self.test_staff_username, password=self.test_password)
 
-            # Send request
-            response = self.client.post(self.url, data=EXAMPLE_COMMERCETOOLS_ORDER_SANCTIONED_MESSAGE, format='json')
+        # Send request
+        response = self.client.post(self.url, data=EXAMPLE_COMMERCETOOLS_ORDER_SANCTIONED_MESSAGE, format='json')
 
-            # Check 200 OK
-            self.assertEqual(response.status_code, 200)
+        # Check 200 OK
+        self.assertEqual(response.status_code, 200)
