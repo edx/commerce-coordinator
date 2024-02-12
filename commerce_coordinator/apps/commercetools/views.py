@@ -12,6 +12,7 @@ from rest_framework.views import APIView
 from commerce_coordinator.apps.commercetools.catalog_info.constants import TwoUKeys
 from commerce_coordinator.apps.commercetools.serializers import OrderFulfillViewInputSerializer
 from commerce_coordinator.apps.commercetools.signals import fulfill_order_placed_signal
+
 from .catalog_info.edx_utils import (
     get_edx_items,
     get_edx_lms_user_id,
