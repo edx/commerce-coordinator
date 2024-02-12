@@ -26,6 +26,6 @@ def on_after_setup_task_logger(**kwargs):
     """
     Dive deeper into calls to log debug messages in tasks if Django logging level is also set to debug.
     """
-    if django.conf.settings.DEBUG:
+    if django.conf.settings.DEBUG:  # pragma no cover
         logger = kwargs["logger"]
         logger.setLevel(logging.DEBUG)
