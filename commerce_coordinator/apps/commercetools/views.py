@@ -12,7 +12,6 @@ from rest_framework.views import APIView
 from commerce_coordinator.apps.commercetools.catalog_info.constants import TwoUKeys
 from commerce_coordinator.apps.commercetools.serializers import OrderFulfillViewInputSerializer
 from commerce_coordinator.apps.commercetools.signals import fulfill_order_placed_signal
-
 from .catalog_info.edx_utils import (
     get_edx_items,
     get_edx_lms_user_id,
@@ -136,9 +135,9 @@ class OrderSanctionedView(APIView):
             return Response(status=status.HTTP_404_NOT_FOUND)
 
         order_workflow_state = None
-        if order.state and order.state.obj: # it should never be that we have one and not the other. # pragma no cover
+        if order.state and order.state.obj:  # it should never be that we have one and not the other. # pragma no cover
             order_workflow_state = order.state.obj.key
-        else: # pragma no cover
+        else:  # pragma no cover
             logger.debug('[CT-OrderSanctionedView] order %s has no workflow/trasition state', order_id)
 
         try:
