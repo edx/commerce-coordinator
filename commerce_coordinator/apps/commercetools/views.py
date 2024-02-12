@@ -133,8 +133,7 @@ class OrderSanctionedView(APIView):
         try:
             order = client.get_order_by_id(order_id)
         except CommercetoolsError as err:  # pragma no cover
-            logger.error("[CT-OrderSanctionedView] Order not found: %s", order_id)
-            logger.error(f'[CT-OrderSanctionedView] CT error {err}, {err.errors}')
+            logger.error(f'[CT-OrderSanctionedView] Order not found: {order_id} with CT error {err}, {err.errors}')
             return Response(status=status.HTTP_404_NOT_FOUND)
 
         order_workflow_state = None
@@ -146,8 +145,8 @@ class OrderSanctionedView(APIView):
         try:
             customer = client.get_customer_by_id(order.customer_id)
         except CommercetoolsError as err:  # pragma no cover
-            logger.error("[CT-OrderSanctionedView] Customer not found: %s for order %s", order.customer_idm, order_id)
-            logger.error(f'[CT-OrderSanctionedView] CT error {err}, {err.errors}')
+            logger.error(f'[CT-OrderSanctionedView]  Customer not found: {order.customer_id} for order {order_id} with '
+                         f'CT error {err}, {err.errors}')
             return Response(status=status.HTTP_404_NOT_FOUND)
 
         if not (customer and order and is_edx_lms_order(order)):
