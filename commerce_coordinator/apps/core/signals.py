@@ -15,7 +15,7 @@ logger = logging.getLogger(__name__)
 test_signal = CoordinatorSignal()
 
 
-def test_receiver_exception(sender, **kwargs):
+def test_receiver_exception(sender, **kwargs):   # pragma no cover
     """
     Output some debug information and throw an error.
 
@@ -26,7 +26,7 @@ def test_receiver_exception(sender, **kwargs):
     raise Exception("Oh no, something went wrong!")  # pylint: disable=broad-exception-raised
 
 
-def test_celery_task(sender, **kwargs):
+def test_celery_task(sender, **kwargs):   # pragma no cover
     logger.info(f"Queuing Celery task debug_task from sender '{sender}'.")
 
     # This takes places our call to the Celery task on the redis queue. The actual debug_task function will be called

@@ -52,11 +52,17 @@ class OrderFulfillView(APIView):
 
         try:
             order = client.get_order_by_id(order_id)
-        except CommercetoolsError as _:  # pragma no cover
-            logger.error("Order not found: %s", order_id)
+        except CommercetoolsError as err:  # pragma no cover
+            logger.error("[CT-OrderFulfillView] Order not found: %s", order_id)
+            logger.error(f'[CT-OrderFulfillView] CT error {err}, {err.errors}')
             return Response(status=status.HTTP_404_NOT_FOUND)
 
-        customer = client.get_customer_by_id(order.customer_id)
+        try:
+            customer = client.get_customer_by_id(order.customer_id)
+        except CommercetoolsError as err:  # pragma no cover
+            logger.error("[CT-OrderFulfillView] Customer not found: %s for order %s", order.customer_idm, order_id)
+            logger.error(f'[CT-OrderFulfillView] CT error {err}, {err.errors}')
+            return Response(status=status.HTTP_404_NOT_FOUND)
 
         if not (customer and order and is_edx_lms_order(order)):
             logger.debug('[CT-OrderFulfillView] order %s is not an edX order', order_id)
@@ -87,14 +93,16 @@ class OrderFulfillView(APIView):
                 'course_id': get_edx_product_course_run_key(item),  # likely not correct
             })
 
-            if serializer.is_valid(raise_exception=True):
-                payload = serializer.validated_data
-                fulfill_order_placed_signal.send_robust(
-                    sender=self.__class__,
-                    **payload
-                )
-                product_information = extract_ct_product_information_for_braze_canvas(item)
-                canvas_entry_properties["products"].append(product_information)
+            # the following throws and thus doesn't need to be a conditional
+            serializer.is_valid(raise_exception=True)  # pragma no cover
+
+            payload = serializer.validated_data
+            fulfill_order_placed_signal.send_robust(
+                sender=self.__class__,
+                **payload
+            )
+            product_information = extract_ct_product_information_for_braze_canvas(item)
+            canvas_entry_properties["products"].append(product_information)
         send_order_confirmation_email(lms_user_id, customer.email, canvas_entry_properties)
 
         return Response(status=status.HTTP_200_OK)
@@ -124,17 +132,25 @@ class OrderSanctionedView(APIView):
 
         try:
             order = client.get_order_by_id(order_id)
-        except CommercetoolsError as _:  # pragma no cover
-            logger.error("Order not found: %s", order_id)
+        except CommercetoolsError as err:  # pragma no cover
+            logger.error(f'[CT-OrderSanctionedView] Order not found: {order_id} with CT error {err}, {err.errors}')
             return Response(status=status.HTTP_404_NOT_FOUND)
 
-        order_workflow_state = order.state.obj.key
+        order_workflow_state = None
+        if order.state and order.state.obj:  # it should never be that we have one and not the other. # pragma no cover
+            order_workflow_state = order.state.obj.key
+        else:  # pragma no cover
+            logger.debug('[CT-OrderSanctionedView] order %s has no workflow/trasition state', order_id)
 
-        customer = client.get_customer_by_id(order.customer_id)
+        try:
+            customer = client.get_customer_by_id(order.customer_id)
+        except CommercetoolsError as err:  # pragma no cover
+            logger.error(f'[CT-OrderSanctionedView]  Customer not found: {order.customer_id} for order {order_id} with '
+                         f'CT error {err}, {err.errors}')
+            return Response(status=status.HTTP_404_NOT_FOUND)
 
         if not (customer and order and is_edx_lms_order(order)):
             logger.debug('[CT-OrderSanctionedView] order %s is not an edX order', order_id)
-
             return Response(status=status.HTTP_200_OK)
 
         if not order_workflow_state == TwoUKeys.SDN_SANCTIONED_ORDER_STATE:

@@ -9,5 +9,5 @@ logger = get_task_logger(__name__)
 
 
 @shared_task()
-def debug_task():
+def debug_task():  # pragma no cover
     logger.info('Core debug_task fired.')

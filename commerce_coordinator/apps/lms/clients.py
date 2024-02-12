@@ -41,7 +41,7 @@ class LMSAPIClient(BaseEdxOAuthClient):
         """
         Send a POST request to a url with json payload.
         """
-        if not timeout:
+        if not timeout:   # pragma no cover
             timeout = self.normal_timeout
         try:
             headers = {

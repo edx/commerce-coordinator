@@ -37,10 +37,17 @@ class CTOrderByIdMock(MagicMock):
     return_value = gen_order(EXAMPLE_FULFILLMENT_SIGNAL_PAYLOAD['order_number'])
 
 
-def get_order_with_bad_state():
+def get_order_with_bad_state_key():
     """Modify a canned order to have a bad transition/workflow state key"""
     order = gen_order(EXAMPLE_FULFILLMENT_SIGNAL_PAYLOAD['order_number'])
     order.state.obj.key = "XXXXXXX"
+    return order
+
+
+def get_order_with_missing_state():
+    """Modify a canned order to have a bad transition/workflow state key"""
+    order = gen_order(EXAMPLE_FULFILLMENT_SIGNAL_PAYLOAD['order_number'])
+    order.state = None
     return order
 
 
@@ -48,7 +55,14 @@ class CTOrderBadStateKeyByIdMock(MagicMock):
     """
     A mock get_order_by_id call that always returns with a bad state
     """
-    return_value = get_order_with_bad_state()
+    return_value = get_order_with_bad_state_key()
+
+
+class CTOrderMissingStateByIdMock(MagicMock):
+    """
+    A mock get_order_by_id call that always returns with a missing state
+    """
+    return_value = get_order_with_missing_state()
 
 
 class CTCustomerByIdMock(MagicMock):
@@ -131,7 +145,7 @@ class OrderFulfillViewTests(APITestCase):
         mock_send_email.assert_called_once()
 
     def test_view_returns_expected_error(self, mock_customer, mock_order, mock_signal):
-        """Check authorized account requesting fulfillment with bad inputs receive an expected error."""
+        """Check an authorized account requesting fulfillment with bad inputs receive an expected error."""
 
         # Login
         self.client.login(username=self.test_staff_username, password=self.test_password)
@@ -150,7 +164,7 @@ class OrderFulfillViewTests(APITestCase):
         self.assertEqual(response.json(), expected_response)
 
     def test_view_returns_expected_error_no_order(self, mock_customer, mock_order, mock_signal):
-        """Check authorized account requesting fulfillment unable to get customer receive an expected error."""
+        """Check an authorized account requesting fulfillment unable to get customer to receive an expected error."""
         mock_customer.return_value = None
         # Login
         self.client.login(username=self.test_staff_username, password=self.test_password)
@@ -265,6 +279,26 @@ class OrderSanctionedViewTests(APITestCase):
     )
     def test_view_returns_ok_bad_order_state(self, mock_customer, mock_order):
         """Check authorized user requesting sanction receives a HTTP 200 OK."""
+
+        # Login
+        self.client.login(username=self.test_staff_username, password=self.test_password)
+
+        # Send request
+        response = self.client.post(self.url, data=EXAMPLE_COMMERCETOOLS_ORDER_SANCTIONED_MESSAGE, format='json')
+
+        # Check 200 OK
+        self.assertEqual(response.status_code, 200)
+
+    @patch(
+        'commerce_coordinator.apps.commercetools.clients.CommercetoolsAPIClient.get_order_by_id',
+        new_callable=CTOrderMissingStateByIdMock
+    )
+    @patch(
+        'commerce_coordinator.apps.commercetools.clients.CommercetoolsAPIClient.get_customer_by_id',
+        new_callable=CTCustomerByIdMock
+    )
+    def test_view_returns_ok_missing_order_state(self, mock_customer, mock_order):
+        """Check authorized with missing order user requesting sanction receives a HTTP 200 OK."""
 
         # Login
         self.client.login(username=self.test_staff_username, password=self.test_password)
