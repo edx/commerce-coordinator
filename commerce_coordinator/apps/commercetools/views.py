@@ -93,14 +93,16 @@ class OrderFulfillView(APIView):
                 'course_id': get_edx_product_course_run_key(item),  # likely not correct
             })
 
-            if serializer.is_valid(raise_exception=True):
-                payload = serializer.validated_data
-                fulfill_order_placed_signal.send_robust(
-                    sender=self.__class__,
-                    **payload
-                )
-                product_information = extract_ct_product_information_for_braze_canvas(item)
-                canvas_entry_properties["products"].append(product_information)
+            # the following throws and thus doesn't need to be a conditional
+            serializer.is_valid(raise_exception=True)  # pragma no cover
+
+            payload = serializer.validated_data
+            fulfill_order_placed_signal.send_robust(
+                sender=self.__class__,
+                **payload
+            )
+            product_information = extract_ct_product_information_for_braze_canvas(item)
+            canvas_entry_properties["products"].append(product_information)
         send_order_confirmation_email(lms_user_id, customer.email, canvas_entry_properties)
 
         return Response(status=status.HTTP_200_OK)

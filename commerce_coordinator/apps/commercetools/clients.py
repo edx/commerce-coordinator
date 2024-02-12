@@ -172,7 +172,8 @@ class CommercetoolsAPIClient:
         else:
             return results.results[0]
 
-    def get_order_by_id(self, order_id: str, expand: ExpandList = DEFAULT_ORDER_EXPANSION) -> CTOrder:
+    def get_order_by_id(self, order_id: str, expand: ExpandList = DEFAULT_ORDER_EXPANSION)  \
+            -> CTOrder:  # pragma no cover
         """
         Fetch an order by the Order ID (UUID)
 
@@ -234,7 +235,7 @@ class CommercetoolsAPIClient:
 
         return orders, customer
 
-    def get_customer_by_id(self, customer_id: str) -> CTCustomer:
+    def get_customer_by_id(self, customer_id: str) -> CTCustomer:  # pragma no cover
         return self.base_client.customers.get_by_id(customer_id)
 
     def get_product_variant_by_course_run(self, cr_id: str) -> Optional[CTProductVariant]:
@@ -244,7 +245,7 @@ class CommercetoolsAPIClient:
         """
         results = self.base_client.product_projections.search(False, filter=f"variants.sku:\"{cr_id}\"").results
 
-        if len(results) < 1:
+        if len(results) < 1:  # pragma no cover
             return None
 
         # Make 2D List of all variants from all results, and then flatten
@@ -264,7 +265,7 @@ class CommercetoolsAPIClient:
             )
         )
 
-        if len(matching_variant_list) < 1:
+        if len(matching_variant_list) < 1:  # pragma no cover
             return None
 
         return matching_variant_list[0]

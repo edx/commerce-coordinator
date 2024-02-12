@@ -145,7 +145,7 @@ class OrderFulfillViewTests(APITestCase):
         mock_send_email.assert_called_once()
 
     def test_view_returns_expected_error(self, mock_customer, mock_order, mock_signal):
-        """Check authorized account requesting fulfillment with bad inputs receive an expected error."""
+        """Check an authorized account requesting fulfillment with bad inputs receive an expected error."""
 
         # Login
         self.client.login(username=self.test_staff_username, password=self.test_password)
@@ -164,7 +164,7 @@ class OrderFulfillViewTests(APITestCase):
         self.assertEqual(response.json(), expected_response)
 
     def test_view_returns_expected_error_no_order(self, mock_customer, mock_order, mock_signal):
-        """Check authorized account requesting fulfillment unable to get customer receive an expected error."""
+        """Check an authorized account requesting fulfillment unable to get customer to receive an expected error."""
         mock_customer.return_value = None
         # Login
         self.client.login(username=self.test_staff_username, password=self.test_password)
