@@ -3,6 +3,7 @@ branch = True
 data_file = .coverage
 source=commerce_coordinator
 omit =
+    */tests/*
     commerce_coordinator/settings/*
     commerce_coordinator/conf/*
     *wsgi.py
