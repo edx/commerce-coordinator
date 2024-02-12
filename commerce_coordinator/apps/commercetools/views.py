@@ -52,11 +52,17 @@ class OrderFulfillView(APIView):
 
         try:
             order = client.get_order_by_id(order_id)
-        except CommercetoolsError as _:  # pragma no cover
-            logger.error("Order not found: %s", order_id)
+        except CommercetoolsError as err:  # pragma no cover
+            logger.error("[CT-OrderFulfillView] Order not found: %s", order_id)
+            logger.error(f'[CT-OrderFulfillView] CT error {err}, {err.errors}')
             return Response(status=status.HTTP_404_NOT_FOUND)
 
-        customer = client.get_customer_by_id(order.customer_id)
+        try:
+            customer = client.get_customer_by_id(order.customer_id)
+        except CommercetoolsError as err:  # pragma no cover
+            logger.error("[CT-OrderFulfillView] Customer not found: %s for order %s", order.customer_idm, order_id)
+            logger.error(f'[CT-OrderFulfillView] CT error {err}, {err.errors}')
+            return Response(status=status.HTTP_404_NOT_FOUND)
 
         if not (customer and order and is_edx_lms_order(order)):
             logger.debug('[CT-OrderFulfillView] order %s is not an edX order', order_id)
@@ -124,17 +130,26 @@ class OrderSanctionedView(APIView):
 
         try:
             order = client.get_order_by_id(order_id)
-        except CommercetoolsError as _:  # pragma no cover
-            logger.error("Order not found: %s", order_id)
+        except CommercetoolsError as err:  # pragma no cover
+            logger.error("[CT-OrderSanctionedView] Order not found: %s", order_id)
+            logger.error(f'[CT-OrderSanctionedView] CT error {err}, {err.errors}')
             return Response(status=status.HTTP_404_NOT_FOUND)
 
-        order_workflow_state = order.state.obj.key
+        order_workflow_state = None
+        if order.state and order.state.obj: # it should never be that we have one and not the other. # pragma no cover
+            order_workflow_state = order.state.obj.key
+        else: # pragma no cover
+            logger.debug('[CT-OrderSanctionedView] order %s has no workflow/trasition state', order_id)
 
-        customer = client.get_customer_by_id(order.customer_id)
+        try:
+            customer = client.get_customer_by_id(order.customer_id)
+        except CommercetoolsError as err:  # pragma no cover
+            logger.error("[CT-OrderSanctionedView] Customer not found: %s for order %s", order.customer_idm, order_id)
+            logger.error(f'[CT-OrderSanctionedView] CT error {err}, {err.errors}')
+            return Response(status=status.HTTP_404_NOT_FOUND)
 
         if not (customer and order and is_edx_lms_order(order)):
             logger.debug('[CT-OrderSanctionedView] order %s is not an edX order', order_id)
-
             return Response(status=status.HTTP_200_OK)
 
         if not order_workflow_state == TwoUKeys.SDN_SANCTIONED_ORDER_STATE:
