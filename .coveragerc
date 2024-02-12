@@ -10,3 +10,5 @@ omit =
     */admin.py
     */static/*
     */templates/*
+    commerce_coordinator/celery.py
+    commerce_coordinator/apps/core/tasks.py
