@@ -434,7 +434,7 @@ OPEN_EDX_FILTERS_CONFIG = {
         "pipeline": [
             'commerce_coordinator.apps.rollout.pipeline.DetermineActiveOrderManagementSystemByOrder',
             'commerce_coordinator.apps.ecommerce.pipeline.GetLegacyEcommerceReceiptRedirectUrl',
-            'commerce_coordinator.apps.core.pipeline.HaltIfRedirectUrlProvided',
+            'commerce_coordinator.apps.rollout.pipeline.HaltIfRedirectUrlProvided',
             'commerce_coordinator.apps.commercetools.pipeline.FetchOrderDetails',
             'commerce_coordinator.apps.stripe.pipeline.GetPaymentIntentReceipt'
         ]

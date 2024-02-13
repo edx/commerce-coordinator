@@ -27,12 +27,15 @@ def date_conv(dt: Union[datetime, str]) -> datetime:
     else:
         return dt
 
+
+# noinspection PyMethodMayBeStatic
 class RedirectReceiptView(APIView):
     """Get the order history for the authenticated user."""
     permission_classes = [LoginRedirectIfUnauthenticated]
     throttle_classes = [UserRateThrottle]
 
     def get(self, request):
+        """Get the order history for the authenticated user."""
 
         # build parameters
         params = {

@@ -1,3 +1,5 @@
+""" Rollout specific pipeline filters/steps """
+
 import logging
 
 from openedx_filters import PipelineStep
@@ -6,7 +8,7 @@ from requests import HTTPError
 
 from commerce_coordinator.apps.commercetools.clients import CommercetoolsAPIClient
 from commerce_coordinator.apps.commercetools.constants import COMMERCETOOLS_ORDER_MANAGEMENT_SYSTEM
-from commerce_coordinator.apps.commercetools_frontend.constants import COMMERCETOOLS, COMMERCETOOLS_FRONTEND
+from commerce_coordinator.apps.commercetools_frontend.constants import COMMERCETOOLS_FRONTEND
 from commerce_coordinator.apps.core.constants import PipelineCommand
 from commerce_coordinator.apps.ecommerce.constarnts import ECOMMERCE_ORDER_MANAGEMENT_SYSTEM
 from commerce_coordinator.apps.enterprise_learner.utils import is_user_enterprise_learner
@@ -25,7 +27,7 @@ class GetActiveOrderManagementSystem(PipelineStep):
     and waffle flag's value.
     """
 
-    def run_filter(self, request):
+    def run_filter(self, request):  # pylint: disable=arguments-differ
         """
         Execute a filter with the signature specified.
         Arguments:
@@ -52,15 +54,15 @@ class GetActiveOrderManagementSystem(PipelineStep):
                 )
 
         if ((is_redirect_to_commercetools_enabled_for_user(request) and commercetools_available_course is not None)
-            and not is_user_enterprise_learner(request)):
+                and not is_user_enterprise_learner(request)):
             active_order_management_system = COMMERCETOOLS_FRONTEND
         elif sku:
             active_order_management_system = FRONTEND_APP_PAYMENT_CHECKOUT
         else:
-            logger.exception(f'An error occurred while determining the active order management system.'
-                             f'No waffle flag, course_run_key or sku value found')
-            raise OpenEdxFilterException(f'Neither course_run_key and waffle flag value nor sku found.'
-                                         f'Unable to determine active order management system.')
+            logger.exception('An error occurred while determining the active order management system.'
+                             'No waffle flag, course_run_key or sku value found')
+            raise OpenEdxFilterException('Neither course_run_key and waffle flag value nor sku found.'
+                                         'Unable to determine active order management system.')
 
         return {
             ACTIVE_ORDER_MANAGEMENT_SYSTEM_KEY: active_order_management_system
@@ -70,7 +72,9 @@ class GetActiveOrderManagementSystem(PipelineStep):
 class DetermineActiveOrderManagementSystemByOrder(PipelineStep):
     """ Using an Order Numer/ID to determine the active order management system """
 
-    def run_filter(self, order_number, **kwargs):
+    def run_filter(self, order_number, **kwargs):  # pylint: disable=arguments-differ
+        """ Using an Order Numer/ID to determine the active order management system """
+
         active_order_management_system = None
 
         if is_uuid(order_number):
@@ -79,9 +83,18 @@ class DetermineActiveOrderManagementSystemByOrder(PipelineStep):
             active_order_management_system = ECOMMERCE_ORDER_MANAGEMENT_SYSTEM
 
         if not active_order_management_system:
-            logger.warning(f"Active order management system for order number {order_number} unknown.")
-            return PipelineCommand.HALT.value
+            logger.error(f"Active order management system for order number {order_number} unknown.")
+            raise OpenEdxFilterException(f'Could not determine the active order management system for '
+                                         f'order number {order_number}')
 
         return {
             ACTIVE_ORDER_MANAGEMENT_SYSTEM_KEY: active_order_management_system
         }
+
+
+class HaltIfRedirectUrlProvided(PipelineStep):
+    """ A basic pipeline step that will stop if there is a redirect url set."""
+    def run_filter(self, redirect_url, **kwargs):  # pylint: disable=arguments-differ
+        if redirect_url is not None:
+            return PipelineCommand.HALT.value
+        return PipelineCommand.CONTINUE.value

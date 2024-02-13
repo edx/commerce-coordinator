@@ -6,13 +6,18 @@ from openedx_filters.tooling import OpenEdxPublicFilter
 
 class OrderReceiptRedirectionUrlRequested(OpenEdxPublicFilter):
     """
-    Filter to gather order data from the defined PipelineStep(s)
+    Filter to gather order receipt redirection url from the defined PipelineStep(s)
     """
+
     # See pipeline step configuration OPEN_EDX_FILTERS_CONFIG dict in `settings/base.py`
     filter_type = "org.edx.coordinator.frontend_app_ecommerce.order.receipt_url.requested.v1"
 
     @classmethod
     def run_filter(cls, params, order_number=None):
+        """
+        Filter to gather order receipt redirection url from the defined PipelineStep(s)
+        """
+
         if order_number is None:  # pragma: no cover
             order_number = []
 

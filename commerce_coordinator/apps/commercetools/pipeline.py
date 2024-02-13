@@ -1,10 +1,6 @@
 """
 Commercetools filter pipelines
 """
-import attr
-from commercetools.platform.models import Customer as CTCustomer
-from commercetools.platform.models import Order as CTOrder
-from django.conf import settings
 from openedx_filters import PipelineStep
 
 from commerce_coordinator.apps.commercetools.catalog_info.constants import (
@@ -12,20 +8,9 @@ from commerce_coordinator.apps.commercetools.catalog_info.constants import (
     PAYMENT_STATUS_INTERFACE_CODE_SUCCEEDED
 )
 from commerce_coordinator.apps.commercetools.clients import CommercetoolsAPIClient
+from commerce_coordinator.apps.commercetools.constants import COMMERCETOOLS_ORDER_MANAGEMENT_SYSTEM
 from commerce_coordinator.apps.commercetools.data import order_from_commercetools
-from commerce_coordinator.apps.core.constants import (
-    UNIFIED_ORDER_HISTORY_RECEIPT_URL_KEY,
-    UNIFIED_ORDER_HISTORY_SOURCE_SYSTEM_KEY
-)
-
-
-def add_order_extended_data(order: CTOrder, customer: CTCustomer):
-    # The typing on asdict is too strict.
-    # noinspection PyTypeChecker
-    dict = attr.asdict(order_from_commercetools(order, customer))
-    dict[UNIFIED_ORDER_HISTORY_RECEIPT_URL_KEY] = f"{settings.COMMERCETOOLS_RECEIPT_URL_BASE}{order.id}"
-    dict[UNIFIED_ORDER_HISTORY_SOURCE_SYSTEM_KEY] = "commercetools"
-    return dict
+from commerce_coordinator.apps.core.constants import PipelineCommand
 
 
 class GetCommercetoolsOrders(PipelineStep):
@@ -49,7 +34,7 @@ class GetCommercetoolsOrders(PipelineStep):
             offset=params["page"] * params["page_size"]
         )
 
-        converted_orders = [add_order_extended_data(x, ct_orders[1])
+        converted_orders = [order_from_commercetools(x, ct_orders[1])
                             for x in ct_orders[0].results]
 
         order_data.append(
@@ -64,14 +49,18 @@ class GetCommercetoolsOrders(PipelineStep):
 class FetchOrderDetails(PipelineStep):
     """ Fetch the order Details and if we can, set the PaymentIntent """
 
-    def run_filter(self, params, order_number):  # pylint: disable=arguments-differ
+    def run_filter(self, active_order_management_system, order_number):  # pylint: disable=arguments-differ
         """
         Execute a filter with the signature specified.
         Arguments:
+            active_order_management_system: The Active Order System (optional)
             params: arguments passed through from the original order history url querystring
             order_number: Order number (for now this is an order.id, but this should change in the future)
         Returns:
         """
+        if not active_order_management_system == COMMERCETOOLS_ORDER_MANAGEMENT_SYSTEM and \
+                active_order_management_system is not None:
+            return PipelineCommand.CONTINUE.value
 
         ct_api_client = CommercetoolsAPIClient()
         ct_order = ct_api_client.get_order_by_id(order_id=order_number)
