@@ -3,7 +3,7 @@ from unittest import TestCase
 import ddt
 from utils import name_test
 
-from commerce_coordinator.apps.core.utils import generate_receipt_url, is_legacy_order, is_uuid
+from commerce_coordinator.apps.rollout.utils import generate_receipt_url, is_legacy_order, is_uuid
 
 
 @ddt.ddt

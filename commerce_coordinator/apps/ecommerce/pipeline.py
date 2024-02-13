@@ -1,7 +1,6 @@
 """
 Ecommerce filter pipelines
 """
-import re
 
 from django.conf import settings
 from openedx_filters import PipelineStep
@@ -11,8 +10,8 @@ from commerce_coordinator.apps.core.constants import (
     UNIFIED_ORDER_HISTORY_SOURCE_SYSTEM_KEY,
     PipelineCommand
 )
-from commerce_coordinator.apps.core.utils import is_legacy_order
 from commerce_coordinator.apps.ecommerce.clients import EcommerceAPIClient
+from commerce_coordinator.apps.rollout.utils import is_legacy_order
 
 
 def add_order_extended_data(ecomm_order):

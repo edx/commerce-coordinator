@@ -20,6 +20,14 @@ commerce\_coordinator.apps.commercetools.tests.conftest module
    :undoc-members:
    :show-inheritance:
 
+commerce\_coordinator.apps.commercetools.tests.constants module
+---------------------------------------------------------------
+
+.. automodule:: commerce_coordinator.apps.commercetools.tests.constants
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
 commerce\_coordinator.apps.commercetools.tests.test\_clients module
 -------------------------------------------------------------------
 
@@ -40,6 +48,14 @@ commerce\_coordinator.apps.commercetools.tests.test\_pipeline module
 --------------------------------------------------------------------
 
 .. automodule:: commerce_coordinator.apps.commercetools.tests.test_pipeline
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+commerce\_coordinator.apps.commercetools.tests.test\_utils module
+-----------------------------------------------------------------
+
+.. automodule:: commerce_coordinator.apps.commercetools.tests.test_utils
    :members:
    :undoc-members:
    :show-inheritance:

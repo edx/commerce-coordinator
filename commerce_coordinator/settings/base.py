@@ -432,6 +432,7 @@ OPEN_EDX_FILTERS_CONFIG = {
     "org.edx.coordinator.frontend_app_ecommerce.order.receipt_url.requested.v1": {
         "fail_silently": False,  # TODO: Coordinator filters should NEVER be allowed to fail silently
         "pipeline": [
+            'commerce_coordinator.apps.rollout.pipeline.DetermineActiveOrderManagementSystemByOrder',
             'commerce_coordinator.apps.ecommerce.pipeline.GetLegacyEcommerceReceiptRedirectUrl',
             'commerce_coordinator.apps.core.pipeline.HaltIfRedirectUrlProvided',
             'commerce_coordinator.apps.commercetools.pipeline.FetchOrderDetails',
