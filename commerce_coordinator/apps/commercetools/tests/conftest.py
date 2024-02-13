@@ -14,6 +14,7 @@ from commercetools.platform.models import Customer as CTCustomer
 from commercetools.platform.models import CustomFields as CTCustomFields
 from commercetools.platform.models import FieldContainer as CTFieldContainer
 from commercetools.platform.models import Order as CTOrder
+from commercetools.platform.models import Product as CTProduct
 from commercetools.platform.models import ProductProjectionPagedSearchResponse as CTProductProjectionPagedSearchResponse
 from commercetools.platform.models import TypeReference as CTTypeReference
 from commercetools.testing import BackendRepository
@@ -149,6 +150,12 @@ def gen_order(uuid_id, with_discount=True) -> CTOrder:
         obj = json.load(f)
         obj['id'] = uuid_id
         return CTOrder.deserialize(obj)
+
+
+def gen_product() -> CTProduct:
+    with open(os.path.join(pathlib.Path(__file__).parent.resolve(), 'raw_ct_product.json')) as f:
+        obj = json.load(f)
+        return CTProduct.deserialize(obj)
 
 
 def gen_variant_search_result() -> CTProductProjectionPagedSearchResponse:
