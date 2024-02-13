@@ -263,7 +263,7 @@ class TestCTOrderConversionToLegacyOrders(TestCase):
     def test_convert_payment_info(self):
         order = gen_order(uuid4_str())
         ret = convert_payment_info(order.payment_info)
-        self.assertEqual(ret, "Mastercard")
+        self.assertEqual(None, ret)
 
     def test_convert_payment_info_when_empty(self):
         order = gen_order(uuid4_str())

@@ -7,150 +7,154 @@
   "customerEmail": "test_customer_6@example.com",
   "lineItems": [
     {
-      "id": "69579965-2597-4347-b34d-43bc8c45dce4",
-      "productId": "7de413b2-8f69-472b-8c9a-d64abe212b82",
-      "productKey": "edx-prod-142765f0-7c1e-4ac4-93fe-8516d87f985e",
+      "id": "822d77c4-00a6-4fb9-909b-094ef0b8c4b9",
+      "productId": "9895858a-2d43-471d-be25-7a5007d52b9f",
+      "productKey": "MichiganX+InjuryPreventionX",
       "name": {
-        "en": "Demonstration Course (Deprecated)",
-        "en-US": "Demonstration Course (Deprecated)"
+        "en-US": "Injury Prevention for Children & Teens"
       },
       "productSlug": {
-        "en": "edx-142765f0-7c1e-4ac4-93fe-8516d87f985e",
-        "en-US": "edx-142765f0-7c1e-4ac4-93fe-8516d87f985e"
+        "en-US": "injury-prevention-for-children-teens"
       },
       "productType": {
         "typeId": "product-type",
-        "id": "f62c0733-4c32-47f1-8feb-cea9c316c9cc"
+        "id": "b2aa56d2-7b98-4d51-9d70-81d675a45686"
       },
       "variant": {
         "id": 1,
-        "sku": "course-v1:edX+DemoX+Demo_Course",
-        "key": "edx-var-demonstration-course-course-v1-edx-demox-demo-course",
+        "sku": "course-v1:MichiganX+InjuryPreventionX+1T2021",
+        "key": "course-v1:MichiganX+InjuryPreventionX+1T2021",
         "prices": [
-          {
-            "id": "e15bef02-0b32-4936-8f32-36524f058164",
-            "key": "edx-usd_price-8CF08E5",
-            "value": {
-              "centAmount": 14900,
-              "currencyCode": "USD",
-              "type": "centPrecision",
-              "fractionDigits": 2
-            },
-            "validFrom": "2013-02-05T00:00:00+00:00",
-            "validUntil": "2024-03-19T17:52:43.355Z"
-          }
         ],
         "attributes": [
           {
-            "name": "edx-parent_course_id",
-            "value": "edX+DemoX"
+            "name": "primarySubjectArea",
+            "value": {
+              "key": "business",
+              "label": "Business"
+            }
           },
           {
             "name": "brand-text",
-            "value": "edX"
+            "value": "MichiganX"
           },
           {
-            "name": "edx-parent_course_uuid",
-            "value": "142765f0-7c1e-4ac4-93fe-8516d87f985e"
+            "name": "date-created",
+            "value": "2019-08-21T00:02:00.000Z"
+          },
+          {
+            "name": "status",
+            "value": {
+              "key": "Published",
+              "label": "Published"
+            }
+          },
+          {
+            "name": "duration-low",
+            "value": 4
+          },
+          {
+            "name": "duration-high",
+            "value": 5
+          },
+          {
+            "name": "duration-unit",
+            "value": {
+              "key": "duration-weeks",
+              "label": "Weeks"
+            }
+          },
+          {
+            "name": "effort-low",
+            "value": 4
+          },
+          {
+            "name": "effort-high",
+            "value": 6
+          },
+          {
+            "name": "effort-unit",
+            "value": {
+              "key": "effot-per-week",
+              "label": "Hours per Week"
+            }
+          },
+          {
+            "name": "courserun-id",
+            "value": "32126"
           },
           {
             "name": "courserun_start",
             "value": "2021-04-19"
           },
           {
-            "name": "edx-parent_course_search_text",
+            "name": "courserun-end",
+            "value": "2024-04-18"
+          },
+          {
+            "name": "courserun-status",
             "value": {
-              "en": "142765f0-7c1e-4ac4-93fe-8516d87f985e\nDemonstration Course\n\nhttp://edx.devstack.lms:18000/course/None\n\n    edX: \n\n    course-v1:edX+DemoX+Demo_Course: Demonstration Course\n\n",
-              "en-US": "142765f0-7c1e-4ac4-93fe-8516d87f985e\nDemonstration Course\n\nhttp://edx.devstack.lms:18000/course/None\n\n    edX: \n\n    course-v1:edX+DemoX+Demo_Course: Demonstration Course\n\n"
+              "key": "courserun-status-published",
+              "label": "Published"
             }
           },
           {
-            "name": "edx-course_json",
-            "value": "{\"availability\": [\"Current\"], \"card_image_url\": \"https://theseus.sandbox.edx.org/asset-v1:edX+DemoX+Demo_Course+type@asset+block@images_course_image.jpg\", \"course_runs\": [\"course-v1:edX+DemoX+Demo_Course\"], \"expected_learning_items\": [], \"end\": [null], \"course_ends\": \"Future\", \"end_date\": null, \"enrollment_start\": [\"2013-02-05T00:00:00+00:00\"], \"enrollment_end\": [null], \"first_enrollable_paid_seat_price\": null, \"languages\": [], \"modified\": \"2023-03-20T17:57:21.994755+00:00\", \"prerequisites\": [], \"skill_names\": [], \"skills\": [], \"status\": [\"published\"], \"start\": [\"2013-02-05T05:00:00+00:00\"], \"course_type\": \"verified-audit\", \"enterprise_subscription_inclusion\": false, \"course_length\": \"\", \"external_course_marketing_type\": null, \"product_source\": null, \"authoring_organizations\": [\"edX: \"], \"authoring_organization_bodies\": [\"{\\\"uuid\\\": \\\"09b980e7-6bcc-4687-9dce-44adeae36710\\\", \\\"key\\\": \\\"edX\\\", \\\"name\\\": \\\"\\\", \\\"auto_generate_course_run_keys\\\": true, \\\"certificate_logo_image_url\\\": null, \\\"logo_image_url\\\": null, \\\"organization_hex_color\\\": null, \\\"description\\\": null, \\\"description_es\\\": \\\"\\\", \\\"homepage_url\\\": null, \\\"tags\\\": [], \\\"marketing_url\\\": \\\"http://edx.devstack.lms:18000/school/edx\\\", \\\"slug\\\": \\\"edx\\\", \\\"banner_image_url\\\": null, \\\"enterprise_subscription_inclusion\\\": false}\"], \"key\": \"edX+DemoX\", \"title\": \"Demonstration Course\", \"full_description\": null, \"image_url\": \"https://theseus.sandbox.edx.org/asset-v1:edX+DemoX+Demo_Course+type@asset+block@images_course_image.jpg\", \"logo_image_urls\": [], \"level_type\": null, \"partner\": \"edx\", \"outcome\": null, \"org\": \"edX\", \"subject_uuids\": [], \"short_description\": null, \"seat_types\": [\"verified\", \"audit\"], \"subjects\": [], \"sponsoring_organizations\": [], \"aggregation_key\": \"course:edX+DemoX\", \"content_type\": \"course\", \"id\": \"course_metadata.course.1\", \"organizations\": [\"edX: \"], \"pk\": 1, \"text\": \"142765f0-7c1e-4ac4-93fe-8516d87f985e\\nDemonstration Course\\n\\n\\n\\nhttp://edx.devstack.lms:18000/course/None\\n\\n\\n\\n\\n\\n\\n    edX: \\n\\n\\n\\n\\n\\n\\n\\n\\n\\n\\n\\n\\n\\n    course-v1:edX+DemoX+Demo_Course: Demonstration Course\\n\\n\", \"uuid\": \"142765f0-7c1e-4ac4-93fe-8516d87f985e\"}"
+            "name": "external-ids-product",
+            "value": "MichiganX+InjuryPreventionX"
           },
           {
-            "name": "edx-course_run_id",
-            "value": "course-v1:edX+DemoX+Demo_Course"
+            "name": "external-ids-variant",
+            "value": "course-v1:MichiganX+InjuryPreventionX+1T2021"
           },
           {
-            "name": "edx-uuid",
-            "value": "05cfefe9-8eae-41e0-8e44-52a2144668af"
-          },
-          {
-            "name": "edx-course_run_search_text",
+            "name": "test-reference-category",
             "value": {
-              "en": "05cfefe9-8eae-41e0-8e44-52a2144668af\nDemonstration Course\n\nhttp://edx.devstack.lms:18000/course/demonstration-course-course-v1-edx-demox-demo-course\n\n    edX: \n\ninstructor_paced\n\n",
-              "en-US": "05cfefe9-8eae-41e0-8e44-52a2144668af\nDemonstration Course\n\nhttp://edx.devstack.lms:18000/course/demonstration-course-course-v1-edx-demox-demo-course\n\n    edX: \n\ninstructor_paced\n\n"
-            }
-          },
-          {
-            "name": "edx-course_run_json",
-            "value": "{\"announcement\": null, \"availability\": \"Current\", \"authoring_organization_uuids\": [\"09b980e7-6bcc-4687-9dce-44adeae36710\"], \"course_key\": \"edX+DemoX\", \"end\": null, \"enrollment_start\": \"2013-02-05T00:00:00+00:00\", \"enrollment_end\": null, \"first_enrollable_paid_seat_sku\": \"8CF08E5\", \"go_live_date\": null, \"has_enrollable_seats\": true, \"has_enrollable_paid_seats\": true, \"hidden\": false, \"is_enrollable\": true, \"is_current_and_still_upgradeable\": true, \"language\": null, \"license\": \"\", \"marketing_url\": \"http://edx.devstack.lms:18000/course/demonstration-course-course-v1-edx-demox-demo-course\", \"min_effort\": null, \"max_effort\": null, \"mobile_available\": false, \"number\": \"DemoX\", \"paid_seat_enrollment_end\": \"2024-03-19T17:52:43.355363+00:00\", \"pacing_type\": \"instructor_paced\", \"program_types\": [], \"published\": true, \"skill_names\": [], \"skills\": [], \"status\": \"published\", \"start\": \"2013-02-05T05:00:00+00:00\", \"slug\": \"demonstration-course-course-v1-edx-demox-demo-course\", \"staff_uuids\": [], \"type\": \"verified\", \"transcript_languages\": [], \"weeks_to_complete\": null, \"authoring_organizations\": [\"edX: \"], \"authoring_organization_bodies\": [\"{\\\"uuid\\\": \\\"09b980e7-6bcc-4687-9dce-44adeae36710\\\", \\\"key\\\": \\\"edX\\\", \\\"name\\\": \\\"\\\", \\\"auto_generate_course_run_keys\\\": true, \\\"certificate_logo_image_url\\\": null, \\\"logo_image_url\\\": null, \\\"organization_hex_color\\\": null, \\\"description\\\": null, \\\"description_es\\\": \\\"\\\", \\\"homepage_url\\\": null, \\\"tags\\\": [], \\\"marketing_url\\\": \\\"http://edx.devstack.lms:18000/school/edx\\\", \\\"slug\\\": \\\"edx\\\", \\\"banner_image_url\\\": null, \\\"enterprise_subscription_inclusion\\\": false}\"], \"key\": \"course-v1:edX+DemoX+Demo_Course\", \"title\": \"Demonstration Course\", \"first_enrollable_paid_seat_price\": 149, \"full_description\": null, \"image_url\": \"https://theseus.sandbox.edx.org/asset-v1:edX+DemoX+Demo_Course+type@asset+block@images_course_image.jpg\", \"logo_image_urls\": [], \"level_type\": null, \"partner\": \"edx\", \"outcome\": null, \"org\": \"edX\", \"subject_uuids\": [], \"short_description\": null, \"seat_types\": [\"verified\", \"audit\"], \"subjects\": [], \"sponsoring_organizations\": [], \"aggregation_key\": \"courserun:edX+DemoX\", \"content_type\": \"courserun\", \"id\": \"course_metadata.courserun.1\", \"organizations\": [\"edX: \"], \"pk\": 1, \"text\": \"05cfefe9-8eae-41e0-8e44-52a2144668af\\nDemonstration Course\\n\\n\\n\\nhttp://edx.devstack.lms:18000/course/demonstration-course-course-v1-edx-demox-demo-course\\n\\n\\n\\n\\n\\n\\n    edX: \\n\\n\\n\\n\\n\\n\\n\\n\\n\\n\\n\\n\\ninstructor_paced\\n\\n\\n\\n\\n\\n\", \"uuid\": \"05cfefe9-8eae-41e0-8e44-52a2144668af\"}"
-          },
-          {
-            "name": "2u-fulfillment_system",
-            "value": "LMS"
-          },
-          {
-            "name": "2u-lob",
-            "value": "edX"
-          },
-          {
-            "name": "duration-low",
-            "value": "4"
-          },
-          {
-            "name": "duration-high",
-            "value": "5"
-          },
-          {
-            "name": "duration-unit",
-            "value": {
-              "label": "weeks"
+              "typeId": "category",
+              "id": "d4ae2b24-3be4-4033-b55c-237ca62cc4bf"
             }
           }
         ],
         "images": [
           {
-            "url": "https://theseus.sandbox.edx.org/asset-v1:edX+DemoX+Demo_Course+type@asset+block@images_course_image.jpg",
+            "url": "https://90bbf3dd6df9e8673f39-65625168de2b7f206447b8dd2ec7c899.ssl.cf1.rackcdn.com/image%20(47)-4DyzF3NF.png",
             "dimensions": {
-              "w": 375,
-              "h": 200
+              "w": 678,
+              "h": 402
             },
-            "label": "edX Course Tile Image"
+            "label": "MichiganX: Injury Prevention for Children & Teens"
           }
         ],
-        "assets": []
+        "assets": [
+        ]
       },
       "price": {
-        "id": "e15bef02-0b32-4936-8f32-36524f058164",
-        "key": "edx-usd_price-8CF08E5",
+        "id": "093c48bb-2b46-4c7c-8e22-f4e16edd8761",
+        "key": "open-course-verified-price",
         "value": {
-          "centAmount": 14900,
+          "centAmount": 4900,
           "currencyCode": "USD",
           "type": "centPrecision",
           "fractionDigits": 2
-        },
-        "validFrom": "2013-02-05T00:00:00+00:00",
-        "validUntil": "2024-03-19T17:52:43.355Z"
+        }
       },
       "quantity": 1,
       "totalPrice": {
-        "centAmount": 14900,
+        "centAmount": 4900,
         "currencyCode": "USD",
         "type": "centPrecision",
         "fractionDigits": 2
       },
-      "discountedPricePerQuantity": [],
+      "discountedPricePerQuantity": [
+      ],
       "taxedPrice": {
         "totalNet": {
-          "centAmount": 16400,
+          "centAmount": 4900,
           "currencyCode": "USD",
           "type": "centPrecision",
           "fractionDigits": 2
         },
         "totalGross": {
-          "centAmount": 16400,
+          "centAmount": 4900,
           "currencyCode": "USD",
           "type": "centPrecision",
           "fractionDigits": 2
@@ -162,7 +166,8 @@
           "fractionDigits": 2
         }
       },
-      "taxedPricePortions": [],
+      "taxedPricePortions": [
+      ],
       "state": [
         {
           "quantity": 1,
@@ -173,43 +178,46 @@
         }
       ],
       "taxRate": {
-        "id": "ueRRT4gj",
-        "name": "None",
+        "name": "Disabled tax calculation",
         "amount": 0,
-        "includedInPrice": true,
-        "country": "US",
-        "subRates": []
+        "includedInPrice": false,
+        "country": "AL",
+        "state": "Berat District",
+        "subRates": [
+        ]
       },
-      "perMethodTaxRate": [],
+      "perMethodTaxRate": [
+      ],
       "priceMode": "Platform",
       "lineItemMode": "Standard",
-      "addedAt": "2023-10-31T19:56:46.127Z",
-      "lastModifiedAt": "2023-10-31T19:56:46.127Z"
+      "addedAt": "2024-02-13T09:33:49.848000+00:00",
+      "lastModifiedAt": "2024-02-13T09:33:49.848000+00:00"
     }
   ],
-  "customLineItems": [],
+  "customLineItems": [
+  ],
   "totalPrice": {
-    "centAmount": 14900,
+    "centAmount": 4900,
     "currencyCode": "USD",
     "type": "centPrecision",
     "fractionDigits": 2
   },
   "taxedPrice": {
     "totalNet": {
-      "centAmount": 14900,
+      "centAmount": 4900,
       "currencyCode": "USD",
       "type": "centPrecision",
       "fractionDigits": 2
     },
     "totalGross": {
-      "centAmount": 14900,
+      "centAmount": 4900,
       "currencyCode": "USD",
       "type": "centPrecision",
       "fractionDigits": 2
     },
     "taxPortions": [
       {
-        "name": "None",
+        "name": "Disabled tax calculation",
         "rate": 0,
         "amount": {
           "centAmount": 0,
@@ -265,62 +273,50 @@
           },
           "customer": {
             "typeId": "customer",
-            "id": "ea421ddf-22ef-43b1-b97b-f06e5a5b8b49"
+            "id": "d04dd210-9bcc-4692-bf4e-338125e3d3bb"
           },
-          "interfaceId": "Stripe",
+          "interfaceId": "pi_3OjJErH4caH7G0X11cqUfLTu",
           "amountPlanned": {
-            "centAmount": 14900,
-            "currencyCode": "USD",
-            "type": "centPrecision",
-            "fractionDigits": 2
-          },
-          "amountAuthorized": {
-            "centAmount": 14900,
-            "currencyCode": "USD",
-            "type": "centPrecision",
-            "fractionDigits": 2
-          },
-          "amountPaid": {
-            "centAmount": 14900,
+            "centAmount": 4900,
             "currencyCode": "USD",
             "type": "centPrecision",
             "fractionDigits": 2
           },
           "paymentMethodInfo": {
-            "paymentInterface": "Stripe",
-            "method": "credit card",
-            "name": {
-              "en": "Mastercard",
-              "en-US": "Mastercard"
-            }
+            "paymentInterface": "stripe_edx",
+            "method": "card"
           },
           "paymentStatus": {
-            "interfaceCode": "completed",
-            "interfaceText": "Completed"
+            "interfaceCode": "succeeded",
+            "interfaceText": "Succeeded"
           },
           "transactions": [
             {
-              "id": "db34acf7-2022-40b1-97f4-fbaf71acba4f",
+              "id": "470ce2de-8456-497b-a7eb-59b2e0faa6e0",
               "type": "Charge",
               "amount": {
-                "centAmount": 14900,
+                "centAmount": 4900,
                 "currencyCode": "USD",
                 "type": "centPrecision",
                 "fractionDigits": 2
               },
-              "state": "Initial"
+              "interactionId": "ch_3OjJErH4caH7G0X11nnFrS0J",
+              "state": "Success"
             }
           ],
-          "interfaceInteractions": []
+          "interfaceInteractions": [
+          ],
+          "key": "pi_3OjJErH4caH7G0X11cqUfLTu"
         }
       }
     ]
   },
   "country": "US",
+  "locale": "en-US",
   "origin": "Customer",
   "cart": {
     "typeId": "cart",
-    "id": "b19d2a92-3a9a-449a-aa2a-4118f13f09ad"
+    "id": "0cc5592e-1dfb-490b-8e29-e80480fd88e2"
   },
   "state": {
     "id": "1DD2756E-1CDF-4F80-B0CA-9EE5040B0609",
@@ -355,9 +351,11 @@
   "orderState": "Complete",
   "shipmentState": "Shipped",
   "paymentState": "Paid",
-  "syncInfo": [],
-  "returnInfo": [],
-  "lastMessageSequenceNumber": 7,
+  "syncInfo": [
+  ],
+  "returnInfo": [
+  ],
+  "lastMessageSequenceNumber": 5,
   "lastModifiedBy": {
     "clientId": "E1UbNz9SHIG_n4nnSAUP1uW4"
   },
