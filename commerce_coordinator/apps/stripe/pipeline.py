@@ -217,6 +217,15 @@ class GetPaymentIntentReceipt(PipelineStep):
             return PipelineCommand.CONTINUE.value
 
         stripe_api_client = StripeAPIClient()
-        # TODO: GRM: Implement
 
-        return {}
+        payment_intent = stripe_api_client.retrieve_payment_intent(
+            payment_intent_id,
+            ["latest_charge"]
+        )
+
+        receipt_url = payment_intent.latest_charge.receipt_url
+
+        return {
+            'payment_intent': payment_intent,
+            'redirect_url': receipt_url
+        }

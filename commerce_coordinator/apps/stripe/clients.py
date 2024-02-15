@@ -1,6 +1,7 @@
 """
 API clients for Stripe.
 """
+
 import stripe
 from celery.utils.log import get_task_logger
 from django.conf import settings
@@ -99,12 +100,13 @@ class StripeAPIClient:
 
         return stripe_response
 
-    def retrieve_payment_intent(self, payment_intent_id):
+    def retrieve_payment_intent(self, payment_intent_id, expand = None):
         """
         Retrieve a Stripe PaymentIntent.
 
         Args:
             payment_intent_id (str): The Stripe PaymentIntent id to look up.
+            expand (List[str] or None): The list of payment intent fields to exapnd
 
         Returns:
             The response from Stripe.
@@ -125,8 +127,10 @@ class StripeAPIClient:
 
         RetrievePaymentIntentInputSerializer(data=initial_locals).is_valid(raise_exception=True)
 
+        expand_params = [] if not expand else expand
+
         try:
-            stripe_response = stripe.PaymentIntent.retrieve(payment_intent_id)
+            stripe_response = stripe.PaymentIntent.retrieve(payment_intent_id, expand=expand_params)
             logger.debug('StripeAPIClient.retrieve_payment_intent called with '
                          f'args: [{initial_locals}] '
                          'returned stripe_response: '
