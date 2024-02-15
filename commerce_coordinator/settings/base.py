@@ -489,7 +489,6 @@ COMMERCETOOLS_CONFIG = {
 
 # Will be suffixed with order numbers
 ECOMMERCE_RECEIPT_URL_BASE=f'{ECOMMERCE_URL}checkout/receipt/?order_number='
-COMMERCETOOLS_RECEIPT_URL_BASE='commercetools://setme/'
 
 # Setting to keep using deprecated pytz with Django>4
 USE_DEPRECATED_PYTZ = True
