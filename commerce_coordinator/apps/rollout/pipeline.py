@@ -94,7 +94,7 @@ class DetermineActiveOrderManagementSystemByOrder(PipelineStep):
 
 class HaltIfRedirectUrlProvided(PipelineStep):
     """ A basic pipeline step that will stop if there is a redirect url set."""
-    def run_filter(self, redirect_url, **kwargs):  # pylint: disable=arguments-differ
-        if redirect_url is not None:
+    def run_filter(self, **kwargs):
+        if 'redirect_url' in kwargs and kwargs['redirect_url'] is not None:
             return PipelineCommand.HALT.value
         return PipelineCommand.CONTINUE.value

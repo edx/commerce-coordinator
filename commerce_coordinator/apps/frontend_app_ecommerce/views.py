@@ -14,7 +14,7 @@ from rest_framework.status import HTTP_303_SEE_OTHER, HTTP_404_NOT_FOUND
 from rest_framework.throttling import UserRateThrottle
 from rest_framework.views import APIView
 
-from commerce_coordinator.apps.core.constants import ORDER_HISTORY_PER_SYSTEM_REQ_LIMIT, HttpHeadersNames, MediaTypes
+from commerce_coordinator.apps.core.constants import ORDER_HISTORY_PER_SYSTEM_REQ_LIMIT, HttpHeadersNames
 from commerce_coordinator.apps.frontend_app_ecommerce.filters import (
     OrderHistoryRequested,
     OrderReceiptRedirectionUrlRequested
@@ -54,11 +54,11 @@ class RedirectReceiptView(APIView):
         if not request.user.lms_user_id:  # pragma: no cover
             raise PermissionDenied(detail="Could not detect LMS user id.")
 
-        redirect_url_obj = OrderReceiptRedirectionUrlRequested.run_filter(params)
+        redirect_url = OrderReceiptRedirectionUrlRequested.run_filter(params, order_number=params['order_number'])
 
-        if 'redirect_url' in redirect_url_obj:
-            redirect = HttpResponseRedirect(redirect_url_obj['redirect_url'], status=HTTP_303_SEE_OTHER)
-            redirect.headers[HttpHeadersNames.CONTENT_TYPE.value] = MediaTypes.JSON.value
+        if redirect_url:
+            redirect = HttpResponseRedirect(redirect_url, status=HTTP_303_SEE_OTHER)
+            redirect.headers[HttpHeadersNames.CACHE_CONTROL.value] = "max-age=2591000"  # 16ish mins short of 30 days
             return redirect
         else:
             return HttpResponse(status=HTTP_404_NOT_FOUND)

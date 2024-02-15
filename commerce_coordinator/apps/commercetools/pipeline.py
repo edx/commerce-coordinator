@@ -60,7 +60,8 @@ class GetCommercetoolsOrders(PipelineStep):
 class FetchOrderDetails(PipelineStep):
     """ Fetch the order Details and if we can, set the PaymentIntent """
 
-    def run_filter(self, active_order_management_system, order_number):  # pylint: disable=arguments-differ
+    # pylint: disable=unused-argument
+    def run_filter(self, params, active_order_management_system, order_number):  # pylint: disable=arguments-differ
         """
         Execute a filter with the signature specified.
         Arguments:

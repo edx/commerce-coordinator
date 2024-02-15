@@ -18,13 +18,11 @@ class OrderReceiptRedirectionUrlRequested(OpenEdxPublicFilter):
         Filter to gather order receipt redirection url from the defined PipelineStep(s)
         """
 
-        if order_number is None:  # pragma: no cover
-            order_number = []
-
         pipeline_data = super().run_pipeline(params=params, order_number=order_number)
-        result = pipeline_data.get("order_number")
 
-        return result
+        if 'redirect_url' in pipeline_data:
+            return pipeline_data['redirect_url']
+        return None
 
 
 class OrderHistoryRequested(OpenEdxPublicFilter):
