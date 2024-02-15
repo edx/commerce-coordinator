@@ -70,7 +70,7 @@ class FetchOrderDetails(PipelineStep):
         Returns:
         """
         if not active_order_management_system == COMMERCETOOLS_ORDER_MANAGEMENT_SYSTEM and \
-            active_order_management_system is not None:
+                active_order_management_system is not None:
             return PipelineCommand.CONTINUE.value
 
         try:
@@ -85,7 +85,7 @@ class FetchOrderDetails(PipelineStep):
                 pmt = pr.obj
                 if pmt.payment_status.interface_code == PAYMENT_STATUS_INTERFACE_CODE_SUCCEEDED \
                     and pmt.payment_method_info.payment_interface == EDX_STRIPE_PAYMENT_INTERFACE_NAME and \
-                    pmt.interface_id:
+                        pmt.interface_id:
                     ret_val['payment_intent_id'] = pmt.interface_id
 
             return ret_val
