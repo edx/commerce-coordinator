@@ -77,14 +77,6 @@ commerce\_coordinator.apps.core.models module
    :undoc-members:
    :show-inheritance:
 
-commerce\_coordinator.apps.core.pipeline module
------------------------------------------------
-
-.. automodule:: commerce_coordinator.apps.core.pipeline
-   :members:
-   :undoc-members:
-   :show-inheritance:
-
 commerce\_coordinator.apps.core.serializers module
 --------------------------------------------------
 
