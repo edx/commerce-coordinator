@@ -14,4 +14,4 @@ def is_uuid(value: str) -> bool:
     """ Determine if an value is a UUID """
     if not value:
         return False
-    return re.search(r"\b[A-F0-9]{8}(?:-[A-F0-9]{4}){3}-[A-F0-9]{12}\b", value) is not None
+    return re.search(r"\b[A-Fa-f0-9]{8}(?:-[A-Fa-f0-9]{4}){3}-[A-Fa-f0-9]{12}\b", value) is not None

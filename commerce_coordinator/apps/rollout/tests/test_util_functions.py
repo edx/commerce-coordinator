@@ -21,7 +21,8 @@ class TestUtilityFunctions(TestCase):
         self.assertEqual(is_legacy_order(value), expectation)
 
     @ddt.data(
-        name_test("test uuid passes", ("03376B46-F737-4D16-8096-D2CEE39758E7", True)),
+        name_test("test uc uuid passes", ("03376B46-F737-4D16-8096-D2CEE39758E7", True)),
+        name_test("test lc uuid passes", ("5f274348-2559-4c36-9ad0-6b99c270ea53", True)),
         name_test("test failure on edx order numbers", ("EDX-100001", False)),
         name_test("test invalid", ("meow", False)),
         name_test("test tolerates none but fails", (None, False)),
