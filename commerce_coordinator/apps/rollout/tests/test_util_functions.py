@@ -1,8 +1,8 @@
 from unittest import TestCase
 
 import ddt
-from utils import name_test
 
+from commerce_coordinator.apps.core.tests.utils import name_test
 from commerce_coordinator.apps.rollout.utils import is_legacy_order, is_uuid
 
 
