@@ -13,6 +13,7 @@ from commerce_coordinator.apps.stripe.constants import StripeRefundStatus
 logger = get_task_logger(__name__)
 
 
+# noinspection PyMethodMayBeStatic
 class StripeAPIClient:
     """
     API client for calls to Stripe using API key.
@@ -100,7 +101,7 @@ class StripeAPIClient:
 
         return stripe_response
 
-    def retrieve_payment_intent(self, payment_intent_id, expand = None):
+    def retrieve_payment_intent(self, payment_intent_id, expand=None):
         """
         Retrieve a Stripe PaymentIntent.
 

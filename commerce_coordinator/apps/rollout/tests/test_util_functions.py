@@ -32,4 +32,3 @@ class TestUtilityFunctions(TestCase):
     @ddt.unpack
     def test_is_uuid(self, value, expectation):
         self.assertEqual(is_uuid(value), expectation)
-

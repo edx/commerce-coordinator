@@ -4,8 +4,6 @@ Tests for the frontend_app_ecommerce app views.
 import logging
 
 import ddt
-from conftest import gen_payment_intent
-from django.conf import settings
 from django.contrib.auth import get_user_model
 from django.test import TestCase, override_settings
 from django.urls import reverse
@@ -15,12 +13,15 @@ from rest_framework import status
 from rest_framework.test import APIClient, APITestCase
 
 from commerce_coordinator.apps.commercetools.tests.conftest import APITestingSet
-from commerce_coordinator.apps.core.tests.utils import uuid4_str
 from commerce_coordinator.apps.frontend_app_ecommerce.tests import (
     ECOMMERCE_REQUEST_EXPECTED_RESPONSE,
     ORDER_HISTORY_GET_PARAMETERS,
     CTOrdersForCustomerMock,
     EcommerceClientMock
+)
+from commerce_coordinator.apps.frontend_app_ecommerce.tests.conftest import (
+    gen_order_for_payment_intent,
+    gen_payment_intent
 )
 
 logger = logging.getLogger(__name__)
@@ -179,39 +180,18 @@ class ReceiptRedirectViewTests(APITestCase):
         with self.assertRaises(OpenEdxFilterException):
             _ = self.client.get(self.url, data={'order_number': order_number})
 
-    def test_view_forwards_to_stripe_receipt_page(self):
-        # Sentinel values.
-        TEST_ORDER_UUID = 'abcdef01-1234-5678-90ab-cdef01234567'
-        TEST_PAYMENT_NUMBER = 12345
-        TEST_PAYMENT_INTENT_ID = 'pi_AbCdEfGhIjKlMnOpQ1234567'
-        TEST_CURRENCY_SYMBOL = 'mok'
-
-        # Build test PAYMENT_PROCESSOR_CONFIG with sentinel value for Stripe's secret_key.
-        TEST_SECRET = 'TEST_SECRET'
-        TEST_PAYMENT_PROCESSOR_CONFIG = settings.PAYMENT_PROCESSOR_CONFIG
-        TEST_PAYMENT_PROCESSOR_CONFIG['edx']['stripe']['secret_key'] = TEST_SECRET
-
-        # TODO: GRM: Mock out Payment Intent Response
-        # TODO: GRM: Mock out Commercetools
-        order_number = uuid4_str()
-        self.client.login(username=self.test_user_username, password=self.test_user_password)
+    @patch('commerce_coordinator.apps.stripe.clients.StripeAPIClient.retrieve_payment_intent')
+    @patch('commerce_coordinator.apps.commercetools.clients.CommercetoolsAPIClient.get_order_by_id')
+    def test_view_forwards_to_stripe_receipt_page(self, ct_mock, stripe_mock):
         intent = gen_payment_intent()
-        # self.assertJSONClientResponse(
-        #     uut=self.client.retrieve_payment_intent,
-        #     input_kwargs={
-        #         'payment_intent_id': TEST_PAYMENT_INTENT_ID,
-        #     },
-        #     request_type='query_string',
-        #     expected_headers=self.expected_headers,
-        #     mock_method='GET',
-        #     mock_url=f'https://api.stripe.com/v1/payment_intents/{TEST_PAYMENT_INTENT_ID}',
-        #     mock_response=gen_payment_intent(),
-        #     expected_output={
-        #         'id': 'mock_id',
-        #         'mock_stripe_response': 'mock_value'
-        #     },
-        # )
+        order = gen_order_for_payment_intent()
+
+        ct_mock.return_value = order
+        stripe_mock.return_value = intent
+
+        order_number = order.id
+        self.client.login(username=self.test_user_username, password=self.test_user_password)
 
         response = self.client.get(self.url, data={'order_number': order_number})
         self.assertEqual(response.status_code, status.HTTP_303_SEE_OTHER)
-        breakpoint()
+        self.assertEqual(response.url, intent.latest_charge.receipt_url)
