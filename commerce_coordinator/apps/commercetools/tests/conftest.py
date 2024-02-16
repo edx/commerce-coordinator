@@ -250,12 +250,12 @@ def gen_customer(email: str, un: str):
     )
 
 
-def gen_return_item(order_line_id: str) -> CTLineItemReturnItem:
+def gen_return_item(order_line_id: str, payment_state: ReturnPaymentState) -> CTLineItemReturnItem:
     return CTLineItemReturnItem(
         id=uuid4_str(),
         quantity=1,
         shipment_state=ReturnShipmentState.RETURNED,
-        payment_state=ReturnPaymentState.INITIAL,
+        payment_state=payment_state,
         last_modified_at=datetime.now(),
         created_at=datetime.now(),
         line_item_id=order_line_id
