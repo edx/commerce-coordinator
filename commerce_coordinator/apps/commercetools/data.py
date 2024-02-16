@@ -111,7 +111,7 @@ def order_from_commercetools(order: CTOrder, customer: CTCustomer) -> LegacyOrde
         date_placed=(order.completed_at if order.completed_at else order.last_modified_at),
         total_excl_tax=typed_money_to_string(order.total_price),
         # in dev systems, this isn't set... so let's use UUID, otherwise, let's rely on order number
-        number=this_or(order.order_number, order.id),
+        number=order.id,  # Long-term: this_or(order.order_number, order.id),
         currency=order.total_price.currency_code,
         payment_processor="stripe via commercetools",
         status=order.order_state.CONFIRMED.value,
