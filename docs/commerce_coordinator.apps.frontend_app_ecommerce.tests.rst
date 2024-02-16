@@ -4,6 +4,14 @@ commerce\_coordinator.apps.frontend\_app\_ecommerce.tests package
 Submodules
 ----------
 
+commerce\_coordinator.apps.frontend\_app\_ecommerce.tests.conftest module
+-------------------------------------------------------------------------
+
+.. automodule:: commerce_coordinator.apps.frontend_app_ecommerce.tests.conftest
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
 commerce\_coordinator.apps.frontend\_app\_ecommerce.tests.test\_filters module
 ------------------------------------------------------------------------------
 
