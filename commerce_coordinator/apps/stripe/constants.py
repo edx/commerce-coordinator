@@ -16,3 +16,7 @@ class Currency(str, Enum):
 
 class StripeErrorCode(str, Enum):
     CARD_DECLINED = 'card_declined'
+
+
+class StripeRefundStatus(str, Enum):
+    REFUND_SUCCESS = 'succeeded'
