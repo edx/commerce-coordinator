@@ -36,8 +36,6 @@ SOURCE_SYSTEM = 'commercetools'
 class OrderFulfillView(APIView):
     """Order Fulfillment View"""
 
-    permission_classes = [IsAdminUser]
-
     def post(self, request):
         """Receive a message from commerce tools forwarded by aws event bridge"""
         input_data = {
