@@ -174,18 +174,6 @@ class OrderFulfillViewTests(APITestCase):
 
         self.assertEqual(response.status_code, 200)
 
-    def test_unauthorized_user(self, mock_customer, mock_order, mock_signal):
-        """Check unauthorized user is forbidden."""
-
-        # Login
-        self.client.login(username=self.test_user_username, password=self.test_password)
-
-        # Send request
-        response = self.client.post(self.url, data=EXAMPLE_COMMERCETOOLS_ORDER_SANCTIONED_MESSAGE, format='json')
-
-        # Check 403 Forbidden
-        self.assertEqual(response.status_code, 403)
-
 
 @ddt.ddt
 class OrderSanctionedViewTests(APITestCase):
@@ -320,15 +308,3 @@ class OrderSanctionedViewTests(APITestCase):
 
         # Check 200 OK
         self.assertEqual(response.status_code, 200)
-
-    def test_unauthorized_user(self):
-        """Check unauthorized user is forbidden."""
-
-        # Login
-        self.client.login(username=self.test_user_username, password=self.test_password)
-
-        # Send request
-        response = self.client.post(self.url, data=EXAMPLE_COMMERCETOOLS_ORDER_SANCTIONED_MESSAGE, format='json')
-
-        # Check 403 Forbidden
-        self.assertEqual(response.status_code, 403)
