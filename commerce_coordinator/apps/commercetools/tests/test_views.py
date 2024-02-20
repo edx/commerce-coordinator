@@ -181,7 +181,7 @@ class OrderFulfillViewTests(APITestCase):
         self.client.login(username=self.test_user_username, password=self.test_password)
 
         # Send request
-        response = self.client.post(self.url, data=EXAMPLE_COMMERCETOOLS_ORDER_FULFILL_MESSAGE, format='json')
+        response = self.client.post(self.url, data=EXAMPLE_COMMERCETOOLS_ORDER_SANCTIONED_MESSAGE, format='json')
 
         # Check 403 Forbidden
         self.assertEqual(response.status_code, 403)
