@@ -16,7 +16,6 @@ from commerce_coordinator.apps.frontend_app_ecommerce.tests import (
     ORDER_HISTORY_GET_PARAMETERS,
     CTOrdersForCustomerMock,
     EcommerceClientMock
-    EcommerceClientMock
 )
 from commerce_coordinator.apps.frontend_app_ecommerce.tests.conftest import (
     gen_order_for_payment_intent,
