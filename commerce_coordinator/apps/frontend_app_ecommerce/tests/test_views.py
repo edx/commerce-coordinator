@@ -1,7 +1,6 @@
 """
 Tests for the frontend_app_ecommerce app views.
 """
-import logging
 
 import ddt
 from django.contrib.auth import get_user_model
@@ -12,11 +11,11 @@ from openedx_filters.exceptions import OpenEdxFilterException
 from rest_framework import status
 from rest_framework.test import APIClient, APITestCase
 
-from commerce_coordinator.apps.commercetools.tests.conftest import APITestingSet
 from commerce_coordinator.apps.frontend_app_ecommerce.tests import (
     ECOMMERCE_REQUEST_EXPECTED_RESPONSE,
     ORDER_HISTORY_GET_PARAMETERS,
     CTOrdersForCustomerMock,
+    EcommerceClientMock
     EcommerceClientMock
 )
 from commerce_coordinator.apps.frontend_app_ecommerce.tests.conftest import (
@@ -24,11 +23,7 @@ from commerce_coordinator.apps.frontend_app_ecommerce.tests.conftest import (
     gen_payment_intent
 )
 
-logger = logging.getLogger(__name__)
-
 User = get_user_model()
-
-TEST_ECOMMERCE_URL = 'https://testserver.com'
 
 
 @patch('commerce_coordinator.apps.ecommerce.clients.EcommerceAPIClient.get_orders',
@@ -143,7 +138,6 @@ class ReceiptRedirectViewTests(APITestCase):
 
     def setUp(self):
         super().setUp()
-        self.client_set = APITestingSet.new_instance()
 
         self.user = User.objects.create_user(
             self.test_user_username,
@@ -154,8 +148,6 @@ class ReceiptRedirectViewTests(APITestCase):
         )
 
     def tearDown(self):
-        # force deconstructor call or some test get flaky
-        del self.client_set
         super().tearDown()
         self.client.logout()
 

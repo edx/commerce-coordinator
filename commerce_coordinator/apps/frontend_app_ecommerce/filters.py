@@ -22,7 +22,9 @@ class OrderReceiptRedirectionUrlRequested(OpenEdxPublicFilter):
 
         if 'redirect_url' in pipeline_data:
             return pipeline_data['redirect_url']
-        return None
+
+        # This shouldn't happen...
+        return None  # pragma no cover
 
 
 class OrderHistoryRequested(OpenEdxPublicFilter):
