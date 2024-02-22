@@ -48,6 +48,6 @@ def get_edx_payment_intent_id(order: CTOrder) -> Union[str, None]:
         pmt = pr.obj
         if pmt.payment_status.interface_code == PAYMENT_STATUS_INTERFACE_CODE_SUCCEEDED \
             and pmt.payment_method_info.payment_interface == EDX_STRIPE_PAYMENT_INTERFACE_NAME and \
-            pmt.interface_id:
+                pmt.interface_id:
             return pmt.interface_id
     return None
