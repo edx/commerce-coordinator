@@ -52,7 +52,7 @@ class GetCommercetoolsOrders(PipelineStep):
             return {
                 "order_data": order_data
             }
-        except CommercetoolsError as err:
+        except CommercetoolsError as err:  # pragma no cover
             log.exception(f"[{type(self).__name__}] Commercetools Error: {err}, {err.errors}", err)
             return PipelineCommand.CONTINUE.value
 
@@ -90,6 +90,6 @@ class FetchOrderDetails(PipelineStep):
                     ret_val['payment_intent_id'] = pmt.interface_id
 
             return ret_val
-        except CommercetoolsError as err:
+        except CommercetoolsError as err:  # pragma no cover
             log.exception(f"[{type(self).__name__}] Commercetools Error: {err}, {err.errors}", err)
             return PipelineCommand.CONTINUE.value

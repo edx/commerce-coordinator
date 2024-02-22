@@ -123,7 +123,6 @@ class OrdersViewTests(TestCase):
         self.assertEqual(request_username, self.test_user_username)
 
 
-@override_settings(BACKEND_SERVICE_EDX_OAUTH2_PROVIDER_URL='https://testserver.com/auth')
 @ddt.ddt
 class ReceiptRedirectViewTests(APITestCase):
     """
@@ -186,3 +185,23 @@ class ReceiptRedirectViewTests(APITestCase):
         response = self.client.get(self.url, data={'order_number': order_number})
         self.assertEqual(response.status_code, status.HTTP_303_SEE_OTHER)
         self.assertEqual(response.url, intent.latest_charge.receipt_url)
+
+    @override_settings(
+        OPEN_EDX_FILTERS_CONFIG={
+            "org.edx.coordinator.frontend_app_ecommerce.order.receipt_url.requested.v1": {
+                "fail_silently": False,
+                "pipeline": [
+                    'commerce_coordinator.apps.rollout.pipeline.DetermineActiveOrderManagementSystemByOrder',
+                    'commerce_coordinator.apps.commercetools.pipeline.FetchOrderDetails',
+                    'commerce_coordinator.apps.stripe.pipeline.GetPaymentIntentReceipt'
+                ]
+            },
+        },
+    )
+    def test_view_forwards_ct_pipe_system_check(self):
+        order_number = 'EDX-999999'
+        self.client.login(username=self.test_user_username, password=self.test_user_password)
+
+        response = self.client.get(self.url, data={'order_number': order_number})
+        self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
+
