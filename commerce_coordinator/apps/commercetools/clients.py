@@ -172,8 +172,7 @@ class CommercetoolsAPIClient:
         else:
             return results.results[0]
 
-    def get_order_by_id(self, order_id: str, expand: ExpandList = DEFAULT_ORDER_EXPANSION)  \
-            -> CTOrder:  # pragma no cover
+    def get_order_by_id(self, order_id: str, expand: ExpandList = DEFAULT_ORDER_EXPANSION) -> CTOrder:
         """
         Fetch an order by the Order ID (UUID)
 
@@ -183,7 +182,7 @@ class CommercetoolsAPIClient:
 
         Returns (CTOrder): Order with Expanded Properties
         """
-        return self.base_client.orders.get_by_id(order_id, expand=list(expand))
+        return self.base_client.orders.get_by_id(order_id, expand=list(expand))  # pragma no cover
 
     def get_orders(self, customer: CTCustomer, offset=0,
                    limit=ORDER_HISTORY_PER_SYSTEM_REQ_LIMIT,
@@ -235,8 +234,8 @@ class CommercetoolsAPIClient:
 
         return orders, customer
 
-    def get_customer_by_id(self, customer_id: str) -> CTCustomer:  # pragma no cover
-        return self.base_client.customers.get_by_id(customer_id)
+    def get_customer_by_id(self, customer_id: str) -> CTCustomer:
+        return self.base_client.customers.get_by_id(customer_id)  # pragma no cover
 
     def get_product_variant_by_course_run(self, cr_id: str) -> Optional[CTProductVariant]:
         """

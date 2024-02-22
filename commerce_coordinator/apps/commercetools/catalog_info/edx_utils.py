@@ -6,7 +6,11 @@ from commercetools.platform.models import Order as CTOrder
 from commercetools.platform.models import Product as CTProduct
 from commercetools.platform.models import ProductVariant as CTProductVariant
 
-from commerce_coordinator.apps.commercetools.catalog_info.constants import EdXFieldNames
+from commerce_coordinator.apps.commercetools.catalog_info.constants import (
+    EDX_STRIPE_PAYMENT_INTERFACE_NAME,
+    PAYMENT_STATUS_INTERFACE_CODE_SUCCEEDED,
+    EdXFieldNames
+)
 
 
 def get_edx_product_course_run_key(prodvar_or_li: Union[CTProductVariant, CTLineItem]) -> str:
@@ -37,3 +41,13 @@ def get_edx_lms_user_id(customer: CTCustomer):
 
 def get_edx_lms_user_name(customer: CTCustomer):
     return customer.custom.fields[EdXFieldNames.LMS_USER_NAME]
+
+
+def get_edx_payment_intent_id(order: CTOrder) -> Union[str, None]:
+    for pr in order.payment_info.payments:
+        pmt = pr.obj
+        if pmt.payment_status.interface_code == PAYMENT_STATUS_INTERFACE_CODE_SUCCEEDED \
+            and pmt.payment_method_info.payment_interface == EDX_STRIPE_PAYMENT_INTERFACE_NAME and \
+            pmt.interface_id:
+            return pmt.interface_id
+    return None

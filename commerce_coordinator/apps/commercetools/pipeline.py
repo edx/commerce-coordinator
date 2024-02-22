@@ -7,10 +7,7 @@ import attrs
 from commercetools import CommercetoolsError
 from openedx_filters import PipelineStep
 
-from commerce_coordinator.apps.commercetools.catalog_info.constants import (
-    EDX_STRIPE_PAYMENT_INTERFACE_NAME,
-    PAYMENT_STATUS_INTERFACE_CODE_SUCCEEDED
-)
+from commerce_coordinator.apps.commercetools.catalog_info.edx_utils import get_edx_payment_intent_id
 from commerce_coordinator.apps.commercetools.clients import CommercetoolsAPIClient
 from commerce_coordinator.apps.commercetools.constants import COMMERCETOOLS_ORDER_MANAGEMENT_SYSTEM
 from commerce_coordinator.apps.commercetools.data import order_from_commercetools
@@ -82,12 +79,10 @@ class FetchOrderDetails(PipelineStep):
                 "order_data": ct_order
             }
 
-            for pr in ct_order.payment_info.payments:
-                pmt = pr.obj
-                if pmt.payment_status.interface_code == PAYMENT_STATUS_INTERFACE_CODE_SUCCEEDED \
-                    and pmt.payment_method_info.payment_interface == EDX_STRIPE_PAYMENT_INTERFACE_NAME and \
-                        pmt.interface_id:
-                    ret_val['payment_intent_id'] = pmt.interface_id
+            intent_id = get_edx_payment_intent_id(ct_order)
+
+            if intent_id:
+                ret_val['payment_intent_id'] = intent_id
 
             return ret_val
         except CommercetoolsError as err:  # pragma no cover
