@@ -205,3 +205,23 @@ class ReceiptRedirectViewTests(APITestCase):
         response = self.client.get(self.url, data={'order_number': order_number})
         self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
 
+
+    @patch('commerce_coordinator.apps.stripe.clients.StripeAPIClient.retrieve_payment_intent')
+    @patch('commerce_coordinator.apps.commercetools.clients.CommercetoolsAPIClient.get_order_by_id')
+    def test_view_errors_if_ct_order_has_no_intent_id(self, ct_mock, stripe_mock):
+        intent = gen_payment_intent()
+        order = gen_order_for_payment_intent()
+
+        for pr in order.payment_info.payments:
+            pmt = pr.obj
+            pmt.payment_status.interface_code = "meow"
+
+        ct_mock.return_value = order
+        stripe_mock.return_value = intent
+
+        order_number = order.id
+        self.client.login(username=self.test_user_username, password=self.test_user_password)
+
+        response = self.client.get(self.url, data={'order_number': order_number})
+
+        self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
