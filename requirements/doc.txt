@@ -15,7 +15,7 @@ asgiref==3.7.2
     #   -r requirements/test.txt
     #   django
     #   django-cors-headers
-astroid==3.0.3
+astroid==3.1.0
     # via
     #   -r requirements/test.txt
     #   pylint
@@ -109,11 +109,11 @@ coreschema==0.0.4
     # via
     #   -r requirements/test.txt
     #   coreapi
-coverage[toml]==7.4.1
+coverage[toml]==7.4.3
     # via
     #   -r requirements/test.txt
     #   pytest-cov
-cryptography==42.0.3
+cryptography==42.0.5
     # via
     #   -r requirements/test.txt
     #   pyjwt
@@ -231,7 +231,7 @@ importlib-metadata==7.0.1
     #   keyring
     #   sphinx
     #   twine
-importlib-resources==6.1.1
+importlib-resources==6.1.2
     # via keyring
 iniconfig==2.0.0
     # via
@@ -291,7 +291,7 @@ more-itertools==10.2.0
     # via jaraco-classes
 mysqlclient==2.2.4
     # via -r requirements/test.txt
-newrelic==9.6.0
+newrelic==9.7.0
     # via
     #   -r requirements/test.txt
     #   edx-django-utils
@@ -362,7 +362,7 @@ pyjwt[crypto]==2.8.0
     #   edx-drf-extensions
     #   edx-rest-api-client
     #   social-auth-core
-pylint==3.0.3
+pylint==3.1.0
     # via
     #   -r requirements/test.txt
     #   edx-lint
@@ -396,7 +396,7 @@ pyproject-api==1.6.1
     #   tox
 pyproject-hooks==1.0.0
     # via build
-pytest==8.0.1
+pytest==8.0.2
     # via
     #   -r requirements/test.txt
     #   pytest-cov
@@ -524,14 +524,14 @@ sqlparse==0.4.4
     # via
     #   -r requirements/test.txt
     #   django
-stevedore==5.1.0
+stevedore==5.2.0
     # via
     #   -r requirements/test.txt
     #   code-annotations
     #   doc8
     #   edx-django-utils
     #   edx-opaque-keys
-stripe==8.3.0
+stripe==8.4.0
     # via -r requirements/test.txt
 testfixtures==8.0.0
     # via -r requirements/test.txt
@@ -558,7 +558,7 @@ tox==4.13.0
     # via -r requirements/test.txt
 twine==5.0.0
     # via -r requirements/doc.in
-typing-extensions==4.9.0
+typing-extensions==4.10.0
     # via
     #   -r requirements/test.txt
     #   asgiref
@@ -589,7 +589,7 @@ vine==5.1.0
     #   amqp
     #   celery
     #   kombu
-virtualenv==20.25.0
+virtualenv==20.25.1
     # via
     #   -r requirements/test.txt
     #   tox

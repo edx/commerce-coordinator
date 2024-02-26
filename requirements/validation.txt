@@ -15,7 +15,7 @@ asgiref==3.7.2
     #   -r requirements/test.txt
     #   django
     #   django-cors-headers
-astroid==3.0.3
+astroid==3.1.0
     # via
     #   -r requirements/quality.txt
     #   -r requirements/test.txt
@@ -129,12 +129,12 @@ coreschema==0.0.4
     #   -r requirements/quality.txt
     #   -r requirements/test.txt
     #   coreapi
-coverage[toml]==7.4.1
+coverage[toml]==7.4.3
     # via
     #   -r requirements/quality.txt
     #   -r requirements/test.txt
     #   pytest-cov
-cryptography==42.0.3
+cryptography==42.0.5
     # via
     #   -r requirements/quality.txt
     #   -r requirements/test.txt
@@ -283,7 +283,7 @@ importlib-metadata==7.0.1
     #   -r requirements/quality.txt
     #   keyring
     #   twine
-importlib-resources==6.1.1
+importlib-resources==6.1.2
     # via
     #   -r requirements/quality.txt
     #   keyring
@@ -368,7 +368,7 @@ mysqlclient==2.2.4
     # via
     #   -r requirements/quality.txt
     #   -r requirements/test.txt
-newrelic==9.6.0
+newrelic==9.7.0
     # via
     #   -r requirements/quality.txt
     #   -r requirements/test.txt
@@ -459,7 +459,7 @@ pyjwt[crypto]==2.8.0
     #   edx-drf-extensions
     #   edx-rest-api-client
     #   social-auth-core
-pylint==3.0.3
+pylint==3.1.0
     # via
     #   -r requirements/quality.txt
     #   -r requirements/test.txt
@@ -498,7 +498,7 @@ pyproject-api==1.6.1
     #   -r requirements/quality.txt
     #   -r requirements/test.txt
     #   tox
-pytest==8.0.1
+pytest==8.0.2
     # via
     #   -r requirements/quality.txt
     #   -r requirements/test.txt
@@ -641,14 +641,14 @@ sqlparse==0.4.4
     #   -r requirements/test.txt
     #   django
     #   django-debug-toolbar
-stevedore==5.1.0
+stevedore==5.2.0
     # via
     #   -r requirements/quality.txt
     #   -r requirements/test.txt
     #   code-annotations
     #   edx-django-utils
     #   edx-opaque-keys
-stripe==8.3.0
+stripe==8.4.0
     # via
     #   -r requirements/quality.txt
     #   -r requirements/test.txt
@@ -681,7 +681,7 @@ tox==4.13.0
     #   -r requirements/test.txt
 twine==5.0.0
     # via -r requirements/quality.txt
-typing-extensions==4.9.0
+typing-extensions==4.10.0
     # via
     #   -r requirements/quality.txt
     #   -r requirements/test.txt
@@ -717,7 +717,7 @@ vine==5.1.0
     #   amqp
     #   celery
     #   kombu
-virtualenv==20.25.0
+virtualenv==20.25.1
     # via
     #   -r requirements/quality.txt
     #   -r requirements/test.txt
