@@ -14,9 +14,12 @@ from commerce_coordinator.apps.commercetools.serializers import OrderFulfillView
 from commerce_coordinator.apps.commercetools.signals import fulfill_order_placed_signal
 
 from .catalog_info.edx_utils import (
+    get_edx_is_sanctioned,
     get_edx_items,
     get_edx_lms_user_id,
     get_edx_lms_user_name,
+    get_edx_order_workflow_state_key,
+    get_edx_payment_intent_id,
     get_edx_product_course_run_key,
     is_edx_lms_order
 )
@@ -135,10 +138,8 @@ class OrderSanctionedView(APIView):
             logger.error(f'[CT-OrderSanctionedView] Order not found: {order_id} with CT error {err}, {err.errors}')
             return Response(status=status.HTTP_404_NOT_FOUND)
 
-        order_workflow_state = None
-        if order.state and order.state.obj:  # it should never be that we have one and not the other. # pragma no cover
-            order_workflow_state = order.state.obj.key
-        else:  # pragma no cover
+        order_workflow_state = get_edx_order_workflow_state_key(order)
+        if not order_workflow_state:
             logger.debug('[CT-OrderSanctionedView] order %s has no workflow/transition state', order_id)
 
         try:
@@ -152,7 +153,7 @@ class OrderSanctionedView(APIView):
             logger.debug('[CT-OrderSanctionedView] order %s is not an edX order', order_id)
             return Response(status=status.HTTP_200_OK)
 
-        if not order_workflow_state == TwoUKeys.SDN_SANCTIONED_ORDER_STATE:
+        if get_edx_is_sanctioned(order):
             logger.debug(
                 '[CT-OrderSanctionedView] order state for order %s is not %s. Actual value is %s',
                 order_id,
@@ -161,8 +162,66 @@ class OrderSanctionedView(APIView):
             )
 
             lms_user_name = get_edx_lms_user_name(customer)
-            logger.debug('[CT-OrderSanctionedView] calling lms to deactive user %s', lms_user_name)
+            logger.debug('[CT-OrderSanctionedView] calling lms to deactivate user %s', lms_user_name)
 
             # TODO: SONIC-155 use lms_user_name to call LMS endpoint to deactivate user
+
+        return Response(status=status.HTTP_200_OK)
+
+
+# noinspection DuplicatedCode
+class OrderReturnedView(APIView):
+    """View to sanction an order and deactivate the lms user"""
+    permission_classes = [IsAdminUser]
+
+    def post(self, request):
+        """
+        Receive a message from commerce tools forwarded by aws event bridge
+        to sanction order and deactivate user through LMS
+        """
+        input_data = {
+            **request.data
+        }
+
+        logger.debug('[CT-OrderReturnedView] Message received from commercetools with details: %s', input_data)
+
+        message_details = OrderMessageInputSerializer(data=input_data)
+        message_details.is_valid(raise_exception=True)
+
+        client = CommercetoolsAPIClient()
+        order_id = message_details.data['order_id']
+
+        try:
+            order = client.get_order_by_id(order_id)
+        except CommercetoolsError as err:  # pragma no cover
+            logger.error(f'[CT-OrderReturnedView] Order not found: {order_id} with CT error {err}, {err.errors}')
+            return Response(status=status.HTTP_404_NOT_FOUND)
+
+        try:
+            customer = client.get_customer_by_id(order.customer_id)
+        except CommercetoolsError as err:  # pragma no cover
+            logger.error(f'[CT-OrderReturnedView]  Customer not found: {order.customer_id} for order {order_id} with '
+                         f'CT error {err}, {err.errors}')
+            return Response(status=status.HTTP_404_NOT_FOUND)
+
+        if not (customer and order and is_edx_lms_order(order)):
+            logger.debug('[CT-OrderReturnedView] order %s is not an edX order', order_id)
+            return Response(status=status.HTTP_200_OK)
+
+        payment_intent_id = get_edx_payment_intent_id(order)
+        lms_user_name = get_edx_lms_user_name(customer)
+
+        logger.debug('[CT-OrderReturnedView] calling stripe to refund payment intent %s', payment_intent_id)
+
+        # TODO: Return payment if payment intent id is set
+
+        for line_item in get_edx_items(order):
+            course_run = get_edx_product_course_run_key(line_item)
+
+            # TODO: Remove LMS Enrollment
+            logger.debug(
+                '[CT-OrderSanctionedView] calling lms to unenroll user %s in %s',
+                lms_user_name, course_run
+            )
 
         return Response(status=status.HTTP_200_OK)
