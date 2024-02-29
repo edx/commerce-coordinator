@@ -2,8 +2,14 @@ from unittest import TestCase
 
 import ddt
 
-from commerce_coordinator.apps.core.tests.utils import name_test
-from commerce_coordinator.apps.rollout.utils import is_legacy_order, is_uuid
+from commerce_coordinator.apps.commercetools.tests.conftest import gen_order
+from commerce_coordinator.apps.core.tests.utils import name_test, uuid4_str
+from commerce_coordinator.apps.rollout.utils import (
+    get_order_return_info_return_items,
+    is_commercetools_line_item_already_refunded,
+    is_legacy_order,
+    is_uuid
+)
 
 
 @ddt.ddt
@@ -32,3 +38,17 @@ class TestUtilityFunctions(TestCase):
     @ddt.unpack
     def test_is_uuid(self, value, expectation):
         self.assertEqual(is_uuid(value), expectation)
+
+    def test_get_order_return_info_return_items(self):
+        order = gen_order(uuid4_str())
+
+        self.assertEqual(len(get_order_return_info_return_items(order)), 2)
+
+    @ddt.data(
+            {'line_item_id': 'order_line_id'}
+    )
+    @ddt.unpack
+    def test_is_commercetools_line_item_already_refunded(self, line_item_id):
+        order = gen_order(uuid4_str())
+
+        self.assertTrue(is_commercetools_line_item_already_refunded(order, line_item_id))

@@ -1,7 +1,15 @@
 """Commercetools pipeline test cases"""
-from commerce_coordinator.apps.commercetools.pipeline import GetCommercetoolsOrders
+from unittest.mock import patch
+
+from commercetools.platform.models import ReturnInfo, ReturnShipmentState
+from rest_framework.test import APITestCase
+
+from commerce_coordinator.apps.commercetools.constants import COMMERCETOOLS_ORDER_MANAGEMENT_SYSTEM
+from commerce_coordinator.apps.commercetools.pipeline import CreateReturnForCommercetoolsOrder, GetCommercetoolsOrders
 from commerce_coordinator.apps.commercetools.tests._test_cases import MonkeyPatchedGetOrderTestCase
+from commerce_coordinator.apps.commercetools.tests.conftest import APITestingSet, gen_order, gen_return_item
 from commerce_coordinator.apps.core.constants import ORDER_HISTORY_PER_SYSTEM_REQ_LIMIT
+from commerce_coordinator.apps.core.exceptions import InvalidFilterType
 
 
 class PipelineTests(MonkeyPatchedGetOrderTestCase):
@@ -21,3 +29,73 @@ class PipelineTests(MonkeyPatchedGetOrderTestCase):
         )
 
         self.assertEqual(len(ret['order_data']), len(self.orders))
+
+
+class CommercetoolsOrLegacyEcommerceRefundPipelineTests(APITestCase):
+    """
+    Rollout pipeline tests to determine which system applies the refund
+    for given order.
+
+    """
+
+    def setUp(self):
+        super().setUp()
+        self.client_set = APITestingSet.new_instance()
+        mock_response_order = gen_order("mock_id")
+        mock_response_order.version = "1"
+        self.mock_response_order = mock_response_order
+        mock_response_return_item = gen_return_item("mock_return_item_id")
+        mock_response_return_info = ReturnInfo(items=[mock_response_return_item])
+        mock_response_order.return_info.append(mock_response_return_info)
+        self.returned_order = mock_response_order
+
+    def tearDown(self):
+        del self.client_set
+        super().tearDown()
+
+    def test_legacy_ecommerce_refund(self):
+        refund_pipe = CreateReturnForCommercetoolsOrder("test_pipe", None)
+        ret = refund_pipe.run_filter(
+            active_order_management_system="Legacy",
+            order_number="mock_id",
+            order_line_id="mock_line_id"
+        )
+        self.assertEqual(ret, {})
+
+    @patch('commerce_coordinator.apps.rollout.utils.is_commercetools_line_item_already_refunded')
+    @patch('commerce_coordinator.apps.commercetools.clients.CommercetoolsAPIClient.get_order_by_id')
+    @patch('commerce_coordinator.apps.commercetools.clients.CommercetoolsAPIClient.create_return_for_order')
+    def test_commercetools_order_refund(self, mock_returned_order, mock_order, mock_ct_refund):
+        mock_ct_refund.return_value = False
+        mock_order.return_value = self.mock_response_order
+        mock_returned_order.return_value = self.returned_order
+
+        refund_pipe = CreateReturnForCommercetoolsOrder("test_pipe", None)
+        ret = refund_pipe.run_filter(
+            active_order_management_system=COMMERCETOOLS_ORDER_MANAGEMENT_SYSTEM,
+            order_number="mock_id",
+            order_line_id="mock_line_id"
+        )
+        mock_order_result = ret['returned_order']
+
+        self.assertEqual(mock_order_result, self.returned_order)
+        self.assertEqual(mock_order_result.return_info[1].items[0].shipment_state, ReturnShipmentState.RETURNED)
+
+    @patch('commerce_coordinator.apps.rollout.utils.is_commercetools_line_item_already_refunded')
+    @patch('commerce_coordinator.apps.commercetools.clients.CommercetoolsAPIClient.get_order_by_id')
+    def test_commercetools_order_item_already_refunded(self, mock_order, mock_ct_refund):
+        mock_order.return_value = self.mock_response_order
+        mock_ct_refund.return_value = True
+
+        refund_pipe = CreateReturnForCommercetoolsOrder("test_pipe", None)
+        with self.assertRaises(InvalidFilterType) as exc:
+            refund_pipe.run_filter(
+                active_order_management_system=COMMERCETOOLS_ORDER_MANAGEMENT_SYSTEM,
+                order_number="mock_id",
+                order_line_id="order_line_id"
+            )
+
+        self.assertEqual(
+            str(exc.exception),
+            'Refund already created for order mock_id with order line id order_line_id'
+        )

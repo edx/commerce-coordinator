@@ -2,16 +2,21 @@
 
 import pytest
 import requests_mock
+from commercetools import CommercetoolsError
 from commercetools.platform.models import (
     Customer,
     CustomerDraft,
     CustomerPagedQueryResponse,
     Order,
     OrderPagedQueryResponse,
+    ReturnInfo,
+    ReturnPaymentState,
+    ReturnShipmentState,
     Type,
     TypeDraft
 )
 from django.test import TestCase
+from mock import patch
 
 from commerce_coordinator.apps.commercetools.catalog_info.constants import EdXFieldNames
 from commerce_coordinator.apps.commercetools.catalog_info.foundational_types import TwoUCustomTypes
@@ -19,7 +24,9 @@ from commerce_coordinator.apps.commercetools.clients import PaginatedResult
 from commerce_coordinator.apps.commercetools.tests.conftest import (
     APITestingSet,
     gen_example_customer,
-    gen_order_history
+    gen_order,
+    gen_order_history,
+    gen_return_item
 )
 from commerce_coordinator.apps.core.constants import ORDER_HISTORY_PER_SYSTEM_REQ_LIMIT
 from commerce_coordinator.apps.core.tests.utils import uuid4_str
@@ -307,6 +314,72 @@ class ClientTests(TestCase):
             self.assertEqual(ret_orders[0].has_more(), True)
             self.assertEqual(ret_orders[0].next_offset(), params['limit'])
             self.assertEqual(ret_orders[0].offset, params['offset'])
+
+    def test_create_return_for_order_success(self):
+        base_url = self.client_set.get_base_url_from_client()
+
+        # Mocked expected order recieved after CT SDK call to update the order
+        mock_response_order = gen_order("mock_order_id")
+        mock_response_order.version = "1"
+        mock_response_return_item = gen_return_item("mock_return_item_id")
+        mock_response_return_info = ReturnInfo(items=[mock_response_return_item])
+        mock_response_order.return_info.append(mock_response_return_info)
+
+        with requests_mock.Mocker(real_http=True, case_sensitive=False) as mocker:
+            mocker.post(
+                f"{base_url}orders/{mock_response_order.id}",
+                json=mock_response_order.serialize(),
+                status_code=200
+            )
+
+            result = self.client_set.client.create_return_for_order(
+                mock_response_order.id,
+                mock_response_order.version,
+                mock_response_return_item.line_item_id
+            )
+
+            self.assertEqual(result.return_info[1].items[0].shipment_state, ReturnShipmentState.RETURNED)
+            self.assertEqual(result.return_info[1].items[0].payment_state, ReturnPaymentState.INITIAL)
+
+    def test_create_return_for_order_exception(self):
+        base_url = self.client_set.get_base_url_from_client()
+        mock_error_response: CommercetoolsError = {
+            "message": "Could not create return for order mock_order_id",
+            "errors": [
+                {
+                    "code": "ConcurrentModification",
+                    "detailedErrorMessage": "Object [mock_order_id] has a "
+                                            "different version than expected. Expected: 2 - Actual: 1."
+                },
+            ],
+            "response": {},
+            "correlation_id": '123456'
+        }
+
+        with requests_mock.Mocker(real_http=True, case_sensitive=False) as mocker:
+            mocker.post(
+                f"{base_url}orders/mock_order_id",
+                json=mock_error_response,
+                status_code=409
+            )
+
+            with patch('commerce_coordinator.apps.commercetools.clients.logging.Logger.error') as log_mock:
+                with self.assertRaises(CommercetoolsError) as cm:
+                    self.client_set.client.create_return_for_order(
+                        order_id="mock_order_id",
+                        order_version="1",
+                        order_line_id="mock_return_item_id"
+                    )
+
+                exception = cm.exception
+
+                expected_message = (
+                    f"[CommercetoolsError] Unable to create return for "
+                    f"order mock_order_id with error correlation id {exception.correlation_id} "
+                    f"and error/s: {exception.errors}"
+                )
+
+                log_mock.assert_called_once_with(expected_message)
 
 
 class PaginatedResultsTest(TestCase):

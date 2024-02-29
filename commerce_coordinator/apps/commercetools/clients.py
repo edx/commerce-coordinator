@@ -12,7 +12,9 @@ from commercetools.platform.models import Customer as CTCustomer
 from commercetools.platform.models import CustomerSetCustomTypeAction as CTCustomerSetCustomTypeAction
 from commercetools.platform.models import FieldContainer as CTFieldContainer
 from commercetools.platform.models import Order as CTOrder
+from commercetools.platform.models import OrderAddReturnInfoAction
 from commercetools.platform.models import ProductVariant as CTProductVariant
+from commercetools.platform.models import ReturnItemDraft, ReturnShipmentState
 from commercetools.platform.models import Type as CTType
 from commercetools.platform.models import TypeDraft as CTTypeDraft
 from commercetools.platform.models import TypeResourceIdentifier as CTTypeResourceIdentifier
@@ -268,3 +270,41 @@ class CommercetoolsAPIClient:
             return None
 
         return matching_variant_list[0]
+
+    def create_return_for_order(self, order_id: str, order_version: str, order_line_id: str) -> CTOrder:
+        """
+        Creates refund/return for Commercetools order
+        Args:
+            order_id (str): Order ID (UUID)
+            order_version (str): Current version of order
+            order_line_id (str): ID of order line item
+        Returns (CTOrder): Updated order object or
+        Returns Exception: Error if update was unsuccesful.
+        """
+
+        try:
+            return_item_draft_comment = f'Creating return item for order {order_id} with ' \
+                                        f'order line id {order_line_id}'
+
+            return_item_draft = ReturnItemDraft(
+                quantity=1,
+                line_item_id=order_line_id,
+                comment=return_item_draft_comment,
+                shipment_state=ReturnShipmentState.RETURNED
+            )
+
+            add_return_info_action = OrderAddReturnInfoAction(
+                items=[return_item_draft]
+            )
+
+            returned_order = self.base_client.orders.update_by_id(
+                id=order_id,
+                version=order_version,
+                actions=[add_return_info_action]
+            )
+            return returned_order
+        except CommercetoolsError as err:
+            logger.error(f"[CommercetoolsError] Unable to create return for "
+                         f"order {order_id} with error correlation id {err.correlation_id} "
+                         f"and error/s: {err.errors}")
+            raise err

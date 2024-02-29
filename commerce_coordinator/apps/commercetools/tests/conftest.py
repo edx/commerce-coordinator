@@ -13,9 +13,11 @@ from commercetools.platform.models import AuthenticationMode as CTAuthentication
 from commercetools.platform.models import Customer as CTCustomer
 from commercetools.platform.models import CustomFields as CTCustomFields
 from commercetools.platform.models import FieldContainer as CTFieldContainer
+from commercetools.platform.models import LineItemReturnItem as CTLineItemReturnItem
 from commercetools.platform.models import Order as CTOrder
 from commercetools.platform.models import Product as CTProduct
 from commercetools.platform.models import ProductProjectionPagedSearchResponse as CTProductProjectionPagedSearchResponse
+from commercetools.platform.models import ReturnPaymentState, ReturnShipmentState
 from commercetools.platform.models import TypeReference as CTTypeReference
 from commercetools.testing import BackendRepository
 
@@ -245,4 +247,16 @@ def gen_customer(email: str, un: str):
         id=uuid4_str(),
         is_email_verified=True,
         last_modified_at=datetime.now()
+    )
+
+
+def gen_return_item(order_line_id: str) -> CTLineItemReturnItem:
+    return CTLineItemReturnItem(
+        id=uuid4_str(),
+        quantity=1,
+        shipment_state=ReturnShipmentState.RETURNED,
+        payment_state=ReturnPaymentState.INITIAL,
+        last_modified_at=datetime.now(),
+        created_at=datetime.now(),
+        line_item_id=order_line_id
     )

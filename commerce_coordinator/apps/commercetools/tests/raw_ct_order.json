@@ -351,9 +351,26 @@
   "orderState": "Complete",
   "shipmentState": "Shipped",
   "paymentState": "Paid",
-  "syncInfo": [
-  ],
+  "syncInfo": [],
   "returnInfo": [
+    {
+      "items": [
+        {
+          "id": "1234",
+          "type": "LineItemReturnItem",
+          "lineItemId": "order_line_id" 
+
+        },
+        {
+          "id": "5678",
+          "type": "LineItemReturnItem",
+          "lineItemId": "not_order_line_id" 
+
+        }
+      ],
+      "returnTrackingId": "1",
+      "returnDate": "2023-10-31T19:56:46.127Z"
+    }
   ],
   "lastMessageSequenceNumber": 5,
   "lastModifiedBy": {

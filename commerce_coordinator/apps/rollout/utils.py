@@ -1,6 +1,10 @@
 """ Rollout Utility Functions"""
 
 import re
+from typing import List
+
+from commercetools.platform.models import Order as CTOrder
+from commercetools.platform.models import ReturnItem as CTReturnItem
 
 
 def is_legacy_order(order_number: str) -> bool:
@@ -15,3 +19,23 @@ def is_uuid(value: str) -> bool:
     if not value:
         return False
     return re.search(r"\b[A-Fa-f0-9]{8}(?:-[A-Fa-f0-9]{4}){3}-[A-Fa-f0-9]{12}\b", value) is not None
+
+
+def get_order_return_info_return_items(order: CTOrder) -> List[CTReturnItem]:
+    """ Returns array of Commercetools order return items """
+    return_info_items = []
+    for item in map(lambda x: x.items, order.return_info):
+        return_info_items.extend(item)
+
+    return return_info_items
+
+
+def is_commercetools_line_item_already_refunded(order: CTOrder, order_line_id: str) -> bool:
+    """
+    Determine if a return already exists for the Commercetools line item
+    to prevent duplicate refunds/returns.
+    """
+
+    return_info_return_items = get_order_return_info_return_items(order)
+
+    return len(list(filter(lambda item: item.line_item_id == order_line_id, return_info_return_items))) >= 1

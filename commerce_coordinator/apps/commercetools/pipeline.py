@@ -1,17 +1,21 @@
 """
 Commercetools filter pipelines
 """
+
 from logging import getLogger
 
 import attrs
 from commercetools import CommercetoolsError
 from openedx_filters import PipelineStep
+from openedx_filters.exceptions import OpenEdxFilterException
 
 from commerce_coordinator.apps.commercetools.catalog_info.edx_utils import get_edx_payment_intent_id
 from commerce_coordinator.apps.commercetools.clients import CommercetoolsAPIClient
 from commerce_coordinator.apps.commercetools.constants import COMMERCETOOLS_ORDER_MANAGEMENT_SYSTEM
 from commerce_coordinator.apps.commercetools.data import order_from_commercetools
 from commerce_coordinator.apps.core.constants import PipelineCommand
+from commerce_coordinator.apps.core.exceptions import InvalidFilterType
+from commerce_coordinator.apps.rollout.utils import is_commercetools_line_item_already_refunded
 
 log = getLogger(__name__)
 
@@ -65,6 +69,7 @@ class FetchOrderDetails(PipelineStep):
             active_order_management_system: The Active Order System (optional)
             params: arguments passed through from the original order history url querystring
             order_number: Order number (for now this is an order.id, but this should change in the future)
+            TODO: SONIC-277 (in-progress)
         Returns:
         """
         if active_order_management_system != COMMERCETOOLS_ORDER_MANAGEMENT_SYSTEM:
@@ -87,3 +92,58 @@ class FetchOrderDetails(PipelineStep):
         except CommercetoolsError as err:  # pragma no cover
             log.exception(f"[{type(self).__name__}] Commercetools Error: {err}, {err.errors}")
             return PipelineCommand.CONTINUE.value
+
+
+class CreateReturnForCommercetoolsOrder(PipelineStep):
+    """
+    Creates refund/return for Commercetools order by Updating its
+    ReturnShipmentStatus & ReturnPaymentStatus
+    """
+
+    def run_filter(
+            self,
+            active_order_management_system,
+            order_number,
+            order_line_id
+    ):  # pylint: disable=arguments-differ
+        """
+        Execute a filter with the signature specified.
+        Args:
+            active_order_management_system: The Active Order System
+            order_number: Order number (for now this is an order.id, but this should change in the future)
+            TODO: SONIC-277 (in-progress)
+            order_line_id: ID of order line item
+        Returns:
+            returned_order: Updated Commercetools order
+            returned_line_item_return_id: Updated Commercetools order's return item ID
+
+        """
+        if active_order_management_system != COMMERCETOOLS_ORDER_MANAGEMENT_SYSTEM:  # pragma no cover
+            return PipelineCommand.CONTINUE.value
+
+        try:
+            ct_api_client = CommercetoolsAPIClient()
+            order = ct_api_client.get_order_by_id(order_id=order_number)
+            if not is_commercetools_line_item_already_refunded(order, order_line_id):
+                returned_order = ct_api_client.create_return_for_order(
+                    order_id=order.id,
+                    order_version=order.version,
+                    order_line_id=order_line_id
+                )
+
+                returned_line_item_return_id = returned_order.return_info[0].items[0].id
+
+                return {
+                    'returned_order': returned_order,
+                    'returned_line_item_return_id': returned_line_item_return_id
+                }
+            else:
+                log.exception(f'Refund already created for order {order.id} with '
+                              f'order line id {order_line_id}')
+                raise InvalidFilterType(
+                    f'Refund already created for order {order.id} with '
+                    f'order line id {order_line_id}')
+        except CommercetoolsError as err:  # pragma no cover
+            # TODO: FIX Per SONIC-354
+            log.exception(f"[{type(self).__name__}] Commercetools Error: {err}, {err.errors}")
+            raise OpenEdxFilterException(str(err)) from err
