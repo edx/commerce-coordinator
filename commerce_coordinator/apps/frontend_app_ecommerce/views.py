@@ -39,20 +39,17 @@ class RedirectReceiptView(APIView):
     def get(self, request):
         """Get the order history for the authenticated user."""
 
+        order_number = request.query_params.get('order_number', None)
+
+        if not order_number:
+            return HttpResponse(status=HTTP_404_NOT_FOUND)
+
         # build parameters
         params = {
             'username': request.user.username,
             "edx_lms_user_id": request.user.lms_user_id,
-            "order_number": request.query_params.get('order_number', None),
+            "order_number": order_number,
         }
-
-        # deny global queries
-        if not request.user.username:  # pragma: no cover
-            # According to the Django checks, this isn't possible with our current user model.
-            # Leaving in incase that changes.
-            raise PermissionDenied(detail="Could not detect username.")
-        if not request.user.lms_user_id:  # pragma: no cover
-            raise PermissionDenied(detail="Could not detect LMS user id.")
 
         redirect_url = OrderReceiptRedirectionUrlRequested.run_filter(params, order_number=params['order_number'])
 

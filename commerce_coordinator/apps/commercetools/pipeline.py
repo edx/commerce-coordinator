@@ -50,7 +50,7 @@ class GetCommercetoolsOrders(PipelineStep):
                 "order_data": order_data
             }
         except CommercetoolsError as err:  # pragma no cover
-            log.exception(f"[{type(self).__name__}] Commercetools Error: {err}, {err.errors}", err)
+            log.exception(f"[{type(self).__name__}] Commercetools Error: {err}, {err.errors}")
             return PipelineCommand.CONTINUE.value
 
 
@@ -67,8 +67,7 @@ class FetchOrderDetails(PipelineStep):
             order_number: Order number (for now this is an order.id, but this should change in the future)
         Returns:
         """
-        if not active_order_management_system == COMMERCETOOLS_ORDER_MANAGEMENT_SYSTEM and \
-                active_order_management_system is not None:
+        if active_order_management_system != COMMERCETOOLS_ORDER_MANAGEMENT_SYSTEM:
             return PipelineCommand.CONTINUE.value
 
         try:
@@ -86,5 +85,5 @@ class FetchOrderDetails(PipelineStep):
 
             return ret_val
         except CommercetoolsError as err:  # pragma no cover
-            log.exception(f"[{type(self).__name__}] Commercetools Error: {err}, {err.errors}", err)
+            log.exception(f"[{type(self).__name__}] Commercetools Error: {err}, {err.errors}")
             return PipelineCommand.CONTINUE.value

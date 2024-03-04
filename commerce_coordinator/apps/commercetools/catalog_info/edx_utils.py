@@ -8,7 +8,7 @@ from commercetools.platform.models import ProductVariant as CTProductVariant
 
 from commerce_coordinator.apps.commercetools.catalog_info.constants import (
     EDX_STRIPE_PAYMENT_INTERFACE_NAME,
-    PAYMENT_STATUS_INTERFACE_CODE_SUCCEEDED,
+    STRIPE_PAYMENT_STATUS_INTERFACE_CODE_SUCCEEDED,
     EdXFieldNames
 )
 
@@ -46,7 +46,7 @@ def get_edx_lms_user_name(customer: CTCustomer):
 def get_edx_payment_intent_id(order: CTOrder) -> Union[str, None]:
     for pr in order.payment_info.payments:
         pmt = pr.obj
-        if pmt.payment_status.interface_code == PAYMENT_STATUS_INTERFACE_CODE_SUCCEEDED \
+        if pmt.payment_status.interface_code == STRIPE_PAYMENT_STATUS_INTERFACE_CODE_SUCCEEDED \
             and pmt.payment_method_info.payment_interface == EDX_STRIPE_PAYMENT_INTERFACE_NAME and \
                 pmt.interface_id:
             return pmt.interface_id

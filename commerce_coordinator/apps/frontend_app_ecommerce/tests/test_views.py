@@ -164,11 +164,24 @@ class ReceiptRedirectViewTests(APITestCase):
         self.assertTrue(response.url.startswith('http://localhost'))
         self.assertTrue(response.url.endswith(order_number))
 
-    def test_view_404s_when_bad_order_number(self):
+    def test_view_404s_when_no_order_number(self):
+        self.client.login(username=self.test_user_username, password=self.test_user_password)
+        response = self.client.get(self.url, data={})
+        self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
+
+    @patch('commerce_coordinator.apps.stripe.clients.StripeAPIClient.retrieve_payment_intent')
+    @patch('commerce_coordinator.apps.commercetools.clients.CommercetoolsAPIClient.get_order_by_id')
+    def test_view_303s_when_order_number_might_be_ct(self, ct_mock, stripe_mock):
+        intent = gen_payment_intent()
+        order = gen_order_for_payment_intent()
+
+        ct_mock.return_value = order
+        stripe_mock.return_value = intent
+
         order_number = 'EDX-ZZZ001'
         self.client.login(username=self.test_user_username, password=self.test_user_password)
-        with self.assertRaises(OpenEdxFilterException):
-            _ = self.client.get(self.url, data={'order_number': order_number})
+        response = self.client.get(self.url, data={'order_number': order_number})
+        self.assertEqual(response.status_code, status.HTTP_303_SEE_OTHER)
 
     @patch('commerce_coordinator.apps.stripe.clients.StripeAPIClient.retrieve_payment_intent')
     @patch('commerce_coordinator.apps.commercetools.clients.CommercetoolsAPIClient.get_order_by_id')
@@ -185,25 +198,25 @@ class ReceiptRedirectViewTests(APITestCase):
         response = self.client.get(self.url, data={'order_number': order_number})
         self.assertEqual(response.status_code, status.HTTP_303_SEE_OTHER)
         self.assertEqual(response.url, intent.latest_charge.receipt_url)
-
-    @override_settings(
-        OPEN_EDX_FILTERS_CONFIG={
-            "org.edx.coordinator.frontend_app_ecommerce.order.receipt_url.requested.v1": {
-                "fail_silently": False,
-                "pipeline": [
-                    'commerce_coordinator.apps.rollout.pipeline.DetermineActiveOrderManagementSystemByOrder',
-                    'commerce_coordinator.apps.commercetools.pipeline.FetchOrderDetails',
-                    'commerce_coordinator.apps.stripe.pipeline.GetPaymentIntentReceipt'
-                ]
-            },
-        },
-    )
-    def test_view_forwards_ct_pipe_system_check(self):
-        order_number = 'EDX-999999'
-        self.client.login(username=self.test_user_username, password=self.test_user_password)
-
-        response = self.client.get(self.url, data={'order_number': order_number})
-        self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
+    #
+    # @override_settings(
+    #     OPEN_EDX_FILTERS_CONFIG={
+    #         "org.edx.coordinator.frontend_app_ecommerce.order.receipt_url.requested.v1": {
+    #             "fail_silently": False,
+    #             "pipeline": [
+    #                 'commerce_coordinator.apps.rollout.pipeline.DetermineActiveOrderManagementSystemByOrder',
+    #                 'commerce_coordinator.apps.commercetools.pipeline.FetchOrderDetails',
+    #                 'commerce_coordinator.apps.stripe.pipeline.GetPaymentIntentReceipt'
+    #             ]
+    #         },
+    #     },
+    # )
+    # def test_view_forwards_ct_pipe_system_check(self):
+    #     order_number = 'EDX-999999'
+    #     self.client.login(username=self.test_user_username, password=self.test_user_password)
+    #
+    #     response = self.client.get(self.url, data={'order_number': order_number})
+    #     self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
 
     @patch('commerce_coordinator.apps.stripe.clients.StripeAPIClient.retrieve_payment_intent')
     @patch('commerce_coordinator.apps.commercetools.clients.CommercetoolsAPIClient.get_order_by_id')

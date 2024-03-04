@@ -13,7 +13,7 @@ from commerce_coordinator.apps.core.constants import PipelineCommand
 from commerce_coordinator.apps.ecommerce.constarnts import ECOMMERCE_ORDER_MANAGEMENT_SYSTEM
 from commerce_coordinator.apps.enterprise_learner.utils import is_user_enterprise_learner
 from commerce_coordinator.apps.frontend_app_payment.constants import FRONTEND_APP_PAYMENT_CHECKOUT
-from commerce_coordinator.apps.rollout.utils import is_legacy_order, is_uuid
+from commerce_coordinator.apps.rollout.utils import is_legacy_order
 from commerce_coordinator.apps.rollout.waffle import is_redirect_to_commercetools_enabled_for_user
 
 logger = logging.getLogger(__name__)
@@ -76,17 +76,10 @@ class DetermineActiveOrderManagementSystemByOrder(PipelineStep):
     def run_filter(self, order_number, **kwargs):  # pylint: disable=arguments-differ
         """ Using an Order Numer/ID to determine the active order management system """
 
-        active_order_management_system = None
+        active_order_management_system = COMMERCETOOLS_ORDER_MANAGEMENT_SYSTEM
 
-        if is_uuid(order_number):
-            active_order_management_system = COMMERCETOOLS_ORDER_MANAGEMENT_SYSTEM
-        elif is_legacy_order(order_number):
+        if is_legacy_order(order_number):
             active_order_management_system = ECOMMERCE_ORDER_MANAGEMENT_SYSTEM
-
-        if not active_order_management_system:
-            logger.error(f"Active order management system for order number {order_number} unknown.")
-            raise OpenEdxFilterException(f'Could not determine the active order management system for '
-                                         f'order number {order_number}')
 
         return {
             ACTIVE_ORDER_MANAGEMENT_SYSTEM_KEY: active_order_management_system

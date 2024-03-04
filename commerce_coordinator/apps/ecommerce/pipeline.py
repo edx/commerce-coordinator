@@ -15,8 +15,7 @@ class GetLegacyEcommerceReceiptRedirectUrl(PipelineStep):
 
     def run_filter(self, params, active_order_management_system, order_number):
         # pylint: disable=arguments-differ, unused-argument
-        if not active_order_management_system == ECOMMERCE_ORDER_MANAGEMENT_SYSTEM and \
-                active_order_management_system is not None:
+        if active_order_management_system != ECOMMERCE_ORDER_MANAGEMENT_SYSTEM:
             return PipelineCommand.CONTINUE.value
 
         return {

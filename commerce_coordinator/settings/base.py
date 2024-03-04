@@ -345,7 +345,7 @@ REQUEST_READ_TIMEOUT_SECONDS = 5
 FULFILLMENT_TIMEOUT = 7
 
 # API URLs
-ECOMMERCE_URL = 'http://localhost:18130/'
+ECOMMERCE_URL = 'http://localhost:18130'
 ECOMMERCE_ADD_TO_BASKET_API_PATH = '/basket/add/'
 TITAN_URL = 'replace-me'
 
@@ -488,7 +488,7 @@ COMMERCETOOLS_CONFIG = {
 
 
 # Will be suffixed with order numbers
-ECOMMERCE_RECEIPT_URL_BASE = f'{ECOMMERCE_URL}checkout/receipt/?order_number='
+ECOMMERCE_RECEIPT_URL_BASE = f'{ECOMMERCE_URL}/checkout/receipt/?order_number='
 
 # Setting to keep using deprecated pytz with Django>4
 USE_DEPRECATED_PYTZ = True
