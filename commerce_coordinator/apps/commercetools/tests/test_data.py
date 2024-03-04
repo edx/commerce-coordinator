@@ -155,7 +155,7 @@ class TestCTOrderConversionToLegacyOrders(TestCase):
             self.assertEqual(ret, li.product_id)
         else:
             attrs = attribute_dict(li.variant.attributes)
-            self.assertEqual(ret, attrs['edx-course_run_id'])
+            self.assertEqual(ret, attrs['courserun-id'])
 
     @ddt.data(
         name_test(

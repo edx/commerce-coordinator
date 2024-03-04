@@ -68,7 +68,7 @@ def convert_line_item_prod_id(li: CTLineItem) -> str:
     Returns: Our best guess at the product line items id.
 
     """
-    key_name = 'edx-course_run_id'  # this could be wrong and will likely change when the catalog is 'fixed'
+    key_name = 'courserun-id'  # this could be wrong and will likely change when the catalog is 'fixed'
     attrs = attribute_dict(li.variant.attributes)
 
     if attrs and key_name in attrs and attrs[key_name]:  # pragma no cover
