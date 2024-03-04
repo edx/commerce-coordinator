@@ -146,12 +146,12 @@ class TestCTOrderConversionToLegacyOrders(TestCase):
         order = gen_order(uuid4_str())
         li: CTLineItem = order.line_items[0]
 
-        if strip_custom_fields:
+        if strip_custom_fields[0]:
             li.variant.attributes = []
 
         ret = convert_line_item_prod_id(li)
 
-        if strip_custom_fields:
+        if strip_custom_fields[0]:
             self.assertEqual(ret, li.product_id)
         else:
             attrs = attribute_dict(li.variant.attributes)
