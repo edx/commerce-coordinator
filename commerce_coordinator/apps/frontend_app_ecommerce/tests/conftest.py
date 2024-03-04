@@ -21,7 +21,7 @@ def gen_payment_intent(hydrate=True) -> Union[PaymentIntent, Dict[str, Any]]:
     with open(os.path.join(pathlib.Path(__file__).parent.resolve(), 'raw_stripe_paymentintent_with_charges.json')) as f:
         obj = json.load(f)
 
-        if not hydrate:
+        if not hydrate:  # pragma no cover
             return obj
 
         intent = PaymentIntent()
