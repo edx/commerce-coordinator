@@ -75,7 +75,7 @@ coreschema==0.0.4
     # via
     #   -r requirements/base.txt
     #   coreapi
-cryptography==42.0.3
+cryptography==42.0.5
     # via
     #   -r requirements/base.txt
     #   pyjwt
@@ -173,7 +173,7 @@ markupsafe==2.1.5
     #   -r requirements/base.txt
     #   jinja2
     #   werkzeug
-marshmallow==3.20.2
+marshmallow==3.21.0
     # via
     #   -r requirements/base.txt
     #   commercetools
@@ -186,7 +186,7 @@ mysqlclient==2.2.4
     # via
     #   -r requirements/base.txt
     #   -r requirements/production.in
-newrelic==9.6.0
+newrelic==9.7.0
     # via
     #   -r requirements/base.txt
     #   edx-django-utils
@@ -242,7 +242,7 @@ pynacl==1.5.0
     # via
     #   -r requirements/base.txt
     #   edx-django-utils
-python-dateutil==2.8.2
+python-dateutil==2.9.0.post0
     # via
     #   -r requirements/base.txt
     #   celery
@@ -260,7 +260,7 @@ pyyaml==6.0.1
     #   -r requirements/base.txt
     #   -r requirements/production.in
     #   edx-django-release-util
-redis==5.0.1
+redis==5.0.2
     # via
     #   -r requirements/base.txt
     #   celery
@@ -317,14 +317,14 @@ sqlparse==0.4.4
     # via
     #   -r requirements/base.txt
     #   django
-stevedore==5.1.0
+stevedore==5.2.0
     # via
     #   -r requirements/base.txt
     #   edx-django-utils
     #   edx-opaque-keys
-stripe==8.3.0
+stripe==8.5.0
     # via -r requirements/base.txt
-typing-extensions==4.9.0
+typing-extensions==4.10.0
     # via
     #   -r requirements/base.txt
     #   asgiref
