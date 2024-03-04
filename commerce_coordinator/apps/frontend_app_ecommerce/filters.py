@@ -13,7 +13,7 @@ class OrderReceiptRedirectionUrlRequested(OpenEdxPublicFilter):
     filter_type = "org.edx.coordinator.frontend_app_ecommerce.order.receipt_url.requested.v1"
 
     @classmethod
-    def run_filter(cls, params, order_number=None):
+    def run_filter(cls, params, order_number):
         """
         Filter to gather order receipt redirection url from the defined PipelineStep(s)
         """
