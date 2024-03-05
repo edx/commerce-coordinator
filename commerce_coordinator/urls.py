@@ -42,23 +42,23 @@ admin.autodiscover()
 
 urlpatterns = oauth2_urlpatterns + [
     re_path('', include('csrf.urls')),  # Include csrf urls from edx-drf-extensions
-    re_path('^admin/', admin.site.urls),
-    re_path('^api-docs/', get_swagger_view(title='commerce-coordinator API')),
-    re_path('^api/', include(api_urls)),
-    re_path('^auto_auth/', core_views.AutoAuth.as_view(), name='auto_auth'),
-    re_path('^ecommerce/', include(ecommerce_urls), name='ecommerce'),
-    re_path('^health/', core_views.health, name='health'),
-    re_path('^lms/', include(lms_urls), name='lms'),
-    re_path('^titan/', include(titan_urls), name='titan'),
-    re_path('^orders/', include(commercetools_urls), name='frontend-app-ecommerce'),
-    re_path('^orders/unified/', include(unified_orders_urls), name='commercetools'),
-    re_path('^frontend-app-payment/', include(frontend_app_payment_urls)),
-    re_path('^stripe/', include(stripe_urls)),
-    re_path('^commercetools/', include(commercetools_urls)),
+    re_path(r'^admin/', admin.site.urls),
+    re_path(r'^api-docs/', get_swagger_view(title='commerce-coordinator API')),
+    re_path(r'^api/', include(api_urls)),
+    re_path(r'^auto_auth/', core_views.AutoAuth.as_view(), name='auto_auth'),
+    re_path(r'^ecommerce/', include(ecommerce_urls), name='ecommerce'),
+    re_path(r'^health/', core_views.health, name='health'),
+    re_path(r'^lms/', include(lms_urls), name='lms'),
+    re_path(r'^titan/', include(titan_urls), name='titan'),
+    re_path(r'^(commercetools/|orders/)', include(commercetools_urls), name='commercetools'),
+    re_path(r'^orders/unified/', include(unified_orders_urls), name='frontend-app-ecommerce'),
+    re_path(r'^frontend-app-payment/', include(frontend_app_payment_urls)),
+    re_path(r'^stripe/', include(stripe_urls)),
     # DEMO: Currently this is only test code, we may want to decouple LMS code here at some point...
-    re_path('^demo_lms/', include(demo_lms_urls))
+    re_path(r'^demo_lms/', include(demo_lms_urls))
 ]
 
 if settings.DEBUG and os.environ.get('ENABLE_DJANGO_TOOLBAR', False):  # pragma: no cover
     import debug_toolbar
+
     urlpatterns.append(re_path(r'^__debug__/', include(debug_toolbar.urls)))
