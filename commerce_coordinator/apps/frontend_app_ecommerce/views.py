@@ -6,7 +6,7 @@ from datetime import datetime
 from typing import Union
 
 from dateutil import parser as dateparser
-from django.http import HttpResponse, HttpResponseRedirect
+from django.http import HttpResponse, HttpResponseBadRequest, HttpResponseRedirect
 from edx_rest_framework_extensions.permissions import LoginRedirectIfUnauthenticated
 from rest_framework.exceptions import PermissionDenied
 from rest_framework.response import Response
@@ -42,7 +42,7 @@ class RedirectReceiptView(APIView):
         order_number = request.query_params.get('order_number', None)
 
         if not order_number:
-            return HttpResponse(status=HTTP_404_NOT_FOUND)
+            return HttpResponseBadRequest("Invalid Order Number supplied.")
 
         # build parameters
         params = {

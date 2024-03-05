@@ -166,7 +166,7 @@ class ReceiptRedirectViewTests(APITestCase):
     def test_view_404s_when_no_order_number(self):
         self.client.login(username=self.test_user_username, password=self.test_user_password)
         response = self.client.get(self.url, data={})
-        self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
 
     @patch('commerce_coordinator.apps.stripe.clients.StripeAPIClient.retrieve_payment_intent')
     @patch('commerce_coordinator.apps.commercetools.clients.CommercetoolsAPIClient.get_order_by_id')
