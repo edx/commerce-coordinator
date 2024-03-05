@@ -1,4 +1,4 @@
-from typing import List, Union
+from typing import List, Optional, Union
 
 from commercetools.platform.models import Customer as CTCustomer
 from commercetools.platform.models import LineItem as CTLineItem
@@ -9,7 +9,8 @@ from commercetools.platform.models import ProductVariant as CTProductVariant
 from commerce_coordinator.apps.commercetools.catalog_info.constants import (
     EDX_STRIPE_PAYMENT_INTERFACE_NAME,
     STRIPE_PAYMENT_STATUS_INTERFACE_CODE_SUCCEEDED,
-    EdXFieldNames
+    EdXFieldNames,
+    TwoUKeys
 )
 
 
@@ -51,3 +52,14 @@ def get_edx_payment_intent_id(order: CTOrder) -> Union[str, None]:
                 pmt.interface_id:
             return pmt.interface_id
     return None
+
+
+def get_edx_order_workflow_state_key(order: CTOrder) -> Optional[str]:
+    order_workflow_state = None
+    if order.state and order.state.obj:  # it should never be that we have one and not the other. # pragma no cover
+        order_workflow_state = order.state.obj.key
+    return order_workflow_state
+
+
+def get_edx_is_sanctioned(order: CTOrder) -> bool:
+    return get_edx_order_workflow_state_key(order) == TwoUKeys.SDN_SANCTIONED_ORDER_STATE

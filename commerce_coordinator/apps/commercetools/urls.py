@@ -4,7 +4,7 @@ commercetools app URLS
 
 from django.urls import include, path
 
-from commerce_coordinator.apps.commercetools.views import OrderFulfillView, OrderSanctionedView
+from commerce_coordinator.apps.commercetools.views import OrderFulfillView, OrderReturnedView, OrderSanctionedView
 
 app_name = 'commercetools'
 urlpatterns = [
@@ -12,4 +12,5 @@ urlpatterns = [
     # EventBridge / CloudWatch Endpoints
     path('fulfill', OrderFulfillView.as_view(), name='fulfill'),
     path('sanctioned', OrderSanctionedView.as_view(), name='sanctioned'),
+    path('returned', OrderReturnedView.as_view(), name='returned')
 ]
