@@ -47,7 +47,7 @@ EXAMPLE_COMMERCETOOLS_ORDER_FULFILL_MESSAGE = {
 
 EXAMPLE_FULFILLMENT_SIGNAL_PAYLOAD = {
     'sender': OrderFulfillView,
-    'course_id': 'course-v1:edX+DemoX+Demo_Course',
+    'course_id': 'course-v1:MichiganX+InjuryPreventionX+1T2021',
     'course_mode': 'verified',
     'date_placed': 'Oct 31, 2023',
     'edx_lms_user_id': 127,

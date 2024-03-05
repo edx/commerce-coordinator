@@ -1,0 +1,340 @@
+{
+  "type": "Order",
+  "id": "12c2c9f7-d2ae-4b27-943e-0d7dc60da954",
+  "version": 5,
+  "versionModifiedAt": "2024-02-06T10:14:35.225Z",
+  "lastMessageSequenceNumber": 5,
+  "createdAt": "2024-02-06T10:14:32.814Z",
+  "lastModifiedAt": "2024-02-06T10:14:35.225Z",
+  "lastModifiedBy": {
+    "clientId": "E1UbNz9SHIG_n4nnSAUP1uW4",
+    "isPlatformClient": false
+  },
+  "createdBy": {
+    "clientId": "E1UbNz9SHIG_n4nnSAUP1uW4",
+    "isPlatformClient": false
+  },
+  "orderNumber": "cart-id-83730b3c-fca9-4949-a18a-8da32ef99b64",
+  "customerId": "c1a56b49-001e-4866-b600-6abe9090f2c9",
+  "customerEmail": "gmartin+232@2u.com",
+  "locale": "en-US",
+  "totalPrice": {
+    "type": "centPrecision",
+    "currencyCode": "USD",
+    "centAmount": 9800,
+    "fractionDigits": 2
+  },
+  "taxedPrice": {
+    "totalNet": {
+      "type": "centPrecision",
+      "currencyCode": "USD",
+      "centAmount": 9800,
+      "fractionDigits": 2
+    },
+    "totalGross": {
+      "type": "centPrecision",
+      "currencyCode": "USD",
+      "centAmount": 9800,
+      "fractionDigits": 2
+    },
+    "taxPortions": [
+      {
+        "rate": 0,
+        "amount": {
+          "type": "centPrecision",
+          "currencyCode": "USD",
+          "centAmount": 0,
+          "fractionDigits": 2
+        },
+        "name": "Disabled tax calculation"
+      }
+    ],
+    "totalTax": {
+      "type": "centPrecision",
+      "currencyCode": "USD",
+      "centAmount": 0,
+      "fractionDigits": 2
+    }
+  },
+  "country": "US",
+  "orderState": "Complete",
+  "shipmentState": "Shipped",
+  "paymentState": "Paid",
+  "syncInfo": [],
+  "returnInfo": [],
+  "taxMode": "Disabled",
+  "inventoryMode": "None",
+  "taxRoundingMode": "HalfEven",
+  "taxCalculationMode": "LineItemLevel",
+  "origin": "Customer",
+  "shippingMode": "Single",
+  "shippingAddress": {
+    "streetName": "123 Anytown Ln",
+    "postalCode": "02062",
+    "city": "Norwood",
+    "state": "Massachusetts",
+    "country": "US",
+    "additionalAddressInfo": ""
+  },
+  "shipping": [],
+  "lineItems": [
+    {
+      "id": "83f882e0-2599-47f4-943d-2347215901fd",
+      "productId": "9895858a-2d43-471d-be25-7a5007d52b9f",
+      "productKey": "MichiganX+InjuryPreventionX",
+      "name": {
+        "en-US": "Injury Prevention for Children & Teens"
+      },
+      "productType": {
+        "typeId": "product-type",
+        "id": "b2aa56d2-7b98-4d51-9d70-81d675a45686"
+      },
+      "productSlug": {
+        "en-US": "injury-prevention-for-children-teens"
+      },
+      "variant": {
+        "id": 1,
+        "sku": "course-v1:MichiganX+InjuryPreventionX+1T2021",
+        "key": "course-v1:MichiganX+InjuryPreventionX+1T2021",
+        "prices": [],
+        "images": [
+          {
+            "url": "https://90bbf3dd6df9e8673f39-65625168de2b7f206447b8dd2ec7c899.ssl.cf1.rackcdn.com/image%20(47)-4DyzF3NF.png",
+            "label": "MichiganX: Injury Prevention for Children & Teens",
+            "dimensions": {
+              "w": 678,
+              "h": 402
+            }
+          }
+        ],
+        "attributes": [
+          {
+            "name": "primarySubjectArea",
+            "value": {
+              "key": "business",
+              "label": "Business"
+            }
+          },
+          {
+            "name": "brand-text",
+            "value": "MichiganX"
+          },
+          {
+            "name": "date-created",
+            "value": "2019-08-21T00:02:00.000Z"
+          },
+          {
+            "name": "status",
+            "value": {
+              "key": "Published",
+              "label": "Published"
+            }
+          },
+          {
+            "name": "duration-low",
+            "value": 4
+          },
+          {
+            "name": "duration-high",
+            "value": 5
+          },
+          {
+            "name": "duration-unit",
+            "value": {
+              "key": "duration-weeks",
+              "label": "Weeks"
+            }
+          },
+          {
+            "name": "effort-low",
+            "value": 4
+          },
+          {
+            "name": "effort-high",
+            "value": 6
+          },
+          {
+            "name": "effort-unit",
+            "value": {
+              "key": "effot-per-week",
+              "label": "Hours per Week"
+            }
+          },
+          {
+            "name": "courserun-id",
+            "value": "32126"
+          },
+          {
+            "name": "courserun_start",
+            "value": "2021-04-19"
+          },
+          {
+            "name": "courserun-end",
+            "value": "2024-04-18"
+          },
+          {
+            "name": "courserun-status",
+            "value": {
+              "key": "courserun-status-published",
+              "label": "Published"
+            }
+          },
+          {
+            "name": "external-ids-product",
+            "value": "MichiganX+InjuryPreventionX"
+          },
+          {
+            "name": "external-ids-variant",
+            "value": "course-v1:MichiganX+InjuryPreventionX+1T2021"
+          },
+          {
+            "name": "test-reference-category",
+            "value": {
+              "typeId": "category",
+              "id": "d4ae2b24-3be4-4033-b55c-237ca62cc4bf"
+            }
+          }
+        ],
+        "assets": []
+      },
+      "price": {
+        "id": "093c48bb-2b46-4c7c-8e22-f4e16edd8761",
+        "value": {
+          "type": "centPrecision",
+          "currencyCode": "USD",
+          "centAmount": 4900,
+          "fractionDigits": 2
+        },
+        "key": "open-course-verified-price"
+      },
+      "quantity": 2,
+      "discountedPricePerQuantity": [],
+      "taxRate": {
+        "name": "Disabled tax calculation",
+        "amount": 0,
+        "includedInPrice": false,
+        "country": "US",
+        "state": "Massachusetts",
+        "subRates": []
+      },
+      "perMethodTaxRate": [],
+      "addedAt": "2024-02-06T10:12:55.839Z",
+      "lastModifiedAt": "2024-02-06T10:12:56.572Z",
+      "state": [
+        {
+          "quantity": 2,
+          "state": {
+            "typeId": "state",
+            "id": "de47c5ea-36df-4161-a232-7da0b0db49d1"
+          }
+        }
+      ],
+      "priceMode": "Platform",
+      "lineItemMode": "Standard",
+      "totalPrice": {
+        "type": "centPrecision",
+        "currencyCode": "USD",
+        "centAmount": 9800,
+        "fractionDigits": 2
+      },
+      "taxedPrice": {
+        "totalNet": {
+          "type": "centPrecision",
+          "currencyCode": "USD",
+          "centAmount": 9800,
+          "fractionDigits": 2
+        },
+        "totalGross": {
+          "type": "centPrecision",
+          "currencyCode": "USD",
+          "centAmount": 9800,
+          "fractionDigits": 2
+        },
+        "totalTax": {
+          "type": "centPrecision",
+          "currencyCode": "USD",
+          "centAmount": 0,
+          "fractionDigits": 2
+        }
+      },
+      "taxedPricePortions": []
+    }
+  ],
+  "customLineItems": [],
+  "transactionFee": true,
+  "discountCodes": [],
+  "directDiscounts": [],
+  "cart": {
+    "typeId": "cart",
+    "id": "83730b3c-fca9-4949-a18a-8da32ef99b64"
+  },
+  "paymentInfo": {
+    "payments": [
+      {
+        "typeId": "payment",
+        "id": "fc9bc0ec-49c9-4c9f-b730-e40f0eadef77",
+        "obj": {
+          "id": "fc9bc0ec-49c9-4c9f-b730-e40f0eadef77",
+          "version": 5,
+          "versionModifiedAt": "2024-02-06T10:14:34.954Z",
+          "lastMessageSequenceNumber": 3,
+          "createdAt": "2024-02-06T10:14:32.266Z",
+          "lastModifiedAt": "2024-02-06T10:14:34.954Z",
+          "lastModifiedBy": {
+            "clientId": "E1UbNz9SHIG_n4nnSAUP1uW4",
+            "isPlatformClient": false
+          },
+          "createdBy": {
+            "clientId": "E1UbNz9SHIG_n4nnSAUP1uW4",
+            "isPlatformClient": false
+          },
+          "key": "pi_3OglffH4caH7G0X10yFTCXOA",
+          "customer": {
+            "typeId": "customer",
+            "id": "c1a56b49-001e-4866-b600-6abe9090f2c9"
+          },
+          "interfaceId": "pi_3OglffH4caH7G0X10yFTCXOA",
+          "amountPlanned": {
+            "type": "centPrecision",
+            "currencyCode": "USD",
+            "centAmount": 9800,
+            "fractionDigits": 2
+          },
+          "paymentMethodInfo": {
+            "paymentInterface": "stripe_edx",
+            "method": "card"
+          },
+          "paymentStatus": {
+            "interfaceCode": "succeeded",
+            "interfaceText": "Succeeded"
+          },
+          "transactions": [
+            {
+              "id": "754c7358-4acd-413f-bc2c-9a373dcc00d7",
+              "type": "Charge",
+              "amount": {
+                "type": "centPrecision",
+                "currencyCode": "USD",
+                "centAmount": 9800,
+                "fractionDigits": 2
+              },
+              "interactionId": "ch_3OglffH4caH7G0X10YsR2xZr",
+              "state": "Success"
+            }
+          ],
+          "interfaceInteractions": []
+        }
+      }
+    ]
+  },
+  "billingAddress": {
+    "streetName": "123 Anytown Ln",
+    "postalCode": "02062",
+    "city": "Norwood",
+    "state": "Massachusetts",
+    "country": "US",
+    "additionalAddressInfo": ""
+  },
+  "itemShippingAddresses": [],
+  "refusedGifts": []
+}

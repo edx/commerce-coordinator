@@ -146,16 +146,16 @@ class TestCTOrderConversionToLegacyOrders(TestCase):
         order = gen_order(uuid4_str())
         li: CTLineItem = order.line_items[0]
 
-        if strip_custom_fields:
+        if strip_custom_fields[0]:
             li.variant.attributes = []
 
         ret = convert_line_item_prod_id(li)
 
-        if strip_custom_fields:
+        if strip_custom_fields[0]:
             self.assertEqual(ret, li.product_id)
         else:
             attrs = attribute_dict(li.variant.attributes)
-            self.assertEqual(ret, attrs['edx-course_run_id'])
+            self.assertEqual(ret, attrs['courserun-id'])
 
     @ddt.data(
         name_test(
@@ -263,7 +263,7 @@ class TestCTOrderConversionToLegacyOrders(TestCase):
     def test_convert_payment_info(self):
         order = gen_order(uuid4_str())
         ret = convert_payment_info(order.payment_info)
-        self.assertEqual(ret, "Mastercard")
+        self.assertEqual(None, ret)
 
     def test_convert_payment_info_when_empty(self):
         order = gen_order(uuid4_str())

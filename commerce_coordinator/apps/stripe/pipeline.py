@@ -207,3 +207,27 @@ class ConfirmPayment(PipelineStep):
         return {
             'payment_intent_data': payment_intent,
         }
+
+
+class GetPaymentIntentReceipt(PipelineStep):
+    """ Pull the receipt if the payment_intent is set """
+
+    # pylint: disable=unused-argument
+    def run_filter(self, payment_intent_id=None, **params):
+        if payment_intent_id is None:
+            logger.debug('[GetPaymentIntentReceipt] payment_intent_id not set, skipping.')
+            return PipelineCommand.CONTINUE.value
+
+        stripe_api_client = StripeAPIClient()
+
+        payment_intent = stripe_api_client.retrieve_payment_intent(
+            payment_intent_id,
+            ["latest_charge"]
+        )
+
+        receipt_url = payment_intent.latest_charge.receipt_url
+
+        return {
+            'payment_intent': payment_intent,
+            'redirect_url': receipt_url
+        }

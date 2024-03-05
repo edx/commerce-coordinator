@@ -91,7 +91,7 @@ class TestBrazeHelpers(unittest.TestCase):
     )
     @patch('commerce_coordinator.apps.commercetools.utils.get_braze_client')
     @patch('commerce_coordinator.apps.commercetools.utils.logger.exception')
-    def test_send_order_confirmation_email_failure(self, mock_logger,  mock_get_braze_client):
+    def test_send_order_confirmation_email_failure(self, mock_logger, mock_get_braze_client):
         mock_braze_client = Mock()
         mock_get_braze_client.return_value = mock_braze_client
 
@@ -118,14 +118,14 @@ class TestBrazeHelpers(unittest.TestCase):
         line_item = order.line_items[0]
         result = extract_ct_product_information_for_braze_canvas(line_item)
         expected = {
-            "type": "course",
-            "title": "Demonstration Course (Deprecated)",
-            "image_url": "https://theseus.sandbox.edx.org/"
-            "asset-v1:edX+DemoX+Demo_Course+type@asset+block@images_course_image.jpg",
-            "partner_name": "edX",
-            "price": "$149.00",
-            "start_date": "2021-04-19",
-            "duration": "4-5 weeks"
+            'duration': '4-5 Weeks',
+            'image_url': 'https://90bbf3dd6df9e8673f39-65625168de2b7f206447b8dd2ec7c899.ssl.cf1.rackcdn.com/image%20'
+                         '(47)-4DyzF3NF.png',
+            'partner_name': 'MichiganX',
+            'price': '$49.00',
+            'start_date': '2021-04-19',
+            'title': 'Injury Prevention for Children & Teens',
+            'type': 'course'
         }
         assert result == expected
 
@@ -147,8 +147,8 @@ class TestBrazeHelpers(unittest.TestCase):
             "view_receipt_cta_url": settings.ORDER_HISTORY_URL,
             "purchase_date": 'Oct 31, 2023',
             "purchase_time": '07:56 PM (UTC)',
-            "subtotal":  "$174.00",
-            "total": "$149.00",
+            "subtotal": "$74.00",
+            "total": "$49.00",
             'discount_code': 'TEST_DISCOUNT_CODE',
             'discount_value': '$25.00'
         }
@@ -172,7 +172,7 @@ class TestBrazeHelpers(unittest.TestCase):
             "view_receipt_cta_url": settings.ORDER_HISTORY_URL,
             "purchase_date": 'Oct 31, 2023',
             "purchase_time": '07:56 PM (UTC)',
-            "subtotal":  "$149.00",
+            "subtotal": "$149.00",
             "total": "$149.00",
         }
         assert result == expected

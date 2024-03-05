@@ -15,6 +15,7 @@ Subpackages
    commerce_coordinator.apps.frontend_app_ecommerce
    commerce_coordinator.apps.frontend_app_payment
    commerce_coordinator.apps.lms
+   commerce_coordinator.apps.rollout
    commerce_coordinator.apps.stripe
    commerce_coordinator.apps.titan
 

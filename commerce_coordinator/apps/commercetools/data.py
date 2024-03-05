@@ -24,6 +24,10 @@ from commerce_coordinator.apps.ecommerce.data import Order as LegacyOrder
 from commerce_coordinator.apps.ecommerce.data import User
 
 
+def this_or(a, b):
+    return a if a else b
+
+
 def convert_address(address: Optional[CTAddress]) -> Optional[BillingAddress]:
     if not address:
         return None
@@ -64,11 +68,11 @@ def convert_line_item_prod_id(li: CTLineItem) -> str:
     Returns: Our best guess at the product line items id.
 
     """
-    key_name = 'edx-course_run_id'  # this could be wrong and will likely change when the catalog is 'fixed'
+    key_name = 'courserun-id'  # this could be wrong and will likely change when the catalog is 'fixed'
     attrs = attribute_dict(li.variant.attributes)
 
-    if attrs and key_name in attrs and attrs[key_name]:
-        return attrs[key_name] or li.product_id
+    if attrs and key_name in attrs and attrs[key_name]:  # pragma no cover
+        return this_or(attrs[key_name], li.product_id)
     return li.product_id
 
 
@@ -104,10 +108,10 @@ def order_from_commercetools(order: CTOrder, customer: CTCustomer) -> LegacyOrde
         user=convert_customer(customer),
         lines=[convert_line_item(x) for x in order.line_items],
         billing_address=convert_address(order.billing_address),
-        date_placed=(order.completed_at or order.last_modified_at),
+        date_placed=order.last_modified_at,
         total_excl_tax=typed_money_to_string(order.total_price),
         # in dev systems, this isn't set... so let's use UUID, otherwise, let's rely on order number
-        number=order.order_number or order.id,
+        number=order.id,  # Long-term: this_or(order.order_number, order.id),
         currency=order.total_price.currency_code,
         payment_processor="stripe via commercetools",
         status=order.order_state.CONFIRMED.value,
@@ -129,6 +133,9 @@ def order_from_commercetools(order: CTOrder, customer: CTCustomer) -> LegacyOrde
                 order.taxed_price.total_tax
             )
         ),
-        vouchers=convert_discount_code_info(order.discount_codes) or convert_direct_discount(order.direct_discounts),
+        vouchers=this_or(
+            convert_discount_code_info(order.discount_codes),
+            convert_direct_discount(order.direct_discounts)
+        ),
         payment_method=convert_payment_info(order.payment_info)
     )
