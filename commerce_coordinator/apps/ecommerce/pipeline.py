@@ -1,6 +1,7 @@
 """
 Ecommerce filter pipelines
 """
+from logging import getLogger
 
 from django.conf import settings
 from openedx_filters import PipelineStep
@@ -8,6 +9,8 @@ from openedx_filters import PipelineStep
 from commerce_coordinator.apps.core.constants import PipelineCommand
 from commerce_coordinator.apps.ecommerce.clients import EcommerceAPIClient
 from commerce_coordinator.apps.ecommerce.constants import ECOMMERCE_ORDER_MANAGEMENT_SYSTEM
+
+log = getLogger(__name__)
 
 
 class GetLegacyEcommerceReceiptRedirectUrl(PipelineStep):
@@ -36,14 +39,24 @@ class GetEcommerceOrders(PipelineStep):
             order_data: any preliminary orders (from an earlier pipeline step) we want to append to
         """
 
-        ecommerce_api_client = EcommerceAPIClient()
         new_params = params.copy()
         # Ecommerce starts pagination from 1, other systems from 0, since the invoker assumes 0, we're always 1 off.
         new_params['page'] = params['page'] + 1
-        ecommerce_response = ecommerce_api_client.get_orders(new_params)
 
-        order_data.append(ecommerce_response)
+        try:
+            ecommerce_api_client = EcommerceAPIClient()
+            ecommerce_response = ecommerce_api_client.get_orders(new_params)
 
-        return {
-            "order_data": order_data
-        }
+            order_data.append(ecommerce_response)
+
+            return {
+                "order_data": order_data
+            }
+        # pylint: disable=broad-exception-caught
+        except Exception as ex:  # pragma no cover
+            log.exception(
+                "[GetEcommerceOrders] Error communicating with Ecommerce IDA. %s %s",
+                ex,
+                new_params
+            )
+            return PipelineCommand.CONTINUE
