@@ -10,7 +10,7 @@ from commerce_coordinator.apps.commercetools.clients import CommercetoolsAPIClie
 from commerce_coordinator.apps.commercetools.constants import COMMERCETOOLS_ORDER_MANAGEMENT_SYSTEM
 from commerce_coordinator.apps.commercetools_frontend.constants import COMMERCETOOLS_FRONTEND
 from commerce_coordinator.apps.core.constants import PipelineCommand
-from commerce_coordinator.apps.ecommerce.constarnts import ECOMMERCE_ORDER_MANAGEMENT_SYSTEM
+from commerce_coordinator.apps.ecommerce.constants import ECOMMERCE_ORDER_MANAGEMENT_SYSTEM
 from commerce_coordinator.apps.enterprise_learner.utils import is_user_enterprise_learner
 from commerce_coordinator.apps.frontend_app_payment.constants import FRONTEND_APP_PAYMENT_CHECKOUT
 from commerce_coordinator.apps.rollout.utils import is_legacy_order

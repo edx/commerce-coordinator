@@ -7,7 +7,7 @@ from openedx_filters import PipelineStep
 
 from commerce_coordinator.apps.core.constants import PipelineCommand
 from commerce_coordinator.apps.ecommerce.clients import EcommerceAPIClient
-from commerce_coordinator.apps.ecommerce.constarnts import ECOMMERCE_ORDER_MANAGEMENT_SYSTEM
+from commerce_coordinator.apps.ecommerce.constants import ECOMMERCE_ORDER_MANAGEMENT_SYSTEM
 
 
 class GetLegacyEcommerceReceiptRedirectUrl(PipelineStep):
