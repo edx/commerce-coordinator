@@ -32,6 +32,7 @@ from .utils import (
     extract_ct_product_information_for_braze_canvas,
     send_order_confirmation_email
 )
+from commerce_coordinator.apps.core.signal_helpers import format_signal_results
 
 logger = logging.getLogger(__name__)
 SOURCE_SYSTEM = 'commercetools'
@@ -83,6 +84,7 @@ class OrderFulfillView(APIView):
         default_params = {
             'email_opt_in': True,  # ?? Where?
             'order_number': order.id,
+            'order_version': order.version,
             'provider_id': None,
             'edx_lms_user_id': lms_user_id,
             'course_mode': 'verified',
@@ -95,19 +97,39 @@ class OrderFulfillView(APIView):
         for item in get_edx_items(order):
             logger.debug('[CT-OrderFulfillView] processing edX order %s, line item %s', order_id, item.variant.sku)
 
+            state_ids = []
+            for item_state in item.state:
+                state_id = item_state.state.id
+                state_ids.append(state_id)
+                client.update_line_item_transition_state_on_fulfillment(
+                    order.id,
+                    order.version,
+                    item.id,
+                    item.quantity,
+                    state_id,
+                    TwoUKeys.PROCESSING_FULFILMENT_STATE
+                )
+            logger.info('Successfully out of for')
             serializer = OrderFulfillViewInputSerializer(data={
                 **default_params,
                 'course_id': get_edx_product_course_run_key(item),  # likely not correct
+                'item_id': item.id,
+                'item_quantity': item.quantity,
+                'state_ids': state_ids
             })
 
             # the following throws and thus doesn't need to be a conditional
             serializer.is_valid(raise_exception=True)  # pragma no cover
 
             payload = serializer.validated_data
+            logger.info(f'Payload {payload}')
             fulfill_order_placed_signal.send_robust(
                 sender=self.__class__,
                 **payload
             )
+            # formated = Response(format_signal_results(result))
+            # logger.info(f'--- RES {formated}')
+            # import pdb; pdb.set_trace()
             product_information = extract_ct_product_information_for_braze_canvas(item)
             canvas_entry_properties["products"].append(product_information)
         send_order_confirmation_email(lms_user_id, customer.email, canvas_entry_properties)
