@@ -7,12 +7,14 @@ from typing import Generic, List, Optional, Tuple, TypeVar, Union
 
 import requests
 from commercetools import Client as CTClient
-from commercetools import CommercetoolsError
+from commercetools import CommercetoolsError, types
 from commercetools.platform.models import Customer as CTCustomer
 from commercetools.platform.models import CustomerSetCustomTypeAction as CTCustomerSetCustomTypeAction
 from commercetools.platform.models import FieldContainer as CTFieldContainer
 from commercetools.platform.models import Order as CTOrder
 from commercetools.platform.models import OrderAddReturnInfoAction, OrderSetReturnPaymentStateAction
+from commercetools.platform.models import OrderTransitionLineItemStateAction
+from commercetools.platform.models import LineItem as CTLineItem
 from commercetools.platform.models import ProductVariant as CTProductVariant
 from commercetools.platform.models import ReturnItemDraft, ReturnPaymentState, ReturnShipmentState
 from commercetools.platform.models import Type as CTType
@@ -343,3 +345,39 @@ class CommercetoolsAPIClient:
                          f"of order {order_id} with error correlation id {err.correlation_id} "
                          f"and error/s: {err.errors}")
             raise OpenEdxFilterException(str(err)) from err
+
+    def update_line_item_transition_state_on_fulfillment(self, order_id:str, order_version: str, item_id: str,
+                                                         item_quantity: int, from_state_id: str, new_state_key: str) -> CTOrder:
+        prev_state = self.base_client.states.get_by_id(from_state_id)
+        new_state = self.base_client.states.get_by_key(new_state_key)
+        logger.info(f'Type of prev_state.id: {type(prev_state.id)}')
+        logger.info(f'Type of new_state.id: {type(new_state.id)}')
+        logger.info(f'prev_state.id: {prev_state.id}')
+        print(f'new_state.id: {new_state.id}')
+
+        logger.info(f'Previous {prev_state}, New {new_state}')
+        try:
+            if new_state.key != prev_state.key:
+                logger.info('INSIDE')
+                transition_line_item_state_action = OrderTransitionLineItemStateAction(
+                    line_item_id=item_id,
+                    quantity=item_quantity,
+                    from_state=types.StateResourceIdentifier(id=from_state_id),
+                    to_state=types.StateResourceIdentifier(key=new_state_key)
+                )
+
+                updated_fulfillment_line_item = self.base_client.orders.update_by_id(
+                    id=order_id,
+                    version=order_version,
+                    actions=[transition_line_item_state_action]
+                )
+
+                return updated_fulfillment_line_item
+            else:
+                logger.info(f"The line item {item_id} already has the correct state {new_state.key}. Not attempting transition")
+                return None
+        except CommercetoolsError as err:
+            logger.error(f"[CommercetoolsError] Unable to update LineItemState "
+                        f"of order {order_id} with error correlation id {err.correlation_id} "
+                        f"and error/s: {err.errors}")
+            pass
