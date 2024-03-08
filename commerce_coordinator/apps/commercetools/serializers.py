@@ -31,6 +31,36 @@ class OrderMessageInputSerializer(CoordinatorSerializer):
         representation = representation.pop('detail')
         return representation
 
+class OrderLineItemMessageDetailSerializer(CoordinatorSerializer):
+    """
+    Serializer for CommerceTools message 'detail'
+    """
+    resourceUserProvidedIdentifiers = serializers.DictField(child=serializers.CharField())
+    fromState = serializers.DictField(child=serializers.CharField())
+    toState = serializers.DictField(child=serializers.CharField())
+
+    def to_representation(self, instance):
+        representation = super().to_representation(instance)
+        order_number = representation['resourceUserProvidedIdentifiers'].get('orderNumber')
+        if order_number:
+            representation['order_number'] = order_number
+        representation.pop('resourceUserProvidedIdentifiers')
+        representation['from_state'] = representation.pop('fromState')
+        representation['to_state'] = representation.pop('toState')
+        return representation
+
+
+class OrderLineItemMessageInputSerializer(CoordinatorSerializer):
+    """
+    Serializer for commercetools message input
+    """
+    detail = OrderLineItemMessageDetailSerializer(allow_null=False)
+
+    def to_representation(self, instance):
+        representation = super().to_representation(instance)
+        representation = representation.pop('detail')
+        return representation
+
 
 class OrderFulfillViewInputSerializer(CoordinatorSerializer):
     """

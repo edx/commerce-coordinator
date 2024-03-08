@@ -12,9 +12,11 @@ from commercetools.platform.models import Customer as CTCustomer
 from commercetools.platform.models import CustomerSetCustomTypeAction as CTCustomerSetCustomTypeAction
 from commercetools.platform.models import FieldContainer as CTFieldContainer
 from commercetools.platform.models import Order as CTOrder
-from commercetools.platform.models import OrderAddReturnInfoAction, OrderSetReturnPaymentStateAction
-from commercetools.platform.models import OrderTransitionLineItemStateAction
-from commercetools.platform.models import LineItem as CTLineItem
+from commercetools.platform.models import (
+  OrderAddReturnInfoAction,
+  OrderSetReturnPaymentStateAction,
+  OrderTransitionLineItemStateAction
+)
 from commercetools.platform.models import ProductVariant as CTProductVariant
 from commercetools.platform.models import ReturnItemDraft, ReturnPaymentState, ReturnShipmentState
 from commercetools.platform.models import Type as CTType
@@ -189,6 +191,19 @@ class CommercetoolsAPIClient:
         """
         return self.base_client.orders.get_by_id(order_id, expand=list(expand))  # pragma no cover
 
+    def get_order_by_number(self, order_number: str, expand: ExpandList = DEFAULT_ORDER_EXPANSION)  \
+            -> CTOrder:  # pragma no cover
+        """
+        Fetch an order by the Order Number (cart-ID)
+
+        Args:
+            order_number (str): Order Numer (cart-Id)
+            expand: List of Order Parameters to expand
+
+        Returns (CTOrder): Order with Expanded Properties
+        """
+        return self.base_client.orders.get_by_order_number(order_number, expand=list(expand))
+
     def get_orders(self, customer: CTCustomer, offset=0,
                    limit=ORDER_HISTORY_PER_SYSTEM_REQ_LIMIT,
                    expand: ExpandList = DEFAULT_ORDER_EXPANSION,
@@ -348,21 +363,15 @@ class CommercetoolsAPIClient:
 
     def update_line_item_transition_state_on_fulfillment(self, order_id:str, order_version: str, item_id: str,
                                                          item_quantity: int, from_state_id: str, new_state_key: str) -> CTOrder:
-        prev_state = self.base_client.states.get_by_id(from_state_id)
-        new_state = self.base_client.states.get_by_key(new_state_key)
-        logger.info(f'Type of prev_state.id: {type(prev_state.id)}')
-        logger.info(f'Type of new_state.id: {type(new_state.id)}')
-        logger.info(f'prev_state.id: {prev_state.id}')
-        print(f'new_state.id: {new_state.id}')
 
-        logger.info(f'Previous {prev_state}, New {new_state}')
+        from_state_key = self.base_client.states.get_by_id(from_state_id).key
+
         try:
-            if new_state.key != prev_state.key:
-                logger.info('INSIDE')
+            if new_state_key != from_state_key:
                 transition_line_item_state_action = OrderTransitionLineItemStateAction(
                     line_item_id=item_id,
                     quantity=item_quantity,
-                    from_state=types.StateResourceIdentifier(id=from_state_id),
+                    from_state=types.StateResourceIdentifier(key=from_state_key),
                     to_state=types.StateResourceIdentifier(key=new_state_key)
                 )
 
@@ -374,9 +383,10 @@ class CommercetoolsAPIClient:
 
                 return updated_fulfillment_line_item
             else:
-                logger.info(f"The line item {item_id} already has the correct state {new_state.key}. Not attempting transition")
-                return None
+                logger.info(f"The line item {item_id} already has the correct state {new_state_key}. Not attempting to transition LineItemState")
+                return self.base_client.orders.get_by_id(order_id)
         except CommercetoolsError as err:
+            # Logs & ignores version conflict errors due to duplicate Commercetools messages
             logger.error(f"[CommercetoolsError] Unable to update LineItemState "
                         f"of order {order_id} with error correlation id {err.correlation_id} "
                         f"and error/s: {err.errors}")

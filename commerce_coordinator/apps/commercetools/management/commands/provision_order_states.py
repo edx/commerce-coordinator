@@ -29,7 +29,7 @@ class Command(CommercetoolsAPIClientCommand):
             try:
                 state = self.ct_api_client.base_client.states.get_by_key(state_draft.key)
             except CommercetoolsError as _:  # pragma: no cover
-                # commercetools.exceptions.CommercetoolsError: The Resource with key 'edx-user_information' was not found.
+                # commercetools.exceptions.CommercetoolsError: The Resource with key '' was not found.
                 pass
             except requests.exceptions.HTTPError as _:  # The test framework doesn't wrap to CommercetoolsError
                 pass
@@ -41,7 +41,7 @@ class Command(CommercetoolsAPIClientCommand):
 
 
         # Updating built-in 'Initial' line item state transition to 'Fulfiment Pending' state
-        initial_state = self.ct_api_client.base_client.states.get_by_key("Initial")
+        initial_state = self.ct_api_client.base_client.states.get_by_key('Initial')
         pending_transition = types.StateResourceIdentifier(key=TwoUCustomStates.PENDING_FULFILLMENT_STATE.key)
         try:
             updated_initial_state = self.ct_api_client.base_client.states.update_by_id(
@@ -51,10 +51,9 @@ class Command(CommercetoolsAPIClientCommand):
                     types.StateSetTransitionsAction(transitions=[pending_transition])
                 ]
             )
-            print("Initial state updated successfully.")
+            print('Initial state updated successfully.')
             print(json.dumps(updated_initial_state.serialize()))
         except CommercetoolsError as _:
-            # Handle the error appropriately
             pass
 
 
@@ -65,7 +64,7 @@ class Command(CommercetoolsAPIClientCommand):
                 try:
                     state = self.ct_api_client.base_client.states.get_by_key(state_draft_ref.key)
                 except CommercetoolsError as _:
-                    # Handle the error appropriately
+                    # commercetools.exceptions.CommercetoolsError: The Resource with key '' was not found.
                     pass
 
                 if state:
@@ -86,8 +85,9 @@ class Command(CommercetoolsAPIClientCommand):
                             types.StateResourceIdentifier(key=TwoUCustomStates.PENDING_FULFILLMENT_STATE.key)
                         ]
 
+
                     if all(transition in current_transitions for transition in new_transitions):
-                        print("The state already has the expected transitions.")
+                        print(f'The {state.name} state already has the expected transitions.')
                     else:
                         try:
                             self.ct_api_client.base_client.states.update_by_id(
@@ -95,10 +95,9 @@ class Command(CommercetoolsAPIClientCommand):
                                 version=state.version,
                                 actions=[
                                     types.StateSetTransitionsAction(transitions=new_transitions)
-                                ]
+                                ],
                             )
                             print(json.dumps(state.serialize()))
-                        except CommercetoolsError as e:
-                            # Handle the error appropriately
+                        except CommercetoolsError as _:
                             pass
 

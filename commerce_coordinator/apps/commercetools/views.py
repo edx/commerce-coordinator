@@ -2,6 +2,7 @@
 Views for the commercetools app
 """
 import logging
+import json
 
 from edx_django_utils.cache import TieredCache
 from rest_framework import status
@@ -133,7 +134,7 @@ class OrderFulfillView(SingleInvocationAPIView):
 
         logger.debug(f'[CT-{tag}] Message received from commercetools with details: %s', input_data)
 
-        message_details = OrderMessageInputSerializer(data=input_data)
+        message_details = OrderLineItemMessageInputSerializer(data=input_data)
         message_details.is_valid(raise_exception=True)
 
         order_id = message_details.data['order_id']

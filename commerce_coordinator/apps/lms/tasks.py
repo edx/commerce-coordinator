@@ -8,7 +8,6 @@ from requests import RequestException
 
 from commerce_coordinator.apps.core.models import User
 from commerce_coordinator.apps.lms.clients import LMSAPIClient
-from commerce_coordinator.apps.lms.signals import fulfillment_completed_signal
 
 # Use the special Celery logger for our tasks
 logger = get_task_logger(__name__)
@@ -72,20 +71,12 @@ def fulfill_order_placed_send_enroll_in_course_task(
             'value': provider_id,
         })
 
-    return_val = LMSAPIClient().enroll_user_in_course(enrollment_data)
-    logger.info(f'-- RETURN_VAL {return_val}--')
-    fulfill_line_item_state_payload = {
+    line_item_state_payload = {
         'order_id': order_number,
         'order_version': order_version,
         'item_id': item_id,
         'item_quantity': item_quantity,
         'state_ids': state_ids,
-        # 'response_status': return_val.status_code
     }
-    logger.info('-- SENDING SIG POST FULFILL --')
-    fulfillment_completed_signal.send_robust(
-        sender=None,
-        **fulfill_line_item_state_payload
-    )
 
-    return return_val
+    return LMSAPIClient().enroll_user_in_course(enrollment_data, line_item_state_payload)
