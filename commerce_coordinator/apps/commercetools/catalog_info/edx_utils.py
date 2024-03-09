@@ -28,7 +28,7 @@ def get_edx_product_course_key(prod_or_li: Union[CTProduct, CTLineItem]) -> str:
         return prod_or_li.product_key
 
 
-def get_edx_items(order: CTOrder) -> List[CTLineItem]:
+def get_edx_items(order: CTOrder) -> list[CTLineItem]:
     return list(filter(lambda x: True, order.line_items))
 
 

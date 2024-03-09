@@ -15,7 +15,7 @@ from commerce_coordinator.apps.commercetools.catalog_info.constants import (
     Languages
 )
 
-LSLike = Union[Dict[str, str], CTLocalizedString]
+LSLike = Union[dict[str, str], CTLocalizedString]
 
 
 def ls(string_dict: LSLike) -> CTLocalizedString:
@@ -150,9 +150,9 @@ def typed_money_add(a: CTTypedMoney, b: Optional[CTTypedMoney]):
     return _typed_money_op(a, b, lambda aint, bint: aint + bint)
 
 
-def attribute_dict(attr_list: Optional[List[CTAttribute]]) -> Optional[dict]:
+def attribute_dict(attr_list: Optional[list[CTAttribute]]) -> Optional[dict]:
     if attr_list is None:
         return None
     if len(attr_list) >= 1:
-        return dict([(d.name, d.value) for d in attr_list])
+        return {d.name: d.value for d in attr_list}
     return None

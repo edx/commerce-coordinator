@@ -26,16 +26,16 @@ logger = logging.getLogger(__name__)
 
 T = TypeVar("T")
 
-ExpandList = Union[Tuple[str], List[str]]
+ExpandList = Union[tuple[str], list[str]]
 
 
 class PaginatedResult(Generic[T]):
     """ Planned paginated response wrapper """
-    results: List[T]
+    results: list[T]
     total: int
     offset: int
 
-    def __init__(self, results: List[T], total: int, offset: int) -> None:
+    def __init__(self, results: list[T], total: int, offset: int) -> None:
         super().__init__()
         self.results = results
         self.total = total
@@ -50,7 +50,7 @@ class PaginatedResult(Generic[T]):
     def __getitem__(self, item):
         return getattr(self, item)
 
-    def rebuild(self, results: List[T]):
+    def rebuild(self, results: list[T]):
         return PaginatedResult(results, total=self.total, offset=self.offset)
 
 

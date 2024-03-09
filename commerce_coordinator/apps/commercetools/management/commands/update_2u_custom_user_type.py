@@ -41,7 +41,7 @@ class Command(CommercetoolsAPIClientCommand):
             print(json.dumps(ret.serialize()))
             exit()
 
-        actions: List[TypeUpdateAction] = []
+        actions: list[TypeUpdateAction] = []
 
         if not ls_eq(current_draft.name, ret.name):
             actions.append(TypeChangeNameAction(name=current_draft.name))

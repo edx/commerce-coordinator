@@ -8,7 +8,7 @@ import ddt
 from django.contrib.auth import get_user_model
 from django.urls import reverse
 from edx_django_utils.cache import TieredCache
-from mock import patch
+from unittest.mock import patch
 from rest_framework import status
 from rest_framework.test import APITestCase
 

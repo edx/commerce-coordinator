@@ -6,7 +6,7 @@ from unittest.mock import MagicMock
 
 from django.test import TestCase
 from django.urls import reverse
-from mock import patch
+from unittest.mock import patch
 from rest_framework.test import APIClient
 
 from commerce_coordinator.apps.core.models import User

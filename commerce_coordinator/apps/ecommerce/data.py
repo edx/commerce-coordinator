@@ -118,7 +118,7 @@ class Product:
     attribute_values: Optional[str] = field(validator=optional(instance_of(str)))
     is_available_to_buy: Optional[str] = field(validator=optional(instance_of(str)))
     is_enrollment_code_product: Optional[str] = field(validator=optional(instance_of(str)))
-    stockrecords: Optional[List[StockRecord]]
+    stockrecords: Optional[list[StockRecord]]
 
 
 @mutable
@@ -139,7 +139,7 @@ class Voucher:
     id: Optional[int]
     start_datetime: datetime
     end_datetime: datetime
-    offers: List[int]
+    offers: list[int]
     name: str = field(validator=optional([instance_of(str), max_len(128), min_len(1)]))
     """This will be shown in the checkout and basket once the coupon is entered"""
     code: str = field(validator=optional([instance_of(str), max_len(128), min_len(1)]))
@@ -164,7 +164,7 @@ class Order:
     date_placed: datetime
     user: User
     total_excl_tax: str
-    lines: List[Line]
+    lines: list[Line]
     number: str = field(validator=optional([instance_of(str), max_len(128), min_len(1)]))
 
     basket_discounts: Optional[str] = field(validator=optional(instance_of(str)))

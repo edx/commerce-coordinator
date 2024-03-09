@@ -1,6 +1,6 @@
 """Test core.views."""
 
-import mock
+from unittest import mock
 from django.conf import settings
 from django.contrib.auth import get_user_model
 from django.db import DatabaseError

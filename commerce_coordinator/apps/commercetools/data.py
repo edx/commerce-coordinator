@@ -77,13 +77,13 @@ def convert_line_item_prod_id(li: CTLineItem) -> str:
 
 
 # TODO: Coupons
-def convert_discount_code_info(dcis: Optional[List[CTDiscountCodeInfo]]) -> Optional[str]:
+def convert_discount_code_info(dcis: Optional[list[CTDiscountCodeInfo]]) -> Optional[str]:
     if not dcis or len(dcis) < 1:
         return None
     return ", ".join([x.discount_code.obj.code for x in dcis])
 
 
-def convert_direct_discount(dds: Optional[List[CTDirectDiscount]]) -> Optional[str]:
+def convert_direct_discount(dds: Optional[list[CTDirectDiscount]]) -> Optional[str]:
     if not dds or len(dds) < 1:
         return None
     # idk how to format this one. We may have to wait till we have an example.

@@ -3,7 +3,7 @@
 from unittest.mock import MagicMock, patch
 
 import ddt
-import mock
+from unittest import mock
 import stripe
 from django.conf import settings
 from django.test import override_settings

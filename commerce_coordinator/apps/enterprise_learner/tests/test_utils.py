@@ -3,7 +3,7 @@
 from django.contrib.auth import get_user_model
 from django.test import RequestFactory, TestCase
 from django.urls import reverse
-from mock import patch
+from unittest.mock import patch
 
 from commerce_coordinator.apps.enterprise_learner.utils import is_user_enterprise_learner
 

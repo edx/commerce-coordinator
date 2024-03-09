@@ -16,7 +16,7 @@ def gen_order_for_payment_intent() -> CTOrder:
         return CTOrder.deserialize(obj)
 
 
-def gen_payment_intent(hydrate=True) -> Union[PaymentIntent, Dict[str, Any]]:
+def gen_payment_intent(hydrate=True) -> Union[PaymentIntent, dict[str, Any]]:
     """Generate payment intent with Charges for Full Testing"""
     with open(os.path.join(pathlib.Path(__file__).parent.resolve(), 'raw_stripe_paymentintent_with_charges.json')) as f:
         obj = json.load(f)

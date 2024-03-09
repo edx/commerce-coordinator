@@ -164,7 +164,7 @@ def gen_variant_search_result() -> CTProductProjectionPagedSearchResponse:
         return CTProductProjectionPagedSearchResponse.deserialize(obj)
 
 
-def gen_order_history(num=1) -> typing.List[CTOrder]:
+def gen_order_history(num=1) -> list[CTOrder]:
     return [gen_order(uuid4_str()) for _ in range(num)]
 
 

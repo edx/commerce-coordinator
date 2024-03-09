@@ -248,7 +248,7 @@ class CoordinatorOAuthClientTestCase(CoordinatorClientTestCase):
         )
 
 
-def name_test(name: str, test_packed_params: Union[Tuple, List, Dict]):
+def name_test(name: str, test_packed_params: Union[tuple, list, dict]):
     """
     Permits the naming of simple ddt packed tests in common collection containers
 

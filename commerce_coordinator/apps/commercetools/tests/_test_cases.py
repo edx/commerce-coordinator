@@ -15,7 +15,7 @@ from commerce_coordinator.apps.core.tests.utils import uuid4_str
 
 class MonkeyPatchedGetOrderTestCase(TestCase):
     """A test case with the CT API Client Patched"""
-    orders: List[CTOrder] = {}
+    orders: list[CTOrder] = {}
 
     def setupOrders(self):
         self.orders = [gen_order(uuid4_str())]

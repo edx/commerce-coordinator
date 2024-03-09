@@ -193,7 +193,7 @@ class TestCTOrderConversionToLegacyOrders(TestCase):
         ),
     )
     @ddt.unpack
-    def test_convert_discount_code_info(self, code_set: Optional[List[CTDiscountCodeInfo]], ret_string: Optional[str]):
+    def test_convert_discount_code_info(self, code_set: Optional[list[CTDiscountCodeInfo]], ret_string: Optional[str]):
         ret = convert_discount_code_info(code_set)
         self.assertEqual(ret, ret_string)
 
@@ -233,7 +233,7 @@ class TestCTOrderConversionToLegacyOrders(TestCase):
         ),
     )
     @ddt.unpack
-    def test_convert_direct_discount(self, code_set: Optional[List[CTDirectDiscount]], ret_string: Optional[str]):
+    def test_convert_direct_discount(self, code_set: Optional[list[CTDirectDiscount]], ret_string: Optional[str]):
         ret = convert_direct_discount(code_set)
         self.assertEqual(ret, ret_string)
 

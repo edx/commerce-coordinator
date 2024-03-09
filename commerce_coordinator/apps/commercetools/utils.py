@@ -99,8 +99,8 @@ def extract_ct_order_information_for_braze_canvas(customer: Customer, order: Ord
     formatted_order_placement_time = order_placed_on.strftime("%I:%M %p (%Z)")
     # calculate subtotal by adding discount back if any discount is applied.
     # TODO: Post R0.1 add support for all discount types here.
-    subtotal = (((order.total_price.cent_amount +
-                  order.discount_on_total_price.discounted_amount.cent_amount))
+    subtotal = ((order.total_price.cent_amount +
+                  order.discount_on_total_price.discounted_amount.cent_amount)
                 if order.discount_on_total_price else order.total_price.cent_amount)
     canvas_entry_properties = {
         "first_name": customer.first_name,

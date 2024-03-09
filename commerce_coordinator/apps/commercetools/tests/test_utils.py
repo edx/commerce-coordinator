@@ -7,7 +7,7 @@ from unittest.mock import MagicMock
 from braze.client import BrazeClient
 from django.conf import settings
 from django.test import override_settings
-from mock import Mock, patch
+from unittest.mock import Mock, patch
 
 from commerce_coordinator.apps.commercetools.tests.conftest import gen_order
 from commerce_coordinator.apps.commercetools.tests.constants import EXAMPLE_FULFILLMENT_SIGNAL_PAYLOAD

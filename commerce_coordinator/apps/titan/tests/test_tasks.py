@@ -2,7 +2,7 @@
 import ddt
 from django.test import TestCase
 from edx_django_utils.cache import TieredCache
-from mock.mock import patch
+from unittest.mock import patch
 from requests import HTTPError
 from testfixtures import LogCapture
 
