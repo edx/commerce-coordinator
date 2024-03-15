@@ -93,4 +93,11 @@ class UserOrdersView(APIView):
         for order_set in order_data:
             output_orders.extend(order_set['results'])
 
-        return Response(sorted(output_orders, key=lambda item: date_conv(item["date_placed"]), reverse=True))
+        output = {
+            "count": request.query_params['page_size'],  # This suppresses the ecomm mfe Order History Pagination ctrl
+            "next": None,
+            "previous": None,
+            "results": sorted(output_orders, key=lambda item: date_conv(item["date_placed"]), reverse=True)
+        }
+
+        return Response(output)

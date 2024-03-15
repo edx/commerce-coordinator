@@ -104,7 +104,7 @@ class OrdersViewTests(TestCase):
         response = self.client.get(reverse('frontend_app_ecommerce:order_history'), ORDER_HISTORY_GET_PARAMETERS)
 
         # Check expected response
-        self.assertEqual(response.json()[1], ECOMMERCE_REQUEST_EXPECTED_RESPONSE['results'][0])
+        self.assertEqual(response.json()['results'][1], ECOMMERCE_REQUEST_EXPECTED_RESPONSE['results'][0])
 
     def test_view_passes_username(self, _mock_ctorders, mock_ecommerce_client):
         """Check logged in user's username is passed to the ecommerce client."""

@@ -21,7 +21,7 @@ from commercetools.platform.models import Reference as CTReference
 from commercetools.platform.models import ReferenceTypeId as CTReferenceTypeId
 from commercetools.platform.models import TypeReference as CTTypeReference
 
-from commerce_coordinator.apps.commercetools.catalog_info.constants import EdXFieldNames
+from commerce_coordinator.apps.commercetools.catalog_info.constants import SEND_MONEY_AS_DECIMAL, EdXFieldNames
 from commerce_coordinator.apps.commercetools.catalog_info.utils import attribute_dict, price_to_string, un_ls
 from commerce_coordinator.apps.commercetools.data import (
     convert_address,
@@ -127,8 +127,8 @@ class TestCTOrderConversionToLegacyOrders(TestCase):
                 course_organization="",
                 description=un_ls(li.name),
                 status="PAID",
-                line_price_excl_tax=price_to_string(li.price),
-                unit_price_excl_tax=price_to_string(li.price)
+                line_price_excl_tax=price_to_string(li.price, SEND_MONEY_AS_DECIMAL),
+                unit_price_excl_tax=price_to_string(li.price, SEND_MONEY_AS_DECIMAL)
             )
         )
 
