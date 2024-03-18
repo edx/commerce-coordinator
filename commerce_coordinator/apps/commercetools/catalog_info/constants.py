@@ -23,6 +23,9 @@ LS_OUT_PREFERENCES = [Languages.ENGLISH, Languages.US_ENGLISH]
 HIDE_CODE_FOR_CURRENCIES = ['USD', 'EUR', 'INR', 'JPY']
 """Currencies to hide the code on, so $12 isn't $12 USD."""
 
+SEND_MONEY_AS_DECIMAL_STRING = True
+"""Sends money values as decimal numbers only ('$123.99 AUD' becomes '123.99' when True)"""
+
 DEFAULT_ORDER_EXPANSION = (
     "state",
     "paymentInfo.payments[*]",
