@@ -277,9 +277,12 @@ REST_FRAMEWORK = {
         'edx_rest_framework_extensions.auth.jwt.authentication.JwtAuthentication',
         'rest_framework.authentication.SessionAuthentication',
     ),
-    'DEFAULT_THROTTLE_CLASSES': [
-        'rest_framework.throttling.UserRateThrottle'
-    ],
+    'DEFAULT_RENDERER_CLASSES': (
+        'rest_framework.renderers.JSONRenderer',
+    ),
+    'DEFAULT_THROTTLE_CLASSES': (
+        'rest_framework.throttling.UserRateThrottle',
+    ),
     'DEFAULT_THROTTLE_RATES': {
         'user': '75/minute',
         'get_payment': '1000/hour',
@@ -345,8 +348,10 @@ REQUEST_READ_TIMEOUT_SECONDS = 5
 FULFILLMENT_TIMEOUT = 7
 
 # API URLs
+COMMERCE_COORDINATOR_URL = 'http://localhost:8140'
 ECOMMERCE_URL = 'http://localhost:18130'
 ECOMMERCE_ADD_TO_BASKET_API_PATH = '/basket/add/'
+ECOMMERCE_ORDER_DETAILS_DASHBOARD_PATH = '/dashboard/orders/'
 TITAN_URL = 'replace-me'
 
 # Timeout for enterprise client
@@ -354,6 +359,8 @@ ENTERPRISE_CLIENT_TIMEOUT = os.environ.get('ENTERPRISE_CLIENT_TIMEOUT', 15)
 
 # Checkout view urls
 COMMERCETOOLS_FRONTEND_URL = 'https://commerce_tools_frontend_url/'
+
+COMMERCETOOLS_MERCHANT_CENTER_ORDERS_PAGE_URL = ''
 
 # Filters
 OPEN_EDX_FILTERS_CONFIG = {

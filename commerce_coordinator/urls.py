@@ -43,6 +43,8 @@ admin.autodiscover()
 urlpatterns = oauth2_urlpatterns + [
     re_path('', include('csrf.urls')),  # Include csrf urls from edx-drf-extensions
     re_path(r'^admin/', admin.site.urls),
+    # Use the same auth views for all logins, including those originating from the browsable API.
+    re_path('api-auth/', include((oauth2_urlpatterns, 'rest_framework'))),
     re_path(r'^api-docs/', get_swagger_view(title='commerce-coordinator API')),
     re_path(r'^api/', include(api_urls)),
     re_path(r'^auto_auth/', core_views.AutoAuth.as_view(), name='auto_auth'),
@@ -52,7 +54,7 @@ urlpatterns = oauth2_urlpatterns + [
     re_path(r'^titan/', include(titan_urls), name='titan'),
     re_path(r'^commercetools/', include(commercetools_urls), name='commercetools'),
     re_path(r'^orders/', include(commercetools_urls, namespace="commercetools_orders_fwd")),
-    re_path(r'^orders/unified/', include(unified_orders_urls), name='frontend-app-ecommerce'),
+    re_path(r'^orders/unified/', include(unified_orders_urls), name='frontend_app_ecommerce'),
     re_path(r'^frontend-app-payment/', include(frontend_app_payment_urls)),
     re_path(r'^stripe/', include(stripe_urls)),
     # DEMO: Currently this is only test code, we may want to decouple LMS code here at some point...

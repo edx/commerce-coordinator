@@ -54,6 +54,10 @@ if os.environ.get('ENABLE_DJANGO_TOOLBAR', False):
 INTERNAL_IPS = ('127.0.0.1',)
 # END TOOLBAR CONFIGURATION
 
+REST_FRAMEWORK['DEFAULT_RENDERER_CLASSES'] += (
+    'rest_framework.renderers.BrowsableAPIRenderer',
+)
+
 # AUTHENTICATION
 # Use a non-SSL URL for authorization redirects
 SOCIAL_AUTH_REDIRECT_IS_HTTPS = False
@@ -138,6 +142,9 @@ PAYMENT_PROCESSOR_CONFIG = {
         },
     },
 }
+
+COMMERCETOOLS_MERCHANT_CENTER_ORDERS_PAGE_URL = \
+    'https://mc.us-central1.gcp.commercetools.com/2u-marketplace-dev-01/orders'
 
 #####################################################################
 # Lastly, see if the developer has any local overrides.

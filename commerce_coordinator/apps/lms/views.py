@@ -2,23 +2,26 @@
 Views for the ecommerce app
 """
 import logging
-from urllib.parse import urlencode
+from urllib.parse import urlencode, urljoin
 
+from django.conf import settings
 from django.http import HttpResponseBadRequest, HttpResponseRedirect
 from edx_rest_framework_extensions.permissions import LoginRedirectIfUnauthenticated
 from openedx_filters.exceptions import OpenEdxFilterException
+from rest_framework.permissions import IsAdminUser
 from rest_framework.status import HTTP_303_SEE_OTHER
 from rest_framework.throttling import UserRateThrottle
 from rest_framework.views import APIView
 
 from commerce_coordinator.apps.core.constants import HttpHeadersNames, MediaTypes
 from commerce_coordinator.apps.lms.filters import PaymentPageRedirectRequested
+from commerce_coordinator.apps.rollout.utils import is_legacy_order
 
 logger = logging.getLogger(__name__)
 
 
 class PaymentPageRedirectView(APIView):
-    """Accept incoming request for routing users to checkout view."""
+    """Accept incoming request for routing users to the checkout view."""
     permission_classes = (LoginRedirectIfUnauthenticated,)
     throttle_classes = (UserRateThrottle,)
 
@@ -86,5 +89,58 @@ class PaymentPageRedirectView(APIView):
         query_params = list(params)
         query_params = urlencode(query_params, True)
         url = url + '?' + query_params if query_params else url
+
+        return url
+
+
+class OrderDetailsRedirectView(APIView):
+    """Accept incoming request from the support tools MFE for routing staff users to the order details admin page."""
+    permission_classes = [IsAdminUser]
+    throttle_classes = (UserRateThrottle,)
+
+    def get(self, request):
+        """
+        Routes staff to desired order details admin view.
+
+        Args:
+            request (django.http.HttpRequest): django.http.HttpRequest
+
+        Returns:
+            - HTTP Redirect (303): Redirection to correct checkout page upon Success
+
+        Errors:
+            - 400: if required params are missing or not in supported format.
+            - 401: if user is unauthorized.
+
+        """
+        params = dict(request.GET.items())
+        if not params.get('order_number', None):
+            return HttpResponseBadRequest('Invalid order number supplied.')
+
+        redirect_url = self._get_redirect_url(params)
+
+        return HttpResponseRedirect(redirect_url, status=HTTP_303_SEE_OTHER)
+
+    @staticmethod
+    def _get_redirect_url(params):
+        """
+        Construct order details page URL based on the e-commerce source system.
+        Args:
+            params (dict): Query params from request as a dictionary
+        Returns:
+            url (str): A URL as a Python String
+        """
+        order_number = params.get('order_number')
+
+        if is_legacy_order(order_number):
+            url = urljoin(settings.ECOMMERCE_URL, f'{settings.ECOMMERCE_ORDER_DETAILS_DASHBOARD_PATH}{order_number}')
+        else:
+            ct_query_params = {
+                'mode': 'basic',
+                'searchMode': 'orderNumber',
+                'searchTerm': f'{order_number}'
+            }
+            query_params = urlencode(ct_query_params, True)
+            url = f'{settings.COMMERCETOOLS_MERCHANT_CENTER_ORDERS_PAGE_URL}?{query_params}'
 
         return url
