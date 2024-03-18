@@ -11,7 +11,7 @@ from commercetools.platform.models import Order as CTOrder
 from commercetools.platform.models import PaymentInfo as CTPaymentInfo
 from django.conf import settings
 
-from commerce_coordinator.apps.commercetools.catalog_info.constants import SEND_MONEY_AS_DECIMAL, EdXFieldNames
+from commerce_coordinator.apps.commercetools.catalog_info.constants import SEND_MONEY_AS_DECIMAL_STRING, EdXFieldNames
 from commerce_coordinator.apps.commercetools.catalog_info.utils import (
     attribute_dict,
     price_to_string,
@@ -54,8 +54,8 @@ def convert_line_item(li: CTLineItem) -> Line:
         course_organization="",
         description=un_ls(li.name),
         status="PAID",
-        line_price_excl_tax=price_to_string(li.price, SEND_MONEY_AS_DECIMAL),
-        unit_price_excl_tax=price_to_string(li.price, SEND_MONEY_AS_DECIMAL)
+        line_price_excl_tax=price_to_string(li.price, SEND_MONEY_AS_DECIMAL_STRING),
+        unit_price_excl_tax=price_to_string(li.price, SEND_MONEY_AS_DECIMAL_STRING)
     )
 
 
@@ -109,7 +109,7 @@ def order_from_commercetools(order: CTOrder, customer: CTCustomer) -> LegacyOrde
         lines=[convert_line_item(x) for x in order.line_items],
         billing_address=convert_address(order.billing_address),
         date_placed=order.last_modified_at,
-        total_excl_tax=typed_money_to_string(order.total_price, SEND_MONEY_AS_DECIMAL),
+        total_excl_tax=typed_money_to_string(order.total_price, SEND_MONEY_AS_DECIMAL_STRING),
         # in dev systems, this isn't set... so let's use UUID, otherwise, let's rely on order number
         number=order.id,  # Long-term: this_or(order.order_number, order.id),
         currency=order.total_price.currency_code,
@@ -119,7 +119,7 @@ def order_from_commercetools(order: CTOrder, customer: CTCustomer) -> LegacyOrde
         order_product_ids=", ".join([convert_line_item_prod_id(x) for x in order.line_items]),
         basket_discounts=convert_direct_discount(order.direct_discounts),
         contains_credit_seat="True",
-        discount=typed_money_to_string(order.discount_on_total_price.discounted_amount, SEND_MONEY_AS_DECIMAL)
+        discount=typed_money_to_string(order.discount_on_total_price.discounted_amount, SEND_MONEY_AS_DECIMAL_STRING)
         if order.discount_on_total_price else None,  # NYI
         enable_hoist_order_history="False",  # ?
         enterprise_learner_portal_url="about:blank",
@@ -132,7 +132,7 @@ def order_from_commercetools(order: CTOrder, customer: CTCustomer) -> LegacyOrde
                 ),
                 order.taxed_price.total_tax
             ),
-            SEND_MONEY_AS_DECIMAL
+            SEND_MONEY_AS_DECIMAL_STRING
         ),
         vouchers=this_or(
             convert_discount_code_info(order.discount_codes),
