@@ -6,6 +6,7 @@ ALLOWED_HOSTS += (
     # Built-in alias to reach the host machine running Docker Desktop from inside a container:
     'host.docker.internal',
     'localhost',
+    '.ngrok-free.app',
 )
 
 INSTALLED_APPS += (
