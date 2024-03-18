@@ -12,6 +12,7 @@ from currencies import Currency
 from commerce_coordinator.apps.commercetools.catalog_info.constants import (
     HIDE_CODE_FOR_CURRENCIES,
     LS_OUT_PREFERENCES,
+    SEND_MONEY_AS_DECIMAL_STRING,
     Languages
 )
 
@@ -73,7 +74,7 @@ def un_ls(string_dict: LSLike, preferred_lang: Optional[str] = None):
         return string_dict[langs_available[0]]
 
 
-def price_to_string(price: CTPrice) -> str:
+def price_to_string(price: CTPrice, money_as_decimal_string=False) -> str:
     """
     Convert Commercetools price to a string.
 
@@ -81,20 +82,22 @@ def price_to_string(price: CTPrice) -> str:
 
     Args:
         price (CTPrice): Price value
+        money_as_decimal_string (bool, optional): Should all money be returned as a decimal?
 
     Returns:
         string: A string representation
 
     """
-    return typed_money_to_string(price.value)
+    return typed_money_to_string(price.value, money_as_decimal_string)
 
 
-def typed_money_to_string(money: CTTypedMoney) -> str:
+def typed_money_to_string(money: CTTypedMoney, money_as_decimal_string=False) -> str:
     """
     Convert Commercetools typed money to a string.
 
     Args:
         money (TypedMoney): The value of meny to be stringified in its native locale.
+        money_as_decimal_string (bool, optional): Should all money be returned as a decimal?
 
     Returns:
         string: A string representation
@@ -103,6 +106,10 @@ def typed_money_to_string(money: CTTypedMoney) -> str:
     cur = Currency(money.currency_code)
 
     def _format(cost):
+        if money_as_decimal_string:  # pragma no cover
+            # This is used to support legacy ecomm mfe
+            return str(cost)
+
         if money.currency_code in HIDE_CODE_FOR_CURRENCIES:
             return cur.get_money_format(cost)
 
