@@ -7,6 +7,7 @@ from unittest.mock import MagicMock
 from braze.client import BrazeClient
 from django.conf import settings
 from django.test import override_settings
+from django.urls import reverse
 from mock import Mock, patch
 
 from commerce_coordinator.apps.commercetools.tests.conftest import gen_order
@@ -131,7 +132,6 @@ class TestBrazeHelpers(unittest.TestCase):
 
     @override_settings(
         LMS_DASHBOARD_URL="https://lms.example.com",
-        ORDER_HISTORY_URL="https://order-mfe/orders"
     )
     def test_extract_ct_order_information_for_braze_canvas_with_discount(self):
         order = gen_order(EXAMPLE_FULFILLMENT_SIGNAL_PAYLOAD['order_number'])
@@ -144,7 +144,8 @@ class TestBrazeHelpers(unittest.TestCase):
             "first_name": "Test",
             "last_name": "User",
             "redirect_url": settings.LMS_DASHBOARD_URL,
-            "view_receipt_cta_url": settings.ORDER_HISTORY_URL,
+            "view_receipt_cta_url": f"{settings.COMMERCE_COORDINATOR_URL}"
+                                    f"{reverse('frontend_app_ecommerce:order_receipt')}?order_number={order.id}",
             "purchase_date": 'Oct 31, 2023',
             "purchase_time": '07:56 PM (UTC)',
             "subtotal": "$74.00",
@@ -156,7 +157,6 @@ class TestBrazeHelpers(unittest.TestCase):
 
     @override_settings(
         LMS_DASHBOARD_URL="https://lms.example.com",
-        ORDER_HISTORY_URL="https://order-mfe/orders"
     )
     def test_extract_ct_order_information_for_braze_canvas_without_discount(self):
         order = gen_order(EXAMPLE_FULFILLMENT_SIGNAL_PAYLOAD['order_number'], with_discount=False)
@@ -169,7 +169,8 @@ class TestBrazeHelpers(unittest.TestCase):
             "first_name": "Test",
             "last_name": "User",
             "redirect_url": settings.LMS_DASHBOARD_URL,
-            "view_receipt_cta_url": settings.ORDER_HISTORY_URL,
+            "view_receipt_cta_url": f"{settings.COMMERCE_COORDINATOR_URL}"
+                                    f"{reverse('frontend_app_ecommerce:order_receipt')}?order_number={order.id}",
             "purchase_date": 'Oct 31, 2023',
             "purchase_time": '07:56 PM (UTC)',
             "subtotal": "$149.00",

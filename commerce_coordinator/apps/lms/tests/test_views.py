@@ -144,3 +144,49 @@ class PaymentPageRedirectViewTests(APITestCase):
                 {'sku': ['sku1'], 'course_run_key': 'course-v1:MichiganX+InjuryPreventionX+1T2021'}
             )
             self.assertEqual(response.status_code, status.HTTP_303_SEE_OTHER)
+
+
+@override_settings(COMMERCETOOLS_MERCHANT_CENTER_ORDERS_PAGE_URL='https://merchant-centre/orders')
+class OrderDetailsRedirectView(APITestCase):
+    """
+    Tests for order details page redirect view.
+    """
+    # Define test user properties
+    test_user_username = 'test'
+    test_user_email = 'test@example.com'
+    test_user_password = 'secret'
+    url = reverse('lms:order_details_page_redirect')
+
+    def setUp(self):
+        super().setUp()
+        self.client_set = APITestingSet.new_instance()
+        self.user = User.objects.create_user(
+            self.test_user_username,
+            self.test_user_email,
+            self.test_user_password,
+            is_staff=True,
+        )
+
+    def tearDown(self):
+        # force destructor call or some test get flaky
+        del self.client_set
+        super().tearDown()
+        self.client.logout()
+
+    def test_missing_query_params(self):
+        """Check bad request."""
+        self.client.login(username=self.test_user_username, password=self.test_user_password)
+        response = self.client.get(self.url)
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+
+    def test_legacy_ecommerce_redirect(self):
+        self.client.login(username=self.test_user_username, password=self.test_user_password)
+        self.client.force_authenticate(user=self.user)
+        response = self.client.get(self.url, {'order_number': ['EDX-123456']})
+        self.assertTrue(response.headers['Location'].startswith(settings.ECOMMERCE_URL))
+
+    def test_commercetools_redirect(self):
+        self.client.login(username=self.test_user_username, password=self.test_user_password)
+        self.client.force_authenticate(user=self.user)
+        response = self.client.get(self.url, {'order_number': ['2U-123456']})
+        self.assertTrue(response.headers['Location'].startswith(settings.COMMERCETOOLS_MERCHANT_CENTER_ORDERS_PAGE_URL))
