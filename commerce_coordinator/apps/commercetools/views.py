@@ -5,6 +5,7 @@ import logging
 
 from commercetools import CommercetoolsError
 from rest_framework import status
+from rest_framework.authentication import SessionAuthentication
 from rest_framework.permissions import IsAdminUser
 from rest_framework.response import Response
 from rest_framework.views import APIView
@@ -13,6 +14,7 @@ from commerce_coordinator.apps.commercetools.catalog_info.constants import TwoUK
 from commerce_coordinator.apps.commercetools.serializers import OrderFulfillViewInputSerializer
 from commerce_coordinator.apps.commercetools.signals import fulfill_order_placed_signal
 
+from .authentication import JwtBearerAuthentication
 from .catalog_info.edx_utils import (
     get_edx_is_sanctioned,
     get_edx_items,
@@ -38,6 +40,9 @@ SOURCE_SYSTEM = 'commercetools'
 # noinspection DuplicatedCode
 class OrderFulfillView(APIView):
     """Order Fulfillment View"""
+
+    authentication_classes = [JwtBearerAuthentication, SessionAuthentication]
+    permission_classes = [IsAdminUser]
 
     def post(self, request):
         """Receive a message from commerce tools forwarded by aws event bridge"""
@@ -113,6 +118,8 @@ class OrderFulfillView(APIView):
 # noinspection DuplicatedCode
 class OrderSanctionedView(APIView):
     """View to sanction an order and deactivate the lms user"""
+
+    authentication_classes = [JwtBearerAuthentication, SessionAuthentication]
     permission_classes = [IsAdminUser]
 
     def post(self, request):

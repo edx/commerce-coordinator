@@ -20,6 +20,7 @@ Contents:
    modules
    changelog
    decisions
+   how_tos
    features
 
 

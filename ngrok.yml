@@ -1,0 +1,8 @@
+tunnels:
+    coordinator:
+        proto: http
+        addr: 8140
+    lms:
+        proto: http
+        addr: 18000
+version: 2

@@ -20,6 +20,14 @@ commerce\_coordinator.apps.commercetools.apps module
    :undoc-members:
    :show-inheritance:
 
+commerce\_coordinator.apps.commercetools.authentication module
+--------------------------------------------------------------
+
+.. automodule:: commerce_coordinator.apps.commercetools.authentication
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
 commerce\_coordinator.apps.commercetools.clients module
 -------------------------------------------------------
 
