@@ -445,6 +445,13 @@ OPEN_EDX_FILTERS_CONFIG = {
             'commerce_coordinator.apps.commercetools.pipeline.FetchOrderDetails',
             'commerce_coordinator.apps.stripe.pipeline.GetPaymentIntentReceipt'
         ]
+    },
+    "org.edx.coordinator.lms.order.refund.requested.v1": {
+        "fail_silently": False,  # TODO: Coordinator filters should NEVER be allowed to fail silently
+        "pipeline": [
+            'commerce_coordinator.apps.rollout.pipeline.DetermineActiveOrderManagementSystemByOrder',
+            'commerce_coordinator.apps.commercetools.pipeline.CreateReturnForCommercetoolsOrder'
+        ]
     }
 }
 

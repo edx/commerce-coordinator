@@ -23,3 +23,27 @@ class PaymentPageRedirectRequested(OpenEdxPublicFilter):
         redirect_url = super().run_pipeline(request=request)
 
         return redirect_url
+
+
+class OrderRefundRequested(OpenEdxPublicFilter):
+    """
+    Filter to create refund/return for Commercetools order
+    """
+    # See pipeline step configuration OPEN_EDX_FILTERS_CONFIG dict in `settings/base.py`
+    filter_type = "org.edx.coordinator.lms.order.refund.requested.v1"
+
+    @classmethod
+    def run_filter(cls, order_number, order_line_id):  # pragma no cover
+        # TODO: Filter will be called in SONIC-83
+        """
+        Call the PipelineStep(s) defined for this filter.
+        Arguments:
+            order_number: Order number (for now this is an order.id, but this should change in the future)
+            TODO: SONIC-277 (in-progress)
+            order_line_id: ID of order line item
+        Returns:
+            order_refund: Updated order with return item attached
+        """
+
+        order_refund = super().run_pipeline(order_number=order_number, order_line_id=order_line_id)
+        return order_refund
