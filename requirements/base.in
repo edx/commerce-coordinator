@@ -26,4 +26,5 @@ mysqlclient
 openedx-filters
 Pillow
 pytz
+segment-analytics-python
 stripe
