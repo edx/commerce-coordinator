@@ -1,11 +1,17 @@
 """Commercetools pipeline test cases"""
+
+from unittest import TestCase
 from unittest.mock import patch
 
-from commercetools.platform.models import ReturnInfo, ReturnShipmentState
+from commercetools.platform.models import ReturnInfo, ReturnPaymentState, ReturnShipmentState
 from rest_framework.test import APITestCase
 
 from commerce_coordinator.apps.commercetools.constants import COMMERCETOOLS_ORDER_MANAGEMENT_SYSTEM
-from commerce_coordinator.apps.commercetools.pipeline import CreateReturnForCommercetoolsOrder, GetCommercetoolsOrders
+from commerce_coordinator.apps.commercetools.pipeline import (
+    CreateReturnForCommercetoolsOrder,
+    GetCommercetoolsOrders,
+    UpdateCommercetoolsOrderReturnPaymentStatus
+)
 from commerce_coordinator.apps.commercetools.tests._test_cases import MonkeyPatchedGetOrderTestCase
 from commerce_coordinator.apps.commercetools.tests.conftest import APITestingSet, gen_order, gen_return_item
 from commerce_coordinator.apps.core.constants import ORDER_HISTORY_PER_SYSTEM_REQ_LIMIT
@@ -44,7 +50,7 @@ class CommercetoolsOrLegacyEcommerceRefundPipelineTests(APITestCase):
         mock_response_order = gen_order("mock_id")
         mock_response_order.version = "1"
         self.mock_response_order = mock_response_order
-        mock_response_return_item = gen_return_item("mock_return_item_id")
+        mock_response_return_item = gen_return_item("mock_return_item_id", ReturnPaymentState.INITIAL)
         mock_response_return_info = ReturnInfo(items=[mock_response_return_item])
         mock_response_order.return_info.append(mock_response_return_info)
         self.returned_order = mock_response_order
@@ -99,3 +105,34 @@ class CommercetoolsOrLegacyEcommerceRefundPipelineTests(APITestCase):
             str(exc.exception),
             'Refund already created for order mock_id with order line id order_line_id'
         )
+
+
+class OrderReturnPipelineTests(TestCase):
+    """Commercetools pipeline testcase for order updates on returns"""
+    def setUp(self) -> None:
+        order_data = gen_order("mock_order_id")
+        return_item = gen_return_item("mock_return_item_id", ReturnPaymentState.INITIAL)
+        return_info = ReturnInfo(items=[return_item])
+        order_data.return_info.append(return_info)
+        self.update_order_data = order_data
+
+        order_respose_data = gen_order("mock_order_id")
+        order_respose_data.version = "8"
+        return_item_response = gen_return_item("mock_return_item_id", ReturnPaymentState.REFUNDED)
+        return_info_response = ReturnInfo(items=[return_item_response])
+        order_respose_data.return_info.append(return_info_response)
+        self.update_order_response = order_respose_data
+
+    @patch(
+        'commerce_coordinator.apps.commercetools.clients.CommercetoolsAPIClient'
+        '.update_return_payment_state_after_successful_refund'
+    )
+    def test_pipeline(self, mock_order_return_update):
+        """Ensure pipeline is functioning as expected"""
+
+        pipe = UpdateCommercetoolsOrderReturnPaymentStatus("test_pipe", None)
+        mock_order_return_update.return_value = self.update_order_response
+        ret = pipe.run_filter(returned_order=self.update_order_data, return_line_item_return_id="mock_return_item_id")
+        result_data = ret['returned_order']
+        self.assertEqual(result_data, self.update_order_response)
+        self.assertEqual(result_data.return_info[1].items[0].payment_state, ReturnPaymentState.REFUNDED)

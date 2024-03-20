@@ -6,6 +6,7 @@ from logging import getLogger
 
 import attrs
 from commercetools import CommercetoolsError
+from commercetools.platform.models import Order as CTOrder
 from openedx_filters import PipelineStep
 from openedx_filters.exceptions import OpenEdxFilterException
 
@@ -147,3 +148,29 @@ class CreateReturnForCommercetoolsOrder(PipelineStep):
             # TODO: FIX Per SONIC-354
             log.exception(f"[{type(self).__name__}] Commercetools Error: {err}, {err.errors}")
             raise OpenEdxFilterException(str(err)) from err
+
+
+class UpdateCommercetoolsOrderReturnPaymentStatus(PipelineStep):
+    """
+    Updates the ReturnPaymentStatus of a Commercetools order
+    """
+    def run_filter(self, returned_order: CTOrder, return_line_item_return_id: str):  # pylint: disable=arguments-differ
+        """
+        Execute a filter with the signature specified.
+        Arguments:
+            returned_order: preliminary order (from an earlier pipeline step) we want to append to
+            return_line_item_return_id: id of the LineItemReturnItem to be refunded
+        Returns:
+            returned_order: the modifed CT order
+        """
+
+        ct_api_client = CommercetoolsAPIClient()
+        updated_order = ct_api_client.update_return_payment_state_after_successful_refund(
+            order_id=returned_order.id,
+            order_version=returned_order.version,
+            return_line_item_return_id=return_line_item_return_id
+        )
+
+        return {
+            "returned_order": updated_order
+        }

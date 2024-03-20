@@ -12,13 +12,14 @@ from commercetools.platform.models import Customer as CTCustomer
 from commercetools.platform.models import CustomerSetCustomTypeAction as CTCustomerSetCustomTypeAction
 from commercetools.platform.models import FieldContainer as CTFieldContainer
 from commercetools.platform.models import Order as CTOrder
-from commercetools.platform.models import OrderAddReturnInfoAction
+from commercetools.platform.models import OrderAddReturnInfoAction, OrderSetReturnPaymentStateAction
 from commercetools.platform.models import ProductVariant as CTProductVariant
-from commercetools.platform.models import ReturnItemDraft, ReturnShipmentState
+from commercetools.platform.models import ReturnItemDraft, ReturnPaymentState, ReturnShipmentState
 from commercetools.platform.models import Type as CTType
 from commercetools.platform.models import TypeDraft as CTTypeDraft
 from commercetools.platform.models import TypeResourceIdentifier as CTTypeResourceIdentifier
 from django.conf import settings
+from openedx_filters.exceptions import OpenEdxFilterException
 
 from commerce_coordinator.apps.commercetools.catalog_info.constants import DEFAULT_ORDER_EXPANSION, EdXFieldNames
 from commerce_coordinator.apps.commercetools.catalog_info.foundational_types import TwoUCustomTypes
@@ -308,3 +309,37 @@ class CommercetoolsAPIClient:
                          f"order {order_id} with error correlation id {err.correlation_id} "
                          f"and error/s: {err.errors}")
             raise err
+
+    def update_return_payment_state_after_successful_refund(self, order_id: str,
+                                                            order_version: str,
+                                                            return_line_item_return_id: str) -> CTOrder:
+        """
+        Update paymentState on the LineItemReturnItem attached to the order.
+        Updated by the Order ID (UUID)
+
+        Args:
+            order_id (str): Order ID (UUID)
+            order_version (str): Current version of order
+            return_item_id (str): LineItemReturnItem ID
+
+        Returns (CTOrder): Updated order object or
+        Returns Exception: Error if update was unsuccesful.
+        """
+        try:
+
+            return_payment_state_action = OrderSetReturnPaymentStateAction(
+                return_item_id=return_line_item_return_id,
+                payment_state=ReturnPaymentState.REFUNDED
+            )
+
+            updated_order = self.base_client.orders.update_by_id(
+                id=order_id,
+                version=order_version,
+                actions=[return_payment_state_action]
+            )
+            return updated_order
+        except CommercetoolsError as err:
+            logger.error(f"[CommercetoolsError] Unable to update ReturnPaymentState "
+                         f"of order {order_id} with error correlation id {err.correlation_id} "
+                         f"and error/s: {err.errors}")
+            raise OpenEdxFilterException(str(err)) from err
