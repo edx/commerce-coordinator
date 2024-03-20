@@ -28,6 +28,10 @@ attrs==23.2.0
     # via -r requirements/test.txt
 babel==2.14.0
     # via sphinx
+backoff==2.2.1
+    # via
+    #   -r requirements/test.txt
+    #   segment-analytics-python
 backports-zoneinfo[tzdata]==0.2.1
     # via
     #   -r requirements/test.txt
@@ -405,10 +409,11 @@ pytest-cov==4.1.0
     # via -r requirements/test.txt
 pytest-django==4.8.0
     # via -r requirements/test.txt
-python-dateutil==2.8.2
+python-dateutil==2.9.0.post0
     # via
     #   -r requirements/test.txt
     #   celery
+    #   segment-analytics-python
 python-slugify==8.0.4
     # via
     #   -r requirements/test.txt
@@ -446,6 +451,7 @@ requests==2.31.0
     #   requests-oauthlib
     #   requests-toolbelt
     #   responses
+    #   segment-analytics-python
     #   slumber
     #   social-auth-core
     #   sphinx
@@ -472,6 +478,8 @@ rich==13.7.0
     # via twine
 secretstorage==3.3.3
     # via keyring
+segment-analytics-python==2.3.2
+    # via -r requirements/test.txt
 semantic-version==2.10.0
     # via
     #   -r requirements/test.txt
