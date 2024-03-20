@@ -8,6 +8,7 @@ omit =
     *wsgi.py
     */migrations/*
     */admin.py
+    */apps.py
     */static/*
     */templates/*
     commerce_coordinator/celery.py
