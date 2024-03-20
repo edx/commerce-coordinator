@@ -9,6 +9,7 @@ import logging
 
 from django.apps import AppConfig
 from django.conf import ImproperlyConfigured, settings
+from segment import analytics
 
 from commerce_coordinator.apps.core.signal_helpers import CoordinatorSignal
 
@@ -43,6 +44,7 @@ class CoreConfig(AppConfig):
         - Confirm that no handlers have been connected to the signals by other means
         - Confirm that every signal has at least one handler
         - Hook up handlers to signals
+        - Sets the Segment's write key
         """
         for signal_path, receivers in settings.CC_SIGNALS.items():
             signal = _get_function_from_string_path(signal_path)
@@ -63,3 +65,6 @@ class CoreConfig(AppConfig):
                 logger.info(f"Connecting {handler_path} to {signal_path}")
                 handler = _get_function_from_string_path(handler_path)
                 signal.connect(handler)
+
+        if settings.SEGMENT_KEY:
+            analytics.write_key = settings.SEGMENT_KEY
