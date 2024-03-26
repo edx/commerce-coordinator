@@ -14,7 +14,7 @@ class JwtBearerAuthentication(JwtAuthentication):
 
         Authorization: JWT <jwt-token>
 
-    We do this by setting JWT_AUTH_HEADER_PREFIX to ``Bearer``.
+    We do this by setting JWT_AUTH_HEADER_PREFIX to ``JWT``.
 
     However, most OAuth2 implementations use an authorization header like:
 
