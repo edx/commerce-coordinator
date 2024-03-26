@@ -21,8 +21,12 @@ def fulfill_order_placed_send_enroll_in_course_task(
     edx_lms_user_id,
     email_opt_in,
     order_number,
+    order_version,
     provider_id,
     source_system,
+    item_id,
+    item_quantity,
+    state_ids,
 ):
     """
     Celery task for order placed fulfillment and enrollment via LMS Enrollment API.
@@ -67,4 +71,12 @@ def fulfill_order_placed_send_enroll_in_course_task(
             'value': provider_id,
         })
 
-    return LMSAPIClient().enroll_user_in_course(enrollment_data)
+    line_item_state_payload = {
+        'order_id': order_number,
+        'order_version': order_version,
+        'item_id': item_id,
+        'item_quantity': item_quantity,
+        'state_ids': state_ids,
+    }
+
+    return LMSAPIClient().enroll_user_in_course(enrollment_data, line_item_state_payload)

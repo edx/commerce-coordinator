@@ -7,12 +7,16 @@ from typing import Generic, List, Optional, Tuple, TypeVar, Union
 
 import requests
 from commercetools import Client as CTClient
-from commercetools import CommercetoolsError
+from commercetools import CommercetoolsError, types
 from commercetools.platform.models import Customer as CTCustomer
 from commercetools.platform.models import CustomerSetCustomTypeAction as CTCustomerSetCustomTypeAction
 from commercetools.platform.models import FieldContainer as CTFieldContainer
 from commercetools.platform.models import Order as CTOrder
-from commercetools.platform.models import OrderAddReturnInfoAction, OrderSetReturnPaymentStateAction
+from commercetools.platform.models import (
+  OrderAddReturnInfoAction,
+  OrderSetReturnPaymentStateAction,
+  OrderTransitionLineItemStateAction
+)
 from commercetools.platform.models import ProductVariant as CTProductVariant
 from commercetools.platform.models import ReturnItemDraft, ReturnPaymentState, ReturnShipmentState
 from commercetools.platform.models import Type as CTType
@@ -187,6 +191,19 @@ class CommercetoolsAPIClient:
         """
         return self.base_client.orders.get_by_id(order_id, expand=list(expand))  # pragma no cover
 
+    def get_order_by_number(self, order_number: str, expand: ExpandList = DEFAULT_ORDER_EXPANSION)  \
+            -> CTOrder:  # pragma no cover
+        """
+        Fetch an order by the Order Number (cart-ID)
+
+        Args:
+            order_number (str): Order Numer (cart-Id)
+            expand: List of Order Parameters to expand
+
+        Returns (CTOrder): Order with Expanded Properties
+        """
+        return self.base_client.orders.get_by_order_number(order_number, expand=list(expand))
+
     def get_orders(self, customer: CTCustomer, offset=0,
                    limit=ORDER_HISTORY_PER_SYSTEM_REQ_LIMIT,
                    expand: ExpandList = DEFAULT_ORDER_EXPANSION,
@@ -343,3 +360,34 @@ class CommercetoolsAPIClient:
                          f"of order {order_id} with error correlation id {err.correlation_id} "
                          f"and error/s: {err.errors}")
             raise OpenEdxFilterException(str(err)) from err
+
+    def update_line_item_transition_state_on_fulfillment(self, order_id:str, order_version: str, item_id: str,
+                                                         item_quantity: int, from_state_id: str, new_state_key: str) -> CTOrder:
+
+        from_state_key = self.base_client.states.get_by_id(from_state_id).key
+
+        try:
+            if new_state_key != from_state_key:
+                transition_line_item_state_action = OrderTransitionLineItemStateAction(
+                    line_item_id=item_id,
+                    quantity=item_quantity,
+                    from_state=types.StateResourceIdentifier(key=from_state_key),
+                    to_state=types.StateResourceIdentifier(key=new_state_key)
+                )
+
+                updated_fulfillment_line_item = self.base_client.orders.update_by_id(
+                    id=order_id,
+                    version=order_version,
+                    actions=[transition_line_item_state_action]
+                )
+
+                return updated_fulfillment_line_item
+            else:
+                logger.info(f"The line item {item_id} already has the correct state {new_state_key}. Not attempting to transition LineItemState")
+                return self.base_client.orders.get_by_id(order_id)
+        except CommercetoolsError as err:
+            # Logs & ignores version conflict errors due to duplicate Commercetools messages
+            logger.error(f"[CommercetoolsError] Unable to update LineItemState "
+                        f"of order {order_id} with error correlation id {err.correlation_id} "
+                        f"and error/s: {err.errors}")
+            pass

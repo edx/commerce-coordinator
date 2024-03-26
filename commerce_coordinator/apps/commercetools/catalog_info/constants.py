@@ -3,6 +3,10 @@ class TwoUKeys:
     CROSS_SYS_USER_INFO_TYPE = '2u-user_information'
 
     SDN_SANCTIONED_ORDER_STATE = '2u-sdn-order-state'
+    PENDING_FULFILMENT_STATE = '2u-fulfillment-pending-state'
+    PROCESSING_FULFILMENT_STATE = '2u-fulfillment-processing-state'
+    SUCCESS_FULFILMENT_STATE = '2u-fulfillment-success-state'
+    FAILURE_FULFILMENT_STATE = '2u-fulfillment-failure-state'
 
 
 class EdXFieldNames:

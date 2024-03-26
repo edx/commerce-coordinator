@@ -21,6 +21,40 @@ class TwoUCustomStates:
         description=ls({'en': 'This order has been sanctioned for an SDN hit'})
     )
 
+    PENDING_FULFILLMENT_STATE = StateDraft(
+        key=TwoUKeys.PENDING_FULFILMENT_STATE,
+        type=StateTypeEnum.LINE_ITEM_STATE,
+        name=ls({'en': 'Fulfillment Pending'}),
+        description=ls({'en': 'This order line item is pending fulfilment'}),
+        initial=False,
+        transitions=[]
+    )
+
+    PROCESSING_FULFILLMENT_STATE = StateDraft(
+        key=TwoUKeys.PROCESSING_FULFILMENT_STATE,
+        type=StateTypeEnum.LINE_ITEM_STATE,
+        name=ls({'en': 'Fulfillment Processing'}),
+        description=ls({'en': 'This order line item is processing fulfilment'}),
+        initial=False,
+        transitions=[]
+    )
+
+    SUCCESS_FULFILLMENT_STATE = StateDraft(
+        key=TwoUKeys.SUCCESS_FULFILMENT_STATE,
+        type=StateTypeEnum.LINE_ITEM_STATE,
+        name=ls({'en': 'Fulfillment Success'}),
+        description=ls({'en': 'This order line item has successfully been fulfilled'}),
+        transitions=[]
+    )
+
+    FAILED_FULFILLMENT_STATE = StateDraft(
+        key=TwoUKeys.FAILURE_FULFILMENT_STATE,
+        type=StateTypeEnum.LINE_ITEM_STATE,
+        name=ls({'en': 'Fulfillment Failure'}),
+        description=ls({'en': 'This order line item was unsuccessfully fulfilled'}),
+        transitions=[]
+    )
+
 
 class TwoUCustomTypes:
     """Global 2U Custom Type Definitions in Commercetools"""
