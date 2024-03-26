@@ -179,6 +179,8 @@ class OrderSanctionedView(APIView):
 # noinspection DuplicatedCode
 class OrderReturnedView(APIView):
     """View to sanction an order and deactivate the lms user"""
+
+    authentication_classes = [JwtBearerAuthentication, SessionAuthentication]
     permission_classes = [IsAdminUser]
 
     def post(self, request):
