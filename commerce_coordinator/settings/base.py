@@ -91,13 +91,17 @@ MIDDLEWARE = (
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
     'social_django.middleware.SocialAuthExceptionMiddleware',
     'waffle.middleware.WaffleMiddleware',
-    # Enables force_django_cache_miss functionality for TieredCache.
-    'edx_django_utils.cache.middleware.TieredCacheMiddleware',
     # Outputs monitoring metrics for a request.
     'edx_rest_framework_extensions.middleware.RequestCustomAttributesMiddleware',
     # Ensures proper DRF permissions in support of JWTs
     'edx_rest_framework_extensions.auth.jwt.middleware.EnsureJWTAuthSettingsMiddleware',
+
+    # /!\ The docs want this to be last. /!\ :
+    #     https://github.com/openedx/edx-django-utils/tree/master/edx_django_utils/cache#tieredcachemiddleware
+    # Enables force_django_cache_miss functionality for TieredCache.
+    'edx_django_utils.cache.middleware.TieredCacheMiddleware',
 )
+
 
 DEFAULT_TIMEOUT = 30 * 60  # Value is in seconds
 # End Cache Configuration
