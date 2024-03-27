@@ -13,6 +13,7 @@ from rest_framework.views import APIView
 from commerce_coordinator.apps.commercetools.catalog_info.constants import TwoUKeys
 from commerce_coordinator.apps.commercetools.serializers import OrderFulfillViewInputSerializer
 from commerce_coordinator.apps.commercetools.signals import fulfill_order_placed_signal
+from commerce_coordinator.apps.core.segment import track
 
 from .authentication import JwtBearerAuthentication
 from .catalog_info.edx_utils import (
@@ -178,7 +179,7 @@ class OrderSanctionedView(APIView):
 
 # noinspection DuplicatedCode
 class OrderReturnedView(APIView):
-    """View to sanction an order and deactivate the lms user"""
+    """View to refund an order's line item."""
 
     authentication_classes = [JwtBearerAuthentication, SessionAuthentication]
     permission_classes = [IsAdminUser]
@@ -219,10 +220,12 @@ class OrderReturnedView(APIView):
 
         payment_intent_id = get_edx_payment_intent_id(order)
         lms_user_name = get_edx_lms_user_name(customer)
+        lms_user_id = get_edx_lms_user_id(customer)
 
         logger.debug('[CT-OrderReturnedView] calling stripe to refund payment intent %s', payment_intent_id)
-
         # TODO: Return payment if payment intent id is set
+
+        segment_event_properties = self._prepare_segment_event_properties(order)  # pragma no cover
 
         for line_item in get_edx_items(order):
             course_run = get_edx_product_course_run_key(line_item)
@@ -233,4 +236,64 @@ class OrderReturnedView(APIView):
                 lms_user_name, course_run
             )
 
+            product = {
+                'product_id': line_item.product_key,
+                'sku': line_item.variant.sku if hasattr(line_item.variant, 'sku') else None,
+                'name': line_item.name['en-US'],
+                'price': self._cents_to_dollars(line_item.price.value),
+                'quantity': line_item.quantity,
+                'category': self._get_line_item_attribute(line_item, 'primarySubjectArea'),
+                'image_url': line_item.variant.images[0].url if line_item.variant.images else None,
+                'brand': self._get_line_item_attribute(line_item, 'brand-text')
+            }
+            segment_event_properties['products'].append(product)
+
+        if segment_event_properties['products']:  # pragma no cover
+            # Emitting the 'Order Refunded' Segment event upon successfully processing a refund.
+            track(
+                lms_user_id=lms_user_id,
+                event='Order Refunded',
+                properties=segment_event_properties
+            )
+
         return Response(status=status.HTTP_200_OK)
+
+    @staticmethod
+    def _get_line_item_attribute(line_item, attribute_name):  # pragma no cover
+        """Utility to get line item's attribute's value."""
+        attribute_value = None
+        for attribute in line_item.variant.attributes:
+            if attribute.name == attribute_name and hasattr(attribute, 'value'):
+                if isinstance(attribute.value, dict):
+                    attribute_value = attribute.value.get('label', None)
+                elif isinstance(attribute.value, str):
+                    attribute_value = attribute.value
+                break
+
+        return attribute_value
+
+    @staticmethod
+    def _cents_to_dollars(amount):
+        return amount.cent_amount / pow(
+            10, amount.fraction_digits
+            if hasattr(amount, 'fraction_digits')
+            else 2
+        )
+
+    def _prepare_segment_event_properties(self, order):  # pragma no cover
+        return {
+            'track_plan_id': 19,
+            'trigger_source': 'server-side',
+            'order_id': order.id,
+            'checkout_id': order.cart.id,
+            'return_id': '',  # TODO: [https://2u-internal.atlassian.net/browse/SONIC-391] Set CT return ID here.
+            'total': self._cents_to_dollars(order.taxed_price.total_gross),
+            'currency': order.taxed_price.total_gross.currency_code,
+            'tax': self._cents_to_dollars(order.taxed_price.total_tax),
+            'coupon': order.discount_codes[-1].discount_code.obj.code if order.discount_codes else None,
+            'coupon_name': [discount.discount_code.obj.code for discount in order.discount_codes[:-1]],
+            'discount': self._cents_to_dollars(
+                order.discount_on_total_price.discounted_amount) if order.discount_on_total_price else 0,
+            'title': get_edx_items(order)[0].name['en-US'] if get_edx_items(order) else None,
+            'products': []
+        }
