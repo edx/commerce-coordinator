@@ -326,6 +326,7 @@ CC_SIGNALS = {
     'commerce_coordinator.apps.demo_lms.signals.enroll_learner_signal': [
         'commerce_coordinator.apps.demo_lms.signals.demo_enroll_learner_in_course',
     ],
+    # Actual Production Signals
     'commerce_coordinator.apps.ecommerce.signals.enrollment_code_redemption_requested_signal': [
         'commerce_coordinator.apps.titan.signals.enrollment_code_redemption_requested_create_order',
     ],
@@ -340,6 +341,15 @@ CC_SIGNALS = {
     ],
     'commerce_coordinator.apps.commercetools.signals.fulfill_order_placed_signal': [
         'commerce_coordinator.apps.lms.signals.fulfill_order_placed_send_enroll_in_course',
+    ],
+    'commerce_coordinator.apps.commercetools.sub_messages.signals_dispatch.fulfill_order_placed_message_signal': [
+        'commerce_coordinator.apps.commercetools.sub_messages.signals_delayed.fulfill_order_placed_message_signal',
+    ],
+    'commerce_coordinator.apps.commercetools.sub_messages.signals_dispatch.fulfill_order_sanctioned_message_signal': [
+        'commerce_coordinator.apps.commercetools.sub_messages.signals_delayed.fulfill_order_sanctioned_message_signal',
+    ],
+    'commerce_coordinator.apps.commercetools.sub_messages.signals_dispatch.fulfill_order_returned_signal': [
+        'commerce_coordinator.apps.commercetools.sub_messages.signals_delayed.fulfill_order_returned_signal',
     ],
 }
 
@@ -369,27 +379,27 @@ COMMERCETOOLS_MERCHANT_CENTER_ORDERS_PAGE_URL = ''
 # Filters
 OPEN_EDX_FILTERS_CONFIG = {
     "org.edx.coordinator.demo_lms.sample_data.v1": {
-        "fail_silently": False,  # TODO: Coordinator filters should NEVER be allowed to fail silently
+        "fail_silently": False,  # Coordinator filters should NEVER be allowed to fail silently
         "pipeline": [
             'commerce_coordinator.apps.demo_lms.pipeline.AddSomeData',
             'commerce_coordinator.apps.demo_lms.pipeline.AddSomeMoreData',
         ]
     },
     "org.edx.coordinator.frontend_app_ecommerce.order.history.requested.v1": {
-        "fail_silently": False,  # TODO: Coordinator filters should NEVER be allowed to fail silently
+        "fail_silently": False,  # Coordinator filters should NEVER be allowed to fail silently
         "pipeline": [
             'commerce_coordinator.apps.ecommerce.pipeline.GetEcommerceOrders',  # old system
             'commerce_coordinator.apps.commercetools.pipeline.GetCommercetoolsOrders',  # new system
         ]
     },
     "org.edx.coordinator.lms.order.create.requested.v1": {
-        "fail_silently": False,  # TODO: Coordinator filters should NEVER be allowed to fail silently
+        "fail_silently": False,  # Coordinator filters should NEVER be allowed to fail silently
         "pipeline": [
             'commerce_coordinator.apps.titan.pipeline.CreateTitanOrder',
         ]
     },
     "org.edx.coordinator.lms.payment.page.redirect.requested.v1": {
-        "fail_silently": False,  # TODO: Coordinator filters should NEVER be allowed to fail silently
+        "fail_silently": False,  # Coordinator filters should NEVER be allowed to fail silently
         "pipeline": [
             'commerce_coordinator.apps.rollout.pipeline.GetActiveOrderManagementSystem',
             'commerce_coordinator.apps.commercetools_frontend.pipeline.GetCommercetoolsRedirectUrl',
@@ -397,13 +407,13 @@ OPEN_EDX_FILTERS_CONFIG = {
         ]
     },
     "org.edx.coordinator.frontend_app_payment.payment.get.requested.v1": {
-        "fail_silently": False,  # TODO: Coordinator filters should NEVER be allowed to fail silently
+        "fail_silently": False,  # Coordinator filters should NEVER be allowed to fail silently
         "pipeline": [
             'commerce_coordinator.apps.titan.pipeline.GetTitanPayment',
         ]
     },
     "org.edx.coordinator.frontend_app_payment.payment.draft.requested.v1": {
-        "fail_silently": False,  # TODO: Coordinator filters should NEVER be allowed to fail silently
+        "fail_silently": False,  # Coordinator filters should NEVER be allowed to fail silently
         "pipeline": [
             'commerce_coordinator.apps.titan.pipeline.GetTitanActiveOrder',
             'commerce_coordinator.apps.titan.pipeline.ValidateOrderReadyForDraftPayment',
@@ -413,19 +423,19 @@ OPEN_EDX_FILTERS_CONFIG = {
         ]
     },
     "org.edx.coordinator.stripe.payment.draft.created.v1": {
-        "fail_silently": False,  # TODO: Coordinator filters should NEVER be allowed to fail silently
+        "fail_silently": False,  # Coordinator filters should NEVER be allowed to fail silently
         "pipeline": [
             'commerce_coordinator.apps.titan.pipeline.CreateDraftPayment',
         ]
     },
     "org.edx.coordinator.frontend_app_payment.active.order.requested.v1": {
-        "fail_silently": False,
+        "fail_silently": False,  # Coordinator filters should NEVER be allowed to fail silently
         "pipeline": [
             'commerce_coordinator.apps.titan.pipeline.GetTitanActiveOrder',
         ]
     },
     "org.edx.coordinator.frontend_app_payment.payment.processing.requested.v1": {
-        "fail_silently": False,  # TODO: Coordinator filters should NEVER be allowed to fail silently
+        "fail_silently": False,  # Coordinator filters should NEVER be allowed to fail silently
         "pipeline": [
             'commerce_coordinator.apps.titan.pipeline.GetTitanPayment',
             'commerce_coordinator.apps.titan.pipeline.ValidatePaymentReadyForProcessing'
@@ -435,13 +445,13 @@ OPEN_EDX_FILTERS_CONFIG = {
         ]
     },
     "org.edx.coordinator.titan.payment.superseded.v1": {
-        "fail_silently": False,  # TODO: Coordinator filters should NEVER be allowed to fail silently
+        "fail_silently": False,  # Coordinator filters should NEVER be allowed to fail silently
         "pipeline": [
             'commerce_coordinator.apps.stripe.pipeline.UpdateStripePayment',
         ]
     },
     "org.edx.coordinator.frontend_app_ecommerce.order.receipt_url.requested.v1": {
-        "fail_silently": False,  # TODO: Coordinator filters should NEVER be allowed to fail silently
+        "fail_silently": False,  # Coordinator filters should NEVER be allowed to fail silently
         "pipeline": [
             'commerce_coordinator.apps.rollout.pipeline.DetermineActiveOrderManagementSystemByOrder',
             'commerce_coordinator.apps.ecommerce.pipeline.GetLegacyEcommerceReceiptRedirectUrl',
@@ -451,7 +461,7 @@ OPEN_EDX_FILTERS_CONFIG = {
         ]
     },
     "org.edx.coordinator.lms.order.refund.requested.v1": {
-        "fail_silently": False,  # TODO: Coordinator filters should NEVER be allowed to fail silently
+        "fail_silently": False,  # Coordinator filters should NEVER be allowed to fail silently
         "pipeline": [
             'commerce_coordinator.apps.rollout.pipeline.DetermineActiveOrderManagementSystemByOrder',
             'commerce_coordinator.apps.commercetools.pipeline.CreateReturnForCommercetoolsOrder'

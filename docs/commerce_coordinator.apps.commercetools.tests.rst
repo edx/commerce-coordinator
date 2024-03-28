@@ -28,6 +28,14 @@ commerce\_coordinator.apps.commercetools.tests.constants module
    :undoc-members:
    :show-inheritance:
 
+commerce\_coordinator.apps.commercetools.tests.test\_authentication module
+--------------------------------------------------------------------------
+
+.. automodule:: commerce_coordinator.apps.commercetools.tests.test_authentication
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
 commerce\_coordinator.apps.commercetools.tests.test\_clients module
 -------------------------------------------------------------------
 
