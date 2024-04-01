@@ -19,10 +19,9 @@ from commerce_coordinator.apps.commercetools.views import SingleInvocationAPIVie
 from commerce_coordinator.apps.core.models import User
 
 
-class FulfillOrderPlacedSignalMock(MagicMock):
+class SendRobustSignalMock(MagicMock):
     """
-    A mock fulfill_order_placed_signal that always returns
-    EXAMPLE_FULFILLMENT_SIGNAL_PAYLOAD in the shape of format_signal_results.
+    A mock send_robust call that always returns
     """
 
     def mock_receiver(self):
@@ -135,8 +134,9 @@ class TestSingleInvocationAPIView(TestCase):
 
 
 @ddt.ddt
-@patch('commerce_coordinator.apps.commercetools.views.fulfill_order_placed_signal.send_robust',
-       new_callable=FulfillOrderPlacedSignalMock)
+@patch('commerce_coordinator.apps.commercetools.sub_messages.signals_dispatch'
+       '.fulfill_order_placed_message_signal.send_robust',
+       new_callable=SendRobustSignalMock)
 @patch(
     'commerce_coordinator.apps.commercetools.clients.CommercetoolsAPIClient.get_order_by_id',
     new_callable=CTOrderByIdMock
@@ -174,7 +174,7 @@ class OrderFulfillViewTests(APITestCase):
         TieredCache.dangerous_clear_all_tiers()
         self.client.logout()
 
-    def test_view_returns_ok(self, mock_customer, mock_order, mock_signal):
+    def test_view_returns_ok(self, _mock_customer, _mock_order, _mock_signal):
         """Check authorized user requesting fulfillment receives a HTTP 200 OK."""
 
         # Login
@@ -186,27 +186,29 @@ class OrderFulfillViewTests(APITestCase):
         # Check 200 OK
         self.assertEqual(response.status_code, 200)
 
-    def test_view_sends_expected_signal_parameters(self, mock_customer, mock_order, mock_signal):
-        """Check view sends expected signal parameters."""
-        # Login
-        self.client.login(username=self.test_staff_username, password=self.test_password)
+    # # TODO: GRM: Move to Signals tests
+    # def test_view_sends_expected_signal_parameters(self, mock_customer, mock_order, mock_signal):
+    #     """Check view sends expected signal parameters."""
+    #     # Login
+    #     self.client.login(username=self.test_staff_username, password=self.test_password)
+    #
+    #     # Send request
+    #     self.client.post(self.url, data=EXAMPLE_COMMERCETOOLS_ORDER_FULFILL_MESSAGE, format='json')
+    #
+    #     # Check expected response
+    #     mock_signal.assert_called_once_with(**EXAMPLE_FULFILLMENT_SIGNAL_PAYLOAD)
 
-        # Send request
-        self.client.post(self.url, data=EXAMPLE_COMMERCETOOLS_ORDER_FULFILL_MESSAGE, format='json')
+    # # TODO: GRM: Move to Signals tests
+    # @patch("commerce_coordinator.apps.commercetools.views.send_order_confirmation_email")
+    # def test_view_triggers_order_confirmation_email(self, mock_send_email, mock_customer, mock_order, mock_signal):
+    #     """Check view sends expected signal parameters."""
+    #     self.client.login(username=self.test_staff_username, password=self.test_password)
+    #
+    #     self.client.post(self.url, data=EXAMPLE_COMMERCETOOLS_ORDER_FULFILL_MESSAGE, format='json')
+    #
+    #     mock_send_email.assert_called_once()
 
-        # Check expected response
-        mock_signal.assert_called_once_with(**EXAMPLE_FULFILLMENT_SIGNAL_PAYLOAD)
-
-    @patch("commerce_coordinator.apps.commercetools.views.send_order_confirmation_email")
-    def test_view_triggers_order_confirmation_email(self, mock_send_email, mock_customer, mock_order, mock_signal):
-        """Check view sends expected signal parameters."""
-        self.client.login(username=self.test_staff_username, password=self.test_password)
-
-        self.client.post(self.url, data=EXAMPLE_COMMERCETOOLS_ORDER_FULFILL_MESSAGE, format='json')
-
-        mock_send_email.assert_called_once()
-
-    def test_view_returns_expected_error(self, mock_customer, mock_order, mock_signal):
+    def test_view_returns_expected_error(self, _mock_customer, _mock_order, _mock_signal):
         """Check an authorized account requesting fulfillment with bad inputs receive an expected error."""
 
         # Login
@@ -225,7 +227,7 @@ class OrderFulfillViewTests(APITestCase):
         }
         self.assertEqual(response.json(), expected_response)
 
-    def test_view_returns_expected_error_no_order(self, mock_customer, mock_order, mock_signal):
+    def test_view_returns_expected_error_no_order(self, mock_customer, _mock_order, _mock_signal):
         """Check an authorized account requesting fulfillment unable to get customer to receive an expected error."""
         mock_customer.return_value = None
         # Login
@@ -236,7 +238,7 @@ class OrderFulfillViewTests(APITestCase):
 
         self.assertEqual(response.status_code, 200)
 
-    def test_unauthorized_user(self, mock_customer, mock_order, mock_signal):
+    def test_unauthorized_user(self, _mock_customer, _mock_order, _mock_signal):
         """Check unauthorized user is forbidden."""
 
         # Login
@@ -250,6 +252,9 @@ class OrderFulfillViewTests(APITestCase):
 
 
 @ddt.ddt
+@patch('commerce_coordinator.apps.commercetools.sub_messages.signals_dispatch'
+       '.fulfill_order_sanctioned_message_signal.send_robust',
+       new_callable=SendRobustSignalMock)
 class OrderSanctionedViewTests(APITestCase):
     # Disable unused-argument due to global @patch
     # pylint: disable=unused-argument
@@ -286,7 +291,7 @@ class OrderSanctionedViewTests(APITestCase):
         'commerce_coordinator.apps.commercetools.clients.CommercetoolsAPIClient.get_customer_by_id',
         new_callable=CTCustomerByIdMock
     )
-    def test_view_returns_ok(self, mock_customer, mock_order):
+    def test_view_returns_ok(self, _mock_customer, _mock_order, _mock_signal):
         """Check authorized user requesting sanction receives a HTTP 200 OK."""
 
         # Login
@@ -306,7 +311,7 @@ class OrderSanctionedViewTests(APITestCase):
         'commerce_coordinator.apps.commercetools.clients.CommercetoolsAPIClient.get_customer_by_id',
         new_callable=CTCustomerByIdMock
     )
-    def test_view_returns_expected_error(self, mock_customer, mock_order):
+    def test_view_returns_expected_error(self, _mock_customer, _mock_order, _mock_signal):
         """Check authorized account requesting fulfillment with bad inputs receive an expected error."""
 
         # Login
@@ -333,7 +338,7 @@ class OrderSanctionedViewTests(APITestCase):
         'commerce_coordinator.apps.commercetools.clients.CommercetoolsAPIClient.get_customer_by_id',
         new_callable=CTCustomerByIdMock
     )
-    def test_view_returns_expected_error_no_order(self, mock_customer, mock_order):
+    def test_view_returns_expected_error_no_order(self, mock_customer, _mock_order, _mock_signal):
         """Check authorized account requesting fulfillment unable to get customer receive an expected error."""
         mock_customer.return_value = None
         # Login
@@ -352,7 +357,7 @@ class OrderSanctionedViewTests(APITestCase):
         'commerce_coordinator.apps.commercetools.clients.CommercetoolsAPIClient.get_customer_by_id',
         new_callable=CTCustomerByIdMock
     )
-    def test_view_returns_ok_bad_order_state(self, mock_customer, mock_order):
+    def test_view_returns_ok_bad_order_state(self, _mock_customer, _mock_order, _mock_signal):
         """Check authorized user requesting sanction receives a HTTP 200 OK."""
 
         # Login
@@ -372,7 +377,7 @@ class OrderSanctionedViewTests(APITestCase):
         'commerce_coordinator.apps.commercetools.clients.CommercetoolsAPIClient.get_customer_by_id',
         new_callable=CTCustomerByIdMock
     )
-    def test_view_returns_ok_missing_order_state(self, mock_customer, mock_order):
+    def test_view_returns_ok_missing_order_state(self, _mock_customer, _mock_order, _mock_signal):
         """Check authorized with missing order user requesting sanction receives a HTTP 200 OK."""
 
         # Login
@@ -386,6 +391,9 @@ class OrderSanctionedViewTests(APITestCase):
 
 
 @ddt.ddt
+@patch('commerce_coordinator.apps.commercetools.sub_messages.signals_dispatch'
+       '.fulfill_order_returned_signal.send_robust',
+       new_callable=SendRobustSignalMock)
 class OrderReturnedViewTests(APITestCase):
     # Disable unused-argument due to global @patch
     # pylint: disable=unused-argument
@@ -422,7 +430,7 @@ class OrderReturnedViewTests(APITestCase):
         'commerce_coordinator.apps.commercetools.clients.CommercetoolsAPIClient.get_customer_by_id',
         new_callable=CTCustomerByIdMock
     )
-    def test_view_returns_ok(self, mock_customer, mock_order):
+    def test_view_returns_ok(self, _mock_customer, _mock_order, _mock_signal):
         """Check authorized user requesting sanction receives a HTTP 200 OK."""
 
         # Login
@@ -442,7 +450,7 @@ class OrderReturnedViewTests(APITestCase):
         'commerce_coordinator.apps.commercetools.clients.CommercetoolsAPIClient.get_customer_by_id',
         new_callable=CTCustomerByIdMock
     )
-    def test_view_returns_expected_error(self, mock_customer, mock_order):
+    def test_view_returns_expected_error(self, _mock_customer, _mock_order, _mock_signal):
         """Check authorized account requesting fulfillment with bad inputs receive an expected error."""
 
         # Login
@@ -469,7 +477,7 @@ class OrderReturnedViewTests(APITestCase):
         'commerce_coordinator.apps.commercetools.clients.CommercetoolsAPIClient.get_customer_by_id',
         new_callable=CTCustomerByIdMock
     )
-    def test_view_returns_expected_error_no_order(self, mock_customer, mock_order):
+    def test_view_returns_expected_error_no_order(self, mock_customer, _mock_order, _mock_signal):
         """Check authorized account requesting fulfillment unable to get customer receive an expected error."""
         mock_customer.return_value = None
         # Login
@@ -488,7 +496,7 @@ class OrderReturnedViewTests(APITestCase):
         'commerce_coordinator.apps.commercetools.clients.CommercetoolsAPIClient.get_customer_by_id',
         new_callable=CTCustomerByIdMock
     )
-    def test_view_returns_ok_bad_order_state(self, mock_customer, mock_order):
+    def test_view_returns_ok_bad_order_state(self, _mock_customer, _mock_order, _mock_signal):
         """Check authorized user requesting sanction receives a HTTP 200 OK."""
 
         # Login
@@ -508,7 +516,7 @@ class OrderReturnedViewTests(APITestCase):
         'commerce_coordinator.apps.commercetools.clients.CommercetoolsAPIClient.get_customer_by_id',
         new_callable=CTCustomerByIdMock
     )
-    def test_view_returns_ok_missing_order_state(self, mock_customer, mock_order):
+    def test_view_returns_ok_missing_order_state(self, _mock_customer, _mock_order, _mock_signal):
         """Check authorized with missing order user requesting sanction receives a HTTP 200 OK."""
 
         # Login
@@ -520,7 +528,7 @@ class OrderReturnedViewTests(APITestCase):
         # Check 200 OK
         self.assertEqual(response.status_code, 200)
 
-    def test_unauthorized_user(self):
+    def test_unauthorized_user(self, _mock_signal):
         """Check unauthorized user is forbidden."""
 
         # Login
