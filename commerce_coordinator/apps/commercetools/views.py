@@ -13,6 +13,7 @@ from rest_framework.views import APIView
 from commerce_coordinator.apps.commercetools.catalog_info.constants import TwoUKeys
 from commerce_coordinator.apps.commercetools.serializers import OrderFulfillViewInputSerializer
 from commerce_coordinator.apps.commercetools.signals import fulfill_order_placed_signal
+from commerce_coordinator.apps.core.constants import ISO_8601_FORMAT
 from commerce_coordinator.apps.core.segment import track
 
 from .authentication import JwtBearerAuthentication
@@ -87,7 +88,7 @@ class OrderFulfillView(APIView):
             'provider_id': None,
             'edx_lms_user_id': lms_user_id,
             'course_mode': 'verified',
-            'date_placed': order.last_modified_at.strftime('%b %d, %Y'),
+            'date_placed': order.last_modified_at.strftime(ISO_8601_FORMAT),
             'source_system': SOURCE_SYSTEM,
         }
         canvas_entry_properties = {"products": []}
