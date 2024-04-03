@@ -9,13 +9,16 @@ from django.http import HttpResponseBadRequest, HttpResponseRedirect
 from edx_rest_framework_extensions.permissions import LoginRedirectIfUnauthenticated
 from openedx_filters.exceptions import OpenEdxFilterException
 from rest_framework.permissions import IsAdminUser
+from rest_framework.response import Response
 from rest_framework.status import HTTP_303_SEE_OTHER
 from rest_framework.throttling import UserRateThrottle
 from rest_framework.views import APIView
 
 from commerce_coordinator.apps.core.constants import HttpHeadersNames, MediaTypes
-from commerce_coordinator.apps.lms.filters import PaymentPageRedirectRequested
 from commerce_coordinator.apps.rollout.utils import is_legacy_order
+
+from .filters import OrderRefundRequested, PaymentPageRedirectRequested
+from .serializers import OrderRefundRequestedFilterInputSerializer, RefundViewInputSerializer
 
 logger = logging.getLogger(__name__)
 
@@ -144,3 +147,54 @@ class OrderDetailsRedirectView(APIView):
             url = f'{settings.COMMERCETOOLS_MERCHANT_CENTER_ORDERS_PAGE_URL}?{query_params}'
 
         return url
+
+
+class RefundView(APIView):
+    """Accept incoming request from LMS for routing staff users to the order details admin page."""
+    permission_classes = [IsAdminUser]
+
+    def post(self, request):
+        """
+        POST request handler for /refund
+
+        Requires a JSON object of the following format:
+
+        .. code-block:: json
+
+            {
+                "course_id": "course-v1:edX+DemoX+Demo_Course",
+                "course_mode": "verified",
+                "order_placed": 1681738233,
+                "edx_lms_user_id": 4,
+                "email_opt_in": 0,
+                "order_number": "61ec1afa-1b0e-4234-ae28-f997728054fa"
+            }
+
+        Returns a JSON object listing the signal receivers of
+        fulfill_order_placed_signal.send_robust which processed the
+        request.
+        """
+        logger.debug(f'LMS RefundView.post() request object: {request.data}.')
+        logger.debug(f'LMS RefundView.post() headers: {request.headers}.')
+
+        params = {
+            'course_id': request.data.get('course_id'),
+            'enrollment_attributes': request.data.get('enrollment_attributes'),
+            'username': request.data.get('username'),
+        }
+
+        logger.info(f'LMS RefundView.post() called using {locals()}.')
+
+        view_serializer = RefundViewInputSerializer(data=params)
+        view_serializer.is_valid(raise_exception=True)
+
+        filter_serializer = OrderRefundRequestedFilterInputSerializer(
+            data=view_serializer.data
+        )
+        filter_serializer.is_valid(raise_exception=True)
+
+        results = OrderRefundRequested.run_filter(
+            **filter_serializer.data
+        )
+
+        return Response(results)

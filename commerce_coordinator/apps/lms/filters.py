@@ -33,8 +33,7 @@ class OrderRefundRequested(OpenEdxPublicFilter):
     filter_type = "org.edx.coordinator.lms.order.refund.requested.v1"
 
     @classmethod
-    def run_filter(cls, order_number, order_line_id):  # pragma no cover
-        # TODO: Filter will be called in SONIC-83
+    def run_filter(cls, order_id, order_line_item_id, **kwargs):  # pragma no cover
         """
         Call the PipelineStep(s) defined for this filter.
         Arguments:
@@ -45,5 +44,5 @@ class OrderRefundRequested(OpenEdxPublicFilter):
             order_refund: Updated order with return item attached
         """
 
-        order_refund = super().run_pipeline(order_number=order_number, order_line_id=order_line_id)
+        order_refund = super().run_pipeline(order_number=order_id, order_line_id=order_line_item_id)
         return order_refund
