@@ -107,7 +107,7 @@ def fulfill_order_placed_message_signal_task(
 
     if not cache_entry.is_found:
         send_order_confirmation_email(lms_user_id, customer.email, canvas_entry_properties)
-        TieredCache.set_all_tiers(cache_entry, value="SENT", django_cache_timeout=EMAIL_NOTIFICATION_CACHE_TTL_SECS)
+        TieredCache.set_all_tiers(cache_key, value="SENT", django_cache_timeout=EMAIL_NOTIFICATION_CACHE_TTL_SECS)
 
 
 # noinspection DuplicatedCode

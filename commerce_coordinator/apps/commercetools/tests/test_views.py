@@ -1,6 +1,6 @@
 """Tests for the commercetools views"""
 
-from unittest.mock import MagicMock, patch
+from unittest.mock import patch
 
 import ddt
 from django.http import HttpResponse
@@ -9,71 +9,19 @@ from django.urls import reverse
 from edx_django_utils.cache import TieredCache
 from rest_framework.test import APIClient, APITestCase
 
-from commerce_coordinator.apps.commercetools.tests.conftest import gen_customer, gen_order
 from commerce_coordinator.apps.commercetools.tests.constants import (
     EXAMPLE_COMMERCETOOLS_ORDER_FULFILL_MESSAGE,
-    EXAMPLE_COMMERCETOOLS_ORDER_SANCTIONED_MESSAGE,
-    EXAMPLE_FULFILLMENT_SIGNAL_PAYLOAD
+    EXAMPLE_COMMERCETOOLS_ORDER_SANCTIONED_MESSAGE
+)
+from commerce_coordinator.apps.commercetools.tests.mocks import (
+    CTCustomerByIdMock,
+    CTOrderBadStateKeyByIdMock,
+    CTOrderByIdMock,
+    CTOrderMissingStateByIdMock,
+    SendRobustSignalMock
 )
 from commerce_coordinator.apps.commercetools.views import SingleInvocationAPIView
 from commerce_coordinator.apps.core.models import User
-
-
-class SendRobustSignalMock(MagicMock):
-    """
-    A mock send_robust call that always returns
-    """
-
-    def mock_receiver(self):
-        pass  # pragma: no cover
-
-    return_value = [
-        (mock_receiver, 'bogus_task_id'),
-    ]
-
-
-class CTOrderByIdMock(MagicMock):
-    """
-    A mock get_order_by_id call that always returns
-    EXAMPLE_FULFILLMENT_SIGNAL_PAYLOAD in the shape of format_signal_results.
-    """
-    return_value = gen_order(EXAMPLE_FULFILLMENT_SIGNAL_PAYLOAD['order_number'])
-
-
-def get_order_with_bad_state_key():
-    """Modify a canned order to have a bad transition/workflow state key"""
-    order = gen_order(EXAMPLE_FULFILLMENT_SIGNAL_PAYLOAD['order_number'])
-    order.state.obj.key = "XXXXXXX"
-    return order
-
-
-def get_order_with_missing_state():
-    """Modify a canned order to have a bad transition/workflow state key"""
-    order = gen_order(EXAMPLE_FULFILLMENT_SIGNAL_PAYLOAD['order_number'])
-    order.state = None
-    return order
-
-
-class CTOrderBadStateKeyByIdMock(MagicMock):
-    """
-    A mock get_order_by_id call that always returns with a bad state
-    """
-    return_value = get_order_with_bad_state_key()
-
-
-class CTOrderMissingStateByIdMock(MagicMock):
-    """
-    A mock get_order_by_id call that always returns with a missing state
-    """
-    return_value = get_order_with_missing_state()
-
-
-class CTCustomerByIdMock(MagicMock):
-    """
-    A mock get_customer_by_id call that always returns
-    EXAMPLE_FULFILLMENT_SIGNAL_PAYLOAD in the shape of format_signal_results.
-    """
-    return_value = gen_customer("hiya@text.example", "jim_34")
 
 
 class TestSingleInvocationAPIView(TestCase):
@@ -137,14 +85,7 @@ class TestSingleInvocationAPIView(TestCase):
 @patch('commerce_coordinator.apps.commercetools.sub_messages.signals_dispatch'
        '.fulfill_order_placed_message_signal.send_robust',
        new_callable=SendRobustSignalMock)
-@patch(
-    'commerce_coordinator.apps.commercetools.clients.CommercetoolsAPIClient.get_order_by_id',
-    new_callable=CTOrderByIdMock
-)
-@patch(
-    'commerce_coordinator.apps.commercetools.clients.CommercetoolsAPIClient.get_customer_by_id',
-    new_callable=CTCustomerByIdMock
-)
+
 class OrderFulfillViewTests(APITestCase):
     # Disable unused-argument due to global @patch
     # pylint: disable=unused-argument
@@ -174,7 +115,7 @@ class OrderFulfillViewTests(APITestCase):
         TieredCache.dangerous_clear_all_tiers()
         self.client.logout()
 
-    def test_view_returns_ok(self, _mock_customer, _mock_order, _mock_signal):
+    def test_view_returns_ok(self, _mock_signal):
         """Check authorized user requesting fulfillment receives a HTTP 200 OK."""
 
         # Login
@@ -208,7 +149,7 @@ class OrderFulfillViewTests(APITestCase):
     #
     #     mock_send_email.assert_called_once()
 
-    def test_view_returns_expected_error(self, _mock_customer, _mock_order, _mock_signal):
+    def test_view_returns_expected_error(self, _mock_signal):
         """Check an authorized account requesting fulfillment with bad inputs receive an expected error."""
 
         # Login
@@ -227,9 +168,9 @@ class OrderFulfillViewTests(APITestCase):
         }
         self.assertEqual(response.json(), expected_response)
 
-    def test_view_returns_expected_error_no_order(self, mock_customer, _mock_order, _mock_signal):
+    def test_view_returns_expected_error_no_order(self, _mock_signal):
         """Check an authorized account requesting fulfillment unable to get customer to receive an expected error."""
-        mock_customer.return_value = None
+
         # Login
         self.client.login(username=self.test_staff_username, password=self.test_password)
 
@@ -238,7 +179,7 @@ class OrderFulfillViewTests(APITestCase):
 
         self.assertEqual(response.status_code, 200)
 
-    def test_unauthorized_user(self, _mock_customer, _mock_order, _mock_signal):
+    def test_unauthorized_user(self, _mock_signal):
         """Check unauthorized user is forbidden."""
 
         # Login
