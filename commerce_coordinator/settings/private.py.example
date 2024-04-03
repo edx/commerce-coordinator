@@ -1,5 +1,12 @@
-SOCIAL_AUTH_EDX_OAUTH2_KEY = 'replace-me'
-SOCIAL_AUTH_EDX_OAUTH2_SECRET = 'replace-me'
-SOCIAL_AUTH_EDX_OAUTH2_URL_ROOT = 'http://127.0.0.1:8000/oauth'
-BACKEND_SERVICE_EDX_OAUTH2_KEY = 'commerce-coordinator-backend-service-key'
-BACKEND_SERVICE_EDX_OAUTH2_SECRET = 'commerce-coordinator-backend-service-secret'
+COMMERCETOOLS_FRONTEND_URL = 'http://localhost:3000/SET-ME'
+
+_COMMERCETOOLS_CONFIG_GEO = 'us-central1.gcp'
+COMMERCETOOLS_CONFIG = {
+    'projectKey': 'SET-ME',
+    'clientId': 'SET-ME',
+    'clientSecret': 'SET-ME',
+    'authUrl': f"https://auth.{_COMMERCETOOLS_CONFIG_GEO}.commercetools.com",
+    'apiUrl': f"https://api.{_COMMERCETOOLS_CONFIG_GEO}.commercetools.com",
+    'importUrl': f"https://import.{_COMMERCETOOLS_CONFIG_GEO}.commercetools.com",  # Required for ImpEx
+    'scopes': 'SET-ME'
+}
