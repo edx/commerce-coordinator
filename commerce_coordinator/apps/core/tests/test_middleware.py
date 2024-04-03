@@ -54,7 +54,6 @@ class LogDRFExceptionsTests(APITestCase):
         print(log_manager.output)
         self.assertEqual(log_manager.records[0].funcName, self.uut.__name__)
 
-
     def test_404_throw_logs(self):
         """Check that an explicit throw yields logs."""
 
@@ -69,7 +68,6 @@ class LogDRFExceptionsTests(APITestCase):
             mock_view_with_404(request)
         print(log_manager.output)
         self.assertEqual(log_manager.records[0].funcName, self.uut.__name__)
-
 
     def test_generic_exception_raise_logs(self):
         """Check that an explicit throw yields logs."""
