@@ -277,6 +277,7 @@ TITAN_OAUTH2_SECRET = 'replace-me'
 
 # DRF CONFIGURATION
 REST_FRAMEWORK = {
+    'EXCEPTION_HANDLER': 'commerce_coordinator.apps.core.middleware.log_drf_exceptions',
     'DEFAULT_AUTHENTICATION_CLASSES': (
         'edx_rest_framework_extensions.auth.jwt.authentication.JwtAuthentication',
         'rest_framework.authentication.SessionAuthentication',
