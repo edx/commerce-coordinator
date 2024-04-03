@@ -331,11 +331,6 @@ TITAN_URL = 'replace-me'
 # Timeout for enterprise client
 ENTERPRISE_CLIENT_TIMEOUT = os.environ.get('ENTERPRISE_CLIENT_TIMEOUT', 15)
 
-# Checkout view urls
-COMMERCETOOLS_FRONTEND_URL = 'https://commerce_tools_frontend_url/'
-
-COMMERCETOOLS_MERCHANT_CENTER_ORDERS_PAGE_URL = ''
-
 # Filters
 OPEN_EDX_FILTERS_CONFIG = {
     "org.edx.coordinator.frontend_app_ecommerce.order.history.requested.v1": {
@@ -416,6 +411,12 @@ COMMERCETOOLS_CONFIG = {
     'importUrl': f"https://import.{_COMMERCETOOLS_CONFIG_GEO}.commercetools.com",  # Required for ImpEx
     'scopes': 'some_scope'
 }
+
+# Checkout view urls
+COMMERCETOOLS_FRONTEND_URL = 'http://localhost:3000/SET-ME'
+
+COMMERCETOOLS_MERCHANT_CENTER_ORDERS_PAGE_URL = \
+    f'https://mc.{_COMMERCETOOLS_CONFIG_GEO}.commercetools.com/{COMMERCETOOLS_CONFIG["projectKey"]}/orders'
 
 
 # Will be suffixed with order numbers
