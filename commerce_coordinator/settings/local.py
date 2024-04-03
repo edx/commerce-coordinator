@@ -83,11 +83,11 @@ BACKEND_SERVICE_EDX_OAUTH2_PROVIDER_URL = os.environ.get(
 )
 BACKEND_SERVICE_EDX_OAUTH2_KEY = os.environ.get(
     'BACKEND_SERVICE_EDX_OAUTH2_KEY',
-    'commerce_coordinator-backend-service-key'
+    'commerce-coordinator-backend-service-key'
 )
 BACKEND_SERVICE_EDX_OAUTH2_SECRET = os.environ.get(
     'BACKEND_SERVICE_EDX_OAUTH2_SECRET',
-    'commerce_coordinator-backend-service-secret'
+    'commerce-coordinator-backend-service-secret'
 )
 
 JWT_AUTH.update({
