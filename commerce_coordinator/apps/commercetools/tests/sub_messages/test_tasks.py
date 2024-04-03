@@ -4,6 +4,7 @@ import logging
 from unittest import TestCase
 from unittest.mock import MagicMock, patch
 
+import ddt
 from edx_django_utils.cache import TieredCache
 
 from commerce_coordinator.apps.commercetools.constants import SOURCE_SYSTEM
@@ -32,21 +33,21 @@ class CommercetoolsAPIClientMock(MagicMock):
 
         self.example_payload = gen_example_fulfill_payload()
         self.order_id = self.example_payload['order_id']
+        self.customer_id = uuid4_str()
         self.cache_key = safe_key(key=self.order_id, key_prefix='send_order_confirmation_email', version='1')
 
         self.order_mock = CTOrderByIdMock()
         self.customer_mock = CTCustomerByIdMock()
 
         self.order_mock.return_value.id = self.order_id
-        self.order_mock.return_value.customer_id = self.customer_mock.return_value.id
+        self.customer_mock.return_value.id = self.customer_id
+        self.order_mock.return_value.customer_id = self.customer_id
 
         self.get_order_by_id = self.order_mock
         self.get_customer_by_id = self.customer_mock
 
         self.expected_order = self.order_mock.return_value
         self.expected_customer = self.customer_mock.return_value
-
-
 
 
 # Log using module name.
@@ -58,6 +59,7 @@ logger = logging.getLogger(__name__)
 fulfill_order_placed_uut = fulfill_order_placed_message_signal_task
 
 
+@ddt.ddt
 @patch('commerce_coordinator.apps.commercetools.sub_messages.tasks.fulfill_order_placed_signal.send_robust',
        new_callable=SendRobustSignalMock)
 @patch('commerce_coordinator.apps.commercetools.sub_messages.tasks.CommercetoolsAPIClient',
@@ -88,3 +90,19 @@ class FulfillOrderPlacedMessageSignalTaskTests(TestCase):
         mock_values.order_mock.assert_called_once_with(mock_values.expected_order.id)
         mock_values.customer_mock.assert_called_once_with(mock_values.expected_customer.id)
         self.assertTrue(TieredCache.get_cached_response(mock_values.cache_key).is_found)
+
+    @patch('commerce_coordinator.apps.commercetools.sub_messages.tasks.is_edx_lms_order',
+           return_value=False)
+    def test_not_lms_order(self, _fn, _ct_client_init: CommercetoolsAPIClientMock, _lms_signal):
+        """
+        Check calling uut with mock_parameters yields call to client with
+        expected_data.
+        """
+        mock_values = _ct_client_init.return_value
+
+        ret_val = self.get_uut()(*self.unpack_for_uut(mock_values.example_payload))
+
+        self.assertTrue(ret_val)
+        mock_values.order_mock.assert_called_once_with(mock_values.order_id)
+        mock_values.customer_mock.assert_called_once_with(mock_values.customer_id)
+        self.assertFalse(TieredCache.get_cached_response(mock_values.cache_key).is_found)

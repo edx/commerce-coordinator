@@ -24,6 +24,7 @@ def fulfill_order_placed_message_signal(**kwargs):
     return async_result.id
 
 
+@log_receiver(logger)
 def fulfill_order_sanctioned_message_signal(**kwargs):
     """ CoordinatorSignal receiver to invoke Celery Task fulfill_order_sanctioned_message_signal"""
     async_result = fulfill_order_sanctioned_message_signal_task.delay(
@@ -32,6 +33,7 @@ def fulfill_order_sanctioned_message_signal(**kwargs):
     return async_result.id
 
 
+@log_receiver(logger)
 def fulfill_order_returned_signal(**kwargs):
     """ CoordinatorSignal receiver to invoke Celery Task fulfill_order_returned_signal"""
     async_result = fulfill_order_returned_signal_task.delay(

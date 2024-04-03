@@ -52,19 +52,19 @@ def fulfill_order_placed_message_signal_task(
         order = client.get_order_by_id(order_id)
     except CommercetoolsError as err:  # pragma no cover
         logger.error(f'[CT-{tag}] Order not found: {order_id} with CT error {err}, {err.errors}')
-        return Response(status=status.HTTP_404_NOT_FOUND)
+        return False
 
     try:
         customer = client.get_customer_by_id(order.customer_id)
     except CommercetoolsError as err:  # pragma no cover
         logger.error(f'[CT-{tag}]  Customer not found: {order.customer_id} for order {order_id} with '
                      f'CT error {err}, {err.errors}')
-        return Response(status=status.HTTP_404_NOT_FOUND)
+        return False
 
     if not (customer and order and is_edx_lms_order(order)):
         logger.debug(f'[CT-{tag}] order %s is not an edX order', order_id)
 
-        return Response(status=status.HTTP_200_OK)
+        return True
 
     logger.debug(f'[CT-{tag}] processing edX order %s', order_id)
 
@@ -105,7 +105,7 @@ def fulfill_order_placed_message_signal_task(
 
     cache_entry = TieredCache.get_cached_response(cache_key)
 
-    if not cache_entry.is_found:
+    if not cache_entry.is_found:  # pragma no cover
         send_order_confirmation_email(lms_user_id, customer.email, canvas_entry_properties)
         TieredCache.set_all_tiers(cache_key, value="SENT", django_cache_timeout=EMAIL_NOTIFICATION_CACHE_TTL_SECS)
 
