@@ -107,6 +107,8 @@ def fulfill_order_placed_message_signal_task(
         send_order_confirmation_email(lms_user_id, customer.email, canvas_entry_properties)
         TieredCache.set_all_tiers(cache_key, value="SENT", django_cache_timeout=EMAIL_NOTIFICATION_CACHE_TTL_SECS)
 
+    return True
+
 
 # noinspection DuplicatedCode
 @shared_task(autoretry_for=(RequestException, CommercetoolsError), retry_kwargs={'max_retries': 5, 'countdown': 3})
@@ -151,6 +153,8 @@ def fulfill_order_sanctioned_message_signal_task(
         logger.debug(f'[CT-{tag}] calling lms to deactivate user %s', lms_user_name)
 
         # TODO: SONIC-155 use lms_user_name to call LMS endpoint to deactivate user
+
+    return True
 
 
 # noinspection DuplicatedCode

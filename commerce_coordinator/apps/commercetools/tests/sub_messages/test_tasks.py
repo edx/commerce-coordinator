@@ -6,7 +6,6 @@ from unittest.mock import MagicMock, patch
 
 from edx_django_utils.cache import TieredCache
 
-from commerce_coordinator.apps.commercetools.catalog_info.constants import TwoUKeys
 from commerce_coordinator.apps.commercetools.constants import SOURCE_SYSTEM
 from commerce_coordinator.apps.commercetools.sub_messages.tasks import (
     fulfill_order_placed_message_signal_task,
@@ -40,6 +39,8 @@ def gen_example_fulfill_payload():
 
 
 class CommercetoolsAPIClientMock(MagicMock):
+    """Mock for CommercetoolsAPIClient with Order and Customer mocks/IDs"""
+
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 

@@ -1,5 +1,7 @@
 """Tests for the commercetools views"""
 
+# pylint: disable=protected-access
+
 from unittest.mock import patch
 
 import ddt
@@ -25,6 +27,8 @@ from commerce_coordinator.apps.core.models import User
 
 
 class TestSingleInvocationAPIView(TestCase):
+    """Tests for SingleInvocationAPIView"""
+
     def setUp(self):
         self.client = APIClient()
         self.view = SingleInvocationAPIView()
@@ -86,8 +90,6 @@ class TestSingleInvocationAPIView(TestCase):
        '.fulfill_order_placed_message_signal.send_robust',
        new_callable=SendRobustSignalMock)
 class OrderFulfillViewTests(APITestCase):
-    # Disable unused-argument due to global @patch
-    # pylint: disable=unused-argument
     "Tests for order fulfill view"
     url = reverse('commercetools:fulfill')
 
@@ -196,8 +198,6 @@ class OrderFulfillViewTests(APITestCase):
        '.fulfill_order_sanctioned_message_signal.send_robust',
        new_callable=SendRobustSignalMock)
 class OrderSanctionedViewTests(APITestCase):
-    # Disable unused-argument due to global @patch
-    # pylint: disable=unused-argument
     "Tests for order sanctioned view"
     url = reverse('commercetools:sanctioned')
 
@@ -335,9 +335,7 @@ class OrderSanctionedViewTests(APITestCase):
        '.fulfill_order_returned_signal.send_robust',
        new_callable=SendRobustSignalMock)
 class OrderReturnedViewTests(APITestCase):
-    # Disable unused-argument due to global @patch
-    # pylint: disable=unused-argument
-    "Tests for order sanctioned view"
+    """Tests for order sanctioned view"""
     url = reverse('commercetools:returned')
 
     # Use Django Rest Framework client for self.client

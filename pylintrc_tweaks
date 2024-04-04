@@ -10,3 +10,6 @@ DISABLE+=
     django-not-configured,
     consider-using-with,
     bad-option-value,
+
+[FORMAT]
+ignore-long-lines = ^\s*(#\s*)?((<?https?://\S+>?)|(\.\. \w+: .*))$
