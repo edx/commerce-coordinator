@@ -81,8 +81,8 @@ class TestSingleInvocationAPIView(TestCase):
             # Call handle_exception
             self.view.handle_exception(Exception())
 
-            # Check if marked as not running
-            self.assertFalse(SingleInvocationAPIView._is_running(view, identifier))
+        # Check if marked as not running
+        self.assertFalse(SingleInvocationAPIView._is_running(view, identifier))
 
 
 @ddt.ddt
