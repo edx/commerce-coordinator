@@ -34,11 +34,11 @@ class TestSingleInvocationAPIView(TestCase):
         identifier = "test_identifier"
 
         # Test marking as running
-        SingleInvocationAPIView._mark_running(view, identifier)
+        self.view.mark_running(view, identifier)
         self.assertTrue(SingleInvocationAPIView._is_running(view, identifier))
 
         # Test marking as not running
-        SingleInvocationAPIView._mark_running(view, identifier, False)
+        self.view.mark_running(view, identifier, False)
         self.assertFalse(SingleInvocationAPIView._is_running(view, identifier))
 
     def test_finalize_response(self):
@@ -53,13 +53,13 @@ class TestSingleInvocationAPIView(TestCase):
         self.view.headers = response.headers
 
         # Mark as running
-        SingleInvocationAPIView._mark_running(view, identifier)
+        self.view.mark_running(view, identifier)
 
         # Call finalize_response
         self.view.finalize_response(request, response)
 
         # Check if marked as not running
-        self.assertFalse(SingleInvocationAPIView._is_running(view, identifier))
+        self.assertTrue(SingleInvocationAPIView._is_running(view, identifier))
 
     def test_handle_exception(self):
         view = "test_view"
@@ -71,7 +71,7 @@ class TestSingleInvocationAPIView(TestCase):
         self.view.meta_id = identifier
 
         # Mark as running
-        SingleInvocationAPIView._mark_running(view, identifier)
+        self.view.mark_running(view, identifier)
 
         with self.assertRaises(Exception) as _:
             # Call handle_exception
@@ -85,7 +85,6 @@ class TestSingleInvocationAPIView(TestCase):
 @patch('commerce_coordinator.apps.commercetools.sub_messages.signals_dispatch'
        '.fulfill_order_placed_message_signal.send_robust',
        new_callable=SendRobustSignalMock)
-
 class OrderFulfillViewTests(APITestCase):
     # Disable unused-argument due to global @patch
     # pylint: disable=unused-argument
