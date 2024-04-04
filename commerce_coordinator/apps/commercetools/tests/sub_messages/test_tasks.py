@@ -168,7 +168,7 @@ class OrderSanctionedMessageSignalTaskTests(TestCase):
 
         ret_val = self.get_uut()(*self.unpack_for_uut(mock_values.example_payload))
 
-        self.assertIsNone(ret_val)
+        self.assertTrue(ret_val)
         mock_values.order_mock.assert_called_once_with(mock_values.order_id)
         mock_values.customer_mock.assert_called_once_with(mock_values.customer_id)
 
@@ -183,7 +183,7 @@ class OrderSanctionedMessageSignalTaskTests(TestCase):
 
         ret_val = self.get_uut()(*self.unpack_for_uut(mock_values.example_payload))
 
-        self.assertIsNone(ret_val)
+        self.assertTrue(ret_val)
         mock_values.order_mock.assert_called_once_with(mock_values.order_id)
         mock_values.customer_mock.assert_called_once_with(mock_values.customer_id)
 
