@@ -65,7 +65,7 @@ class CoreConfig(AppConfig):
                 logger.info(f"Connecting {handler_path} to {signal_path}")
                 handler = _get_function_from_string_path(handler_path)
                 # NOTE: if this call reports back: `TypeError: cannot create weak reference to 'Proxy' object`
-                #   you may have connected a singal to a task, when you need a sigal that is a receiver to run the
+                #   you may have connected a signal to a task, when you need a sigal that is a receiver to run the
                 #   celery task
                 signal.connect(handler)
 
