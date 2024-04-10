@@ -2,7 +2,7 @@ name: Python CI
 
 on:
   push:
-    branches: 
+    branches:
       - main
   pull_request:
     branches:
@@ -36,9 +36,10 @@ jobs:
           TOXENV: ${{ matrix.toxenv }}
         run: tox
 
-      - name: Run coverage
-        if: matrix.python-version == '3.8' && matrix.toxenv == 'django42'
-        uses: codecov/codecov-action@v1
-        with:
-          flags: unittests
-          fail_ci_if_error: true
+# Disabled: until this can be resolved: https://twou.slack.com/archives/C044520P010/p1712756140233839
+#      - name: Run coverage
+#        if: matrix.python-version == '3.8' && matrix.toxenv == 'django42'
+#        uses: codecov/codecov-action@v1
+#        with:
+#          flags: unittests
+#          fail_ci_if_error: true
