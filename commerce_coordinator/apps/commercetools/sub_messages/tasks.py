@@ -38,6 +38,7 @@ logger = get_task_logger(__name__)
 @shared_task(autoretry_for=(RequestException, CommercetoolsError), retry_kwargs={'max_retries': 5, 'countdown': 3})
 def fulfill_order_placed_message_signal_task(
     order_id,
+    line_item_state_id,
     source_system,
 ):
     """Celery task for fulfilling an order placed message."""
@@ -71,6 +72,7 @@ def fulfill_order_placed_message_signal_task(
     default_params = {
         'email_opt_in': True,  # ?? Where?
         'order_number': order.id,
+        'order_version': order.version,
         'provider_id': None,
         'edx_lms_user_id': lms_user_id,
         'course_mode': 'verified',
@@ -82,10 +84,27 @@ def fulfill_order_placed_message_signal_task(
 
     for item in get_edx_items(order):
         logger.debug(f'[CT-{tag}] processing edX order %s, line item %s', order_id, item.variant.sku)
+        updated_order = client.update_line_item_transition_state_on_fulfillment(
+            order.id,
+            order.version,
+            item.id,
+            item.quantity,
+            line_item_state_id,
+            TwoUKeys.PROCESSING_FULFILMENT_STATE
+        )
+
+        # from here we will always be transitioning from a 'Fulfillment Processing' state
+        line_item_state_id = client.get_state_by_key(TwoUKeys.PROCESSING_FULFILMENT_STATE).id
+
+        updated_order_version = updated_order.version
+        default_params['order_version'] = updated_order_version
 
         serializer = OrderFulfillViewInputSerializer(data={
             **default_params,
             'course_id': get_edx_product_course_run_key(item),  # likely not correct
+            'line_item_id': item.id,
+            'item_quantity': item.quantity,
+            'line_item_state_id': line_item_state_id
         })
 
         # the following throws and thus doesn't need to be a conditional

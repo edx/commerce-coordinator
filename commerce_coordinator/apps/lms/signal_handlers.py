@@ -26,6 +26,6 @@ def fulfill_order_placed_send_enroll_in_course(**kwargs):
         source_system=kwargs['source_system'],
         item_id=kwargs['item_id'],
         item_quantity=kwargs['item_quantity'],
-        state_ids=kwargs['state_ids'],
+        line_item_state_id=kwargs['line_item_state_id'],
     )
     return async_result.id

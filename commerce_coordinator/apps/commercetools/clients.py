@@ -22,6 +22,7 @@ from commercetools.platform.models import ReturnItemDraft, ReturnPaymentState, R
 from commercetools.platform.models import Type as CTType
 from commercetools.platform.models import TypeDraft as CTTypeDraft
 from commercetools.platform.models import TypeResourceIdentifier as CTTypeResourceIdentifier
+from commercetools.platform.models.state import State as CTLineItemState
 from django.conf import settings
 from openedx_filters.exceptions import OpenEdxFilterException
 
@@ -257,6 +258,12 @@ class CommercetoolsAPIClient:
     def get_customer_by_id(self, customer_id: str) -> CTCustomer:
         return self.base_client.customers.get_by_id(customer_id)  # pragma no cover
 
+    def get_state_by_id(self, state_id: str) -> CTLineItemState:
+        return self.base_client.states.get_by_id(state_id) # pragma no cover
+
+    def get_state_by_key(self, state_key: str) -> CTLineItemState:
+        return self.base_client.states.get_by_key(state_key) # pragma no cover
+
     def get_product_variant_by_course_run(self, cr_id: str) -> Optional[CTProductVariant]:
         """
         Args:
@@ -361,15 +368,15 @@ class CommercetoolsAPIClient:
                          f"and error/s: {err.errors}")
             raise OpenEdxFilterException(str(err)) from err
 
-    def update_line_item_transition_state_on_fulfillment(self, order_id:str, order_version: str, item_id: str,
+    def update_line_item_transition_state_on_fulfillment(self, order_id:str, order_version: int, line_item_id: str,
                                                          item_quantity: int, from_state_id: str, new_state_key: str) -> CTOrder:
 
-        from_state_key = self.base_client.states.get_by_id(from_state_id).key
+        from_state_key = self.get_state_by_id(from_state_id).key
 
         try:
             if new_state_key != from_state_key:
                 transition_line_item_state_action = OrderTransitionLineItemStateAction(
-                    line_item_id=item_id,
+                    line_item_id=line_item_id,
                     quantity=item_quantity,
                     from_state=types.StateResourceIdentifier(key=from_state_key),
                     to_state=types.StateResourceIdentifier(key=new_state_key)
@@ -378,13 +385,13 @@ class CommercetoolsAPIClient:
                 updated_fulfillment_line_item = self.base_client.orders.update_by_id(
                     id=order_id,
                     version=order_version,
-                    actions=[transition_line_item_state_action]
+                    actions=[transition_line_item_state_action],
                 )
 
                 return updated_fulfillment_line_item
             else:
-                logger.info(f"The line item {item_id} already has the correct state {new_state_key}. Not attempting to transition LineItemState")
-                return self.base_client.orders.get_by_id(order_id)
+                logger.info(f"The line item {line_item_id} already has the correct state {new_state_key}. Not attempting to transition LineItemState")
+                return self.get_order_by_id(order_id)
         except CommercetoolsError as err:
             # Logs & ignores version conflict errors due to duplicate Commercetools messages
             logger.error(f"[CommercetoolsError] Unable to update LineItemState "

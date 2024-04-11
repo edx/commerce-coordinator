@@ -35,16 +35,17 @@ class OrderLineItemMessageDetailSerializer(CoordinatorSerializer):
     """
     Serializer for CommerceTools message 'detail'
     """
-    resourceUserProvidedIdentifiers = serializers.DictField(child=serializers.CharField())
+    resource = serializers.DictField(child=serializers.CharField())
     fromState = serializers.DictField(child=serializers.CharField())
     toState = serializers.DictField(child=serializers.CharField())
 
     def to_representation(self, instance):
         representation = super().to_representation(instance)
-        order_number = representation['resourceUserProvidedIdentifiers'].get('orderNumber')
-        if order_number:
-            representation['order_number'] = order_number
-        representation.pop('resourceUserProvidedIdentifiers')
+        # 'resource' attribute in message holds reference to order id attached to line item
+        order_id = representation['resource'].get('id')
+        if order_id:
+            representation['order_id'] = order_id
+        representation.pop('resource')
         representation['from_state'] = representation.pop('fromState')
         representation['to_state'] = representation.pop('toState')
         return representation
@@ -70,13 +71,13 @@ class OrderFulfillViewInputSerializer(CoordinatorSerializer):
     course_mode = serializers.CharField(allow_null=False)
     date_placed = serializers.CharField(allow_null=False)
     email_opt_in = serializers.BooleanField(allow_null=False)
-    item_id = serializers.CharField(allow_null=False)
+    line_item_id = serializers.CharField(allow_null=False)
     item_quantity = serializers.IntegerField(allow_null=False)
     order_number = serializers.CharField(allow_null=False)
-    order_version = serializers.CharField(allow_null=False)
+    order_version = serializers.IntegerField(allow_null=False)
     provider_id = serializers.CharField(allow_null=True)
     source_system = serializers.CharField(allow_null=False)
-    state_ids = serializers.ListField(allow_null=False)
+    line_item_state_id = serializers.CharField(allow_null=False)
     edx_lms_user_id = serializers.IntegerField(allow_null=False)
 
 

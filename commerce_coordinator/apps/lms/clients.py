@@ -35,11 +35,11 @@ class LMSAPIClient(BaseEdxOAuthClient):
         return self.post(
             url=self.api_enrollment_base_url,
             json=enrollment_data,
-            timeout=settings.FULFILLMENT_TIMEOUT,
-            line_item_state_payload=line_item_state_payload
+            line_item_state_payload=line_item_state_payload,
+            timeout=settings.FULFILLMENT_TIMEOUT
         )
 
-    def post(self, url, json, timeout=None, line_item_state_payload=None):
+    def post(self, url, json, line_item_state_payload, timeout=None):
         """
         Send a POST request to a url with json payload.
         """
@@ -72,13 +72,13 @@ class LMSAPIClient(BaseEdxOAuthClient):
                 'is_fulfilled': False
             }
             fulfillment_completed_signal.send_robust(
-                sender=None,
+                sender=self.__class__,
                 **fulfill_line_item_state_payload
             )
             raise
 
         fulfillment_completed_signal.send_robust(
-            sender=None,
+            sender=self.__class__,
             **fulfill_line_item_state_payload
         )
         return response.json()

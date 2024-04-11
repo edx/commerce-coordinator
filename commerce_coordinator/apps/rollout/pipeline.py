@@ -56,10 +56,8 @@ class GetActiveOrderManagementSystem(PipelineStep):
 
         if ((is_redirect_to_commercetools_enabled_for_user(request) and commercetools_available_course is not None)
                 and not is_user_enterprise_learner(request)):
-            logger.info('-- CT -- ')
             active_order_management_system = COMMERCETOOLS_FRONTEND
         elif sku:
-            logger.info('-- FAPayment -- ')
             active_order_management_system = FRONTEND_APP_PAYMENT_CHECKOUT
         else:
             logger.exception('An error occurred while determining the active order management system.'

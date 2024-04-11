@@ -13,7 +13,7 @@ from rest_framework.views import APIView
 
 from commerce_coordinator.apps.commercetools.authentication import JwtBearerAuthentication
 from commerce_coordinator.apps.commercetools.constants import SOURCE_SYSTEM
-from commerce_coordinator.apps.commercetools.serializers import OrderMessageInputSerializer
+from commerce_coordinator.apps.commercetools.serializers import OrderMessageInputSerializer, OrderLineItemMessageInputSerializer
 from commerce_coordinator.apps.commercetools.sub_messages.signals_dispatch import (
     fulfill_order_placed_message_signal,
     fulfill_order_returned_signal,
@@ -138,6 +138,7 @@ class OrderFulfillView(SingleInvocationAPIView):
         message_details.is_valid(raise_exception=True)
 
         order_id = message_details.data['order_id']
+        line_item_state_id = message_details.data['to_state']['id']
 
         if self._is_running(tag, order_id):  # pragma no cover
             self.meta_should_mark_not_running = False
@@ -148,6 +149,7 @@ class OrderFulfillView(SingleInvocationAPIView):
         fulfill_order_placed_message_signal.send_robust(
             sender=self,
             order_id=order_id,
+            line_item_state_id=line_item_state_id,
             source_system=SOURCE_SYSTEM
         )
 

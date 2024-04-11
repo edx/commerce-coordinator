@@ -6,6 +6,8 @@ from celery import shared_task
 from celery.utils.log import get_task_logger
 from requests import RequestException
 
+from commerce_coordinator.apps.commercetools.clients import CommercetoolsAPIClient
+from commerce_coordinator.apps.commercetools.catalog_info.constants import TwoUKeys
 from commerce_coordinator.apps.core.models import User
 from commerce_coordinator.apps.lms.clients import LMSAPIClient
 
@@ -13,8 +15,9 @@ from commerce_coordinator.apps.lms.clients import LMSAPIClient
 logger = get_task_logger(__name__)
 
 
-@shared_task(autoretry_for=(RequestException,), retry_kwargs={'max_retries': 5, 'countdown': 3})
+@shared_task(bind=True, autoretry_for=(RequestException,), retry_kwargs={'max_retries': 5, 'countdown': 3})
 def fulfill_order_placed_send_enroll_in_course_task(
+    self,
     course_id,
     course_mode,
     date_placed,
@@ -24,9 +27,9 @@ def fulfill_order_placed_send_enroll_in_course_task(
     order_version,
     provider_id,
     source_system,
-    item_id,
+    line_item_id,
     item_quantity,
-    state_ids,
+    line_item_state_id,
 ):
     """
     Celery task for order placed fulfillment and enrollment via LMS Enrollment API.
@@ -71,12 +74,22 @@ def fulfill_order_placed_send_enroll_in_course_task(
             'value': provider_id,
         })
 
+    import pdb; pdb.set_trace()
+
+    # Updating the order version and stateID after the transition to 'Fulfillment Failure'
+    if self.request.retries > 0:
+        import pdb; pdb.set_trace()
+        client = CommercetoolsAPIClient()
+        # A retry means the current line item state on the order would be a failure state
+        line_item_state_id = client.get_state_by_key(TwoUKeys.FAILURE_FULFILMENT_STATE).id
+        order_version = client.get_order_by_id(order_number).version
+
     line_item_state_payload = {
         'order_id': order_number,
         'order_version': order_version,
-        'item_id': item_id,
+        'line_item_id': line_item_id,
         'item_quantity': item_quantity,
-        'state_ids': state_ids,
+        'line_item_state_id': line_item_state_id,
     }
 
     return LMSAPIClient().enroll_user_in_course(enrollment_data, line_item_state_payload)

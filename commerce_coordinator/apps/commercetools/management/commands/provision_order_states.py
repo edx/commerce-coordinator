@@ -82,7 +82,8 @@ class Command(CommercetoolsAPIClientCommand):
                         ]
                     elif state_draft_ref == TwoUCustomStates.FAILED_FULFILLMENT_STATE:
                         new_transitions = [
-                            types.StateResourceIdentifier(key=TwoUCustomStates.PENDING_FULFILLMENT_STATE.key)
+                            types.StateResourceIdentifier(key=TwoUCustomStates.PENDING_FULFILLMENT_STATE.key),
+                            types.StateResourceIdentifier(key=TwoUCustomStates.SUCCESS_FULFILLMENT_STATE.key)
                         ]
 
 

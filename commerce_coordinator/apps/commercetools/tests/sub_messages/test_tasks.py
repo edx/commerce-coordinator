@@ -14,7 +14,10 @@ from commerce_coordinator.apps.commercetools.sub_messages.tasks import (
 )
 from commerce_coordinator.apps.commercetools.tests.mocks import (
     CTCustomerByIdMock,
+    CTLineItemStateByIdMock,
+    CTLineItemStateByKeyMock,
     CTOrderByIdMock,
+    CTUpdateLineItemState,
     SendRobustSignalMock
 )
 from commerce_coordinator.apps.core.memcache import safe_key
@@ -34,6 +37,7 @@ fulfill_order_returned_uut = fulfill_order_returned_signal_task
 def gen_example_fulfill_payload():
     return {
         'order_id': uuid4_str(),
+        'line_item_state_id': uuid4_str(),
         'source_system': SOURCE_SYSTEM,
     }
 
@@ -48,18 +52,26 @@ class CommercetoolsAPIClientMock(MagicMock):
 
         self.example_payload = gen_example_fulfill_payload()
         self.order_id = self.example_payload['order_id']
+        self.line_item_state_id = self.example_payload['line_item_state_id']
         self.customer_id = uuid4_str()
+        self.processing_line_item_id = uuid4_str()
         self.cache_key = safe_key(key=self.order_id, key_prefix='send_order_confirmation_email', version='1')
 
         self.order_mock = CTOrderByIdMock()
         self.customer_mock = CTCustomerByIdMock()
 
+        self.state_by_key_mock = CTLineItemStateByKeyMock()
+        self.updated_line_item_mock = CTUpdateLineItemState()
+
         self.order_mock.return_value.id = self.order_id
         self.customer_mock.return_value.id = self.customer_id
         self.order_mock.return_value.customer_id = self.customer_id
+        self.state_by_key_mock.return_value.id = self.processing_line_item_id
 
         self.get_order_by_id = self.order_mock
         self.get_customer_by_id = self.customer_mock
+        self.get_state_by_key = self.state_by_key_mock
+        self.update_line_item_transition_state_on_fulfillment = self.updated_line_item_mock
 
         self.expected_order = self.order_mock.return_value
         self.expected_customer = self.customer_mock.return_value
@@ -77,6 +89,7 @@ class FulfillOrderPlacedMessageSignalTaskTests(TestCase):
         """ Unpack the dictionary in the order required for the UUT """
         return (
             values['order_id'],
+            values['line_item_state_id'],
             values['source_system']
         )
 
