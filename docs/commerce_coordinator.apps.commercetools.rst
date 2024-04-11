@@ -7,6 +7,7 @@ Subpackages
 .. toctree::
    :maxdepth: 4
 
+   commerce_coordinator.apps.commercetools.sub_messages
    commerce_coordinator.apps.commercetools.tests
 
 Submodules

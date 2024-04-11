@@ -8,6 +8,7 @@ Subpackages
    :maxdepth: 4
 
    commerce_coordinator.apps.commercetools.tests.catalog_info
+   commerce_coordinator.apps.commercetools.tests.sub_messages
 
 Submodules
 ----------
@@ -24,6 +25,22 @@ commerce\_coordinator.apps.commercetools.tests.constants module
 ---------------------------------------------------------------
 
 .. automodule:: commerce_coordinator.apps.commercetools.tests.constants
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+commerce\_coordinator.apps.commercetools.tests.mocks module
+-----------------------------------------------------------
+
+.. automodule:: commerce_coordinator.apps.commercetools.tests.mocks
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+commerce\_coordinator.apps.commercetools.tests.test\_authentication module
+--------------------------------------------------------------------------
+
+.. automodule:: commerce_coordinator.apps.commercetools.tests.test_authentication
    :members:
    :undoc-members:
    :show-inheritance:

@@ -61,6 +61,14 @@ commerce\_coordinator.apps.core.context\_processors module
    :undoc-members:
    :show-inheritance:
 
+commerce\_coordinator.apps.core.exceptions module
+-------------------------------------------------
+
+.. automodule:: commerce_coordinator.apps.core.exceptions
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
 commerce\_coordinator.apps.core.memcache module
 -----------------------------------------------
 

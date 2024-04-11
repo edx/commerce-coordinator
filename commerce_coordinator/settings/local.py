@@ -24,12 +24,14 @@ CORS_ORIGIN_WHITELIST = [
 # See: https://docs.djangoproject.com/en/dev/ref/settings/#databases
 DATABASES = {
     'default': {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': root('default.db'),
-        'USER': '',
-        'PASSWORD': '',
-        'HOST': '',
-        'PORT': '',
+        'ENGINE': 'django.db.backends.mysql',
+        'NAME': os.environ.get('DB_NAME', 'commerce_coordinator'),
+        'USER': os.environ.get('DB_USER', 'root'),
+        'PASSWORD': os.environ.get('DB_PASSWORD', ''),
+        'HOST': os.environ.get('DB_HOST', '127.0.0.1'),
+        'PORT': os.environ.get('DB_PORT', 3406),
+        'ATOMIC_REQUESTS': False,
+        'CONN_MAX_AGE': 60,
     }
 }
 # END DATABASE CONFIGURATION
