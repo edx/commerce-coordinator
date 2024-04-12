@@ -42,9 +42,10 @@ class EnrollmentAttributeSerializer(CoordinatorSerializer):
     name = serializers.CharField(required=True)
     value = serializers.CharField(required=True)
 
-    def dict_tuple(self) -> (str, str):
+    @staticmethod
+    def dict_tuple(data: dict) -> (str, str):
         """ Converts serializer data to a tuple of (f"{namespace}.{name}", value) """
-        return (enrollment_attribute_key(self.data['namespace'], self.data['name']), self.data['value'])
+        return enrollment_attribute_key(data['namespace'], data['name']), data['value']
 
 class CourseRefundInputSerializer(CoordinatorSerializer):
     """
@@ -73,4 +74,4 @@ class CourseRefundInputSerializer(CoordinatorSerializer):
 
     def enrollment_attributes_dict(self) -> Dict[str, str]:
         """ Converts serializer data to a dict of {f"{namespace}.{name}": value, ... n} """
-        return dict([e.dict_tuple() for e in self.data['enrollment_attributes']])
+        return dict([EnrollmentAttributeSerializer.dict_tuple(e) for e in self.data['enrollment_attributes']])

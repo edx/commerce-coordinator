@@ -146,6 +146,7 @@ class OrderDetailsRedirectView(APIView):
 
         return url
 
+
 class RefundView(APIView):
     """Accept incoming LMS request to process Refunds in Stripe."""
     permission_classes = [IsAdminUser]
@@ -201,18 +202,32 @@ class RefundView(APIView):
         logger.debug(f"[RefundView] Starting LMS Refund for username: {username}, course_id: {course_id}, "
                      f"Enrollment attributes: {enrollment_attributes}.")
 
-        order_line_id = enrollment_attributes[enrollment_attribute_key('order', 'order_line_id')]
-        order_id = enrollment_attributes[enrollment_attribute_key('order', 'order_id')]
+        order_line_id = enrollment_attributes.get(enrollment_attribute_key('order', 'order_line_id'), None)
+        order_id = enrollment_attributes.get(enrollment_attribute_key('order', 'order_id'), None)
+
+        if not order_id:
+            logger.error(f"[RefundView] Failed processing refund for username: {username}, "
+                         f"course_id: {course_id} the enrollment_attributes array requires an orders: order_id "
+                         f"attribute.")
+            return HttpResponseBadRequest('the enrollment_attributes array requires an orders: order_id '
+                                          'attribute.')
+
+        if not order_line_id:
+            logger.error(f"[RefundView] Failed processing refund for order {order_id} for username: {username}, "
+                         f"course_id: {course_id} the enrollment_attributes array requires an orders: order_line_id "
+                         f"attribute.")
+            return HttpResponseBadRequest('the enrollment_attributes array requires an orders: order_line_id '
+                                          'attribute.')
 
         try:
             result = OrderRefundRequested.run_filter(order_id, order_line_id)
 
             if result['returned_order']:
-                logger.debug(f"[RefundView] Successfully returned order {order_id} fo username: {username}, "
+                logger.debug(f"[RefundView] Successfully returned order {order_id} for username: {username}, "
                              f"course_id: {course_id} with result: {result}.")
                 return HttpResponse(result, status=HTTP_200_OK)
             else:
-                logger.error(f"[RefundView] Failed returning order {order_id} fo username: {username}, "
+                logger.error(f"[RefundView] Failed returning order {order_id} for username: {username}, "
                              f"course_id: {course_id} with invalid filter/pipeline result: {result}.")
                 return HttpResponseBadRequest('Exception occurred while returning order')
 

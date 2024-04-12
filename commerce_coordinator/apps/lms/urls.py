@@ -10,5 +10,5 @@ app_name = 'lms'
 urlpatterns = [
     path('payment_page_redirect/', PaymentPageRedirectView.as_view(), name='payment_page_redirect'),
     path('order_details_page_redirect/', OrderDetailsRedirectView.as_view(), name='order_details_page_redirect'),
-    path('refund/', RefundView.as_view(), name='payment_page_redirect'),
+    path('refund/', RefundView.as_view(), name='refund'),
 ]
