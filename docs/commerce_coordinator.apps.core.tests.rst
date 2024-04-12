@@ -44,6 +44,14 @@ commerce\_coordinator.apps.core.tests.test\_models module
    :undoc-members:
    :show-inheritance:
 
+commerce\_coordinator.apps.core.tests.test\_segment module
+----------------------------------------------------------
+
+.. automodule:: commerce_coordinator.apps.core.tests.test_segment
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
 commerce\_coordinator.apps.core.tests.test\_serializers module
 --------------------------------------------------------------
 
