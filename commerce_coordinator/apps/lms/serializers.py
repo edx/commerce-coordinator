@@ -23,6 +23,7 @@ def enrollment_attribute_key(namespace: str, name: str) -> str:
     """ Returns the key for the given namespace and name """
     return f"{namespace}.{name}"
 
+
 class EnrollmentAttributeSerializer(CoordinatorSerializer):
     """
     Serializer for Enrollment Attribute input validation.
@@ -46,6 +47,7 @@ class EnrollmentAttributeSerializer(CoordinatorSerializer):
     def dict_tuple(data: dict) -> (str, str):
         """ Converts serializer data to a tuple of (f"{namespace}.{name}", value) """
         return enrollment_attribute_key(data['namespace'], data['name']), data['value']
+
 
 class CourseRefundInputSerializer(CoordinatorSerializer):
     """
