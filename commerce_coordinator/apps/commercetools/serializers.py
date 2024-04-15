@@ -44,3 +44,30 @@ class OrderFulfillViewInputSerializer(CoordinatorSerializer):
     provider_id = serializers.CharField(allow_null=True)
     source_system = serializers.CharField(allow_null=False)
     edx_lms_user_id = serializers.IntegerField(allow_null=False)
+
+
+class OrderReturnedViewMessageDetailSerializer(CoordinatorSerializer):
+    """
+    Serializer for OrderReturnedView message detail.
+    """
+    resource = serializers.DictField(child=serializers.CharField())
+
+    def to_representation(self, instance):
+        representation = super().to_representation(instance)
+        order_id = representation['resource'].get('id')
+        if order_id:
+            representation['order_id'] = order_id
+        representation.pop('resource')
+        return representation
+
+
+class OrderReturnedViewMessageInputSerializer(CoordinatorSerializer):
+    """
+    Serializer for OrderReturnedView message input
+    """
+    detail = OrderReturnedViewMessageDetailSerializer(allow_null=False)
+
+    def to_representation(self, instance):
+        representation = super().to_representation(instance)
+        representation = representation.pop('detail')
+        return representation

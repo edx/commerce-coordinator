@@ -20,6 +20,30 @@ from commerce_coordinator.apps.commercetools.sub_messages.signals_dispatch impor
 )
 from commerce_coordinator.apps.core.memcache import safe_key
 
+from .authentication import JwtBearerAuthentication
+from .serializers import OrderMessageInputSerializer, OrderReturnedViewMessageInputSerializer
+
+# Commenting out unused imports for now
+
+# from commerce_coordinator.apps.commercetools.catalog_info.constants import TwoUKeys
+# from commerce_coordinator.apps.commercetools.signals import fulfill_order_placed_signal
+# from .catalog_info.edx_utils import (
+#     get_edx_is_sanctioned,
+#     get_edx_items,
+#     get_edx_lms_user_id,
+#     get_edx_lms_user_name,
+#     get_edx_order_workflow_state_key,
+#     get_edx_payment_intent_id,
+#     get_edx_product_course_run_key,
+#     is_edx_lms_order
+# )
+# from .clients import CommercetoolsAPIClient
+# from .utils import (
+#     extract_ct_order_information_for_braze_canvas,
+#     extract_ct_product_information_for_braze_canvas,
+#     send_order_confirmation_email
+# )
+
 logger = logging.getLogger(__name__)
 
 
@@ -189,7 +213,7 @@ class OrderReturnedView(SingleInvocationAPIView):
 
         logger.debug(f'[CT-{tag}] Message received from commercetools with details: %s', input_data)
 
-        message_details = OrderMessageInputSerializer(data=input_data)
+        message_details = OrderReturnedViewMessageInputSerializer(data=input_data)
         message_details.is_valid(raise_exception=True)
 
         order_id = message_details.data['order_id']
