@@ -486,7 +486,7 @@ class ClientTests(TestCase):
         base_url = self.client_set.get_base_url_from_client()
         mock_state_by_id().return_value = gen_line_item_state()
         mock_error_response: CommercetoolsError = {
-            "message":"Could not create return for order mock_order_id",
+            "message": "Could not create return for order mock_order_id",
             "errors": [
                 {
                     "code": "ConcurrentModification",

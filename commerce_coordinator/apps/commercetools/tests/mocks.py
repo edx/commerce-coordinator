@@ -27,10 +27,6 @@ class CTOrderByIdMock(MagicMock):
     return_value = gen_order(EXAMPLE_FULFILLMENT_SIGNAL_PAYLOAD['order_number'])
 
 
-class CTLineItemStateByIdMock(MagicMock):
-    return_value = gen_line_item_state()
-
-
 class CTLineItemStateByKeyMock(MagicMock):
     return_value = gen_line_item_state()
 
@@ -40,6 +36,7 @@ def gen_updated_line_item_state_order():
     order = gen_order(EXAMPLE_FULFILLMENT_SIGNAL_PAYLOAD['order_number'])
     order.version = 8
     return order
+
 
 def get_order_with_bad_state_key():
     """Modify a canned order to have a bad transition/workflow state key"""

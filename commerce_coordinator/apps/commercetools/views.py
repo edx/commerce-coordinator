@@ -2,7 +2,6 @@
 Views for the commercetools app
 """
 import logging
-import json
 
 from edx_django_utils.cache import TieredCache
 from rest_framework import status
@@ -13,7 +12,10 @@ from rest_framework.views import APIView
 
 from commerce_coordinator.apps.commercetools.authentication import JwtBearerAuthentication
 from commerce_coordinator.apps.commercetools.constants import SOURCE_SYSTEM
-from commerce_coordinator.apps.commercetools.serializers import OrderMessageInputSerializer, OrderLineItemMessageInputSerializer
+from commerce_coordinator.apps.commercetools.serializers import (
+    OrderLineItemMessageInputSerializer,
+    OrderMessageInputSerializer
+)
 from commerce_coordinator.apps.commercetools.sub_messages.signals_dispatch import (
     fulfill_order_placed_message_signal,
     fulfill_order_returned_signal,

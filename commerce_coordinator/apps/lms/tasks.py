@@ -6,8 +6,8 @@ from celery import shared_task
 from celery.utils.log import get_task_logger
 from requests import RequestException
 
-from commerce_coordinator.apps.commercetools.clients import CommercetoolsAPIClient
 from commerce_coordinator.apps.commercetools.catalog_info.constants import TwoUKeys
+from commerce_coordinator.apps.commercetools.clients import CommercetoolsAPIClient
 from commerce_coordinator.apps.core.models import User
 from commerce_coordinator.apps.lms.clients import LMSAPIClient
 
@@ -74,11 +74,8 @@ def fulfill_order_placed_send_enroll_in_course_task(
             'value': provider_id,
         })
 
-    import pdb; pdb.set_trace()
-
     # Updating the order version and stateID after the transition to 'Fulfillment Failure'
-    if self.request.retries > 0:
-        import pdb; pdb.set_trace()
+    if self.request.retries > 0:  # pragma no cover
         client = CommercetoolsAPIClient()
         # A retry means the current line item state on the order would be a failure state
         line_item_state_id = client.get_state_by_key(TwoUKeys.FAILURE_FULFILMENT_STATE).id

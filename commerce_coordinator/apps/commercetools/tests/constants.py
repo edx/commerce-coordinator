@@ -1,7 +1,6 @@
 '''Constants for commercetools tests'''
 from commerce_coordinator.apps.commercetools.catalog_info.constants import TwoUKeys
 from commerce_coordinator.apps.commercetools.views import OrderFulfillView
-from typing import Dict, Union
 
 EXAMPLE_COMMERCETOOLS_ORDER_FULFILL_MESSAGE = {
     'version': '0',

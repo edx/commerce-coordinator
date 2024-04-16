@@ -18,8 +18,8 @@ from commercetools.platform.models import Order as CTOrder
 from commercetools.platform.models import Product as CTProduct
 from commercetools.platform.models import ProductProjectionPagedSearchResponse as CTProductProjectionPagedSearchResponse
 from commercetools.platform.models import ReturnPaymentState, ReturnShipmentState
-from commercetools.platform.models.state import State as CTLineItemState
 from commercetools.platform.models import TypeReference as CTTypeReference
+from commercetools.platform.models.state import State as CTLineItemState
 from commercetools.testing import BackendRepository
 
 from commerce_coordinator.apps.commercetools.catalog_info.constants import EdXFieldNames
@@ -262,9 +262,10 @@ def gen_return_item(order_line_id: str, payment_state: ReturnPaymentState) -> CT
         line_item_id=order_line_id
     )
 
+
 def gen_line_item_state() -> CTLineItemState:
-    return CTLineItemState (
-        id= '669d3d11-5eaa-4521-b146-ccbd408ae940',
+    return CTLineItemState(
+        id='669d3d11-5eaa-4521-b146-ccbd408ae940',
         version=2,
         created_at=datetime.now(),
         last_modified_at=datetime.now(),

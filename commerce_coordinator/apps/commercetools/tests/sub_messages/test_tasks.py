@@ -14,7 +14,6 @@ from commerce_coordinator.apps.commercetools.sub_messages.tasks import (
 )
 from commerce_coordinator.apps.commercetools.tests.mocks import (
     CTCustomerByIdMock,
-    CTLineItemStateByIdMock,
     CTLineItemStateByKeyMock,
     CTOrderByIdMock,
     CTUpdateLineItemState,

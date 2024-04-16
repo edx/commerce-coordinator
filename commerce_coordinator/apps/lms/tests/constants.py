@@ -1,8 +1,11 @@
 """
 LMS App Testing Data Constants
 """
+
 from datetime import datetime
 from typing import Dict, Union
+
+# from commerce_coordinator.apps.lms.tasks import fulfill_order_placed_send_enroll_in_course_task
 
 _INIT_DATE = datetime.now().strftime('%b %d, %Y')
 
@@ -11,7 +14,7 @@ EXAMPLE_LINE_ITEM_STATE_PAYLOAD = {
     'order_version': 2,
     'line_item_id': '822d77c4-00a6-4fb9-909b-094ef0b8c4b9',
     'item_quantity': 1,
-    'line_item_state_id': '8f2e888e-9777-4557-9a7f-c649153770c2'
+    'line_item_state_id': '8f2e888e-9777-4557-9a7f-c649153770c2',
 }
 
 EXAMPLE_FULFILLMENT_SIGNAL_PAYLOAD: Dict[str, Union[str, bool, int, None]] = {
@@ -26,7 +29,7 @@ EXAMPLE_FULFILLMENT_SIGNAL_PAYLOAD: Dict[str, Union[str, bool, int, None]] = {
     'source_system': 'test',
     'line_item_id': '822d77c4-00a6-4fb9-909b-094ef0b8c4b9',
     'item_quantity': 1,
-    'line_item_state_id': '8f2e888e-9777-4557-9a7f-c649153770c2'
+    'line_item_state_id': '8f2e888e-9777-4557-9a7f-c649153770c2',
 }
 
 EXAMPLE_FULFILLMENT_REQUEST_PAYLOAD = {

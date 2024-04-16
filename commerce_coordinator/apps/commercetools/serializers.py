@@ -31,6 +31,7 @@ class OrderMessageInputSerializer(CoordinatorSerializer):
         representation = representation.pop('detail')
         return representation
 
+
 class OrderLineItemMessageDetailSerializer(CoordinatorSerializer):
     """
     Serializer for CommerceTools message 'detail'
@@ -41,7 +42,6 @@ class OrderLineItemMessageDetailSerializer(CoordinatorSerializer):
 
     def to_representation(self, instance):
         representation = super().to_representation(instance)
-        # 'resource' attribute in message holds reference to order id attached to line item
         order_id = representation['resource'].get('id')
         if order_id:
             representation['order_id'] = order_id

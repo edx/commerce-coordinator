@@ -13,9 +13,9 @@ from commercetools.platform.models import CustomerSetCustomTypeAction as CTCusto
 from commercetools.platform.models import FieldContainer as CTFieldContainer
 from commercetools.platform.models import Order as CTOrder
 from commercetools.platform.models import (
-  OrderAddReturnInfoAction,
-  OrderSetReturnPaymentStateAction,
-  OrderTransitionLineItemStateAction
+    OrderAddReturnInfoAction,
+    OrderSetReturnPaymentStateAction,
+    OrderTransitionLineItemStateAction
 )
 from commercetools.platform.models import ProductVariant as CTProductVariant
 from commercetools.platform.models import ReturnItemDraft, ReturnPaymentState, ReturnShipmentState
@@ -259,10 +259,10 @@ class CommercetoolsAPIClient:
         return self.base_client.customers.get_by_id(customer_id)  # pragma no cover
 
     def get_state_by_id(self, state_id: str) -> CTLineItemState:
-        return self.base_client.states.get_by_id(state_id) # pragma no cover
+        return self.base_client.states.get_by_id(state_id)  # pragma no cover
 
     def get_state_by_key(self, state_key: str) -> CTLineItemState:
-        return self.base_client.states.get_by_key(state_key) # pragma no cover
+        return self.base_client.states.get_by_key(state_key)  # pragma no cover
 
     def get_product_variant_by_course_run(self, cr_id: str) -> Optional[CTProductVariant]:
         """
@@ -368,8 +368,22 @@ class CommercetoolsAPIClient:
                          f"and error/s: {err.errors}")
             raise OpenEdxFilterException(str(err)) from err
 
-    def update_line_item_transition_state_on_fulfillment(self, order_id:str, order_version: int, line_item_id: str,
-                                                         item_quantity: int, from_state_id: str, new_state_key: str) -> CTOrder:
+    def update_line_item_transition_state_on_fulfillment(self, order_id: str, order_version: int,
+                                                         line_item_id: str, item_quantity: int,
+                                                         from_state_id: str, new_state_key: str) -> CTOrder:
+        """
+        Update Commercetools order line item state
+        Args:
+            order_id (str): Order ID (UUID)
+            order_version (int): Current version of order
+            line_item_id (str): ID of order line item
+            item_quantity (int): Count of variants in line item
+            from_state_id (str): ID of LineItemState to transition from
+            to_state_key (str): Key of LineItemState to transition to
+        Returns (CTOrder): Updated order object or
+        Returns (CTOrder): Current un-updated order
+        Returns Exception: Error if update was unsuccesful.
+        """
 
         from_state_key = self.get_state_by_id(from_state_id).key
 
@@ -382,19 +396,20 @@ class CommercetoolsAPIClient:
                     to_state=types.StateResourceIdentifier(key=new_state_key)
                 )
 
-                updated_fulfillment_line_item = self.base_client.orders.update_by_id(
+                updated_fulfillment_line_item_order = self.base_client.orders.update_by_id(
                     id=order_id,
                     version=order_version,
                     actions=[transition_line_item_state_action],
                 )
 
-                return updated_fulfillment_line_item
+                return updated_fulfillment_line_item_order
             else:
-                logger.info(f"The line item {line_item_id} already has the correct state {new_state_key}. Not attempting to transition LineItemState")
+                logger.info(f"The line item {line_item_id} already has the correct state {new_state_key}. "
+                            "Not attempting to transition LineItemState")
                 return self.get_order_by_id(order_id)
         except CommercetoolsError as err:
             # Logs & ignores version conflict errors due to duplicate Commercetools messages
             logger.error(f"[CommercetoolsError] Unable to update LineItemState "
-                        f"of order {order_id} with error correlation id {err.correlation_id} "
-                        f"and error/s: {err.errors}")
-            pass
+                         f"of order {order_id} with error correlation id {err.correlation_id} "
+                         f"and error/s: {err.errors}")
+            return None

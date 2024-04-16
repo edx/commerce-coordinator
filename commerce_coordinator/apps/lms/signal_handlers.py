@@ -24,7 +24,7 @@ def fulfill_order_placed_send_enroll_in_course(**kwargs):
         order_version=kwargs['order_version'],
         provider_id=kwargs['provider_id'],
         source_system=kwargs['source_system'],
-        item_id=kwargs['item_id'],
+        line_item_id=kwargs['line_item_id'],
         item_quantity=kwargs['item_quantity'],
         line_item_state_id=kwargs['line_item_state_id'],
     )

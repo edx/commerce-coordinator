@@ -39,7 +39,6 @@ class Command(CommercetoolsAPIClientCommand):
 
             print(json.dumps(state.serialize()))
 
-
         # Updating built-in 'Initial' line item state transition to 'Fulfiment Pending' state
         initial_state = self.ct_api_client.base_client.states.get_by_key('Initial')
         pending_transition = types.StateResourceIdentifier(key=TwoUCustomStates.PENDING_FULFILLMENT_STATE.key)
@@ -56,11 +55,13 @@ class Command(CommercetoolsAPIClientCommand):
         except CommercetoolsError as _:
             pass
 
-
-        # Updating the transitions of the fulfillment states after they have been created
+        # Updating the line item state transitions of the fulfillment states after they have been created
         for state_draft_ref in order_states:
             state = None
-            if state_draft_ref != TwoUCustomStates.SANCTIONED_ORDER_STATE and state_draft_ref != TwoUCustomStates.SUCCESS_FULFILLMENT_STATE:
+            if (
+                state_draft_ref != TwoUCustomStates.SANCTIONED_ORDER_STATE and
+                state_draft_ref != TwoUCustomStates.SUCCESS_FULFILLMENT_STATE
+            ):
                 try:
                     state = self.ct_api_client.base_client.states.get_by_key(state_draft_ref.key)
                 except CommercetoolsError as _:
@@ -86,7 +87,6 @@ class Command(CommercetoolsAPIClientCommand):
                             types.StateResourceIdentifier(key=TwoUCustomStates.SUCCESS_FULFILLMENT_STATE.key)
                         ]
 
-
                     if all(transition in current_transitions for transition in new_transitions):
                         print(f'The {state.name} state already has the expected transitions.')
                     else:
@@ -101,4 +101,3 @@ class Command(CommercetoolsAPIClientCommand):
                             print(json.dumps(state.serialize()))
                         except CommercetoolsError as _:
                             pass
-
