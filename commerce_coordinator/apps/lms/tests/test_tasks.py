@@ -54,7 +54,7 @@ class FulfillOrderPlacedSendEnrollInCourseTaskTest(TestCase):
         Check calling uut with mock_parameters yields call to client with
         expected_data.
         '''
-        _ = uut(*self.unpack_for_uut(EXAMPLE_FULFILLMENT_SIGNAL_PAYLOAD))
+        _ = uut(*self.unpack_for_uut(EXAMPLE_FULFILLMENT_SIGNAL_PAYLOAD))  # pylint: disable = no-value-for-parameter
         logger.info('mock_client().mock_calls: %s', mock_client().mock_calls)
         mock_client().enroll_user_in_course.assert_called_once_with(
             EXAMPLE_FULFILLMENT_REQUEST_PAYLOAD,
@@ -81,7 +81,7 @@ class FulfillOrderPlacedSendEnrollInCourseTaskTest(TestCase):
         })
 
         # Run test:
-        _ = uut(*self.unpack_for_uut(credit_mock_parameters))
+        _ = uut(*self.unpack_for_uut(credit_mock_parameters))  # pylint: disable = no-value-for-parameter
         logger.info('mock_client().mock_calls: %s', mock_client().mock_calls)
         mock_client().enroll_user_in_course.assert_called_once_with(
             credit_expected_data,
@@ -93,6 +93,6 @@ class FulfillOrderPlacedSendEnrollInCourseTaskTest(TestCase):
         Check uut returns whatever the client returns.
         '''
         mock_client().enroll_user_in_course.return_value = sentinel.mock_client_return_value
-        result = uut(*self.unpack_for_uut(EXAMPLE_FULFILLMENT_SIGNAL_PAYLOAD))
-        logger.info('result: %s', result)
-        self.assertEqual(result, sentinel.mock_client_return_value)
+        res = uut(*self.unpack_for_uut(EXAMPLE_FULFILLMENT_SIGNAL_PAYLOAD))  # pylint: disable=no-value-for-parameter
+        logger.info('result: %s', res)
+        self.assertEqual(res, sentinel.mock_client_return_value)
