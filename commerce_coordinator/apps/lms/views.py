@@ -5,16 +5,19 @@ import logging
 from urllib.parse import urlencode, urljoin
 
 from django.conf import settings
-from django.http import HttpResponseBadRequest, HttpResponseRedirect
+from django.http import HttpResponse, HttpResponseRedirect
 from edx_rest_framework_extensions.permissions import LoginRedirectIfUnauthenticated
 from openedx_filters.exceptions import OpenEdxFilterException
+from rest_framework.exceptions import ValidationError
 from rest_framework.permissions import IsAdminUser
-from rest_framework.status import HTTP_303_SEE_OTHER
+from rest_framework.response import Response
+from rest_framework.status import HTTP_200_OK, HTTP_303_SEE_OTHER, HTTP_400_BAD_REQUEST, HTTP_500_INTERNAL_SERVER_ERROR
 from rest_framework.throttling import UserRateThrottle
 from rest_framework.views import APIView
 
 from commerce_coordinator.apps.core.constants import HttpHeadersNames, MediaTypes
-from commerce_coordinator.apps.lms.filters import PaymentPageRedirectRequested
+from commerce_coordinator.apps.lms.filters import OrderRefundRequested, PaymentPageRedirectRequested
+from commerce_coordinator.apps.lms.serializers import CourseRefundInputSerializer, enrollment_attribute_key
 from commerce_coordinator.apps.rollout.utils import is_legacy_order
 
 logger = logging.getLogger(__name__)
@@ -50,7 +53,7 @@ class PaymentPageRedirectView(APIView):
             return self._redirect_response_payment(request)
         except OpenEdxFilterException as e:
             logger.exception(f"Something went wrong! Exception raised in {self.get.__name__} with error {repr(e)}")
-            return HttpResponseBadRequest('Something went wrong.')
+            return HttpResponse('Something went wrong.', status=HTTP_400_BAD_REQUEST)
 
     def _redirect_response_payment(self, request):
         """
@@ -115,7 +118,7 @@ class OrderDetailsRedirectView(APIView):
         """
         params = dict(request.GET.items())
         if not params.get('order_number', None):
-            return HttpResponseBadRequest('Invalid order number supplied.')
+            return HttpResponse('Invalid order number supplied.', status=HTTP_400_BAD_REQUEST)
 
         redirect_url = self._get_redirect_url(params)
 
@@ -144,3 +147,96 @@ class OrderDetailsRedirectView(APIView):
             url = f'{settings.COMMERCETOOLS_MERCHANT_CENTER_ORDERS_PAGE_URL}?{query_params}'
 
         return url
+
+
+class RefundView(APIView):
+    """Accept incoming LMS request to process Refunds in Stripe."""
+    permission_classes = [IsAdminUser]
+    throttle_classes = (UserRateThrottle,)
+
+    def post(self, request) -> HttpResponse:
+        """
+         Process a refund request from the LMS.
+
+         Args:
+             request (Request): The HTTP request object containing the refund details.
+
+         Returns:
+             - HttpResponse:
+                 - 200 OK if the refund was successfully processed with the result of the OrderRefundRequested
+                   filter/pipeline.
+                 - 400 If the refund request failed due to an invalid order.
+                 - 500 If an OpenEdxFilterException occurred while processing the refund.
+                 - 500 If any other unexpected exception occurred during refund processing.
+
+         The method expects a POST request with a JSON payload containing:
+             - course_id (str): The ID of the course to refund.
+             - username (str): The username of the user to refund.
+             - enrollment_attributes (list): a `list` of `dict` related to the order and order line.
+
+         The refund is processed by running the OrderRefundRequested filter/pipeline
+         using the provided order_id and order_line_id extracted from the enrollment
+         attributes.
+
+         If the refund is successfully marked in CT, a 200 OK response is returned along
+         with the result from the OrderRefundRequested filter/pipeline.
+
+         If the refund fails due to a bad pipeline response, a 400 Bad Request is returned.
+
+         If an exception occurs during refund processing, a 500 Internal Server Error
+         is returned.
+         """
+
+        input_data = {**request.data}
+
+        input_details = CourseRefundInputSerializer(data=input_data)
+        try:
+            input_details.is_valid(raise_exception=True)
+        except ValidationError as e:
+            logger.exception(f"[RefundView] Exception raised validating input {self.post.__name__} with error "
+                             f"{repr(e)}, input: {input_data}.")
+            return HttpResponse('Invalid input provided', status=HTTP_400_BAD_REQUEST)
+
+        course_id = input_details.data['course_id']
+        username = input_details.data['username']
+
+        enrollment_attributes = input_details.enrollment_attributes_dict()
+
+        logger.info(f"[RefundView] Starting LMS Refund for username: {username}, course_id: {course_id}, "
+                    f"Enrollment attributes: {enrollment_attributes}.")
+
+        order_line_id = enrollment_attributes.get(enrollment_attribute_key('order', 'order_line_id'), None)
+        order_id = enrollment_attributes.get(enrollment_attribute_key('order', 'order_id'), None)
+
+        if not order_id:
+            logger.error(f"[RefundView] Failed processing refund for username: {username}, "
+                         f"course_id: {course_id} the enrollment_attributes array requires an orders: order_id "
+                         f"attribute.")
+            return HttpResponse('the enrollment_attributes array requires an orders: order_id '
+                                'attribute.', status=HTTP_400_BAD_REQUEST)
+
+        if not order_line_id:
+            logger.error(f"[RefundView] Failed processing refund for order {order_id} for username: {username}, "
+                         f"course_id: {course_id} the enrollment_attributes array requires an orders: order_line_id "
+                         f"attribute.")
+            return HttpResponse('the enrollment_attributes array requires an orders: order_line_id '
+                                'attribute.', status=HTTP_400_BAD_REQUEST)
+
+        try:
+            result = OrderRefundRequested.run_filter(order_id, order_line_id)
+
+            if result['returned_order']:
+                logger.info(f"[RefundView] Successfully returned order {order_id} for username: {username}, "
+                            f"course_id: {course_id} with result: {result}.")
+                return Response(result, status=HTTP_200_OK)
+            else:
+                logger.error(f"[RefundView] Failed returning order {order_id} for username: {username}, "
+                             f"course_id: {course_id} with invalid filter/pipeline result: {result}.")
+                return HttpResponse('Exception occurred while returning order', status=HTTP_400_BAD_REQUEST)
+
+        except OpenEdxFilterException as e:
+            logger.exception(f"[RefundView] Exception raised in {self.post.__name__} with error {repr(e)}")
+            return HttpResponse('Exception occurred while returning order', status=HTTP_500_INTERNAL_SERVER_ERROR)
+        except Exception as e:  # pylint: disable=broad-except
+            logger.exception(f"[RefundView] Exception raised in {self.post.__name__} with error {repr(e)}")
+            return HttpResponse('Exception occurred while returning order', status=HTTP_500_INTERNAL_SERVER_ERROR)

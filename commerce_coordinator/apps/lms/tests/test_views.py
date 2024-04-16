@@ -1,6 +1,7 @@
 """
 Tests for the LMS (edx-platform) views.
 """
+import copy
 from urllib.parse import unquote
 
 import ddt
@@ -10,13 +11,14 @@ from django.contrib.auth import get_user_model
 from django.test import override_settings
 from django.urls import reverse
 from mock import patch
+from openedx_filters.exceptions import OpenEdxFilterException
 from rest_framework import status
 from rest_framework.test import APITestCase
 
 from commerce_coordinator.apps.commercetools.tests.conftest import APITestingSet, gen_variant_search_result
+from commerce_coordinator.apps.core.tests.utils import name_test
 
 User = get_user_model()
-
 
 TEST_ECOMMERCE_URL = 'https://testserver.com'
 
@@ -190,3 +192,115 @@ class OrderDetailsRedirectView(APITestCase):
         self.client.force_authenticate(user=self.user)
         response = self.client.get(self.url, {'order_number': ['2U-123456']})
         self.assertTrue(response.headers['Location'].startswith(settings.COMMERCETOOLS_MERCHANT_CENTER_ORDERS_PAGE_URL))
+
+
+@ddt.ddt
+class RefundViewTests(APITestCase):
+    """
+    Tests for order refund view.
+    """
+    # Define test user properties
+
+    test_user_username = 'test'
+    test_user_email = 'test@example.com'
+    test_user_password = 'secret'
+
+    url = reverse('lms:refund')
+
+    valid_payload = {
+        'course_id': 'course-v1:edX+DemoX+Demo_Course',
+        'username': 'john',
+        'enrollment_attributes': [{
+            'namespace': 'order',
+            'name': 'order_id',
+            'value': '123'
+        }, {
+            'namespace': 'order',
+            'name': 'order_line_id',
+            'value': '123'
+        }]
+    }
+
+    invalid_payload = {
+        'course_id': '',
+        'username': ''
+    }
+
+    def setUp(self):
+        super().setUp()
+        self.user = User.objects.create_user(
+            self.test_user_username,
+            self.test_user_email,
+            self.test_user_password,
+            is_staff=True,
+        )
+
+    def tearDown(self):
+        super().tearDown()
+        self.client.logout()
+
+    def authenticate_user(self):
+        self.client.login(username=self.test_user_username, password=self.test_user_password)
+        self.client.force_authenticate(user=self.user)
+
+    @patch('commerce_coordinator.apps.lms.views.OrderRefundRequested.run_filter')
+    def test_post_with_valid_data_succeeds(self, mock_filter):
+        self.authenticate_user()
+        mock_filter.return_value = {'returned_order': True}
+        response = self.client.post(self.url, self.valid_payload, format='json')
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        mock_filter.assert_called_once_with('123', '123')
+
+    @patch('commerce_coordinator.apps.lms.views.OrderRefundRequested.run_filter')
+    def test_post_with_valid_data_invalid_pipeline_return_fails(self, mock_filter):
+        self.authenticate_user()
+        mock_filter.return_value = {'returned_order': None}
+        response = self.client.post(self.url, self.valid_payload, format='json')
+
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        mock_filter.assert_called_once_with('123', '123')
+
+    def test_post_with_invalid_data_fails(self):
+        self.authenticate_user()
+        response = self.client.post(self.url, self.invalid_payload, format='json')
+
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+
+    @patch('commerce_coordinator.apps.lms.views.OrderRefundRequested.run_filter')
+    def test_post_with_filter_exception_fails(self, mock_filter):
+        self.authenticate_user()
+        mock_filter.side_effect = OpenEdxFilterException('Filter failed')
+        response = self.client.post(self.url, self.valid_payload, format='json')
+
+        self.assertEqual(response.status_code, status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+    @patch('commerce_coordinator.apps.lms.views.OrderRefundRequested.run_filter')
+    def test_post_with_unexpected_exception_fails(self, mock_filter):
+        self.authenticate_user()
+        mock_filter.side_effect = Exception('Unexpected error')
+        response = self.client.post(self.url, self.valid_payload, format='json')
+
+        self.assertEqual(response.status_code, status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+    @ddt.data(
+        name_test("missing order_id", (
+            "order_id",
+        )),
+        name_test("missing order_line_id", (
+            "order_line_id",
+        )),
+    )
+    @ddt.unpack
+    def test_post_with_invalid_attr_data_fails(self, drop_key):
+        self.authenticate_user()
+        local_invalid_payload = copy.deepcopy(self.valid_payload)
+        local_invalid_payload['enrollment_attributes'] = list(
+            filter(
+                lambda x: x['name'] != drop_key,
+                local_invalid_payload['enrollment_attributes']
+            )
+        )
+        response = self.client.post(self.url, local_invalid_payload, format='json')
+
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
