@@ -5,8 +5,6 @@ LMS App Testing Data Constants
 from datetime import datetime
 from typing import Dict, Union
 
-# from commerce_coordinator.apps.lms.tasks import fulfill_order_placed_send_enroll_in_course_task
-
 _INIT_DATE = datetime.now().strftime('%b %d, %Y')
 
 EXAMPLE_LINE_ITEM_STATE_PAYLOAD = {

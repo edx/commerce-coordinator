@@ -31,7 +31,7 @@ class FulfillOrderPlacedSendEnrollInCourseTest(CoordinatorSignalReceiverTestCase
         'order_version': 7,
         'provider_id': 8,
         'source_system': 9,
-        'item_id': 10,
+        'line_item_id': 10,
         'item_quantity': 1,
         'line_item_state_id': 11,
     }

@@ -25,7 +25,7 @@ class FulfillOrderCompletedSendLineItemStateTest(CoordinatorSignalReceiverTestCa
     mock_parameters = {
         'order_id': 1,
         'order_version': 2,
-        'item_id': 3,
+        'line_item_id': 3,
         'item_quantity': 1,
         'line_item_state_id': 4,
     }

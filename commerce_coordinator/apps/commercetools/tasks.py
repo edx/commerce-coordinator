@@ -34,6 +34,6 @@ def update_line_item_state_on_fulfillment_completion(
         )
         return updated_order
     except CommercetoolsError as err:
-        logger.error(f"Unable to update line item [ {item_id} ] state on fulfillment "
+        logger.error(f"Unable to update line item [ {line_item_id} ] state on fulfillment "
                      f"result with error {err.errors} and correlation id {err.correlation_id}")
         return None
