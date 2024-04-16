@@ -39,8 +39,8 @@ class EnrollmentAttributeSerializer(CoordinatorSerializer):
         }
 
     """
-    namespace = serializers.CharField(required=True)
-    name = serializers.CharField(required=True)
+    namespace = serializers.CharField(required=True, allow_null=False, allow_blank=False)
+    name = serializers.CharField(required=True, allow_null=False, allow_blank=False)
     value = serializers.CharField(required=True)
 
     @staticmethod
@@ -70,9 +70,9 @@ class CourseRefundInputSerializer(CoordinatorSerializer):
         }
 
     """
-    course_id = serializers.CharField(required=True)
-    username = serializers.CharField(required=True)
-    enrollment_attributes = EnrollmentAttributeSerializer(many=True)
+    course_id = serializers.CharField(required=True, allow_null=False, allow_blank=False)
+    username = serializers.CharField(required=True, allow_null=False, allow_blank=False)
+    enrollment_attributes = EnrollmentAttributeSerializer(many=True, allow_null=False, allow_empty=True)
 
     def enrollment_attributes_dict(self) -> Dict[str, str]:
         """ Converts serializer data to a dict of {f"{namespace}.{name}": value, ... n} """
