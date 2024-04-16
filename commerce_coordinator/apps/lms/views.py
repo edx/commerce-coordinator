@@ -203,7 +203,7 @@ class RefundView(APIView):
         enrollment_attributes = input_details.enrollment_attributes_dict()
 
         logger.info(f"[RefundView] Starting LMS Refund for username: {username}, course_id: {course_id}, "
-                     f"Enrollment attributes: {enrollment_attributes}.")
+                    f"Enrollment attributes: {enrollment_attributes}.")
 
         order_line_id = enrollment_attributes.get(enrollment_attribute_key('order', 'order_line_id'), None)
         order_id = enrollment_attributes.get(enrollment_attribute_key('order', 'order_id'), None)
@@ -213,21 +213,21 @@ class RefundView(APIView):
                          f"course_id: {course_id} the enrollment_attributes array requires an orders: order_id "
                          f"attribute.")
             return HttpResponse('the enrollment_attributes array requires an orders: order_id '
-                                          'attribute.', status=HTTP_400_BAD_REQUEST)
+                                'attribute.', status=HTTP_400_BAD_REQUEST)
 
         if not order_line_id:
             logger.error(f"[RefundView] Failed processing refund for order {order_id} for username: {username}, "
                          f"course_id: {course_id} the enrollment_attributes array requires an orders: order_line_id "
                          f"attribute.")
             return HttpResponse('the enrollment_attributes array requires an orders: order_line_id '
-                                          'attribute.', status=HTTP_400_BAD_REQUEST)
+                                'attribute.', status=HTTP_400_BAD_REQUEST)
 
         try:
             result = OrderRefundRequested.run_filter(order_id, order_line_id)
 
             if result['returned_order']:
                 logger.info(f"[RefundView] Successfully returned order {order_id} for username: {username}, "
-                             f"course_id: {course_id} with result: {result}.")
+                            f"course_id: {course_id} with result: {result}.")
                 return Response(result, status=HTTP_200_OK)
             else:
                 logger.error(f"[RefundView] Failed returning order {order_id} for username: {username}, "
