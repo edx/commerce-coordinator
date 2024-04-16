@@ -331,7 +331,7 @@ CC_SIGNALS = {
         'commerce_coordinator.apps.titan.signals.enrollment_code_redemption_requested_create_order',
     ],
     'commerce_coordinator.apps.titan.signals.fulfill_order_placed_signal': [
-        'commerce_coordinator.apps.lms.signals.fulfill_order_placed_send_enroll_in_course',
+        'commerce_coordinator.apps.lms.signal_handlers.fulfill_order_placed_send_enroll_in_course',
     ],
     'commerce_coordinator.apps.ecommerce.signals.order_created_signal': [
         'commerce_coordinator.apps.titan.signals.order_created_save',
@@ -340,7 +340,10 @@ CC_SIGNALS = {
         'commerce_coordinator.apps.titan.signals.payment_processed_save',
     ],
     'commerce_coordinator.apps.commercetools.signals.fulfill_order_placed_signal': [
-        'commerce_coordinator.apps.lms.signals.fulfill_order_placed_send_enroll_in_course',
+        'commerce_coordinator.apps.lms.signal_handlers.fulfill_order_placed_send_enroll_in_course',
+    ],
+    'commerce_coordinator.apps.lms.signals.fulfillment_completed_signal': [
+        'commerce_coordinator.apps.commercetools.signals.fulfill_order_completed_send_line_item_state',
     ],
     'commerce_coordinator.apps.commercetools.sub_messages.signals_dispatch.fulfill_order_placed_message_signal': [
         'commerce_coordinator.apps.commercetools.sub_messages.signals_delayed.fulfill_order_placed_message_signal',

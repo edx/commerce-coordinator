@@ -19,12 +19,13 @@ from django.test import TestCase
 from mock import patch
 from openedx_filters.exceptions import OpenEdxFilterException
 
-from commerce_coordinator.apps.commercetools.catalog_info.constants import EdXFieldNames
+from commerce_coordinator.apps.commercetools.catalog_info.constants import EdXFieldNames, TwoUKeys
 from commerce_coordinator.apps.commercetools.catalog_info.foundational_types import TwoUCustomTypes
 from commerce_coordinator.apps.commercetools.clients import PaginatedResult
 from commerce_coordinator.apps.commercetools.tests.conftest import (
     APITestingSet,
     gen_example_customer,
+    gen_line_item_state,
     gen_order,
     gen_order_history,
     gen_return_item
@@ -442,6 +443,117 @@ class ClientTests(TestCase):
                     order_version="2",
                     return_line_item_return_id="mock_return_item_id"
                 )
+
+    @patch('commerce_coordinator.apps.commercetools.clients.CommercetoolsAPIClient.get_state_by_id')
+    def test_successful_order_line_item_state_update(self, mock_state_by_id):
+        base_url = self.client_set.get_base_url_from_client()
+
+        mock_order = gen_order("mock_order_id")
+        mock_order.version = "2"
+        mock_line_item_state = gen_line_item_state()
+        mock_line_item_state.key = TwoUKeys.PROCESSING_FULFILMENT_STATE
+        mock_order.line_items[0].state[0].state = mock_line_item_state
+
+        mock_state_by_id().return_value = mock_line_item_state
+
+        mock_response_order = gen_order("mock_order_id")
+        mock_response_order.version = 3
+        mock_response_line_item_state = gen_line_item_state()
+        mock_response_line_item_state.id = "mock_success_id"
+        mock_response_line_item_state.key = TwoUKeys.SUCCESS_FULFILMENT_STATE
+        mock_response_order.line_items[0].state[0].state = mock_response_line_item_state
+
+        with requests_mock.Mocker(real_http=True, case_sensitive=False) as mocker:
+            mocker.post(
+                f"{base_url}orders/{mock_response_order.id}",
+                json=mock_response_order.serialize(),
+                status_code=200
+            )
+
+            result = self.client_set.client.update_line_item_transition_state_on_fulfillment(
+                mock_order.id,
+                mock_order.version,
+                mock_order.line_items[0].id,
+                1,
+                mock_order.line_items[0].state[0].state.id,
+                TwoUKeys.SUCCESS_FULFILMENT_STATE
+            )
+
+            self.assertEqual(result.line_items[0].state[0].state.id, mock_response_line_item_state.id)
+
+    @patch('commerce_coordinator.apps.commercetools.clients.CommercetoolsAPIClient.get_state_by_id')
+    def test_update_line_item_state_exception(self, mock_state_by_id):
+        base_url = self.client_set.get_base_url_from_client()
+        mock_state_by_id().return_value = gen_line_item_state()
+        mock_error_response: CommercetoolsError = {
+            "message": "Could not create return for order mock_order_id",
+            "errors": [
+                {
+                    "code": "ConcurrentModification",
+                    "detailedErrorMessage": "Object [mock_order_id] has a "
+                                            "different version than expected. Expected: 2 - Actual: 1."
+                },
+            ],
+            "response": {},
+            "correlation_id": "None"
+        }
+
+        with requests_mock.Mocker(real_http=True, case_sensitive=False) as mocker:
+            mocker.post(
+                f"{base_url}orders/mock_order_id",
+                json=mock_error_response,
+                status_code=409
+            )
+
+            with patch('commerce_coordinator.apps.commercetools.clients.logging.Logger.error') as log_mock:
+                self.client_set.client.update_line_item_transition_state_on_fulfillment(
+                    "mock_order_id",
+                    1,
+                    "mock_order_line_item_id",
+                    1,
+                    "mock_order_line_item_state.id",
+                    TwoUKeys.SUCCESS_FULFILMENT_STATE
+                )
+
+                expected_message = (
+                    f"[CommercetoolsError] Unable to update LineItemState "
+                    f"of order mock_order_id with error correlation id {mock_error_response['correlation_id']} "
+                    f"and error/s: {mock_error_response['errors']}"
+                )
+
+                log_mock.assert_called_once_with(expected_message)
+
+    @patch('commerce_coordinator.apps.commercetools.clients.CommercetoolsAPIClient.get_state_by_id')
+    @patch('commerce_coordinator.apps.commercetools.clients.CommercetoolsAPIClient.get_order_by_id')
+    def test_order_line_item_in_correct_state(self, mock_order_by_id, mock_state_by_id):
+        mock_order = gen_order("mock_order_id")
+        mock_order.version = 3
+        mock_line_item_state = gen_line_item_state()
+        mock_line_item_state.key = TwoUKeys.PROCESSING_FULFILMENT_STATE
+        mock_order.line_items[0].state[0].state = mock_line_item_state
+        line_item_id = mock_order.line_items[0].id
+
+        mock_state_by_id.return_value = mock_line_item_state
+        mock_order_by_id.return_value = mock_order
+
+        with patch('commerce_coordinator.apps.commercetools.clients.logging.Logger.info') as log_mock:
+            result = self.client_set.client.update_line_item_transition_state_on_fulfillment(
+                mock_order.id,
+                mock_order.version,
+                line_item_id,
+                1,
+                mock_order.line_items[0].state[0].state.id,
+                TwoUKeys.PROCESSING_FULFILMENT_STATE
+            )
+
+            expected_message = (
+                f"The line item {line_item_id} already has the correct state {mock_line_item_state.key}. "
+                f"Not attempting to transition LineItemState"
+            )
+
+            log_mock.assert_called_once_with(expected_message)
+            self.assertEqual(result.id, mock_order.id)
+            self.assertEqual(result.version, mock_order.version)
 
 
 class PaginatedResultsTest(TestCase):

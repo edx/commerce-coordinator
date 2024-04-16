@@ -14,11 +14,11 @@ logger = logging.getLogger(__name__)
 @override_settings(
     CC_SIGNALS={
         'commerce_coordinator.apps.core.tests.utils.example_signal': [
-            'commerce_coordinator.apps.lms.signals.fulfill_order_placed_send_enroll_in_course',
+            'commerce_coordinator.apps.lms.signal_handlers.fulfill_order_placed_send_enroll_in_course',
         ],
     }
 )
-@patch('commerce_coordinator.apps.lms.signals.fulfill_order_placed_send_enroll_in_course_task')
+@patch('commerce_coordinator.apps.lms.signal_handlers.fulfill_order_placed_send_enroll_in_course_task')
 class FulfillOrderPlacedSendEnrollInCourseTest(CoordinatorSignalReceiverTestCase):
     """ LMS Fulfillment Order Placed, Enrollment Signal Tester"""
     mock_parameters = {
@@ -28,8 +28,12 @@ class FulfillOrderPlacedSendEnrollInCourseTest(CoordinatorSignalReceiverTestCase
         'edx_lms_user_id': 4,
         'email_opt_in': 5,
         'order_number': 6,
-        'provider_id': 7,
-        'source_system': 8,
+        'order_version': 7,
+        'provider_id': 8,
+        'source_system': 9,
+        'line_item_id': 10,
+        'item_quantity': 1,
+        'line_item_state_id': 11,
     }
 
     def test_correct_arguments_passed(self, mock_task):

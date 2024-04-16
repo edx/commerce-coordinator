@@ -2,7 +2,7 @@
 
 from unittest.mock import MagicMock
 
-from commerce_coordinator.apps.commercetools.tests.conftest import gen_customer, gen_order
+from commerce_coordinator.apps.commercetools.tests.conftest import gen_customer, gen_line_item_state, gen_order
 from commerce_coordinator.apps.commercetools.tests.constants import EXAMPLE_FULFILLMENT_SIGNAL_PAYLOAD
 
 
@@ -25,6 +25,17 @@ class CTOrderByIdMock(MagicMock):
     EXAMPLE_FULFILLMENT_SIGNAL_PAYLOAD in the shape of format_signal_results.
     """
     return_value = gen_order(EXAMPLE_FULFILLMENT_SIGNAL_PAYLOAD['order_number'])
+
+
+class CTLineItemStateByKeyMock(MagicMock):
+    return_value = gen_line_item_state()
+
+
+def gen_updated_line_item_state_order():
+    """jsdjkasbdj"""
+    order = gen_order(EXAMPLE_FULFILLMENT_SIGNAL_PAYLOAD['order_number'])
+    order.version = 8
+    return order
 
 
 def get_order_with_bad_state_key():
@@ -61,3 +72,7 @@ class CTCustomerByIdMock(MagicMock):
     EXAMPLE_FULFILLMENT_SIGNAL_PAYLOAD in the shape of format_signal_results.
     """
     return_value = gen_customer("hiya@text.example", "jim_34")
+
+
+class CTUpdateLineItemState(MagicMock):
+    return_value = gen_updated_line_item_state_order()

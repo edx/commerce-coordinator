@@ -24,6 +24,7 @@ class FulfillOrderPlacedMessageSignalTest(CoordinatorSignalReceiverTestCase):
     """ Commercetools Fulfillment Order Placed Signal Tester"""
     mock_parameters = {
         'order_id': uuid4_str(),
+        'line_item_state_id': uuid4_str(),
         'source_system': SOURCE_SYSTEM,
     }
 

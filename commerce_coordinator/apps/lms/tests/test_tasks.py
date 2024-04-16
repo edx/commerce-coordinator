@@ -11,7 +11,8 @@ from commerce_coordinator.apps.core.models import User
 from commerce_coordinator.apps.lms.tasks import fulfill_order_placed_send_enroll_in_course_task
 from commerce_coordinator.apps.lms.tests.constants import (
     EXAMPLE_FULFILLMENT_REQUEST_PAYLOAD,
-    EXAMPLE_FULFILLMENT_SIGNAL_PAYLOAD
+    EXAMPLE_FULFILLMENT_SIGNAL_PAYLOAD,
+    EXAMPLE_LINE_ITEM_STATE_PAYLOAD
 )
 
 # Log using module name.
@@ -37,8 +38,12 @@ class FulfillOrderPlacedSendEnrollInCourseTaskTest(TestCase):
             values['edx_lms_user_id'],
             values['email_opt_in'],
             values['order_number'],
+            values['order_version'],
             values['provider_id'],
-            values['source_system']
+            values['source_system'],
+            values['line_item_id'],
+            values['item_quantity'],
+            values['line_item_state_id']
         )
 
     def setUp(self):
@@ -49,9 +54,12 @@ class FulfillOrderPlacedSendEnrollInCourseTaskTest(TestCase):
         Check calling uut with mock_parameters yields call to client with
         expected_data.
         '''
-        _ = uut(*self.unpack_for_uut(EXAMPLE_FULFILLMENT_SIGNAL_PAYLOAD))
+        _ = uut(*self.unpack_for_uut(EXAMPLE_FULFILLMENT_SIGNAL_PAYLOAD))  # pylint: disable = no-value-for-parameter
         logger.info('mock_client().mock_calls: %s', mock_client().mock_calls)
-        mock_client().enroll_user_in_course.assert_called_once_with(EXAMPLE_FULFILLMENT_REQUEST_PAYLOAD)
+        mock_client().enroll_user_in_course.assert_called_once_with(
+            EXAMPLE_FULFILLMENT_REQUEST_PAYLOAD,
+            EXAMPLE_LINE_ITEM_STATE_PAYLOAD
+        )
 
     def test_correct_arguments_passed_credit(self, mock_client):
         '''
@@ -73,15 +81,18 @@ class FulfillOrderPlacedSendEnrollInCourseTaskTest(TestCase):
         })
 
         # Run test:
-        _ = uut(*self.unpack_for_uut(credit_mock_parameters))
+        _ = uut(*self.unpack_for_uut(credit_mock_parameters))  # pylint: disable = no-value-for-parameter
         logger.info('mock_client().mock_calls: %s', mock_client().mock_calls)
-        mock_client().enroll_user_in_course.assert_called_once_with(credit_expected_data)
+        mock_client().enroll_user_in_course.assert_called_once_with(
+            credit_expected_data,
+            EXAMPLE_LINE_ITEM_STATE_PAYLOAD
+        )
 
     def test_passes_through_client_return(self, mock_client):
         '''
         Check uut returns whatever the client returns.
         '''
         mock_client().enroll_user_in_course.return_value = sentinel.mock_client_return_value
-        result = uut(*self.unpack_for_uut(EXAMPLE_FULFILLMENT_SIGNAL_PAYLOAD))
-        logger.info('result: %s', result)
-        self.assertEqual(result, sentinel.mock_client_return_value)
+        res = uut(*self.unpack_for_uut(EXAMPLE_FULFILLMENT_SIGNAL_PAYLOAD))  # pylint: disable=no-value-for-parameter
+        logger.info('result: %s', res)
+        self.assertEqual(res, sentinel.mock_client_return_value)
