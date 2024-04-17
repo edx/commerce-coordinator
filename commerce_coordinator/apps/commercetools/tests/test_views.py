@@ -13,6 +13,7 @@ from rest_framework.test import APIClient, APITestCase
 
 from commerce_coordinator.apps.commercetools.tests.constants import (
     EXAMPLE_COMMERCETOOLS_ORDER_FULFILL_MESSAGE,
+    EXAMPLE_COMMERCETOOLS_ORDER_RETURNED_MESSAGE,
     EXAMPLE_COMMERCETOOLS_ORDER_SANCTIONED_MESSAGE
 )
 from commerce_coordinator.apps.commercetools.tests.mocks import (
@@ -338,7 +339,7 @@ class OrderReturnedViewTests(APITestCase):
     """Tests for order sanctioned view"""
     url = reverse('commercetools:returned')
 
-    # Use Django Rest Framework client for self.client
+    # Use the Django Rest Framework client for self.client
     client_class = APIClient
 
     test_user_username = 'test_user'
@@ -354,7 +355,7 @@ class OrderReturnedViewTests(APITestCase):
         User.objects.create_user(username=self.test_staff_username, password=self.test_password, is_staff=True)
 
     def tearDown(self):
-        """Log out any user from client after test ends."""
+        """Log out any user from the client after test ends."""
 
         super().tearDown()
         TieredCache.dangerous_clear_all_tiers()
@@ -375,7 +376,7 @@ class OrderReturnedViewTests(APITestCase):
         self.client.login(username=self.test_staff_username, password=self.test_password)
 
         # Send request
-        response = self.client.post(self.url, data=EXAMPLE_COMMERCETOOLS_ORDER_SANCTIONED_MESSAGE, format='json')
+        response = self.client.post(self.url, data=EXAMPLE_COMMERCETOOLS_ORDER_RETURNED_MESSAGE, format='json')
 
         # Check 200 OK
         self.assertEqual(response.status_code, 200)
@@ -389,13 +390,13 @@ class OrderReturnedViewTests(APITestCase):
         new_callable=CTCustomerByIdMock
     )
     def test_view_returns_expected_error(self, _mock_customer, _mock_order, _mock_signal):
-        """Check authorized account requesting fulfillment with bad inputs receive an expected error."""
+        """Check an authorized account requesting fulfillment with bad inputs receive an expected error."""
 
         # Login
         self.client.login(username=self.test_staff_username, password=self.test_password)
 
         # Add errors to example request
-        payload_with_errors = EXAMPLE_COMMERCETOOLS_ORDER_SANCTIONED_MESSAGE.copy()
+        payload_with_errors = EXAMPLE_COMMERCETOOLS_ORDER_RETURNED_MESSAGE.copy()
         payload_with_errors.pop('detail')
 
         # Send request
@@ -416,13 +417,13 @@ class OrderReturnedViewTests(APITestCase):
         new_callable=CTCustomerByIdMock
     )
     def test_view_returns_expected_error_no_order(self, mock_customer, _mock_order, _mock_signal):
-        """Check authorized account requesting fulfillment unable to get customer receive an expected error."""
+        """Check an authorized account requesting fulfillment unable to get customer receive an expected error."""
         mock_customer.return_value = None
         # Login
         self.client.login(username=self.test_staff_username, password=self.test_password)
 
         # Send request
-        response = self.client.post(self.url, data=EXAMPLE_COMMERCETOOLS_ORDER_SANCTIONED_MESSAGE, format='json')
+        response = self.client.post(self.url, data=EXAMPLE_COMMERCETOOLS_ORDER_RETURNED_MESSAGE, format='json')
 
         self.assertEqual(response.status_code, 200)
 
@@ -441,7 +442,7 @@ class OrderReturnedViewTests(APITestCase):
         self.client.login(username=self.test_staff_username, password=self.test_password)
 
         # Send request
-        response = self.client.post(self.url, data=EXAMPLE_COMMERCETOOLS_ORDER_SANCTIONED_MESSAGE, format='json')
+        response = self.client.post(self.url, data=EXAMPLE_COMMERCETOOLS_ORDER_RETURNED_MESSAGE, format='json')
 
         # Check 200 OK
         self.assertEqual(response.status_code, 200)
@@ -461,7 +462,7 @@ class OrderReturnedViewTests(APITestCase):
         self.client.login(username=self.test_staff_username, password=self.test_password)
 
         # Send request
-        response = self.client.post(self.url, data=EXAMPLE_COMMERCETOOLS_ORDER_SANCTIONED_MESSAGE, format='json')
+        response = self.client.post(self.url, data=EXAMPLE_COMMERCETOOLS_ORDER_RETURNED_MESSAGE, format='json')
 
         # Check 200 OK
         self.assertEqual(response.status_code, 200)
@@ -473,7 +474,7 @@ class OrderReturnedViewTests(APITestCase):
         self.client.login(username=self.test_user_username, password=self.test_password)
 
         # Send request
-        response = self.client.post(self.url, data=EXAMPLE_COMMERCETOOLS_ORDER_SANCTIONED_MESSAGE, format='json')
+        response = self.client.post(self.url, data=EXAMPLE_COMMERCETOOLS_ORDER_RETURNED_MESSAGE, format='json')
 
         # Check 403 Forbidden
         self.assertEqual(response.status_code, 403)

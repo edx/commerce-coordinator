@@ -200,10 +200,6 @@ class OrderSanctionedMessageSignalTaskTests(TestCase):
         mock_values.customer_mock.assert_called_once_with(mock_values.customer_id)
 
 
-@patch('commerce_coordinator.apps.commercetools.sub_messages.tasks.fulfill_order_placed_signal.send_robust',
-       new_callable=SendRobustSignalMock)
-@patch('commerce_coordinator.apps.commercetools.sub_messages.tasks.CommercetoolsAPIClient',
-       new_callable=CommercetoolsAPIClientMock)
 class OrderReturnedMessageSignalTaskTests(TestCase):
     """Tests for the fulfill_order_returned_signal_task"""
 
@@ -218,6 +214,11 @@ class OrderReturnedMessageSignalTaskTests(TestCase):
     def get_uut():
         return fulfill_order_returned_uut
 
+    @patch('commerce_coordinator.apps.commercetools.sub_messages.tasks.is_edx_lms_order')
+    @patch('commerce_coordinator.apps.commercetools.clients.CommercetoolsAPIClient',
+           new_callable=CommercetoolsAPIClientMock)
+    # @patch('commerce_coordinator.apps.commercetools.sub_messages.tasks.CommercetoolsAPIClient',
+    #        new_callable=CommercetoolsAPIClientMock)
     def test_correct_arguments_passed(self, _ct_client_init: CommercetoolsAPIClientMock, _lms_signal):
         """
         Check calling uut with mock_parameters yields call to client with
@@ -231,7 +232,9 @@ class OrderReturnedMessageSignalTaskTests(TestCase):
 
     @patch('commerce_coordinator.apps.commercetools.sub_messages.tasks.is_edx_lms_order',
            return_value=False)
-    def test_not_lms_order(self, _fn, _ct_client_init: CommercetoolsAPIClientMock, _lms_signal):
+    @patch('commerce_coordinator.apps.commercetools.sub_messages.tasks.CommercetoolsAPIClient',
+           new_callable=CommercetoolsAPIClientMock)
+    def test_not_lms_order(self, _ct_client_init: CommercetoolsAPIClientMock, _lms_signal):
         """
         Check calling uut with mock_parameters yields call to client with
         expected_data.

@@ -81,11 +81,35 @@ class OrderFulfillViewInputSerializer(CoordinatorSerializer):
     edx_lms_user_id = serializers.IntegerField(allow_null=False)
 
 
+class OrderReturnedViewMessageLineItemReturnItemSerializer(CoordinatorSerializer):
+    """
+    Serializer for OrderReturnedView message LineItemReturnItem.
+    """
+    type = serializers.CharField()
+    id = serializers.CharField()
+    quantity = serializers.IntegerField()
+    lineItemId = serializers.CharField()
+    shipmentState = serializers.CharField()
+    paymentState = serializers.CharField()
+    lastModifiedAt = serializers.DateTimeField()
+    createdAt = serializers.DateTimeField()
+
+
+class OrderReturnedViewMessageReturnInfoSerializer(CoordinatorSerializer):
+    """
+    Serializer for OrderReturnedView message returnInfo.
+    """
+    items = OrderReturnedViewMessageLineItemReturnItemSerializer(many=True)
+    returnTrackingId = serializers.CharField()
+    returnDate = serializers.DateTimeField()
+
+
 class OrderReturnedViewMessageDetailSerializer(CoordinatorSerializer):
     """
     Serializer for OrderReturnedView message detail.
     """
     resource = serializers.DictField(child=serializers.CharField())
+    returnInfo = OrderReturnedViewMessageReturnInfoSerializer()
 
     def to_representation(self, instance):
         representation = super().to_representation(instance)
@@ -106,3 +130,18 @@ class OrderReturnedViewMessageInputSerializer(CoordinatorSerializer):
         representation = super().to_representation(instance)
         representation = representation.pop('detail')
         return representation
+
+    def get_return_info(self):
+        validated_data = self.validated_data
+        detail = validated_data.get('detail', {})
+        return_info = detail.get('returnInfo', {})
+        items = return_info.get('items', [])
+
+        if len(items) > 0:
+            first_item = items[0] if items else {}
+            return first_item
+        else:
+            return {}
+
+    def get_return_line_item_id(self):
+        return self.get_return_info().get('lineItemId', None)

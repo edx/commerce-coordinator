@@ -1,7 +1,7 @@
 """
 Commercetools filter pipelines
 """
-
+import decimal
 from logging import getLogger
 
 import attrs
@@ -10,13 +10,19 @@ from commercetools.platform.models import Order as CTOrder
 from openedx_filters import PipelineStep
 from openedx_filters.exceptions import OpenEdxFilterException
 
-from commerce_coordinator.apps.commercetools.catalog_info.edx_utils import get_edx_payment_intent_id
+from commerce_coordinator.apps.commercetools.catalog_info.edx_utils import (
+    get_edx_payment_intent_id,
+    get_edx_refund_amount
+)
 from commerce_coordinator.apps.commercetools.clients import CommercetoolsAPIClient
 from commerce_coordinator.apps.commercetools.constants import COMMERCETOOLS_ORDER_MANAGEMENT_SYSTEM
 from commerce_coordinator.apps.commercetools.data import order_from_commercetools
 from commerce_coordinator.apps.core.constants import PipelineCommand
 from commerce_coordinator.apps.core.exceptions import InvalidFilterType
-from commerce_coordinator.apps.rollout.utils import is_commercetools_line_item_already_refunded
+from commerce_coordinator.apps.rollout.utils import (
+    get_order_return_info_return_items,
+    is_commercetools_line_item_already_refunded
+)
 
 log = getLogger(__name__)
 
@@ -63,7 +69,7 @@ class FetchOrderDetails(PipelineStep):
     """ Fetch the order Details and if we can, set the PaymentIntent """
 
     # pylint: disable=unused-argument
-    def run_filter(self, params, active_order_management_system, order_number):  # pylint: disable=arguments-differ
+    def run_filter(self, active_order_management_system, order_number):  # pylint: disable=arguments-differ
         """
         Execute a filter with the signature specified.
         Arguments:
@@ -88,6 +94,12 @@ class FetchOrderDetails(PipelineStep):
 
             if intent_id:
                 ret_val['payment_intent_id'] = intent_id
+                ret_val['refund_amount_cents'] = get_edx_refund_amount(ct_order)
+                ret_val['has_been_refunded'] = len(get_order_return_info_return_items(ct_order)) >= 1
+            else:
+                ret_val['payment_intent_id'] = None
+                ret_val['refund_amount_cents'] = decimal.Decimal(0.00)
+                ret_val['has_been_refunded'] = False
 
             return ret_val
         except CommercetoolsError as err:  # pragma no cover
@@ -102,14 +114,18 @@ class CreateReturnForCommercetoolsOrder(PipelineStep):
     """
 
     def run_filter(
-            self,
-            active_order_management_system,
-            order_number,
-            order_line_id
+        self,
+        active_order_management_system,
+        order_number,
+        order_line_id,
+        order_data: CTOrder,
+        has_been_refunded
     ):  # pylint: disable=arguments-differ
         """
         Execute a filter with the signature specified.
         Args:
+            has_been_refunded(bool): Whether or not the order has been refunded
+            order_data:(CTOrder): Commercetools order object
             active_order_management_system: The Active Order System
             order_number: Order number (for now this is an order.id, but this should change in the future)
             TODO: SONIC-277 (in-progress)
@@ -122,9 +138,12 @@ class CreateReturnForCommercetoolsOrder(PipelineStep):
         if active_order_management_system != COMMERCETOOLS_ORDER_MANAGEMENT_SYSTEM:  # pragma no cover
             return PipelineCommand.CONTINUE.value
 
+        if has_been_refunded:
+            return PipelineCommand.CONTINUE.value
+
         try:
             ct_api_client = CommercetoolsAPIClient()
-            order = ct_api_client.get_order_by_id(order_id=order_number)
+            order = order_data
             if not is_commercetools_line_item_already_refunded(order, order_line_id):
                 returned_order = ct_api_client.create_return_for_order(
                     order_id=order.id,
@@ -154,6 +173,7 @@ class UpdateCommercetoolsOrderReturnPaymentStatus(PipelineStep):
     """
     Updates the ReturnPaymentStatus of a Commercetools order
     """
+
     def run_filter(self, returned_order: CTOrder, return_line_item_return_id: str):  # pylint: disable=arguments-differ
         """
         Execute a filter with the signature specified.
