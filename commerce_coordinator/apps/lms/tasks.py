@@ -56,6 +56,11 @@ def fulfill_order_placed_send_enroll_in_course_task(
             },
             {
                 'namespace': 'order',
+                'name': 'line_item_id',
+                'value': line_item_id,
+            },
+            {
+                'namespace': 'order',
                 'name': 'order_placed',
                 'value': date_placed,
             },
