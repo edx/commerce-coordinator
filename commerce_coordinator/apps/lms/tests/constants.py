@@ -46,6 +46,11 @@ EXAMPLE_FULFILLMENT_REQUEST_PAYLOAD = {
         },
         {
             'namespace': 'order',
+            'name': 'line_item_id',
+            'value': '822d77c4-00a6-4fb9-909b-094ef0b8c4b9',
+        },
+        {
+            'namespace': 'order',
             'name': 'order_placed',
             'value': _INIT_DATE,
         },
