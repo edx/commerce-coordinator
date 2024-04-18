@@ -39,12 +39,16 @@ class Command(BaseCommand):
 
         return NL.join(out)
 
-    # pylint: disable=line-too-long
-    def handle(self, *args, **options):
-        print(f"## Coordinator Signals YAML ############################################################################{NL}")
-        print(Command.indent_like_edx_internal(Command.to_yaml(settings.CC_SIGNALS)))
-        print(f"{NL}{NL}## Coordinator Filters YAML ####################################################################{NL}")
-        print(Command.indent_like_edx_internal(Command.to_yaml(settings.OPEN_EDX_FILTERS_CONFIG)))
-        print(f"{NL}{NL}## END  ########################################################################################{NL}")
+    @staticmethod
+    def make_line(line: str, less=0, pad="#") -> str:
+        """Pads end of line with # until we hid the width of the terminal"""
+        columns, _ = os.get_terminal_size(0)
 
-    # pylint: enable=line-too-long
+        return line + pad * ((columns - less) - len(line))
+
+    def handle(self, *args, **options):
+        print(f"## {Command.make_line('Coordinator Signals YAML ', less=len(NL)+3)}{NL}")
+        print(Command.indent_like_edx_internal(Command.to_yaml(settings.CC_SIGNALS)))
+        print(f"{NL}## {Command.make_line('Coordinator Filters YAML ', less=len(NL)*2+3)}{NL}")
+        print(Command.indent_like_edx_internal(Command.to_yaml(settings.OPEN_EDX_FILTERS_CONFIG)))
+        print(f"{NL}## {Command.make_line('END ', less=len(NL)*2+3)}{NL}")
