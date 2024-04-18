@@ -23,8 +23,8 @@ def health(_):
     Checks the status of the database connection on which this service relies.
 
     Returns:
-        HttpResponse: 200 if the service is available, with JSON data indicating the health of each required service
-        HttpResponse: 503 if the service is unavailable, with JSON data indicating the health of each required service
+        Response: 200 if the service is available, with JSON data indicating the health of each required service
+        Response: 503 if the service is unavailable, with JSON data indicating the health of each required service
 
     Example:
         >>> response = requests.get('https://commerce-coordinator.edx.org/health')

@@ -5,7 +5,6 @@ import logging
 from urllib.parse import urlencode, urljoin
 
 from django.conf import settings
-from django.http import HttpResponse, HttpResponseRedirect
 from edx_rest_framework_extensions.permissions import LoginRedirectIfUnauthenticated
 from openedx_filters.exceptions import OpenEdxFilterException
 from rest_framework.exceptions import ValidationError
@@ -53,7 +52,7 @@ class PaymentPageRedirectView(APIView):
             return self._redirect_response_payment(request)
         except OpenEdxFilterException as e:
             logger.exception(f"Something went wrong! Exception raised in {self.get.__name__} with error {repr(e)}")
-            return HttpResponse('Something went wrong.', status=HTTP_400_BAD_REQUEST)
+            return Response('Something went wrong.', status=HTTP_400_BAD_REQUEST)
 
     def _redirect_response_payment(self, request):
         """
@@ -62,7 +61,7 @@ class PaymentPageRedirectView(APIView):
         Args:
             request (django.HttpRequest):
         Returns:
-            response (django.HttpResponse):
+            response (django.Response):
         """
 
         get_items = list(self.request.GET.items())
@@ -73,8 +72,8 @@ class PaymentPageRedirectView(APIView):
             redirect_url_obj['redirect_url'],
             get_items
         )
-
-        redirect = HttpResponseRedirect(redirect_url, status=HTTP_303_SEE_OTHER)
+        redirect = Response(status=HTTP_303_SEE_OTHER)
+        redirect['Location'] = redirect_url
         redirect.headers[HttpHeadersNames.CONTENT_TYPE.value] = MediaTypes.JSON.value
         logger.debug(f'{self._redirect_response_payment.__qualname__} Redirecting 303 via {redirect}.')
         return redirect
@@ -118,11 +117,13 @@ class OrderDetailsRedirectView(APIView):
         """
         params = dict(request.GET.items())
         if not params.get('order_number', None):
-            return HttpResponse('Invalid order number supplied.', status=HTTP_400_BAD_REQUEST)
+            return Response('Invalid order number supplied.', status=HTTP_400_BAD_REQUEST)
 
         redirect_url = self._get_redirect_url(params)
 
-        return HttpResponseRedirect(redirect_url, status=HTTP_303_SEE_OTHER)
+        response = Response(status=HTTP_303_SEE_OTHER)
+        response['Location'] = redirect_url
+        return response
 
     @staticmethod
     def _get_redirect_url(params):
@@ -154,7 +155,7 @@ class RefundView(APIView):
     permission_classes = [IsAdminUser]
     throttle_classes = (UserRateThrottle,)
 
-    def post(self, request) -> HttpResponse:
+    def post(self, request) -> Response:
         """
          Process a refund request from the LMS.
 
@@ -162,7 +163,7 @@ class RefundView(APIView):
              request (Request): The HTTP request object containing the refund details.
 
          Returns:
-             - HttpResponse:
+             - Response:
                  - 200 OK if the refund was successfully processed with the result of the OrderRefundRequested
                    filter/pipeline.
                  - 400 If the refund request failed due to an invalid order.
@@ -195,7 +196,7 @@ class RefundView(APIView):
         except ValidationError as e:
             logger.exception(f"[RefundView] Exception raised validating input {self.post.__name__} with error "
                              f"{repr(e)}, input: {input_data}.")
-            return HttpResponse('Invalid input provided', status=HTTP_400_BAD_REQUEST)
+            return Response('Invalid input provided', status=HTTP_400_BAD_REQUEST)
 
         course_id = input_details.data['course_id']
         username = input_details.data['username']
@@ -212,15 +213,15 @@ class RefundView(APIView):
             logger.error(f"[RefundView] Failed processing refund for username: {username}, "
                          f"course_id: {course_id} the enrollment_attributes array requires an orders: order_id "
                          f"attribute.")
-            return HttpResponse('the enrollment_attributes array requires an orders: order_id '
-                                'attribute.', status=HTTP_400_BAD_REQUEST)
+            return Response('the enrollment_attributes array requires an orders: order_id '
+                            'attribute.', status=HTTP_400_BAD_REQUEST)
 
         if not order_line_id:
             logger.error(f"[RefundView] Failed processing refund for order {order_id} for username: {username}, "
                          f"course_id: {course_id} the enrollment_attributes array requires an orders: order_line_id "
                          f"attribute.")
-            return HttpResponse('the enrollment_attributes array requires an orders: order_line_id '
-                                'attribute.', status=HTTP_400_BAD_REQUEST)
+            return Response('the enrollment_attributes array requires an orders: order_line_id '
+                            'attribute.', status=HTTP_400_BAD_REQUEST)
 
         try:
             result = OrderRefundRequested.run_filter(order_id, order_line_id)
@@ -232,11 +233,11 @@ class RefundView(APIView):
             else:
                 logger.error(f"[RefundView] Failed returning order {order_id} for username: {username}, "
                              f"course_id: {course_id} with invalid filter/pipeline result: {result}.")
-                return HttpResponse('Exception occurred while returning order', status=HTTP_400_BAD_REQUEST)
+                return Response('Exception occurred while returning order', status=HTTP_400_BAD_REQUEST)
 
         except OpenEdxFilterException as e:
             logger.exception(f"[RefundView] Exception raised in {self.post.__name__} with error {repr(e)}")
-            return HttpResponse('Exception occurred while returning order', status=HTTP_500_INTERNAL_SERVER_ERROR)
+            return Response('Exception occurred while returning order', status=HTTP_500_INTERNAL_SERVER_ERROR)
         except Exception as e:  # pylint: disable=broad-except
             logger.exception(f"[RefundView] Exception raised in {self.post.__name__} with error {repr(e)}")
-            return HttpResponse('Exception occurred while returning order', status=HTTP_500_INTERNAL_SERVER_ERROR)
+            return Response('Exception occurred while returning order', status=HTTP_500_INTERNAL_SERVER_ERROR)

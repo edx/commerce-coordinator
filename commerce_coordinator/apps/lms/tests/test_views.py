@@ -115,7 +115,7 @@ class PaymentPageRedirectViewTests(APITestCase):
                 {'sku': ['sku1'], 'course_run_key': 'course-v1:MichiganX+InjuryPreventionX+1T2021'}
             )
             self.assertTrue(response.headers['Location'].startswith(settings.COMMERCETOOLS_FRONTEND_URL))
-            self.assertIn(ret_variant.sku, unquote(unquote(response.url)))
+            self.assertIn(ret_variant.sku, unquote(unquote(response.headers['Location'])))
 
     @patch('commerce_coordinator.apps.rollout.pipeline.is_redirect_to_commercetools_enabled_for_user')
     def test_run_filter_only_sku_available(self, is_redirect_mock):

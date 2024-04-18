@@ -5,10 +5,10 @@
 from unittest.mock import patch
 
 import ddt
-from django.http import HttpResponse
 from django.test import TestCase
 from django.urls import reverse
 from edx_django_utils.cache import TieredCache
+from rest_framework.response import Response
 from rest_framework.test import APIClient, APITestCase
 
 from commerce_coordinator.apps.commercetools.tests.constants import (
@@ -53,7 +53,7 @@ class TestSingleInvocationAPIView(TestCase):
         request = self.client.get("/test-url/")
         self.view.meta_view = view
         self.view.meta_id = identifier
-        response = HttpResponse(status=200)
+        response = Response(status=200)
         self.view.headers = response.headers
 
         # Mark as running
