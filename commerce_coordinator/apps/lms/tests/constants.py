@@ -51,7 +51,7 @@ EXAMPLE_FULFILLMENT_REQUEST_PAYLOAD = {
         },
         {
             'namespace': 'order',
-            'name': 'order_placed',
+            'name': 'date_placed',
             'value': _INIT_DATE,
         },
         {

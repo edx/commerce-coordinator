@@ -27,6 +27,7 @@ from commerce_coordinator.apps.commercetools.utils import (
     extract_ct_product_information_for_braze_canvas,
     send_order_confirmation_email
 )
+from commerce_coordinator.apps.core.constants import ISO_8601_FORMAT
 from commerce_coordinator.apps.core.memcache import safe_key
 from commerce_coordinator.apps.core.segment import track
 
@@ -75,7 +76,7 @@ def fulfill_order_placed_message_signal_task(
         'provider_id': None,
         'edx_lms_user_id': lms_user_id,
         'course_mode': 'verified',
-        'date_placed': order.last_modified_at.strftime('%b %d, %Y'),
+        'date_placed': order.last_modified_at.strftime(ISO_8601_FORMAT),
         'source_system': source_system,
     }
     canvas_entry_properties = {"products": []}
