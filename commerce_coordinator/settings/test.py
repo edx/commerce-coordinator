@@ -188,4 +188,3 @@ COMMERCETOOLS_CONFIG = {
     'authUrl': "https://localhost/oauth/token",
     'projectKey': "test",
 }
-
