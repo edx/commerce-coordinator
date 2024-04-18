@@ -40,8 +40,10 @@ class Command(BaseCommand):
         return NL.join(out)
 
     def handle(self, *args, **options):
+        # pylint: disable=line-too-long
         print(f"## Coordinator Signals YAML ############################################################################{NL}")
         print(Command.indent_like_edx_internal(Command.to_yaml(settings.CC_SIGNALS)))
         print(f"{NL}{NL}## Coordinator Filters YAML ####################################################################{NL}")
         print(Command.indent_like_edx_internal(Command.to_yaml(settings.OPEN_EDX_FILTERS_CONFIG)))
         print(f"{NL}{NL}## END  ########################################################################################{NL}")
+        # pylint: enable=line-too-long
