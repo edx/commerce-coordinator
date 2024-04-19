@@ -79,8 +79,7 @@ class FetchOrderDetails(PipelineStep):
         Arguments:
             active_order_management_system: The Active Order System (optional)
             params: arguments passed through from the original order history url querystring
-            order_number: Order number (for now this is an order.id, but this should change in the future)
-            TODO: SONIC-277 (in-progress)
+            order_number: Order number
         Returns:
         """
         if active_order_management_system != COMMERCETOOLS_ORDER_MANAGEMENT_SYSTEM:
