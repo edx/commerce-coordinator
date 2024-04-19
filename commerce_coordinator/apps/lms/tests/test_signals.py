@@ -28,12 +28,13 @@ class FulfillOrderPlacedSendEnrollInCourseTest(CoordinatorSignalReceiverTestCase
         'edx_lms_user_id': 4,
         'email_opt_in': 5,
         'order_number': 6,
-        'order_version': 7,
-        'provider_id': 8,
-        'source_system': 9,
-        'line_item_id': 10,
+        'order_id': 7,
+        'order_version': 8,
+        'provider_id': 9,
+        'source_system': 10,
+        'line_item_id': 11,
         'item_quantity': 1,
-        'line_item_state_id': 11,
+        'line_item_state_id': 12,
     }
 
     def test_correct_arguments_passed(self, mock_task):

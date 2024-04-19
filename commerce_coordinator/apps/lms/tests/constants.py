@@ -22,6 +22,7 @@ EXAMPLE_FULFILLMENT_SIGNAL_PAYLOAD: Dict[str, Union[str, bool, int, None]] = {
     'edx_lms_user_id': 4,
     'email_opt_in': False,
     'order_number': '61ec1afa-1b0e-4234-ae28-f997728054fa',
+    'order_id': '61ec1afa-1b0e-4234-ae28-f997728054fa',
     'order_version': 2,
     'provider_id': None,
     'source_system': 'test',
@@ -42,6 +43,11 @@ EXAMPLE_FULFILLMENT_REQUEST_PAYLOAD = {
         {
             'namespace': 'order',
             'name': 'order_number',
+            'value': '61ec1afa-1b0e-4234-ae28-f997728054fa'
+        },
+        {
+            'namespace': 'order',
+            'name': 'order_id',
             'value': '61ec1afa-1b0e-4234-ae28-f997728054fa'
         },
         {
