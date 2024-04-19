@@ -5,6 +5,7 @@ import logging
 from urllib.parse import urlencode, urljoin
 
 from django.conf import settings
+from django.http import HttpResponseBadRequest, HttpResponseRedirect
 from edx_rest_framework_extensions.permissions import LoginRedirectIfUnauthenticated
 from openedx_filters.exceptions import OpenEdxFilterException
 from rest_framework.exceptions import ValidationError
@@ -52,16 +53,16 @@ class PaymentPageRedirectView(APIView):
             return self._redirect_response_payment(request)
         except OpenEdxFilterException as e:
             logger.exception(f"Something went wrong! Exception raised in {self.get.__name__} with error {repr(e)}")
-            return Response('Something went wrong.', status=HTTP_400_BAD_REQUEST)
+            return HttpResponseBadRequest('Something went wrong.')
 
     def _redirect_response_payment(self, request):
         """
         Redirect to desired checkout view
 
         Args:
-            request (django.HttpRequest):
+            request (django.http.HttpRequest):
         Returns:
-            response (django.Response):
+            response (django.http.HttpResponseRedirect):
         """
 
         get_items = list(self.request.GET.items())
@@ -72,8 +73,7 @@ class PaymentPageRedirectView(APIView):
             redirect_url_obj['redirect_url'],
             get_items
         )
-        redirect = Response(status=HTTP_303_SEE_OTHER)
-        redirect['Location'] = redirect_url
+        redirect = HttpResponseRedirect(redirect_url, status=HTTP_303_SEE_OTHER)
         redirect.headers[HttpHeadersNames.CONTENT_TYPE.value] = MediaTypes.JSON.value
         logger.debug(f'{self._redirect_response_payment.__qualname__} Redirecting 303 via {redirect}.')
         return redirect
@@ -97,7 +97,7 @@ class PaymentPageRedirectView(APIView):
 
 class OrderDetailsRedirectView(APIView):
     """Accept incoming request from the support tools MFE for routing staff users to the order details admin page."""
-    permission_classes = [IsAdminUser]
+    permission_classes = [LoginRedirectIfUnauthenticated]
     throttle_classes = (UserRateThrottle,)
 
     def get(self, request):
@@ -117,13 +117,11 @@ class OrderDetailsRedirectView(APIView):
         """
         params = dict(request.GET.items())
         if not params.get('order_number', None):
-            return Response('Invalid order number supplied.', status=HTTP_400_BAD_REQUEST)
+            return HttpResponseBadRequest('Invalid order number supplied.')
 
         redirect_url = self._get_redirect_url(params)
 
-        response = Response(status=HTTP_303_SEE_OTHER)
-        response['Location'] = redirect_url
-        return response
+        return HttpResponseRedirect(redirect_url, status=HTTP_303_SEE_OTHER)
 
     @staticmethod
     def _get_redirect_url(params):

@@ -6,10 +6,11 @@ from datetime import datetime
 from typing import Union
 
 from dateutil import parser as dateparser
+from django.http import HttpResponseBadRequest, HttpResponseNotFound, HttpResponseRedirect
 from edx_rest_framework_extensions.permissions import LoginRedirectIfUnauthenticated
 from rest_framework.exceptions import PermissionDenied
 from rest_framework.response import Response
-from rest_framework.status import HTTP_303_SEE_OTHER, HTTP_400_BAD_REQUEST, HTTP_404_NOT_FOUND
+from rest_framework.status import HTTP_303_SEE_OTHER
 from rest_framework.throttling import UserRateThrottle
 from rest_framework.views import APIView
 
@@ -41,7 +42,7 @@ class RedirectReceiptView(APIView):
         order_number = request.query_params.get('order_number', None)
 
         if not order_number:
-            return Response("Invalid Order Number supplied.", status=HTTP_400_BAD_REQUEST)
+            return HttpResponseBadRequest("Invalid order number supplied.")
 
         # build parameters
         params = {
@@ -53,12 +54,11 @@ class RedirectReceiptView(APIView):
         redirect_url = OrderReceiptRedirectionUrlRequested.run_filter(params, order_number=params['order_number'])
 
         if redirect_url:
-            redirect = Response(status=HTTP_303_SEE_OTHER)
-            redirect['Location'] = redirect_url
+            redirect = HttpResponseRedirect(redirect_url, status=HTTP_303_SEE_OTHER)
             redirect.headers[HttpHeadersNames.CACHE_CONTROL.value] = "max-age=2591000"  # 16ish mins short of 30 days
             return redirect
         else:
-            return Response(status=HTTP_404_NOT_FOUND)
+            return HttpResponseNotFound("Something went wrong.")
 
 
 # noinspection PyMethodMayBeStatic
