@@ -9,6 +9,7 @@ from commercetools import CommercetoolsError
 from commercetools.platform.models import Order as CTOrder
 from openedx_filters import PipelineStep
 from openedx_filters.exceptions import OpenEdxFilterException
+from requests import HTTPError
 
 from commerce_coordinator.apps.commercetools.catalog_info.edx_utils import get_edx_payment_intent_id
 from commerce_coordinator.apps.commercetools.clients import CommercetoolsAPIClient
@@ -57,6 +58,9 @@ class GetCommercetoolsOrders(PipelineStep):
         except CommercetoolsError as err:  # pragma no cover
             log.exception(f"[{type(self).__name__}] Commercetools Error: {err}, {err.errors}")
             return PipelineCommand.CONTINUE.value
+        except HTTPError as err:
+            log.exception(f"[{type(self).__name__}] HTTP Error: {err}")
+            return PipelineCommand.CONTINUE.value
 
 
 class FetchOrderDetails(PipelineStep):
@@ -92,6 +96,9 @@ class FetchOrderDetails(PipelineStep):
             return ret_val
         except CommercetoolsError as err:  # pragma no cover
             log.exception(f"[{type(self).__name__}] Commercetools Error: {err}, {err.errors}")
+            return PipelineCommand.CONTINUE.value
+        except HTTPError as err:
+            log.exception(f"[{type(self).__name__}] HTTP Error: {err}")
             return PipelineCommand.CONTINUE.value
 
 
@@ -148,6 +155,9 @@ class CreateReturnForCommercetoolsOrder(PipelineStep):
             # TODO: FIX Per SONIC-354
             log.exception(f"[{type(self).__name__}] Commercetools Error: {err}, {err.errors}")
             raise OpenEdxFilterException(str(err)) from err
+        except HTTPError as err:
+            log.exception(f"[{type(self).__name__}] HTTP Error: {err}")
+            return PipelineCommand.CONTINUE.value
 
 
 class UpdateCommercetoolsOrderReturnPaymentStatus(PipelineStep):

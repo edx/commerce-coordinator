@@ -160,8 +160,8 @@ class ReceiptRedirectViewTests(APITestCase):
         response = self.client.get(self.url, data={'order_number': order_number})
 
         self.assertEqual(response.status_code, status.HTTP_303_SEE_OTHER)
-        self.assertTrue(response.headers['Location'].startswith('http://localhost'))
-        self.assertTrue(response.headers['Location'].endswith(order_number))
+        self.assertTrue(response.url.startswith('http://localhost'))
+        self.assertTrue(response.url.endswith(order_number))
 
     def test_view_404s_when_no_order_number(self):
         self.client.login(username=self.test_user_username, password=self.test_user_password)
@@ -196,7 +196,7 @@ class ReceiptRedirectViewTests(APITestCase):
 
         response = self.client.get(self.url, data={'order_number': order_number})
         self.assertEqual(response.status_code, status.HTTP_303_SEE_OTHER)
-        self.assertEqual(response.headers['Location'], intent.latest_charge.receipt_url)
+        self.assertEqual(response.url, intent.latest_charge.receipt_url)
 
     @override_settings(
         OPEN_EDX_FILTERS_CONFIG={

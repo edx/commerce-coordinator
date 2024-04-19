@@ -114,8 +114,8 @@ class PaymentPageRedirectViewTests(APITestCase):
                 self.url,
                 {'sku': ['sku1'], 'course_run_key': 'course-v1:MichiganX+InjuryPreventionX+1T2021'}
             )
-            self.assertTrue(response.headers['Location'].startswith(settings.COMMERCETOOLS_FRONTEND_URL))
-            self.assertIn(ret_variant.sku, unquote(unquote(response.headers['Location'])))
+            self.assertTrue(response.url.startswith(settings.COMMERCETOOLS_FRONTEND_URL))
+            self.assertIn(ret_variant.sku, unquote(unquote(response.url)))
 
     @patch('commerce_coordinator.apps.rollout.pipeline.is_redirect_to_commercetools_enabled_for_user')
     def test_run_filter_only_sku_available(self, is_redirect_mock):
@@ -123,7 +123,7 @@ class PaymentPageRedirectViewTests(APITestCase):
         is_redirect_mock.return_value = False
         self.client.force_authenticate(user=self.user)
         response = self.client.get(self.url, {'sku': ['sku1']})
-        self.assertTrue(response.headers['Location'].startswith(settings.ECOMMERCE_URL))
+        self.assertTrue(response.url.startswith(settings.ECOMMERCE_URL))
 
     @ddt.unpack
     @patch('commerce_coordinator.apps.rollout.pipeline.is_redirect_to_commercetools_enabled_for_user')
@@ -185,13 +185,13 @@ class OrderDetailsRedirectView(APITestCase):
         self.client.login(username=self.test_user_username, password=self.test_user_password)
         self.client.force_authenticate(user=self.user)
         response = self.client.get(self.url, {'order_number': ['EDX-123456']})
-        self.assertTrue(response.headers['Location'].startswith(settings.ECOMMERCE_URL))
+        self.assertTrue(response.url.startswith(settings.ECOMMERCE_URL))
 
     def test_commercetools_redirect(self):
         self.client.login(username=self.test_user_username, password=self.test_user_password)
         self.client.force_authenticate(user=self.user)
         response = self.client.get(self.url, {'order_number': ['2U-123456']})
-        self.assertTrue(response.headers['Location'].startswith(settings.COMMERCETOOLS_MERCHANT_CENTER_ORDERS_PAGE_URL))
+        self.assertTrue(response.url.startswith(settings.COMMERCETOOLS_MERCHANT_CENTER_ORDERS_PAGE_URL))
 
 
 @ddt.ddt
