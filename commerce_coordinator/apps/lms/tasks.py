@@ -24,6 +24,7 @@ def fulfill_order_placed_send_enroll_in_course_task(
     edx_lms_user_id,
     email_opt_in,
     order_number,
+    order_id,
     order_version,
     provider_id,
     source_system,
@@ -53,6 +54,11 @@ def fulfill_order_placed_send_enroll_in_course_task(
                 'namespace': 'order',
                 'name': 'order_number',
                 'value': order_number,
+            },
+            {
+                'namespace': 'order',
+                'name': 'order_id',
+                'value': order_id,
             },
             {
                 'namespace': 'order',
@@ -87,7 +93,7 @@ def fulfill_order_placed_send_enroll_in_course_task(
         order_version = client.get_order_by_id(order_number).version
 
     line_item_state_payload = {
-        'order_id': order_number,
+        'order_id': order_id,
         'order_version': order_version,
         'line_item_id': line_item_id,
         'item_quantity': item_quantity,

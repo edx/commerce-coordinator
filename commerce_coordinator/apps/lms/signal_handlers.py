@@ -21,6 +21,7 @@ def fulfill_order_placed_send_enroll_in_course(**kwargs):
         edx_lms_user_id=kwargs['edx_lms_user_id'],
         email_opt_in=kwargs['email_opt_in'],
         order_number=kwargs['order_number'],
+        order_id=kwargs['order_id'],
         order_version=kwargs['order_version'],
         provider_id=kwargs['provider_id'],
         source_system=kwargs['source_system'],

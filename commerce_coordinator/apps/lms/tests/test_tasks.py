@@ -38,6 +38,7 @@ class FulfillOrderPlacedSendEnrollInCourseTaskTest(TestCase):
             values['edx_lms_user_id'],
             values['email_opt_in'],
             values['order_number'],
+            values['order_id'],
             values['order_version'],
             values['provider_id'],
             values['source_system'],

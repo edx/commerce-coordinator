@@ -74,6 +74,7 @@ class OrderFulfillViewInputSerializer(CoordinatorSerializer):
     line_item_id = serializers.CharField(allow_null=False)
     item_quantity = serializers.IntegerField(allow_null=False)
     order_number = serializers.CharField(allow_null=False)
+    order_id = serializers.CharField(allow_null=False)
     order_version = serializers.IntegerField(allow_null=False)
     provider_id = serializers.CharField(allow_null=True)
     source_system = serializers.CharField(allow_null=False)
