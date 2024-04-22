@@ -13,7 +13,7 @@ asgiref==3.7.2
     #   -r requirements/validation.txt
     #   django
     #   django-cors-headers
-astroid==3.0.3
+astroid==3.1.0
     # via
     #   -r requirements/validation.txt
     #   pylint
@@ -28,25 +28,30 @@ backoff==2.2.1
     # via
     #   -r requirements/validation.txt
     #   segment-analytics-python
+backports-tarfile==1.1.0
+    # via
+    #   -r requirements/validation.txt
+    #   jaraco-context
 backports-zoneinfo[tzdata]==0.2.1
     # via
     #   -r requirements/validation.txt
     #   celery
     #   django
+    #   djangorestframework
     #   kombu
 billiard==4.2.0
     # via
     #   -r requirements/validation.txt
     #   celery
-build==1.0.3
+build==1.2.1
     # via
     #   -r requirements/pip-tools.txt
     #   pip-tools
-cachetools==5.3.2
+cachetools==5.3.3
     # via
     #   -r requirements/validation.txt
     #   tox
-celery[redis]==5.3.6
+celery[redis]==5.4.0
     # via -r requirements/validation.txt
 certifi==2024.2.2
     # via
@@ -79,7 +84,7 @@ click==8.1.7
     #   edx-django-utils
     #   edx-lint
     #   pip-tools
-click-didyoumean==0.3.0
+click-didyoumean==0.3.1
     # via
     #   -r requirements/validation.txt
     #   celery
@@ -95,7 +100,7 @@ click-repl==0.3.0
     # via
     #   -r requirements/validation.txt
     #   celery
-code-annotations==1.6.0
+code-annotations==1.8.0
     # via
     #   -r requirements/validation.txt
     #   edx-lint
@@ -114,11 +119,11 @@ coreschema==0.0.4
     # via
     #   -r requirements/validation.txt
     #   coreapi
-coverage[toml]==7.4.1
+coverage[toml]==7.4.4
     # via
     #   -r requirements/validation.txt
     #   pytest-cov
-cryptography==42.0.3
+cryptography==42.0.5
     # via
     #   -r requirements/validation.txt
     #   pyjwt
@@ -126,14 +131,14 @@ cryptography==42.0.3
     #   social-auth-core
 currencies==2020.12.12
     # via -r requirements/validation.txt
-ddt==1.7.1
+ddt==1.7.2
     # via -r requirements/validation.txt
 defusedxml==0.8.0rc2
     # via
     #   -r requirements/validation.txt
     #   python3-openid
     #   social-auth-core
-diff-cover==8.0.3
+diff-cover==9.0.0
     # via -r requirements/dev.in
 dill==0.3.8
     # via
@@ -143,7 +148,7 @@ distlib==0.3.8
     # via
     #   -r requirements/validation.txt
     #   virtualenv
-django==4.2.10
+django==4.2.11
     # via
     #   -r requirements/validation.txt
     #   django-cors-headers
@@ -181,7 +186,7 @@ django-waffle==4.1.0
     #   -r requirements/validation.txt
     #   edx-django-utils
     #   edx-drf-extensions
-djangorestframework==3.14.0
+djangorestframework==3.15.1
     # via
     #   -r requirements/validation.txt
     #   django-rest-swagger
@@ -195,20 +200,20 @@ drf-jwt==1.19.2
     # via
     #   -r requirements/validation.txt
     #   edx-drf-extensions
-edx-auth-backends==4.2.0
+edx-auth-backends==4.3.0
     # via -r requirements/validation.txt
-edx-braze-client==0.2.2
+edx-braze-client==0.2.3
     # via -r requirements/validation.txt
-edx-django-release-util==1.3.0
+edx-django-release-util==1.4.0
     # via -r requirements/validation.txt
-edx-django-utils==5.10.1
+edx-django-utils==5.12.0
     # via
     #   -r requirements/validation.txt
     #   edx-drf-extensions
     #   edx-rest-api-client
-edx-drf-extensions==10.2.0
+edx-drf-extensions==10.3.0
     # via -r requirements/validation.txt
-edx-i18n-tools==1.3.0
+edx-i18n-tools==1.5.0
     # via -r requirements/dev.in
 edx-lint==5.3.6
     # via -r requirements/validation.txt
@@ -216,29 +221,29 @@ edx-opaque-keys==2.5.1
     # via
     #   -r requirements/validation.txt
     #   edx-drf-extensions
-edx-rest-api-client==5.6.1
+edx-rest-api-client==5.7.0
     # via -r requirements/validation.txt
-exceptiongroup==1.2.0
+exceptiongroup==1.2.1
     # via
     #   -r requirements/validation.txt
     #   pytest
-filelock==3.13.1
+filelock==3.13.4
     # via
     #   -r requirements/validation.txt
     #   tox
     #   virtualenv
-idna==3.6
+idna==3.7
     # via
     #   -r requirements/validation.txt
     #   requests
-importlib-metadata==7.0.1
+importlib-metadata==6.11.0
     # via
     #   -r requirements/pip-tools.txt
     #   -r requirements/validation.txt
     #   build
     #   keyring
     #   twine
-importlib-resources==6.1.1
+importlib-resources==6.4.0
     # via
     #   -r requirements/validation.txt
     #   keyring
@@ -254,7 +259,15 @@ itypes==1.2.0
     # via
     #   -r requirements/validation.txt
     #   coreapi
-jaraco-classes==3.3.1
+jaraco-classes==3.4.0
+    # via
+    #   -r requirements/validation.txt
+    #   keyring
+jaraco-context==5.3.0
+    # via
+    #   -r requirements/validation.txt
+    #   keyring
+jaraco-functools==4.0.1
     # via
     #   -r requirements/validation.txt
     #   keyring
@@ -269,15 +282,15 @@ jinja2==3.1.3
     #   code-annotations
     #   coreschema
     #   diff-cover
-keyring==24.3.0
+keyring==25.1.0
     # via
     #   -r requirements/validation.txt
     #   twine
-kombu==5.3.5
+kombu==5.3.7
     # via
     #   -r requirements/validation.txt
     #   celery
-lxml==5.1.0
+lxml==5.2.1
     # via edx-i18n-tools
 markdown-it-py==3.0.0
     # via
@@ -288,7 +301,7 @@ markupsafe==2.1.5
     #   -r requirements/validation.txt
     #   jinja2
     #   werkzeug
-marshmallow==3.20.2
+marshmallow==3.21.1
     # via
     #   -r requirements/validation.txt
     #   commercetools
@@ -311,13 +324,14 @@ more-itertools==10.2.0
     # via
     #   -r requirements/validation.txt
     #   jaraco-classes
+    #   jaraco-functools
 mysqlclient==2.2.4
     # via -r requirements/validation.txt
-newrelic==9.6.0
+newrelic==9.9.0
     # via
     #   -r requirements/validation.txt
     #   edx-django-utils
-nh3==0.2.15
+nh3==0.2.17
     # via
     #   -r requirements/validation.txt
     #   readme-renderer
@@ -330,9 +344,9 @@ openapi-codec==1.3.2
     # via
     #   -r requirements/validation.txt
     #   django-rest-swagger
-openedx-filters==1.6.0
+openedx-filters==1.8.1
     # via -r requirements/validation.txt
-packaging==23.2
+packaging==24.0
     # via
     #   -r requirements/pip-tools.txt
     #   -r requirements/validation.txt
@@ -341,17 +355,17 @@ packaging==23.2
     #   pyproject-api
     #   pytest
     #   tox
-path==16.10.0
+path==16.14.0
     # via edx-i18n-tools
 pbr==6.0.0
     # via
     #   -r requirements/validation.txt
     #   stevedore
-pillow==10.2.0
+pillow==10.3.0
     # via -r requirements/validation.txt
-pip-tools==7.4.0
+pip-tools==7.4.1
     # via -r requirements/pip-tools.txt
-pkginfo==1.9.6
+pkginfo==1.10.0
     # via
     #   -r requirements/validation.txt
     #   twine
@@ -361,7 +375,7 @@ platformdirs==4.2.0
     #   pylint
     #   tox
     #   virtualenv
-pluggy==1.4.0
+pluggy==1.5.0
     # via
     #   -r requirements/validation.txt
     #   diff-cover
@@ -379,7 +393,7 @@ psutil==5.9.8
     #   edx-django-utils
 pycodestyle==2.11.1
     # via -r requirements/validation.txt
-pycparser==2.21
+pycparser==2.22
     # via
     #   -r requirements/validation.txt
     #   cffi
@@ -400,7 +414,7 @@ pyjwt[crypto]==2.8.0
     #   edx-rest-api-client
     #   segment-analytics-python
     #   social-auth-core
-pylint==3.0.3
+pylint==3.1.0
     # via
     #   -r requirements/validation.txt
     #   edx-lint
@@ -437,12 +451,12 @@ pyproject-hooks==1.0.0
     #   -r requirements/pip-tools.txt
     #   build
     #   pip-tools
-pytest==8.0.1
+pytest==8.1.1
     # via
     #   -r requirements/validation.txt
     #   pytest-cov
     #   pytest-django
-pytest-cov==4.1.0
+pytest-cov==5.0.0
     # via -r requirements/validation.txt
 pytest-django==4.8.0
     # via -r requirements/validation.txt
@@ -463,7 +477,6 @@ pytz==2024.1
     # via
     #   -r requirements/validation.txt
     #   commercetools
-    #   djangorestframework
 pyyaml==6.0.1
     # via
     #   -r requirements/validation.txt
@@ -471,11 +484,11 @@ pyyaml==6.0.1
     #   edx-django-release-util
     #   edx-i18n-tools
     #   responses
-readme-renderer==42.0
+readme-renderer==43.0
     # via
     #   -r requirements/validation.txt
     #   twine
-redis==5.0.1
+redis==5.0.3
     # via
     #   -r requirements/validation.txt
     #   celery
@@ -495,11 +508,11 @@ requests==2.31.0
     #   social-auth-core
     #   stripe
     #   twine
-requests-mock==1.11.0
+requests-mock==1.12.1
     # via
     #   -r requirements/validation.txt
     #   commercetools
-requests-oauthlib==1.3.1
+requests-oauthlib==2.0.0
     # via
     #   -r requirements/validation.txt
     #   commercetools
@@ -514,7 +527,7 @@ rfc3986==2.0.0
     # via
     #   -r requirements/validation.txt
     #   twine
-rich==13.7.0
+rich==13.7.1
     # via
     #   -r requirements/validation.txt
     #   twine
@@ -539,7 +552,6 @@ six==1.16.0
     #   edx-django-release-util
     #   edx-lint
     #   python-dateutil
-    #   requests-mock
 slumber==0.7.1
     # via
     #   -r requirements/validation.txt
@@ -557,20 +569,20 @@ social-auth-core==4.5.3
     #   -r requirements/validation.txt
     #   edx-auth-backends
     #   social-auth-app-django
-sqlparse==0.4.4
+sqlparse==0.5.0
     # via
     #   -r requirements/validation.txt
     #   django
     #   django-debug-toolbar
-stevedore==5.1.0
+stevedore==5.2.0
     # via
     #   -r requirements/validation.txt
     #   code-annotations
     #   edx-django-utils
     #   edx-opaque-keys
-stripe==8.3.0
+stripe==9.3.0
     # via -r requirements/validation.txt
-testfixtures==8.0.0
+testfixtures==8.1.0
     # via -r requirements/validation.txt
 text-unidecode==1.3
     # via
@@ -588,15 +600,15 @@ tomli==2.0.1
     #   pyproject-hooks
     #   pytest
     #   tox
-tomlkit==0.12.3
+tomlkit==0.12.4
     # via
     #   -r requirements/validation.txt
     #   pylint
-tox==4.13.0
+tox==4.14.2
     # via -r requirements/validation.txt
 twine==5.0.0
     # via -r requirements/validation.txt
-typing-extensions==4.9.0
+typing-extensions==4.11.0
     # via
     #   -r requirements/validation.txt
     #   asgiref
@@ -627,7 +639,7 @@ vine==5.1.0
     #   amqp
     #   celery
     #   kombu
-virtualenv==20.25.0
+virtualenv==20.25.3
     # via
     #   -r requirements/validation.txt
     #   tox
@@ -639,11 +651,11 @@ webob==1.8.7
     # via
     #   -r requirements/validation.txt
     #   commercetools
-werkzeug==3.0.1
+werkzeug==3.0.2
     # via
     #   -r requirements/validation.txt
     #   commercetools
-wheel==0.42.0
+wheel==0.43.0
     # via
     #   -r requirements/pip-tools.txt
     #   pip-tools
@@ -651,7 +663,7 @@ wrapt==1.16.0
     # via
     #   -r requirements/validation.txt
     #   commercetools
-zipp==3.17.0
+zipp==3.18.1
     # via
     #   -r requirements/pip-tools.txt
     #   -r requirements/validation.txt
