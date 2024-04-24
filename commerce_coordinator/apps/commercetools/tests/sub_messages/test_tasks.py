@@ -37,6 +37,7 @@ def gen_example_fulfill_payload():
     return {
         'order_id': uuid4_str(),
         'line_item_state_id': uuid4_str(),
+        'order_line_id': uuid4_str(),
         'source_system': SOURCE_SYSTEM,
     }
 
@@ -208,12 +209,14 @@ class OrderReturnedMessageSignalTaskTests(TestCase):
         """ Unpack the dictionary in the order required for the UUT """
         return (
             values['order_id'],
+            values['order_line_id'],
         )
 
     @staticmethod
     def get_uut():
         return fulfill_order_returned_uut
 
+    # todo this flow is broken
     @patch('commerce_coordinator.apps.commercetools.sub_messages.tasks.is_edx_lms_order')
     @patch('commerce_coordinator.apps.commercetools.clients.CommercetoolsAPIClient',
            new_callable=CommercetoolsAPIClientMock)

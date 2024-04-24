@@ -69,7 +69,7 @@ class FetchOrderDetails(PipelineStep):
     """ Fetch the order Details and if we can, set the PaymentIntent """
 
     # pylint: disable=unused-argument
-    def run_filter(self, active_order_management_system, order_number):  # pylint: disable=arguments-differ
+    def run_filter(self, active_order_management_system, order_number, **kwargs):  # pylint: disable=arguments-differ
         """
         Execute a filter with the signature specified.
         Arguments:
@@ -119,7 +119,7 @@ class CreateReturnForCommercetoolsOrder(PipelineStep):
         order_number,
         order_line_id,
         order_data: CTOrder,
-        has_been_refunded
+        has_been_refunded = False
     ):  # pylint: disable=arguments-differ
         """
         Execute a filter with the signature specified.
