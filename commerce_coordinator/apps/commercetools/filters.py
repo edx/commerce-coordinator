@@ -9,7 +9,7 @@ class OrderRefundRequested(OpenEdxPublicFilter):
     filter_type = "org.edx.coordinator.commercetools.order.refund.requested.v1"
 
     @classmethod
-    def run_filter(cls, order_number):
+    def run_filter(cls, order_number, **kwargs):
         # TODO: Filter will be called in SONIC-83
         """
         Call the PipelineStep(s) defined for this filter.
@@ -20,5 +20,5 @@ class OrderRefundRequested(OpenEdxPublicFilter):
             order_refund: Updated order with return item attached
         """
 
-        order_refund = super().run_pipeline(order_number=order_number)
+        order_refund = super().run_pipeline(order_number=order_number, **kwargs)
         return order_refund

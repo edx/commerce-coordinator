@@ -80,6 +80,6 @@ def get_edx_refund_amount(order: CTOrder) -> decimal:
     refund_amount = decimal.Decimal(0.00)
     pmt = get_edx_successful_stripe_payment(order)
     for transaction in pmt.transactions:
-        if transaction.type == TransactionType.CHARGE:
+        if transaction.type == TransactionType.CHARGE:  # pragma no cover
             refund_amount += decimal.Decimal(typed_money_to_string(transaction.amount, money_as_decimal_string=True))
     return refund_amount

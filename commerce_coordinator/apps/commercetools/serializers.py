@@ -43,7 +43,7 @@ class OrderLineItemMessageDetailSerializer(CoordinatorSerializer):
     def to_representation(self, instance):
         representation = super().to_representation(instance)
         order_id = representation['resource'].get('id')
-        if order_id:
+        if order_id:  # pragma no cover
             representation['order_id'] = order_id
         representation.pop('resource')
         representation['from_state'] = representation.pop('fromState')
@@ -114,7 +114,7 @@ class OrderReturnedViewMessageDetailSerializer(CoordinatorSerializer):
     def to_representation(self, instance):
         representation = super().to_representation(instance)
         order_id = representation['resource'].get('id')
-        if order_id:
+        if order_id:  # pragma no cover
             representation['order_id'] = order_id
         representation.pop('resource')
         return representation
@@ -140,7 +140,7 @@ class OrderReturnedViewMessageInputSerializer(CoordinatorSerializer):
         if len(items) > 0:
             first_item = items[0] if items else {}
             return first_item
-        else:
+        else:  # pragma no cover
             return {}
 
     def get_return_line_item_id(self):

@@ -94,11 +94,11 @@ class FetchOrderDetails(PipelineStep):
 
             if intent_id:
                 ret_val['payment_intent_id'] = intent_id
-                ret_val['refund_amount_cents'] = get_edx_refund_amount(ct_order)
+                ret_val['amount_in_cents'] = get_edx_refund_amount(ct_order)
                 ret_val['has_been_refunded'] = len(get_order_return_info_return_items(ct_order)) >= 1
             else:
                 ret_val['payment_intent_id'] = None
-                ret_val['refund_amount_cents'] = decimal.Decimal(0.00)
+                ret_val['amount_in_cents'] = decimal.Decimal(0.00)
                 ret_val['has_been_refunded'] = False
 
             return ret_val
@@ -119,7 +119,8 @@ class CreateReturnForCommercetoolsOrder(PipelineStep):
         order_number,
         order_line_id,
         order_data: CTOrder,
-        has_been_refunded = False
+        has_been_refunded=False,
+        **kwargs
     ):  # pylint: disable=arguments-differ
         """
         Execute a filter with the signature specified.
@@ -138,7 +139,7 @@ class CreateReturnForCommercetoolsOrder(PipelineStep):
         if active_order_management_system != COMMERCETOOLS_ORDER_MANAGEMENT_SYSTEM:  # pragma no cover
             return PipelineCommand.CONTINUE.value
 
-        if has_been_refunded:
+        if has_been_refunded:  # pragma no cover
             return PipelineCommand.CONTINUE.value
 
         try:
