@@ -430,7 +430,10 @@ class TestStripeAPIClient(CoordinatorClientTestCase):
                 'id': 'mock_id',
                 'status': 'succeeded'
             },
-            expected_output='mock_id'
+            expected_output={
+                'id': 'mock_id',
+                'status': 'succeeded'
+            }
         )
 
     def test_refund_payment_intent_returns_none(self):
@@ -504,7 +507,7 @@ class TestStripeAPIClient(CoordinatorClientTestCase):
                         'code': 'charge_already_refunded',
                     }
                 },
-                expected_output='946'
+                expected_output={'id': '946', 'status': 'succeeded'}
             )
 
     def test_refund_payment_intent_error_invalid_request_not_already_refunded(self):

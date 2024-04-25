@@ -1,10 +1,12 @@
 """
 API clients for Stripe.
 """
+from typing import Optional
 
 import stripe
 from celery.utils.log import get_task_logger
 from django.conf import settings
+from stripe import Refund
 
 from commerce_coordinator.apps.core import serializers
 from commerce_coordinator.apps.stripe.constants import StripeRefundStatus
@@ -264,23 +266,26 @@ class StripeAPIClient:
             order_uuid,
             payment_intent_id,
             amount
-    ):
+    ) -> Optional[Refund]:
         """
         Issues Stripe refund for desired order.
 
         Args:
             order_uuid (str): The identifier of the order.
-            payment_intent_id (str): The Stripe PaymentIntent id to look up.
-            amount (decimal): The amount to refund.
+            Payment_intent_id (str): The Stripe PaymentIntent id to look up.
+            Amount (decimal): The amount to refund.
 
         Returns:
-            The identifier of refund response from Stripe.
+            The refund response from Stripe.
+
+        Raises:
+            If refund fails for any reason.
 
         See:
             https://stripe.com/docs/api/refunds/create
         """
         try:
-            # Stripe requires amount to be in cents. "amount" is a Decimal object to the hundredths place
+            # Stripe requires amount to be in cents. `amount` is a Decimal object to the hundredths' place
             amount_in_cents = int(amount * 100)
             refund = stripe.Refund.create(payment_intent=payment_intent_id, amount=amount_in_cents)
         except stripe.error.InvalidRequestError as err:
@@ -304,4 +309,4 @@ class StripeAPIClient:
             logger.exception('Refund for order [%s] was unsuccessful', order_uuid)
             return None
 
-        return refund.id
+        return refund
