@@ -256,7 +256,12 @@ class OrderReturnedMessageSignalTaskTests(TestCase):
     @patch('commerce_coordinator.apps.commercetools.sub_messages.tasks.is_edx_lms_order')
     @patch('commerce_coordinator.apps.stripe.pipeline.StripeAPIClient')
     @patch('commerce_coordinator.apps.commercetools.clients.CommercetoolsAPIClient.create_return_for_order')
-    def test_correct_arguments_passed_valid_stripe_refund(self, _return_order_mock:MagicMock, _stripe_api_mock:MagicMock, _lms_signal):
+    def test_correct_arguments_passed_valid_stripe_refund(
+        self,
+        _return_order_mock: MagicMock,
+        _stripe_api_mock: MagicMock,
+        _lms_signal
+    ):
         """
         Check calling uut with mock_parameters yields call to client with
         expected_data.

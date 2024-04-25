@@ -241,10 +241,18 @@ class RefundPaymentIntent(PipelineStep):
     Refunds a payment intent
     """
 
-    def run_filter(self, payment_intent_id, amount_in_cents, has_been_refunded, **kwargs):  # pylint: disable=arguments-differ
+    def run_filter(
+        self,
+        order_id,
+        payment_intent_id,
+        amount_in_cents,
+        has_been_refunded,
+        **kwargs
+    ):  # pylint: disable=arguments-differ
         """
         Execute a filter with the signature specified.
         Arguments:
+            order_id (str): The identifier of the order.
             payment_intent_id (str): The Stripe PaymentIntent id to look up.
             amount_in_cents (decimal): Total amount to refund
             has_been_refunded (bool): Has this payment been refunded
@@ -269,6 +277,7 @@ class RefundPaymentIntent(PipelineStep):
             ret_val = stripe_api_client.refund_payment_intent(
                 payment_intent_id=payment_intent_id,
                 amount=amount_in_cents,
+                order_uuid=order_id
             )
             return {
                 'refund_response': ret_val

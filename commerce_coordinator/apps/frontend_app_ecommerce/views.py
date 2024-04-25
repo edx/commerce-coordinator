@@ -50,7 +50,10 @@ class RedirectReceiptView(APIView):
             "order_number": order_number,
         }
 
-        redirect_url = OrderReceiptRedirectionUrlRequested.run_filter(params=params, order_number=params['order_number'])
+        redirect_url = OrderReceiptRedirectionUrlRequested.run_filter(
+            params=params,
+            order_number=params['order_number']
+        )
 
         if redirect_url:
             redirect = Response(status=HTTP_303_SEE_OTHER)

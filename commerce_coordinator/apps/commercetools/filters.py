@@ -1,3 +1,4 @@
+"""Commercetools filters"""
 from openedx_filters.tooling import OpenEdxPublicFilter
 
 

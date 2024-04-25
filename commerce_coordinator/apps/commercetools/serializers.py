@@ -132,6 +132,7 @@ class OrderReturnedViewMessageInputSerializer(CoordinatorSerializer):
         return representation
 
     def get_return_info(self):
+        """Get the return info from the message detail"""
         validated_data = self.validated_data
         detail = validated_data.get('detail', {})
         return_info = detail.get('returnInfo', {})

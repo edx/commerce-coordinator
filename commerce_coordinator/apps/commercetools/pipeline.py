@@ -68,7 +68,6 @@ class GetCommercetoolsOrders(PipelineStep):
 class FetchOrderDetails(PipelineStep):
     """ Fetch the order Details and if we can, set the PaymentIntent """
 
-    # pylint: disable=unused-argument
     def run_filter(self, active_order_management_system, order_number, **kwargs):  # pylint: disable=arguments-differ
         """
         Execute a filter with the signature specified.
@@ -87,7 +86,8 @@ class FetchOrderDetails(PipelineStep):
             ct_order = ct_api_client.get_order_by_id(order_id=order_number)
 
             ret_val = {
-                "order_data": ct_order
+                "order_data": ct_order,
+                "order_id": ct_order.id
             }
 
             intent_id = get_edx_payment_intent_id(ct_order)
@@ -116,7 +116,7 @@ class CreateReturnForCommercetoolsOrder(PipelineStep):
     def run_filter(
         self,
         active_order_management_system,
-        order_number,
+        order_number,  # pylint: disable=unused-argument
         order_line_id,
         order_data: CTOrder,
         has_been_refunded=False,

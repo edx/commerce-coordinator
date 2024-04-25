@@ -16,7 +16,6 @@ from commerce_coordinator.apps.commercetools.catalog_info.edx_utils import (
     get_edx_order_workflow_state_key,
     get_edx_payment_intent_id,
     get_edx_product_course_run_key,
-    get_edx_refund_amount,
     is_edx_lms_order
 )
 from commerce_coordinator.apps.commercetools.clients import CommercetoolsAPIClient
@@ -32,7 +31,6 @@ from commerce_coordinator.apps.commercetools.utils import (
 from commerce_coordinator.apps.core.constants import ISO_8601_FORMAT
 from commerce_coordinator.apps.core.memcache import safe_key
 from commerce_coordinator.apps.core.segment import track
-from commerce_coordinator.apps.stripe.pipeline import RefundPaymentIntent
 
 # Use the special Celery logger for our tasks
 logger = get_task_logger(__name__)
@@ -273,8 +271,6 @@ def fulfill_order_returned_signal_task(
             f'[CT-{tag}] calling lms to unenroll user %s in %s',
             lms_user_name, course_run
         )
-
-
 
         product = {
             'product_id': line_item.product_key,

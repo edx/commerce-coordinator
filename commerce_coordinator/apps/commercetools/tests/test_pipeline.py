@@ -65,7 +65,7 @@ class CommercetoolsOrLegacyEcommerceRefundPipelineTests(APITestCase):
             active_order_management_system="Legacy",
             order_number="mock_id",
             order_line_id="mock_line_id",
-                order_data=self.mock_response_order
+            order_data=self.mock_response_order
         )
         self.assertEqual(ret, {})
 

@@ -7,7 +7,7 @@ from typing import Generic, List, Optional, Tuple, TypeVar, Union
 
 import requests
 from commercetools import Client as CTClient
-from commercetools import CommercetoolsError, types
+from commercetools import CommercetoolsError
 from commercetools.platform.models import Customer as CTCustomer
 from commercetools.platform.models import CustomerSetCustomTypeAction as CTCustomerSetCustomTypeAction
 from commercetools.platform.models import FieldContainer as CTFieldContainer

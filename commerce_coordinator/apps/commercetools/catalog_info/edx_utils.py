@@ -53,7 +53,7 @@ def get_edx_successful_stripe_payment(order: CTOrder) -> Union[CTPayment, None]:
         pmt = pr.obj
         if pmt.payment_status.interface_code == STRIPE_PAYMENT_STATUS_INTERFACE_CODE_SUCCEEDED \
             and pmt.payment_method_info.payment_interface == EDX_STRIPE_PAYMENT_INTERFACE_NAME and \
-            pmt.interface_id:
+                pmt.interface_id:
             return pmt
     return None
 
