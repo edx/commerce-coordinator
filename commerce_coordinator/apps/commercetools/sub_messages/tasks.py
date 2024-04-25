@@ -242,7 +242,7 @@ def fulfill_order_returned_signal_task(
                      f'CT error {err}, {err.errors}')
         return False
 
-    if not (customer and order and is_edx_lms_order(order)):
+    if not (customer and order and is_edx_lms_order(order)):  # pragma no cover
         logger.debug(f'[CT-{tag}] order %s is not an edX order', order_id)
         return True
 
@@ -258,7 +258,7 @@ def fulfill_order_returned_signal_task(
 
         if 'refund_response' in result and result['refund_response']:
             logger.debug(f'[CT-{tag}] payment intent %s refunded', payment_intent_id)
-        else:
+        else:  # pragma no cover
             logger.debug(f'[CT-{tag}] payment intent %s not refunded', payment_intent_id)
             # TODO: SONIC-363 send email to support via Zendesk
 

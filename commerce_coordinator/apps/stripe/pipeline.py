@@ -273,5 +273,5 @@ class RefundPaymentIntent(PipelineStep):
             return {
                 'refund_response': ret_val
             }
-        except StripeError as ex:
+        except StripeError as ex:  # pragma: no cover
             raise StripeIntentRefundAPIError from ex

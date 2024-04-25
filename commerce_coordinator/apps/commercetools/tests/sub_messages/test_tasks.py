@@ -1,22 +1,21 @@
 """Commercetools Task Tests"""
-import inspect
 import logging
-from typing import List
 from unittest import TestCase
 from unittest.mock import MagicMock, call, patch
 
-from commercetools.platform.models import Customer as CTCustomer
 from commercetools.platform.models import Order as CTOrder
+from commercetools.platform.models import ReturnInfo as CTReturnInfo
+from commercetools.platform.models import ReturnPaymentState as CTReturnPaymentState
 from edx_django_utils.cache import TieredCache
 
-from commerce_coordinator.apps.commercetools.clients import CommercetoolsAPIClient, PaginatedResult
+from commerce_coordinator.apps.commercetools.clients import CommercetoolsAPIClient
 from commerce_coordinator.apps.commercetools.constants import SOURCE_SYSTEM
 from commerce_coordinator.apps.commercetools.sub_messages.tasks import (
     fulfill_order_placed_message_signal_task,
     fulfill_order_returned_signal_task,
     fulfill_order_sanctioned_message_signal_task
 )
-from commerce_coordinator.apps.commercetools.tests.conftest import MonkeyPatch, gen_order
+from commerce_coordinator.apps.commercetools.tests.conftest import MonkeyPatch, gen_return_item
 from commerce_coordinator.apps.commercetools.tests.mocks import (
     CTCustomerByIdMock,
     CTLineItemStateByKeyMock,
@@ -24,8 +23,6 @@ from commerce_coordinator.apps.commercetools.tests.mocks import (
     CTUpdateLineItemState,
     SendRobustSignalMock
 )
-from commerce_coordinator.apps.commercetools.tests.test_data import gen_customer
-from commerce_coordinator.apps.core.constants import ORDER_HISTORY_PER_SYSTEM_REQ_LIMIT
 from commerce_coordinator.apps.core.memcache import safe_key
 from commerce_coordinator.apps.core.tests.utils import uuid4_str
 
@@ -250,30 +247,34 @@ class OrderReturnedMessageSignalTaskTests(TestCase):
         """
         mock_values = self.mock
 
-        # _ = self.get_uut()(*self.unpack_for_uut(mock_values.example_payload))
-        #
-        # mock_values.order_mock.assert_called_once_with(mock_values.expected_order.id)
-        # mock_values.customer_mock.assert_called_once_with(mock_values.expected_customer.id)
-
         ret_val = self.get_uut()(*self.unpack_for_uut(self.mock.example_payload))
 
         self.assertTrue(ret_val)
         mock_values.order_mock.assert_has_calls([call(mock_values.order_id), call(order_id=mock_values.order_id)])
         mock_values.customer_mock.assert_called_once_with(mock_values.customer_id)
 
-    # @patch('commerce_coordinator.apps.commercetools.sub_messages.tasks.is_edx_lms_order',
-    #        return_value=False)
-    # @patch('commerce_coordinator.apps.commercetools.sub_messages.tasks.CommercetoolsAPIClient',
-    #        new_callable=CommercetoolsAPIClientMock)
-    # def test_not_lms_order(self, _ct_client_init: CommercetoolsAPIClientMock, _lms_signal):
-    #     """
-    #     Check calling uut with mock_parameters yields call to client with
-    #     expected_data.
-    #     """
-    #     mock_values = _ct_client_init.return_value
-    #
-    #     ret_val = self.get_uut()(*self.unpack_for_uut(mock_values.example_payload))
-    #
-    #     self.assertTrue(ret_val)
-    #     mock_values.order_mock.assert_called_once_with(mock_values.order_id)
-    #     mock_values.customer_mock.assert_called_once_with(mock_values.customer_id)
+    @patch('commerce_coordinator.apps.commercetools.sub_messages.tasks.is_edx_lms_order')
+    @patch('commerce_coordinator.apps.stripe.pipeline.StripeAPIClient')
+    @patch('commerce_coordinator.apps.commercetools.clients.CommercetoolsAPIClient.create_return_for_order')
+    def test_correct_arguments_passed_valid_stripe_refund(self, _return_order_mock:MagicMock, _stripe_api_mock:MagicMock, _lms_signal):
+        """
+        Check calling uut with mock_parameters yields call to client with
+        expected_data.
+        """
+        mock_values = self.mock
+        mock_values.order_mock.return_value.return_info = []
+        _stripe_api_mock.return_value.refund_payment_intent.return_value.return_value = {
+            "id": "123",
+            "status": "succeeded"
+        }
+        _return_order_mock.return_value = CTOrder.deserialize(mock_values.order_mock.return_value.serialize())
+        _return_order_mock.return_value.return_info.append(
+            CTReturnInfo(items=[gen_return_item("mock_return_item_id", CTReturnPaymentState.INITIAL)])
+        )
+
+        ret_val = self.get_uut()(*self.unpack_for_uut(self.mock.example_payload))
+
+        self.assertTrue(ret_val)
+        mock_values.order_mock.assert_has_calls([call(mock_values.order_id), call(order_id=mock_values.order_id)])
+        mock_values.customer_mock.assert_called_once_with(mock_values.customer_id)
+        _stripe_api_mock.return_value.refund_payment_intent.assert_called_once()
