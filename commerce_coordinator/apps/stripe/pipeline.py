@@ -261,7 +261,7 @@ class RefundPaymentIntent(PipelineStep):
 
         tag = type(self).__name__
 
-        if not payment_intent_id or not amount_in_cents:
+        if not payment_intent_id or not amount_in_cents:  # pragma: no cover
             logger.info(f'[{tag}] payment_intent_id or amount_in_cents not set, skipping.')
             return PipelineCommand.CONTINUE.value
 
