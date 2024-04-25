@@ -73,7 +73,7 @@ def fulfill_order_placed_message_signal_task(
 
     default_params = {
         'email_opt_in': True,  # ?? Where?
-        'order_number': order.id,
+        'order_number': order.order_number,
         'order_id': order.id,
         'provider_id': None,
         'edx_lms_user_id': lms_user_id,

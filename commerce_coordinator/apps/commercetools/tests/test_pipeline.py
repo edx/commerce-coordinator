@@ -73,7 +73,7 @@ class CommercetoolsOrLegacyEcommerceRefundPipelineTests(APITestCase):
         refund_pipe = CreateReturnForCommercetoolsOrder("test_pipe", None)
         ret = refund_pipe.run_filter(
             active_order_management_system="Legacy",
-            order_number="mock_id",
+            order_id="mock_id",
             order_line_id="mock_line_id",
             order_data=self.mock_response_order
         )
@@ -90,7 +90,7 @@ class CommercetoolsOrLegacyEcommerceRefundPipelineTests(APITestCase):
         refund_pipe = CreateReturnForCommercetoolsOrder("test_pipe", None)
         ret = refund_pipe.run_filter(
             active_order_management_system=COMMERCETOOLS_ORDER_MANAGEMENT_SYSTEM,
-            order_number="mock_id",
+            order_id="mock_id",
             order_line_id="mock_line_id",
             order_data=self.mock_response_order
         )
@@ -109,7 +109,7 @@ class CommercetoolsOrLegacyEcommerceRefundPipelineTests(APITestCase):
         with self.assertRaises(InvalidFilterType) as exc:
             refund_pipe.run_filter(
                 active_order_management_system=COMMERCETOOLS_ORDER_MANAGEMENT_SYSTEM,
-                order_number="mock_id",
+                order_id="mock_id",
                 order_line_id="order_line_id",
                 order_data=self.mock_response_order
             )

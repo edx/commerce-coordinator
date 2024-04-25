@@ -87,7 +87,7 @@ class FetchOrderDetails(PipelineStep):
 
         try:
             ct_api_client = CommercetoolsAPIClient()
-            ct_order = ct_api_client.get_order_by_id(order_id=order_number)
+            ct_order = ct_api_client.get_order_by_number(order_number=order_number)
 
             ret_val = {
                 "order_data": ct_order,
@@ -124,6 +124,7 @@ class CreateReturnForCommercetoolsOrder(PipelineStep):
     """
 
     def run_filter(
+<<<<<<< HEAD
         self,
         active_order_management_system,
         order_number,  # pylint: disable=unused-argument
@@ -131,6 +132,12 @@ class CreateReturnForCommercetoolsOrder(PipelineStep):
         order_data: CTOrder,
         has_been_refunded=False,
         **kwargs
+=======
+            self,
+            active_order_management_system,
+            order_id,
+            order_line_id
+>>>>>>> 060bd55 (fix: Fix tests and address comments)
     ):  # pylint: disable=arguments-differ
         """
         Execute a filter with the signature specified.
@@ -139,7 +146,6 @@ class CreateReturnForCommercetoolsOrder(PipelineStep):
             order_data:(CTOrder): Commercetools order object
             active_order_management_system: The Active Order System
             order_number: Order number (for now this is an order.id, but this should change in the future)
-            TODO: SONIC-277 (in-progress)
             order_line_id: ID of order line item
         Returns:
             returned_order: Updated Commercetools order
@@ -154,7 +160,11 @@ class CreateReturnForCommercetoolsOrder(PipelineStep):
 
         try:
             ct_api_client = CommercetoolsAPIClient()
+<<<<<<< HEAD
             order = order_data
+=======
+            order = ct_api_client.get_order_by_id(order_id=order_id)
+>>>>>>> 060bd55 (fix: Fix tests and address comments)
             if not is_commercetools_line_item_already_refunded(order, order_line_id):
                 returned_order = ct_api_client.create_return_for_order(
                     order_id=order.id,

@@ -42,6 +42,7 @@ fulfill_order_returned_uut = fulfill_order_returned_signal_task
 def gen_example_fulfill_payload():
     return {
         'order_id': uuid4_str(),
+        'order_number': '2U-000000',
         'line_item_state_id': uuid4_str(),
         'order_line_id': uuid4_str(),
         'source_system': SOURCE_SYSTEM,
@@ -58,6 +59,7 @@ class CommercetoolsAPIClientMock(MagicMock):
 
         self.example_payload = gen_example_fulfill_payload()
         self.order_id = self.example_payload['order_id']
+        self.order_number = self.example_payload['order_number']
         self.line_item_state_id = self.example_payload['line_item_state_id']
         self.customer_id = uuid4_str()
         self.processing_line_item_id = uuid4_str()
@@ -72,6 +74,7 @@ class CommercetoolsAPIClientMock(MagicMock):
         self.create_return_item_mock = CTReturnItemCreateMock()
 
         self.order_mock.return_value.id = self.order_id
+        self.order_mock.return_value.order_number = self.order_number
         self.customer_mock.return_value.id = self.customer_id
         self.order_mock.return_value.customer_id = self.customer_id
         self.state_by_key_mock.return_value.id = self.processing_line_item_id

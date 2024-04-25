@@ -170,7 +170,7 @@ class ReceiptRedirectViewTests(APITestCase):
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
 
     @patch('commerce_coordinator.apps.stripe.clients.StripeAPIClient.retrieve_payment_intent')
-    @patch('commerce_coordinator.apps.commercetools.pipeline.CommercetoolsAPIClient')
+    @patch('commerce_coordinator.apps.commercetools.pipeline.CommercetoolsAPIClient.get_order_by_number')
     def test_view_303s_when_order_number_might_be_ct(self, ct_mock, stripe_mock):
         intent = gen_payment_intent()
         order = gen_order_for_payment_intent()
@@ -184,7 +184,7 @@ class ReceiptRedirectViewTests(APITestCase):
         self.assertEqual(response.status_code, status.HTTP_303_SEE_OTHER)
 
     @patch('commerce_coordinator.apps.stripe.clients.StripeAPIClient.retrieve_payment_intent')
-    @patch('commerce_coordinator.apps.commercetools.clients.CommercetoolsAPIClient.get_order_by_id')
+    @patch('commerce_coordinator.apps.commercetools.clients.CommercetoolsAPIClient.get_order_by_number')
     @patch('commerce_coordinator.apps.commercetools.clients.CommercetoolsAPIClient.get_payment_by_key')
     def test_view_forwards_to_stripe_receipt_page(self, ct_payment_mock, ct_mock, stripe_mock):
         intent = gen_payment_intent()
@@ -222,7 +222,7 @@ class ReceiptRedirectViewTests(APITestCase):
         self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
 
     @patch('commerce_coordinator.apps.stripe.clients.StripeAPIClient.retrieve_payment_intent')
-    @patch('commerce_coordinator.apps.commercetools.clients.CommercetoolsAPIClient.get_order_by_id')
+    @patch('commerce_coordinator.apps.commercetools.clients.CommercetoolsAPIClient.get_order_by_number')
     def test_view_errors_if_ct_order_has_no_intent_id(self, ct_mock, stripe_mock):
         intent = gen_payment_intent()
         order = gen_order_for_payment_intent()
