@@ -5,6 +5,7 @@ import decimal
 from logging import getLogger
 
 import attrs
+import stripe
 from commercetools import CommercetoolsError
 from commercetools.platform.models import Order as CTOrder
 from openedx_filters import PipelineStep
@@ -15,6 +16,7 @@ from commerce_coordinator.apps.commercetools.catalog_info.edx_utils import (
     get_edx_payment_intent_id,
     get_edx_refund_amount
 )
+from commerce_coordinator.apps.commercetools.utils import has_refund_transaction
 from commerce_coordinator.apps.commercetools.clients import CommercetoolsAPIClient
 from commerce_coordinator.apps.commercetools.constants import COMMERCETOOLS_ORDER_MANAGEMENT_SYSTEM
 from commerce_coordinator.apps.commercetools.data import order_from_commercetools
@@ -205,3 +207,59 @@ class UpdateCommercetoolsOrderReturnPaymentStatus(PipelineStep):
         return {
             "returned_order": updated_order
         }
+
+
+class CreateReturnPaymentTransaction(PipelineStep):
+    """
+    Creates a Transaction for a return payment of a Commercetools order
+    based on Stripes refund object on a refunded charge.
+    """
+    def run_filter(
+            self,
+            refund_response,
+            active_order_management_system,
+            **kwargs
+        ):  # pylint: disable=arguments-differ
+        """
+        Execute a filter with the signature specified.
+        Arguments:
+            refund_response: Stripe refund object or str value "charge_already_refunded"
+            active_order_management_system: The Active Order System
+            kwargs: arguments passed through from the filter.
+        Returns:
+            returned_payment: the modifed CT payment
+        """
+
+        tag = type(self).__name__
+
+        if active_order_management_system != COMMERCETOOLS_ORDER_MANAGEMENT_SYSTEM:  # pragma no cover
+            return PipelineCommand.CONTINUE.value
+
+        if refund_response == "charge_already_refunded":
+            return PipelineCommand.CONTINUE.value
+
+        ct_api_client = CommercetoolsAPIClient()
+        try:
+            payment_key = refund_response['payment_intent']
+            payment_on_order = ct_api_client.base_client.payments.get_by_key(payment_key)
+
+            if has_refund_transaction(payment_on_order):
+                log.info(f'[{tag}] payment {payment_on_order.id} already has refund transaction, skipping.')
+                return PipelineCommand.CONTINUE.value
+
+
+            updated_payment = ct_api_client.create_return_payment_transaction(
+                payment_id=payment_on_order.id,
+                payment_version=payment_on_order.version,
+                stripe_refund=refund_response
+            )
+
+            return {
+                'returned_payment': updated_payment
+            }
+        except CommercetoolsError as err:  # pragma no cover
+            log.exception(f"[{tag}] Commercetools Error: {err}, {err.errors}")
+            return PipelineCommand.CONTINUE.value
+        except HTTPError as err:
+            log.exception(f"[{tag}] HTTP Error: {err}")
+            return PipelineCommand.CONTINUE.value

@@ -3,6 +3,7 @@ API clients for commercetools app.
 """
 
 import logging
+import stripe
 from typing import Generic, List, Optional, Tuple, TypeVar, Union
 
 import requests
@@ -11,12 +12,15 @@ from commercetools import CommercetoolsError
 from commercetools.platform.models import Customer as CTCustomer
 from commercetools.platform.models import CustomerSetCustomTypeAction as CTCustomerSetCustomTypeAction
 from commercetools.platform.models import FieldContainer as CTFieldContainer
+from commercetools.platform.models import Money as CTMoney
 from commercetools.platform.models import Order as CTOrder
 from commercetools.platform.models import (
     OrderAddReturnInfoAction,
     OrderSetReturnPaymentStateAction,
     OrderTransitionLineItemStateAction
 )
+from commercetools.platform.models import Payment as CTPayment
+from commercetools.platform.models import PaymentAddTransactionAction
 from commercetools.platform.models import ProductVariant as CTProductVariant
 from commercetools.platform.models import (
     ReturnItemDraft,
@@ -24,6 +28,7 @@ from commercetools.platform.models import (
     ReturnShipmentState,
     StateResourceIdentifier
 )
+from commercetools.platform.models import TransactionDraft, TransactionState, TransactionType
 from commercetools.platform.models import Type as CTType
 from commercetools.platform.models import TypeDraft as CTTypeDraft
 from commercetools.platform.models import TypeResourceIdentifier as CTTypeResourceIdentifier
@@ -33,7 +38,8 @@ from openedx_filters.exceptions import OpenEdxFilterException
 
 from commerce_coordinator.apps.commercetools.catalog_info.constants import DEFAULT_ORDER_EXPANSION, EdXFieldNames
 from commerce_coordinator.apps.commercetools.catalog_info.foundational_types import TwoUCustomTypes
-from commerce_coordinator.apps.core.constants import ORDER_HISTORY_PER_SYSTEM_REQ_LIMIT
+from commerce_coordinator.apps.commercetools.utils import translate_stripe_refund_status_to_transaction_status
+from commerce_coordinator.apps.core.constants import ORDER_HISTORY_PER_SYSTEM_REQ_LIMIT, ISO_8601_FORMAT
 
 logger = logging.getLogger(__name__)
 
@@ -372,6 +378,38 @@ class CommercetoolsAPIClient:
                          f"of order {order_id} with error correlation id {err.correlation_id} "
                          f"and error/s: {err.errors}")
             raise OpenEdxFilterException(str(err)) from err
+
+    def create_return_payment_transaction(self, payment_id: str, payment_version: int, stripe_refund: stripe.Refund) -> CTPayment:
+        try:
+            amount_as_money = CTMoney(
+                cent_amount=stripe_refund.amount,
+                currency_code=stripe_refund.currency.upper()
+            )
+
+            transaction_draft = TransactionDraft(
+                type=TransactionType.REFUND,
+                amount=amount_as_money,
+                timestamp=stripe_refund.created.strftime(ISO_8601_FORMAT),
+                state=translate_stripe_refund_status_to_transaction_status(stripe_refund.status),
+                interactionId=stripe_refund.charge
+            )
+
+            add_transaction_action = PaymentAddTransactionAction(
+                transaction=transaction_draft
+            )
+
+            returned_payment = self.base_client.payments.update_by_id(
+                id=payment_id,
+                version=payment_version,
+                actions=[add_transaction_action]
+            )
+
+            return returned_payment
+        except CommercetoolsError as err:
+            logger.error(f"[CommercetoolsError] Unable to create refund payment transaction for "
+                         f"payment {payment_id} and stripe refund {stripe_refund.id} with "
+                         f"error correlation id {err.correlation_id} and error/s: {err.errors}")
+            raise err
 
     def update_line_item_transition_state_on_fulfillment(self, order_id: str, order_version: int,
                                                          line_item_id: str, item_quantity: int,
