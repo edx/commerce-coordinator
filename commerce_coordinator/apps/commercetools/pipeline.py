@@ -124,7 +124,6 @@ class CreateReturnForCommercetoolsOrder(PipelineStep):
     """
 
     def run_filter(
-<<<<<<< HEAD
         self,
         active_order_management_system,
         order_number,  # pylint: disable=unused-argument
@@ -132,12 +131,6 @@ class CreateReturnForCommercetoolsOrder(PipelineStep):
         order_data: CTOrder,
         has_been_refunded=False,
         **kwargs
-=======
-            self,
-            active_order_management_system,
-            order_number,
-            order_line_id
->>>>>>> 060bd55 (fix: Fix tests and address comments)
     ):  # pylint: disable=arguments-differ
         """
         Execute a filter with the signature specified.
