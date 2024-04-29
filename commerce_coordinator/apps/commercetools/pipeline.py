@@ -135,7 +135,7 @@ class CreateReturnForCommercetoolsOrder(PipelineStep):
 =======
             self,
             active_order_management_system,
-            order_id,
+            order_number,
             order_line_id
 >>>>>>> 060bd55 (fix: Fix tests and address comments)
     ):  # pylint: disable=arguments-differ
@@ -161,10 +161,14 @@ class CreateReturnForCommercetoolsOrder(PipelineStep):
         try:
             ct_api_client = CommercetoolsAPIClient()
 <<<<<<< HEAD
+<<<<<<< HEAD
             order = order_data
 =======
             order = ct_api_client.get_order_by_id(order_id=order_id)
 >>>>>>> 060bd55 (fix: Fix tests and address comments)
+=======
+            order = ct_api_client.get_order_by_number(order_number=order_number)
+>>>>>>> 0419fe0 (fix: Fix pipeline)
             if not is_commercetools_line_item_already_refunded(order, order_line_id):
                 returned_order = ct_api_client.create_return_for_order(
                     order_id=order.id,

@@ -80,7 +80,7 @@ class CommercetoolsOrLegacyEcommerceRefundPipelineTests(APITestCase):
         self.assertEqual(ret, {})
 
     @patch('commerce_coordinator.apps.rollout.utils.is_commercetools_line_item_already_refunded')
-    @patch('commerce_coordinator.apps.commercetools.clients.CommercetoolsAPIClient.get_order_by_id')
+    @patch('commerce_coordinator.apps.commercetools.clients.CommercetoolsAPIClient.get_order_by_number')
     @patch('commerce_coordinator.apps.commercetools.clients.CommercetoolsAPIClient.create_return_for_order')
     def test_commercetools_order_refund(self, mock_returned_order, mock_order, mock_ct_refund):
         mock_ct_refund.return_value = False
@@ -90,7 +90,7 @@ class CommercetoolsOrLegacyEcommerceRefundPipelineTests(APITestCase):
         refund_pipe = CreateReturnForCommercetoolsOrder("test_pipe", None)
         ret = refund_pipe.run_filter(
             active_order_management_system=COMMERCETOOLS_ORDER_MANAGEMENT_SYSTEM,
-            order_id="mock_id",
+            order_number="mock_id",
             order_line_id="mock_line_id",
             order_data=self.mock_response_order
         )
@@ -100,7 +100,7 @@ class CommercetoolsOrLegacyEcommerceRefundPipelineTests(APITestCase):
         self.assertEqual(mock_order_result.return_info[1].items[0].shipment_state, ReturnShipmentState.RETURNED)
 
     @patch('commerce_coordinator.apps.rollout.utils.is_commercetools_line_item_already_refunded')
-    @patch('commerce_coordinator.apps.commercetools.clients.CommercetoolsAPIClient.get_order_by_id')
+    @patch('commerce_coordinator.apps.commercetools.clients.CommercetoolsAPIClient.get_order_by_number')
     def test_commercetools_order_item_already_refunded(self, mock_order, mock_ct_refund):
         mock_order.return_value = self.mock_response_order
         mock_ct_refund.return_value = True
@@ -109,7 +109,7 @@ class CommercetoolsOrLegacyEcommerceRefundPipelineTests(APITestCase):
         with self.assertRaises(InvalidFilterType) as exc:
             refund_pipe.run_filter(
                 active_order_management_system=COMMERCETOOLS_ORDER_MANAGEMENT_SYSTEM,
-                order_id="mock_id",
+                order_number="mock_id",
                 order_line_id="order_line_id",
                 order_data=self.mock_response_order
             )
