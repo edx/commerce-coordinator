@@ -39,5 +39,6 @@ def fulfill_order_returned_signal(**kwargs):
     """ CoordinatorSignal receiver to invoke Celery Task fulfill_order_returned_signal"""
     async_result = fulfill_order_returned_signal_task.delay(
         order_id=kwargs['order_id'],
+        order_line_id=kwargs['order_line_id'],
     )
     return async_result.id

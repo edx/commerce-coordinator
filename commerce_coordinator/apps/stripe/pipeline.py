@@ -13,6 +13,7 @@ from commerce_coordinator.apps.stripe.constants import Currency
 from commerce_coordinator.apps.stripe.exceptions import (
     StripeIntentConfirmAPIError,
     StripeIntentCreateAPIError,
+    StripeIntentRefundAPIError,
     StripeIntentRetrieveAPIError,
     StripeIntentUpdateAPIError
 )
@@ -214,8 +215,10 @@ class GetPaymentIntentReceipt(PipelineStep):
 
     # pylint: disable=unused-argument
     def run_filter(self, payment_intent_id=None, **params):
+        tag = type(self).__name__
+
         if payment_intent_id is None:
-            logger.debug('[GetPaymentIntentReceipt] payment_intent_id not set, skipping.')
+            logger.debug(f'[{tag}] payment_intent_id not set, skipping.')
             return PipelineCommand.CONTINUE.value
 
         stripe_api_client = StripeAPIClient()
@@ -231,3 +234,53 @@ class GetPaymentIntentReceipt(PipelineStep):
             'payment_intent': payment_intent,
             'redirect_url': receipt_url
         }
+
+
+class RefundPaymentIntent(PipelineStep):
+    """
+    Refunds a payment intent
+    """
+
+    def run_filter(
+        self,
+        order_id,
+        payment_intent_id,
+        amount_in_cents,
+        has_been_refunded,
+        **kwargs
+    ):  # pylint: disable=arguments-differ
+        """
+        Execute a filter with the signature specified.
+        Arguments:
+            order_id (str): The identifier of the order.
+            payment_intent_id (str): The Stripe PaymentIntent id to look up.
+            amount_in_cents (decimal): Total amount to refund
+            has_been_refunded (bool): Has this payment been refunded
+            kwargs: arguments passed through from the filter.
+        """
+
+        tag = type(self).__name__
+
+        if not payment_intent_id or not amount_in_cents:  # pragma: no cover
+            logger.info(f'[{tag}] payment_intent_id or amount_in_cents not set, skipping.')
+            return PipelineCommand.CONTINUE.value
+
+        if has_been_refunded:
+            logger.info(f'[{tag}] payment_intent already refunded, skipping.')
+            return {
+                'refund_response': "charge_already_refunded"
+            }
+
+        stripe_api_client = StripeAPIClient()
+
+        try:
+            ret_val = stripe_api_client.refund_payment_intent(
+                payment_intent_id=payment_intent_id,
+                amount=amount_in_cents,
+                order_uuid=order_id
+            )
+            return {
+                'refund_response': ret_val
+            }
+        except StripeError as ex:  # pragma: no cover
+            raise StripeIntentRefundAPIError from ex

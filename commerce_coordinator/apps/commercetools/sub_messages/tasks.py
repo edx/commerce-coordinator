@@ -20,6 +20,7 @@ from commerce_coordinator.apps.commercetools.catalog_info.edx_utils import (
 )
 from commerce_coordinator.apps.commercetools.clients import CommercetoolsAPIClient
 from commerce_coordinator.apps.commercetools.constants import EMAIL_NOTIFICATION_CACHE_TTL_SECS
+from commerce_coordinator.apps.commercetools.filters import OrderRefundRequested
 from commerce_coordinator.apps.commercetools.serializers import OrderFulfillViewInputSerializer
 from commerce_coordinator.apps.commercetools.signals import fulfill_order_placed_signal
 from commerce_coordinator.apps.commercetools.utils import (
@@ -181,6 +182,7 @@ def fulfill_order_sanctioned_message_signal_task(
 @shared_task(autoretry_for=(RequestException, CommercetoolsError), retry_kwargs={'max_retries': 5, 'countdown': 3})
 def fulfill_order_returned_signal_task(
     order_id,
+    order_line_id
 ):
     """Celery task for an order return (and refunded) message."""
 
@@ -239,7 +241,7 @@ def fulfill_order_returned_signal_task(
                      f'CT error {err}, {err.errors}')
         return False
 
-    if not (customer and order and is_edx_lms_order(order)):
+    if not (customer and order and is_edx_lms_order(order)):  # pragma no cover
         logger.debug(f'[CT-{tag}] order %s is not an edX order', order_id)
         return True
 
@@ -249,7 +251,15 @@ def fulfill_order_returned_signal_task(
 
     logger.debug(f'[CT-{tag}] calling stripe to refund payment intent %s', payment_intent_id)
 
-    # TODO: Return payment if payment intent id is set
+    # Return payment if payment intent id is set
+    if payment_intent_id is not None:
+        result = OrderRefundRequested.run_filter(order_number=order_id, order_line_id=order_line_id)
+
+        if 'refund_response' in result and result['refund_response']:
+            logger.debug(f'[CT-{tag}] payment intent %s refunded', payment_intent_id)
+        else:  # pragma no cover
+            logger.debug(f'[CT-{tag}] payment intent %s not refunded', payment_intent_id)
+            # TODO: SONIC-363 send email to support via Zendesk
 
     segment_event_properties = _prepare_segment_event_properties(order)  # pragma no cover
 

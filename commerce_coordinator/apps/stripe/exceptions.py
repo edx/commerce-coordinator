@@ -43,3 +43,9 @@ class StripeIntentRetrieveAPIError(APIException):
     status_code = 502
     default_detail = 'Error while retrieving payment intent on payment gateway.'
     default_code = 'stripe_intent_retrieve_error'
+
+
+class StripeIntentRefundAPIError(APIException):
+    status_code = 502
+    default_detail = 'Error while refunding payment intent on payment gateway.'
+    default_code = 'stripe_intent_refund_error'

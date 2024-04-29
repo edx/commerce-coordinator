@@ -123,3 +123,53 @@ EXAMPLE_COMMERCETOOLS_ORDER_SANCTIONED_MESSAGE = {
         },
     },
 }
+
+EXAMPLE_COMMERCETOOLS_ORDER_RETURNED_MESSAGE = {
+    "detail": {
+        "id": "db116fbd-3f62-468e-810a-a68eb6e15bfe",
+        "version": 1,
+        "versionModifiedAt": "2024-04-15T13:13:06.104Z",
+        "sequenceNumber": 2,
+        "resource": {
+            "typeId": "order",
+            "id": "debb493b-5f1e-43ee-af22-8dff50d8acd3"
+        },
+        "resourceVersion": 2,
+        "resourceUserProvidedIdentifiers": {
+            "orderNumber": "cart-id-ebc80b80-65c0-416c-a532-54cdafd20796"
+        },
+        "type": "ReturnInfoAdded",
+        "returnInfo": {
+            "items": [
+                {
+                    "type": "LineItemReturnItem",
+                    "id": "d26cd880-72a4-4467-b1c4-1efa65dd5156",
+                    "quantity": 1,
+                    "lineItemId": "5259bfe2-86cb-4cf6-87c7-550561d882b1",
+                    "shipmentState": "Returned",
+                    "paymentState": "Initial",
+                    "lastModifiedAt": "2024-04-15T13:13:06.083Z",
+                    "createdAt": "2024-04-15T13:13:06.083Z"
+                }
+            ],
+            "returnTrackingId": "5259bfe2-86cb-4cf6-87c7-550561d882b1",
+            "returnDate": "2024-04-15T00:00:00.000Z"
+        },
+        "createdAt": "2024-04-15T13:13:06.104Z",
+        "lastModifiedAt": "2024-04-15T13:13:06.104Z",
+        "lastModifiedBy": {
+            "isPlatformClient": True,
+            "user": {
+                "typeId": "user",
+                "id": "e0761f02-d7d5-4592-9332-a3bf6abc2539"
+            }
+        },
+        "createdBy": {
+            "isPlatformClient": True,
+            "user": {
+                "typeId": "user",
+                "id": "e0761f02-d7d5-4592-9332-a3bf6abc2539"
+            }
+        }
+    }
+}

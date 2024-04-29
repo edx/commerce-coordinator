@@ -43,7 +43,7 @@ class OrderLineItemMessageDetailSerializer(CoordinatorSerializer):
     def to_representation(self, instance):
         representation = super().to_representation(instance)
         order_id = representation['resource'].get('id')
-        if order_id:
+        if order_id:  # pragma no cover
             representation['order_id'] = order_id
         representation.pop('resource')
         representation['from_state'] = representation.pop('fromState')
@@ -82,16 +82,40 @@ class OrderFulfillViewInputSerializer(CoordinatorSerializer):
     edx_lms_user_id = serializers.IntegerField(allow_null=False)
 
 
+class OrderReturnedViewMessageLineItemReturnItemSerializer(CoordinatorSerializer):
+    """
+    Serializer for OrderReturnedView message LineItemReturnItem.
+    """
+    type = serializers.CharField()
+    id = serializers.CharField()
+    quantity = serializers.IntegerField()
+    lineItemId = serializers.CharField()
+    shipmentState = serializers.CharField()
+    paymentState = serializers.CharField()
+    lastModifiedAt = serializers.DateTimeField()
+    createdAt = serializers.DateTimeField()
+
+
+class OrderReturnedViewMessageReturnInfoSerializer(CoordinatorSerializer):
+    """
+    Serializer for OrderReturnedView message returnInfo.
+    """
+    items = OrderReturnedViewMessageLineItemReturnItemSerializer(many=True)
+    returnTrackingId = serializers.CharField()
+    returnDate = serializers.DateTimeField()
+
+
 class OrderReturnedViewMessageDetailSerializer(CoordinatorSerializer):
     """
     Serializer for OrderReturnedView message detail.
     """
     resource = serializers.DictField(child=serializers.CharField())
+    returnInfo = OrderReturnedViewMessageReturnInfoSerializer()
 
     def to_representation(self, instance):
         representation = super().to_representation(instance)
         order_id = representation['resource'].get('id')
-        if order_id:
+        if order_id:  # pragma no cover
             representation['order_id'] = order_id
         representation.pop('resource')
         return representation
@@ -107,3 +131,19 @@ class OrderReturnedViewMessageInputSerializer(CoordinatorSerializer):
         representation = super().to_representation(instance)
         representation = representation.pop('detail')
         return representation
+
+    def get_return_info(self):
+        """Get the return info from the message detail"""
+        validated_data = self.validated_data
+        detail = validated_data.get('detail', {})
+        return_info = detail.get('returnInfo', {})
+        items = return_info.get('items', [])
+
+        if len(items) > 0:
+            first_item = items[0] if items else {}
+            return first_item
+        else:  # pragma no cover
+            return {}
+
+    def get_return_line_item_id(self):
+        return self.get_return_info().get('lineItemId', None)

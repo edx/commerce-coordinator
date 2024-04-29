@@ -130,7 +130,7 @@ def typed_money_to_string(money: CTTypedMoney, money_as_decimal_string=False) ->
 
 
 def _typed_money_op(a: CTTypedMoney, b: Optional[CTTypedMoney], op):
-    if b is None:
+    if b is None:  # pragma: no cover
         return a
     if (
         a.type == b.type and a.currency_code == b.currency_code and

@@ -114,7 +114,7 @@ ENABLE_AUTO_AUTH = True
 
 LOGGING = get_logger_config(debug=DEBUG)
 
-CELERY_BROKER_URL = "redis://:password@localhost:6379/0"
+CELERY_BROKER_URL = "redis://:@localhost:6379/0"
 
 EDX_API_KEY = 'PUT_YOUR_API_KEY_HERE'  # This is the actual API key in devstack.
 

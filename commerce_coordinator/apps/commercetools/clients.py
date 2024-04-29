@@ -7,7 +7,7 @@ from typing import Generic, List, Optional, Tuple, TypeVar, Union
 
 import requests
 from commercetools import Client as CTClient
-from commercetools import CommercetoolsError, types
+from commercetools import CommercetoolsError
 from commercetools.platform.models import Customer as CTCustomer
 from commercetools.platform.models import CustomerSetCustomTypeAction as CTCustomerSetCustomTypeAction
 from commercetools.platform.models import FieldContainer as CTFieldContainer
@@ -18,7 +18,12 @@ from commercetools.platform.models import (
     OrderTransitionLineItemStateAction
 )
 from commercetools.platform.models import ProductVariant as CTProductVariant
-from commercetools.platform.models import ReturnItemDraft, ReturnPaymentState, ReturnShipmentState
+from commercetools.platform.models import (
+    ReturnItemDraft,
+    ReturnPaymentState,
+    ReturnShipmentState,
+    StateResourceIdentifier
+)
 from commercetools.platform.models import Type as CTType
 from commercetools.platform.models import TypeDraft as CTTypeDraft
 from commercetools.platform.models import TypeResourceIdentifier as CTTypeResourceIdentifier
@@ -296,12 +301,12 @@ class CommercetoolsAPIClient:
 
         return matching_variant_list[0]
 
-    def create_return_for_order(self, order_id: str, order_version: str, order_line_id: str) -> CTOrder:
+    def create_return_for_order(self, order_id: str, order_version: int, order_line_id: str) -> CTOrder:
         """
         Creates refund/return for Commercetools order
         Args:
             order_id (str): Order ID (UUID)
-            order_version (str): Current version of order
+            order_version (int): Current version of order
             order_line_id (str): ID of order line item
         Returns (CTOrder): Updated order object or
         Returns Exception: Error if update was unsuccesful.
@@ -335,19 +340,19 @@ class CommercetoolsAPIClient:
             raise err
 
     def update_return_payment_state_after_successful_refund(self, order_id: str,
-                                                            order_version: str,
-                                                            return_line_item_return_id: str) -> CTOrder:
+                                                            order_version: int,
+                                                            return_line_item_return_id: str) -> Union[CTOrder, None]:
         """
         Update paymentState on the LineItemReturnItem attached to the order.
         Updated by the Order ID (UUID)
 
         Args:
             order_id (str): Order ID (UUID)
-            order_version (str): Current version of order
-            return_item_id (str): LineItemReturnItem ID
+            order_version (int): Current version of order
+            return_line_item_return_id (str): LineItemReturnItem ID
 
         Returns (CTOrder): Updated order object or
-        Returns Exception: Error if update was unsuccesful.
+        Raises Exception: Error if update was unsuccessful.
         """
         try:
 
@@ -379,10 +384,10 @@ class CommercetoolsAPIClient:
             line_item_id (str): ID of order line item
             item_quantity (int): Count of variants in line item
             from_state_id (str): ID of LineItemState to transition from
-            to_state_key (str): Key of LineItemState to transition to
+            new_state_key (str): Key of LineItemState to transition to
         Returns (CTOrder): Updated order object or
         Returns (CTOrder): Current un-updated order
-        Returns Exception: Error if update was unsuccesful.
+        Raises Exception: Error if update was unsuccessful.
         """
 
         from_state_key = self.get_state_by_id(from_state_id).key
@@ -392,8 +397,8 @@ class CommercetoolsAPIClient:
                 transition_line_item_state_action = OrderTransitionLineItemStateAction(
                     line_item_id=line_item_id,
                     quantity=item_quantity,
-                    from_state=types.StateResourceIdentifier(key=from_state_key),
-                    to_state=types.StateResourceIdentifier(key=new_state_key)
+                    from_state=StateResourceIdentifier(key=from_state_key),
+                    to_state=StateResourceIdentifier(key=new_state_key)
                 )
 
                 updated_fulfillment_line_item_order = self.base_client.orders.update_by_id(
