@@ -1,10 +1,18 @@
 import json
 
 import requests
-from commercetools import CommercetoolsError, types
+from commercetools import CommercetoolsError
+from commercetools.platform.models import (
+    StateChangeInitialAction,
+    StateResourceIdentifier,
+    StateSetDescriptionAction,
+    StateSetNameAction,
+    StateSetTransitionsAction
+)
 from django.core.management.base import no_translations
 
 from commerce_coordinator.apps.commercetools.catalog_info.foundational_types import TwoUCustomStates
+from commerce_coordinator.apps.commercetools.catalog_info.utils import ls_eq
 from commerce_coordinator.apps.commercetools.management.commands._ct_api_client_command import (
     CommercetoolsAPIClientCommand
 )
@@ -17,7 +25,10 @@ class Command(CommercetoolsAPIClientCommand):
     def handle(self, *args, **options):
 
         order_states = [
+            # Order Workflow States
             TwoUCustomStates.SANCTIONED_ORDER_STATE,
+            # Line Item States
+            TwoUCustomStates.INITIAL_FULFILLMENT_STATE,
             TwoUCustomStates.PENDING_FULFILLMENT_STATE,
             TwoUCustomStates.PROCESSING_FULFILLMENT_STATE,
             TwoUCustomStates.SUCCESS_FULFILLMENT_STATE,
@@ -39,65 +50,48 @@ class Command(CommercetoolsAPIClientCommand):
 
             print(json.dumps(state.serialize()))
 
-        # Updating built-in 'Initial' line item state transition to 'Fulfiment Pending' state
-        initial_state = self.ct_api_client.base_client.states.get_by_key('Initial')
-        pending_transition = types.StateResourceIdentifier(key=TwoUCustomStates.PENDING_FULFILLMENT_STATE.key)
-        try:
-            updated_initial_state = self.ct_api_client.base_client.states.update_by_id(
-                id=initial_state.id,
-                version=initial_state.version,
-                actions=[
-                    types.StateSetTransitionsAction(transitions=[pending_transition])
-                ]
-            )
-            print('Initial state updated successfully.')
-            print(json.dumps(updated_initial_state.serialize()))
-        except CommercetoolsError as _:
-            pass
+        state_translations = {}
+        state_pairs = []
 
-        # Updating the line item state transitions of the fulfillment states after they have been created
         for state_draft_ref in order_states:
-            state = None
-            if (
-                state_draft_ref != TwoUCustomStates.SANCTIONED_ORDER_STATE and
-                state_draft_ref != TwoUCustomStates.SUCCESS_FULFILLMENT_STATE
-            ):
-                try:
-                    state = self.ct_api_client.base_client.states.get_by_key(state_draft_ref.key)
-                except CommercetoolsError as _:
-                    # commercetools.exceptions.CommercetoolsError: The Resource with key '' was not found.
-                    pass
+            state = self.ct_api_client.base_client.states.get_by_key(state_draft_ref.key)
+            state_translations[state.key] = state.id
+            state_translations[state.id] = state.key
+            state_pairs.append((state_draft_ref, state))
 
-                if state:
-                    new_transitions = None
-                    current_transitions = [transition.id for transition in state.transitions]
+        actions = []
 
-                    if state_draft_ref == TwoUCustomStates.PENDING_FULFILLMENT_STATE:
-                        new_transitions = [
-                            types.StateResourceIdentifier(key=TwoUCustomStates.PROCESSING_FULFILLMENT_STATE.key)
-                        ]
-                    elif state_draft_ref == TwoUCustomStates.PROCESSING_FULFILLMENT_STATE:
-                        new_transitions = [
-                            types.StateResourceIdentifier(key=TwoUCustomStates.SUCCESS_FULFILLMENT_STATE.key),
-                            types.StateResourceIdentifier(key=TwoUCustomStates.FAILED_FULFILLMENT_STATE.key)
-                        ]
-                    elif state_draft_ref == TwoUCustomStates.FAILED_FULFILLMENT_STATE:
-                        new_transitions = [
-                            types.StateResourceIdentifier(key=TwoUCustomStates.PENDING_FULFILLMENT_STATE.key),
-                            types.StateResourceIdentifier(key=TwoUCustomStates.SUCCESS_FULFILLMENT_STATE.key)
-                        ]
+        # Updating states after they have been created
+        for (state_draft_ref, state) in state_pairs:
 
-                    if all(transition in current_transitions for transition in new_transitions):
-                        print(f'The {state.name} state already has the expected transitions.')
-                    else:
-                        try:
-                            self.ct_api_client.base_client.states.update_by_id(
-                                id=state.id,
-                                version=state.version,
-                                actions=[
-                                    types.StateSetTransitionsAction(transitions=new_transitions)
-                                ],
-                            )
-                            print(json.dumps(state.serialize()))
-                        except CommercetoolsError as _:
-                            pass
+            # Updating the line item state transitions of the fulfillment states after they have been created
+            current_transitions = [transition.id for transition in state.transitions]
+            new_transitions = [state_translations[transition.key] for transition in state_draft_ref.transitions]
+
+            if all(transition in current_transitions for transition in new_transitions):
+                print(f'The {state.key}/{state.id} state already has the expected transitions.')
+            else:
+                actions.append(StateSetTransitionsAction(transitions=new_transitions))
+
+            # Update Initial
+            if state.initial != state_draft_ref.initial:
+                if state_draft_ref.initial is True or state_draft_ref.initial is False:
+                    actions.append(StateChangeInitialAction(initial=state_draft_ref.initial))
+
+            if not ls_eq(state.description, state_draft_ref.description):
+                actions.append(StateSetDescriptionAction(description=state_draft_ref.description))
+
+            if not ls_eq(state.name, state_draft_ref.name):
+                actions.append(StateSetNameAction(name=state_draft_ref.name))
+
+            if actions:
+                print(f'Updating {state.key}/{state.id} state...')
+                self.ct_api_client.base_client.states.update_by_id(
+                    id=state.id,
+                    version=state.version,
+                    actions=actions,
+                )
+                print(json.dumps(state.serialize()))
+            else:
+                print(f'{state.key}/{state.id} Has no changes...')
+

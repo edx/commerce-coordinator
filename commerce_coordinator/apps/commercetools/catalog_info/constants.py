@@ -1,8 +1,15 @@
 class TwoUKeys:
     """Global 2U Object Keys for use in Commercetools"""
+
+    # 2U Custom Types
+    # Customer Custom Fields Types
     CROSS_SYS_USER_INFO_TYPE = '2u-user_information'
 
+    # Order States
     SDN_SANCTIONED_ORDER_STATE = '2u-sdn-order-state'
+
+    # Line Item Fulfillment States
+    INITIAL_FULFILMENT_STATE = 'Initial'  # this key doesn't match our format because it is built in.
     PENDING_FULFILMENT_STATE = '2u-fulfillment-pending-state'
     PROCESSING_FULFILMENT_STATE = '2u-fulfillment-processing-state'
     SUCCESS_FULFILMENT_STATE = '2u-fulfillment-success-state'
@@ -11,6 +18,9 @@ class TwoUKeys:
 
 class EdXFieldNames:
     """edX Specific field names for use in Commercetools"""
+
+    # 2U Custom Types
+    # Customer Custom Fields Types
     LMS_USER_ID = 'edx-lms_user_id'
     LMS_USER_NAME = 'edx-lms_user_name'
 

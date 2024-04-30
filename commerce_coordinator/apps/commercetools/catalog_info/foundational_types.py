@@ -3,6 +3,7 @@ from commercetools.platform.models import (
     FieldDefinition,
     ResourceTypeId,
     StateDraft,
+    StateResourceIdentifier,
     StateTypeEnum,
     TypeDraft,
     TypeTextInputHint
@@ -14,11 +15,26 @@ from commerce_coordinator.apps.commercetools.catalog_info.utils import ls
 
 class TwoUCustomStates:
     """Global 2U Workflow Transition State Definitions in Commercetools"""
+
+    # Order States
     SANCTIONED_ORDER_STATE = StateDraft(
         key=TwoUKeys.SDN_SANCTIONED_ORDER_STATE,
         type=StateTypeEnum.ORDER_STATE,
         name=ls({'en': 'Sanctioned'}),
-        description=ls({'en': 'This order has been sanctioned for an SDN hit'})
+        description=ls({'en': 'This order has been sanctioned for an SDN hit'}),
+        transitions=[]
+    )
+
+    # Line Item States
+    INITIAL_FULFILLMENT_STATE = StateDraft(
+        key=TwoUKeys.INITIAL_FULFILMENT_STATE,
+        type=StateTypeEnum.LINE_ITEM_STATE,
+        name=ls({'en': 'Fulfillment Initial'}),
+        description=ls({'en': 'This order line item has not yet been fulfilled'}),
+        initial=True,
+        transitions=[
+            StateResourceIdentifier(key=TwoUKeys.PENDING_FULFILMENT_STATE)
+        ]
     )
 
     PENDING_FULFILLMENT_STATE = StateDraft(
@@ -27,7 +43,9 @@ class TwoUCustomStates:
         name=ls({'en': 'Fulfillment Pending'}),
         description=ls({'en': 'This order line item is pending fulfilment'}),
         initial=False,
-        transitions=[]
+        transitions=[
+            StateResourceIdentifier(key=TwoUKeys.PROCESSING_FULFILMENT_STATE)
+        ]
     )
 
     PROCESSING_FULFILLMENT_STATE = StateDraft(
@@ -36,7 +54,10 @@ class TwoUCustomStates:
         name=ls({'en': 'Fulfillment Processing'}),
         description=ls({'en': 'This order line item is processing fulfilment'}),
         initial=False,
-        transitions=[]
+        transitions=[
+            StateResourceIdentifier(key=TwoUKeys.SUCCESS_FULFILMENT_STATE),
+            StateResourceIdentifier(key=TwoUKeys.FAILURE_FULFILMENT_STATE)
+        ]
     )
 
     SUCCESS_FULFILLMENT_STATE = StateDraft(
@@ -44,6 +65,7 @@ class TwoUCustomStates:
         type=StateTypeEnum.LINE_ITEM_STATE,
         name=ls({'en': 'Fulfillment Success'}),
         description=ls({'en': 'This order line item has successfully been fulfilled'}),
+        initial=False,
         transitions=[]
     )
 
@@ -52,12 +74,17 @@ class TwoUCustomStates:
         type=StateTypeEnum.LINE_ITEM_STATE,
         name=ls({'en': 'Fulfillment Failure'}),
         description=ls({'en': 'This order line item was unsuccessfully fulfilled'}),
-        transitions=[]
+        initial=False,
+        transitions=[
+            StateResourceIdentifier(key=TwoUKeys.PENDING_FULFILMENT_STATE),
+            StateResourceIdentifier(key=TwoUKeys.SUCCESS_FULFILMENT_STATE)
+        ]
     )
 
 
 class TwoUCustomTypes:
     """Global 2U Custom Type Definitions in Commercetools"""
+
     CUSTOMER_TYPE_DRAFT = TypeDraft(
         key=TwoUKeys.CROSS_SYS_USER_INFO_TYPE,
         name=ls({'en': '2U Cross System User Information'}),
@@ -89,3 +116,4 @@ class TwoUCustomTypes:
             )
         ]
     )
+    """2U Cross System User Information for Customer Objects"""
