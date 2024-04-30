@@ -86,6 +86,22 @@ class DetermineActiveOrderManagementSystemByOrder(PipelineStep):
         }
 
 
+class DetermineActiveOrderManagementSystemByOrderID(PipelineStep):
+    """ Using an Order Numer/ID to determine the active order management system """
+
+    def run_filter(self, order_id, **kwargs):  # pylint: disable=arguments-differ
+        """ Using an Order Numer/ID to determine the active order management system """
+        logger.info(f"\n\n-- DetermineActiveOrderManagementSystemByOrder:order_id: {order_id} --\n\n")
+        active_order_management_system = COMMERCETOOLS_ORDER_MANAGEMENT_SYSTEM
+
+        if is_legacy_order(order_id):
+            active_order_management_system = ECOMMERCE_ORDER_MANAGEMENT_SYSTEM
+
+        return {
+            ACTIVE_ORDER_MANAGEMENT_SYSTEM_KEY: active_order_management_system
+        }
+
+
 class HaltIfRedirectUrlProvided(PipelineStep):
     """ A basic pipeline step that will stop if there is a redirect url set."""
     def run_filter(self, **kwargs):
