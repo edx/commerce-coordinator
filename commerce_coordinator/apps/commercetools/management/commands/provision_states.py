@@ -93,4 +93,3 @@ class Command(CommercetoolsAPIClientCommand):
                 print(json.dumps(state.serialize()))
             else:
                 print(f'{state.key}/{state.id} Has no changes...')
-
