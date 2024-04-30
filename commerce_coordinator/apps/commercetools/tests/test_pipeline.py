@@ -9,6 +9,7 @@ from rest_framework.test import APITestCase
 from commerce_coordinator.apps.commercetools.constants import COMMERCETOOLS_ORDER_MANAGEMENT_SYSTEM
 from commerce_coordinator.apps.commercetools.pipeline import (
     CreateReturnForCommercetoolsOrder,
+    CreateReturnPaymentTransaction,
     GetCommercetoolsOrders,
     UpdateCommercetoolsOrderReturnPaymentStatus
 )
@@ -110,6 +111,7 @@ class CommercetoolsOrLegacyEcommerceRefundPipelineTests(APITestCase):
         )
 
 
+# do we still need this?
 class OrderReturnPipelineTests(TestCase):
     """Commercetools pipeline testcase for order updates on returns"""
     def setUp(self) -> None:

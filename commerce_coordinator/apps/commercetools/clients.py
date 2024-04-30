@@ -2,6 +2,7 @@
 API clients for commercetools app.
 """
 
+import datetime
 import logging
 import stripe
 from typing import Generic, List, Optional, Tuple, TypeVar, Union
@@ -389,9 +390,9 @@ class CommercetoolsAPIClient:
             transaction_draft = TransactionDraft(
                 type=TransactionType.REFUND,
                 amount=amount_as_money,
-                timestamp=stripe_refund.created.strftime(ISO_8601_FORMAT),
+                timestamp=datetime.datetime.utcfromtimestamp(stripe_refund.created),
                 state=translate_stripe_refund_status_to_transaction_status(stripe_refund.status),
-                interactionId=stripe_refund.charge
+                interaction_id=stripe_refund.charge
             )
 
             add_transaction_action = PaymentAddTransactionAction(

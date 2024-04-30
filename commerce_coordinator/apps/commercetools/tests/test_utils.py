@@ -10,13 +10,16 @@ from django.test import override_settings
 from django.urls import reverse
 from mock import Mock, patch
 
-from commerce_coordinator.apps.commercetools.tests.conftest import gen_order
+from commercetools.platform.models import TransactionState ,TransactionType
+from commerce_coordinator.apps.commercetools.tests.conftest import gen_order, gen_payment
 from commerce_coordinator.apps.commercetools.tests.constants import EXAMPLE_FULFILLMENT_SIGNAL_PAYLOAD
 from commerce_coordinator.apps.commercetools.utils import (
     extract_ct_order_information_for_braze_canvas,
     extract_ct_product_information_for_braze_canvas,
     get_braze_client,
-    send_order_confirmation_email
+    has_refund_transaction,
+    send_order_confirmation_email,
+    translate_stripe_refund_status_to_transaction_status
 )
 
 
@@ -177,3 +180,33 @@ class TestBrazeHelpers(unittest.TestCase):
             "total": "$149.00",
         }
         assert result == expected
+
+
+class TestHasRefundTransaction(unittest.TestCase):
+
+    def test_has_refund_transaction_with_refund(self):
+        # Create a payment object with a refund transaction
+        payment = gen_payment()
+        self.assertTrue(has_refund_transaction(payment))
+
+    def test_has_refund_transaction_without_refund(self):
+        # Create a payment object without a refund transaction
+        payment = gen_payment()
+        payment.transactions[0].type = TransactionType.CHARGE
+        self.assertFalse(has_refund_transaction(payment))
+
+
+class TestTranslateStripeRefundStatus(unittest.TestCase):
+
+    def test_translate_stripe_refund_status_succeeded(self):
+        self.assertEqual(translate_stripe_refund_status_to_transaction_status('succeeded'), TransactionState.SUCCESS)
+
+    def test_translate_stripe_refund_status_pending(self):
+        self.assertEqual(translate_stripe_refund_status_to_transaction_status('pending'), TransactionState.PENDING)
+
+    def test_translate_stripe_refund_status_failed(self):
+        self.assertEqual(translate_stripe_refund_status_to_transaction_status('failed'), TransactionState.FAILURE)
+
+    def test_translate_stripe_refund_status_other(self):
+        # Test for an unknown status
+        self.assertEqual(translate_stripe_refund_status_to_transaction_status('unknown_status'), 'unknown_status')

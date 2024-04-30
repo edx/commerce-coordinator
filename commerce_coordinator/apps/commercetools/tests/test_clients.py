@@ -2,6 +2,7 @@
 
 import pytest
 import requests_mock
+import stripe
 from commercetools import CommercetoolsError
 from commercetools.platform.models import (
     Customer,
@@ -12,6 +13,7 @@ from commercetools.platform.models import (
     ReturnInfo,
     ReturnPaymentState,
     ReturnShipmentState,
+    TransactionState,
     Type,
     TypeDraft
 )
@@ -28,6 +30,7 @@ from commerce_coordinator.apps.commercetools.tests.conftest import (
     gen_line_item_state,
     gen_order,
     gen_order_history,
+    gen_payment,
     gen_return_item
 )
 from commerce_coordinator.apps.core.constants import ORDER_HISTORY_PER_SYSTEM_REQ_LIMIT
@@ -443,6 +446,87 @@ class ClientTests(TestCase):
                     order_version="2",
                     return_line_item_return_id="mock_return_item_id"
                 )
+
+    def test_create_refund_transaction(self):
+        base_url = self.client_set.get_base_url_from_client()
+
+        mock_response_payment = gen_payment()
+        mock_stripe_refund = stripe.Refund()
+        stripe_refund_json = {
+            "amount":4900,
+            "charge":"ch_3P9RWsH4caH7G0X11toRGUJf",
+            "created":1692942318,
+            "currency":"usd",
+            "status":"succeeded"
+        }
+        mock_stripe_refund.update(stripe_refund_json)
+
+        with requests_mock.Mocker(real_http=True, case_sensitive=False) as mocker:
+            mocker.post(
+                f"{base_url}payments/{mock_response_payment.id}",
+                json=mock_response_payment.serialize(),
+                status_code=200
+            )
+
+            result = self.client_set.client.create_return_payment_transaction(
+                mock_response_payment.id,
+                mock_response_payment.version,
+                mock_stripe_refund
+            )
+
+            self.assertEqual(result.transactions[0].type, mock_response_payment.transactions[0].type)
+            self.assertEqual(result.transactions[0].state, TransactionState.SUCCESS)
+
+    def test_create_refund_transaction_exception(self):
+        base_url = self.client_set.get_base_url_from_client()
+        mock_stripe_refund = stripe.Refund()
+        stripe_refund_json = {
+            "id":"re_1Nispe2eZvKYlo2Cd31jOCgZ",
+            "amount":4900,
+            "charge":"ch_3P9RWsH4caH7G0X11toRGUJf",
+            "created":1692942318,
+            "currency":"usd",
+            "status":"succeeded"
+        }
+        mock_stripe_refund.update(stripe_refund_json)
+
+        mock_error_response: CommercetoolsError = {
+            "message": "Could not create return for order mock_order_id",
+            "errors": [
+                {
+                    "code": "ConcurrentModification",
+                    "detailedErrorMessage": "Object [mock_order_id] has a "
+                                            "different version than expected. Expected: 2 - Actual: 1."
+                },
+            ],
+            "response": {},
+            "correlation_id": '123456'
+        }
+
+        with requests_mock.Mocker(real_http=True, case_sensitive=False) as mocker:
+            mocker.post(
+                f"{base_url}payments/mock_payment_id",
+                json=mock_error_response,
+                status_code=409
+            )
+
+            with patch('commerce_coordinator.apps.commercetools.clients.logging.Logger.error') as log_mock:
+                with self.assertRaises(CommercetoolsError) as cm:
+                    self.client_set.client.create_return_payment_transaction(
+                        payment_id="mock_payment_id",
+                        payment_version=1,
+                        stripe_refund=mock_stripe_refund
+                    )
+
+                exception = cm.exception
+
+                expected_message = (
+                    f"[CommercetoolsError] Unable to create refund payment transaction for "
+                    f"payment mock_payment_id and stripe refund {mock_stripe_refund.id} with "
+                    f"error correlation id {exception.correlation_id} and error/s: {exception.errors}"
+                )
+
+                log_mock.assert_called_once_with(expected_message)
 
     @patch('commerce_coordinator.apps.commercetools.clients.CommercetoolsAPIClient.get_state_by_id')
     def test_successful_order_line_item_state_update(self, mock_state_by_id):
