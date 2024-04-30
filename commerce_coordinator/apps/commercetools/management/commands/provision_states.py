@@ -4,7 +4,6 @@ import requests
 from commercetools import CommercetoolsError
 from commercetools.platform.models import (
     StateChangeInitialAction,
-    StateResourceIdentifier,
     StateSetDescriptionAction,
     StateSetNameAction,
     StateSetTransitionsAction
