@@ -378,7 +378,7 @@ OPEN_EDX_FILTERS_CONFIG = {
         "fail_silently": False,  # Coordinator filters should NEVER be allowed to fail silently
         "pipeline": [
             'commerce_coordinator.apps.rollout.pipeline.DetermineActiveOrderManagementSystemByOrderID',
-            'commerce_coordinator.apps.commercetools.pipeline.FetchOrderDetails',
+            'commerce_coordinator.apps.commercetools.pipeline.FetchOrderDetailsID',
             'commerce_coordinator.apps.commercetools.pipeline.CreateReturnForCommercetoolsOrder',
         ]
     },

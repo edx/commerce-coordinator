@@ -91,7 +91,7 @@ class DetermineActiveOrderManagementSystemByOrderID(PipelineStep):
 
     def run_filter(self, order_id, **kwargs):  # pylint: disable=arguments-differ
         """ Using an Order Numer/ID to determine the active order management system """
-        logger.info(f"\n\n-- DetermineActiveOrderManagementSystemByOrder:order_id: {order_id} --\n\n")
+
         active_order_management_system = COMMERCETOOLS_ORDER_MANAGEMENT_SYSTEM
 
         if is_legacy_order(order_id):

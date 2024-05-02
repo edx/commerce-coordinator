@@ -117,6 +117,51 @@ class FetchOrderDetails(PipelineStep):
             return PipelineCommand.CONTINUE.value
 
 
+class FetchOrderDetailsID(PipelineStep):
+    """ Fetch the order Details and if we can, set the PaymentIntent """
+
+    def run_filter(self, active_order_management_system, order_id, **kwargs):  # pylint: disable=arguments-differ
+        """
+        Execute a filter with the signature specified.
+        Arguments:
+            active_order_management_system: The Active Order System (optional)
+            params: arguments passed through from the original order history url querystring
+            order_number: Order number
+        Returns:
+        """
+
+        if active_order_management_system != COMMERCETOOLS_ORDER_MANAGEMENT_SYSTEM:
+            return PipelineCommand.CONTINUE.value
+
+        try:
+            ct_api_client = CommercetoolsAPIClient()
+            ct_order = ct_api_client.get_order_by_id(order_id=order_id)
+
+            ret_val = {
+                "order_data": ct_order,
+                "order_id": ct_order.id
+            }
+
+            intent_id = get_edx_payment_intent_id(ct_order)
+
+            if intent_id:
+                ret_val['payment_intent_id'] = intent_id
+                ret_val['amount_in_cents'] = get_edx_refund_amount(ct_order)
+                ret_val['has_been_refunded'] = len(get_order_return_info_return_items(ct_order)) >= 1
+            else:
+                ret_val['payment_intent_id'] = None
+                ret_val['amount_in_cents'] = decimal.Decimal(0.00)
+                ret_val['has_been_refunded'] = False
+
+            return ret_val
+        except CommercetoolsError as err:  # pragma no cover
+            log.exception(f"[{type(self).__name__}] Commercetools Error: {err}, {err.errors}")
+            return PipelineCommand.CONTINUE.value
+        except HTTPError as err:
+            log.exception(f"[{type(self).__name__}] HTTP Error: {err}")
+            return PipelineCommand.CONTINUE.value
+
+
 class CreateReturnForCommercetoolsOrder(PipelineStep):
     """
     Creates refund/return for Commercetools order by Updating its
