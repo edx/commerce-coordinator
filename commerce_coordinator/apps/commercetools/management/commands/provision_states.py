@@ -64,7 +64,7 @@ class Command(CommercetoolsAPIClientCommand):
         for (state_draft_ref, state) in state_pairs:
 
             # Updating the line item state transitions of the fulfillment states after they have been created
-            current_transitions = [transition.id for transition in state.transitions]
+            current_transitions = [transition.id for transition in state.transitions or []]
             new_transitions = [state_translations[transition.key] for transition in state_draft_ref.transitions]
 
             if all(transition in current_transitions for transition in new_transitions):
@@ -85,6 +85,8 @@ class Command(CommercetoolsAPIClientCommand):
 
             if actions:
                 print(f'Updating {state.key}/{state.id} state...')
+                # if Updating 2u-fulfillment-failure-state fails with 'initial' has no changes.
+                # this is a bug in the CT api, rerun and it should be good :)
                 self.ct_api_client.base_client.states.update_by_id(
                     id=state.id,
                     version=state.version,
