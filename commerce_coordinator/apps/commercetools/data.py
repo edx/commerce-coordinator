@@ -110,7 +110,6 @@ def order_from_commercetools(order: CTOrder, customer: CTCustomer) -> LegacyOrde
         billing_address=convert_address(order.billing_address),
         date_placed=order.last_modified_at,
         total_excl_tax=typed_money_to_string(order.total_price, money_as_decimal_string=SEND_MONEY_AS_DECIMAL_STRING),
-        # in dev systems, this isn't set... so let's use UUID, otherwise, let's rely on order number
         number=order.order_number,
         currency=order.total_price.currency_code,
         payment_processor="stripe via commercetools",
