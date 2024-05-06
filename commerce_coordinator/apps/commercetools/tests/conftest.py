@@ -16,12 +16,12 @@ from commercetools.platform.models import FieldContainer as CTFieldContainer
 from commercetools.platform.models import LineItemReturnItem as CTLineItemReturnItem
 from commercetools.platform.models import Order as CTOrder
 from commercetools.platform.models import Payment as CTPayment
-from commercetools.platform.models import Transaction as CTTransaction
-from commercetools.platform.models import TransactionState, TransactionType
 from commercetools.platform.models import PaymentState
 from commercetools.platform.models import Product as CTProduct
 from commercetools.platform.models import ProductProjectionPagedSearchResponse as CTProductProjectionPagedSearchResponse
 from commercetools.platform.models import ReturnPaymentState, ReturnShipmentState
+from commercetools.platform.models import Transaction as CTTransaction
+from commercetools.platform.models import TransactionState, TransactionType
 from commercetools.platform.models import TypeReference as CTTypeReference
 from commercetools.platform.models.state import State as CTLineItemState
 from commercetools.testing import BackendRepository
@@ -182,6 +182,7 @@ def gen_transaction() -> CTTransaction:
         state=TransactionState.SUCCESS,
         interaction_id='ch_3P9RWsH4caH7G0X11toRGUJf'
     )
+
 
 def gen_product() -> CTProduct:
     with open(os.path.join(pathlib.Path(__file__).parent.resolve(), 'raw_ct_product.json')) as f:

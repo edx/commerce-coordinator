@@ -326,7 +326,7 @@ class ClientTests(TestCase):
         # Mocked expected order recieved after CT SDK call to update the order
         mock_response_order = gen_order("mock_order_id")
         mock_response_order.version = "1"
-        mock_response_return_item = gen_return_item("mock_return_item_id", ReturnPaymentState.INITIAL)
+        mock_response_return_item = gen_return_item("mock_return_item_id", ReturnPaymentState.REFUNDED)
         mock_response_return_info = ReturnInfo(items=[mock_response_return_item])
         mock_response_order.return_info.append(mock_response_return_info)
 
@@ -344,7 +344,7 @@ class ClientTests(TestCase):
             )
 
             self.assertEqual(result.return_info[1].items[0].shipment_state, ReturnShipmentState.RETURNED)
-            self.assertEqual(result.return_info[1].items[0].payment_state, ReturnPaymentState.INITIAL)
+            self.assertEqual(result.return_info[1].items[0].payment_state, ReturnPaymentState.REFUNDED)
 
     def test_create_return_for_order_exception(self):
         base_url = self.client_set.get_base_url_from_client()
@@ -453,11 +453,12 @@ class ClientTests(TestCase):
         mock_response_payment = gen_payment()
         mock_stripe_refund = stripe.Refund()
         stripe_refund_json = {
-            "amount":4900,
-            "charge":"ch_3P9RWsH4caH7G0X11toRGUJf",
-            "created":1692942318,
-            "currency":"usd",
-            "status":"succeeded"
+            "id": "re_1Nispe2eZvKYlo2Cd31jOCgZ",
+            "amount": 4900,
+            "charge": "ch_3P9RWsH4caH7G0X11toRGUJf",
+            "created": 1692942318,
+            "currency": "usd",
+            "status": "succeeded"
         }
         mock_stripe_refund.update(stripe_refund_json)
 
@@ -481,12 +482,12 @@ class ClientTests(TestCase):
         base_url = self.client_set.get_base_url_from_client()
         mock_stripe_refund = stripe.Refund()
         stripe_refund_json = {
-            "id":"re_1Nispe2eZvKYlo2Cd31jOCgZ",
-            "amount":4900,
-            "charge":"ch_3P9RWsH4caH7G0X11toRGUJf",
-            "created":1692942318,
-            "currency":"usd",
-            "status":"succeeded"
+            "id": "re_1Nispe2eZvKYlo2Cd31jOCgZ",
+            "amount": 4900,
+            "charge": "ch_3P9RWsH4caH7G0X11toRGUJf",
+            "created": 1692942318,
+            "currency": "usd",
+            "status": "succeeded"
         }
         mock_stripe_refund.update(stripe_refund_json)
 

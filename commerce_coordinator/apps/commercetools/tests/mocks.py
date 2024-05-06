@@ -2,7 +2,15 @@
 
 from unittest.mock import MagicMock
 
-from commerce_coordinator.apps.commercetools.tests.conftest import gen_customer, gen_line_item_state, gen_order
+from commercetools.platform.models import ReturnInfo, ReturnPaymentState, TransactionType
+
+from commerce_coordinator.apps.commercetools.tests.conftest import (
+    gen_customer,
+    gen_line_item_state,
+    gen_order,
+    gen_payment,
+    gen_return_item
+)
 from commerce_coordinator.apps.commercetools.tests.constants import EXAMPLE_FULFILLMENT_SIGNAL_PAYLOAD
 
 
@@ -52,6 +60,22 @@ def get_order_with_missing_state():
     return order
 
 
+def gen_payment_with_charge_transaction():
+    """Modify payment to have TransactionType.CHARGE to allow for refund"""
+    payment = gen_payment()
+    payment.transactions[0].type = TransactionType.CHARGE
+    return payment
+
+
+def gen_order_with_return_item():
+    """Modify order to have a return item"""
+    returned_order = gen_order(EXAMPLE_FULFILLMENT_SIGNAL_PAYLOAD['order_number'])
+    return_item = gen_return_item("mock_return_item_id", ReturnPaymentState.REFUNDED)
+    return_info = ReturnInfo(items=[return_item])
+    returned_order.return_info.append(return_info)
+    return returned_order
+
+
 class CTOrderBadStateKeyByIdMock(MagicMock):
     """
     A mock get_order_by_id call that always returns with a bad state
@@ -76,3 +100,11 @@ class CTCustomerByIdMock(MagicMock):
 
 class CTUpdateLineItemState(MagicMock):
     return_value = gen_updated_line_item_state_order()
+
+
+class CTPaymentByKey(MagicMock):
+    return_value = gen_payment_with_charge_transaction()
+
+
+class CTReturnItemCreateMock(MagicMock):
+    return_value = gen_order_with_return_item()

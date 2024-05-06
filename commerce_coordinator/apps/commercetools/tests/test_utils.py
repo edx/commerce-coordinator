@@ -5,12 +5,12 @@ import unittest
 from unittest.mock import MagicMock
 
 from braze.client import BrazeClient
+from commercetools.platform.models import TransactionState, TransactionType
 from django.conf import settings
 from django.test import override_settings
 from django.urls import reverse
 from mock import Mock, patch
 
-from commercetools.platform.models import TransactionState ,TransactionType
 from commerce_coordinator.apps.commercetools.tests.conftest import gen_order, gen_payment
 from commerce_coordinator.apps.commercetools.tests.constants import EXAMPLE_FULFILLMENT_SIGNAL_PAYLOAD
 from commerce_coordinator.apps.commercetools.utils import (
@@ -183,20 +183,24 @@ class TestBrazeHelpers(unittest.TestCase):
 
 
 class TestHasRefundTransaction(unittest.TestCase):
+    """
+    Tests for Has Refund Transaction Utils class
+    """
 
     def test_has_refund_transaction_with_refund(self):
-        # Create a payment object with a refund transaction
         payment = gen_payment()
         self.assertTrue(has_refund_transaction(payment))
 
     def test_has_refund_transaction_without_refund(self):
-        # Create a payment object without a refund transaction
         payment = gen_payment()
         payment.transactions[0].type = TransactionType.CHARGE
         self.assertFalse(has_refund_transaction(payment))
 
 
 class TestTranslateStripeRefundStatus(unittest.TestCase):
+    """
+    Tests for Translating Stripes Refund Status Utils class
+    """
 
     def test_translate_stripe_refund_status_succeeded(self):
         self.assertEqual(translate_stripe_refund_status_to_transaction_status('succeeded'), TransactionState.SUCCESS)

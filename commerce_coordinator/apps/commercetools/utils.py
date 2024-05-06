@@ -5,14 +5,7 @@ Helpers for the commercetools app.
 import logging
 
 from braze.client import BrazeClient
-from commercetools.platform.models import (
-    Customer,
-    LineItem,
-    Order,
-    Payment,
-    TransactionState,
-    TransactionType
-)
+from commercetools.platform.models import Customer, LineItem, Order, Payment, TransactionState, TransactionType
 from django.conf import settings
 from django.urls import reverse
 
@@ -139,6 +132,7 @@ def has_refund_transaction(payment: Payment):
         if transaction.type == TransactionType.REFUND:  # pragma no cover
             return True
     return False
+
 
 def translate_stripe_refund_status_to_transaction_status(stripe_refund_status: str):
     """

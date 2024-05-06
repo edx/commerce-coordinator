@@ -4,10 +4,10 @@ API clients for commercetools app.
 
 import datetime
 import logging
-import stripe
 from typing import Generic, List, Optional, Tuple, TypeVar, Union
 
 import requests
+import stripe
 from commercetools import Client as CTClient
 from commercetools import CommercetoolsError
 from commercetools.platform.models import Customer as CTCustomer
@@ -27,9 +27,10 @@ from commercetools.platform.models import (
     ReturnItemDraft,
     ReturnPaymentState,
     ReturnShipmentState,
-    StateResourceIdentifier
+    StateResourceIdentifier,
+    TransactionDraft,
+    TransactionType
 )
-from commercetools.platform.models import TransactionDraft, TransactionState, TransactionType
 from commercetools.platform.models import Type as CTType
 from commercetools.platform.models import TypeDraft as CTTypeDraft
 from commercetools.platform.models import TypeResourceIdentifier as CTTypeResourceIdentifier
@@ -40,7 +41,7 @@ from openedx_filters.exceptions import OpenEdxFilterException
 from commerce_coordinator.apps.commercetools.catalog_info.constants import DEFAULT_ORDER_EXPANSION, EdXFieldNames
 from commerce_coordinator.apps.commercetools.catalog_info.foundational_types import TwoUCustomTypes
 from commerce_coordinator.apps.commercetools.utils import translate_stripe_refund_status_to_transaction_status
-from commerce_coordinator.apps.core.constants import ORDER_HISTORY_PER_SYSTEM_REQ_LIMIT, ISO_8601_FORMAT
+from commerce_coordinator.apps.core.constants import ORDER_HISTORY_PER_SYSTEM_REQ_LIMIT
 
 logger = logging.getLogger(__name__)
 
@@ -276,6 +277,9 @@ class CommercetoolsAPIClient:
     def get_state_by_key(self, state_key: str) -> CTLineItemState:
         return self.base_client.states.get_by_key(state_key)  # pragma no cover
 
+    def get_payment_by_key(self, payment_key: str) -> CTPayment:
+        return self.base_client.payments.get_by_key(payment_key)  # pragma no cover
+
     def get_product_variant_by_course_run(self, cr_id: str) -> Optional[CTProductVariant]:
         """
         Args:
@@ -327,7 +331,7 @@ class CommercetoolsAPIClient:
                 quantity=1,
                 line_item_id=order_line_id,
                 comment=return_item_draft_comment,
-                shipment_state=ReturnShipmentState.RETURNED
+                shipment_state=ReturnShipmentState.RETURNED,
             )
 
             add_return_info_action = OrderAddReturnInfoAction(
@@ -380,7 +384,19 @@ class CommercetoolsAPIClient:
                          f"and error/s: {err.errors}")
             raise OpenEdxFilterException(str(err)) from err
 
-    def create_return_payment_transaction(self, payment_id: str, payment_version: int, stripe_refund: stripe.Refund) -> CTPayment:
+    def create_return_payment_transaction(
+            self, payment_id: str,
+            payment_version: int,
+            stripe_refund: stripe.Refund) -> CTPayment:
+        """
+        Create Commercetools payment transaction for refund
+        Args:
+            payment_id (str): Payment ID (UUID)
+            payment_version (int): Current version of payment
+            stripe_refund (stripe.Refund): Stripe's refund object
+        Returns (CTPayment): Updated payment object or
+        Raises Exception: Error if creation was unsuccessful.
+        """
         try:
             amount_as_money = CTMoney(
                 cent_amount=stripe_refund.amount,
@@ -392,7 +408,7 @@ class CommercetoolsAPIClient:
                 amount=amount_as_money,
                 timestamp=datetime.datetime.utcfromtimestamp(stripe_refund.created),
                 state=translate_stripe_refund_status_to_transaction_status(stripe_refund.status),
-                interaction_id=stripe_refund.charge
+                interaction_id=stripe_refund.id
             )
 
             add_transaction_action = PaymentAddTransactionAction(
