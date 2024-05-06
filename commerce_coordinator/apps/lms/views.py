@@ -204,7 +204,7 @@ class RefundView(APIView):
         logger.info(f"[RefundView] Starting LMS Refund for username: {username}, course_id: {course_id}, "
                     f"Enrollment attributes: {enrollment_attributes}.")
 
-        order_line_id = enrollment_attributes.get(enrollment_attribute_key('order', 'order_line_id'), None)
+        order_line_id = enrollment_attributes.get(enrollment_attribute_key('order', 'line_item_id'), None)
         order_id = enrollment_attributes.get(enrollment_attribute_key('order', 'order_id'), None)
 
         if not order_id:
