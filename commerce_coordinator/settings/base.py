@@ -379,9 +379,9 @@ OPEN_EDX_FILTERS_CONFIG = {
         "pipeline": [
             'commerce_coordinator.apps.rollout.pipeline.DetermineActiveOrderManagementSystemByOrder',
             'commerce_coordinator.apps.commercetools.pipeline.FetchOrderDetails',
+            'commerce_coordinator.apps.commercetools.pipeline.CreateReturnForCommercetoolsOrder',
             'commerce_coordinator.apps.stripe.pipeline.RefundPaymentIntent',
             'commerce_coordinator.apps.commercetools.pipeline.CreateReturnPaymentTransaction',
-            'commerce_coordinator.apps.commercetools.pipeline.CreateReturnForCommercetoolsOrder',
             'commerce_coordinator.apps.commercetools.pipeline.UpdateCommercetoolsOrderReturnPaymentStatus'
         ]
     },
