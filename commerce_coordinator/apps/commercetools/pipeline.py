@@ -117,7 +117,7 @@ class FetchOrderDetails(PipelineStep):
             return PipelineCommand.CONTINUE.value
 
 
-class FetchOrderDetailsID(PipelineStep):
+class FetchOrderDetailsbyOrderID(PipelineStep):
     """ Fetch the order Details and if we can, set the PaymentIntent """
 
     def run_filter(self, active_order_management_system, order_id, **kwargs):  # pylint: disable=arguments-differ
@@ -126,7 +126,7 @@ class FetchOrderDetailsID(PipelineStep):
         Arguments:
             active_order_management_system: The Active Order System (optional)
             params: arguments passed through from the original order history url querystring
-            order_number: Order number
+            order_id: Order ID
         Returns:
         """
 
@@ -182,7 +182,6 @@ class CreateReturnForCommercetoolsOrder(PipelineStep):
             has_been_refunded(bool): Whether or not the order has been refunded
             order_data:(CTOrder): Commercetools order object
             active_order_management_system: The Active Order System
-            order_number: Order number (for now this is an order.id, but this should change in the future)
             order_line_id: ID of order line item
         Returns:
             returned_order: Updated Commercetools order
