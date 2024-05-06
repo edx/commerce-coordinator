@@ -3,17 +3,23 @@
 from unittest import TestCase
 from unittest.mock import patch
 
-from commercetools.platform.models import ReturnInfo, ReturnPaymentState, ReturnShipmentState
+from commercetools.platform.models import ReturnInfo, ReturnPaymentState, ReturnShipmentState, TransactionType
 from rest_framework.test import APITestCase
 
 from commerce_coordinator.apps.commercetools.constants import COMMERCETOOLS_ORDER_MANAGEMENT_SYSTEM
 from commerce_coordinator.apps.commercetools.pipeline import (
     CreateReturnForCommercetoolsOrder,
+    CreateReturnPaymentTransaction,
     GetCommercetoolsOrders,
     UpdateCommercetoolsOrderReturnPaymentStatus
 )
 from commerce_coordinator.apps.commercetools.tests._test_cases import MonkeyPatchedGetOrderTestCase
-from commerce_coordinator.apps.commercetools.tests.conftest import APITestingSet, gen_order, gen_return_item
+from commerce_coordinator.apps.commercetools.tests.conftest import (
+    APITestingSet,
+    gen_order,
+    gen_payment,
+    gen_return_item
+)
 from commerce_coordinator.apps.core.constants import ORDER_HISTORY_PER_SYSTEM_REQ_LIMIT
 from commerce_coordinator.apps.core.exceptions import InvalidFilterType
 
@@ -54,6 +60,10 @@ class CommercetoolsOrLegacyEcommerceRefundPipelineTests(APITestCase):
         mock_response_return_info = ReturnInfo(items=[mock_response_return_item])
         mock_response_order.return_info.append(mock_response_return_info)
         self.returned_order = mock_response_order
+        self.returned_payment = gen_payment()
+        mock_response_payment = gen_payment()
+        mock_response_payment.transactions[0].type = TransactionType.CHARGE
+        self.mock_response_payment = mock_response_payment
 
     def tearDown(self):
         del self.client_set
@@ -108,6 +118,47 @@ class CommercetoolsOrLegacyEcommerceRefundPipelineTests(APITestCase):
             str(exc.exception),
             'Refund already created for order mock_id with order line id order_line_id'
         )
+
+    @patch('commerce_coordinator.apps.commercetools.utils.has_refund_transaction')
+    @patch('commerce_coordinator.apps.commercetools.clients.CommercetoolsAPIClient.get_payment_by_key')
+    @patch('commerce_coordinator.apps.commercetools.clients.CommercetoolsAPIClient.create_return_payment_transaction')
+    def test_commercetools_transaction_create(self, mock_returned_payment, mock_payment, mock_has_refund):
+        mock_has_refund.return_value = False
+        mock_payment.return_value = self.mock_response_payment
+        mock_returned_payment.return_value = self.returned_payment
+
+        refund_pipe = CreateReturnPaymentTransaction("test_pipe", None)
+        ret = refund_pipe.run_filter(
+            payment_data=self.mock_response_payment,
+            refund_response={"payment_intent": "mock_payment_intent"},
+            active_order_management_system=COMMERCETOOLS_ORDER_MANAGEMENT_SYSTEM,
+            has_been_refunded=False
+        )
+        mock_payment_result = ret['returned_payment']
+
+        self.assertEqual(mock_payment_result, self.returned_payment)
+        self.assertEqual(mock_payment_result.transactions[0].type, TransactionType.REFUND)
+
+    @patch('commerce_coordinator.apps.commercetools.utils.has_refund_transaction')
+    @patch('commerce_coordinator.apps.commercetools.clients.CommercetoolsAPIClient.get_payment_by_key')
+    @patch('commerce_coordinator.apps.commercetools.clients.CommercetoolsAPIClient.create_return_payment_transaction')
+    def test_commercetools_transaction_create_no_payment_data(self, mock_returned_payment,
+                                                              mock_payment, mock_has_refund):
+        mock_has_refund.return_value = False
+        mock_payment.return_value = self.mock_response_payment
+        mock_returned_payment.return_value = self.returned_payment
+
+        refund_pipe = CreateReturnPaymentTransaction("test_pipe", None)
+        ret = refund_pipe.run_filter(
+            payment_data=None,
+            refund_response={"payment_intent": "mock_payment_intent"},
+            active_order_management_system=COMMERCETOOLS_ORDER_MANAGEMENT_SYSTEM,
+            has_been_refunded=False
+        )
+        mock_payment_result = ret['returned_payment']
+
+        self.assertEqual(mock_payment_result, self.returned_payment)
+        self.assertEqual(mock_payment_result.transactions[0].type, TransactionType.REFUND)
 
 
 class OrderReturnPipelineTests(TestCase):

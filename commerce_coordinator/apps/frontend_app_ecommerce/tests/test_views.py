@@ -10,6 +10,7 @@ from mock import patch
 from rest_framework import status
 from rest_framework.test import APIClient, APITestCase
 
+from commerce_coordinator.apps.commercetools.tests.conftest import gen_payment
 from commerce_coordinator.apps.frontend_app_ecommerce.tests import (
     ECOMMERCE_REQUEST_EXPECTED_RESPONSE,
     ORDER_HISTORY_GET_PARAMETERS,
@@ -184,12 +185,15 @@ class ReceiptRedirectViewTests(APITestCase):
 
     @patch('commerce_coordinator.apps.stripe.clients.StripeAPIClient.retrieve_payment_intent')
     @patch('commerce_coordinator.apps.commercetools.clients.CommercetoolsAPIClient.get_order_by_id')
-    def test_view_forwards_to_stripe_receipt_page(self, ct_mock, stripe_mock):
+    @patch('commerce_coordinator.apps.commercetools.clients.CommercetoolsAPIClient.get_payment_by_key')
+    def test_view_forwards_to_stripe_receipt_page(self, ct_payment_mock, ct_mock, stripe_mock):
         intent = gen_payment_intent()
         order = gen_order_for_payment_intent()
+        payment = gen_payment()
 
         ct_mock.return_value = order
         stripe_mock.return_value = intent
+        ct_payment_mock.return_value = payment
 
         order_number = order.id
         self.client.login(username=self.test_user_username, password=self.test_user_password)

@@ -15,9 +15,13 @@ from commercetools.platform.models import CustomFields as CTCustomFields
 from commercetools.platform.models import FieldContainer as CTFieldContainer
 from commercetools.platform.models import LineItemReturnItem as CTLineItemReturnItem
 from commercetools.platform.models import Order as CTOrder
+from commercetools.platform.models import Payment as CTPayment
+from commercetools.platform.models import PaymentState
 from commercetools.platform.models import Product as CTProduct
 from commercetools.platform.models import ProductProjectionPagedSearchResponse as CTProductProjectionPagedSearchResponse
 from commercetools.platform.models import ReturnPaymentState, ReturnShipmentState
+from commercetools.platform.models import Transaction as CTTransaction
+from commercetools.platform.models import TransactionState, TransactionType
 from commercetools.platform.models import TypeReference as CTTypeReference
 from commercetools.platform.models.state import State as CTLineItemState
 from commercetools.testing import BackendRepository
@@ -155,6 +159,31 @@ def gen_order(uuid_id, with_discount=True) -> CTOrder:
         return CTOrder.deserialize(obj)
 
 
+def gen_payment():
+    return CTPayment(
+        id=uuid4_str(),
+        version=1,
+        created_at=datetime.now(),
+        last_modified_at=datetime.now(),
+        amount_planned=4900,
+        payment_method_info={},
+        payment_status=PaymentState.PAID,
+        transactions=[gen_transaction()],
+        interface_interactions=[]
+    )
+
+
+def gen_transaction() -> CTTransaction:
+    return CTTransaction(
+        id=uuid4_str(),
+        type=TransactionType.REFUND,
+        amount=4900,
+        timestamp=datetime.now(),
+        state=TransactionState.SUCCESS,
+        interaction_id='ch_3P9RWsH4caH7G0X11toRGUJf'
+    )
+
+
 def gen_product() -> CTProduct:
     with open(os.path.join(pathlib.Path(__file__).parent.resolve(), 'raw_ct_product.json')) as f:
         obj = json.load(f)
@@ -265,7 +294,7 @@ def gen_return_item(order_line_id: str, payment_state: ReturnPaymentState) -> CT
 
 def gen_line_item_state() -> CTLineItemState:
     return CTLineItemState(
-        id='669d3d11-5eaa-4521-b146-ccbd408ae940',
+        id=uuid4_str(),
         version=2,
         created_at=datetime.now(),
         last_modified_at=datetime.now(),

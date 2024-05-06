@@ -5,7 +5,7 @@ Helpers for the commercetools app.
 import logging
 
 from braze.client import BrazeClient
-from commercetools.platform.models import Customer, LineItem, Order
+from commercetools.platform.models import Customer, LineItem, Order, Payment, TransactionState, TransactionType
 from django.conf import settings
 from django.urls import reverse
 
@@ -122,3 +122,25 @@ def extract_ct_order_information_for_braze_canvas(customer: Customer, order: Ord
                 order.discount_on_total_price.discounted_amount.cent_amount),
         })
     return canvas_entry_properties
+
+
+def has_refund_transaction(payment: Payment):
+    """
+    Utility to determine is CT payment has an existing 'refund' transaction
+    """
+    for transaction in payment.transactions:
+        if transaction.type == TransactionType.REFUND:  # pragma no cover
+            return True
+    return False
+
+
+def translate_stripe_refund_status_to_transaction_status(stripe_refund_status: str):
+    """
+    Utility to translate stripe's refund object's status attribute to a valid CT transaction state
+    """
+    translations = {
+        'succeeded': TransactionState.SUCCESS,
+        'pending': TransactionState.PENDING,
+        'failed': TransactionState.FAILURE,
+    }
+    return translations.get(stripe_refund_status.lower(), stripe_refund_status)
