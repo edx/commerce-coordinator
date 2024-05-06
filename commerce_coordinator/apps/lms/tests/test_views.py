@@ -216,7 +216,7 @@ class RefundViewTests(APITestCase):
             'value': '123'
         }, {
             'namespace': 'order',
-            'name': 'order_line_id',
+            'name': 'line_item_id',
             'value': '123'
         }]
     }
@@ -287,8 +287,8 @@ class RefundViewTests(APITestCase):
         name_test("missing order_id", (
             "order_id",
         )),
-        name_test("missing order_line_id", (
-            "order_line_id",
+        name_test("missing line_item_id", (
+            "line_item_id",
         )),
     )
     @ddt.unpack
