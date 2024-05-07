@@ -85,6 +85,8 @@ class CommercetoolsAPIClientMock(MagicMock):
         self.get_payment_by_key = self.payment_mock
         self.update_line_item_transition_state_on_fulfillment = self.updated_line_item_mock
         self.create_return_for_order = self.create_return_item_mock
+        self.create_return_payment_transaction = self.payment_mock
+        self.update_return_payment_state_after_successful_refund = self.order_mock
 
         self.expected_order = self.order_mock.return_value
         self.expected_customer = self.customer_mock.return_value
@@ -228,7 +230,10 @@ class OrderReturnedMessageSignalTaskTests(TestCase):
                 'get_order_by_id': self.mock.get_order_by_id,
                 'get_customer_by_id': self.mock.get_customer_by_id,
                 'get_payment_by_key': self.mock.get_payment_by_key,
-                'create_return_for_order': self.mock.create_return_for_order
+                'create_return_for_order': self.mock.create_return_for_order,
+                'create_return_payment_transaction': self.mock.create_return_payment_transaction,
+                'update_return_payment_state_after_successful_refund':
+                    self.mock.update_return_payment_state_after_successful_refund
             }
         )
 
