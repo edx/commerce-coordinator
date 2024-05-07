@@ -227,7 +227,7 @@ class RefundView(APIView):
             if result.get('returned_order', None):
                 logger.info(f"[RefundView] Successfully returned order {order_id} for username: {username}, "
                             f"course_id: {course_id} with result: {result}.")
-                return Response(result, status=HTTP_200_OK)
+                return Response(status=HTTP_200_OK)
             else:
                 logger.error(f"[RefundView] Failed returning order {order_id} for username: {username}, "
                              f"course_id: {course_id} with invalid filter/pipeline result: {result}.")

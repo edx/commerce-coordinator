@@ -82,7 +82,7 @@ class ReturnedOrderPlacedMessageSignalTest(CoordinatorSignalReceiverTestCase):
     """ Commercetools Returned Order Placed Signal Tester"""
     mock_parameters = {
         'order_id': uuid4_str(),
-        'order_line_id': uuid4_str(),
+        'return_line_item_return_id': uuid4_str(),
     }
 
     def test_correct_arguments_passed(self, mock_task):

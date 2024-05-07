@@ -249,16 +249,16 @@ class UpdateCommercetoolsOrderReturnPaymentStatus(PipelineStep):
         """
 
         order = kwargs['order_data']
-        if 'order_line_id' not in kwargs:
-            return_item_id = get_order_return_info_return_items(order)[0].id
+        if 'return_line_item_return_id' not in kwargs:
+            return_line_item_return_id = get_order_return_info_return_items(order)[0].id
         else:
-            return_item_id = kwargs['order_line_id']
+            return_line_item_return_id = kwargs['return_line_item_return_id']
 
         ct_api_client = CommercetoolsAPIClient()
         updated_order = ct_api_client.update_return_payment_state_after_successful_refund(
             order_id=order.id,
             order_version=order.version,
-            return_line_item_return_id=return_item_id
+            return_line_item_return_id=return_line_item_return_id
         )
 
         return {

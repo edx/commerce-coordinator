@@ -182,7 +182,7 @@ def fulfill_order_sanctioned_message_signal_task(
 @shared_task(autoretry_for=(RequestException, CommercetoolsError), retry_kwargs={'max_retries': 5, 'countdown': 3})
 def fulfill_order_returned_signal_task(
     order_id,
-    order_line_id
+    return_line_item_return_id
 ):
     """Celery task for an order return (and refunded) message."""
 
@@ -253,7 +253,9 @@ def fulfill_order_returned_signal_task(
 
     # Return payment if payment intent id is set
     if payment_intent_id is not None:
-        result = OrderRefundRequested.run_filter(order_id=order_id, order_line_id=order_line_id)
+        result = OrderRefundRequested.run_filter(
+            order_id=order_id, return_line_item_return_id=return_line_item_return_id
+        )
 
         if 'refund_response' in result and result['refund_response']:
             logger.debug(f'[CT-{tag}] payment intent %s refunded', payment_intent_id)
