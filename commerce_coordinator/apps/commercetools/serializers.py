@@ -101,8 +101,6 @@ class OrderReturnedViewMessageReturnInfoSerializer(CoordinatorSerializer):
     Serializer for OrderReturnedView message returnInfo.
     """
     items = OrderReturnedViewMessageLineItemReturnItemSerializer(many=True)
-    returnTrackingId = serializers.CharField()
-    returnDate = serializers.DateTimeField()
 
 
 class OrderReturnedViewMessageDetailSerializer(CoordinatorSerializer):
