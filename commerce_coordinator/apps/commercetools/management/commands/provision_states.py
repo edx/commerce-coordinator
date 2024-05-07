@@ -58,10 +58,9 @@ class Command(CommercetoolsAPIClientCommand):
             state_translations[state.id] = state.key
             state_pairs.append((state_draft_ref, state))
 
-        actions = []
-
         # Updating states after they have been created
         for (state_draft_ref, state) in state_pairs:
+            actions = []
 
             # Updating the line item state transitions of the fulfillment states after they have been created
             current_transitions = [transition.id for transition in state.transitions or []]
