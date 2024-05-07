@@ -253,7 +253,7 @@ def fulfill_order_returned_signal_task(
 
     # Return payment if payment intent id is set
     if payment_intent_id is not None:
-        result = OrderRefundRequested.run_filter(order_number=order_id, order_line_id=order_line_id)
+        result = OrderRefundRequested.run_filter(order_id=order_id, order_line_id=order_line_id)
 
         if 'refund_response' in result and result['refund_response']:
             logger.debug(f'[CT-{tag}] payment intent %s refunded', payment_intent_id)

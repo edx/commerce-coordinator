@@ -33,15 +33,14 @@ class OrderRefundRequested(OpenEdxPublicFilter):
     filter_type = "org.edx.coordinator.lms.order.refund.requested.v1"
 
     @classmethod
-    def run_filter(cls, order_id, order_line_id):  # pragma no cover
+    def run_filter(cls, order_id, order_line_item_id):  # pragma no cover
         """
         Call the PipelineStep(s) defined for this filter.
         Arguments:
-            order_id: Order Id
-            order_line_id: ID of order line item
+            order_id: Order ID
+            order_line_item_id: Order's line item ID
         Returns:
             order_refund: Updated order with return item attached
         """
 
-        order_refund = super().run_pipeline(order_id=order_id, order_line_id=order_line_id)
-        return order_refund
+        return super().run_pipeline(order_id=order_id, order_line_item_id=order_line_item_id)

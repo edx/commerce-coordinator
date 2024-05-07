@@ -367,10 +367,10 @@ OPEN_EDX_FILTERS_CONFIG = {
     "org.edx.coordinator.frontend_app_ecommerce.order.receipt_url.requested.v1": {
         "fail_silently": False,  # Coordinator filters should NEVER be allowed to fail silently
         "pipeline": [
-            'commerce_coordinator.apps.rollout.pipeline.DetermineActiveOrderManagementSystemByOrder',
+            'commerce_coordinator.apps.rollout.pipeline.DetermineActiveOrderManagementSystemByOrderNumber',
             'commerce_coordinator.apps.ecommerce.pipeline.GetLegacyEcommerceReceiptRedirectUrl',
             'commerce_coordinator.apps.rollout.pipeline.HaltIfRedirectUrlProvided',
-            'commerce_coordinator.apps.commercetools.pipeline.FetchOrderDetails',
+            'commerce_coordinator.apps.commercetools.pipeline.FetchOrderDetailsByOrderNumber',
             'commerce_coordinator.apps.stripe.pipeline.GetPaymentIntentReceipt'
         ]
     },
@@ -378,15 +378,14 @@ OPEN_EDX_FILTERS_CONFIG = {
         "fail_silently": False,  # Coordinator filters should NEVER be allowed to fail silently
         "pipeline": [
             'commerce_coordinator.apps.rollout.pipeline.DetermineActiveOrderManagementSystemByOrderID',
-            'commerce_coordinator.apps.commercetools.pipeline.FetchOrderDetailsbyOrderID',
             'commerce_coordinator.apps.commercetools.pipeline.CreateReturnForCommercetoolsOrder',
         ]
     },
     "org.edx.coordinator.commercetools.order.refund.requested.v1": {
         "fail_silently": False,  # Coordinator filters should NEVER be allowed to fail silently
         "pipeline": [
-            'commerce_coordinator.apps.rollout.pipeline.DetermineActiveOrderManagementSystemByOrder',
-            'commerce_coordinator.apps.commercetools.pipeline.FetchOrderDetails',
+            'commerce_coordinator.apps.rollout.pipeline.DetermineActiveOrderManagementSystemByOrderID',
+            'commerce_coordinator.apps.commercetools.pipeline.FetchOrderDetailsByOrderID',
             'commerce_coordinator.apps.stripe.pipeline.RefundPaymentIntent',
             'commerce_coordinator.apps.commercetools.pipeline.CreateReturnPaymentTransaction',
             'commerce_coordinator.apps.commercetools.pipeline.UpdateCommercetoolsOrderReturnPaymentStatus',

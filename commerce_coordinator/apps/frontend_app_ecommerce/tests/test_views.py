@@ -170,12 +170,12 @@ class ReceiptRedirectViewTests(APITestCase):
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
 
     @patch('commerce_coordinator.apps.stripe.clients.StripeAPIClient.retrieve_payment_intent')
-    @patch('commerce_coordinator.apps.commercetools.pipeline.CommercetoolsAPIClient.get_order_by_number')
+    @patch('commerce_coordinator.apps.commercetools.pipeline.CommercetoolsAPIClient')
     def test_view_303s_when_order_number_might_be_ct(self, ct_mock, stripe_mock):
         intent = gen_payment_intent()
         order = gen_order_for_payment_intent()
 
-        ct_mock.return_value.get_order_by_id.return_value = order
+        ct_mock.return_value.get_order_by_number.return_value = order
         stripe_mock.return_value = intent
 
         order_number = 'EDX-ZZZ001'
@@ -207,8 +207,8 @@ class ReceiptRedirectViewTests(APITestCase):
             "org.edx.coordinator.frontend_app_ecommerce.order.receipt_url.requested.v1": {
                 "fail_silently": False,
                 "pipeline": [
-                    'commerce_coordinator.apps.rollout.pipeline.DetermineActiveOrderManagementSystemByOrder',
-                    'commerce_coordinator.apps.commercetools.pipeline.FetchOrderDetails',
+                    'commerce_coordinator.apps.rollout.pipeline.DetermineActiveOrderManagementSystemByOrderNumber',
+                    'commerce_coordinator.apps.commercetools.pipeline.FetchOrderDetailsByOrderNumber',
                     'commerce_coordinator.apps.stripe.pipeline.GetPaymentIntentReceipt'
                 ]
             },

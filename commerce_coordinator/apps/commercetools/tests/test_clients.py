@@ -372,8 +372,8 @@ class ClientTests(TestCase):
                 with self.assertRaises(CommercetoolsError) as cm:
                     self.client_set.client.create_return_for_order(
                         order_id="mock_order_id",
-                        order_version="1",
-                        order_line_id="mock_return_item_id"
+                        order_version=1,
+                        order_line_item_id="mock_return_item_id"
                     )
 
                 exception = cm.exception

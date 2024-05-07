@@ -4,82 +4,20 @@ from unittest.mock import patch
 
 from stripe.error import StripeError
 
-from commerce_coordinator.apps.core.constants import OrderPaymentState, PaymentState
+from commerce_coordinator.apps.core.constants import PaymentState
 from commerce_coordinator.apps.stripe.constants import Currency
 from commerce_coordinator.apps.stripe.exceptions import (
     StripeIntentConfirmAPIError,
-    StripeIntentCreateAPIError,
     StripeIntentRetrieveAPIError,
     StripeIntentUpdateAPIError
 )
 from commerce_coordinator.apps.stripe.pipeline import (
     ConfirmPayment,
-    CreateOrGetStripeDraftPayment,
     GetStripeDraftPayment,
     UpdateStripeDraftPayment,
     UpdateStripePayment
 )
-from commerce_coordinator.apps.titan.tests.test_clients import ORDER_UUID, PROVIDER_RESPONSE_BODY
-
-
-class TestCreateOrGetStripeDraftPaymentStep(TestCase):
-    """A pytest Test case for the CreateOrGetStripeDraftPayment Pipeline Step"""
-    @patch('commerce_coordinator.apps.titan.clients.TitanAPIClient.create_payment')
-    @patch('commerce_coordinator.apps.stripe.clients.StripeAPIClient.create_payment_intent')
-    def test_pipeline_step(self, mock_create_payment_intent, mock_create_payment):
-        create_draft_payment_pipe = CreateOrGetStripeDraftPayment("test_pipe", None)
-        mock_active_order = {
-            'basket_id': ORDER_UUID,
-            'item_total': '100.0',
-            'payment_state': OrderPaymentState.BALANCE_DUE.value
-        }
-        intent_id = 'ch_3MebJMAa00oRYTAV1C26pHmmj572'
-        client_sec_id = 'pi_hiya_secret_howsitgoing'
-        mock_create_payment_intent.return_value = {
-            'id': intent_id,
-            'client_secret': client_sec_id
-        }
-        mock_payment_data = {
-            'amount': '228.0',
-            'payment_number': 'PDHB22WS',
-            'order_uuid': ORDER_UUID,
-            'key_id': client_sec_id,
-            'state': PaymentState.CHECKOUT.value,
-        }
-        mock_create_payment.return_value = {
-            'amount': mock_payment_data['amount'],
-            'number': mock_payment_data['payment_number'],
-            'orderUuid': mock_payment_data['order_uuid'],
-            'responseCode': mock_payment_data['key_id'],
-            'state': mock_payment_data['state'],
-            'providerResponseBody': PROVIDER_RESPONSE_BODY,
-        }
-
-        # Test with payment_data.
-        result: dict = create_draft_payment_pipe.run_filter(
-            order_data=mock_active_order,
-            payment_data=mock_payment_data,
-            edx_lms_user_id=12,
-        )
-        mock_create_payment_intent.assert_not_called()
-        mock_create_payment.assert_not_called()
-        self.assertIsNone(result)
-
-        # Test without payment_data.
-        mock_create_payment_intent.reset_mock()
-        mock_create_payment.reset_mock()
-        result: dict = create_draft_payment_pipe.run_filter(
-            order_data=mock_active_order,
-            edx_lms_user_id=12,
-        )
-        mock_create_payment_intent.assert_called()
-        mock_create_payment.assert_called()
-        self.assertEqual(mock_payment_data['key_id'], result['payment_data']['key_id'])
-
-        # Test Error while creating payment intent
-        mock_create_payment_intent.side_effect = StripeError
-        with self.assertRaises(StripeIntentCreateAPIError):
-            create_draft_payment_pipe.run_filter(mock_active_order, mock_payment_data=None, edx_lms_user_id=12)
+from commerce_coordinator.apps.titan.tests.test_clients import ORDER_UUID
 
 
 class TestGetStripeDraftPaymentStep(TestCase):

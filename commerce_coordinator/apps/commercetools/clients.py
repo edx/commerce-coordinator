@@ -208,10 +208,10 @@ class CommercetoolsAPIClient:
     def get_order_by_number(self, order_number: str, expand: ExpandList = DEFAULT_ORDER_EXPANSION)  \
             -> CTOrder:  # pragma no cover
         """
-        Fetch an order by the Order Number (cart-ID)
+        Fetch an order by the Order Number (Human readable order number)
 
         Args:
-            order_number (str): Order Numer (cart-Id)
+            order_number (str): Order Number (Human readable order number)
             expand: List of Order Parameters to expand
 
         Returns (CTOrder): Order with Expanded Properties
@@ -312,24 +312,24 @@ class CommercetoolsAPIClient:
 
         return matching_variant_list[0]
 
-    def create_return_for_order(self, order_id: str, order_version: int, order_line_id: str) -> CTOrder:
+    def create_return_for_order(self, order_id: str, order_version: int, order_line_item_id: str) -> CTOrder:
         """
         Creates refund/return for Commercetools order
         Args:
             order_id (str): Order ID (UUID)
             order_version (int): Current version of order
-            order_line_id (str): ID of order line item
+            order_line_item_id (str): ID of order line item
         Returns (CTOrder): Updated order object or
-        Returns Exception: Error if update was unsuccesful.
+        Returns Exception: Error if update was unsuccessful.
         """
 
         try:
             return_item_draft_comment = f'Creating return item for order {order_id} with ' \
-                                        f'order line id {order_line_id}'
+                                        f'order line item ID {order_line_item_id}'
 
             return_item_draft = ReturnItemDraft(
                 quantity=1,
-                line_item_id=order_line_id,
+                line_item_id=order_line_item_id,
                 comment=return_item_draft_comment,
                 shipment_state=ReturnShipmentState.RETURNED,
             )

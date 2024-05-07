@@ -70,11 +70,11 @@ class GetActiveOrderManagementSystem(PipelineStep):
         }
 
 
-class DetermineActiveOrderManagementSystemByOrder(PipelineStep):
-    """ Using an Order Numer/ID to determine the active order management system """
+class DetermineActiveOrderManagementSystemByOrderNumber(PipelineStep):
+    """ Using an order number to determine the active order management system """
 
     def run_filter(self, order_number, **kwargs):  # pylint: disable=arguments-differ
-        """ Using an Order Numer/ID to determine the active order management system """
+        """ Using an order number to determine the active order management system """
 
         active_order_management_system = COMMERCETOOLS_ORDER_MANAGEMENT_SYSTEM
 
@@ -87,10 +87,10 @@ class DetermineActiveOrderManagementSystemByOrder(PipelineStep):
 
 
 class DetermineActiveOrderManagementSystemByOrderID(PipelineStep):
-    """ Using an Order Numer/ID to determine the active order management system """
+    """ Using an order ID to determine the active order management system """
 
     def run_filter(self, order_id, **kwargs):  # pylint: disable=arguments-differ
-        """ Using an Order Numer/ID to determine the active order management system """
+        """ Using an Order ID to determine the active order management system """
 
         active_order_management_system = COMMERCETOOLS_ORDER_MANAGEMENT_SYSTEM
 
