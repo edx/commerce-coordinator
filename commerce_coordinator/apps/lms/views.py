@@ -174,7 +174,7 @@ class RefundView(APIView):
              - enrollment_attributes (list): a `list` of `dict` related to the order and order line.
 
          The refund is processed by running the OrderRefundRequested filter/pipeline
-         using the provided order_id and order_line_id extracted from the enrollment
+         using the provided order_id and line_item_id extracted from the enrollment
          attributes.
 
          If the refund is successfully marked in CT, a 200 OK response is returned along
@@ -204,7 +204,7 @@ class RefundView(APIView):
         logger.info(f"[RefundView] Starting LMS Refund for username: {username}, course_id: {course_id}, "
                     f"Enrollment attributes: {enrollment_attributes}.")
 
-        order_line_id = enrollment_attributes.get(enrollment_attribute_key('order', 'line_item_id'), None)
+        order_line_item_id = enrollment_attributes.get(enrollment_attribute_key('order', 'line_item_id'), None)
         order_id = enrollment_attributes.get(enrollment_attribute_key('order', 'order_id'), None)
 
         if not order_id:
@@ -214,20 +214,20 @@ class RefundView(APIView):
             return Response('the enrollment_attributes array requires an orders: order_id '
                             'attribute.', status=HTTP_400_BAD_REQUEST)
 
-        if not order_line_id:
+        if not order_line_item_id:
             logger.error(f"[RefundView] Failed processing refund for order {order_id} for username: {username}, "
-                         f"course_id: {course_id} the enrollment_attributes array requires an orders: order_line_id "
+                         f"course_id: {course_id} the enrollment_attributes array requires an orders: line_item_id "
                          f"attribute.")
-            return Response('the enrollment_attributes array requires an orders: order_line_id '
+            return Response('the enrollment_attributes array requires an orders: line_item_id '
                             'attribute.', status=HTTP_400_BAD_REQUEST)
 
         try:
-            result = OrderRefundRequested.run_filter(order_id, order_line_id)
+            result = OrderRefundRequested.run_filter(order_id, order_line_item_id)
 
-            if result['returned_order']:
+            if result.get('returned_order', None):
                 logger.info(f"[RefundView] Successfully returned order {order_id} for username: {username}, "
                             f"course_id: {course_id} with result: {result}.")
-                return Response(result, status=HTTP_200_OK)
+                return Response(status=HTTP_200_OK)
             else:
                 logger.error(f"[RefundView] Failed returning order {order_id} for username: {username}, "
                              f"course_id: {course_id} with invalid filter/pipeline result: {result}.")

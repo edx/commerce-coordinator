@@ -175,7 +175,7 @@ class ReceiptRedirectViewTests(APITestCase):
         intent = gen_payment_intent()
         order = gen_order_for_payment_intent()
 
-        ct_mock.return_value.get_order_by_id.return_value = order
+        ct_mock.return_value.get_order_by_number.return_value = order
         stripe_mock.return_value = intent
 
         order_number = 'EDX-ZZZ001'
@@ -184,7 +184,7 @@ class ReceiptRedirectViewTests(APITestCase):
         self.assertEqual(response.status_code, status.HTTP_303_SEE_OTHER)
 
     @patch('commerce_coordinator.apps.stripe.clients.StripeAPIClient.retrieve_payment_intent')
-    @patch('commerce_coordinator.apps.commercetools.clients.CommercetoolsAPIClient.get_order_by_id')
+    @patch('commerce_coordinator.apps.commercetools.clients.CommercetoolsAPIClient.get_order_by_number')
     @patch('commerce_coordinator.apps.commercetools.clients.CommercetoolsAPIClient.get_payment_by_key')
     def test_view_forwards_to_stripe_receipt_page(self, ct_payment_mock, ct_mock, stripe_mock):
         intent = gen_payment_intent()
@@ -207,8 +207,8 @@ class ReceiptRedirectViewTests(APITestCase):
             "org.edx.coordinator.frontend_app_ecommerce.order.receipt_url.requested.v1": {
                 "fail_silently": False,
                 "pipeline": [
-                    'commerce_coordinator.apps.rollout.pipeline.DetermineActiveOrderManagementSystemByOrder',
-                    'commerce_coordinator.apps.commercetools.pipeline.FetchOrderDetails',
+                    'commerce_coordinator.apps.rollout.pipeline.DetermineActiveOrderManagementSystemByOrderNumber',
+                    'commerce_coordinator.apps.commercetools.pipeline.FetchOrderDetailsByOrderNumber',
                     'commerce_coordinator.apps.stripe.pipeline.GetPaymentIntentReceipt'
                 ]
             },
@@ -222,7 +222,7 @@ class ReceiptRedirectViewTests(APITestCase):
         self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
 
     @patch('commerce_coordinator.apps.stripe.clients.StripeAPIClient.retrieve_payment_intent')
-    @patch('commerce_coordinator.apps.commercetools.clients.CommercetoolsAPIClient.get_order_by_id')
+    @patch('commerce_coordinator.apps.commercetools.clients.CommercetoolsAPIClient.get_order_by_number')
     def test_view_errors_if_ct_order_has_no_intent_id(self, ct_mock, stripe_mock):
         intent = gen_payment_intent()
         order = gen_order_for_payment_intent()

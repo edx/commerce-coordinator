@@ -73,9 +73,8 @@ class CommercetoolsOrLegacyEcommerceRefundPipelineTests(APITestCase):
         refund_pipe = CreateReturnForCommercetoolsOrder("test_pipe", None)
         ret = refund_pipe.run_filter(
             active_order_management_system="Legacy",
-            order_number="mock_id",
-            order_line_id="mock_line_id",
-            order_data=self.mock_response_order
+            order_id="mock_id",
+            order_line_item_id="mock_line_id"
         )
         self.assertEqual(ret, {})
 
@@ -90,9 +89,8 @@ class CommercetoolsOrLegacyEcommerceRefundPipelineTests(APITestCase):
         refund_pipe = CreateReturnForCommercetoolsOrder("test_pipe", None)
         ret = refund_pipe.run_filter(
             active_order_management_system=COMMERCETOOLS_ORDER_MANAGEMENT_SYSTEM,
-            order_number="mock_id",
-            order_line_id="mock_line_id",
-            order_data=self.mock_response_order
+            order_id="mock_id",
+            order_line_item_id="mock_line_id"
         )
         mock_order_result = ret['returned_order']
 
@@ -109,14 +107,13 @@ class CommercetoolsOrLegacyEcommerceRefundPipelineTests(APITestCase):
         with self.assertRaises(InvalidFilterType) as exc:
             refund_pipe.run_filter(
                 active_order_management_system=COMMERCETOOLS_ORDER_MANAGEMENT_SYSTEM,
-                order_number="mock_id",
-                order_line_id="order_line_id",
-                order_data=self.mock_response_order
+                order_id="mock_id",
+                order_line_item_id="order_line_id"
             )
 
         self.assertEqual(
             str(exc.exception),
-            'Refund already created for order mock_id with order line id order_line_id'
+            'Refund already created for order mock_id with order line item id order_line_id'
         )
 
     @patch('commerce_coordinator.apps.commercetools.utils.has_refund_transaction')
@@ -186,7 +183,7 @@ class OrderReturnPipelineTests(TestCase):
 
         pipe = UpdateCommercetoolsOrderReturnPaymentStatus("test_pipe", None)
         mock_order_return_update.return_value = self.update_order_response
-        ret = pipe.run_filter(returned_order=self.update_order_data, return_line_item_return_id="mock_return_item_id")
+        ret = pipe.run_filter(order_data=self.update_order_data, returned_order=self.update_order_data)
         result_data = ret['returned_order']
         self.assertEqual(result_data, self.update_order_response)
         self.assertEqual(result_data.return_info[1].items[0].payment_state, ReturnPaymentState.REFUNDED)

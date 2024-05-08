@@ -6,7 +6,6 @@ from logging import getLogger
 
 import attrs
 from commercetools import CommercetoolsError
-from commercetools.platform.models import Order as CTOrder
 from openedx_filters import PipelineStep
 from openedx_filters.exceptions import OpenEdxFilterException
 from requests import HTTPError
@@ -70,25 +69,82 @@ class GetCommercetoolsOrders(PipelineStep):
             return PipelineCommand.CONTINUE.value
 
 
-class FetchOrderDetails(PipelineStep):
+class FetchOrderDetailsByOrderNumber(PipelineStep):
     """ Fetch the order Details and if we can, set the PaymentIntent """
 
     def run_filter(self, active_order_management_system, order_number, **kwargs):  # pylint: disable=arguments-differ
         """
         Execute a filter with the signature specified.
         Arguments:
-            active_order_management_system: The Active Order System (optional)
-            params: arguments passed through from the original order history url querystring
-            order_number: Order number (for now this is an order.id, but this should change in the future)
-            TODO: SONIC-277 (in-progress)
+            active_order_management_system: The Active Order System
+            order_number: Order number
+            kwargs: The keyword arguments passed through from the filter
         Returns:
+            order_data (CTOrder): The object of the order
+            payment_intent_id (str): The Stripe PaymentIntent ID
+            amount_in_cents (decimal): Total amount to refund
+            has_been_refunded (bool): Has this payment been refunded
+            payment_data (CTPayment): Payment object of the order
         """
         if active_order_management_system != COMMERCETOOLS_ORDER_MANAGEMENT_SYSTEM:
             return PipelineCommand.CONTINUE.value
 
         try:
             ct_api_client = CommercetoolsAPIClient()
-            ct_order = ct_api_client.get_order_by_id(order_id=order_number)
+            ct_order = ct_api_client.get_order_by_number(order_number=order_number)
+
+            ret_val = {
+                "order_data": ct_order,
+            }
+
+            intent_id = get_edx_payment_intent_id(ct_order)
+
+            if intent_id:
+                ct_payment = ct_api_client.get_payment_by_key(intent_id)
+                ret_val['payment_intent_id'] = intent_id
+                ret_val['amount_in_cents'] = get_edx_refund_amount(ct_order)
+                ret_val['has_been_refunded'] = has_refund_transaction(ct_payment)
+                ret_val['payment_data'] = ct_payment
+            else:
+                ret_val['payment_intent_id'] = None
+                ret_val['amount_in_cents'] = decimal.Decimal(0.00)
+                ret_val['has_been_refunded'] = False
+                ret_val['payment_data'] = None
+
+            return ret_val
+        except CommercetoolsError as err:  # pragma no cover
+            log.exception(f"[{type(self).__name__}] Commercetools Error: {err}, {err.errors}")
+            return PipelineCommand.CONTINUE.value
+        except HTTPError as err:
+            log.exception(f"[{type(self).__name__}] HTTP Error: {err}")
+            return PipelineCommand.CONTINUE.value
+
+
+class FetchOrderDetailsByOrderID(PipelineStep):
+    """ Fetch the order details and if we can, set the PaymentIntent """
+
+    def run_filter(self, active_order_management_system, order_id, **kwargs):  # pylint: disable=arguments-differ
+        """
+        Execute a filter with the signature specified.
+        Arguments:
+            active_order_management_system: The Active Order System
+            order_id: Order ID
+            kwargs: The keyword arguments passed through from the filter
+        Returns:
+            order_data (CTOrder): The object of the order
+            order_id (str): Order ID
+            payment_intent_id (str): The Stripe PaymentIntent ID
+            amount_in_cents (decimal): Total amount to refund
+            has_been_refunded (bool): Has this payment been refunded
+            payment_data (CTPayment): Payment object of the order
+        """
+
+        if active_order_management_system != COMMERCETOOLS_ORDER_MANAGEMENT_SYSTEM:
+            return PipelineCommand.CONTINUE.value
+
+        try:
+            ct_api_client = CommercetoolsAPIClient()
+            ct_order = ct_api_client.get_order_by_id(order_id=order_id)
 
             ret_val = {
                 "order_data": ct_order,
@@ -120,47 +176,38 @@ class FetchOrderDetails(PipelineStep):
 
 class CreateReturnForCommercetoolsOrder(PipelineStep):
     """
-    Creates refund/return for Commercetools order by Updating its
+    Creates refund/return for Commercetools order by updating its
     ReturnShipmentStatus & ReturnPaymentStatus
     """
 
     def run_filter(
         self,
         active_order_management_system,
-        order_number,  # pylint: disable=unused-argument
-        order_line_id,
-        order_data: CTOrder,
-        has_been_refunded=False,
-        **kwargs
+        order_id,
+        order_line_item_id,
     ):  # pylint: disable=arguments-differ
         """
         Execute a filter with the signature specified.
         Args:
-            has_been_refunded(bool): Whether or not the order has been refunded
-            order_data:(CTOrder): Commercetools order object
             active_order_management_system: The Active Order System
-            order_number: Order number (for now this is an order.id, but this should change in the future)
-            TODO: SONIC-277 (in-progress)
-            order_line_id: ID of order line item
+            order_id: Order ID
+            order_line_item_id: Order's line item ID
         Returns:
-            returned_order: Updated Commercetools order
-            returned_line_item_return_id: Updated Commercetools order's return item ID
+            returned_order (CTOrder): Updated Commercetools order
+            returned_line_item_return_id (str): Updated Commercetools order's return item ID
 
         """
         if active_order_management_system != COMMERCETOOLS_ORDER_MANAGEMENT_SYSTEM:  # pragma no cover
             return PipelineCommand.CONTINUE.value
 
-        if has_been_refunded:  # pragma no cover
-            return PipelineCommand.CONTINUE.value
-
         try:
             ct_api_client = CommercetoolsAPIClient()
-            order = order_data
-            if not is_commercetools_line_item_already_refunded(order, order_line_id):
+            order = ct_api_client.get_order_by_id(order_id=order_id)
+            if not is_commercetools_line_item_already_refunded(order, order_line_item_id):
                 returned_order = ct_api_client.create_return_for_order(
                     order_id=order.id,
                     order_version=order.version,
-                    order_line_id=order_line_id
+                    order_line_item_id=order_line_item_id
                 )
 
                 returned_line_item_return_id = returned_order.return_info[0].items[0].id
@@ -171,10 +218,10 @@ class CreateReturnForCommercetoolsOrder(PipelineStep):
                 }
             else:
                 log.exception(f'Refund already created for order {order.id} with '
-                              f'order line id {order_line_id}')
+                              f'order line item id {order_line_item_id}')
                 raise InvalidFilterType(
                     f'Refund already created for order {order.id} with '
-                    f'order line id {order_line_id}')
+                    f'order line item id {order_line_item_id}')
         except CommercetoolsError as err:  # pragma no cover
             # TODO: FIX Per SONIC-354
             log.exception(f"[{type(self).__name__}] Commercetools Error: {err}, {err.errors}")
@@ -196,25 +243,22 @@ class UpdateCommercetoolsOrderReturnPaymentStatus(PipelineStep):
         """
         Execute a filter with the signature specified.
         Arguments:
-            returned_order: preliminary order (from an earlier pipeline step) we want to append to
-            return_line_item_return_id: id of the LineItemReturnItem to be refunded
+            kwargs: The keyword arguments passed through from the filter
         Returns:
-            returned_order: the modifed CT order
+            returned_order: the modified CT order
         """
 
-        # 'returned_order' is only sent if we're on an automatic refunds flow.
-        if 'returned_order' not in kwargs:
-            order = kwargs['order_data']
-            return_item_id = get_order_return_info_return_items(order)[0].id
+        order = kwargs['order_data']
+        if 'return_line_item_return_id' not in kwargs:
+            return_line_item_return_id = get_order_return_info_return_items(order)[0].id
         else:
-            order = kwargs['returned_order']
-            return_item_id = kwargs['return_line_item_return_id']
+            return_line_item_return_id = kwargs['return_line_item_return_id']
 
         ct_api_client = CommercetoolsAPIClient()
         updated_order = ct_api_client.update_return_payment_state_after_successful_refund(
             order_id=order.id,
             order_version=order.version,
-            return_line_item_return_id=return_item_id
+            return_line_item_return_id=return_line_item_return_id
         )
 
         return {
@@ -230,22 +274,22 @@ class CreateReturnPaymentTransaction(PipelineStep):
 
     def run_filter(
         self,
-        payment_data,
         refund_response,
         active_order_management_system,
+        payment_data,
         has_been_refunded,
         **kwargs
     ):  # pylint: disable=arguments-differ
         """
         Execute a filter with the signature specified.
         Arguments:
-            payment_data: CT payment object attached to the refunded order
             refund_response: Stripe refund object or str value "charge_already_refunded"
             active_order_management_system: The Active Order System
+            payment_data: CT payment object attached to the refunded order
+            has_been_refunded (bool): Has this payment been refunded
             kwargs: arguments passed through from the filter.
-            has_been_refunded(bool): Whether or not the order has been refunded
         Returns:
-            returned_payment: the modifed CT payment
+            returned_payment: the modified CT payment
         """
 
         tag = type(self).__name__

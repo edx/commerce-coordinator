@@ -90,7 +90,7 @@ def fulfill_order_placed_send_enroll_in_course_task(
         client = CommercetoolsAPIClient()
         # A retry means the current line item state on the order would be a failure state
         line_item_state_id = client.get_state_by_key(TwoUKeys.FAILURE_FULFILMENT_STATE).id
-        order_version = client.get_order_by_id(order_number).version
+        order_version = client.get_order_by_id(order_id).version
 
     line_item_state_payload = {
         'order_id': order_id,

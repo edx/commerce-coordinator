@@ -143,5 +143,5 @@ class OrderReturnedViewMessageInputSerializer(CoordinatorSerializer):
         else:  # pragma no cover
             return {}
 
-    def get_return_line_item_id(self):
-        return self.get_return_info().get('lineItemId', None)
+    def get_return_line_item_return_id(self):
+        return self.get_return_info().get('id', None)

@@ -70,15 +70,31 @@ class GetActiveOrderManagementSystem(PipelineStep):
         }
 
 
-class DetermineActiveOrderManagementSystemByOrder(PipelineStep):
-    """ Using an Order Numer/ID to determine the active order management system """
+class DetermineActiveOrderManagementSystemByOrderNumber(PipelineStep):
+    """ Using an order number to determine the active order management system """
 
     def run_filter(self, order_number, **kwargs):  # pylint: disable=arguments-differ
-        """ Using an Order Numer/ID to determine the active order management system """
+        """ Using an order number to determine the active order management system """
 
         active_order_management_system = COMMERCETOOLS_ORDER_MANAGEMENT_SYSTEM
 
         if is_legacy_order(order_number):
+            active_order_management_system = ECOMMERCE_ORDER_MANAGEMENT_SYSTEM
+
+        return {
+            ACTIVE_ORDER_MANAGEMENT_SYSTEM_KEY: active_order_management_system
+        }
+
+
+class DetermineActiveOrderManagementSystemByOrderID(PipelineStep):
+    """ Using an order ID to determine the active order management system """
+
+    def run_filter(self, order_id, **kwargs):  # pylint: disable=arguments-differ
+        """ Using an Order ID to determine the active order management system """
+
+        active_order_management_system = COMMERCETOOLS_ORDER_MANAGEMENT_SYSTEM
+
+        if is_legacy_order(order_id):
             active_order_management_system = ECOMMERCE_ORDER_MANAGEMENT_SYSTEM
 
         return {
