@@ -4,6 +4,8 @@ from unittest import TestCase
 from unittest.mock import patch
 
 from commercetools.platform.models import ReturnInfo, ReturnPaymentState, ReturnShipmentState, TransactionType
+from django.contrib.auth import get_user_model
+from django.test import RequestFactory
 from rest_framework.test import APITestCase
 
 from commerce_coordinator.apps.commercetools.constants import COMMERCETOOLS_ORDER_MANAGEMENT_SYSTEM
@@ -23,15 +25,24 @@ from commerce_coordinator.apps.commercetools.tests.conftest import (
 from commerce_coordinator.apps.core.constants import ORDER_HISTORY_PER_SYSTEM_REQ_LIMIT
 from commerce_coordinator.apps.core.exceptions import InvalidFilterType
 
+User = get_user_model()
+
 
 class PipelineTests(MonkeyPatchedGetOrderTestCase):
     """Commercetools pipeline testcase"""
 
-    def test_pipeline(self):
+    @patch('commerce_coordinator.apps.commercetools.pipeline.is_redirect_to_commercetools_enabled_for_user')
+    def test_pipeline(self, is_redirect_mock):
         """Ensure pipeline is functioning as expected"""
 
+        is_redirect_mock.return_value = True
+        request = RequestFactory()
+        request.user = User.objects.create_user(
+            username='test', email='test@example.com', password='secret'
+        )
         pipe = GetCommercetoolsOrders("test_pipe", None)
         ret = pipe.run_filter(
+            request,
             {
                 "edx_lms_user_id": 127,
                 "page_size": ORDER_HISTORY_PER_SYSTEM_REQ_LIMIT,

@@ -148,7 +148,8 @@ class TestBrazeHelpers(unittest.TestCase):
             "last_name": "User",
             "redirect_url": settings.LMS_DASHBOARD_URL,
             "view_receipt_cta_url": f"{settings.COMMERCE_COORDINATOR_URL}"
-                                    f"{reverse('frontend_app_ecommerce:order_receipt')}?order_number={order.id}",
+                                    f"{reverse('frontend_app_ecommerce:order_receipt')}"
+                                    f"?order_number={order.order_number}",
             "purchase_date": 'Oct 31, 2023',
             "purchase_time": '07:56 PM (UTC)',
             "subtotal": "$74.00",
@@ -173,7 +174,8 @@ class TestBrazeHelpers(unittest.TestCase):
             "last_name": "User",
             "redirect_url": settings.LMS_DASHBOARD_URL,
             "view_receipt_cta_url": f"{settings.COMMERCE_COORDINATOR_URL}"
-                                    f"{reverse('frontend_app_ecommerce:order_receipt')}?order_number={order.id}",
+                                    f"{reverse('frontend_app_ecommerce:order_receipt')}"
+                                    f"?order_number={order.order_number}",
             "purchase_date": 'Oct 31, 2023',
             "purchase_time": '07:56 PM (UTC)',
             "subtotal": "$149.00",
