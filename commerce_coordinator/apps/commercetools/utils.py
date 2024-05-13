@@ -108,7 +108,7 @@ def extract_ct_order_information_for_braze_canvas(customer: Customer, order: Ord
         "last_name": customer.last_name,
         "redirect_url": settings.LMS_DASHBOARD_URL,
         "view_receipt_cta_url": f"{settings.COMMERCE_COORDINATOR_URL}{reverse('frontend_app_ecommerce:order_receipt')}"
-                                f"?order_number={order.id}",
+                                f"?order_number={order.order_number}",
         "purchase_date": formatted_order_placement_date,
         "purchase_time": formatted_order_placement_time,
         "subtotal":  format_amount_for_braze_canvas(subtotal),

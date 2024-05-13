@@ -1,5 +1,6 @@
 {
   "id": "7506b6f1-8fe2-440d-ac76-4f62dfbd3775",
+  "orderNumber": "2U-000001",
   "version": 7,
   "createdAt": "2023-10-31T19:51:46.791Z",
   "lastModifiedAt": "2023-10-31T19:56:36.957Z",
@@ -358,13 +359,13 @@
         {
           "id": "1234",
           "type": "LineItemReturnItem",
-          "lineItemId": "order_line_id" 
+          "lineItemId": "order_line_id"
 
         },
         {
           "id": "5678",
           "type": "LineItemReturnItem",
-          "lineItemId": "not_order_line_id" 
+          "lineItemId": "not_order_line_id"
 
         }
       ],

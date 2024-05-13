@@ -1,10 +1,10 @@
 """ Fallback Monkeypatched Test Case """
 
 from typing import List
-from unittest import TestCase
 
 from commercetools.platform.models import Customer as CTCustomer
 from commercetools.platform.models import Order as CTOrder
+from django.test import TestCase
 
 from commerce_coordinator.apps.commercetools.clients import CommercetoolsAPIClient, PaginatedResult
 from commerce_coordinator.apps.commercetools.tests.conftest import MonkeyPatch, gen_order

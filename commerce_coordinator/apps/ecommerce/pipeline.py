@@ -31,10 +31,11 @@ class GetEcommerceOrders(PipelineStep):
     Adds ecommerce orders to the order data list.
     """
 
-    def run_filter(self, params, order_data):  # pylint: disable=arguments-differ
+    def run_filter(self, request, params, order_data):  # pylint: disable=arguments-differ
         """
         Execute a filter with the signature specified.
         Arguments:
+            request: request object passed through from the lms filter
             params: arguments passed through from the original order history url querystring
             order_data: any preliminary orders (from an earlier pipeline step) we want to append to
         """
@@ -59,4 +60,4 @@ class GetEcommerceOrders(PipelineStep):
                 ex,
                 new_params
             )
-            return PipelineCommand.CONTINUE
+            return PipelineCommand.CONTINUE.value

@@ -24,6 +24,7 @@ from commerce_coordinator.apps.rollout.utils import (
     get_order_return_info_return_items,
     is_commercetools_line_item_already_refunded
 )
+from commerce_coordinator.apps.rollout.waffle import is_redirect_to_commercetools_enabled_for_user
 
 log = getLogger(__name__)
 
@@ -33,14 +34,18 @@ class GetCommercetoolsOrders(PipelineStep):
     Adds commercetools orders to the order data list.
     """
 
-    def run_filter(self, params, order_data):  # pylint: disable=arguments-differ
+    def run_filter(self, request, params, order_data):  # pylint: disable=arguments-differ
         """
         Execute a filter with the signature specified.
         Arguments:
+            request: request object passed through from the lms filter
             params: arguments passed through from the original order history url querystring
             order_data: any preliminary orders (from an earlier pipeline step) we want to append to
         Returns:
         """
+
+        if not is_redirect_to_commercetools_enabled_for_user(request):
+            return PipelineCommand.CONTINUE.value
 
         try:
             ct_api_client = CommercetoolsAPIClient()

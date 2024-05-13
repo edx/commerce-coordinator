@@ -97,7 +97,7 @@ class PaymentPageRedirectView(APIView):
 
 class OrderDetailsRedirectView(APIView):
     """Accept incoming request from the support tools MFE for routing staff users to the order details admin page."""
-    permission_classes = [LoginRedirectIfUnauthenticated]
+    permission_classes = [IsAdminUser]
     throttle_classes = (UserRateThrottle,)
 
     def get(self, request):

@@ -206,13 +206,13 @@ def fulfill_order_returned_signal_task(
             else 2
         )
 
-    def _prepare_segment_event_properties(in_order):  # pragma no cover
+    def _prepare_segment_event_properties(in_order, return_line_item_return_id):
         return {
             'track_plan_id': 19,
             'trigger_source': 'server-side',
             'order_id': in_order.id,
             'checkout_id': in_order.cart.id,
-            'return_id': '',  # TODO: [https://2u-internal.atlassian.net/browse/SONIC-391] Set CT return ID here.
+            'return_id': return_line_item_return_id,
             'total': _cents_to_dollars(in_order.taxed_price.total_gross),
             'currency': in_order.taxed_price.total_gross.currency_code,
             'tax': _cents_to_dollars(in_order.taxed_price.total_tax),
@@ -259,40 +259,37 @@ def fulfill_order_returned_signal_task(
 
         if 'refund_response' in result and result['refund_response']:
             logger.debug(f'[CT-{tag}] payment intent %s refunded', payment_intent_id)
+            segment_event_properties = _prepare_segment_event_properties(order, return_line_item_return_id)
+
+            for line_item in get_edx_items(order):
+                course_run = get_edx_product_course_run_key(line_item)
+                # TODO: Remove LMS Enrollment
+                logger.debug(
+                    f'[CT-{tag}] calling lms to unenroll user %s in %s',
+                    lms_user_name, course_run
+                )
+
+                product = {
+                    'product_id': line_item.product_key,
+                    'sku': line_item.variant.sku if hasattr(line_item.variant, 'sku') else None,
+                    'name': line_item.name['en-US'],
+                    'price': _cents_to_dollars(line_item.price.value),
+                    'quantity': line_item.quantity,
+                    'category': _get_line_item_attribute(line_item, 'primarySubjectArea'),
+                    'image_url': line_item.variant.images[0].url if line_item.variant.images else None,
+                    'brand': _get_line_item_attribute(line_item, 'brand-text')
+                }
+                segment_event_properties['products'].append(product)
+
+            if segment_event_properties['products']:  # pragma no cover
+                # Emitting the 'Order Refunded' Segment event upon successfully processing a refund.
+                track(
+                    lms_user_id=lms_user_id,
+                    event='Order Refunded',
+                    properties=segment_event_properties
+                )
         else:  # pragma no cover
             logger.debug(f'[CT-{tag}] payment intent %s not refunded', payment_intent_id)
             # TODO: SONIC-363 send email to support via Zendesk
-
-    segment_event_properties = _prepare_segment_event_properties(order)  # pragma no cover
-
-    for line_item in get_edx_items(order):
-        course_run = get_edx_product_course_run_key(line_item)
-
-        # TODO: Remove LMS Enrollment
-
-        logger.debug(
-            f'[CT-{tag}] calling lms to unenroll user %s in %s',
-            lms_user_name, course_run
-        )
-
-        product = {
-            'product_id': line_item.product_key,
-            'sku': line_item.variant.sku if hasattr(line_item.variant, 'sku') else None,
-            'name': line_item.name['en-US'],
-            'price': _cents_to_dollars(line_item.price.value),
-            'quantity': line_item.quantity,
-            'category': _get_line_item_attribute(line_item, 'primarySubjectArea'),
-            'image_url': line_item.variant.images[0].url if line_item.variant.images else None,
-            'brand': _get_line_item_attribute(line_item, 'brand-text')
-        }
-        segment_event_properties['products'].append(product)
-
-    if segment_event_properties['products']:  # pragma no cover
-        # Emitting the 'Order Refunded' Segment event upon successfully processing a refund.
-        track(
-            lms_user_id=lms_user_id,
-            event='Order Refunded',
-            properties=segment_event_properties
-        )
 
     return True

@@ -40,12 +40,11 @@ class GetActiveOrderManagementSystem(PipelineStep):
         """
         sku = request.query_params.get('sku', '').strip()
         course_run = request.query_params.get('course_run_key', '').strip()
-
-        ct_api_client = CommercetoolsAPIClient()
         commercetools_available_course = None
 
-        if course_run:
+        if course_run and is_redirect_to_commercetools_enabled_for_user(request):
             try:
+                ct_api_client = CommercetoolsAPIClient()
                 commercetools_available_course = ct_api_client.get_product_variant_by_course_run(course_run)
             except HTTPError as exc:  # pragma no cover
                 # TODO: FIX Per SONIC-354
@@ -54,8 +53,7 @@ class GetActiveOrderManagementSystem(PipelineStep):
                     f'for course_run: {course_run} with exception: {exc}'
                 )
 
-        if ((is_redirect_to_commercetools_enabled_for_user(request) and commercetools_available_course is not None)
-                and not is_user_enterprise_learner(request)):
+        if commercetools_available_course and not is_user_enterprise_learner(request):
             active_order_management_system = COMMERCETOOLS_FRONTEND
         elif sku:
             active_order_management_system = FRONTEND_APP_PAYMENT_CHECKOUT
