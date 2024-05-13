@@ -26,7 +26,8 @@ from commerce_coordinator.apps.commercetools.signals import fulfill_order_placed
 from commerce_coordinator.apps.commercetools.utils import (
     extract_ct_order_information_for_braze_canvas,
     extract_ct_product_information_for_braze_canvas,
-    send_order_confirmation_email
+    send_order_confirmation_email,
+    send_refund_notification
 )
 from commerce_coordinator.apps.core.constants import ISO_8601_FORMAT
 from commerce_coordinator.apps.core.memcache import safe_key
@@ -290,6 +291,6 @@ def fulfill_order_returned_signal_task(
                 )
         else:  # pragma no cover
             logger.debug(f'[CT-{tag}] payment intent %s not refunded', payment_intent_id)
-            # TODO: SONIC-363 send email to support via Zendesk
+            return send_refund_notification(customer, order_id)
 
     return True
