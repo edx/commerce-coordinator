@@ -4,6 +4,7 @@ import requests
 from commercetools import CommercetoolsError
 from commercetools.platform.models import (
     StateChangeInitialAction,
+    StateResourceIdentifier,
     StateSetDescriptionAction,
     StateSetNameAction,
     StateSetTransitionsAction
@@ -63,13 +64,30 @@ class Command(CommercetoolsAPIClientCommand):
             actions = []
 
             # Updating the line item state transitions of the fulfillment states after they have been created
-            current_transitions = [transition.id for transition in state.transitions or []]
-            new_transitions = [state_translations[transition.key] for transition in state_draft_ref.transitions]
+            current_transitions = [transition.id for transition in state.transitions] \
+                if state.transitions is not None else None
+            new_transitions = [state_translations[transition.key] for transition in state_draft_ref.transitions] \
+                if state_draft_ref.transitions is not None else None
 
-            if all(transition in current_transitions for transition in new_transitions):
-                print(f'The {state.key}/{state.id} state already has the expected transitions.')
+            # Update Transitions
+
+            def _exactly_equal(x, y):
+                if x is None and y is None:
+                    return True
+                if x is None or y is None:
+                    return False
+                if len(x or []) == 0 and len(y or []) == 0:
+                    return True
+                return x == y
+
+            if not _exactly_equal(new_transitions, current_transitions):
+                new_transitions = None if new_transitions is None \
+                    else [StateResourceIdentifier(id=transition) for transition in new_transitions]
+                actions.append(StateSetTransitionsAction(
+                    transitions=new_transitions
+                ))
             else:
-                actions.append(StateSetTransitionsAction(transitions=new_transitions))
+                print(f'The {state.key}/{state.id} state already has the expected transitions.')
 
             # Update Initial
             if state.initial != state_draft_ref.initial:
