@@ -1,6 +1,7 @@
 import platform
 import sys
 from os import environ
+import ddtrace.auto
 
 from django.core.exceptions import ImproperlyConfigured
 
@@ -96,6 +97,12 @@ def get_logger_config(logging_env="no_env",
                 'handlers': handlers,
                 'level': 'DEBUG',
                 'propagate': False
+            },
+            'loggers': {
+                'ddtrace': {
+                    'handlers': ['console'],
+                    'level': 'WARNING',
+                }
             },
         }
     }

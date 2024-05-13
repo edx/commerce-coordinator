@@ -23,7 +23,10 @@ async-timeout==4.0.3
     #   -r requirements/validation.txt
     #   redis
 attrs==23.2.0
-    # via -r requirements/validation.txt
+    # via
+    #   -r requirements/validation.txt
+    #   cattrs
+    #   ddtrace
 backoff==2.2.1
     # via
     #   -r requirements/validation.txt
@@ -47,10 +50,18 @@ build==1.2.1
     # via
     #   -r requirements/pip-tools.txt
     #   pip-tools
+bytecode==0.15.1
+    # via
+    #   -r requirements/validation.txt
+    #   ddtrace
 cachetools==5.3.3
     # via
     #   -r requirements/validation.txt
     #   tox
+cattrs==23.2.3
+    # via
+    #   -r requirements/validation.txt
+    #   ddtrace
 celery[redis]==5.4.0
     # via -r requirements/validation.txt
 certifi==2024.2.2
@@ -130,13 +141,23 @@ cryptography==42.0.7
     #   social-auth-core
 currencies==2020.12.12
     # via -r requirements/validation.txt
+ddsketch==3.0.1
+    # via
+    #   -r requirements/validation.txt
+    #   ddtrace
 ddt==1.7.2
+    # via -r requirements/validation.txt
+ddtrace==2.8.4
     # via -r requirements/validation.txt
 defusedxml==0.8.0rc2
     # via
     #   -r requirements/validation.txt
     #   python3-openid
     #   social-auth-core
+deprecated==1.2.14
+    # via
+    #   -r requirements/validation.txt
+    #   opentelemetry-api
 diff-cover==9.0.0
     # via -r requirements/dev.in
 dill==0.3.8
@@ -226,9 +247,14 @@ edx-opaque-keys==2.9.0
     #   edx-drf-extensions
 edx-rest-api-client==5.7.0
     # via -r requirements/validation.txt
+envier==0.5.1
+    # via
+    #   -r requirements/validation.txt
+    #   ddtrace
 exceptiongroup==1.2.1
     # via
     #   -r requirements/validation.txt
+    #   cattrs
     #   pytest
 filelock==3.14.0
     # via
@@ -245,6 +271,7 @@ importlib-metadata==6.11.0
     #   -r requirements/validation.txt
     #   build
     #   keyring
+    #   opentelemetry-api
     #   twine
 importlib-resources==6.4.0
     # via
@@ -348,6 +375,10 @@ openapi-codec==1.3.2
     #   django-rest-swagger
 openedx-filters==1.8.1
     # via -r requirements/validation.txt
+opentelemetry-api==1.24.0
+    # via
+    #   -r requirements/validation.txt
+    #   ddtrace
 packaging==24.0
     # via
     #   -r requirements/pip-tools.txt
@@ -389,6 +420,10 @@ prompt-toolkit==3.0.43
     # via
     #   -r requirements/validation.txt
     #   click-repl
+protobuf==5.26.1
+    # via
+    #   -r requirements/validation.txt
+    #   ddtrace
 psutil==5.9.8
     # via
     #   -r requirements/validation.txt
@@ -546,6 +581,8 @@ simplejson==3.19.2
 six==1.16.0
     # via
     #   -r requirements/validation.txt
+    #   ddsketch
+    #   ddtrace
     #   edx-auth-backends
     #   edx-django-release-util
     #   edx-lint
@@ -570,6 +607,7 @@ social-auth-core==4.5.4
 sqlparse==0.5.0
     # via
     #   -r requirements/validation.txt
+    #   ddtrace
     #   django
     #   django-debug-toolbar
 stevedore==5.2.0
@@ -610,6 +648,9 @@ typing-extensions==4.11.0
     #   -r requirements/validation.txt
     #   asgiref
     #   astroid
+    #   bytecode
+    #   cattrs
+    #   ddtrace
     #   edx-opaque-keys
     #   kombu
     #   pylint
@@ -660,6 +701,11 @@ wrapt==1.16.0
     # via
     #   -r requirements/validation.txt
     #   commercetools
+    #   deprecated
+xmltodict==0.13.0
+    # via
+    #   -r requirements/validation.txt
+    #   ddtrace
 zipp==3.18.1
     # via
     #   -r requirements/pip-tools.txt

@@ -1,5 +1,6 @@
 import os
 from os.path import abspath, dirname, join
+import ddtrace
 
 from corsheaders.defaults import default_headers as corsheaders_default_headers
 
@@ -301,6 +302,11 @@ PLATFORM_NAME = 'Your Platform Name Here'
 
 # Set up logging for development use (logging to stdout)
 LOGGING = get_logger_config(debug=DEBUG)
+
+# Set up DataDog logging
+ddtrace.config.django['service_name'] = 'commerce-coordinator'
+ddtrace.config.django['distributed_tracing'] = True
+ddtrace.config.django['analytics_enabled'] = True
 
 #####################################################################
 # Commerce Coordinator Signal Configuration

@@ -39,6 +39,14 @@ ENV LANG en_US.UTF-8
 ENV LANGUAGE en_US:en
 ENV LC_ALL en_US.UTF-8
 ENV DJANGO_SETTINGS_MODULE commerce_coordinator.settings.production
+ENV DD_TRACE_AGENT_URL='http://localhost:8126'
+ENV DD_SERVICE="commerce-coordinator"
+ENV DD_ENV="dev"
+ENV DD_VERSION="0.1.0"
+
+LABEL com.datadoghq.tags.service="commerce-coordinator"
+LABEL com.datadoghq.tags.env="dev"
+LABEL com.datadoghq.tags.version="0.1.0"
 
 EXPOSE 8140
 RUN useradd -m --shell /bin/false app
@@ -59,7 +67,7 @@ RUN mkdir -p /edx/var/log
 USER app
 
 # Gunicorn 19 does not log to stdout or stderr by default. Once we are past gunicorn 19, the logging to STDOUT need not be specified.
-CMD gunicorn --workers=2 --name commerce-coordinator -c /edx/app/commerce-coordinator/commerce_coordinator/docker_gunicorn_configuration.py --log-file - --max-requests=1000 commerce-coordinator.wsgi:application
+CMD ["ddtrace-run", "gunicorn", "--workers=2", "--name", "commerce-coordinator", "-c", "/edx/app/commerce-coordinator/commerce_coordinator/docker_gunicorn_configuration.py", "--log-file", "-", "--max-requests=1000", "commerce-coordinator.wsgi:application"]
 
 # This line is after the requirements so that changes to the code will not
 # bust the image cache

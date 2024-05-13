@@ -1,5 +1,19 @@
 version: "2.1"
 services:
+  datadog:
+        container_name: dd-agent
+        image: "gcr.io/datadoghq/agent:latest"
+        environment:
+          - DD_API_KEY=os.environ.get('DD_API_KEY', '')
+          - DD_SITE=datadoghq.com
+          - DD_APM_ENABLED=true    # Enable APM
+          - DD_APM_NON_LOCAL_TRAFFIC=true
+        volumes:
+          - /var/run/docker.sock:/var/run/docker.sock:ro
+          - /proc/:/host/proc/:ro
+          - /sys/fs/cgroup/:/host/sys/fs/cgroup:ro
+        ports:
+          - "8126:8126"
   db:
     image: edxops/mysql:5.7
     container_name: commerce-coordinator.db
@@ -22,6 +36,7 @@ services:
     command: bash -c 'while true; do python /edx/app/commerce-coordinator/manage.py runserver 0.0.0.0:8140; sleep 2; done'
     environment:
       DJANGO_SETTINGS_MODULE: commerce_coordinator.settings.devstack
+      DD_AGENT_HOST: dd-agent
     ports:
       - "8140:8140"
     stdin_open: true
