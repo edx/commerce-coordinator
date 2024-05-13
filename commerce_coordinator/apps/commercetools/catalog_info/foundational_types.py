@@ -22,7 +22,7 @@ class TwoUCustomStates:
         type=StateTypeEnum.ORDER_STATE,
         name=ls({'en': 'Sanctioned'}),
         description=ls({'en': 'This order has been sanctioned for an SDN hit'}),
-        transitions=[]
+        transitions=None
     )
 
     # Line Item States
