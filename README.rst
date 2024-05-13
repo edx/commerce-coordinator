@@ -49,6 +49,7 @@ Local
 
   # Install/update the dev requirements (run inside the venv)
   make requirements
+  pip install ddtrace-run # This may be temporary
   # If you get 'Unsupported architecture' errors above, instead use: CFLAGS='-D__x86_64__' make requirements
 
   # Expose the redis port for devstack (needed until commerce coordinator is part of devstack)
