@@ -4,7 +4,8 @@ Tests for the frontend_app_ecommerce app filters.
 
 from unittest.mock import patch
 
-from django.test import TestCase
+from django.contrib.auth import get_user_model
+from django.test import RequestFactory, TestCase
 
 from commerce_coordinator.apps.frontend_app_ecommerce.filters import OrderHistoryRequested
 from commerce_coordinator.apps.frontend_app_ecommerce.tests import (
@@ -13,6 +14,8 @@ from commerce_coordinator.apps.frontend_app_ecommerce.tests import (
     CTOrdersForCustomerMock,
     EcommerceClientMock
 )
+
+User = get_user_model()
 
 
 @patch('commerce_coordinator.apps.ecommerce.clients.EcommerceAPIClient.get_orders',
@@ -33,5 +36,9 @@ class TestFrontendAppEcommerceFilters(TestCase):
         Confirm that OrderHistoryRequested filter calls expected PipelineStep: GetEcommerceOrders
         """
 
-        response = OrderHistoryRequested.run_filter(ORDER_HISTORY_GET_PARAMETERS)
+        request = RequestFactory()
+        request.user = User.objects.create_user(
+            username='test', email='test@example.com', password='secret'
+        )
+        response = OrderHistoryRequested.run_filter(request, ORDER_HISTORY_GET_PARAMETERS)
         self.assertEqual(response[0], ECOMMERCE_REQUEST_EXPECTED_RESPONSE)

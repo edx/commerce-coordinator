@@ -95,9 +95,11 @@ class OrdersViewTests(TestCase):
         # Check 200 OK
         self.assertEqual(response.status_code, 200)
 
-    def test_view_returns_expected_ecommerce_response(self, _mock_ctorders, _mock_ecommerce_client):
+    @patch('commerce_coordinator.apps.commercetools.pipeline.is_redirect_to_commercetools_enabled_for_user')
+    def test_view_returns_expected_ecommerce_response(self, is_redirect_mock, _mock_ctorders, _mock_ecommerce_client):
         """Check authorized user querying orders receive an expected response."""
 
+        is_redirect_mock.return_value = True
         # Login
         self.client.login(username=self.test_user_username, password=self.test_user_password)
 

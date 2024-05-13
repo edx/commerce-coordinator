@@ -89,7 +89,7 @@ class UserOrdersView(APIView):
         if not request.user.lms_user_id:  # pragma: no cover
             raise PermissionDenied(detail="Could not detect LMS user id.")
 
-        order_data = OrderHistoryRequested.run_filter(params)
+        order_data = OrderHistoryRequested.run_filter(request, params)
 
         output_orders = []
 

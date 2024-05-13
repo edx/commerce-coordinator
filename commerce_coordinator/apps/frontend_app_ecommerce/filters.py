@@ -35,17 +35,18 @@ class OrderHistoryRequested(OpenEdxPublicFilter):
     filter_type = "org.edx.coordinator.frontend_app_ecommerce.order.history.requested.v1"
 
     @classmethod
-    def run_filter(cls, params, order_data=None):
+    def run_filter(cls, request, params, order_data=None):
         """
         Call the PipelineStep(s) defined for this filter, to gather orders and return together
         Arguments:
+            request: request object passed through from the lms filter
             params: arguments passed through from the original order history url querystring
             order_data: any preliminary orders we want to append to when running the pipeline
         """
         if order_data is None:  # pragma: no cover
             order_data = []
 
-        pipeline_data = super().run_pipeline(params=params, order_data=order_data)
+        pipeline_data = super().run_pipeline(request=request, params=params, order_data=order_data)
         result = pipeline_data.get("order_data")
 
         # Note: OpenEdxPublicFilter run_pipeline returns an array with our dictionary inside
