@@ -29,7 +29,7 @@
         ],
         "attributes": [
           {
-            "name": "primarySubjectArea",
+            "name": "primary-subject-area",
             "value": {
               "key": "business",
               "label": "Business"
@@ -85,7 +85,7 @@
             "value": "32126"
           },
           {
-            "name": "courserun_start",
+            "name": "courserun-start",
             "value": "2021-04-19"
           },
           {

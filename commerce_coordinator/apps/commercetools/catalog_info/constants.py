@@ -42,6 +42,7 @@ SEND_MONEY_AS_DECIMAL_STRING = True
 
 DEFAULT_ORDER_EXPANSION = (
     "state",
+    'lineItems[*].productType.obj',
     "paymentInfo.payments[*]",
     "discountCodes[*].discountCode",
     "directDiscounts[*]"
