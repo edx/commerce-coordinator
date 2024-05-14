@@ -1,0 +1,26 @@
+# datadog.yaml
+
+# Set the API key for your DataDog account
+api_key: "8fadd0c3696168ff43abf512a5ad5962"
+
+# Enable logs collection
+logs_enabled: true
+
+# Configure logs processing
+logs_config:
+  use_v2_pipeline: true
+
+# Enable process collection
+process_config:
+  enabled: true
+
+# Configure integrations
+integrations:
+  - name: redisdb
+    instances:
+      - host: 172.18.0.7  # Redis server IP address
+        port: 6379         # Redis server port
+
+  - name: elastic
+    instances:
+      - url: http://172.18.0.7:9200  # Elasticsearch URL
