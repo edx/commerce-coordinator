@@ -39,7 +39,7 @@ ENV LANG en_US.UTF-8
 ENV LANGUAGE en_US:en
 ENV LC_ALL en_US.UTF-8
 ENV DJANGO_SETTINGS_MODULE commerce_coordinator.settings.production
-ENV DD_TRACE_AGENT_URL='http://localhost:8126'
+ENV DD_TRACE_AGENT_URL='http://datadog:8126'
 ENV DD_SERVICE="commerce-coordinator"
 ENV DD_ENV="dev"
 ENV DD_VERSION="0.1.0"
