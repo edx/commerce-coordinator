@@ -282,7 +282,7 @@ def fulfill_order_returned_signal_task(
                     'url': _get_line_item_attribute(line_item, 'url-course'),
                     'lob': 'edX',  # TODO: Decision was made to hardcode this value for phase 1.
                     'product_type': line_item.product_type.obj.name
-                        if hasattr(line_item.product_type.obj, 'name') else None
+                    if hasattr(line_item.product_type.obj, 'name') else None
                 }
                 segment_event_properties['products'].append(product)
 
