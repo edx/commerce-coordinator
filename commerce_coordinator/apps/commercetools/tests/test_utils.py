@@ -4,6 +4,9 @@ Tests for Commerce tools utils
 import unittest
 from unittest.mock import MagicMock
 
+import ddt
+import pytest
+import requests_mock
 from braze.client import BrazeClient
 from commercetools.platform.models import TransactionState, TransactionType
 from django.conf import settings
@@ -11,14 +14,17 @@ from django.test import override_settings
 from django.urls import reverse
 from mock import Mock, patch
 
-from commerce_coordinator.apps.commercetools.tests.conftest import gen_order, gen_payment
+from commerce_coordinator.apps.commercetools.catalog_info.edx_utils import get_edx_lms_user_name
+from commerce_coordinator.apps.commercetools.tests.conftest import gen_example_customer, gen_order, gen_payment
 from commerce_coordinator.apps.commercetools.tests.constants import EXAMPLE_FULFILLMENT_SIGNAL_PAYLOAD
 from commerce_coordinator.apps.commercetools.utils import (
+    create_zendesk_ticket,
     extract_ct_order_information_for_braze_canvas,
     extract_ct_product_information_for_braze_canvas,
     get_braze_client,
     has_refund_transaction,
     send_order_confirmation_email,
+    send_refund_notification,
     translate_stripe_refund_status_to_transaction_status
 )
 
@@ -216,3 +222,120 @@ class TestTranslateStripeRefundStatus(unittest.TestCase):
     def test_translate_stripe_refund_status_other(self):
         # Test for an unknown status
         self.assertEqual(translate_stripe_refund_status_to_transaction_status('unknown_status'), 'unknown_status')
+
+
+@pytest.mark.django_db
+@ddt.ddt
+class TestSendRefundNotification(unittest.TestCase):
+    """
+    Tests for creating of and sending Zendesk tickets
+    """
+
+    def setUp(self):
+        self.order = gen_order(EXAMPLE_FULFILLMENT_SIGNAL_PAYLOAD['order_number'], with_discount=False)
+        self.user = gen_example_customer()
+
+    @patch("commerce_coordinator.apps.commercetools.utils.create_zendesk_ticket")
+    def test_commercetools_refund_send_notification_failed(self, mock_create_zendesk_ticket):
+        mock_create_zendesk_ticket.return_value = False
+
+        self.assertFalse(send_refund_notification(self.user, self.order.order_number))
+
+    @patch("commerce_coordinator.apps.commercetools.utils.create_zendesk_ticket")
+    def test_commercetools_refund_send_notification_success(self, mock_create_zendesk_ticket):
+        mock_create_zendesk_ticket.return_value = True
+
+        self.assertTrue(send_refund_notification(self.user, self.order.order_number))
+
+    @patch('commerce_coordinator.apps.commercetools.utils.logger.error')
+    def test_create_zendesk_ticket_failed_not_configured(self, mock_logger):
+        tags = 'test_tags'
+        subject = 'test_subject'
+        body = 'test_body'
+
+        create_zendesk_ticket(
+            get_edx_lms_user_name(self.user),
+            self.user.email,
+            subject,
+            body,
+            tags
+        )
+
+        mock_logger.assert_called_once_with('Zendesk is not configured. Cannot create a ticket.')
+
+    @override_settings(
+            ZENDESK_URL="https://test_url",
+            ZENDESK_USER="test_user",
+            ZENDESK_API_KEY="test_key"
+    )
+    @patch('commerce_coordinator.apps.commercetools.utils.logger.debug')
+    def test_create_zendesk_ticket_success(self, mock_logger):
+        tags = 'test_tags'
+        subject = 'test_subject'
+        body = 'test_body'
+
+        with requests_mock.Mocker(real_http=True, case_sensitive=False) as mocker:
+            mocker.post(
+                f"{settings.ZENDESK_URL}/api/v2/tickets.json",
+                status_code=201
+            )
+
+            create_zendesk_ticket(
+                get_edx_lms_user_name(self.user),
+                self.user.email,
+                subject,
+                body,
+                tags
+            )
+
+            mock_logger.assert_called_once_with('Successfully created ticket.')
+
+    @override_settings(
+            ZENDESK_URL="https://test_url",
+            ZENDESK_USER="test_user",
+            ZENDESK_API_KEY="test_key"
+    )
+    @patch('commerce_coordinator.apps.commercetools.utils.logger.error')
+    def test_create_zendesk_ticket_status_code_fail(self, mock_logger):
+        tags = 'test_tags'
+        subject = 'test_subject'
+        body = 'test_body'
+
+        with requests_mock.Mocker(real_http=True, case_sensitive=False) as mocker:
+            mocker.post(
+                f"{settings.ZENDESK_URL}/api/v2/tickets.json",
+                status_code=400
+            )
+
+            create_zendesk_ticket(
+                get_edx_lms_user_name(self.user),
+                self.user.email,
+                subject,
+                body,
+                tags
+            )
+
+            mock_logger.assert_called_once_with('Failed to create ticket. Status: [%d], Body: [%s]', 400, b'')
+
+    @override_settings(
+            ZENDESK_URL="https://test_url",
+            ZENDESK_USER="test_user",
+            ZENDESK_API_KEY="test_key"
+    )
+    @patch("commerce_coordinator.apps.commercetools.utils.create_zendesk_ticket")
+    @patch('commerce_coordinator.apps.commercetools.utils.logger.exception')
+    def test_create_zendesk_ticket_failed_response(self, mock_logger, mock_create_zendesk_ticket):
+        mock_create_zendesk_ticket.side_effect = Exception("Connection error")
+        tags = 'test_tags'
+        subject = 'test_subject'
+        body = 'test_body'
+
+        with pytest.raises(Exception) as exc:
+            create_zendesk_ticket(
+                get_edx_lms_user_name(self.user),
+                self.user.email,
+                subject,
+                body,
+                tags
+            )
+            mock_logger.assert_called_once_with(f'Failed to create ticket. Exception: {exc.value}')
