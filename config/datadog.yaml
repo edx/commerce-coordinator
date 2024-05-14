@@ -1,7 +1,7 @@
 # datadog.yaml
 
 # Set the API key for your DataDog account
-api_key: "8fadd0c3696168ff43abf512a5ad5962"
+api_key: "THE_API_KEY"
 
 # Enable logs collection
 logs_enabled: true
