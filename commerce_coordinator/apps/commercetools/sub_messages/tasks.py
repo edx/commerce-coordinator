@@ -276,9 +276,13 @@ def fulfill_order_returned_signal_task(
                     'name': line_item.name['en-US'],
                     'price': _cents_to_dollars(line_item.price.value),
                     'quantity': line_item.quantity,
-                    'category': _get_line_item_attribute(line_item, 'primarySubjectArea'),
+                    'category': _get_line_item_attribute(line_item, 'primary-subject-area'),
                     'image_url': line_item.variant.images[0].url if line_item.variant.images else None,
-                    'brand': _get_line_item_attribute(line_item, 'brand-text')
+                    'brand': _get_line_item_attribute(line_item, 'brand-text'),
+                    'url': _get_line_item_attribute(line_item, 'url-course'),
+                    'lob': 'edX',  # TODO: Decision was made to hardcode this value for phase 1.
+                    'product_type': line_item.product_type.obj.name
+                    if hasattr(line_item.product_type.obj, 'name') else None
                 }
                 segment_event_properties['products'].append(product)
 

@@ -73,7 +73,7 @@ def extract_ct_product_information_for_braze_canvas(item: LineItem):
 
     price = format_amount_for_braze_canvas(item.price.value.cent_amount)
 
-    start_date = attributes_dict.get('courserun_start', '')
+    start_date = attributes_dict.get('courserun-start', '')
     duration_low = attributes_dict.get('duration-low', '')
     duration_high = attributes_dict.get('duration-high', '')
 
