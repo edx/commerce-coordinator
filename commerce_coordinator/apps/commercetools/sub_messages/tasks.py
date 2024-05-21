@@ -211,7 +211,7 @@ def fulfill_order_returned_signal_task(
         return {
             'track_plan_id': 19,
             'trigger_source': 'server-side',
-            'order_id': in_order.id,
+            'order_id': in_order.order_number,
             'checkout_id': in_order.cart.id,
             'return_id': return_line_item_return_id,
             'total': _cents_to_dollars(in_order.taxed_price.total_gross),
