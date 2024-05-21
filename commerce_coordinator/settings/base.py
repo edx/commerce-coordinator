@@ -398,7 +398,7 @@ EDX_DRF_EXTENSIONS = {
     "JWT_PAYLOAD_USER_ATTRIBUTE_MAPPING": {
         "administrator": "is_staff",
         "email": "email",
-        "full_name": "full_name",
+        "name": "full_name",
         "user_id": "lms_user_id",
     },
     "ENABLE_SET_REQUEST_USER_FOR_JWT_COOKIE": True,
