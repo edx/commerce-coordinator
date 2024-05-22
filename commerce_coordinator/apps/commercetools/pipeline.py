@@ -69,6 +69,9 @@ class GetCommercetoolsOrders(PipelineStep):
         except CommercetoolsError as err:  # pragma no cover
             log.exception(f"[{type(self).__name__}] Commercetools Error: {err}, {err.errors}")
             return PipelineCommand.CONTINUE.value
+        except ValueError as err:  # pragma no cover
+            log.exception(f"[{type(self).__name__}] Value Error: {err}")
+            return PipelineCommand.CONTINUE.value
         except HTTPError as err:
             log.exception(f"[{type(self).__name__}] HTTP Error: {err}")
             return PipelineCommand.CONTINUE.value
