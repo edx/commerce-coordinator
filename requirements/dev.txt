@@ -13,7 +13,7 @@ asgiref==3.7.2
     #   -r requirements/validation.txt
     #   django
     #   django-cors-headers
-astroid==3.1.0
+astroid==3.2.2
     # via
     #   -r requirements/validation.txt
     #   pylint
@@ -28,7 +28,7 @@ backoff==2.2.1
     # via
     #   -r requirements/validation.txt
     #   segment-analytics-python
-backports-tarfile==1.1.1
+backports-tarfile==1.2.0
     # via
     #   -r requirements/validation.txt
     #   jaraco-context
@@ -53,7 +53,7 @@ cachetools==5.3.3
     #   tox
 celery[redis]==5.4.0
     # via -r requirements/validation.txt
-certifi==2024.2.2
+certifi==2024.6.2
     # via
     #   -r requirements/validation.txt
     #   requests
@@ -119,7 +119,7 @@ coreschema==0.0.4
     # via
     #   -r requirements/validation.txt
     #   coreapi
-coverage[toml]==7.5.1
+coverage[toml]==7.5.3
     # via
     #   -r requirements/validation.txt
     #   pytest-cov
@@ -127,6 +127,7 @@ cryptography==42.0.7
     # via
     #   -r requirements/validation.txt
     #   pyjwt
+    #   secretstorage
     #   social-auth-core
 currencies==2020.12.12
     # via -r requirements/validation.txt
@@ -170,7 +171,7 @@ django-crum==0.7.9
     # via
     #   -r requirements/validation.txt
     #   edx-django-utils
-django-debug-toolbar==4.3.0
+django-debug-toolbar==4.4.2
     # via
     #   -r requirements/dev.in
     #   -r requirements/validation.txt
@@ -209,7 +210,7 @@ edx-braze-client==0.2.5
     # via -r requirements/validation.txt
 edx-django-release-util==1.4.0
     # via -r requirements/validation.txt
-edx-django-utils==5.13.0
+edx-django-utils==5.14.2
     # via
     #   -r requirements/validation.txt
     #   edx-drf-extensions
@@ -274,13 +275,18 @@ jaraco-functools==4.0.1
     # via
     #   -r requirements/validation.txt
     #   keyring
+jeepney==0.8.0
+    # via
+    #   -r requirements/validation.txt
+    #   keyring
+    #   secretstorage
 jinja2==3.1.4
     # via
     #   -r requirements/validation.txt
     #   code-annotations
     #   coreschema
     #   diff-cover
-keyring==25.2.0
+keyring==25.2.1
     # via
     #   -r requirements/validation.txt
     #   twine
@@ -329,7 +335,7 @@ more-itertools==10.2.0
     #   jaraco-functools
 mysqlclient==2.2.4
     # via -r requirements/validation.txt
-newrelic==9.9.0
+newrelic==9.10.0
     # via
     #   -r requirements/validation.txt
     #   edx-django-utils
@@ -367,11 +373,11 @@ pillow==10.3.0
     # via -r requirements/validation.txt
 pip-tools==7.4.1
     # via -r requirements/pip-tools.txt
-pkginfo==1.10.0
+pkginfo==1.11.0
     # via
     #   -r requirements/validation.txt
     #   twine
-platformdirs==4.2.1
+platformdirs==4.2.2
     # via
     #   -r requirements/validation.txt
     #   pylint
@@ -385,7 +391,7 @@ pluggy==1.5.0
     #   tox
 polib==1.2.0
     # via edx-i18n-tools
-prompt-toolkit==3.0.43
+prompt-toolkit==3.0.45
     # via
     #   -r requirements/validation.txt
     #   click-repl
@@ -416,7 +422,7 @@ pyjwt[crypto]==2.8.0
     #   edx-rest-api-client
     #   segment-analytics-python
     #   social-auth-core
-pylint==3.1.1
+pylint==3.2.2
     # via
     #   -r requirements/validation.txt
     #   edx-lint
@@ -453,7 +459,7 @@ pyproject-hooks==1.1.0
     #   -r requirements/pip-tools.txt
     #   build
     #   pip-tools
-pytest==8.2.0
+pytest==8.2.1
     # via
     #   -r requirements/validation.txt
     #   pytest-cov
@@ -533,6 +539,10 @@ rich==13.7.1
     # via
     #   -r requirements/validation.txt
     #   twine
+secretstorage==3.3.3
+    # via
+    #   -r requirements/validation.txt
+    #   keyring
 segment-analytics-python==2.3.2
     # via -r requirements/validation.txt
 semantic-version==2.10.0
@@ -578,7 +588,7 @@ stevedore==5.2.0
     #   code-annotations
     #   edx-django-utils
     #   edx-opaque-keys
-stripe==9.6.0
+stripe==9.9.0
     # via -r requirements/validation.txt
 testfixtures==8.2.0
     # via -r requirements/validation.txt
@@ -603,9 +613,9 @@ tomlkit==0.12.5
     #   pylint
 tox==4.15.0
     # via -r requirements/validation.txt
-twine==5.0.0
+twine==5.1.0
     # via -r requirements/validation.txt
-typing-extensions==4.11.0
+typing-extensions==4.12.1
     # via
     #   -r requirements/validation.txt
     #   asgiref
@@ -636,7 +646,7 @@ vine==5.1.0
     #   amqp
     #   celery
     #   kombu
-virtualenv==20.26.1
+virtualenv==20.26.2
     # via
     #   -r requirements/validation.txt
     #   tox
@@ -660,7 +670,7 @@ wrapt==1.16.0
     # via
     #   -r requirements/validation.txt
     #   commercetools
-zipp==3.18.1
+zipp==3.19.1
     # via
     #   -r requirements/pip-tools.txt
     #   -r requirements/validation.txt

@@ -27,7 +27,7 @@ billiard==4.2.0
     # via celery
 celery[redis]==5.4.0
     # via -r requirements/base.in
-certifi==2024.2.2
+certifi==2024.6.2
     # via requests
 cffi==1.16.0
     # via
@@ -112,7 +112,7 @@ edx-braze-client==0.2.5
     # via -r requirements/base.in
 edx-django-release-util==1.4.0
     # via -r requirements/base.in
-edx-django-utils==5.13.0
+edx-django-utils==5.14.2
     # via
     #   -r requirements/base.in
     #   edx-drf-extensions
@@ -143,7 +143,7 @@ marshmallow-enum==1.5.1
     # via commercetools
 mysqlclient==2.2.4
     # via -r requirements/base.in
-newrelic==9.9.0
+newrelic==9.10.0
     # via edx-django-utils
 oauthlib==3.2.2
     # via
@@ -159,7 +159,7 @@ pbr==6.0.0
     # via stevedore
 pillow==10.3.0
     # via -r requirements/base.in
-prompt-toolkit==3.0.43
+prompt-toolkit==3.0.45
     # via click-repl
 psutil==5.9.8
     # via edx-django-utils
@@ -235,9 +235,9 @@ stevedore==5.2.0
     # via
     #   edx-django-utils
     #   edx-opaque-keys
-stripe==9.6.0
+stripe==9.9.0
     # via -r requirements/base.in
-typing-extensions==4.11.0
+typing-extensions==4.12.1
     # via
     #   asgiref
     #   edx-opaque-keys

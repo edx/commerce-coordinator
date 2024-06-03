@@ -13,7 +13,7 @@ asgiref==3.7.2
     #   -r requirements/base.txt
     #   django
     #   django-cors-headers
-astroid==3.1.0
+astroid==3.2.2
     # via
     #   pylint
     #   pylint-celery
@@ -42,7 +42,7 @@ cachetools==5.3.3
     # via tox
 celery[redis]==5.4.0
     # via -r requirements/base.txt
-certifi==2024.2.2
+certifi==2024.6.2
     # via
     #   -r requirements/base.txt
     #   requests
@@ -99,7 +99,7 @@ coreschema==0.0.4
     # via
     #   -r requirements/base.txt
     #   coreapi
-coverage[toml]==7.5.1
+coverage[toml]==7.5.3
     # via
     #   -r requirements/test.in
     #   pytest-cov
@@ -174,7 +174,7 @@ edx-braze-client==0.2.5
     # via -r requirements/base.txt
 edx-django-release-util==1.4.0
     # via -r requirements/base.txt
-edx-django-utils==5.13.0
+edx-django-utils==5.14.2
     # via
     #   -r requirements/base.txt
     #   edx-drf-extensions
@@ -236,7 +236,7 @@ mock==5.1.0
     # via -r requirements/test.in
 mysqlclient==2.2.4
     # via -r requirements/base.txt
-newrelic==9.9.0
+newrelic==9.10.0
     # via
     #   -r requirements/base.txt
     #   edx-django-utils
@@ -264,7 +264,7 @@ pbr==6.0.0
     #   stevedore
 pillow==10.3.0
     # via -r requirements/base.txt
-platformdirs==4.2.1
+platformdirs==4.2.2
     # via
     #   pylint
     #   tox
@@ -273,7 +273,7 @@ pluggy==1.5.0
     # via
     #   pytest
     #   tox
-prompt-toolkit==3.0.43
+prompt-toolkit==3.0.45
     # via
     #   -r requirements/base.txt
     #   click-repl
@@ -294,7 +294,7 @@ pyjwt[crypto]==2.8.0
     #   edx-rest-api-client
     #   segment-analytics-python
     #   social-auth-core
-pylint==3.1.1
+pylint==3.2.2
     # via
     #   edx-lint
     #   pylint-celery
@@ -318,7 +318,7 @@ pynacl==1.5.0
     #   edx-django-utils
 pyproject-api==1.6.1
     # via tox
-pytest==8.2.0
+pytest==8.2.1
     # via
     #   -r requirements/test.in
     #   pytest-cov
@@ -417,7 +417,7 @@ stevedore==5.2.0
     #   code-annotations
     #   edx-django-utils
     #   edx-opaque-keys
-stripe==9.6.0
+stripe==9.9.0
     # via -r requirements/base.txt
 testfixtures==8.2.0
     # via -r requirements/test.in
@@ -434,7 +434,7 @@ tomlkit==0.12.5
     # via pylint
 tox==4.15.0
     # via -r requirements/test.in
-typing-extensions==4.11.0
+typing-extensions==4.12.1
     # via
     #   -r requirements/base.txt
     #   asgiref
@@ -463,7 +463,7 @@ vine==5.1.0
     #   amqp
     #   celery
     #   kombu
-virtualenv==20.26.1
+virtualenv==20.26.2
     # via tox
 wcwidth==0.2.13
     # via
