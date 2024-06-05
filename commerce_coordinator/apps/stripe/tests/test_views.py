@@ -17,6 +17,7 @@ from testfixtures import LogCapture
 from commerce_coordinator.apps.core.constants import PaymentState
 from commerce_coordinator.apps.core.tests.utils import name_test
 from commerce_coordinator.apps.stripe.constants import Currency, StripeEventType
+from commerce_coordinator.apps.stripe.views import WebhookView
 
 User = get_user_model()
 log = logging.getLogger(__name__)
@@ -153,3 +154,83 @@ class WebhooksViewTests(APITestCase):
                     )
             else:
                 mock_payment_processed_save_task.assert_not_called()
+
+
+    @ddt.data(
+        # name_test(
+        #     "Test edx order refund",
+        #     ('EDX-123456', None)
+        # ),
+        name_test(
+            "Test edx order refund",
+            ('2U-123456', None)
+        ),
+    )
+    @ddt.unpack
+    @mock.patch('stripe.Webhook.construct_event')
+    # @mock.patch('commerce_coordinator.apps.commercetools.tasks.refund_from_stripe_task')
+    @mock.patch('commerce_coordinator.apps.stripe.views.payment_refunded_signal.send_robust')
+    #@mock.patch('commerce_coordinator.apps.commercetools.signals.refund_from_stripe_task.delay')
+    @mock.patch('commerce_coordinator.apps.stripe.views.is_legacy_order')
+    def test_payment_refunded_event(self, order_number, source_system, mock_is_legacy, mock_refund_task, mock_construct_event):
+        """
+        Verify the payment_refunded_signal is sent correctly for PAYMENT_REFUNDED event.
+        """
+        expected_status = status.HTTP_200_OK
+        payment_intent_id = 'pi_789dummy'
+        #order_uuid = '2U-123456'
+        refund_data = {
+            'id': "re_1Nispe2eZvKYlo2Cd31jOCgZ",
+            'amount': 1000,
+            'charge': "ch_1NirD82eZvKYlo2CIvbtLWuY",
+            'created': 1692942318,
+            'currency': "usd",
+            'payment_intent': "pi_3PNWMsH4caH7G0X109NekCG5",
+            'status': "succeeded",
+        }
+        default_source_system = settings.PAYMENT_PROCESSOR_CONFIG['edx']['stripe']['source_system_identifier']
+        source_system = source_system or default_source_system
+        self.mock_stripe_event.type = StripeEventType.PAYMENT_REFUNDED.value
+        self.mock_stripe_event.data.object.payment_intent = payment_intent_id
+        self.mock_stripe_event.data.object.refunds.data = [refund_data]
+        metadata = {
+            'order_number': order_number,
+            'source_system': source_system
+        }
+        body = {'data': {'object': {'refunds': {'data':[]}, 'metadata': metadata}}}
+        self.mock_stripe_event.data.object.metadata = StripeObject()
+        self.mock_stripe_event.data.object.metadata.update(metadata)
+        assert(self.mock_stripe_event.data.object.metadata['source_system'] == source_system)
+        mock_construct_event.return_value = self.mock_stripe_event
+        #mock_is_legacy.return_value = False
+
+        response = self.client.post(self.url, data=body, format='json', **self.mock_header)
+        self.assertEqual(response.status_code, expected_status)
+
+
+        mock_refund_task.assert_called_with(
+            sender=WebhookView,
+            payment_intent_id=payment_intent_id,
+            stripe_refund=refund_data
+        )
+
+        # with LogCapture(log_name) as log_capture:
+        #     response = self.client.post(self.url, data=body, format='json', **self.mock_header)
+        #     self.assertEqual(response.status_code, expected_status)
+        #     if expected_status == status.HTTP_200_OK:
+        #         log_capture.check_present(
+        #             (
+        #                 log_name,
+        #                 'INFO',
+        #                 f'[Stripe webhooks] event {StripeEventType.PAYMENT_REFUNDED.value} with '
+        #                 f'payment intent ID [{payment_intent_id}], source: [{default_source_system}].',
+        #             )
+        #         )
+
+        #         mock_refund_task.assert_called_with(
+        #             sender=WebhookView,
+        #             payment_intent_id=payment_intent_id,
+        #             stripe_refund=refund_data
+        #         )
+
+

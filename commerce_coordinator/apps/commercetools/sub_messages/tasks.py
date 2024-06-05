@@ -259,40 +259,44 @@ def fulfill_order_returned_signal_task(
         )
 
         if 'refund_response' in result and result['refund_response']:
-            logger.debug(f'[CT-{tag}] payment intent %s refunded', payment_intent_id)
-            segment_event_properties = _prepare_segment_event_properties(order, return_line_item_return_id)
+            if result['refund_response'] == 'charge_already_refunded':
+                logger.debug(f'[CT-{tag}] payment intent %s already has refund transaction, sending Zendesk email', payment_intent_id)
+                send_refund_notification(customer, order_id)
+            else:
+                logger.debug(f'[CT-{tag}] payment intent %s refunded', payment_intent_id)
+                segment_event_properties = _prepare_segment_event_properties(order, return_line_item_return_id)
 
-            for line_item in get_edx_items(order):
-                course_run = get_edx_product_course_run_key(line_item)
-                # TODO: Remove LMS Enrollment
-                logger.debug(
-                    f'[CT-{tag}] calling lms to unenroll user %s in %s',
-                    lms_user_name, course_run
-                )
+                for line_item in get_edx_items(order):
+                    course_run = get_edx_product_course_run_key(line_item)
+                    # TODO: Remove LMS Enrollment
+                    logger.debug(
+                        f'[CT-{tag}] calling lms to unenroll user %s in %s',
+                        lms_user_name, course_run
+                    )
 
-                product = {
-                    'product_id': line_item.product_key,
-                    'sku': line_item.variant.sku if hasattr(line_item.variant, 'sku') else None,
-                    'name': line_item.name['en-US'],
-                    'price': _cents_to_dollars(line_item.price.value),
-                    'quantity': line_item.quantity,
-                    'category': _get_line_item_attribute(line_item, 'primary-subject-area'),
-                    'image_url': line_item.variant.images[0].url if line_item.variant.images else None,
-                    'brand': _get_line_item_attribute(line_item, 'brand-text'),
-                    'url': _get_line_item_attribute(line_item, 'url-course'),
-                    'lob': 'edX',  # TODO: Decision was made to hardcode this value for phase 1.
-                    'product_type': line_item.product_type.obj.name
-                    if hasattr(line_item.product_type.obj, 'name') else None
-                }
-                segment_event_properties['products'].append(product)
+                    product = {
+                        'product_id': line_item.product_key,
+                        'sku': line_item.variant.sku if hasattr(line_item.variant, 'sku') else None,
+                        'name': line_item.name['en-US'],
+                        'price': _cents_to_dollars(line_item.price.value),
+                        'quantity': line_item.quantity,
+                        'category': _get_line_item_attribute(line_item, 'primary-subject-area'),
+                        'image_url': line_item.variant.images[0].url if line_item.variant.images else None,
+                        'brand': _get_line_item_attribute(line_item, 'brand-text'),
+                        'url': _get_line_item_attribute(line_item, 'url-course'),
+                        'lob': 'edX',  # TODO: Decision was made to hardcode this value for phase 1.
+                        'product_type': line_item.product_type.obj.name
+                        if hasattr(line_item.product_type.obj, 'name') else None
+                    }
+                    segment_event_properties['products'].append(product)
 
-            if segment_event_properties['products']:  # pragma no cover
-                # Emitting the 'Order Refunded' Segment event upon successfully processing a refund.
-                track(
-                    lms_user_id=lms_user_id,
-                    event='Order Refunded',
-                    properties=segment_event_properties
-                )
+                if segment_event_properties['products']:  # pragma no cover
+                    # Emitting the 'Order Refunded' Segment event upon successfully processing a refund.
+                    track(
+                        lms_user_id=lms_user_id,
+                        event='Order Refunded',
+                        properties=segment_event_properties
+                    )
         else:  # pragma no cover
             logger.debug(f'[CT-{tag}] payment intent %s not refunded', payment_intent_id)
             return send_refund_notification(customer, order_id)

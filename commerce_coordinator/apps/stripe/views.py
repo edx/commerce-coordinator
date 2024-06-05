@@ -18,7 +18,8 @@ from commerce_coordinator.apps.stripe.exceptions import (
     SignatureVerificationAPIError,
     UnhandledStripeEventAPIError
 )
-from commerce_coordinator.apps.stripe.signals import payment_processed_signal
+from commerce_coordinator.apps.stripe.signals import payment_processed_signal, payment_refunded_signal
+from commerce_coordinator.apps.rollout.utils import is_legacy_order
 
 logger = logging.getLogger(__name__)
 
@@ -63,6 +64,32 @@ class WebhookView(APIView):
             payment_state = PaymentState.COMPLETED.value
         elif event.type == StripeEventType.PAYMENT_FAILED:
             payment_state = PaymentState.FAILED.value
+        elif event.type == StripeEventType.PAYMENT_REFUNDED:
+            payment_intent = event.data.object
+            event_source_system_identifier = payment_intent.metadata.get('source_system')
+            order_number = event.data.object.metadata.order_number
+            is_legacy_order_check =  is_legacy_order(order_number)
+            source_systems_match = event_source_system_identifier == source_system_identifier
+
+            if not is_legacy_order_check and source_systems_match:
+                #import pdb; pdb.set_trace()
+                payment_intent_id = event.data.object.payment_intent
+                refunds = event.data.object.refunds.data
+                latest_refund = max(refunds, key=lambda refund: refund['created'])
+
+                logger.info(
+                    '[Stripe webhooks] refund event %s with payment intent ID [%s], source: [%s].',
+                    event.type,
+                    payment_intent_id,
+                    event_source_system_identifier,
+                )
+
+                payment_refunded_signal.send_robust(
+                    sender=self.__class__,
+                    payment_intent_id=payment_intent_id,
+                    stripe_refund=latest_refund
+                )
+            return Response(status=status.HTTP_200_OK)
         else:
             raise UnhandledStripeEventAPIError
 

@@ -81,6 +81,33 @@ EXAMPLE_UPDATE_LINE_ITEM_SIGNAL_PAYLOAD = {
     'to_state_key': TwoUKeys.SUCCESS_FULFILMENT_STATE
 }
 
+EXAMPLE_RETURNED_ORDER_STRIPE_SIGNAL_PAYLOAD = {
+    'payment_intent_id': 'pi_3PNWMsH4caH7G0X109NekCG5',
+    'stripe_refund': {
+        'id': "re_1Nispe2eZvKYlo2Cd31jOCgZ",
+        'amount': 1000,
+        'charge': "ch_1NirD82eZvKYlo2CIvbtLWuY",
+        'created': 1692942318,
+        'currency': "usd",
+        'payment_intent': "pi_3PNWMsH4caH7G0X109NekCG5",
+        'status': "succeeded",
+    }
+}
+
+EXAMPLE_RETURNED_ORDER_STRIPE_CLIENT_PAYLOAD = {
+    'payment_id': 'f988e0c5-ea44-4111-a7f2-39ecf6af9840',
+    'payment_version':1,
+    'stripe_refund': {
+        'id': "re_1Nispe2eZvKYlo2Cd31jOCgZ",
+        'amount': 1000,
+        'charge': "ch_1NirD82eZvKYlo2CIvbtLWuY",
+        'created': 1692942318,
+        'currency': "usd",
+        'payment_intent': "pi_3PNWMsH4caH7G0X109NekCG5",
+        'status': "succeeded",
+    }
+}
+
 EXAMPLE_COMMERCETOOLS_ORDER_SANCTIONED_MESSAGE = {
     'version': '0',
     'id': 'aaaaaaaa-8888-00ee-aaaa-aaaaaaaaaaaa',
