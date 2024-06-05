@@ -3,15 +3,22 @@ Commercetools app Task Tests
 """
 
 import logging
-import stripe
 from unittest.mock import patch
 
+import stripe
 from commercetools import CommercetoolsError
 from django.test import TestCase
 
-from commerce_coordinator.apps.commercetools.tasks import update_line_item_state_on_fulfillment_completion, refund_from_stripe_task
-from commerce_coordinator.apps.commercetools.tests.constants import EXAMPLE_UPDATE_LINE_ITEM_SIGNAL_PAYLOAD, EXAMPLE_RETURNED_ORDER_STRIPE_CLIENT_PAYLOAD,EXAMPLE_RETURNED_ORDER_STRIPE_SIGNAL_PAYLOAD
+from commerce_coordinator.apps.commercetools.tasks import (
+    refund_from_stripe_task,
+    update_line_item_state_on_fulfillment_completion
+)
 from commerce_coordinator.apps.commercetools.tests.conftest import gen_payment
+from commerce_coordinator.apps.commercetools.tests.constants import (
+    EXAMPLE_RETURNED_ORDER_STRIPE_CLIENT_PAYLOAD,
+    EXAMPLE_RETURNED_ORDER_STRIPE_SIGNAL_PAYLOAD,
+    EXAMPLE_UPDATE_LINE_ITEM_SIGNAL_PAYLOAD
+)
 from commerce_coordinator.apps.core.models import User
 
 # Log using module name.
@@ -133,8 +140,7 @@ class ReturnedOrderfromStripeTaskTest(TestCase):
         returned_uut(*self.unpack_for_uut(EXAMPLE_RETURNED_ORDER_STRIPE_SIGNAL_PAYLOAD))
 
         mock_logger.error.assert_called_once_with(
-            f"Unable to create refund transaction for payment [ {EXAMPLE_RETURNED_ORDER_STRIPE_CLIENT_PAYLOAD['payment_id']} ] "
+            f"Unable to create refund transaction for payment [ {mock_payment.id} ] "
             f"on Stripe refund {EXAMPLE_RETURNED_ORDER_STRIPE_CLIENT_PAYLOAD['stripe_refund']['id']} "
             f"with error Some error message and correlation id 123456"
         )
-

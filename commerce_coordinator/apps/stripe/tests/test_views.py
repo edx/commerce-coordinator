@@ -155,30 +155,38 @@ class WebhooksViewTests(APITestCase):
             else:
                 mock_payment_processed_save_task.assert_not_called()
 
-
     @ddt.data(
-        # name_test(
-        #     "Test edx order refund",
-        #     ('EDX-123456', None)
-        # ),
         name_test(
-            "Test edx order refund",
-            ('2U-123456', None)
+            "Test 2U order refund and correct source_system",
+            ('2U-123456', False, None)
+        ),
+        name_test(
+            "Test edx order refund and correct source_system",
+            ('EDX-123456', True, None)
+        ),
+        name_test(
+            "Test edx order refund and incorrect source_system",
+            ('EDX-123456', True, 'unknown_source')
         ),
     )
     @ddt.unpack
     @mock.patch('stripe.Webhook.construct_event')
-    # @mock.patch('commerce_coordinator.apps.commercetools.tasks.refund_from_stripe_task')
     @mock.patch('commerce_coordinator.apps.stripe.views.payment_refunded_signal.send_robust')
-    #@mock.patch('commerce_coordinator.apps.commercetools.signals.refund_from_stripe_task.delay')
     @mock.patch('commerce_coordinator.apps.stripe.views.is_legacy_order')
-    def test_payment_refunded_event(self, order_number, source_system, mock_is_legacy, mock_refund_task, mock_construct_event):
+    def test_payment_refunded_event(
+        self,
+        order_number,
+        is_legacy_order,
+        source_system,
+        mock_is_legacy,
+        mock_refund_task,
+        mock_construct_event
+    ):
         """
         Verify the payment_refunded_signal is sent correctly for PAYMENT_REFUNDED event.
         """
         expected_status = status.HTTP_200_OK
         payment_intent_id = 'pi_789dummy'
-        #order_uuid = '2U-123456'
         refund_data = {
             'id': "re_1Nispe2eZvKYlo2Cd31jOCgZ",
             'amount': 1000,
@@ -197,40 +205,20 @@ class WebhooksViewTests(APITestCase):
             'order_number': order_number,
             'source_system': source_system
         }
-        body = {'data': {'object': {'refunds': {'data':[]}, 'metadata': metadata}}}
+        body = {'data': {'object': {'refunds': {'data': []}, 'metadata': metadata}}}
         self.mock_stripe_event.data.object.metadata = StripeObject()
         self.mock_stripe_event.data.object.metadata.update(metadata)
-        assert(self.mock_stripe_event.data.object.metadata['source_system'] == source_system)
         mock_construct_event.return_value = self.mock_stripe_event
-        #mock_is_legacy.return_value = False
+        mock_is_legacy.return_value = is_legacy_order
 
         response = self.client.post(self.url, data=body, format='json', **self.mock_header)
         self.assertEqual(response.status_code, expected_status)
 
-
-        mock_refund_task.assert_called_with(
-            sender=WebhookView,
-            payment_intent_id=payment_intent_id,
-            stripe_refund=refund_data
-        )
-
-        # with LogCapture(log_name) as log_capture:
-        #     response = self.client.post(self.url, data=body, format='json', **self.mock_header)
-        #     self.assertEqual(response.status_code, expected_status)
-        #     if expected_status == status.HTTP_200_OK:
-        #         log_capture.check_present(
-        #             (
-        #                 log_name,
-        #                 'INFO',
-        #                 f'[Stripe webhooks] event {StripeEventType.PAYMENT_REFUNDED.value} with '
-        #                 f'payment intent ID [{payment_intent_id}], source: [{default_source_system}].',
-        #             )
-        #         )
-
-        #         mock_refund_task.assert_called_with(
-        #             sender=WebhookView,
-        #             payment_intent_id=payment_intent_id,
-        #             stripe_refund=refund_data
-        #         )
-
-
+        if not is_legacy_order:
+            mock_refund_task.assert_called_with(
+                sender=WebhookView,
+                payment_intent_id=payment_intent_id,
+                stripe_refund=refund_data
+            )
+        else:
+            mock_refund_task.assert_not_called()

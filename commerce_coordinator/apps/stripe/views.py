@@ -12,6 +12,7 @@ from rest_framework.response import Response
 from rest_framework.views import APIView
 
 from commerce_coordinator.apps.core.constants import PaymentState
+from commerce_coordinator.apps.rollout.utils import is_legacy_order
 from commerce_coordinator.apps.stripe.constants import StripeEventType
 from commerce_coordinator.apps.stripe.exceptions import (
     InvalidPayloadAPIError,
@@ -19,7 +20,6 @@ from commerce_coordinator.apps.stripe.exceptions import (
     UnhandledStripeEventAPIError
 )
 from commerce_coordinator.apps.stripe.signals import payment_processed_signal, payment_refunded_signal
-from commerce_coordinator.apps.rollout.utils import is_legacy_order
 
 logger = logging.getLogger(__name__)
 
@@ -68,11 +68,10 @@ class WebhookView(APIView):
             payment_intent = event.data.object
             event_source_system_identifier = payment_intent.metadata.get('source_system')
             order_number = event.data.object.metadata.order_number
-            is_legacy_order_check =  is_legacy_order(order_number)
+            is_legacy_order_check = is_legacy_order(order_number)
             source_systems_match = event_source_system_identifier == source_system_identifier
 
             if not is_legacy_order_check and source_systems_match:
-                #import pdb; pdb.set_trace()
                 payment_intent_id = event.data.object.payment_intent
                 refunds = event.data.object.refunds.data
                 latest_refund = max(refunds, key=lambda refund: refund['created'])

@@ -4,7 +4,10 @@ Commercetools signals and receivers.
 import logging
 
 from commerce_coordinator.apps.commercetools.catalog_info.constants import TwoUKeys
-from commerce_coordinator.apps.commercetools.tasks import update_line_item_state_on_fulfillment_completion, refund_from_stripe_task
+from commerce_coordinator.apps.commercetools.tasks import (
+    refund_from_stripe_task,
+    update_line_item_state_on_fulfillment_completion
+)
 from commerce_coordinator.apps.core.signal_helpers import CoordinatorSignal, log_receiver
 
 logger = logging.getLogger(__name__)
@@ -36,12 +39,12 @@ def fulfill_order_completed_send_line_item_state(**kwargs):
 
     return result
 
+
 @log_receiver(logger)
 def refund_from_stripe(**kwargs):
     """
     Create a refund transaction in Commercetools based on a refund created from the Stripe dashboard
     """
-    #import pdb; pdb.set_trace()
     async_result = refund_from_stripe_task.delay(
         payment_intent_id=kwargs['payment_intent_id'],
         stripe_refund=kwargs['stripe_refund'],

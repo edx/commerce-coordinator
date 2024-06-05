@@ -6,8 +6,8 @@ from unittest.mock import patch
 
 from django.test import override_settings
 
-from commerce_coordinator.apps.core.tests.utils import CoordinatorSignalReceiverTestCase
 from commerce_coordinator.apps.commercetools.tests.constants import EXAMPLE_RETURNED_ORDER_STRIPE_SIGNAL_PAYLOAD
+from commerce_coordinator.apps.core.tests.utils import CoordinatorSignalReceiverTestCase
 
 # Log using module name.
 logger = logging.getLogger(__name__)

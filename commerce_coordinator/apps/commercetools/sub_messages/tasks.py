@@ -260,7 +260,8 @@ def fulfill_order_returned_signal_task(
 
         if 'refund_response' in result and result['refund_response']:
             if result['refund_response'] == 'charge_already_refunded':
-                logger.debug(f'[CT-{tag}] payment intent %s already has refund transaction, sending Zendesk email', payment_intent_id)
+                logger.debug(f'[CT-{tag}] payment intent %s already has refund transaction, '
+                             f'sending Zendesk email', payment_intent_id)
                 send_refund_notification(customer, order_id)
             else:
                 logger.debug(f'[CT-{tag}] payment intent %s refunded', payment_intent_id)

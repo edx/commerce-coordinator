@@ -96,7 +96,7 @@ EXAMPLE_RETURNED_ORDER_STRIPE_SIGNAL_PAYLOAD = {
 
 EXAMPLE_RETURNED_ORDER_STRIPE_CLIENT_PAYLOAD = {
     'payment_id': 'f988e0c5-ea44-4111-a7f2-39ecf6af9840',
-    'payment_version':1,
+    'payment_version': 1,
     'stripe_refund': {
         'id': "re_1Nispe2eZvKYlo2Cd31jOCgZ",
         'amount': 1000,

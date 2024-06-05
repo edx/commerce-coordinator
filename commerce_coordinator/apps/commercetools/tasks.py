@@ -2,18 +2,19 @@
 Commercetools tasks
 """
 
-import stripe
-from django.conf import settings
-from celery import shared_task
 import logging
 
+import stripe
+from celery import shared_task
 from commercetools import CommercetoolsError
+from django.conf import settings
 
 from .clients import CommercetoolsAPIClient
 
 logger = logging.getLogger(__name__)
 
 stripe.api_key = settings.PAYMENT_PROCESSOR_CONFIG['edx']['stripe']['secret_key']
+
 
 def update_line_item_state_on_fulfillment_completion(
     order_id,
@@ -52,7 +53,6 @@ def refund_from_stripe_task(
     Celery task for a refund registered in Stripe dashboard and need to create
     refund payment transaction record via Commercetools API.
     """
-    #import pdb; pdb.set_trace()
     # Celery serializes stripe_refund to a dict, so we need to explictly convert it back to a Refund object
     stripe_refund = stripe.Refund.construct_from(stripe_refund, stripe.api_key)
     client = CommercetoolsAPIClient()
@@ -65,6 +65,7 @@ def refund_from_stripe_task(
         )
         return updated_payment
     except CommercetoolsError as err:
-        logger.error(f"Unable to create refund transaction for payment [ {payment.id} ] on Stripe refund {stripe_refund.id} "
+        logger.error(f"Unable to create refund transaction for payment [ {payment.id} ] "
+                     f"on Stripe refund {stripe_refund.id} "
                      f"with error {err.errors} and correlation id {err.correlation_id}")
         return None
