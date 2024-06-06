@@ -33,11 +33,13 @@ from rest_framework_swagger.views import get_swagger_view
 from commerce_coordinator.apps.api import urls as api_urls
 from commerce_coordinator.apps.commercetools import urls as commercetools_urls
 from commerce_coordinator.apps.core import views as core_views
+from commerce_coordinator.apps.demo_lms import urls as demo_lms_urls
 from commerce_coordinator.apps.ecommerce import urls as ecommerce_urls
 from commerce_coordinator.apps.frontend_app_ecommerce import urls as unified_orders_urls
 from commerce_coordinator.apps.frontend_app_payment import urls as frontend_app_payment_urls
 from commerce_coordinator.apps.lms import urls as lms_urls
 from commerce_coordinator.apps.stripe import urls as stripe_urls
+from commerce_coordinator.apps.titan import urls as titan_urls
 from commerce_coordinator.settings.base import FAVICON_URL
 
 admin.autodiscover()
@@ -69,6 +71,11 @@ urlpatterns = oauth2_urlpatterns + [
     ], status=status.HTTP_200_OK, safe=False), name='root'),
 
     path('favicon.ico', RedirectView.as_view(url=FAVICON_URL), name='favicon'),
+
+    # To Disable Soon
+    re_path(r'^titan/', include(titan_urls), name='titan'),
+    # DEMO: Currently this is only test code, we may want to decouple LMS code here at some point...
+    re_path(r'^demo_lms/', include(demo_lms_urls))
 ]
 
 if settings.DEBUG and os.environ.get('ENABLE_DJANGO_TOOLBAR', False):  # pragma: no cover
