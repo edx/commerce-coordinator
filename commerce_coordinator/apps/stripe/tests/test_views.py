@@ -158,26 +158,29 @@ class WebhooksViewTests(APITestCase):
     @ddt.data(
         name_test(
             "Test 2U order refund and correct source_system",
-            ('2U-123456', False, None)
+            ('2U-123456', False, True, None)
         ),
         name_test(
             "Test edx order refund and correct source_system",
-            ('EDX-123456', True, None)
+            ('EDX-123456', True, False, None)
         ),
         name_test(
             "Test edx order refund and incorrect source_system",
-            ('EDX-123456', True, 'unknown_source')
+            ('EDX-123456', True, False, 'unknown_source')
         ),
     )
     @ddt.unpack
     @mock.patch('stripe.Webhook.construct_event')
     @mock.patch('commerce_coordinator.apps.stripe.views.payment_refunded_signal.send_robust')
     @mock.patch('commerce_coordinator.apps.stripe.views.is_legacy_order')
+    @mock.patch('commerce_coordinator.apps.stripe.views.is_commercetools_stripe_refund')
     def test_payment_refunded_event(
         self,
         order_number,
         is_legacy_order,
+        is_ct_order,
         source_system,
+        mock_is_ct_refund,
         mock_is_legacy,
         mock_refund_task,
         mock_construct_event
@@ -210,6 +213,7 @@ class WebhooksViewTests(APITestCase):
         self.mock_stripe_event.data.object.metadata.update(metadata)
         mock_construct_event.return_value = self.mock_stripe_event
         mock_is_legacy.return_value = is_legacy_order
+        mock_is_ct_refund.return_value = is_ct_order
 
         response = self.client.post(self.url, data=body, format='json', **self.mock_header)
         self.assertEqual(response.status_code, expected_status)
