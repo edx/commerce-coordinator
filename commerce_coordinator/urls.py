@@ -24,7 +24,10 @@ import os
 from auth_backends.urls import oauth2_urlpatterns
 from django.conf import settings
 from django.contrib import admin
-from django.urls import include, re_path
+from django.http import JsonResponse
+from django.urls import include, path, re_path
+from django.views.generic import RedirectView
+from rest_framework import status
 from rest_framework_swagger.views import get_swagger_view
 
 from commerce_coordinator.apps.api import urls as api_urls
@@ -37,10 +40,12 @@ from commerce_coordinator.apps.frontend_app_payment import urls as frontend_app_
 from commerce_coordinator.apps.lms import urls as lms_urls
 from commerce_coordinator.apps.stripe import urls as stripe_urls
 from commerce_coordinator.apps.titan import urls as titan_urls
+from commerce_coordinator.settings.base import FAVICON_URL
 
 admin.autodiscover()
 
 urlpatterns = oauth2_urlpatterns + [
+    # Standard IDA Handlers
     re_path('', include('csrf.urls')),  # Include csrf urls from edx-drf-extensions
     re_path(r'^admin/', admin.site.urls),
     # Use the same auth views for all logins, including those originating from the browsable API.
@@ -48,15 +53,27 @@ urlpatterns = oauth2_urlpatterns + [
     re_path(r'^api-docs/', get_swagger_view(title='commerce-coordinator API')),
     re_path(r'^api/', include(api_urls)),
     re_path(r'^auto_auth/', core_views.AutoAuth.as_view(), name='auto_auth'),
+    re_path(r'^health/?', core_views.health, name='health'),
+
+    # Local Django Apps
     re_path(r'^ecommerce/', include(ecommerce_urls), name='ecommerce'),
-    re_path(r'^health/', core_views.health, name='health'),
     re_path(r'^lms/', include(lms_urls), name='lms'),
-    re_path(r'^titan/', include(titan_urls), name='titan'),
     re_path(r'^commercetools/', include(commercetools_urls), name='commercetools'),
     re_path(r'^orders/', include(commercetools_urls, namespace="commercetools_orders_fwd")),
     re_path(r'^orders/unified/', include(unified_orders_urls), name='frontend_app_ecommerce'),
     re_path(r'^frontend-app-payment/', include(frontend_app_payment_urls)),
     re_path(r'^stripe/', include(stripe_urls)),
+
+    # Browser automated hits, this will limit 404s in logging
+    re_path(r'^$', lambda r: JsonResponse(data=[
+        "Welcome to Commerce Coordinator",
+        "This is an API app that provides a backend for Commerce.",
+    ], status=status.HTTP_200_OK, safe=False), name='root'),
+
+    path('favicon.ico', RedirectView.as_view(url=FAVICON_URL), name='favicon'),
+
+    # To Disable Soon
+    re_path(r'^titan/', include(titan_urls), name='titan'),
     # DEMO: Currently this is only test code, we may want to decouple LMS code here at some point...
     re_path(r'^demo_lms/', include(demo_lms_urls))
 ]

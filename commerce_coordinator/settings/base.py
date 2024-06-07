@@ -463,3 +463,5 @@ SEGMENT_KEY = None
 ZENDESK_URL = None
 ZENDESK_USER = None
 ZENDESK_API_KEY = None
+
+FAVICON_URL = "https://edx-cdn.org/v3/prod/favicon.ico"
