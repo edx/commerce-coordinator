@@ -3,17 +3,17 @@ import logging
 import uuid
 
 from django.conf import settings
-from edx_django_utils.cache import TieredCache
-from rest_framework.views import APIView
-from commerce_coordinator.apps.core.memcache import safe_key
 from django.contrib.auth import authenticate, get_user_model, login
 from django.db import DatabaseError, connection, transaction
 from django.http import Http404, JsonResponse
 from django.shortcuts import redirect
 from django.views.generic import View
+from edx_django_utils.cache import TieredCache
 from edx_django_utils.monitoring import ignore_transaction
+from rest_framework.views import APIView
 
 from commerce_coordinator.apps.core.constants import Status
+from commerce_coordinator.apps.core.memcache import safe_key
 
 logger = logging.getLogger(__name__)
 User = get_user_model()
