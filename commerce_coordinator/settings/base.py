@@ -404,6 +404,8 @@ EDX_DRF_EXTENSIONS = {
     "ENABLE_SET_REQUEST_USER_FOR_JWT_COOKIE": True,
 }
 
+STRIPE_WEBHOOK_ENDPOINT_SECRET = 'SET-ME-PLEASE'
+
 # PAYMENT PROCESSING
 PAYMENT_PROCESSOR_CONFIG = {
     'edx': {
@@ -416,7 +418,7 @@ PAYMENT_PROCESSOR_CONFIG = {
             'publishable_key': 'SET-ME-PLEASE',
             'secret_key': 'SET-ME-PLEASE',
             'source_system_identifier': 'edx/commerce_coordinator?v=1',
-            'webhook_endpoint_secret': 'SET-ME-PLEASE',
+            'webhook_endpoint_secret': STRIPE_WEBHOOK_ENDPOINT_SECRET,
         },
     },
 }
