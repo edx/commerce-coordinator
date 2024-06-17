@@ -195,10 +195,6 @@ For more information about these options, see the `Getting Help`_ page.
     :target: https://github.com/edx/commerce-coordinator/actions
     :alt: CI
 
-.. |codecov-badge| image:: https://codecov.io/github/edx/commerce-coordinator/coverage.svg?branch=main
-    :target: https://codecov.io/github/edx/commerce-coordinator?branch=main
-    :alt: Codecov
-
 .. |doc-badge| image:: https://readthedocs.org/projects/commerce-coordinator/badge/?version=latest
     :target: https://commerce-coordinator.readthedocs.io/en/latest/
     :alt: Documentation
