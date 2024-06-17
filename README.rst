@@ -2,7 +2,7 @@
 commerce-coordinator
 ####################
 
-|pypi-badge| |ci-badge| |codecov-badge| |doc-badge| |pyversions-badge|
+|pypi-badge| |ci-badge| |doc-badge| |pyversions-badge|
 |license-badge| |status-badge|
 
 A controller to manage commerce workflows and services
@@ -194,10 +194,6 @@ For more information about these options, see the `Getting Help`_ page.
 .. |ci-badge| image:: https://github.com/edx/commerce-coordinator/workflows/Python%20CI/badge.svg?branch=main
     :target: https://github.com/edx/commerce-coordinator/actions
     :alt: CI
-
-.. |codecov-badge| image:: https://codecov.io/github/edx/commerce-coordinator/coverage.svg?branch=main
-    :target: https://codecov.io/github/edx/commerce-coordinator?branch=main
-    :alt: Codecov
 
 .. |doc-badge| image:: https://readthedocs.org/projects/commerce-coordinator/badge/?version=latest
     :target: https://commerce-coordinator.readthedocs.io/en/latest/
