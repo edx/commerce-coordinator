@@ -2,7 +2,7 @@
 commerce-coordinator
 ####################
 
-|pypi-badge| |ci-badge| |codecov-badge| |doc-badge| |pyversions-badge|
+|pypi-badge| |ci-badge| |doc-badge| |pyversions-badge|
 |license-badge| |status-badge|
 
 A controller to manage commerce workflows and services
