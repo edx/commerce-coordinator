@@ -10,6 +10,7 @@ from commercetools import CommercetoolsError
 from django.conf import settings
 
 from .clients import CommercetoolsAPIClient
+from .utils import has_full_refund_transaction
 
 logger = logging.getLogger(__name__)
 
@@ -58,6 +59,10 @@ def refund_from_stripe_task(
     client = CommercetoolsAPIClient()
     try:
         payment = client.get_payment_by_key(payment_intent_id)
+        if has_full_refund_transaction(payment):
+            logger.info(f"Stripe charge.refunded event received, but Payment with ID {payment.id} "
+                        f"already has a full refund. Skipping task to add refund transaction")
+            return None
         updated_payment = client.create_return_payment_transaction(
             payment_id=payment.id,
             payment_version=payment.version,
