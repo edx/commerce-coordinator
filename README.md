@@ -32,13 +32,13 @@
 | commerce\_coordinator/apps/commercetools/sub\_messages/signals\_delayed.py             |       16 |        0 |        6 |        3 |     86% |18->17, 29->28, 38->37 |
 | commerce\_coordinator/apps/commercetools/sub\_messages/signals\_dispatch.py            |        4 |        0 |        0 |        0 |    100% |           |
 | commerce\_coordinator/apps/commercetools/sub\_messages/tasks.py                        |       96 |        2 |       20 |        5 |     94% |42->41, 137->136, 184->183, 256->305, 263-265 |
-| commerce\_coordinator/apps/commercetools/tasks.py                                      |       27 |        0 |        2 |        1 |     97% |    48->47 |
+| commerce\_coordinator/apps/commercetools/tasks.py                                      |       31 |        0 |        4 |        1 |     97% |    49->48 |
 | commerce\_coordinator/apps/commercetools/tests/\_\_init\_\_.py                         |        0 |        0 |        0 |        0 |    100% |           |
 | commerce\_coordinator/apps/commercetools/tests/\_test\_cases.py                        |       25 |        0 |        4 |        1 |     97% |  36->exit |
 | commerce\_coordinator/apps/commercetools/tests/catalog\_info/\_\_init\_\_.py           |        0 |        0 |        0 |        0 |    100% |           |
 | commerce\_coordinator/apps/commercetools/tests/catalog\_info/test\_edx\_utils.py       |       39 |        1 |        2 |        1 |     95% |        69 |
 | commerce\_coordinator/apps/commercetools/tests/catalog\_info/test\_utils.py            |       76 |        0 |       52 |       22 |     83% |49->58, 57->49, 58->57, 62->71, 70->62, 71->70, 79->86, 85->79, 86->85, 98->137, 136->98, 137->136, 143->173, 172->143, 173->172, 178->184, 183->178, 184->183, 195->265, 264->195, 265->264, 267->exit |
-| commerce\_coordinator/apps/commercetools/tests/conftest.py                             |      102 |        4 |       20 |        8 |     90% |39->38, 44->43, 54->53, 86, 89, 91, 131, 139->138, 156->exit, 188->exit, 194->exit |
+| commerce\_coordinator/apps/commercetools/tests/conftest.py                             |      108 |        4 |       22 |        8 |     91% |39->38, 44->43, 54->53, 86, 89, 91, 131, 139->138, 156->exit, 210->exit, 216->exit |
 | commerce\_coordinator/apps/commercetools/tests/constants.py                            |        9 |        0 |        0 |        0 |    100% |           |
 | commerce\_coordinator/apps/commercetools/tests/mocks.py                                |       45 |        0 |        0 |        0 |    100% |           |
 | commerce\_coordinator/apps/commercetools/tests/sub\_messages/\_\_init\_\_.py           |        0 |        0 |        0 |        0 |    100% |           |
@@ -49,11 +49,11 @@
 | commerce\_coordinator/apps/commercetools/tests/test\_data.py                           |       87 |        0 |       28 |       10 |     91% |71->109, 108->71, 109->108, 145->135, 160->196, 195->160, 196->195, 200->236, 235->200, 236->235 |
 | commerce\_coordinator/apps/commercetools/tests/test\_pipeline.py                       |      110 |        0 |       36 |       18 |     88% |35->34, 92->95, 93->92, 94->93, 95->94, 111->113, 112->111, 113->112, 118->125, 130->133, 131->130, 132->131, 133->132, 150->153, 151->150, 152->151, 153->152, 192->188 |
 | commerce\_coordinator/apps/commercetools/tests/test\_signals.py                        |       40 |        0 |       10 |        4 |     92% |16->24, 23->16, 53->61, 60->53 |
-| commerce\_coordinator/apps/commercetools/tests/test\_tasks.py                          |       54 |        0 |       12 |        4 |     94% |39->38, 65->64, 92->91, 125->124 |
-| commerce\_coordinator/apps/commercetools/tests/test\_utils.py                          |      152 |        0 |       65 |       32 |     85% |41->37, 51->48, 60->57, 72->78, 77->72, 78->77, 86->exit, 97->104, 102->97, 103->102, 104->103, 112->exit, 145->142, 171->168, 227->229, 228->227, 239->238, 245->244, 251->250, 266->272, 271->266, 272->271, 277->exit, 293->299, 298->293, 299->298, 304->exit, 320->327, 325->320, 326->325, 327->326, 333->exit |
+| commerce\_coordinator/apps/commercetools/tests/test\_tasks.py                          |       63 |        0 |       14 |        5 |     94% |40->39, 66->65, 93->92, 138->exit, 147->146 |
+| commerce\_coordinator/apps/commercetools/tests/test\_utils.py                          |      162 |        0 |       65 |       32 |     86% |47->43, 57->54, 66->63, 78->84, 83->78, 84->83, 92->exit, 103->110, 108->103, 109->108, 110->109, 118->exit, 151->148, 177->174, 251->253, 252->251, 263->262, 269->268, 275->274, 290->296, 295->290, 296->295, 301->exit, 317->323, 322->317, 323->322, 328->exit, 344->351, 349->344, 350->349, 351->350, 357->exit |
 | commerce\_coordinator/apps/commercetools/tests/test\_views.py                          |      182 |        0 |       77 |       37 |     86% |81->86, 89->93, 90->89, 197->201, 198->197, 227->235, 231->227, 235->231, 247->255, 251->247, 255->251, 274->282, 278->274, 282->278, 293->301, 297->293, 301->297, 313->321, 317->313, 321->317, 334->338, 335->334, 364->372, 368->364, 372->368, 384->392, 388->384, 392->388, 411->419, 415->411, 419->415, 430->438, 434->430, 438->434, 450->458, 454->450, 458->454 |
 | commerce\_coordinator/apps/commercetools/urls.py                                       |        4 |        0 |        0 |        0 |    100% |           |
-| commerce\_coordinator/apps/commercetools/utils.py                                      |       90 |        0 |       10 |        0 |    100% |           |
+| commerce\_coordinator/apps/commercetools/utils.py                                      |       96 |        0 |       12 |        0 |    100% |           |
 | commerce\_coordinator/apps/commercetools/views.py                                      |       54 |        0 |        0 |        0 |    100% |           |
 | commerce\_coordinator/apps/commercetools\_frontend/constants.py                        |        1 |        0 |        0 |        0 |    100% |           |
 | commerce\_coordinator/apps/commercetools\_frontend/pipeline.py                         |        9 |        0 |        2 |        0 |    100% |           |
@@ -185,7 +185,7 @@
 | commerce\_coordinator/apps/titan/views.py                                              |       23 |        1 |        2 |        1 |     92% |        79 |
 | commerce\_coordinator/docker\_gunicorn\_configuration.py                               |       27 |       27 |       10 |        0 |      0% |      4-57 |
 | commerce\_coordinator/urls.py                                                          |       22 |        0 |        0 |        0 |    100% |           |
-|                                                                              **TOTAL** | **6307** |  **235** | **1528** |  **511** | **90%** |           |
+|                                                                              **TOTAL** | **6342** |  **235** | **1536** |  **512** | **90%** |           |
 
 
 ## Setup coverage badge
