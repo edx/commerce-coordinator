@@ -139,6 +139,21 @@ def has_refund_transaction(payment: Payment):
     return False
 
 
+def has_full_refund_transaction(payment: Payment):
+    """
+    Utility to determine is CT payment has an existing 'refund' transaction for the full
+    charge amount
+    """
+    # get charge transaction and get amount then check against refund.
+    charge_amount = 0
+    for transaction in payment.transactions:
+        if transaction.type == TransactionType.CHARGE:
+            charge_amount = transaction.amount
+        if transaction.type == TransactionType.REFUND and transaction.amount == charge_amount:  # pragma no cover
+            return True
+    return False
+
+
 def translate_stripe_refund_status_to_transaction_status(stripe_refund_status: str):
     """
     Utility to translate stripe's refund object's status attribute to a valid CT transaction state

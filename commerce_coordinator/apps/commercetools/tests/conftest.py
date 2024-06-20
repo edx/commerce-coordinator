@@ -168,16 +168,38 @@ def gen_payment():
         amount_planned=4900,
         payment_method_info={},
         payment_status=PaymentState.PAID,
-        transactions=[gen_transaction()],
+        transactions=[gen_transaction(TransactionType.REFUND, 4900)],
         interface_interactions=[]
     )
 
 
-def gen_transaction() -> CTTransaction:
+def gen_payment_with_multiple_transactions(*args):
+    """
+    Generate a CTPayment object with multiple transaction records
+    """
+    transactions = []
+    for i in range(0, len(args), 2):
+        transaction = gen_transaction(args[i], args[i+1])
+        transactions.append(transaction)
+
+    return CTPayment(
+        id=uuid4_str(),
+        version=1,
+        created_at=datetime.now(),
+        last_modified_at=datetime.now(),
+        amount_planned=4900,
+        payment_method_info={},
+        payment_status=PaymentState.PAID,
+        transactions=transactions,
+        interface_interactions=[]
+    )
+
+
+def gen_transaction(transaction_type=None, amount=None) -> CTTransaction:
     return CTTransaction(
         id=uuid4_str(),
-        type=TransactionType.REFUND,
-        amount=4900,
+        type=transaction_type,
+        amount=amount,
         timestamp=datetime.now(),
         state=TransactionState.SUCCESS,
         interaction_id='ch_3P9RWsH4caH7G0X11toRGUJf'

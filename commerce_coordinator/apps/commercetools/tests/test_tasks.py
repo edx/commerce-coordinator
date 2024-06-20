@@ -7,13 +7,14 @@ from unittest.mock import patch
 
 import stripe
 from commercetools import CommercetoolsError
+from commercetools.platform.models import TransactionType
 from django.test import TestCase
 
 from commerce_coordinator.apps.commercetools.tasks import (
     refund_from_stripe_task,
     update_line_item_state_on_fulfillment_completion
 )
-from commerce_coordinator.apps.commercetools.tests.conftest import gen_payment
+from commerce_coordinator.apps.commercetools.tests.conftest import gen_payment, gen_payment_with_multiple_transactions
 from commerce_coordinator.apps.commercetools.tests.constants import (
     EXAMPLE_RETURNED_ORDER_STRIPE_CLIENT_PAYLOAD,
     EXAMPLE_RETURNED_ORDER_STRIPE_SIGNAL_PAYLOAD,
@@ -120,6 +121,27 @@ class ReturnedOrderfromStripeTaskTest(TestCase):
             payment_version=mock_payment.version,
             stripe_refund=mock_stripe_refund
         )
+
+    def test_full_refund_already_exists(self, mock_client):
+        '''
+        Check if the payment already has a full refund, the task logs the
+        appropriate message and skips creating a refund transaction.
+        '''
+        mock_payment = gen_payment_with_multiple_transactions(
+            TransactionType.CHARGE, 4900,
+            TransactionType.REFUND, 4900
+        )
+        mock_payment.id = 'f988e0c5-ea44-4111-a7f2-39ecf6af9840'
+
+        mock_client.return_value.get_payment_by_key.return_value = mock_payment
+
+        with patch('commerce_coordinator.apps.commercetools.tasks.logger') as mock_logger:
+            result = refund_from_stripe_task(*self.unpack_for_uut(EXAMPLE_RETURNED_ORDER_STRIPE_SIGNAL_PAYLOAD))
+            self.assertIsNone(result)
+            mock_logger.info.assert_called_once_with(
+                f"Stripe charge.refunded event received, but Payment with ID {mock_payment.id} "
+                f"already has a full refund. Skipping task to add refund transaction"
+            )
 
     @patch('commerce_coordinator.apps.commercetools.tasks.logger')
     def test_exception_handling(self, mock_logger, mock_client):

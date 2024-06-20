@@ -15,13 +15,19 @@ from django.urls import reverse
 from mock import Mock, patch
 
 from commerce_coordinator.apps.commercetools.catalog_info.edx_utils import get_edx_lms_user_name
-from commerce_coordinator.apps.commercetools.tests.conftest import gen_example_customer, gen_order, gen_payment
+from commerce_coordinator.apps.commercetools.tests.conftest import (
+    gen_example_customer,
+    gen_order,
+    gen_payment,
+    gen_payment_with_multiple_transactions
+)
 from commerce_coordinator.apps.commercetools.tests.constants import EXAMPLE_FULFILLMENT_SIGNAL_PAYLOAD
 from commerce_coordinator.apps.commercetools.utils import (
     create_zendesk_ticket,
     extract_ct_order_information_for_braze_canvas,
     extract_ct_product_information_for_braze_canvas,
     get_braze_client,
+    has_full_refund_transaction,
     has_refund_transaction,
     send_order_confirmation_email,
     send_refund_notification,
@@ -203,6 +209,24 @@ class TestHasRefundTransaction(unittest.TestCase):
         payment = gen_payment()
         payment.transactions[0].type = TransactionType.CHARGE
         self.assertFalse(has_refund_transaction(payment))
+
+
+class TestHasFullRefundTransaction(unittest.TestCase):
+    """
+    Tests for Has Full Refund Transaction Utils function
+    """
+
+    def test_has_full_refund_transaction_with_full_refund(self):
+        payment = gen_payment_with_multiple_transactions(TransactionType.CHARGE, 4900, TransactionType.REFUND, 4900)
+        self.assertTrue(has_full_refund_transaction(payment))
+
+    def test_has_partial_refund_transaction(self):
+        payment = gen_payment_with_multiple_transactions(TransactionType.CHARGE, 4900, TransactionType.REFUND, 2500)
+        self.assertFalse(has_full_refund_transaction(payment))
+
+    def test_has_no_refund_transaction(self):
+        payment = gen_payment_with_multiple_transactions(TransactionType.CHARGE, 4900)
+        self.assertFalse(has_full_refund_transaction(payment))
 
 
 class TestTranslateStripeRefundStatus(unittest.TestCase):
