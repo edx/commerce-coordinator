@@ -32,6 +32,7 @@ from commerce_coordinator.apps.commercetools.utils import (
 from commerce_coordinator.apps.core.constants import ISO_8601_FORMAT
 from commerce_coordinator.apps.core.memcache import safe_key
 from commerce_coordinator.apps.core.segment import track
+from commerce_coordinator.apps.lms.clients import LMSAPIClient
 
 # Use the special Celery logger for our tasks
 logger = get_task_logger(__name__)
@@ -160,23 +161,23 @@ def fulfill_order_sanctioned_message_signal_task(
         return False
 
     if not (customer and order and is_edx_lms_order(order)):
-        logger.debug(f'[CT-{tag}] order %s is not an edX order', order_id)
+        logger.info(f'[CT-{tag}] order %s is not an edX order', order_id)
         return True
 
     if get_edx_is_sanctioned(order):
-        logger.debug(
+        lms_user_name = get_edx_lms_user_name(customer)
+        logger.info(f'[CT-{tag}] calling lms to deactivate user %s', lms_user_name)
+
+        LMSAPIClient().deactivate_user(lms_user_name)
+        return True
+    else:
+        logger.error(
             f'[CT-{tag}] order state for order %s is not %s. Actual value is %s',
             order_id,
             TwoUKeys.SDN_SANCTIONED_ORDER_STATE,
             order_workflow_state
         )
-
-        lms_user_name = get_edx_lms_user_name(customer)
-        logger.debug(f'[CT-{tag}] calling lms to deactivate user %s', lms_user_name)
-
-        # TODO: SONIC-155 use lms_user_name to call LMS endpoint to deactivate user
-
-    return True
+        return False
 
 
 # noinspection DuplicatedCode
