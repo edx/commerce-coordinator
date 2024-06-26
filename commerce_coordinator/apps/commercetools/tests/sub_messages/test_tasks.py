@@ -141,8 +141,8 @@ class FulfillOrderPlacedMessageSignalTaskTests(TestCase):
         self.assertFalse(TieredCache.get_cached_response(mock_values.cache_key).is_found)
 
 
-@patch('commerce_coordinator.apps.commercetools.sub_messages.tasks.fulfill_order_placed_signal.send_robust',
-       new_callable=SendRobustSignalMock)
+@patch('commerce_coordinator.apps.commercetools.sub_messages.tasks.LMSAPIClient.deactivate_user',
+       return_value=None)
 @patch('commerce_coordinator.apps.commercetools.sub_messages.tasks.CommercetoolsAPIClient',
        new_callable=CommercetoolsAPIClientMock)
 class OrderSanctionedMessageSignalTaskTests(TestCase):
@@ -159,7 +159,7 @@ class OrderSanctionedMessageSignalTaskTests(TestCase):
     def get_uut():
         return fulfill_order_sanctioned_uut
 
-    def test_correct_arguments_passed(self, _ct_client_init: CommercetoolsAPIClientMock, _lms_signal):
+    def test_correct_arguments_passed(self, _ct_client_init: CommercetoolsAPIClientMock, _fn_mock):
         """
         Check calling uut with mock_parameters yields call to client with
         expected_data.
@@ -172,7 +172,7 @@ class OrderSanctionedMessageSignalTaskTests(TestCase):
 
     @patch('commerce_coordinator.apps.commercetools.sub_messages.tasks.is_edx_lms_order',
            return_value=None)
-    def test_not_lms_order(self, _fn, _ct_client_init: CommercetoolsAPIClientMock, _lms_signal):
+    def test_not_lms_order(self, _fn, _ct_client_init: CommercetoolsAPIClientMock, _fn_mock):
         """
         Check calling uut with mock_parameters yields call to client with
         expected_data.
@@ -187,7 +187,7 @@ class OrderSanctionedMessageSignalTaskTests(TestCase):
 
     @patch('commerce_coordinator.apps.commercetools.sub_messages.tasks.get_edx_order_workflow_state_key',
            return_value=None)
-    def test_missing_order_workflow_state(self, _fn, _ct_client_init: CommercetoolsAPIClientMock, _lms_signal):
+    def test_missing_order_workflow_state(self, _fn, _ct_client_init: CommercetoolsAPIClientMock, _fn_mock):
         """
         Check calling uut with mock_parameters yields call to client with
         expected_data.
@@ -202,7 +202,7 @@ class OrderSanctionedMessageSignalTaskTests(TestCase):
 
     @patch('commerce_coordinator.apps.commercetools.sub_messages.tasks.get_edx_is_sanctioned',
            return_value=False)
-    def test_order_not_sanctioned(self, _fn, _ct_client_init: CommercetoolsAPIClientMock, _lms_signal):
+    def test_order_not_sanctioned(self, _fn, _ct_client_init: CommercetoolsAPIClientMock, _fn_mock):
         """
         Check calling uut with mock_parameters yields call to client with
         expected_data.
@@ -210,7 +210,20 @@ class OrderSanctionedMessageSignalTaskTests(TestCase):
         mock_values = _ct_client_init.return_value
 
         ret_val = self.get_uut()(*self.unpack_for_uut(mock_values.example_payload))
+        self.assertFalse(ret_val)
+        mock_values.order_mock.assert_called_once_with(mock_values.order_id)
+        mock_values.customer_mock.assert_called_once_with(mock_values.customer_id)
 
+    @patch('commerce_coordinator.apps.commercetools.sub_messages.tasks.get_edx_is_sanctioned',
+           return_value=True)
+    def test_order_sanctioned(self, _fn, _ct_client_init: CommercetoolsAPIClientMock, _fn_mock):
+        """
+        Check calling uut with mock_parameters yields call to client with
+        expected_data.
+        """
+        mock_values = _ct_client_init.return_value
+
+        ret_val = self.get_uut()(*self.unpack_for_uut(mock_values.example_payload))
         self.assertTrue(ret_val)
         mock_values.order_mock.assert_called_once_with(mock_values.order_id)
         mock_values.customer_mock.assert_called_once_with(mock_values.customer_id)

@@ -24,6 +24,33 @@ class LMSAPIClient(BaseEdxOAuthClient):
         """
         return urljoin_directory(settings.LMS_URL_ROOT, '/api/enrollment/v1/enrollment')
 
+    @property
+    def deactivate_user_api_url(self):
+        """
+        Base URL for LMS Enrollment API service.
+        """
+        return urljoin_directory(
+            settings.LMS_URL_ROOT, '/api/user/v1/accounts/{username}/deactivate/'
+        )
+
+    def deactivate_user(self, username):
+        """
+        Call up the LMS to deactivate a user account.
+
+        Intended use is on SDN check failure.
+        """
+        try:
+            response = self.client.post(
+                self.deactivate_user_api_url.format(username=username),
+                timeout=self.normal_timeout,
+            )
+            response.raise_for_status()
+        except (ConnectionError, RequestException) as exc:
+            logger.exception(
+                f'An error occurred while deactivating account for user with username {username}: {exc}'
+            )
+            raise
+
     def enroll_user_in_course(self, enrollment_data, line_item_state_payload):
         """
         Send a POST request to LMS Enrollment API endpoint
