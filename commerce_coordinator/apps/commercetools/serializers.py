@@ -4,27 +4,29 @@ from commerce_coordinator.apps.core import serializers
 from commerce_coordinator.apps.core.serializers import CoordinatorSerializer
 
 
-class OrderMessageDetailSerializer(CoordinatorSerializer):
+class OrderSanctionedViewMessageDetailSerializer(CoordinatorSerializer):
     """
     Serializer for CommerceTools message 'detail'
     """
-    orderId = serializers.CharField(allow_null=False)
-    orderState = serializers.CharField(allow_null=False)
-    oldOrderState = serializers.CharField()
+    resource = serializers.DictField(child=serializers.CharField())
+    type = serializers.CharField(allow_null=False)
 
     def to_representation(self, instance):
         representation = super().to_representation(instance)
-        representation['order_id'] = representation.pop('orderId')
-        representation['order_state'] = representation.pop('orderState')
-        representation['old_order_state'] = representation.pop('oldOrderState')
+        representation['type'] = representation.pop('type')
+
+        order_id = representation['resource'].get('id')
+        if order_id:
+            representation['order_id'] = order_id
+        representation.pop('resource')
         return representation
 
 
-class OrderMessageInputSerializer(CoordinatorSerializer):
+class OrderSanctionedViewMessageInputSerializer(CoordinatorSerializer):
     """
-    Serializer for commercetools message input
+    Serializer for commercetools Sanctioned View message input
     """
-    detail = OrderMessageDetailSerializer(allow_null=False)
+    detail = OrderSanctionedViewMessageDetailSerializer(allow_null=False)
 
     def to_representation(self, instance):
         representation = super().to_representation(instance)
