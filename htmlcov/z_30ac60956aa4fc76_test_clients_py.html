@@ -66,8 +66,8 @@
             <a id="indexLink" class="nav" href="index.html">&Hat; index</a> &nbsp; &nbsp;
             <a id="nextFileLink" class="nav" href="z_30ac60956aa4fc76_test_pipeline_py.html">&#xbb; next</a>
             &nbsp; &nbsp; &nbsp;
-            <a class="nav" href="https://coverage.readthedocs.io/en/7.5.3">coverage.py v7.5.3</a>,
-            created at 2024-06-20 12:58 +0000
+            <a class="nav" href="https://coverage.readthedocs.io/en/7.5.4">coverage.py v7.5.4</a>,
+            created at 2024-06-26 13:48 +0000
         </p>
         <aside class="hidden">
             <button type="button" class="button_next_chunk" data-shortcut="j"></button>
@@ -280,7 +280,7 @@
     <p class="pln"><span class="n"><a id="t196" href="#t196">196</a></span><span class="t">&nbsp;</span><span class="r"></span></p>
     <p class="run"><span class="n"><a id="t197" href="#t197">197</a></span><span class="t">    <span class="key">def</span> <span class="nam">test_post_failure</span><span class="op">(</span><span class="nam">self</span><span class="op">)</span><span class="op">:</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t198" href="#t198">198</a></span><span class="t">        <span class="str">'''Check empty request and mock 400 generates exception.'''</span>&nbsp;</span><span class="r"></span></p>
-    <p class="par run show_par"><span class="n"><a id="t199" href="#t199">199</a></span><span class="t">        <span class="key">with</span> <span class="nam">self</span><span class="op">.</span><span class="nam">assertRaises</span><span class="op">(</span><span class="nam">HTTPError</span><span class="op">)</span><span class="op">:</span>&nbsp;</span><span class="r"><span class="annotate short">199&#x202F;&#x219B;&#x202F;exit</span><span class="annotate long">line 199 didn't return from function 'test_post_failure', because </span></span></p>
+    <p class="par run show_par"><span class="n"><a id="t199" href="#t199">199</a></span><span class="t">        <span class="key">with</span> <span class="nam">self</span><span class="op">.</span><span class="nam">assertRaises</span><span class="op">(</span><span class="nam">HTTPError</span><span class="op">)</span><span class="op">:</span>&nbsp;</span><span class="r"><span class="annotate short">199&#x202F;&#x219B;&#x202F;exit</span><span class="annotate long">line 199 didn't return from function 'test_post_failure' because </span></span></p>
     <p class="run"><span class="n"><a id="t200" href="#t200">200</a></span><span class="t">            <span class="nam">self</span><span class="op">.</span><span class="nam">assertJSONClientResponse</span><span class="op">(</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t201" href="#t201">201</a></span><span class="t">                <span class="nam">uut</span><span class="op">=</span><span class="nam">self</span><span class="op">.</span><span class="nam">client</span><span class="op">.</span><span class="nam">_request</span><span class="op">,</span>  <span class="com"># pylint: disable=protected-access</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t202" href="#t202">202</a></span><span class="t">                <span class="nam">input_kwargs</span><span class="op">=</span><span class="op">{</span><span class="str">'request_method'</span><span class="op">:</span> <span class="str">'POST'</span><span class="op">,</span> <span class="str">'resource_path'</span><span class="op">:</span> <span class="str">'/'</span><span class="op">}</span><span class="op">,</span>&nbsp;</span><span class="r"></span></p>
@@ -437,7 +437,7 @@
     <p class="pln"><span class="n"><a id="t353" href="#t353">353</a></span><span class="t">        <span class="op">}</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t354" href="#t354">354</a></span><span class="t">&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t355" href="#t355">355</a></span><span class="t">        <span class="com"># test with no params</span>&nbsp;</span><span class="r"></span></p>
-    <p class="par run show_par"><span class="n"><a id="t356" href="#t356">356</a></span><span class="t">        <span class="key">with</span> <span class="nam">self</span><span class="op">.</span><span class="nam">assertRaises</span><span class="op">(</span><span class="nam">RuntimeError</span><span class="op">)</span> <span class="key">as</span> <span class="nam">ex</span><span class="op">:</span>&nbsp;</span><span class="r"><span class="annotate short">356&#x202F;&#x219B;&#x202F;363</span><span class="annotate long">line 356 didn't jump to line 363, because </span></span></p>
+    <p class="par run show_par"><span class="n"><a id="t356" href="#t356">356</a></span><span class="t">        <span class="key">with</span> <span class="nam">self</span><span class="op">.</span><span class="nam">assertRaises</span><span class="op">(</span><span class="nam">RuntimeError</span><span class="op">)</span> <span class="key">as</span> <span class="nam">ex</span><span class="op">:</span>&nbsp;</span><span class="r"><span class="annotate short">356&#x202F;&#x219B;&#x202F;363</span><span class="annotate long">line 356 didn't jump to line 363 because </span></span></p>
     <p class="run"><span class="n"><a id="t357" href="#t357">357</a></span><span class="t">            <span class="nam">self</span><span class="op">.</span><span class="nam">assertJSONClientResponse</span><span class="op">(</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t358" href="#t358">358</a></span><span class="t">                <span class="nam">uut</span><span class="op">=</span><span class="nam">self</span><span class="op">.</span><span class="nam">client</span><span class="op">.</span><span class="nam">get_payment</span><span class="op">,</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t359" href="#t359">359</a></span><span class="t">                <span class="nam">input_kwargs</span><span class="op">=</span><span class="op">{</span><span class="op">}</span><span class="op">,</span>&nbsp;</span><span class="r"></span></p>
@@ -817,8 +817,8 @@
             <a class="nav" href="index.html">&Hat; index</a> &nbsp; &nbsp;
             <a class="nav" href="z_30ac60956aa4fc76_test_pipeline_py.html">&#xbb; next</a>
             &nbsp; &nbsp; &nbsp;
-            <a class="nav" href="https://coverage.readthedocs.io/en/7.5.3">coverage.py v7.5.3</a>,
-            created at 2024-06-20 12:58 +0000
+            <a class="nav" href="https://coverage.readthedocs.io/en/7.5.4">coverage.py v7.5.4</a>,
+            created at 2024-06-26 13:48 +0000
         </p>
     </div>
 </footer>

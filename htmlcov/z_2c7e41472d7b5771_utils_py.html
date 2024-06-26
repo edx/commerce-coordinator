@@ -66,8 +66,8 @@
             <a id="indexLink" class="nav" href="index.html">&Hat; index</a> &nbsp; &nbsp;
             <a id="nextFileLink" class="nav" href="z_d8f661694b6325bc_views_py.html">&#xbb; next</a>
             &nbsp; &nbsp; &nbsp;
-            <a class="nav" href="https://coverage.readthedocs.io/en/7.5.3">coverage.py v7.5.3</a>,
-            created at 2024-06-20 12:58 +0000
+            <a class="nav" href="https://coverage.readthedocs.io/en/7.5.4">coverage.py v7.5.4</a>,
+            created at 2024-06-26 13:48 +0000
         </p>
         <aside class="hidden">
             <button type="button" class="button_next_chunk" data-shortcut="j"></button>
@@ -159,7 +159,7 @@
     <p class="pln"><span class="n"><a id="t75" href="#t75">75</a></span><span class="t">&nbsp;</span><span class="r"></span></p>
     <p class="run"><span class="n"><a id="t76" href="#t76">76</a></span><span class="t">    <span class="key">def</span> <span class="nam">fire_signal</span><span class="op">(</span><span class="nam">self</span><span class="op">)</span><span class="op">:</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t77" href="#t77">77</a></span><span class="t">        <span class="str">'''Send mock_signal.'''</span>&nbsp;</span><span class="r"></span></p>
-    <p class="par run show_par"><span class="n"><a id="t78" href="#t78">78</a></span><span class="t">        <span class="key">with</span> <span class="nam">self</span><span class="op">.</span><span class="nam">assertLogs</span><span class="op">(</span><span class="op">)</span> <span class="key">as</span> <span class="nam">logs</span><span class="op">:</span>&nbsp;</span><span class="r"><span class="annotate short">78&#x202F;&#x219B;&#x202F;83</span><span class="annotate long">line 78 didn't jump to line 83, because </span></span></p>
+    <p class="par run show_par"><span class="n"><a id="t78" href="#t78">78</a></span><span class="t">        <span class="key">with</span> <span class="nam">self</span><span class="op">.</span><span class="nam">assertLogs</span><span class="op">(</span><span class="op">)</span> <span class="key">as</span> <span class="nam">logs</span><span class="op">:</span>&nbsp;</span><span class="r"><span class="annotate short">78&#x202F;&#x219B;&#x202F;83</span><span class="annotate long">line 78 didn't jump to line 83 because </span></span></p>
     <p class="run"><span class="n"><a id="t79" href="#t79">79</a></span><span class="t">            <span class="nam">result</span> <span class="op">=</span> <span class="nam">self</span><span class="op">.</span><span class="nam">mock_signal</span><span class="op">.</span><span class="nam">send_robust</span><span class="op">(</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t80" href="#t80">80</a></span><span class="t">                <span class="nam">sender</span><span class="op">=</span><span class="nam">self</span><span class="op">.</span><span class="nam">__class__</span><span class="op">,</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t81" href="#t81">81</a></span><span class="t">                <span class="op">**</span><span class="nam">self</span><span class="op">.</span><span class="nam">mock_parameters</span>&nbsp;</span><span class="r"></span></p>
@@ -350,9 +350,9 @@
     <p class="run"><span class="n"><a id="t266" href="#t266">266</a></span><span class="t">        <span class="key">pass</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t267" href="#t267">267</a></span><span class="t">&nbsp;</span><span class="r"></span></p>
     <p class="run"><span class="n"><a id="t268" href="#t268">268</a></span><span class="t">    <span class="nam">wrapped_test_params</span> <span class="op">=</span> <span class="key">None</span>&nbsp;</span><span class="r"></span></p>
-    <p class="par run show_par"><span class="n"><a id="t269" href="#t269">269</a></span><span class="t">    <span class="key">if</span> <span class="nam">isinstance</span><span class="op">(</span><span class="nam">test_packed_params</span><span class="op">,</span> <span class="nam">dict</span><span class="op">)</span><span class="op">:</span>&nbsp;</span><span class="r"><span class="annotate short">269&#x202F;&#x219B;&#x202F;270</span><span class="annotate long">line 269 didn't jump to line 270, because the condition on line 269 was never true</span></span></p>
+    <p class="par run show_par"><span class="n"><a id="t269" href="#t269">269</a></span><span class="t">    <span class="key">if</span> <span class="nam">isinstance</span><span class="op">(</span><span class="nam">test_packed_params</span><span class="op">,</span> <span class="nam">dict</span><span class="op">)</span><span class="op">:</span>&nbsp;</span><span class="r"><span class="annotate short">269&#x202F;&#x219B;&#x202F;270</span><span class="annotate long">line 269 didn't jump to line 270 because the condition on line 269 was never true</span></span></p>
     <p class="mis show_mis"><span class="n"><a id="t270" href="#t270">270</a></span><span class="t">        <span class="nam">wrapped_test_params</span> <span class="op">=</span> <span class="nam">WrappedDict</span><span class="op">(</span><span class="nam">test_packed_params</span><span class="op">)</span>&nbsp;</span><span class="r"></span></p>
-    <p class="par run show_par"><span class="n"><a id="t271" href="#t271">271</a></span><span class="t">    <span class="key">elif</span> <span class="nam">isinstance</span><span class="op">(</span><span class="nam">test_packed_params</span><span class="op">,</span> <span class="nam">tuple</span><span class="op">)</span><span class="op">:</span>&nbsp;</span><span class="r"><span class="annotate short">271&#x202F;&#x219B;&#x202F;273</span><span class="annotate long">line 271 didn't jump to line 273, because the condition on line 271 was always true</span></span></p>
+    <p class="par run show_par"><span class="n"><a id="t271" href="#t271">271</a></span><span class="t">    <span class="key">elif</span> <span class="nam">isinstance</span><span class="op">(</span><span class="nam">test_packed_params</span><span class="op">,</span> <span class="nam">tuple</span><span class="op">)</span><span class="op">:</span>&nbsp;</span><span class="r"><span class="annotate short">271&#x202F;&#x219B;&#x202F;273</span><span class="annotate long">line 271 didn't jump to line 273 because the condition on line 271 was always true</span></span></p>
     <p class="run"><span class="n"><a id="t272" href="#t272">272</a></span><span class="t">        <span class="nam">wrapped_test_params</span> <span class="op">=</span> <span class="nam">WrappedTuple</span><span class="op">(</span><span class="nam">test_packed_params</span><span class="op">)</span>&nbsp;</span><span class="r"></span></p>
     <p class="mis show_mis"><span class="n"><a id="t273" href="#t273">273</a></span><span class="t">    <span class="key">elif</span> <span class="nam">isinstance</span><span class="op">(</span><span class="nam">test_packed_params</span><span class="op">,</span> <span class="nam">list</span><span class="op">)</span><span class="op">:</span>  <span class="com"># coverage skipping here is a bug. sorry.</span>&nbsp;</span><span class="r"></span></p>
     <p class="mis show_mis"><span class="n"><a id="t274" href="#t274">274</a></span><span class="t">        <span class="nam">wrapped_test_params</span> <span class="op">=</span> <span class="nam">WrappedList</span><span class="op">(</span><span class="nam">test_packed_params</span><span class="op">)</span>&nbsp;</span><span class="r"></span></p>
@@ -407,8 +407,8 @@
             <a class="nav" href="index.html">&Hat; index</a> &nbsp; &nbsp;
             <a class="nav" href="z_d8f661694b6325bc_views_py.html">&#xbb; next</a>
             &nbsp; &nbsp; &nbsp;
-            <a class="nav" href="https://coverage.readthedocs.io/en/7.5.3">coverage.py v7.5.3</a>,
-            created at 2024-06-20 12:58 +0000
+            <a class="nav" href="https://coverage.readthedocs.io/en/7.5.4">coverage.py v7.5.4</a>,
+            created at 2024-06-26 13:48 +0000
         </p>
     </div>
 </footer>

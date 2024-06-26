@@ -66,8 +66,8 @@
             <a id="indexLink" class="nav" href="index.html">&Hat; index</a> &nbsp; &nbsp;
             <a id="nextFileLink" class="nav" href="z_30ac60956aa4fc76_constants_py.html">&#xbb; next</a>
             &nbsp; &nbsp; &nbsp;
-            <a class="nav" href="https://coverage.readthedocs.io/en/7.5.3">coverage.py v7.5.3</a>,
-            created at 2024-06-20 12:58 +0000
+            <a class="nav" href="https://coverage.readthedocs.io/en/7.5.4">coverage.py v7.5.4</a>,
+            created at 2024-06-26 13:48 +0000
         </p>
         <aside class="hidden">
             <button type="button" class="button_next_chunk" data-shortcut="j"></button>
@@ -190,7 +190,7 @@
     <p class="run"><span class="n"><a id="t106" href="#t106">106</a></span><span class="t">        <span class="nam">payment_state</span> <span class="op">=</span> <span class="nam">payment</span><span class="op">[</span><span class="str">'state'</span><span class="op">]</span>&nbsp;</span><span class="r"></span></p>
     <p class="run"><span class="n"><a id="t107" href="#t107">107</a></span><span class="t">        <span class="key">if</span> <span class="nam">payment_state</span> <span class="op">==</span> <span class="nam">PaymentState</span><span class="op">.</span><span class="nam">COMPLETED</span><span class="op">.</span><span class="nam">value</span><span class="op">:</span>&nbsp;</span><span class="r"></span></p>
     <p class="run"><span class="n"><a id="t108" href="#t108">108</a></span><span class="t">            <span class="nam">PaymentCache</span><span class="op">(</span><span class="op">)</span><span class="op">.</span><span class="nam">set_paid_cache_payment</span><span class="op">(</span><span class="nam">payment</span><span class="op">)</span>&nbsp;</span><span class="r"></span></p>
-    <p class="par run show_par"><span class="n"><a id="t109" href="#t109">109</a></span><span class="t">        <span class="key">elif</span> <span class="nam">payment_state</span> <span class="op">==</span> <span class="nam">PaymentState</span><span class="op">.</span><span class="nam">FAILED</span><span class="op">.</span><span class="nam">value</span><span class="op">:</span>&nbsp;</span><span class="r"><span class="annotate short">109&#x202F;&#x219B;&#x202F;exit</span><span class="annotate long">line 109 didn't return from function 'payment_processed_save_task', because the condition on line 109 was always true</span></span></p>
+    <p class="par run show_par"><span class="n"><a id="t109" href="#t109">109</a></span><span class="t">        <span class="key">elif</span> <span class="nam">payment_state</span> <span class="op">==</span> <span class="nam">PaymentState</span><span class="op">.</span><span class="nam">FAILED</span><span class="op">.</span><span class="nam">value</span><span class="op">:</span>&nbsp;</span><span class="r"><span class="annotate short">109&#x202F;&#x219B;&#x202F;exit</span><span class="annotate long">line 109 didn't return from function 'payment_processed_save_task' because the condition on line 109 was always true</span></span></p>
     <p class="run"><span class="n"><a id="t110" href="#t110">110</a></span><span class="t">            <span class="nam">stripe_api_client</span> <span class="op">=</span> <span class="nam">StripeAPIClient</span><span class="op">(</span><span class="op">)</span>&nbsp;</span><span class="r"></span></p>
     <p class="run"><span class="n"><a id="t111" href="#t111">111</a></span><span class="t">            <span class="nam">provider_response_body</span> <span class="op">=</span> <span class="nam">stripe_api_client</span><span class="op">.</span><span class="nam">retrieve_payment_intent</span><span class="op">(</span><span class="nam">reference_number</span><span class="op">)</span>&nbsp;</span><span class="r"></span></p>
     <p class="run"><span class="n"><a id="t112" href="#t112">112</a></span><span class="t">            <span class="nam">provider_response_body</span> <span class="op">=</span> <span class="nam">sanitize_provider_response_body</span><span class="op">(</span><span class="nam">provider_response_body</span><span class="op">)</span>&nbsp;</span><span class="r"></span></p>
@@ -225,8 +225,8 @@
             <a class="nav" href="index.html">&Hat; index</a> &nbsp; &nbsp;
             <a class="nav" href="z_30ac60956aa4fc76_constants_py.html">&#xbb; next</a>
             &nbsp; &nbsp; &nbsp;
-            <a class="nav" href="https://coverage.readthedocs.io/en/7.5.3">coverage.py v7.5.3</a>,
-            created at 2024-06-20 12:58 +0000
+            <a class="nav" href="https://coverage.readthedocs.io/en/7.5.4">coverage.py v7.5.4</a>,
+            created at 2024-06-26 13:48 +0000
         </p>
     </div>
 </footer>
