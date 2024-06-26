@@ -58,7 +58,7 @@ def get_logger_config(logging_env="no_env",
             'skip_health_check': {
                 '()': 'django.utils.log.CallbackFilter',
                 # Space before the path is intentional. It forces the match to be from the root of the service.
-                'callback': lambda record: ' /health/' not in record.getMessage() and \
+                'callback': lambda record: ' /health/' not in record.getMessage() and
                                            ' /health' not in record.getMessage()
             }
         },
