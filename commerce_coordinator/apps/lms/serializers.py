@@ -77,3 +77,10 @@ class CourseRefundInputSerializer(CoordinatorSerializer):
     def enrollment_attributes_dict(self) -> Dict[str, str]:
         """ Converts serializer data to a dict of {f"{namespace}.{name}": value, ... n} """
         return dict([EnrollmentAttributeSerializer.dict_tuple(e) for e in self.data['enrollment_attributes']])
+
+
+class UserRetiredInputSerializer(CoordinatorSerializer):
+    """
+    Serializer for User Deactivation/Retirement input validation
+    """
+    edx_lms_user_id = serializers.IntegerField(allow_null=False)

@@ -6,6 +6,7 @@ from logging import getLogger
 
 import attrs
 from commercetools import CommercetoolsError
+from django.conf import settings
 from openedx_filters import PipelineStep
 from openedx_filters.exceptions import OpenEdxFilterException
 from requests import HTTPError
@@ -17,7 +18,7 @@ from commerce_coordinator.apps.commercetools.catalog_info.edx_utils import (
 from commerce_coordinator.apps.commercetools.clients import CommercetoolsAPIClient
 from commerce_coordinator.apps.commercetools.constants import COMMERCETOOLS_ORDER_MANAGEMENT_SYSTEM
 from commerce_coordinator.apps.commercetools.data import order_from_commercetools
-from commerce_coordinator.apps.commercetools.utils import has_refund_transaction
+from commerce_coordinator.apps.commercetools.utils import create_retired_fields, has_refund_transaction
 from commerce_coordinator.apps.core.constants import PipelineCommand
 from commerce_coordinator.apps.core.exceptions import InvalidFilterType
 from commerce_coordinator.apps.rollout.utils import (
@@ -324,6 +325,64 @@ class CreateReturnPaymentTransaction(PipelineStep):
 
             return {
                 'returned_payment': updated_payment
+            }
+        except CommercetoolsError as err:  # pragma no cover
+            log.exception(f"[{tag}] Commercetools Error: {err}, {err.errors}")
+            return PipelineCommand.CONTINUE.value
+        except HTTPError as err:  # pragma no cover
+            log.exception(f"[{tag}] HTTP Error: {err}")
+            return PipelineCommand.CONTINUE.value
+
+
+class AnonymizeRetiredUser(PipelineStep):
+    """
+    Finds a CT customer by their LMS user ID and anonymizes PII fields
+    following user retirement/account deletion in LMS
+    """
+
+    def run_filter(
+        self,
+        lms_user_id
+    ):  # pylint: disable=arguments-differ
+        """
+        Execute a filter with the signature specified.
+        Arguments:
+            lms_user_id: User UUID from LMS connecting to and
+            stored in CT customer object
+        Returns:
+            returned_customer: the modified CT customer
+        """
+
+        tag = type(self).__name__
+
+        ct_api_client = CommercetoolsAPIClient()
+        try:
+            customer = ct_api_client.get_customer_by_lms_user_id(lms_user_id)
+            first_name = customer.first_name
+            last_name = customer.last_name
+            email = customer.email
+            lms_username = customer.custom.fields.get("edx-lms_user_name")
+            fields_to_anonymize = {
+                "first_name": first_name,
+                "last_name": last_name,
+                "email": email,
+                "lms_username": lms_username
+            }
+
+            anonymized_fields = {key: create_retired_fields(value, settings.RETIRED_USER_SALTS)
+                                 for key, value in fields_to_anonymize.items()}
+
+            retired_customer = ct_api_client.retire_customer_anonymize_fields(
+                customer.id,
+                customer.version,
+                anonymized_fields.get("first_name"),
+                anonymized_fields.get("last_name"),
+                anonymized_fields.get("email"),
+                anonymized_fields.get("lms_username")
+            )
+
+            return {
+                'returned_customer': retired_customer
             }
         except CommercetoolsError as err:  # pragma no cover
             log.exception(f"[{tag}] Commercetools Error: {err}, {err.errors}")

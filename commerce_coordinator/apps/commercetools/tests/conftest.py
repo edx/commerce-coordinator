@@ -302,6 +302,30 @@ def gen_customer(email: str, un: str):
     )
 
 
+def gen_retired_customer(first_name: str, last_name: str, email: str, un: str):
+    return CTCustomer(
+        email=email,
+        first_name=first_name,
+        last_name=last_name,
+        custom=CTCustomFields(
+            type=CTTypeReference(
+                id=uuid4_str()
+            ),
+            fields=CTFieldContainer({
+                EdXFieldNames.LMS_USER_NAME: un,
+                EdXFieldNames.LMS_USER_ID: DEFAULT_EDX_LMS_USER_ID
+            })
+        ),
+        version=3,
+        addresses=[],
+        authentication_mode=CTAuthenticationMode.PASSWORD,
+        created_at=datetime.now(),
+        id=uuid4_str(),
+        is_email_verified=True,
+        last_modified_at=datetime.now()
+    )
+
+
 def gen_return_item(order_line_id: str, payment_state: ReturnPaymentState) -> CTLineItemReturnItem:
     return CTLineItemReturnItem(
         id=uuid4_str(),
