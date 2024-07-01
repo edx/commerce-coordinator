@@ -70,26 +70,6 @@ class PaymentPageRedirectViewTests(APITestCase):
         # Error HTTP_302_FOUND
         self.assertEqual(response.status_code, status.HTTP_302_FOUND)
 
-    # TODO: FIX Per SONIC-354
-    # @patch('commerce_coordinator.apps.rollout.pipeline.logger')
-    # @patch('commerce_coordinator.apps.commercetools.clients.CommercetoolsAPIClient')
-    # def test_get_product_variant_by_course_run_failure(self, mock_ct_client, mock_logger):
-    #     self.client.login(username=self.test_user_username, password=self.test_user_password)
-    #     self.client.force_authenticate(user=self.user)
-    #
-    #     mock_ct_client.return_value.get_product_variant_by_course_run.side_effect = HTTPError('Error in CT search')
-    #     self.client.get(
-    #         self.url,
-    #         {'sku': ['sku1'], 'course_run_key': 'course-v1:MichiganX+InjuryPreventionX+1T2021'}
-    #     )
-    #
-    #     mock_logger.exception.assert_called_once_with(
-    #         '[get_product_variant_by_course_run] Failed to get CT course for course_run: '
-    #         'course-v1:MichiganX+InjuryPreventionX+1T2021 with exception: Error in CT search'
-    #     )
-    #
-    #     mock_ct_client.reset_mock(return_value=True, side_effect=True)
-
     @patch('commerce_coordinator.apps.rollout.pipeline.is_user_enterprise_learner')
     @patch('commerce_coordinator.apps.rollout.pipeline.is_redirect_to_commercetools_enabled_for_user')
     def test_run_rollout_pipeline_redirect_to_commercetools(self, is_redirect_mock, is_enterprise_mock):
