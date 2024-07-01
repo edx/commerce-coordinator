@@ -129,28 +129,6 @@ class OrderFulfillViewTests(APITestCase):
         # Check 200 OK
         self.assertEqual(response.status_code, 200)
 
-    # # TODO: GRM: Move to Signals tests
-    # def test_view_sends_expected_signal_parameters(self, mock_customer, mock_order, mock_signal):
-    #     """Check view sends expected signal parameters."""
-    #     # Login
-    #     self.client.login(username=self.test_staff_username, password=self.test_password)
-    #
-    #     # Send request
-    #     self.client.post(self.url, data=EXAMPLE_COMMERCETOOLS_ORDER_FULFILL_MESSAGE, format='json')
-    #
-    #     # Check expected response
-    #     mock_signal.assert_called_once_with(**EXAMPLE_FULFILLMENT_SIGNAL_PAYLOAD)
-
-    # # TODO: GRM: Move to Signals tests
-    # @patch("commerce_coordinator.apps.commercetools.views.send_order_confirmation_email")
-    # def test_view_triggers_order_confirmation_email(self, mock_send_email, mock_customer, mock_order, mock_signal):
-    #     """Check view sends expected signal parameters."""
-    #     self.client.login(username=self.test_staff_username, password=self.test_password)
-    #
-    #     self.client.post(self.url, data=EXAMPLE_COMMERCETOOLS_ORDER_FULFILL_MESSAGE, format='json')
-    #
-    #     mock_send_email.assert_called_once()
-
     def test_view_returns_expected_error(self, _mock_signal):
         """Check an authorized account requesting fulfillment with bad inputs receive an expected error."""
 
