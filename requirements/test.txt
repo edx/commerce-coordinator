@@ -294,7 +294,7 @@ pyjwt[crypto]==2.8.0
     #   edx-rest-api-client
     #   segment-analytics-python
     #   social-auth-core
-pylint==3.2.4
+pylint==3.2.5
     # via
     #   edx-lint
     #   pylint-celery
@@ -308,7 +308,7 @@ pylint-plugin-utils==0.8.2
     # via
     #   pylint-celery
     #   pylint-django
-pymongo==4.7.3
+pymongo==4.8.0
     # via
     #   -r requirements/base.txt
     #   edx-opaque-keys
@@ -417,7 +417,7 @@ stevedore==5.2.0
     #   code-annotations
     #   edx-django-utils
     #   edx-opaque-keys
-stripe==10.0.0
+stripe==10.1.0
     # via -r requirements/base.txt
 testfixtures==8.3.0
     # via -r requirements/test.in

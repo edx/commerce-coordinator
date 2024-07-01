@@ -149,6 +149,7 @@ cryptography==42.0.8
     #   -r requirements/quality.txt
     #   -r requirements/test.txt
     #   pyjwt
+    #   secretstorage
     #   social-auth-core
 currencies==2020.12.12
     # via
@@ -328,6 +329,11 @@ jaraco-functools==4.0.1
     # via
     #   -r requirements/quality.txt
     #   keyring
+jeepney==0.8.0
+    # via
+    #   -r requirements/quality.txt
+    #   keyring
+    #   secretstorage
 jinja2==3.1.4
     # via
     #   -r requirements/quality.txt
@@ -478,7 +484,7 @@ pyjwt[crypto]==2.8.0
     #   edx-rest-api-client
     #   segment-analytics-python
     #   social-auth-core
-pylint==3.2.4
+pylint==3.2.5
     # via
     #   -r requirements/quality.txt
     #   -r requirements/test.txt
@@ -502,7 +508,7 @@ pylint-plugin-utils==0.8.2
     #   -r requirements/test.txt
     #   pylint-celery
     #   pylint-django
-pymongo==4.7.3
+pymongo==4.8.0
     # via
     #   -r requirements/quality.txt
     #   -r requirements/test.txt
@@ -612,6 +618,10 @@ rich==13.7.1
     # via
     #   -r requirements/quality.txt
     #   twine
+secretstorage==3.3.3
+    # via
+    #   -r requirements/quality.txt
+    #   keyring
 segment-analytics-python==2.3.2
     # via
     #   -r requirements/quality.txt
@@ -667,7 +677,7 @@ stevedore==5.2.0
     #   code-annotations
     #   edx-django-utils
     #   edx-opaque-keys
-stripe==10.0.0
+stripe==10.1.0
     # via
     #   -r requirements/quality.txt
     #   -r requirements/test.txt
