@@ -264,7 +264,7 @@ class RetirementView(APIView):
         Returns:
             - Response:
                 - 200 OK if the refund was successfully processed with the result of
-                the UserRetirementRequested filter/pipeline.
+                    the UserRetirementRequested filter/pipeline.
                 - 400 If the retirement request failed due to an invalid lms user uuid.
                 - 500 If an OpenEdxFilterException occurred while anonymizing the customer fields.
                 - 500 If any other unexpected exception occurred during retirement/anonymizing processing.
