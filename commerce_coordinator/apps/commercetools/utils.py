@@ -262,7 +262,7 @@ def _create_retired_hash_withsalt(value_to_retire, salt):
         value_to_retire (str): Value to be retired.
         salt (str): Salt string used to modify the retired value before hashing.
     """
-    return hashlib.sha1(
+    return hashlib.sha256(
         salt.encode() + value_to_retire.encode('utf-8')
     ).hexdigest()
 

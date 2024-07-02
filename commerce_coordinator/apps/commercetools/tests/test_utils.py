@@ -376,7 +376,7 @@ class TestRetirementAnonymizingTestCase(unittest.TestCase):
         self.field_value = "TestValue"
         self.salt = "TestSalt"
         self.salt_list = ["Salt1", "Salt2", self.salt]
-        self.expected_hash = hashlib.sha1((self.salt.encode() + self.field_value.lower().encode('utf-8'))).hexdigest()
+        self.expected_hash = hashlib.sha256((self.salt.encode() + self.field_value.lower().encode('utf-8'))).hexdigest()
         self.expected_retired_field = f"retired_user_{self.expected_hash}"
 
     def test_create_retired_fields(self):
