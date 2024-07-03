@@ -51,7 +51,12 @@ class LMSAPIClient(BaseEdxOAuthClient):
             )
             raise
 
-    def enroll_user_in_course(self, enrollment_data, line_item_state_payload):
+    def enroll_user_in_course(
+            self,
+            enrollment_data,
+            line_item_state_payload,
+            fulfillment_logging_obj
+    ):
         """
         Send a POST request to LMS Enrollment API endpoint
         Arguments:
@@ -63,10 +68,11 @@ class LMSAPIClient(BaseEdxOAuthClient):
             url=self.api_enrollment_base_url,
             json=enrollment_data,
             line_item_state_payload=line_item_state_payload,
+            logging_obj=fulfillment_logging_obj,
             timeout=settings.FULFILLMENT_TIMEOUT
         )
 
-    def post(self, url, json, line_item_state_payload, timeout=None):
+    def post(self, url, json, line_item_state_payload, logging_obj, timeout=None):
         """
         Send a POST request to a url with json payload.
         """
@@ -92,6 +98,12 @@ class LMSAPIClient(BaseEdxOAuthClient):
                 **line_item_state_payload,
                 'is_fulfilled': True
             }
+            logger.info(
+                f"Successful fulfillment for user: {logging_obj['user']} with details: "
+                f"[lms user id: {logging_obj['lms_user_id']}, order id: {logging_obj['order_id']}, "
+                f"course id: {logging_obj['course_id']}, message_id: {logging_obj['message_id']}, "
+                f"celery_task_id: {logging_obj['celery_task_id']}]"
+            )
         except RequestException as exc:
             self.log_request_exception(logger, exc)
             fulfill_line_item_state_payload = {
@@ -101,6 +113,12 @@ class LMSAPIClient(BaseEdxOAuthClient):
             fulfillment_completed_signal.send_robust(
                 sender=self.__class__,
                 **fulfill_line_item_state_payload
+            )
+            logger.info(
+                f"Unsuccessful fulfillment for user: {logging_obj['user']} with details: "
+                f"[lms user id: {logging_obj['lms_user_id']}, order id: {logging_obj['order_id']}, "
+                f"course id: {logging_obj['course_id']}, message_id: {logging_obj['message_id']}, "
+                f"celery_task_id: {logging_obj['celery_task_id']}]"
             )
             raise
 

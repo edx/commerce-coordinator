@@ -38,12 +38,14 @@ class OrderLineItemMessageDetailSerializer(CoordinatorSerializer):
     """
     Serializer for CommerceTools message 'detail'
     """
+    id = serializers.CharField()
     resource = serializers.DictField(child=serializers.CharField())
     fromState = serializers.DictField(child=serializers.CharField())
     toState = serializers.DictField(child=serializers.CharField())
 
     def to_representation(self, instance):
         representation = super().to_representation(instance)
+        representation['message_id'] = representation.pop('id')
         order_id = representation['resource'].get('id')
         if order_id:  # pragma no cover
             representation['order_id'] = order_id
@@ -82,6 +84,7 @@ class OrderFulfillViewInputSerializer(CoordinatorSerializer):
     source_system = serializers.CharField(allow_null=False)
     line_item_state_id = serializers.CharField(allow_null=False)
     edx_lms_user_id = serializers.IntegerField(allow_null=False)
+    message_id = serializers.CharField(allow_null=False)
 
 
 class OrderReturnedViewMessageLineItemReturnItemSerializer(CoordinatorSerializer):

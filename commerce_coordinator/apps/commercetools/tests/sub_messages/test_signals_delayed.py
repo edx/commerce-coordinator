@@ -26,6 +26,7 @@ class FulfillOrderPlacedMessageSignalTest(CoordinatorSignalReceiverTestCase):
         'order_id': uuid4_str(),
         'line_item_state_id': uuid4_str(),
         'source_system': SOURCE_SYSTEM,
+        'message_id': uuid4_str()
     }
 
     def test_correct_arguments_passed(self, mock_task):
