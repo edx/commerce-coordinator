@@ -21,6 +21,7 @@ def fulfill_order_placed_message_signal(**kwargs):
         order_id=kwargs['order_id'],
         line_item_state_id=kwargs['line_item_state_id'],
         source_system=kwargs['source_system'],
+        message_id=kwargs['message_id']
     )
     return async_result.id
 

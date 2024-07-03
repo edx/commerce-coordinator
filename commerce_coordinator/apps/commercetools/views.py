@@ -48,6 +48,7 @@ class OrderFulfillView(SingleInvocationAPIView):
 
         order_id = message_details.data['order_id']
         line_item_state_id = message_details.data['to_state']['id']
+        message_id = message_details.data['message_id']
 
         if self._is_running(tag, order_id):  # pragma no cover
             self.meta_should_mark_not_running = False
@@ -59,7 +60,8 @@ class OrderFulfillView(SingleInvocationAPIView):
             sender=self,
             order_id=order_id,
             line_item_state_id=line_item_state_id,
-            source_system=SOURCE_SYSTEM
+            source_system=SOURCE_SYSTEM,
+            message_id=message_id
         )
 
         return Response(status=status.HTTP_200_OK)

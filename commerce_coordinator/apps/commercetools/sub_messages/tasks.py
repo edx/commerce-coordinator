@@ -44,6 +44,7 @@ def fulfill_order_placed_message_signal_task(
     order_id,
     line_item_state_id,
     source_system,
+    message_id
 ):
     """Celery task for fulfilling an order placed message."""
 
@@ -108,7 +109,8 @@ def fulfill_order_placed_message_signal_task(
             'course_id': get_edx_product_course_run_key(item),  # likely not correct
             'line_item_id': item.id,
             'item_quantity': item.quantity,
-            'line_item_state_id': line_item_state_id
+            'line_item_state_id': line_item_state_id,
+            'message_id': message_id
         })
 
         # the following throws and thus doesn't need to be a conditional

@@ -29,6 +29,7 @@ EXAMPLE_FULFILLMENT_SIGNAL_PAYLOAD: Dict[str, Union[str, bool, int, None]] = {
     'line_item_id': '822d77c4-00a6-4fb9-909b-094ef0b8c4b9',
     'item_quantity': 1,
     'line_item_state_id': '8f2e888e-9777-4557-9a7f-c649153770c2',
+    'message_id': '1063f19c-08f3-41a4-a952-a8577374373c'
 }
 
 EXAMPLE_FULFILLMENT_REQUEST_PAYLOAD = {
@@ -103,4 +104,13 @@ EXAMPLE_FULFILLMENT_RESPONSE_PAYLOAD = {
         'invite_only': False,
         'pacing_type': 'Instructor Paced'
     },
+}
+
+EXAMPLE_FULFILLMENT_LOGGING_OBJ = {
+    'user': 'test-user',
+    'lms_user_id': 4,
+    'order_id': '61ec1afa-1b0e-4234-ae28-f997728054fa',
+    'course_id': 'course-v1:edX+DemoX+Demo_Course',
+    'message_id': '1063f19c-08f3-41a4-a952-a8577374373c',
+    'celery_task_id': None
 }

@@ -46,6 +46,7 @@ def gen_example_fulfill_payload():
         'line_item_state_id': uuid4_str(),
         'order_line_id': uuid4_str(),
         'source_system': SOURCE_SYSTEM,
+        'message_id': uuid4_str()
     }
 
 
@@ -105,7 +106,8 @@ class FulfillOrderPlacedMessageSignalTaskTests(TestCase):
         return (
             values['order_id'],
             values['line_item_state_id'],
-            values['source_system']
+            values['source_system'],
+            values['message_id']
         )
 
     @staticmethod
