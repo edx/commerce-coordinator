@@ -27,7 +27,7 @@ billiard==4.2.0
     # via celery
 celery[redis]==5.4.0
     # via -r requirements/base.in
-certifi==2024.6.2
+certifi==2024.7.4
     # via requests
 cffi==1.16.0
     # via
@@ -157,7 +157,7 @@ packaging==24.1
     # via marshmallow
 pbr==6.0.0
     # via stevedore
-pillow==10.3.0
+pillow==10.4.0
     # via -r requirements/base.in
 prompt-toolkit==3.0.47
     # via click-repl
@@ -173,7 +173,7 @@ pyjwt[crypto]==2.8.0
     #   edx-rest-api-client
     #   segment-analytics-python
     #   social-auth-core
-pymongo==4.7.3
+pymongo==4.8.0
     # via edx-opaque-keys
 pynacl==1.5.0
     # via edx-django-utils
@@ -235,7 +235,7 @@ stevedore==5.2.0
     # via
     #   edx-django-utils
     #   edx-opaque-keys
-stripe==10.0.0
+stripe==10.2.0
     # via -r requirements/base.in
 typing-extensions==4.12.2
     # via

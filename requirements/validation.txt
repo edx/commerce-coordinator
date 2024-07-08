@@ -61,7 +61,7 @@ celery[redis]==5.4.0
     # via
     #   -r requirements/quality.txt
     #   -r requirements/test.txt
-certifi==2024.6.2
+certifi==2024.7.4
     # via
     #   -r requirements/quality.txt
     #   -r requirements/test.txt
@@ -149,6 +149,7 @@ cryptography==42.0.8
     #   -r requirements/quality.txt
     #   -r requirements/test.txt
     #   pyjwt
+    #   secretstorage
     #   social-auth-core
 currencies==2020.12.12
     # via
@@ -200,7 +201,7 @@ django-crum==0.7.9
     #   -r requirements/quality.txt
     #   -r requirements/test.txt
     #   edx-django-utils
-django-debug-toolbar==4.4.2
+django-debug-toolbar==4.4.5
     # via -r requirements/quality.txt
 django-dynamic-fixture==4.0.1
     # via
@@ -328,6 +329,11 @@ jaraco-functools==4.0.1
     # via
     #   -r requirements/quality.txt
     #   keyring
+jeepney==0.8.0
+    # via
+    #   -r requirements/quality.txt
+    #   keyring
+    #   secretstorage
 jinja2==3.1.4
     # via
     #   -r requirements/quality.txt
@@ -391,7 +397,7 @@ newrelic==9.11.0
     #   -r requirements/quality.txt
     #   -r requirements/test.txt
     #   edx-django-utils
-nh3==0.2.17
+nh3==0.2.18
     # via
     #   -r requirements/quality.txt
     #   readme-renderer
@@ -423,7 +429,7 @@ pbr==6.0.0
     #   -r requirements/quality.txt
     #   -r requirements/test.txt
     #   stevedore
-pillow==10.3.0
+pillow==10.4.0
     # via
     #   -r requirements/quality.txt
     #   -r requirements/test.txt
@@ -478,7 +484,7 @@ pyjwt[crypto]==2.8.0
     #   edx-rest-api-client
     #   segment-analytics-python
     #   social-auth-core
-pylint==3.2.4
+pylint==3.2.5
     # via
     #   -r requirements/quality.txt
     #   -r requirements/test.txt
@@ -502,7 +508,7 @@ pylint-plugin-utils==0.8.2
     #   -r requirements/test.txt
     #   pylint-celery
     #   pylint-django
-pymongo==4.7.3
+pymongo==4.8.0
     # via
     #   -r requirements/quality.txt
     #   -r requirements/test.txt
@@ -612,6 +618,10 @@ rich==13.7.1
     # via
     #   -r requirements/quality.txt
     #   twine
+secretstorage==3.3.3
+    # via
+    #   -r requirements/quality.txt
+    #   keyring
 segment-analytics-python==2.3.2
     # via
     #   -r requirements/quality.txt
@@ -667,7 +677,7 @@ stevedore==5.2.0
     #   code-annotations
     #   edx-django-utils
     #   edx-opaque-keys
-stripe==10.0.0
+stripe==10.2.0
     # via
     #   -r requirements/quality.txt
     #   -r requirements/test.txt
@@ -694,7 +704,7 @@ tomlkit==0.12.5
     #   -r requirements/quality.txt
     #   -r requirements/test.txt
     #   pylint
-tox==4.15.1
+tox==4.16.0
     # via
     #   -r requirements/quality.txt
     #   -r requirements/test.txt
