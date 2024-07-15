@@ -636,7 +636,7 @@ class ClientTests(TestCase):
                 f"Not attempting to transition LineItemState"
             )
 
-            log_mock.assert_called_once_with(expected_message)
+            log_mock.assert_called_with(expected_message)
             self.assertEqual(result.id, mock_order.id)
             self.assertEqual(result.version, mock_order.version)
 

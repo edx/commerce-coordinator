@@ -168,6 +168,21 @@ class CommercetoolsOrLegacyEcommerceRefundPipelineTests(APITestCase):
         self.assertEqual(mock_payment_result, self.returned_payment)
         self.assertEqual(mock_payment_result.transactions[0].type, TransactionType.REFUND)
 
+    @patch('commerce_coordinator.apps.commercetools.utils.has_refund_transaction')
+    @patch('commerce_coordinator.apps.commercetools.pipeline.log.info')
+    def test_commercetools_transaction_create_has_refund(self, mock_logger, mock_has_refund):
+        mock_has_refund.return_value = True
+
+        refund_pipe = CreateReturnPaymentTransaction("test_pipe", None)
+        refund_pipe.run_filter(
+            payment_data=self.mock_response_payment,
+            refund_response="charge_already_refunded",
+            active_order_management_system=COMMERCETOOLS_ORDER_MANAGEMENT_SYSTEM,
+            has_been_refunded=True
+        )
+        mock_logger.assert_called_once_with('[CreateReturnPaymentTransaction] refund has already been processed, '
+                                            'skipping refund payment transaction creation')
+
 
 class OrderReturnPipelineTests(TestCase):
     """Commercetools pipeline testcase for order updates on returns"""

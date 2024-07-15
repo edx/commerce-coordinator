@@ -205,6 +205,8 @@ class CreateReturnForCommercetoolsOrder(PipelineStep):
             returned_line_item_return_id (str): Updated Commercetools order's return item ID
 
         """
+        tag = type(self).__name__
+
         if active_order_management_system != COMMERCETOOLS_ORDER_MANAGEMENT_SYSTEM:  # pragma no cover
             return PipelineCommand.CONTINUE.value
 
@@ -232,9 +234,13 @@ class CreateReturnForCommercetoolsOrder(PipelineStep):
                     f'order line item id {order_line_item_id}')
         except CommercetoolsError as err:  # pragma no cover
             # TODO: FIX Per SONIC-354
+            log.info(f"[{tag}] Unsuccessful attempt to create order return with details: "
+                     f"[order_id: {order_id}, order_line_item_id: {order_line_item_id}")
             log.exception(f"[{type(self).__name__}] Commercetools Error: {err}, {err.errors}")
             raise OpenEdxFilterException(str(err)) from err
-        except HTTPError as err:
+        except HTTPError as err:  # pragma no cover
+            log.info(f"[{tag}] Unsuccessful attempt to create order return with details: "
+                     f"[order_id: {order_id}, order_line_item_id: {order_line_item_id}")
             log.exception(f"[{type(self).__name__}] HTTP Error: {err}")
             return PipelineCommand.CONTINUE.value
 
@@ -303,9 +309,11 @@ class CreateReturnPaymentTransaction(PipelineStep):
         tag = type(self).__name__
 
         if active_order_management_system != COMMERCETOOLS_ORDER_MANAGEMENT_SYSTEM:  # pragma no cover
+            log.info(f"[{tag}] active order management system is not {COMMERCETOOLS_ORDER_MANAGEMENT_SYSTEM}, skipping")
             return PipelineCommand.CONTINUE.value
 
         if refund_response == "charge_already_refunded" or has_been_refunded:
+            log.info(f"[{tag}] refund has already been processed, skipping refund payment transaction creation")
             return PipelineCommand.CONTINUE.value
 
         ct_api_client = CommercetoolsAPIClient()
@@ -326,8 +334,14 @@ class CreateReturnPaymentTransaction(PipelineStep):
                 'returned_payment': updated_payment
             }
         except CommercetoolsError as err:  # pragma no cover
+            log.info(f"[{tag}] Unsuccessful attempt to create refund payment transaction with details: "
+                     f"[stripe_payment_intent_id: {refund_response['payment_intent']}, "
+                     f"payment_id: {payment_on_order.id}], message_id: {kwargs['message_id']}")
             log.exception(f"[{tag}] Commercetools Error: {err}, {err.errors}")
             return PipelineCommand.CONTINUE.value
         except HTTPError as err:  # pragma no cover
+            log.info(f"[{tag}] Unsuccessful attempt to create refund payment transaction with details: "
+                     f"[stripe_payment_intent_id: {refund_response['payment_intent']}, "
+                     f"payment_id: {payment_on_order.id}], message_id: {kwargs['message_id']}")
             log.exception(f"[{tag}] HTTP Error: {err}")
             return PipelineCommand.CONTINUE.value

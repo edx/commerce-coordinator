@@ -8,11 +8,13 @@ class OrderSanctionedViewMessageDetailSerializer(CoordinatorSerializer):
     """
     Serializer for CommerceTools message 'detail'
     """
+    id = serializers.CharField()
     resource = serializers.DictField(child=serializers.CharField())
     type = serializers.CharField(allow_null=False)
 
     def to_representation(self, instance):
         representation = super().to_representation(instance)
+        representation['message_id'] = representation.pop('id')
         representation['type'] = representation.pop('type')
 
         order_id = representation['resource'].get('id')
@@ -112,11 +114,13 @@ class OrderReturnedViewMessageDetailSerializer(CoordinatorSerializer):
     """
     Serializer for OrderReturnedView message detail.
     """
+    id = serializers.CharField()
     resource = serializers.DictField(child=serializers.CharField())
     returnInfo = OrderReturnedViewMessageReturnInfoSerializer()
 
     def to_representation(self, instance):
         representation = super().to_representation(instance)
+        representation['message_id'] = representation.pop('id')
         order_id = representation['resource'].get('id')
         if order_id:  # pragma no cover
             representation['order_id'] = order_id

@@ -283,4 +283,7 @@ class RefundPaymentIntent(PipelineStep):
                 'refund_response': ret_val
             }
         except StripeError as ex:  # pragma: no cover
+            logger.info(f'[CT-{tag}] Unsuccessful Stripe refund with details:'
+                        f'[order_id: {order_id}, payment_intent_id: {payment_intent_id}'
+                        f'message_id: {kwargs["message_id"]}')
             raise StripeIntentRefundAPIError from ex

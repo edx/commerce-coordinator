@@ -33,19 +33,23 @@ class LMSAPIClient(BaseEdxOAuthClient):
             settings.LMS_URL_ROOT, '/api/user/v1/accounts/{username}/deactivate/'
         )
 
-    def deactivate_user(self, username):
+    def deactivate_user(self, username, ct_message_id):
         """
         Call up the LMS to deactivate a user account.
 
         Intended use is on SDN check failure.
         """
         try:
+            logger.info(f'Calling LMS to deactivate account for user with username {username}'
+                        f'after receiving subsctiption message with ID: {ct_message_id}')
             response = self.client.post(
                 self.deactivate_user_api_url.format(username=username),
                 timeout=self.normal_timeout,
             )
             response.raise_for_status()
         except (ConnectionError, RequestException) as exc:
+            logger.info(f'Unsuccessful call to LMS to deactivate account for user with username {username}'
+                        f'with details: [message_id: {ct_message_id}]')
             logger.exception(
                 f'An error occurred while deactivating account for user with username {username}: {exc}'
             )
