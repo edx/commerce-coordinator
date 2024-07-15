@@ -194,6 +194,8 @@ class RefundView(APIView):
 
         input_data = {**request.data}
 
+        logger.info(f"{self.post.__qualname__} request object: {input_data}.")
+
         input_details = CourseRefundInputSerializer(data=input_data)
         try:
             input_details.is_valid(raise_exception=True)
