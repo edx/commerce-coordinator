@@ -317,12 +317,11 @@ class OrderReturnedMessageSignalTaskTests(TestCase):
         mock_values.customer_mock.assert_called_once_with(mock_values.customer_id)
         _stripe_api_mock.return_value.refund_payment_intent.assert_called_once()
 
-
     @patch('commerce_coordinator.apps.commercetools.sub_messages.tasks.send_refund_notification')
     @patch('commerce_coordinator.apps.commercetools.sub_messages.tasks.get_edx_payment_intent_id')
     @patch('commerce_coordinator.apps.commercetools.sub_messages.tasks.logger.debug')
     @patch('commerce_coordinator.apps.commercetools.sub_messages.tasks.OrderRefundRequested.run_filter')
-    def test_correct_arguments_passed_valid_stripe_refund(
+    def test_refund_already_charged(
         self,
         _return_filter_mock: MagicMock,
         _mock_logger,
@@ -338,8 +337,7 @@ class OrderReturnedMessageSignalTaskTests(TestCase):
         _return_filter_mock.return_value = {'refund_response': 'charge_already_refunded'}
         _mock_payment_intent.return_value = 'mock_payment_intent_id'
 
-
         self.get_uut()(*self.unpack_for_uut(self.mock.example_payload))
-        _mock_logger.assert_called_with(f'[CT-fulfill_order_returned_signal_task] payment intent mock_payment_intent_id already '
-                             f'has refund transaction, sending Zendesk email')
+        _mock_logger.assert_called_with('[CT-fulfill_order_returned_signal_task] payment intent '
+                                        'mock_payment_intent_id already has refund transaction, sending Zendesk email')
         _mock_zendesk.assert_called_once()
