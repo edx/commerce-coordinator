@@ -238,7 +238,7 @@ class CreateReturnForCommercetoolsOrder(PipelineStep):
                      f"[order_id: {order_id}, order_line_item_id: {order_line_item_id}")
             log.exception(f"[{type(self).__name__}] Commercetools Error: {err}, {err.errors}")
             raise OpenEdxFilterException(str(err)) from err
-        except HTTPError as err:
+        except HTTPError as err:  # pragma no cover
             log.info(f"[{tag}] Unsuccessful attempt to create order return with details: "
                      f"[order_id: {order_id}, order_line_item_id: {order_line_item_id}")
             log.exception(f"[{type(self).__name__}] HTTP Error: {err}")
