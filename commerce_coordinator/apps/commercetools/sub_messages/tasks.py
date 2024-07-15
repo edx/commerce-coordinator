@@ -50,27 +50,31 @@ def fulfill_order_placed_message_signal_task(
 
     tag = "fulfill_order_placed_message_signal_task"
 
+    logger.info(f'[CT-{tag}] Processing order {order_id}, '
+                f'line item {line_item_state_id}, source system {source_system}, message id: {message_id}')
+
     client = CommercetoolsAPIClient()
 
     try:
         order = client.get_order_by_id(order_id)
     except CommercetoolsError as err:  # pragma no cover
-        logger.error(f'[CT-{tag}] Order not found: {order_id} with CT error {err}, {err.errors}')
+        logger.error(f'[CT-{tag}] Order not found: {order_id} with CT error {err}, {err.errors},'
+                     f'message id: {message_id}')
         return False
 
     try:
         customer = client.get_customer_by_id(order.customer_id)
     except CommercetoolsError as err:  # pragma no cover
         logger.error(f'[CT-{tag}]  Customer not found: {order.customer_id} for order {order_id} with '
-                     f'CT error {err}, {err.errors}')
+                     f'CT error {err}, {err.errors}, message id: {message_id}')
         return False
 
     if not (customer and order and is_edx_lms_order(order)):
-        logger.debug(f'[CT-{tag}] order %s is not an edX order', order_id)
+        logger.debug(f'[CT-{tag}] order %s is not an edX order, message id: %s', order_id)
 
         return True
 
-    logger.debug(f'[CT-{tag}] processing edX order %s', order_id)
+    logger.debug(f'[CT-{tag}] processing edX order %s, message id: %s', order_id, message_id)
 
     lms_user_id = get_edx_lms_user_id(customer)
 
@@ -88,7 +92,8 @@ def fulfill_order_placed_message_signal_task(
     canvas_entry_properties.update(extract_ct_order_information_for_braze_canvas(customer, order))
 
     for item in get_edx_items(order):
-        logger.debug(f'[CT-{tag}] processing edX order %s, line item %s', order_id, item.variant.sku)
+        logger.debug(f'[CT-{tag}] processing edX order %s, line item %s, message id: %s',
+                     order_id, item.variant.sku, message_id)
         updated_order = client.update_line_item_transition_state_on_fulfillment(
             order.id,
             order.version,
@@ -132,6 +137,9 @@ def fulfill_order_placed_message_signal_task(
         send_order_confirmation_email(lms_user_id, customer.email, canvas_entry_properties)
         TieredCache.set_all_tiers(cache_key, value="SENT", django_cache_timeout=EMAIL_NOTIFICATION_CACHE_TTL_SECS)
 
+    logger.info(f'[CT-{tag}] Finished order {order_id}, '
+                f'line item {line_item_state_id}, source system {source_system}, message id: {message_id}')
+
     return True
 
 
@@ -145,38 +153,43 @@ def fulfill_order_sanctioned_message_signal_task(
 
     tag = "fulfill_order_sanctioned_message_signal_task"
 
+    logger.info(f'[CT-{tag}] Processing sanctions for {order_id}, message id: {message_id}')
+
     client = CommercetoolsAPIClient()
     try:
         order = client.get_order_by_id(order_id)
     except CommercetoolsError as err:  # pragma no cover
-        logger.error(f'[CT-{tag}] Order not found: {order_id} with CT error {err}, {err.errors}')
+        logger.error(f'[CT-{tag}] Order not found: {order_id} with CT error {err}, {err.errors}, '
+                     f'message id: {message_id}')
         return False
 
     order_workflow_state = get_edx_order_workflow_state_key(order)
     if not order_workflow_state:
-        logger.info(f'[CT-{tag}] order {order_id} has no workflow/transition state')
+        logger.info(f'[CT-{tag}] order {order_id} has no workflow/transition state, message id: {message_id}')
 
     try:
         customer = client.get_customer_by_id(order.customer_id)
     except CommercetoolsError as err:  # pragma no cover
         logger.error(f'[CT-{tag}]  Customer not found: {order.customer_id} for order {order_id} with '
-                     f'CT error {err}, {err.errors}')
+                     f'CT error {err}, {err.errors}, message id: {message_id}')
         return False
 
     if not (customer and order and is_edx_lms_order(order)):
-        logger.info(f'[CT-{tag}] order {order_id} is not an edX order')
+        logger.info(f'[CT-{tag}] order {order_id} is not an edX order, message id: {message_id}')
         return True
 
     if get_edx_is_sanctioned(order):
         lms_user_name = get_edx_lms_user_name(customer)
-        logger.info(f'[CT-{tag}] calling lms to deactivate user {lms_user_name}.')
+        logger.info(f'[CT-{tag}] calling lms to deactivate user {lms_user_name}, message id: {message_id}.')
 
         LMSAPIClient().deactivate_user(lms_user_name, message_id)
+
+        logger.info(f'[CT-{tag}] Finished sanctions for {order_id}, message id: {message_id}')
         return True
     else:
         logger.error(
             f'[CT-{tag}] order state for order {order_id} is not {TwoUKeys.SDN_SANCTIONED_ORDER_STATE}. '
-            f'Actual value is {order_workflow_state}'
+            f'Actual value is {order_workflow_state}, message id: {message_id}'
         )
         return False
 
@@ -230,30 +243,34 @@ def fulfill_order_returned_signal_task(
 
     tag = "fulfill_order_returned_signal_task"
 
+    logger.info(f'[CT-{tag}] Processing return for order: {order_id}, line item: {return_line_item_return_id}, '
+                f'message id: {message_id}')
+
     client = CommercetoolsAPIClient()
 
     try:
         order = client.get_order_by_id(order_id)
     except CommercetoolsError as err:  # pragma no cover
-        logger.error(f'[CT-{tag}] Order not found: {order_id} with CT error {err}, {err.errors}')
+        logger.error(f'[CT-{tag}] Order not found: {order_id} with CT error {err}, {err.errors}'
+                     f', message id: {message_id}')
         return False
 
     try:
         customer = client.get_customer_by_id(order.customer_id)
     except CommercetoolsError as err:  # pragma no cover
         logger.error(f'[CT-{tag}] Customer not found: {order.customer_id} for order {order_id} with '
-                     f'CT error {err}, {err.errors}')
+                     f'CT error {err}, {err.errors}, message id: {message_id}')
         return False
 
     if not (customer and order and is_edx_lms_order(order)):  # pragma no cover
-        logger.debug(f'[CT-{tag}] order {order_id} is not an edX order')
+        logger.debug(f'[CT-{tag}] order {order_id} is not an edX order, message id: {message_id}')
         return True
 
     payment_intent_id = get_edx_payment_intent_id(order)
     lms_user_name = get_edx_lms_user_name(customer)
     lms_user_id = get_edx_lms_user_id(customer)
 
-    logger.debug(f'[CT-{tag}] calling stripe to refund payment intent {payment_intent_id}')
+    logger.info(f'[CT-{tag}] calling stripe to refund payment intent {payment_intent_id}, message id: {message_id}')
 
     # Return payment if payment intent id is set
     if payment_intent_id is not None:
@@ -263,11 +280,11 @@ def fulfill_order_returned_signal_task(
 
         if 'refund_response' in result and result['refund_response']:
             if result['refund_response'] == 'charge_already_refunded':
-                logger.debug(f'[CT-{tag}] payment intent {payment_intent_id} already has refund transaction, '
-                             f'sending Zendesk email')
+                logger.info(f'[CT-{tag}] payment intent {payment_intent_id} already has refund transaction, '
+                            f'sending Zendesk email, message id: {message_id}')
                 send_refund_notification(customer, order_id)
             else:
-                logger.debug(f'[CT-{tag}] payment intent {payment_intent_id} refunded. Message_id: {message_id}')
+                logger.debug(f'[CT-{tag}] payment intent {payment_intent_id} refunded. message id: {message_id}')
                 segment_event_properties = _prepare_segment_event_properties(order, return_line_item_return_id)
 
                 for line_item in get_edx_items(order):
@@ -275,6 +292,7 @@ def fulfill_order_returned_signal_task(
                     # TODO: Remove LMS Enrollment
                     logger.debug(
                         f'[CT-{tag}] calling lms to unenroll user {lms_user_name} in {course_run}'
+                        f', message id: {message_id}'
                     )
 
                     product = {
@@ -301,7 +319,10 @@ def fulfill_order_returned_signal_task(
                         properties=segment_event_properties
                     )
         else:  # pragma no cover
-            logger.debug(f'[CT-{tag}] payment intent {payment_intent_id} not refunded. Message_id: {message_id}')
+            logger.info(f'[CT-{tag}] payment intent {payment_intent_id} not refunded. Message_id: {message_id}')
             return send_refund_notification(customer, order_id)
+
+    logger.info(f'[CT-{tag}] Finished return for order: {order_id}, line item: {return_line_item_return_id}, '
+                f'message id: {message_id}')
 
     return True
