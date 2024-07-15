@@ -155,6 +155,7 @@ class OrderSanctionedMessageSignalTaskTests(TestCase):
         """ Unpack the dictionary in the order required for the UUT """
         return (
             values['order_id'],
+            values['message_id']
         )
 
     @staticmethod
@@ -262,6 +263,7 @@ class OrderReturnedMessageSignalTaskTests(TestCase):
         return (
             values['order_id'],
             values['order_line_id'],
+            values['message_id']
         )
 
     @staticmethod

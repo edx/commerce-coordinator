@@ -139,6 +139,7 @@ def fulfill_order_placed_message_signal_task(
 @shared_task(autoretry_for=(RequestException, CommercetoolsError), retry_kwargs={'max_retries': 5, 'countdown': 3})
 def fulfill_order_sanctioned_message_signal_task(
     order_id,
+    message_id
 ):
     """Celery task for an order sanctioned message."""
 
@@ -153,7 +154,7 @@ def fulfill_order_sanctioned_message_signal_task(
 
     order_workflow_state = get_edx_order_workflow_state_key(order)
     if not order_workflow_state:
-        logger.debug(f'[CT-{tag}] order %s has no workflow/transition state', order_id)
+        logger.info(f'[CT-{tag}] order {order_id} has no workflow/transition state')
 
     try:
         customer = client.get_customer_by_id(order.customer_id)
@@ -163,21 +164,19 @@ def fulfill_order_sanctioned_message_signal_task(
         return False
 
     if not (customer and order and is_edx_lms_order(order)):
-        logger.info(f'[CT-{tag}] order %s is not an edX order', order_id)
+        logger.info(f'[CT-{tag}] order {order_id} is not an edX order')
         return True
 
     if get_edx_is_sanctioned(order):
         lms_user_name = get_edx_lms_user_name(customer)
-        logger.info(f'[CT-{tag}] calling lms to deactivate user %s', lms_user_name)
+        logger.info(f'[CT-{tag}] calling lms to deactivate user {lms_user_name}.')
 
-        LMSAPIClient().deactivate_user(lms_user_name)
+        LMSAPIClient().deactivate_user(lms_user_name, message_id)
         return True
     else:
         logger.error(
-            f'[CT-{tag}] order state for order %s is not %s. Actual value is %s',
-            order_id,
-            TwoUKeys.SDN_SANCTIONED_ORDER_STATE,
-            order_workflow_state
+            f'[CT-{tag}] order state for order {order_id} is not {TwoUKeys.SDN_SANCTIONED_ORDER_STATE}. '
+            f'Actual value is {order_workflow_state}'
         )
         return False
 
@@ -186,7 +185,8 @@ def fulfill_order_sanctioned_message_signal_task(
 @shared_task(autoretry_for=(RequestException, CommercetoolsError), retry_kwargs={'max_retries': 5, 'countdown': 3})
 def fulfill_order_returned_signal_task(
     order_id,
-    return_line_item_return_id
+    return_line_item_return_id,
+    message_id
 ):
     """Celery task for an order return (and refunded) message."""
 
@@ -241,41 +241,40 @@ def fulfill_order_returned_signal_task(
     try:
         customer = client.get_customer_by_id(order.customer_id)
     except CommercetoolsError as err:  # pragma no cover
-        logger.error(f'[CT-{tag}]  Customer not found: {order.customer_id} for order {order_id} with '
+        logger.error(f'[CT-{tag}] Customer not found: {order.customer_id} for order {order_id} with '
                      f'CT error {err}, {err.errors}')
         return False
 
     if not (customer and order and is_edx_lms_order(order)):  # pragma no cover
-        logger.debug(f'[CT-{tag}] order %s is not an edX order', order_id)
+        logger.debug(f'[CT-{tag}] order {order_id} is not an edX order')
         return True
 
     payment_intent_id = get_edx_payment_intent_id(order)
     lms_user_name = get_edx_lms_user_name(customer)
     lms_user_id = get_edx_lms_user_id(customer)
 
-    logger.debug(f'[CT-{tag}] calling stripe to refund payment intent %s', payment_intent_id)
+    logger.debug(f'[CT-{tag}] calling stripe to refund payment intent {payment_intent_id}')
 
     # Return payment if payment intent id is set
     if payment_intent_id is not None:
         result = OrderRefundRequested.run_filter(
-            order_id=order_id, return_line_item_return_id=return_line_item_return_id
+            order_id=order_id, return_line_item_return_id=return_line_item_return_id, message_id=message_id
         )
 
         if 'refund_response' in result and result['refund_response']:
             if result['refund_response'] == 'charge_already_refunded':
-                logger.debug(f'[CT-{tag}] payment intent %s already has refund transaction, '
-                             f'sending Zendesk email', payment_intent_id)
+                logger.debug(f'[CT-{tag}] payment intent {payment_intent_id} already has refund transaction, '
+                             f'sending Zendesk email')
                 send_refund_notification(customer, order_id)
             else:
-                logger.debug(f'[CT-{tag}] payment intent %s refunded', payment_intent_id)
+                logger.debug(f'[CT-{tag}] payment intent {payment_intent_id} refunded. Message_id: {message_id}')
                 segment_event_properties = _prepare_segment_event_properties(order, return_line_item_return_id)
 
                 for line_item in get_edx_items(order):
                     course_run = get_edx_product_course_run_key(line_item)
                     # TODO: Remove LMS Enrollment
                     logger.debug(
-                        f'[CT-{tag}] calling lms to unenroll user %s in %s',
-                        lms_user_name, course_run
+                        f'[CT-{tag}] calling lms to unenroll user {lms_user_name} in {course_run}'
                     )
 
                     product = {
@@ -302,7 +301,7 @@ def fulfill_order_returned_signal_task(
                         properties=segment_event_properties
                     )
         else:  # pragma no cover
-            logger.debug(f'[CT-{tag}] payment intent %s not refunded', payment_intent_id)
+            logger.debug(f'[CT-{tag}] payment intent {payment_intent_id} not refunded. Message_id: {message_id}')
             return send_refund_notification(customer, order_id)
 
     return True

@@ -88,9 +88,10 @@ class LMSAPIClientTests(CoordinatorOAuthClientTestCase):
         self.assertJSONClientResponse(
             uut=self.client.deactivate_user,
             input_kwargs={
-                'username': 'test_user'
+                'username': 'test_user',
+                'ct_message_id': 'mock_message_id'
             },
-            mock_url=self.deactivate_user_url.format(username='test_user'),
+            mock_url=self.deactivate_user_url.format(username='test_user', ct_message_id='mock_message_id'),
         )
 
     def test_deactivate_user_api_error(self):
@@ -99,8 +100,9 @@ class LMSAPIClientTests(CoordinatorOAuthClientTestCase):
             self.assertJSONClientResponse(
                 uut=self.client.deactivate_user,
                 input_kwargs={
-                    'username': 'test_user'
+                    'username': 'test_user',
+                    'ct_message_id': 'mock_message_id'
                 },
-                mock_url=self.deactivate_user_url.format(username='test_user'),
+                mock_url=self.deactivate_user_url.format(username='test_user', ct_message_id='mock_message_id'),
                 mock_status=400,
             )
