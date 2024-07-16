@@ -31,7 +31,7 @@
 | commerce\_coordinator/apps/commercetools/sub\_messages/\_\_init\_\_.py                 |        0 |        0 |        0 |        0 |    100% |           |
 | commerce\_coordinator/apps/commercetools/sub\_messages/signals\_delayed.py             |       16 |        0 |        6 |        3 |     86% |18->17, 30->29, 40->39 |
 | commerce\_coordinator/apps/commercetools/sub\_messages/signals\_dispatch.py            |        4 |        0 |        0 |        0 |    100% |           |
-| commerce\_coordinator/apps/commercetools/sub\_messages/tasks.py                        |       99 |        0 |       20 |        4 |     97% |43->42, 140->139, 186->185, 259->307 |
+| commerce\_coordinator/apps/commercetools/sub\_messages/tasks.py                        |      105 |        0 |       20 |        4 |     97% |43->42, 148->147, 199->198, 276->325 |
 | commerce\_coordinator/apps/commercetools/tasks.py                                      |       31 |        0 |        4 |        1 |     97% |    49->48 |
 | commerce\_coordinator/apps/commercetools/tests/\_\_init\_\_.py                         |        0 |        0 |        0 |        0 |    100% |           |
 | commerce\_coordinator/apps/commercetools/tests/\_test\_cases.py                        |       25 |        0 |        4 |        1 |     97% |  36->exit |
@@ -43,7 +43,7 @@
 | commerce\_coordinator/apps/commercetools/tests/mocks.py                                |       45 |        0 |        0 |        0 |    100% |           |
 | commerce\_coordinator/apps/commercetools/tests/sub\_messages/\_\_init\_\_.py           |        0 |        0 |        0 |        0 |    100% |           |
 | commerce\_coordinator/apps/commercetools/tests/sub\_messages/test\_signals\_delayed.py |       45 |        0 |       15 |        6 |     90% |15->23, 22->15, 45->55, 53->45, 75->83, 82->75 |
-| commerce\_coordinator/apps/commercetools/tests/sub\_messages/test\_tasks.py            |      164 |        0 |       58 |       27 |     88% |96->100, 98->96, 104->103, 114->113, 131->129, 146->150, 148->146, 154->153, 162->161, 178->176, 193->191, 208->206, 222->220, 261->260, 270->269, 274->276, 275->274, 276->275, 289->292, 290->289, 291->290, 292->291, 320->324, 321->320, 322->321, 323->322, 324->323 |
+| commerce\_coordinator/apps/commercetools/tests/sub\_messages/test\_tasks.py            |      162 |        0 |       56 |       26 |     88% |96->100, 98->96, 104->103, 114->113, 131->129, 146->150, 148->146, 154->153, 162->161, 178->176, 193->191, 208->206, 222->220, 261->260, 270->269, 274->276, 275->274, 276->275, 289->292, 290->289, 291->290, 292->291, 320->323, 321->320, 322->321, 323->322 |
 | commerce\_coordinator/apps/commercetools/tests/test\_authentication.py                 |       25 |        0 |        0 |        0 |    100% |           |
 | commerce\_coordinator/apps/commercetools/tests/test\_clients.py                        |      263 |        0 |       62 |       29 |     91% |82->exit, 122->exit, 151->exit, 183->exit, 187->exit, 203->exit, 216->203, 239->exit, 291->exit, 333->exit, 364->exit, 371->364, 372->379, 406->exit, 436->exit, 443->436, 465->exit, 507->exit, 514->507, 515->522, 533->532, 551->exit, 570->569, 586->exit, 593->586, 611->613, 612->611, 613->612, 624->exit |
 | commerce\_coordinator/apps/commercetools/tests/test\_data.py                           |       87 |        0 |       28 |       10 |     91% |71->109, 108->71, 109->108, 145->135, 160->196, 195->160, 196->195, 200->236, 235->200, 236->235 |
@@ -185,7 +185,7 @@
 | commerce\_coordinator/apps/titan/views.py                                              |       23 |        1 |        2 |        1 |     92% |        79 |
 | commerce\_coordinator/docker\_gunicorn\_configuration.py                               |       27 |       27 |       10 |        0 |      0% |      4-57 |
 | commerce\_coordinator/urls.py                                                          |       22 |        0 |        0 |        0 |    100% |           |
-|                                                                              **TOTAL** | **6410** |  **230** | **1561** |  **522** | **90%** |           |
+|                                                                              **TOTAL** | **6414** |  **230** | **1559** |  **521** | **90%** |           |
 
 
 ## Setup coverage badge
