@@ -41,7 +41,7 @@ class OrderFulfillView(SingleInvocationAPIView):
             **request.data
         }
 
-        logger.debug(f'[CT-{tag}] Message received from commercetools with details: %s', input_data)
+        logger.debug(f'[CT-{tag}] Message received from commercetools with details: {input_data}')
 
         message_details = OrderLineItemMessageInputSerializer(data=input_data)
         message_details.is_valid(raise_exception=True)
@@ -85,7 +85,7 @@ class OrderSanctionedView(SingleInvocationAPIView):
             **request.data
         }
 
-        logger.debug(f'[CT-{tag}] Message received from commercetools with details: %s', input_data)
+        logger.debug(f'[CT-{tag}] Message received from commercetools with details: {input_data}')
 
         message_details = OrderSanctionedViewMessageInputSerializer(data=input_data)
         message_details.is_valid(raise_exception=True)
@@ -127,7 +127,7 @@ class OrderReturnedView(SingleInvocationAPIView):
             **request.data
         }
 
-        logger.debug(f'[CT-{tag}] Message received from commercetools with details: %s', input_data)
+        logger.debug(f'[CT-{tag}] Message received from commercetools with details: {input_data}')
 
         message_details = OrderReturnedViewMessageInputSerializer(data=input_data)
         message_details.is_valid(raise_exception=True)
