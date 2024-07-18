@@ -118,16 +118,11 @@ class FulfillOrderPlacedSendEnrollInCourseTaskTest(TestCase):
         retry_payload['line_item_state_id'] = 'initial-state-id'
         retry_payload['order_version'] = 1
 
-        with mock_client:
-            mock_client().enroll_user_in_course.side_effect = RequestException()
-
-            try:
-                uut.apply(
-                    args=self.unpack_for_uut(retry_payload),
-                    throw=False
-                )
-            except RequestException:
-                pass
+        mock_client().enroll_user_in_course.side_effect = RequestException()
+        uut.apply(
+            args=self.unpack_for_uut(retry_payload),
+            throw=False
+        )
 
         expected_state_payload = EXAMPLE_FULFILLMENT_SIGNAL_PAYLOAD.copy()
         expected_state_payload['line_item_state_id'] = '2u-fulfillment-failure-state'
