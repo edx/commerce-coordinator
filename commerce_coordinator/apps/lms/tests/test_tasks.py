@@ -6,7 +6,10 @@ import logging
 from unittest.mock import patch, sentinel
 
 from django.test import TestCase
+from requests import RequestException
 
+from commerce_coordinator.apps.commercetools.catalog_info.constants import TwoUKeys
+from commerce_coordinator.apps.commercetools.tests.conftest import gen_line_item_state, gen_order
 from commerce_coordinator.apps.core.models import User
 from commerce_coordinator.apps.lms.tasks import fulfill_order_placed_send_enroll_in_course_task
 from commerce_coordinator.apps.lms.tests.constants import (
@@ -101,3 +104,34 @@ class FulfillOrderPlacedSendEnrollInCourseTaskTest(TestCase):
         res = uut(*self.unpack_for_uut(EXAMPLE_FULFILLMENT_SIGNAL_PAYLOAD))  # pylint: disable=no-value-for-parameter
         logger.info('result: %s', res)
         self.assertEqual(res, sentinel.mock_client_return_value)
+
+    @patch('commerce_coordinator.apps.lms.tasks.CommercetoolsAPIClient.get_state_by_key')
+    @patch('commerce_coordinator.apps.lms.tasks.CommercetoolsAPIClient.get_order_by_id')
+    def test_retry_logic(self, mock_ct_get_order, mock_ct_get_state, mock_client):
+        """
+        Check if the retry logic updates the line item state ID and order version correctly.
+        """
+        mock_ct_get_state.return_value = gen_line_item_state()
+        mock_ct_get_order.return_value = gen_order('mock_order_id')
+
+        retry_payload = EXAMPLE_FULFILLMENT_SIGNAL_PAYLOAD.copy()
+        retry_payload['line_item_state_id'] = 'initial-state-id'
+        retry_payload['order_version'] = 1
+
+        with mock_client:
+            mock_client().enroll_user_in_course.side_effect = RequestException()
+
+            try:
+                uut.apply(
+                    args=self.unpack_for_uut(retry_payload),
+                    throw=False
+                )
+            except RequestException:
+                pass
+
+        expected_state_payload = EXAMPLE_FULFILLMENT_SIGNAL_PAYLOAD.copy()
+        expected_state_payload['line_item_state_id'] = '2u-fulfillment-failure-state'
+        expected_state_payload['order_version'] = 2
+
+        mock_ct_get_state.assert_called_with(TwoUKeys.FAILURE_FULFILMENT_STATE)
+        mock_ct_get_order.assert_called_with(EXAMPLE_FULFILLMENT_SIGNAL_PAYLOAD.get('order_id'))
