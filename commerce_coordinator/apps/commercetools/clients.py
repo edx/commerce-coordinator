@@ -2,6 +2,7 @@
 API clients for commercetools app.
 """
 
+import decimal
 import datetime
 import logging
 from typing import Generic, List, Optional, Tuple, TypeVar, Union
@@ -20,10 +21,14 @@ from commercetools.platform.models import Order as CTOrder
 from commercetools.platform.models import (
     OrderAddReturnInfoAction,
     OrderSetReturnPaymentStateAction,
+    OrderSetReturnItemCustomTypeAction,
     OrderTransitionLineItemStateAction
 )
 from commercetools.platform.models import Payment as CTPayment
-from commercetools.platform.models import PaymentAddTransactionAction
+from commercetools.platform.models import (
+    PaymentAddTransactionAction,
+    PaymentSetTransactionCustomTypeAction
+)
 from commercetools.platform.models import ProductVariant as CTProductVariant
 from commercetools.platform.models import (
     ReturnItemDraft,
@@ -44,7 +49,7 @@ from commerce_coordinator.apps.commercetools.catalog_info.constants import DEFAU
 from commerce_coordinator.apps.commercetools.catalog_info.foundational_types import TwoUCustomTypes
 from commerce_coordinator.apps.commercetools.utils import (
     handle_commercetools_error,
-    translate_stripe_refund_status_to_transaction_status
+    translate_stripe_refund_status_to_transaction_status, find_refund_transaction
 )
 from commerce_coordinator.apps.core.constants import ORDER_HISTORY_PER_SYSTEM_REQ_LIMIT
 
@@ -332,7 +337,7 @@ class CommercetoolsAPIClient:
 
         return matching_variant_list[0]
 
-    def create_return_for_order(self, order_id: str, order_version: int, order_line_item_id: str) -> CTOrder:
+    def create_return_for_order(self, order_id: str, order_version: int, order_line_item_id: str, payment_intent_id: str) -> CTOrder:
         """
         Creates refund/return for Commercetools order
         Args:
@@ -359,11 +364,23 @@ class CommercetoolsAPIClient:
             add_return_info_action = OrderAddReturnInfoAction(
                 items=[return_item_draft]
             )
+            if not payment_intent_id:
+                payment_intent_id = ''
 
+            update_transaction_id_action = OrderSetReturnItemCustomTypeAction(
+                return_item_id=order_line_item_id,
+                type=CTTypeResourceIdentifier(
+                    key='returnItemCustomType',
+                ),
+                fields=CTFieldContainer({
+                    'transactionId': payment_intent_id
+                })
+            )
+            
             returned_order = self.base_client.orders.update_by_id(
                 id=order_id,
                 version=order_version,
-                actions=[add_return_info_action]
+                actions=[add_return_info_action, update_transaction_id_action]
             )
             return returned_order
         except CommercetoolsError as err:
@@ -372,7 +389,9 @@ class CommercetoolsAPIClient:
 
     def update_return_payment_state_after_successful_refund(self, order_id: str,
                                                             order_version: int,
-                                                            return_line_item_return_id: str) -> Union[CTOrder, None]:
+                                                            return_line_item_return_id: str,
+                                                            payment_intent_id: str,
+                                                            amount_in_cents: decimal) -> Union[CTOrder, None]:
         """
         Update paymentState on the LineItemReturnItem attached to the order.
         Updated by the Order ID (UUID)
@@ -393,11 +412,21 @@ class CommercetoolsAPIClient:
                 return_item_id=return_line_item_return_id,
                 payment_state=ReturnPaymentState.REFUNDED
             )
+            payment = self.get_payment_by_key(payment_intent_id)
+
+            transaction_id = find_refund_transaction(payment, amount_in_cents)
+            return_transaction_return_item_action = PaymentSetTransactionCustomTypeAction(
+                transaction_id=transaction_id,
+                type=CTTypeResourceIdentifier(key='transactionCustomType'),
+                fields=CTFieldContainer({
+                    'returnItemId': return_line_item_return_id
+                })
+            )
 
             updated_order = self.base_client.orders.update_by_id(
                 id=order_id,
                 version=order_version,
-                actions=[return_payment_state_action]
+                actions=[return_payment_state_action, return_transaction_return_item_action]
             )
             return updated_order
         except CommercetoolsError as err:
