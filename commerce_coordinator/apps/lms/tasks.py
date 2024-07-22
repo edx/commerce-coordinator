@@ -87,7 +87,7 @@ def fulfill_order_placed_send_enroll_in_course_task(
         })
 
     # Updating the order version and stateID after the transition to 'Fulfillment Failure'
-    if self.request.retries > 0:  # pragma no cover
+    if self.request.retries > 0:
         client = CommercetoolsAPIClient()
         # A retry means the current line item state on the order would be a failure state
         line_item_state_id = client.get_state_by_key(TwoUKeys.FAILURE_FULFILMENT_STATE).id

@@ -200,7 +200,7 @@ class CommercetoolsAPIClient:
             return results.results[0]
 
     def get_order_by_id(self, order_id: str, expand: ExpandList = DEFAULT_ORDER_EXPANSION) \
-            -> CTOrder:  # pragma no cover
+            -> CTOrder:
         """
         Fetch an order by the Order ID (UUID)
 
@@ -214,7 +214,7 @@ class CommercetoolsAPIClient:
         return self.base_client.orders.get_by_id(order_id, expand=list(expand))
 
     def get_order_by_number(self, order_number: str, expand: ExpandList = DEFAULT_ORDER_EXPANSION)  \
-            -> CTOrder:  # pragma no cover
+            -> CTOrder:
         """
         Fetch an order by the Order Number (Human readable order number)
 
@@ -279,19 +279,19 @@ class CommercetoolsAPIClient:
 
         return orders, customer
 
-    def get_customer_by_id(self, customer_id: str) -> CTCustomer:  # pragma no cover
+    def get_customer_by_id(self, customer_id: str) -> CTCustomer:
         logger.info(f"[CommercetoolsAPIClient] - Attempting to find customer with ID {customer_id}")
         return self.base_client.customers.get_by_id(customer_id)
 
-    def get_state_by_id(self, state_id: str) -> CTLineItemState:  # pragma no cover
+    def get_state_by_id(self, state_id: str) -> CTLineItemState:
         logger.info(f"[CommercetoolsAPIClient] - Attempting to find state with id {state_id}")
         return self.base_client.states.get_by_id(state_id)
 
-    def get_state_by_key(self, state_key: str) -> CTLineItemState:  # pragma no cover
+    def get_state_by_key(self, state_key: str) -> CTLineItemState:
         logger.info(f"[CommercetoolsAPIClient] - Attempting to find state with key {state_key}")
         return self.base_client.states.get_by_key(state_key)
 
-    def get_payment_by_key(self, payment_key: str) -> CTPayment:  # pragma no cover
+    def get_payment_by_key(self, payment_key: str) -> CTPayment:
         logger.info(f"[CommercetoolsAPIClient] - Attempting to find payment with key {payment_key}")
         return self.base_client.payments.get_by_key(payment_key)
 

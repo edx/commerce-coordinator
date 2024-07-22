@@ -24,6 +24,7 @@ from commercetools.platform.models import Transaction as CTTransaction
 from commercetools.platform.models import TransactionState, TransactionType
 from commercetools.platform.models import TypeReference as CTTypeReference
 from commercetools.platform.models.state import State as CTLineItemState
+from commercetools.platform.models.state import StateTypeEnum as CTStateType
 from commercetools.testing import BackendRepository
 
 from commerce_coordinator.apps.commercetools.catalog_info.constants import EdXFieldNames
@@ -165,6 +166,7 @@ def gen_payment():
         version=1,
         created_at=datetime.now(),
         last_modified_at=datetime.now(),
+        key="pi_4MtwBwLkdIwGlenn28a3tqPa",
         amount_planned=4900,
         payment_method_info={},
         payment_status=PaymentState.PAID,
@@ -321,7 +323,7 @@ def gen_line_item_state() -> CTLineItemState:
         created_at=datetime.now(),
         last_modified_at=datetime.now(),
         key='2u-fulfillment-pending-state',
-        type='LineItemState',
+        type=CTStateType.LINE_ITEM_STATE,
         initial=False,
         built_in=False,
     )
