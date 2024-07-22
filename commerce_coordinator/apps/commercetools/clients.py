@@ -176,6 +176,8 @@ class CommercetoolsAPIClient:
              is returned.
         """
 
+        logger.info(f"[CommercetoolsAPIClient] - Attempting to get customer with LMS user id: {lms_user_id}")
+
         edx_lms_user_id_key = EdXFieldNames.LMS_USER_ID
 
         results = self.base_client.customers.query(
@@ -187,15 +189,20 @@ class CommercetoolsAPIClient:
         if results.count > 1:
             # We are unable due to CT Limitations to enforce unique LMS ID values on Customers on the catalog side, so
             #   let's do a backhanded check by trying to pull 2 users and erroring if we find a discrepancy.
+            logger.info(f"[CommercetoolsAPIClient] - More than one customer found with LMS "
+                        f"user id: {lms_user_id}, raising error")
             raise ValueError("More than one user was returned from the catalog with this edX LMS User ID, these must "
                              "be unique.")
 
         if results.count == 0:
+            logger.info(f"[CommercetoolsAPIClient] - No customer found with LMS user id: {lms_user_id}")
             return None
         else:
+            logger.info(f"[CommercetoolsAPIClient] - Customer found with LMS user id: {lms_user_id}")
             return results.results[0]
 
-    def get_order_by_id(self, order_id: str, expand: ExpandList = DEFAULT_ORDER_EXPANSION) -> CTOrder:
+    def get_order_by_id(self, order_id: str, expand: ExpandList = DEFAULT_ORDER_EXPANSION) \
+            -> CTOrder:  # pragma no cover
         """
         Fetch an order by the Order ID (UUID)
 
@@ -205,7 +212,8 @@ class CommercetoolsAPIClient:
 
         Returns (CTOrder): Order with Expanded Properties
         """
-        return self.base_client.orders.get_by_id(order_id, expand=list(expand))  # pragma no cover
+        logger.info(f"[CommercetoolsAPIClient] - Attempting to find order with id: {order_id}")
+        return self.base_client.orders.get_by_id(order_id, expand=list(expand))
 
     def get_order_by_number(self, order_number: str, expand: ExpandList = DEFAULT_ORDER_EXPANSION)  \
             -> CTOrder:  # pragma no cover
@@ -218,6 +226,7 @@ class CommercetoolsAPIClient:
 
         Returns (CTOrder): Order with Expanded Properties
         """
+        logger.info(f"[CommercetoolsAPIClient] - Attempting to find order with number {order_number}")
         return self.base_client.orders.get_by_order_number(order_number, expand=list(expand))
 
     def get_orders(self, customer: CTCustomer, offset=0,
@@ -240,6 +249,8 @@ class CommercetoolsAPIClient:
         See sample response in tests.py
 
         """
+        logger.info(f"[CommercetoolsAPIClient] - Attempting to find all completed orders for "
+                    f"customer with ID {customer.id}")
         order_where_clause = f"orderState=\"{order_state}\""
         values = self.base_client.orders.query(
             where=["customerId=:cid", order_where_clause],
@@ -270,17 +281,21 @@ class CommercetoolsAPIClient:
 
         return orders, customer
 
-    def get_customer_by_id(self, customer_id: str) -> CTCustomer:
-        return self.base_client.customers.get_by_id(customer_id)  # pragma no cover
+    def get_customer_by_id(self, customer_id: str) -> CTCustomer:  # pragma no cover
+        logger.info(f"[CommercetoolsAPIClient] - Attempting to find customer with ID {customer_id}")
+        return self.base_client.customers.get_by_id(customer_id)
 
-    def get_state_by_id(self, state_id: str) -> CTLineItemState:
-        return self.base_client.states.get_by_id(state_id)  # pragma no cover
+    def get_state_by_id(self, state_id: str) -> CTLineItemState:  # pragma no cover
+        logger.info(f"[CommercetoolsAPIClient] - Attempting to find state with id {state_id}")
+        return self.base_client.states.get_by_id(state_id)
 
-    def get_state_by_key(self, state_key: str) -> CTLineItemState:
-        return self.base_client.states.get_by_key(state_key)  # pragma no cover
+    def get_state_by_key(self, state_key: str) -> CTLineItemState:  # pragma no cover
+        logger.info(f"[CommercetoolsAPIClient] - Attempting to find state with key {state_key}")
+        return self.base_client.states.get_by_key(state_key)
 
-    def get_payment_by_key(self, payment_key: str) -> CTPayment:
-        return self.base_client.payments.get_by_key(payment_key)  # pragma no cover
+    def get_payment_by_key(self, payment_key: str) -> CTPayment:  # pragma no cover
+        logger.info(f"[CommercetoolsAPIClient] - Attempting to find payment with key {payment_key}")
+        return self.base_client.payments.get_by_key(payment_key)
 
     def get_product_variant_by_course_run(self, cr_id: str) -> Optional[CTProductVariant]:
         """
@@ -329,6 +344,8 @@ class CommercetoolsAPIClient:
             return_item_draft_comment = f'Creating return item for order {order_id} with ' \
                                         f'order line item ID {order_line_item_id}'
 
+            logger.info(f"[CommercetoolsAPIClient] - {return_item_draft_comment}")
+
             return_item_draft = ReturnItemDraft(
                 quantity=1,
                 line_item_id=order_line_item_id,
@@ -368,6 +385,8 @@ class CommercetoolsAPIClient:
         Raises Exception: Error if update was unsuccessful.
         """
         try:
+            logger.info(f"[CommercetoolsAPIClient] - Updating payment state for return "
+                        f"with id {return_line_item_return_id} to '{ReturnPaymentState.REFUNDED}'.")
 
             return_payment_state_action = OrderSetReturnPaymentStateAction(
                 return_item_id=return_line_item_return_id,
@@ -400,6 +419,9 @@ class CommercetoolsAPIClient:
         Raises Exception: Error if creation was unsuccessful.
         """
         try:
+            logger.info(f"[CommercetoolsAPIClient] - Creating refund transaction for payment with ID {payment_id} "
+                        f"following successful Stripe refund {stripe_refund.id}")
+
             amount_as_money = CTMoney(
                 cent_amount=stripe_refund.amount,
                 currency_code=stripe_refund.currency.upper()
@@ -448,6 +470,9 @@ class CommercetoolsAPIClient:
         """
 
         from_state_key = self.get_state_by_id(from_state_id).key
+
+        logger.info(f"[CommercetoolsAPIClient] - Transitioning line item state for order with ID {order_id}"
+                    f"from {from_state_key} to {new_state_key}")
 
         try:
             if new_state_key != from_state_key:

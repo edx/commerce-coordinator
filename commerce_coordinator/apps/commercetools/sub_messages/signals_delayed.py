@@ -21,6 +21,7 @@ def fulfill_order_placed_message_signal(**kwargs):
         order_id=kwargs['order_id'],
         line_item_state_id=kwargs['line_item_state_id'],
         source_system=kwargs['source_system'],
+        message_id=kwargs['message_id']
     )
     return async_result.id
 
@@ -30,6 +31,7 @@ def fulfill_order_sanctioned_message_signal(**kwargs):
     """ CoordinatorSignal receiver to invoke Celery Task fulfill_order_sanctioned_message_signal"""
     async_result = fulfill_order_sanctioned_message_signal_task.delay(
         order_id=kwargs['order_id'],
+        message_id=kwargs['message_id']
     )
     return async_result.id
 
@@ -40,5 +42,6 @@ def fulfill_order_returned_signal(**kwargs):
     async_result = fulfill_order_returned_signal_task.delay(
         order_id=kwargs['order_id'],
         return_line_item_return_id=kwargs['return_line_item_return_id'],
+        message_id=kwargs['message_id']
     )
     return async_result.id

@@ -46,6 +46,7 @@ def gen_example_fulfill_payload():
         'line_item_state_id': uuid4_str(),
         'order_line_id': uuid4_str(),
         'source_system': SOURCE_SYSTEM,
+        'message_id': uuid4_str()
     }
 
 
@@ -105,7 +106,8 @@ class FulfillOrderPlacedMessageSignalTaskTests(TestCase):
         return (
             values['order_id'],
             values['line_item_state_id'],
-            values['source_system']
+            values['source_system'],
+            values['message_id']
         )
 
     @staticmethod
@@ -153,6 +155,7 @@ class OrderSanctionedMessageSignalTaskTests(TestCase):
         """ Unpack the dictionary in the order required for the UUT """
         return (
             values['order_id'],
+            values['message_id']
         )
 
     @staticmethod
@@ -260,6 +263,7 @@ class OrderReturnedMessageSignalTaskTests(TestCase):
         return (
             values['order_id'],
             values['order_line_id'],
+            values['message_id']
         )
 
     @staticmethod
@@ -312,3 +316,24 @@ class OrderReturnedMessageSignalTaskTests(TestCase):
         mock_values.order_mock.assert_has_calls([call(mock_values.order_id), call(order_id=mock_values.order_id)])
         mock_values.customer_mock.assert_called_once_with(mock_values.customer_id)
         _stripe_api_mock.return_value.refund_payment_intent.assert_called_once()
+
+    @patch('commerce_coordinator.apps.commercetools.sub_messages.tasks.send_refund_notification')
+    @patch('commerce_coordinator.apps.commercetools.sub_messages.tasks.get_edx_payment_intent_id')
+    @patch('commerce_coordinator.apps.commercetools.sub_messages.tasks.OrderRefundRequested.run_filter')
+    def test_refund_already_charged(
+        self,
+        _return_filter_mock: MagicMock,
+        _mock_payment_intent: MagicMock,
+        _mock_zendesk: MagicMock
+    ):
+        """
+        Check calling uut with mock_parameters yields call to client with
+        expected_data.
+        """
+        mock_values = self.mock
+        mock_values.order_mock.return_value.return_info = []
+        _return_filter_mock.return_value = {'refund_response': 'charge_already_refunded'}
+        _mock_payment_intent.return_value = 'mock_payment_intent_id'
+
+        self.get_uut()(*self.unpack_for_uut(self.mock.example_payload))
+        _mock_zendesk.assert_called_once()

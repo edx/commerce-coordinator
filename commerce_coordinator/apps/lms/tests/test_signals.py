@@ -35,6 +35,7 @@ class FulfillOrderPlacedSendEnrollInCourseTest(CoordinatorSignalReceiverTestCase
         'line_item_id': 11,
         'item_quantity': 1,
         'line_item_state_id': 12,
+        'message_id': 13
     }
 
     def test_correct_arguments_passed(self, mock_task):

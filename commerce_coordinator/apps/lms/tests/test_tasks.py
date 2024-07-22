@@ -10,6 +10,7 @@ from django.test import TestCase
 from commerce_coordinator.apps.core.models import User
 from commerce_coordinator.apps.lms.tasks import fulfill_order_placed_send_enroll_in_course_task
 from commerce_coordinator.apps.lms.tests.constants import (
+    EXAMPLE_FULFILLMENT_LOGGING_OBJ,
     EXAMPLE_FULFILLMENT_REQUEST_PAYLOAD,
     EXAMPLE_FULFILLMENT_SIGNAL_PAYLOAD,
     EXAMPLE_LINE_ITEM_STATE_PAYLOAD
@@ -44,7 +45,8 @@ class FulfillOrderPlacedSendEnrollInCourseTaskTest(TestCase):
             values['source_system'],
             values['line_item_id'],
             values['item_quantity'],
-            values['line_item_state_id']
+            values['line_item_state_id'],
+            values['message_id']
         )
 
     def setUp(self):
@@ -59,7 +61,8 @@ class FulfillOrderPlacedSendEnrollInCourseTaskTest(TestCase):
         logger.info('mock_client().mock_calls: %s', mock_client().mock_calls)
         mock_client().enroll_user_in_course.assert_called_once_with(
             EXAMPLE_FULFILLMENT_REQUEST_PAYLOAD,
-            EXAMPLE_LINE_ITEM_STATE_PAYLOAD
+            EXAMPLE_LINE_ITEM_STATE_PAYLOAD,
+            EXAMPLE_FULFILLMENT_LOGGING_OBJ
         )
 
     def test_correct_arguments_passed_credit(self, mock_client):
@@ -86,7 +89,8 @@ class FulfillOrderPlacedSendEnrollInCourseTaskTest(TestCase):
         logger.info('mock_client().mock_calls: %s', mock_client().mock_calls)
         mock_client().enroll_user_in_course.assert_called_once_with(
             credit_expected_data,
-            EXAMPLE_LINE_ITEM_STATE_PAYLOAD
+            EXAMPLE_LINE_ITEM_STATE_PAYLOAD,
+            EXAMPLE_FULFILLMENT_LOGGING_OBJ
         )
 
     def test_passes_through_client_return(self, mock_client):

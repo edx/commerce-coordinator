@@ -31,6 +31,7 @@ def fulfill_order_placed_send_enroll_in_course_task(
     line_item_id,
     item_quantity,
     line_item_state_id,
+    message_id
 ):
     """
     Celery task for order placed fulfillment and enrollment via LMS Enrollment API.
@@ -100,4 +101,13 @@ def fulfill_order_placed_send_enroll_in_course_task(
         'line_item_state_id': line_item_state_id,
     }
 
-    return LMSAPIClient().enroll_user_in_course(enrollment_data, line_item_state_payload)
+    fulfillment_logging_obj = {
+        'user': user.username,
+        'lms_user_id': user.lms_user_id,
+        'order_id': order_id,
+        'course_id': course_id,
+        'message_id': message_id,
+        'celery_task_id': self.request.id
+    }
+
+    return LMSAPIClient().enroll_user_in_course(enrollment_data, line_item_state_payload, fulfillment_logging_obj)

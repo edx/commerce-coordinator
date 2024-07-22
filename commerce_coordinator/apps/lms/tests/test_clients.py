@@ -11,6 +11,7 @@ from commerce_coordinator.apps.core.clients import urljoin_directory
 from commerce_coordinator.apps.core.tests.utils import CoordinatorOAuthClientTestCase
 from commerce_coordinator.apps.lms.clients import LMSAPIClient
 from commerce_coordinator.apps.lms.tests.constants import (
+    EXAMPLE_FULFILLMENT_LOGGING_OBJ,
     EXAMPLE_FULFILLMENT_REQUEST_PAYLOAD,
     EXAMPLE_FULFILLMENT_RESPONSE_PAYLOAD,
     EXAMPLE_LINE_ITEM_STATE_PAYLOAD
@@ -56,6 +57,7 @@ class LMSAPIClientTests(CoordinatorOAuthClientTestCase):
             input_kwargs={
                 'enrollment_data': EXAMPLE_FULFILLMENT_REQUEST_PAYLOAD,
                 'line_item_state_payload': EXAMPLE_LINE_ITEM_STATE_PAYLOAD,
+                'fulfillment_logging_obj': EXAMPLE_FULFILLMENT_LOGGING_OBJ
             },
             expected_request=EXAMPLE_FULFILLMENT_REQUEST_PAYLOAD,
             mock_url=self.url,
@@ -71,7 +73,11 @@ class LMSAPIClientTests(CoordinatorOAuthClientTestCase):
         with self.assertRaises(HTTPError):
             self.assertJSONClientResponse(
                 uut=self.client.enroll_user_in_course,
-                input_kwargs={'enrollment_data': '', 'line_item_state_payload': EXAMPLE_LINE_ITEM_STATE_PAYLOAD},
+                input_kwargs={
+                    'enrollment_data': '',
+                    'line_item_state_payload': EXAMPLE_LINE_ITEM_STATE_PAYLOAD,
+                    'fulfillment_logging_obj': EXAMPLE_FULFILLMENT_LOGGING_OBJ
+                },
                 mock_url=self.url,
                 mock_status=400,
             )
@@ -82,9 +88,10 @@ class LMSAPIClientTests(CoordinatorOAuthClientTestCase):
         self.assertJSONClientResponse(
             uut=self.client.deactivate_user,
             input_kwargs={
-                'username': 'test_user'
+                'username': 'test_user',
+                'ct_message_id': 'mock_message_id'
             },
-            mock_url=self.deactivate_user_url.format(username='test_user'),
+            mock_url=self.deactivate_user_url.format(username='test_user', ct_message_id='mock_message_id'),
         )
 
     def test_deactivate_user_api_error(self):
@@ -93,8 +100,9 @@ class LMSAPIClientTests(CoordinatorOAuthClientTestCase):
             self.assertJSONClientResponse(
                 uut=self.client.deactivate_user,
                 input_kwargs={
-                    'username': 'test_user'
+                    'username': 'test_user',
+                    'ct_message_id': 'mock_message_id'
                 },
-                mock_url=self.deactivate_user_url.format(username='test_user'),
+                mock_url=self.deactivate_user_url.format(username='test_user', ct_message_id='mock_message_id'),
                 mock_status=400,
             )

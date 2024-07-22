@@ -123,11 +123,15 @@ class OrderDetailsRedirectView(APIView):
             - 401: if user is unauthorized.
 
         """
+        logger.info(f"{self.get.__qualname__} request object: {request.data}.")
+
         params = dict(request.GET.items())
         if not params.get('order_number', None):
             return HttpResponseBadRequest('Invalid order number supplied.')
 
         redirect_url = self._get_redirect_url(params)
+
+        logger.info(f"[OrderDetailsRedirectView] - Redirecting 303 via {redirect_url}")
 
         return HttpResponseRedirect(redirect_url, status=HTTP_303_SEE_OTHER)
 
@@ -141,6 +145,8 @@ class OrderDetailsRedirectView(APIView):
             url (str): A URL as a Python String
         """
         order_number = params.get('order_number')
+
+        logger.info(f"[OrderDetailsRedirectView] - Determining redirect url for order with number {order_number}")
 
         if is_legacy_order(order_number):
             url = urljoin(settings.ECOMMERCE_URL, f'{settings.ECOMMERCE_ORDER_DETAILS_DASHBOARD_PATH}{order_number}')
@@ -195,6 +201,8 @@ class RefundView(APIView):
          """
 
         input_data = {**request.data}
+
+        logger.info(f"{self.post.__qualname__} request object: {input_data}.")
 
         input_details = CourseRefundInputSerializer(data=input_data)
         try:
