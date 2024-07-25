@@ -184,6 +184,90 @@ class ClientTests(TestCase):
         with pytest.raises(ValueError) as _:
             _ = self.client_set.client.get_customer_by_lms_user_id(id_num)
 
+    def test_get_order_by_id(self):
+        base_url = self.client_set.get_base_url_from_client()
+        order_id = "mock_order_id"
+        expected_order = gen_order(order_id)
+
+        with requests_mock.Mocker(real_http=True, case_sensitive=False) as mocker:
+            mocker.get(
+                f"{base_url}orders/{order_id}",
+                json=expected_order.serialize()
+            )
+
+            result = self.client_set.client.get_order_by_id(order_id)
+            self.assertEqual(result, expected_order)
+
+    def test_get_order_by_number(self):
+        base_url = self.client_set.get_base_url_from_client()
+        expected_order = gen_order("mock_order_id")
+        order_number = expected_order.order_number
+
+        with requests_mock.Mocker(real_http=True, case_sensitive=False) as mocker:
+            mocker.get(
+                f"{base_url}orders/order-number={order_number}",
+                json=expected_order.serialize()
+            )
+
+            result = self.client_set.client.get_order_by_number(order_number)
+            self.assertEqual(result, expected_order)
+
+    def test_get_customer_by_id(self):
+        base_url = self.client_set.get_base_url_from_client()
+        expected_customer = gen_example_customer()
+        customer_id = expected_customer.id
+
+        with requests_mock.Mocker(real_http=True, case_sensitive=False) as mocker:
+            mocker.get(
+                f"{base_url}customers/{customer_id}",
+                json=expected_customer.serialize()
+            )
+
+            result = self.client_set.client.get_customer_by_id(customer_id)
+            self.assertEqual(result, expected_customer)
+
+    def test_get_state_by_key(self):
+        base_url = self.client_set.get_base_url_from_client()
+        state_key = '2u-fulfillment-pending-state'
+        expected_state = gen_line_item_state()
+
+        with requests_mock.Mocker(real_http=True, case_sensitive=False) as mocker:
+            mocker.get(
+                f"{base_url}states/key={state_key}",
+                json=expected_state.serialize()
+            )
+
+            result = self.client_set.client.get_state_by_key(state_key)
+            self.assertEqual(result, expected_state)
+
+    def test_get_state_by_id(self):
+        base_url = self.client_set.get_base_url_from_client()
+        expected_state = gen_line_item_state()
+        state_id = expected_state.id
+
+        with requests_mock.Mocker(real_http=True, case_sensitive=False) as mocker:
+            mocker.get(
+                f"{base_url}states/{state_id}",
+                json=expected_state.serialize()
+            )
+
+            result = self.client_set.client.get_state_by_id(state_id)
+            self.assertEqual(result, expected_state)
+
+    def test_get_payment_by_key(self):
+        base_url = self.client_set.get_base_url_from_client()
+        payment_key = "pi_4MtwBwLkdIwGlenn28a3tqPa"
+        expected_payment = gen_payment()
+
+        with requests_mock.Mocker(real_http=True, case_sensitive=False) as mocker:
+            mocker.get(
+                f"{base_url}payments/key={payment_key}",
+                json=expected_payment.serialize()
+            )
+
+            result = self.client_set.client.get_payment_by_key(payment_key)
+            self.assertEqual(result.id, expected_payment.id)
+
     def test_order_history_throws_if_user_not_found(self):
         with pytest.raises(ValueError) as _:
             _ = self.client_set.client.get_orders_for_customer(995)
