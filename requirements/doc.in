@@ -5,7 +5,7 @@
 -r test.txt               # Core and testing dependencies for this package
 
 doc8                      # reStructuredText style checker
-edx_sphinx_theme          # edX theme for Sphinx output
+sphinx_book_theme         # edX theme for Sphinx output
 twine                     # Validates README.rst for usage on PyPI
 build                     # Needed to build the wheel for twine README check
 Sphinx                    # Documentation builder
