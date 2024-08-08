@@ -18,11 +18,11 @@ As a result of this, we need to pull out all the references of `commerce-coordin
 Decision
 ********
 
-We have decided to use `Django App Plugins`_ from `edx_django_utils`_ to override the `EcommerceService().payment_page_url`_ and `lms.djangoapps.commerce.util.refund_seat`_ in `edx-platform` in which currently we have implemented commerce-coordinator specific code. These plugins provide a way to override the application code without modifying the original codebase.
-Specifically we will be using the `pluggable_overrides`_ utility which is designed to override any method/function to point to an alternate implementation.
+We have decided to use `Django App Plugins`_ from `edx_django_utils`_ to override the `EcommerceService().payment_page_url`_ and `lms.djangoapps.commerce.util.refund_seat`_ functions/methods in `edx-platform` in which currently we have implemented commerce-coordinator specific code. `Django App Plugins`_ provide us with a way to override the application code without modifying the original codebase.
+Specifically we will be using the `pluggable_overrides`_ utility which is designed to override any method/function to point to an alternative implementation.
 As a result of this we will be able to pull out the `commerce-coordinator` related code from `edx-platform` into a private pluggable application and still be able to use the functionality provided by `commerce-coordinator`.
 
-For the implementation, we will create a new pluggable application that will house all the business specific `commerce-coordinator` related code in overridden functions. This new pluggable application will be installed with `EDXAPP_PRIVATE_REQUIREMENTS`_ from `edx-internal`_.
+For the implementation, we will be creating a new pluggable application that will house all the business specific `commerce-coordinator` related code in overridden functions. This new pluggable application will be installed with `EDXAPP_PRIVATE_REQUIREMENTS`_ from `edx-internal`_.
 
 .. _Django App Plugins: https://github.com/openedx/edx-django-utils/tree/master/edx_django_utils/plugins#django-app-plugins
 .. _edx_django_utils: https://github.com/openedx/edx-django-utils
