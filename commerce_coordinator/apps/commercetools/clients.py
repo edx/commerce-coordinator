@@ -40,7 +40,10 @@ from openedx_filters.exceptions import OpenEdxFilterException
 
 from commerce_coordinator.apps.commercetools.catalog_info.constants import DEFAULT_ORDER_EXPANSION, EdXFieldNames
 from commerce_coordinator.apps.commercetools.catalog_info.foundational_types import TwoUCustomTypes
-from commerce_coordinator.apps.commercetools.utils import translate_stripe_refund_status_to_transaction_status, handle_commercetools_error
+from commerce_coordinator.apps.commercetools.utils import (
+    handle_commercetools_error,
+    translate_stripe_refund_status_to_transaction_status
+)
 from commerce_coordinator.apps.core.constants import ORDER_HISTORY_PER_SYSTEM_REQ_LIMIT
 
 logger = logging.getLogger(__name__)
@@ -441,7 +444,9 @@ class CommercetoolsAPIClient:
 
             return returned_payment
         except CommercetoolsError as err:
-            handle_commercetools_error(err, f"Unable to create refund payment transaction for payment {payment_id}")
+            context = f"Unable to create refund payment transaction for "\
+                      f"payment {payment_id} and stripe refund {stripe_refund.id}"
+            handle_commercetools_error(err, context)
             raise err
 
     def update_line_item_transition_state_on_fulfillment(self, order_id: str, order_version: int,
