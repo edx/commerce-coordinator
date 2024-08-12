@@ -22,6 +22,7 @@ edx-django-utils
 edx-django-release-util
 edx-drf-extensions
 edx-rest-api-client
+importlib-metadata==8.2.0
 mysqlclient
 openedx-filters
 Pillow
@@ -43,5 +44,6 @@ protobuf #==5.27.3
 pydantic #==2.8.2
 requests-unixsocket2 #==0.4.1
 uptime #==3.0.1
-importlib-metadata==8.2.0
 
+# Not specified but required by DD
+requests-toolbelt

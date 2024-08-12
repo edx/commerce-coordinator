@@ -673,6 +673,7 @@ requests-oauthlib==2.0.0
 requests-toolbelt==1.0.0
     # via
     #   -r requirements/quality.txt
+    #   -r requirements/test.txt
     #   twine
 requests-unixsocket2==0.4.1
     # via

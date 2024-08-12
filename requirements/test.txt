@@ -417,6 +417,7 @@ requests==2.32.3
     #   edx-rest-api-client
     #   requests-mock
     #   requests-oauthlib
+    #   requests-toolbelt
     #   requests-unixsocket2
     #   responses
     #   segment-analytics-python
@@ -432,6 +433,8 @@ requests-oauthlib==2.0.0
     #   -r requirements/base.txt
     #   commercetools
     #   social-auth-core
+requests-toolbelt==1.0.0
+    # via -r requirements/base.txt
 requests-unixsocket2==0.4.1
     # via -r requirements/base.txt
 responses==0.25.3

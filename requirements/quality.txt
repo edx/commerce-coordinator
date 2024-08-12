@@ -513,7 +513,9 @@ requests-oauthlib==2.0.0
     #   commercetools
     #   social-auth-core
 requests-toolbelt==1.0.0
-    # via twine
+    # via
+    #   -r requirements/test.txt
+    #   twine
 requests-unixsocket2==0.4.1
     # via -r requirements/test.txt
 responses==0.25.3
