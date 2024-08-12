@@ -21,16 +21,20 @@ from commerce_coordinator.apps.commercetools.sub_messages.signals_dispatch impor
     fulfill_order_sanctioned_message_signal
 )
 from commerce_coordinator.apps.core.views import SingleInvocationAPIView
+from datadog_checks import AgentCheck
 
 logger = logging.getLogger(__name__)
 
 
 # noinspection DuplicatedCode
-class OrderFulfillView(SingleInvocationAPIView):
+class OrderFulfillView(SingleInvocationAPIView, AgentCheck):
     """Order Fulfillment View"""
 
     authentication_classes = [JwtBearerAuthentication, SessionAuthentication]
     permission_classes = [IsAdminUser]
+
+    def check(self, instance):
+        self.gauge("hello.world", 1)
 
     def post(self, request):
         """Receive a message from commerce tools forwarded by aws event bridge"""
@@ -63,6 +67,8 @@ class OrderFulfillView(SingleInvocationAPIView):
             source_system=SOURCE_SYSTEM,
             message_id=message_id
         )
+
+        self.check()
 
         return Response(status=status.HTTP_200_OK)
 
