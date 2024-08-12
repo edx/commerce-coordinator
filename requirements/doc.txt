@@ -461,6 +461,7 @@ requests==2.32.3
     #   requests-mock
     #   requests-oauthlib
     #   requests-toolbelt
+    #   requests-unixsocket
     #   responses
     #   segment-analytics-python
     #   slumber
@@ -479,6 +480,8 @@ requests-oauthlib==2.0.0
     #   social-auth-core
 requests-toolbelt==1.0.0
     # via twine
+requests-unixsocket==0.3.0
+    # via -r requirements/test.txt
 responses==0.25.3
     # via -r requirements/test.txt
 restructuredtext-lint==1.4.0

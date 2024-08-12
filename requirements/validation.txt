@@ -583,6 +583,7 @@ requests==2.32.3
     #   requests-mock
     #   requests-oauthlib
     #   requests-toolbelt
+    #   requests-unixsocket
     #   responses
     #   segment-analytics-python
     #   slumber
@@ -604,6 +605,10 @@ requests-toolbelt==1.0.0
     # via
     #   -r requirements/quality.txt
     #   twine
+requests-unixsocket==0.3.0
+    # via
+    #   -r requirements/quality.txt
+    #   -r requirements/test.txt
 responses==0.25.3
     # via
     #   -r requirements/quality.txt

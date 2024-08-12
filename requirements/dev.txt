@@ -502,6 +502,7 @@ requests==2.32.3
     #   requests-mock
     #   requests-oauthlib
     #   requests-toolbelt
+    #   requests-unixsocket
     #   responses
     #   segment-analytics-python
     #   slumber
@@ -521,6 +522,8 @@ requests-toolbelt==1.0.0
     # via
     #   -r requirements/validation.txt
     #   twine
+requests-unixsocket==0.3.0
+    # via -r requirements/validation.txt
 responses==0.25.3
     # via -r requirements/validation.txt
 rfc3986==2.0.0

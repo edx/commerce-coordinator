@@ -285,6 +285,7 @@ requests==2.32.3
     #   edx-rest-api-client
     #   requests-mock
     #   requests-oauthlib
+    #   requests-unixsocket
     #   segment-analytics-python
     #   slumber
     #   social-auth-core
@@ -298,6 +299,8 @@ requests-oauthlib==2.0.0
     #   -r requirements/base.txt
     #   commercetools
     #   social-auth-core
+requests-unixsocket==0.3.0
+    # via -r requirements/base.txt
 segment-analytics-python==2.3.2
     # via -r requirements/base.txt
 semantic-version==2.10.0
