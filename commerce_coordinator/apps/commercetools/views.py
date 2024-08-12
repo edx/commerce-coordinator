@@ -68,7 +68,7 @@ class OrderFulfillView(SingleInvocationAPIView, AgentCheck):
             message_id=message_id
         )
 
-        self.check()
+        self.check({})
 
         return Response(status=status.HTTP_200_OK)
 
