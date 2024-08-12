@@ -8,6 +8,10 @@ amqp==5.2.0
     # via
     #   -r requirements/base.txt
     #   kombu
+annotated-types==0.7.0
+    # via
+    #   -r requirements/base.txt
+    #   pydantic
 asgiref==3.7.2
     # via
     #   -r requirements/base.txt
@@ -22,7 +26,10 @@ async-timeout==4.0.3
     #   -r requirements/base.txt
     #   redis
 attrs==24.2.0
-    # via -r requirements/base.txt
+    # via
+    #   -r requirements/base.txt
+    #   cattrs
+    #   ddtrace
 backoff==2.2.1
     # via
     #   -r requirements/base.txt
@@ -38,8 +45,18 @@ billiard==4.2.0
     # via
     #   -r requirements/base.txt
     #   celery
+binary==1.0.0
+    # via -r requirements/base.txt
+bytecode==0.15.1
+    # via
+    #   -r requirements/base.txt
+    #   ddtrace
 cachetools==5.4.0
     # via tox
+cattrs==23.2.3
+    # via
+    #   -r requirements/base.txt
+    #   ddtrace
 celery[redis]==5.4.0
     # via -r requirements/base.txt
 certifi==2024.7.4
@@ -112,13 +129,23 @@ currencies==2020.12.12
     # via -r requirements/base.txt
 datadog-checks-base==36.13.0
     # via -r requirements/base.txt
+ddsketch==3.0.1
+    # via
+    #   -r requirements/base.txt
+    #   ddtrace
 ddt==1.7.2
     # via -r requirements/test.in
+ddtrace==2.10.4
+    # via -r requirements/base.txt
 defusedxml==0.8.0rc2
     # via
     #   -r requirements/base.txt
     #   python3-openid
     #   social-auth-core
+deprecated==1.2.14
+    # via
+    #   -r requirements/base.txt
+    #   opentelemetry-api
 dill==0.3.8
     # via pylint
 distlib==0.3.8
@@ -191,8 +218,15 @@ edx-opaque-keys==2.10.0
     #   edx-drf-extensions
 edx-rest-api-client==5.7.1
     # via -r requirements/base.txt
+envier==0.5.2
+    # via
+    #   -r requirements/base.txt
+    #   ddtrace
 exceptiongroup==1.2.2
-    # via pytest
+    # via
+    #   -r requirements/base.txt
+    #   cattrs
+    #   pytest
 filelock==3.15.4
     # via
     #   tox
@@ -201,6 +235,8 @@ idna==3.7
     # via
     #   -r requirements/base.txt
     #   requests
+importlib-metadata==8.2.0
+    # via -r requirements/base.txt
 iniconfig==2.0.0
     # via pytest
 isort==5.13.2
@@ -209,6 +245,8 @@ itypes==1.2.0
     # via
     #   -r requirements/base.txt
     #   coreapi
+jellyfish==1.1.0
+    # via -r requirements/base.txt
 jinja2==3.1.4
     # via
     #   -r requirements/base.txt
@@ -253,6 +291,10 @@ openapi-codec==1.3.2
     #   django-rest-swagger
 openedx-filters==1.9.0
     # via -r requirements/base.txt
+opentelemetry-api==1.16.0
+    # via
+    #   -r requirements/base.txt
+    #   ddtrace
 packaging==24.1
     # via
     #   -r requirements/base.txt
@@ -275,10 +317,16 @@ pluggy==1.5.0
     # via
     #   pytest
     #   tox
+prometheus-client==0.20.0
+    # via -r requirements/base.txt
 prompt-toolkit==3.0.47
     # via
     #   -r requirements/base.txt
     #   click-repl
+protobuf==5.27.3
+    # via
+    #   -r requirements/base.txt
+    #   ddtrace
 psutil==6.0.0
     # via
     #   -r requirements/base.txt
@@ -287,6 +335,12 @@ pycparser==2.22
     # via
     #   -r requirements/base.txt
     #   cffi
+pydantic==2.8.2
+    # via -r requirements/base.txt
+pydantic-core==2.20.1
+    # via
+    #   -r requirements/base.txt
+    #   pydantic
 pyjwt[crypto]==2.8.0
     # via
     #   -r requirements/base.txt
@@ -363,7 +417,7 @@ requests==2.32.3
     #   edx-rest-api-client
     #   requests-mock
     #   requests-oauthlib
-    #   requests-unixsocket
+    #   requests-unixsocket2
     #   responses
     #   segment-analytics-python
     #   slumber
@@ -378,7 +432,7 @@ requests-oauthlib==2.0.0
     #   -r requirements/base.txt
     #   commercetools
     #   social-auth-core
-requests-unixsocket==0.3.0
+requests-unixsocket2==0.4.1
     # via -r requirements/base.txt
 responses==0.25.3
     # via -r requirements/test.in
@@ -395,6 +449,8 @@ simplejson==3.19.2
 six==1.16.0
     # via
     #   -r requirements/base.txt
+    #   ddsketch
+    #   ddtrace
     #   edx-auth-backends
     #   edx-django-release-util
     #   edx-lint
@@ -442,10 +498,16 @@ tox==4.17.1
 typing-extensions==4.12.2
     # via
     #   -r requirements/base.txt
+    #   annotated-types
     #   asgiref
     #   astroid
+    #   bytecode
+    #   cattrs
+    #   ddtrace
     #   edx-opaque-keys
     #   kombu
+    #   pydantic
+    #   pydantic-core
     #   pylint
     #   stripe
 tzdata==2024.1
@@ -453,6 +515,8 @@ tzdata==2024.1
     #   -r requirements/base.txt
     #   backports-zoneinfo
     #   celery
+uptime==3.0.1
+    # via -r requirements/base.txt
 uritemplate==4.1.1
     # via
     #   -r requirements/base.txt
@@ -461,6 +525,7 @@ urllib3==2.2.2
     # via
     #   -r requirements/base.txt
     #   requests
+    #   requests-unixsocket2
     #   responses
 vine==5.1.0
     # via
@@ -486,3 +551,15 @@ wrapt==1.16.0
     # via
     #   -r requirements/base.txt
     #   commercetools
+    #   deprecated
+xmltodict==0.13.0
+    # via
+    #   -r requirements/base.txt
+    #   ddtrace
+zipp==3.20.0
+    # via
+    #   -r requirements/base.txt
+    #   importlib-metadata
+
+# The following packages are considered to be unsafe in a requirements file:
+# setuptools
