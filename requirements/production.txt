@@ -17,7 +17,7 @@ async-timeout==4.0.3
     # via
     #   -r requirements/base.txt
     #   redis
-attrs==23.2.0
+attrs==24.2.0
     # via -r requirements/base.txt
 backoff==2.2.1
     # via
@@ -36,11 +36,11 @@ billiard==4.2.0
     #   celery
 celery[redis]==5.4.0
     # via -r requirements/base.txt
-certifi==2024.6.2
+certifi==2024.7.4
     # via
     #   -r requirements/base.txt
     #   requests
-cffi==1.16.0
+cffi==1.17.0
     # via
     #   -r requirements/base.txt
     #   cryptography
@@ -80,7 +80,7 @@ coreschema==0.0.4
     # via
     #   -r requirements/base.txt
     #   coreapi
-cryptography==42.0.8
+cryptography==43.0.0
     # via
     #   -r requirements/base.txt
     #   pyjwt
@@ -94,7 +94,7 @@ defusedxml==0.8.0rc2
     #   -r requirements/base.txt
     #   python3-openid
     #   social-auth-core
-django==4.2.13
+django==4.2.15
     # via
     #   -r requirements/base.txt
     #   django-cors-headers
@@ -144,7 +144,7 @@ edx-braze-client==0.2.5
     # via -r requirements/base.txt
 edx-django-release-util==1.4.0
     # via -r requirements/base.txt
-edx-django-utils==5.14.2
+edx-django-utils==5.15.0
     # via
     #   -r requirements/base.txt
     #   edx-drf-extensions
@@ -161,7 +161,7 @@ gevent==24.2.1
     # via -r requirements/production.in
 greenlet==3.0.3
     # via gevent
-gunicorn==22.0.0
+gunicorn==23.0.0
     # via -r requirements/production.in
 idna==3.7
     # via
@@ -175,7 +175,7 @@ jinja2==3.1.4
     # via
     #   -r requirements/base.txt
     #   coreschema
-kombu==5.3.7
+kombu==5.4.0
     # via
     #   -r requirements/base.txt
     #   celery
@@ -197,7 +197,7 @@ mysqlclient==2.2.4
     # via
     #   -r requirements/base.txt
     #   -r requirements/production.in
-newrelic==9.11.0
+newrelic==9.13.0
     # via
     #   -r requirements/base.txt
     #   edx-django-utils
@@ -221,7 +221,7 @@ pbr==6.0.0
     # via
     #   -r requirements/base.txt
     #   stevedore
-pillow==10.3.0
+pillow==10.4.0
     # via -r requirements/base.txt
 prompt-toolkit==3.0.47
     # via
@@ -246,7 +246,7 @@ pyjwt[crypto]==2.8.0
     #   social-auth-core
 pymemcache==4.0.0
     # via -r requirements/production.in
-pymongo==4.7.3
+pymongo==4.8.0
     # via
     #   -r requirements/base.txt
     #   edx-opaque-keys
@@ -267,12 +267,12 @@ pytz==2024.1
     # via
     #   -r requirements/base.txt
     #   commercetools
-pyyaml==6.0.1
+pyyaml==6.0.2
     # via
     #   -r requirements/base.txt
     #   -r requirements/production.in
     #   edx-django-release-util
-redis==5.0.7
+redis==5.0.8
     # via
     #   -r requirements/base.txt
     #   celery
@@ -318,7 +318,7 @@ slumber==0.7.1
     # via
     #   -r requirements/base.txt
     #   edx-rest-api-client
-social-auth-app-django==5.4.1
+social-auth-app-django==5.4.2
     # via
     #   -r requirements/base.txt
     #   edx-auth-backends
@@ -327,7 +327,7 @@ social-auth-core==4.5.4
     #   -r requirements/base.txt
     #   edx-auth-backends
     #   social-auth-app-django
-sqlparse==0.5.0
+sqlparse==0.5.1
     # via
     #   -r requirements/base.txt
     #   django
@@ -336,7 +336,7 @@ stevedore==5.2.0
     #   -r requirements/base.txt
     #   edx-django-utils
     #   edx-opaque-keys
-stripe==10.0.0
+stripe==10.7.0
     # via -r requirements/base.txt
 typing-extensions==4.12.2
     # via
@@ -382,7 +382,7 @@ wrapt==1.16.0
     #   commercetools
 zope-event==5.0
     # via gevent
-zope-interface==6.4.post2
+zope-interface==7.0.1
     # via gevent
 
 # The following packages are considered to be unsafe in a requirements file:
