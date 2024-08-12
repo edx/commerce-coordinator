@@ -154,6 +154,10 @@ currencies==2020.12.12
     # via
     #   -r requirements/quality.txt
     #   -r requirements/test.txt
+datadog-checks-base==36.13.0
+    # via
+    #   -r requirements/quality.txt
+    #   -r requirements/test.txt
 ddt==1.7.2
     # via
     #   -r requirements/quality.txt

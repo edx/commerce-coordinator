@@ -87,6 +87,8 @@ cryptography==42.0.8
     #   social-auth-core
 currencies==2020.12.12
     # via -r requirements/base.txt
+datadog-checks-base==36.13.0
+    # via -r requirements/base.txt
 defusedxml==0.8.0rc2
     # via
     #   -r requirements/base.txt

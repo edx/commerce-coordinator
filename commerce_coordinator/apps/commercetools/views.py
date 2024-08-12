@@ -3,6 +3,7 @@ Views for the commercetools app
 """
 import logging
 
+from datadog_checks.base import AgentCheck
 from rest_framework import status
 from rest_framework.authentication import SessionAuthentication
 from rest_framework.permissions import IsAdminUser
@@ -21,7 +22,6 @@ from commerce_coordinator.apps.commercetools.sub_messages.signals_dispatch impor
     fulfill_order_sanctioned_message_signal
 )
 from commerce_coordinator.apps.core.views import SingleInvocationAPIView
-from datadog_checks import AgentCheck
 
 logger = logging.getLogger(__name__)
 
