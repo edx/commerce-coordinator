@@ -438,8 +438,8 @@ class ClientTests(TestCase):
             "errors": [
                 {
                     "code": "ConcurrentModification",
-                    "detailedErrorMessage": "Object [mock_order_id] has a "
-                                            "different version than expected. Expected: 2 - Actual: 1."
+                    "message": "Object [mock_order_id] has a "
+                               "different version than expected. Expected: 2 - Actual: 1.",
                 },
             ],
             "response": {},
@@ -465,8 +465,8 @@ class ClientTests(TestCase):
 
                 expected_message = (
                     f"[CommercetoolsError] Unable to create return for "
-                    f"order mock_order_id with error correlation id {exception.correlation_id} "
-                    f"and error/s: {exception.errors}"
+                    f"order mock_order_id "
+                    f"- Correlation ID: {exception.correlation_id}, Details: {exception.errors}"
                 )
 
                 log_mock.assert_called_once_with(expected_message)
@@ -510,8 +510,8 @@ class ClientTests(TestCase):
             "errors": [
                 {
                     "code": "ConcurrentModification",
-                    "detailedErrorMessage": "Object [mock_order_id] has a "
-                                            "different version than expected. Expected: 3 - Actual: 2."
+                    "message": "Object [mock_order_id] has a "
+                               "different version than expected. Expected: 3 - Actual: 2."
                 },
             ],
             "response": {},
@@ -581,8 +581,8 @@ class ClientTests(TestCase):
             "errors": [
                 {
                     "code": "ConcurrentModification",
-                    "detailedErrorMessage": "Object [mock_order_id] has a "
-                                            "different version than expected. Expected: 2 - Actual: 1."
+                    "message": "Object [mock_order_id] has a "
+                               "different version than expected. Expected: 2 - Actual: 1.",
                 },
             ],
             "response": {},
@@ -608,8 +608,8 @@ class ClientTests(TestCase):
 
                 expected_message = (
                     f"[CommercetoolsError] Unable to create refund payment transaction for "
-                    f"payment mock_payment_id and stripe refund {mock_stripe_refund.id} with "
-                    f"error correlation id {exception.correlation_id} and error/s: {exception.errors}"
+                    f"payment mock_payment_id and stripe refund {mock_stripe_refund.id} "
+                    f"- Correlation ID: {exception.correlation_id}, Details: {exception.errors}"
                 )
 
                 log_mock.assert_called_once_with(expected_message)
@@ -660,8 +660,8 @@ class ClientTests(TestCase):
             "errors": [
                 {
                     "code": "ConcurrentModification",
-                    "detailedErrorMessage": "Object [mock_order_id] has a "
-                                            "different version than expected. Expected: 2 - Actual: 1."
+                    "message": "Object [mock_order_id] has a "
+                               "different version than expected. Expected: 2 - Actual: 1."
                 },
             ],
             "response": {},
@@ -687,8 +687,9 @@ class ClientTests(TestCase):
 
                 expected_message = (
                     f"[CommercetoolsError] Unable to update LineItemState "
-                    f"of order mock_order_id with error correlation id {mock_error_response['correlation_id']} "
-                    f"and error/s: {mock_error_response['errors']}"
+                    f"of order mock_order_id "
+                    f"- Correlation ID: {mock_error_response['correlation_id']}, "
+                    f"Details: {mock_error_response['errors']}"
                 )
 
                 log_mock.assert_called_once_with(expected_message)

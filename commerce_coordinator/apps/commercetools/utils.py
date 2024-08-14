@@ -9,6 +9,7 @@ from urllib.parse import urljoin
 
 import requests
 from braze.client import BrazeClient
+from commercetools import CommercetoolsError
 from commercetools.platform.models import Customer, LineItem, Order, Payment, TransactionState, TransactionType
 from django.conf import settings
 from django.urls import reverse
@@ -34,6 +35,11 @@ def get_braze_client():
         api_url=braze_api_url,
         app_id='',
     )
+
+
+def handle_commercetools_error(err: CommercetoolsError, context: str):
+    error_message = f"[CommercetoolsError] {context} - Correlation ID: {err.correlation_id}, Details: {err.errors}"
+    logger.error(error_message)
 
 
 def send_order_confirmation_email(
