@@ -11,7 +11,9 @@ import stripe
 from commercetools import Client as CTClient
 from commercetools import CommercetoolsError
 from commercetools.platform.models import Customer as CTCustomer
+from commercetools.platform.models import CustomerChangeEmailAction, CustomerSetCustomFieldAction
 from commercetools.platform.models import CustomerSetCustomTypeAction as CTCustomerSetCustomTypeAction
+from commercetools.platform.models import CustomerSetFirstNameAction, CustomerSetLastNameAction
 from commercetools.platform.models import FieldContainer as CTFieldContainer
 from commercetools.platform.models import Money as CTMoney
 from commercetools.platform.models import Order as CTOrder
@@ -495,3 +497,57 @@ class CommercetoolsAPIClient:
             # Logs & ignores version conflict errors due to duplicate Commercetools messages
             handle_commercetools_error(err, f"Unable to update LineItemState of order {order_id}")
             return None
+
+    def retire_customer_anonymize_fields(self, customer_id: str, customer_version: int,
+                                         retired_first_name: str, retired_last_name: str,
+                                         retired_email: str, retired_lms_username: str) -> CTCustomer:
+        """
+        Update Commercetools customer with anonymized fields
+        Args:
+            customer_id (str): Customer ID (UUID)
+            customer_version (int): Current version of customer
+            retired_first_name (str): anonymized customer first name value
+            retired_last_name (str): anonymized customer last name value
+            retired_email (str): anonymized customer email value
+            retired_lms_username (str): anonymized customer lms username value
+        Returns (CTCustomer): Updated customer object or
+        Raises Exception: Error if update was unsuccessful.
+        """
+
+        actions = []
+        update_retired_first_name_action = CustomerSetFirstNameAction(
+            first_name=retired_first_name
+        )
+
+        update_retired_last_name_action = CustomerSetLastNameAction(
+            last_name=retired_last_name
+        )
+
+        update_retired_email_action = CustomerChangeEmailAction(
+            email=retired_email
+        )
+
+        update_retired_lms_username_action = CustomerSetCustomFieldAction(
+            name="edx-lms_user_name",
+            value=retired_lms_username
+        )
+
+        actions.extend([
+            update_retired_first_name_action,
+            update_retired_last_name_action,
+            update_retired_email_action,
+            update_retired_lms_username_action
+        ])
+
+        try:
+            retired_customer = self.base_client.customers.update_by_id(
+                id=customer_id,
+                version=customer_version,
+                actions=actions
+            )
+            return retired_customer
+        except CommercetoolsError as err:
+            logger.error(f"[CommercetoolsError] Unable to anonymize customer fields for customer "
+                         f"with ID: {customer_id}, after LMS retirement with "
+                         f"error correlation id {err.correlation_id} and error/s: {err.errors}")
+            raise err

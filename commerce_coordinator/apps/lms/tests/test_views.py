@@ -284,3 +284,81 @@ class RefundViewTests(APITestCase):
         response = self.client.post(self.url, local_invalid_payload, format='json')
 
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+
+
+@ddt.ddt
+class RetirementViewTests(APITestCase):
+    """
+    Tests for user retirement view.
+    """
+
+    test_user_username = 'test'
+    test_user_email = 'test@example.com'
+    test_user_password = 'secret'
+
+    url = reverse('lms:user_retirement')
+
+    valid_payload = {
+        'edx_lms_user_id': 127,
+    }
+
+    invalid_payload = {
+        'edx_lms_user_id': '',
+    }
+
+    def setUp(self):
+        super().setUp()
+        self.user = User.objects.create_user(
+            self.test_user_username,
+            self.test_user_email,
+            self.test_user_password,
+            is_staff=True,
+        )
+
+    def tearDown(self):
+        super().tearDown()
+        self.client.logout()
+
+    def authenticate_user(self):
+        self.client.login(username=self.test_user_username, password=self.test_user_password)
+        self.client.force_authenticate(user=self.user)
+
+    @patch('commerce_coordinator.apps.lms.views.UserRetirementRequested.run_filter')
+    def test_post_with_valid_data_succeeds(self, mock_filter):
+        self.authenticate_user()
+        mock_filter.return_value = {'returned_customer': True}
+        response = self.client.post(self.url, self.valid_payload, format='json')
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        mock_filter.assert_called_once_with(127)
+
+    @patch('commerce_coordinator.apps.lms.views.UserRetirementRequested.run_filter')
+    def test_post_with_valid_data_invalid_pipeline_return_fails(self, mock_filter):
+        self.authenticate_user()
+        mock_filter.return_value = {'returned_customer': None}
+        response = self.client.post(self.url, self.valid_payload, format='json')
+
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        mock_filter.assert_called_once_with(127)
+
+    def test_post_with_invalid_data_fails(self):
+        self.authenticate_user()
+        response = self.client.post(self.url, self.invalid_payload, format='json')
+
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+
+    @patch('commerce_coordinator.apps.lms.views.UserRetirementRequested.run_filter')
+    def test_post_with_filter_exception_fails(self, mock_filter):
+        self.authenticate_user()
+        mock_filter.side_effect = OpenEdxFilterException('Filter failed')
+        response = self.client.post(self.url, self.valid_payload, format='json')
+
+        self.assertEqual(response.status_code, status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+    @patch('commerce_coordinator.apps.lms.views.UserRetirementRequested.run_filter')
+    def test_post_with_unexpected_exception_fails(self, mock_filter):
+        self.authenticate_user()
+        mock_filter.side_effect = Exception('Unexpected error')
+        response = self.client.post(self.url, self.valid_payload, format='json')
+
+        self.assertEqual(response.status_code, status.HTTP_500_INTERNAL_SERVER_ERROR)

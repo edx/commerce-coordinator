@@ -10,6 +10,7 @@ from rest_framework.test import APITestCase
 
 from commerce_coordinator.apps.commercetools.constants import COMMERCETOOLS_ORDER_MANAGEMENT_SYSTEM
 from commerce_coordinator.apps.commercetools.pipeline import (
+    AnonymizeRetiredUser,
     CreateReturnForCommercetoolsOrder,
     CreateReturnPaymentTransaction,
     GetCommercetoolsOrders,
@@ -18,8 +19,10 @@ from commerce_coordinator.apps.commercetools.pipeline import (
 from commerce_coordinator.apps.commercetools.tests._test_cases import MonkeyPatchedGetOrderTestCase
 from commerce_coordinator.apps.commercetools.tests.conftest import (
     APITestingSet,
+    gen_customer,
     gen_order,
     gen_payment,
+    gen_retired_customer,
     gen_return_item
 )
 from commerce_coordinator.apps.core.constants import ORDER_HISTORY_PER_SYSTEM_REQ_LIMIT
@@ -213,3 +216,47 @@ class OrderReturnPipelineTests(TestCase):
         result_data = ret['returned_order']
         self.assertEqual(result_data, self.update_order_response)
         self.assertEqual(result_data.return_info[1].items[0].payment_state, ReturnPaymentState.REFUNDED)
+
+
+class AnonymizeRetiredUserPipelineTests(TestCase):
+    """Commercetools pipeline testcase for CT customer retirement after account deletion in LMS"""
+    def setUp(self) -> None:
+        self.customer_data = gen_customer("mock_email", "mock_username")
+
+        mock_anonymized_first_name = "retired_user_b90b0331d08e19eaef586"
+        mock_anonymized_last_name = "retired_user_b45093f6f96eac6421f8"
+        mock_anonymized_email = "retired_user_149c01e31901998b11"
+        mock_anonymized_lms_username = "retired_user_8d2382cd8435a1c520"
+        self.mock_anonymize_result = {
+            "first_name": mock_anonymized_first_name,
+            "last_name": mock_anonymized_last_name,
+            "email": mock_anonymized_email,
+            "lms_username": mock_anonymized_lms_username
+        }
+        self.update_customer_response = gen_retired_customer(
+            mock_anonymized_first_name,
+            mock_anonymized_last_name,
+            mock_anonymized_email,
+            mock_anonymized_lms_username
+        )
+        self.mock_lms_user_id = 127
+
+    @patch(
+        'commerce_coordinator.apps.commercetools.clients.CommercetoolsAPIClient'
+        '.retire_customer_anonymize_fields'
+    )
+    @patch(
+        'commerce_coordinator.apps.commercetools.clients.CommercetoolsAPIClient'
+        '.get_customer_by_lms_user_id'
+    )
+    @patch('commerce_coordinator.apps.commercetools.pipeline.create_retired_fields')
+    def test_pipeline(self, mock_anonymize_fields, mock_customer_by_lms_id, mock_anonymized_customer_return):
+        """Ensure pipeline is functioning as expected"""
+
+        pipe = AnonymizeRetiredUser("test_pipe", None)
+        mock_customer_by_lms_id.return_value = self.customer_data
+        mock_anonymize_fields.return_value = self.mock_anonymize_result
+        mock_anonymized_customer_return.return_value = self.update_customer_response
+        ret = pipe.run_filter(lms_user_id=self.mock_lms_user_id)
+        result_data = ret['returned_customer']
+        self.assertEqual(result_data, self.update_customer_response)

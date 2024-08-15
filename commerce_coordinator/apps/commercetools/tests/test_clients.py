@@ -31,6 +31,7 @@ from commerce_coordinator.apps.commercetools.tests.conftest import (
     gen_order,
     gen_order_history,
     gen_payment,
+    gen_retired_customer,
     gen_return_item
 )
 from commerce_coordinator.apps.core.constants import ORDER_HISTORY_PER_SYSTEM_REQ_LIMIT
@@ -724,6 +725,86 @@ class ClientTests(TestCase):
             log_mock.assert_called_with(expected_message)
             self.assertEqual(result.id, mock_order.id)
             self.assertEqual(result.version, mock_order.version)
+
+    def test_update_customer_with_anonymized_fields(self):
+        base_url = self.client_set.get_base_url_from_client()
+        mock_retired_first_name = "retired_user_b90b0331d08e19eaef586"
+        mock_retired_last_name = "retired_user_b45093f6f96eac6421f8"
+        mock_retired_email = "retired_user_149c01e31901998b11"
+        mock_retired_lms_username = "retired_user_8d2382cd8435a1c520"
+
+        mock_response_customer = gen_retired_customer(
+            mock_retired_first_name,
+            mock_retired_last_name,
+            mock_retired_email,
+            mock_retired_lms_username
+        )
+
+        with requests_mock.Mocker(real_http=True, case_sensitive=False) as mocker:
+            mocker.post(
+                f"{base_url}customers/{mock_response_customer.id}",
+                json=mock_response_customer.serialize(),
+                status_code=200
+            )
+
+            result = self.client_set.client.retire_customer_anonymize_fields(
+                mock_response_customer.id,
+                mock_response_customer.version,
+                mock_retired_first_name,
+                mock_retired_last_name,
+                mock_retired_email,
+                mock_retired_lms_username
+            )
+
+            self.assertEqual(result, mock_response_customer)
+
+    def test_update_customer_with_anonymized_fields_exception(self):
+        base_url = self.client_set.get_base_url_from_client()
+        mock_retired_first_name = "retired_user_b90b0331d08e19eaef586"
+        mock_retired_last_name = "retired_user_b45093f6f96eac6421f8"
+        mock_retired_email = "retired_user_149c01e31901998b11"
+        mock_retired_lms_username = "retired_user_8d2382cd8435a1c520"
+
+        mock_error_response: CommercetoolsError = {
+            "message": "Could not create return for order mock_order_id",
+            "errors": [
+                {
+                    "code": "ConcurrentModification",
+                    "detailedErrorMessage": "Object [mock_order_id] has a "
+                                            "different version than expected. Expected: 2 - Actual: 1."
+                },
+            ],
+            "response": {},
+            "correlation_id": '123456'
+        }
+
+        with requests_mock.Mocker(real_http=True, case_sensitive=False) as mocker:
+            mocker.post(
+                f"{base_url}customers/mock_customer_id",
+                json=mock_error_response,
+                status_code=409
+            )
+
+            with patch('commerce_coordinator.apps.commercetools.clients.logging.Logger.error') as log_mock:
+                with self.assertRaises(CommercetoolsError) as cm:
+                    self.client_set.client.retire_customer_anonymize_fields(
+                        "mock_customer_id",
+                        1,
+                        mock_retired_first_name,
+                        mock_retired_last_name,
+                        mock_retired_email,
+                        mock_retired_lms_username
+                    )
+
+                exception = cm.exception
+
+                expected_message = (
+                    f"[CommercetoolsError] Unable to anonymize customer fields for customer "
+                    f"with ID: mock_customer_id, after LMS retirement with "
+                    f"error correlation id {exception.correlation_id} and error/s: {exception.errors}"
+                )
+
+                log_mock.assert_called_once_with(expected_message)
 
 
 class PaginatedResultsTest(TestCase):

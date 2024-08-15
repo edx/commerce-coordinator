@@ -44,3 +44,23 @@ class OrderRefundRequested(OpenEdxPublicFilter):
         """
 
         return super().run_pipeline(order_id=order_id, order_line_item_id=order_line_item_id)
+
+
+class UserRetirementRequested(OpenEdxPublicFilter):
+    """
+    Filter to anonymize retired customer fields in Commercetools
+    """
+    # See pipeline step configuration OPEN_EDX_FILTERS_CONFIG dict in `settings/base.py`
+    filter_type = "org.edx.coordinator.lms.user.retirement.requested.v1"
+
+    @classmethod
+    def run_filter(cls, lms_user_id):  # pragma no cover
+        """
+        Call the PipelineStep(s) defined for this filter.
+        Arguments:
+            lms_user_id: edx LMS user ID of customer
+        Returns:
+            returned_customer: Updated customer Commercetools object with anonymized fields
+        """
+
+        return super().run_pipeline(lms_user_id=lms_user_id)

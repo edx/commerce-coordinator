@@ -16,8 +16,16 @@ from rest_framework.throttling import UserRateThrottle
 from rest_framework.views import APIView
 
 from commerce_coordinator.apps.core.constants import HttpHeadersNames, MediaTypes
-from commerce_coordinator.apps.lms.filters import OrderRefundRequested, PaymentPageRedirectRequested
-from commerce_coordinator.apps.lms.serializers import CourseRefundInputSerializer, enrollment_attribute_key
+from commerce_coordinator.apps.lms.filters import (
+    OrderRefundRequested,
+    PaymentPageRedirectRequested,
+    UserRetirementRequested
+)
+from commerce_coordinator.apps.lms.serializers import (
+    CourseRefundInputSerializer,
+    UserRetiredInputSerializer,
+    enrollment_attribute_key
+)
 from commerce_coordinator.apps.rollout.utils import is_legacy_order
 
 logger = logging.getLogger(__name__)
@@ -247,3 +255,70 @@ class RefundView(APIView):
         except Exception as e:  # pylint: disable=broad-except
             logger.exception(f"[RefundView] Exception raised in {self.post.__name__} with error {repr(e)}")
             return Response('Exception occurred while returning order', status=HTTP_500_INTERNAL_SERVER_ERROR)
+
+
+class RetirementView(APIView):
+    """Accept incoming LMS request to retire user in CT."""
+    permission_classes = [IsAdminUser]
+    throttle_classes = (UserRateThrottle,)
+
+    def post(self, request) -> Response:
+        """
+        Process a refund request from the LMS.
+
+        Args:
+            request (Request): The HTTP request object containing the refund details.
+
+        Returns:
+            - Response:
+                - 200 OK if the refund was successfully processed with the result of
+                    the UserRetirementRequested filter/pipeline.
+                - 400 If the retirement request failed due to an invalid lms user uuid.
+                - 500 If an OpenEdxFilterException occurred while anonymizing the customer fields.
+                - 500 If any other unexpected exception occurred during retirement/anonymizing processing.
+
+        The method expects a POST request with a JSON payload containing:
+            - lms_user_is (str): The ID of the lms user.
+
+        The user retirement/field anonymization is processed by running the UserRetirementRequested
+        filter/pipeline using the provided lms_user_id from the request
+
+        If the retirement is successfully marked in CT (the PII fields are successfully anonymized), a 200 OK
+        response is returned along with the result from the UserRetirementRequested filter/pipeline.
+
+        If the retirement fails due to a bad pipeline response, a 400 Bad Request is returned.
+
+        If an exception occurs during retirement processing, a 500 Internal Server Error is returned.
+        """
+        input_data = {**request.data}
+
+        input_details = UserRetiredInputSerializer(data=input_data)
+        try:
+            input_details.is_valid(raise_exception=True)
+        except ValidationError as e:
+            logger.exception(f"[RetirementView] Exception raised validating input {self.post.__name__} "
+                             f"with error {repr(e)}, input: {input_data}.")
+            return Response('Invalid input provided', status=HTTP_400_BAD_REQUEST)
+
+        lms_user_id = input_details.data['edx_lms_user_id']
+
+        try:
+            result = UserRetirementRequested.run_filter(lms_user_id)
+
+            if result.get('returned_customer', None):
+                logger.info(f"[RetirementView] Successfully anonymized fields for retired customer with "
+                            f"LMS ID {lms_user_id}, with result: {result}.")
+                return Response(status=HTTP_200_OK)
+            else:
+                logger.error(f"[RetirementView] Failed anonymizing fields for retired customer with "
+                             f"LMS ID {lms_user_id}, with invalid filter/pipeline result: {result}.")
+                return Response('Exception occurred while returning order', status=HTTP_400_BAD_REQUEST)
+
+        except OpenEdxFilterException as e:
+            logger.exception(f"[RetirementView] Exception raised in {self.post.__name__} with error {repr(e)}")
+            return Response('Exception occurred while retiring Commercetools customer',
+                            status=HTTP_500_INTERNAL_SERVER_ERROR)
+        except Exception as e:  # pylint: disable=broad-except
+            logger.exception(f"[RefundView] Exception raised in {self.post.__name__} with error {repr(e)}")
+            return Response('Exception occurred while retiring Commercetools customer',
+                            status=HTTP_500_INTERNAL_SERVER_ERROR)

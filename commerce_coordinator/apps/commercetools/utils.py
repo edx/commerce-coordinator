@@ -2,6 +2,7 @@
 Helpers for the commercetools app.
 """
 
+import hashlib
 import json
 import logging
 from urllib.parse import urljoin
@@ -16,6 +17,9 @@ from django.urls import reverse
 from commerce_coordinator.apps.commercetools.catalog_info.edx_utils import get_edx_lms_user_name
 
 logger = logging.getLogger(__name__)
+
+RETIRED_USER_FIELD_DEFAULT_FMT = 'retired_user_{}'
+SALT_LIST_EXCEPTION = ValueError("Salt must be a list -or- tuple of all historical salts.")
 
 
 def get_braze_client():
@@ -254,3 +258,38 @@ def create_zendesk_ticket(requester_name, requester_email, subject, body, tags=N
         logger.exception(f'Failed to create ticket. Exception: {exc}')
         return False
     return True
+
+
+def _create_retired_hash_withsalt(value_to_retire, salt):
+    """
+    Returns a retired value given a value to retire and a hash.
+
+    Arguments:
+        value_to_retire (str): Value to be retired.
+        salt (str): Salt string used to modify the retired value before hashing.
+    """
+    return hashlib.sha256(
+        salt.encode() + value_to_retire.encode('utf-8')
+    ).hexdigest()
+
+
+def create_retired_fields(field_value, salt_list, retired_user_field_fmt=RETIRED_USER_FIELD_DEFAULT_FMT):
+    """
+    Returns a retired field value based on the original lowercased field value and
+    all the historical salts, from oldest to current.  The current salt is
+    assumed to be the last salt in the list.
+
+    Raises :class:`~ValueError` if the salt isn't a list of salts.
+
+    Arguments:
+        field_value (str): The value of the field to be retired.
+        salt_list (list/tuple): List of all historical salts.
+
+    Yields:
+        Returns a retired value based on the original field value
+        and all the historical salts, including the current salt.
+    """
+    if not isinstance(salt_list, (list, tuple)):
+        raise SALT_LIST_EXCEPTION
+
+    return retired_user_field_fmt.format(_create_retired_hash_withsalt(field_value.lower(), salt_list[-1]))

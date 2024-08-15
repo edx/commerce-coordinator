@@ -393,6 +393,12 @@ OPEN_EDX_FILTERS_CONFIG = {
             'commerce_coordinator.apps.commercetools.pipeline.CreateReturnPaymentTransaction',
             'commerce_coordinator.apps.commercetools.pipeline.UpdateCommercetoolsOrderReturnPaymentStatus',
         ]
+    },
+    "org.edx.coordinator.lms.user.retirement.requested.v1": {
+        "fail_silently": False,  # Coordinator filters should NEVER be allowed to fail silently
+        "pipeline": [
+            'commerce_coordinator.apps.commercetools.pipeline.AnonymizeRetiredUser',
+        ]
     }
 }
 
@@ -430,6 +436,8 @@ PAYMENT_PROCESSOR_CONFIG = {
 LMS_URL_ROOT = "http://localhost:18000"
 LMS_DASHBOARD_URL = "http://localhost:18000"  # fix me
 ORDER_HISTORY_URL = "http://localhost:1996"
+
+RETIRED_USER_SALTS = ['abc', '123']
 
 _COMMERCETOOLS_CONFIG_GEO = 'us-central1.gcp'
 
