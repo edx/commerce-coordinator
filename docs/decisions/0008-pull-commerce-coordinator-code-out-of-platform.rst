@@ -9,7 +9,7 @@ Status
 Context
 *******
 
-Kyle from Axim marked Commerce Coordinator related code in edx-platform as ``business-related``. For Reference see `PR`_
+Axim has marked Commerce Coordinator related code in edx-platform as ``business-related``. For Reference see `PR`_
 
 .. _PR: https://github.com/openedx/edx-platform/pull/35203
 
@@ -24,6 +24,7 @@ We have decided to use `Django App Plugins`_ from `edx_django_utils`_ to overrid
 As a result of this we will be able to pull out the ``commerce-coordinator`` related code from ``edx-platform`` into a private pluggable application and still be able to use the functionality provided by ``commerce-coordinator``.
 
 For the implementation, we will be creating a new pluggable application that will house all the business specific ``commerce-coordinator`` related code in overridden functions. This new pluggable application will be installed with `EDXAPP_PRIVATE_REQUIREMENTS`_ from `edx-internal`_.
+This solution also ensures that regular flow for the community remains unaffected.
 
 .. _Django App Plugins: https://github.com/openedx/edx-django-utils/tree/master/edx_django_utils/plugins#django-app-plugins
 .. _edx_django_utils: https://github.com/openedx/edx-django-utils
