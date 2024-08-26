@@ -10,9 +10,11 @@ from braze.client import BrazeClient
 from commercetools import CommercetoolsError
 from commercetools.platform.models import Customer, LineItem, Order, Payment, TransactionState, TransactionType
 from commercetools.platform.models import Order as CTOrder
-from commerce_coordinator.apps.commercetools.catalog_info.utils import typed_money_to_string
+from commercetools.platform.models import Payment, TransactionState, TransactionType
 from django.conf import settings
 from django.urls import reverse
+
+from commerce_coordinator.apps.commercetools.catalog_info.utils import typed_money_to_string
 
 logger = logging.getLogger(__name__)
 

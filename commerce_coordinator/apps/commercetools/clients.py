@@ -2,8 +2,8 @@
 API clients for commercetools app.
 """
 
-import decimal
 import datetime
+import decimal
 import logging
 from typing import Generic, List, Optional, Tuple, TypeVar, Union
 
@@ -20,15 +20,12 @@ from commercetools.platform.models import Money as CTMoney
 from commercetools.platform.models import Order as CTOrder
 from commercetools.platform.models import (
     OrderAddReturnInfoAction,
-    OrderSetReturnPaymentStateAction,
     OrderSetReturnItemCustomTypeAction,
+    OrderSetReturnPaymentStateAction,
     OrderTransitionLineItemStateAction
 )
 from commercetools.platform.models import Payment as CTPayment
-from commercetools.platform.models import (
-    PaymentAddTransactionAction,
-    PaymentSetTransactionCustomTypeAction
-)
+from commercetools.platform.models import PaymentAddTransactionAction, PaymentSetTransactionCustomTypeAction
 from commercetools.platform.models import ProductVariant as CTProductVariant
 from commercetools.platform.models import (
     ReturnItemDraft,
@@ -364,7 +361,7 @@ class CommercetoolsAPIClient:
             add_return_info_action = OrderAddReturnInfoAction(
                 items=[return_item_draft]
             )
-            
+
             returned_order = self.base_client.orders.update_by_id(
                 id=order_id,
                 version=order_version,
@@ -431,12 +428,12 @@ class CommercetoolsAPIClient:
                 version=order_version,
                 actions=[return_payment_state_action, update_transaction_id_action]
             )
-            returned_payment = self.base_client.payments.update_by_id(
+            _ = self.base_client.payments.update_by_id(
                 id=payment.id,
                 version=payment.version,
                 actions=[return_transaction_return_item_action]
             )
-            logger.info(f"Updated transaction with return item id")
+            logger.info("Updated transaction with return item id")
             return updated_order
         except CommercetoolsError as err:
             handle_commercetools_error(err, f"Unable to update ReturnPaymentState of order {order_id}")
