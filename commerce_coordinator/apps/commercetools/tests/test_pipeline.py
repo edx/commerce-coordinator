@@ -212,7 +212,8 @@ class OrderReturnPipelineTests(TestCase):
 
         pipe = UpdateCommercetoolsOrderReturnPaymentStatus("test_pipe", None)
         mock_order_return_update.return_value = self.update_order_response
-        ret = pipe.run_filter(order_data=self.update_order_data, returned_order=self.update_order_data)
+        ret = pipe.run_filter(order_data=self.update_order_data, returned_order=self.update_order_data,
+                              payment_intent_id="mock_payment_intent_id", amount_in_cents=10000)
         result_data = ret['returned_order']
         self.assertEqual(result_data, self.update_order_response)
         self.assertEqual(result_data.return_info[1].items[0].payment_state, ReturnPaymentState.REFUNDED)

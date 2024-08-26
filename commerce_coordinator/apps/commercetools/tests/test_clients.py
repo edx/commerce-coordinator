@@ -23,9 +23,10 @@ from openedx_filters.exceptions import OpenEdxFilterException
 
 from commerce_coordinator.apps.commercetools.catalog_info.constants import EdXFieldNames, TwoUKeys
 from commerce_coordinator.apps.commercetools.catalog_info.foundational_types import TwoUCustomTypes
-from commerce_coordinator.apps.commercetools.clients import PaginatedResult
+from commerce_coordinator.apps.commercetools.clients import PaginatedResult, CommercetoolsAPIClient
 from commerce_coordinator.apps.commercetools.tests.conftest import (
     APITestingSet,
+    MonkeyPatch,
     gen_example_customer,
     gen_line_item_state,
     gen_order,
@@ -34,6 +35,13 @@ from commerce_coordinator.apps.commercetools.tests.conftest import (
     gen_retired_customer,
     gen_return_item
 )
+from commerce_coordinator.apps.commercetools.tests.mocks import (
+    CTPaymentByKey
+)
+from commerce_coordinator.apps.commercetools.tests.sub_messages.test_tasks import (
+    CommercetoolsAPIClientMock
+)
+
 from commerce_coordinator.apps.core.constants import ORDER_HISTORY_PER_SYSTEM_REQ_LIMIT
 from commerce_coordinator.apps.core.tests.utils import uuid4_str
 
@@ -823,3 +831,105 @@ class PaginatedResultsTest(TestCase):
 
         self.assertEqual(paginated.has_more(), False)
         self.assertEqual(paginated.next_offset(), 10)
+
+
+
+class ClientUpdateReturnTests(TestCase):
+    client_set: APITestingSet
+
+
+    def setUp(self):
+        super().setUp()
+        self.mock = CommercetoolsAPIClientMock()
+        self.client_set = APITestingSet.new_instance()
+
+        MonkeyPatch.monkey(
+            CommercetoolsAPIClient,
+            {
+                # '__init__': lambda _: None,
+                # 'get_order_by_id': self.mock.get_order_by_id,
+                # 'get_customer_by_id': self.mock.get_customer_by_id,
+                'get_payment_by_key': self.mock.get_payment_by_key,
+                # 'create_return_for_order': self.mock.create_return_for_order,
+                # 'create_return_payment_transaction': self.mock.create_return_payment_transaction,
+                # 'update_return_payment_state_after_successful_refund':
+                #     self.mock.update_return_payment_state_after_successful_refund
+            }
+        )
+
+    def tearDown(self):
+        MonkeyPatch.unmonkey(CommercetoolsAPIClient)
+        super().tearDown()
+        
+    def test_successful_order_return_payment_state_update(self):
+        base_url = self.client_set.get_base_url_from_client()
+
+        # Mocked order to be passed in to update method
+        mock_order = gen_order("mock_order_id")
+        mock_order.version = "2"
+        mock_return_item = gen_return_item("mock_return_item_id", ReturnPaymentState.INITIAL)
+        mock_return_info = ReturnInfo(items=[mock_return_item])
+        mock_order.return_info.append(mock_return_info)
+
+        # Mocked expected order recieved after CT SDK call to update the order
+        mock_response_order = gen_order("mock_order_id")
+        mock_response_order.version = "3"
+        mock_response_return_item = gen_return_item("mock_return_item_id", ReturnPaymentState.REFUNDED)
+        mock_response_return_info = ReturnInfo(items=[mock_response_return_item])
+        mock_response_order.return_info.append(mock_response_return_info)
+
+        mock_response_payment = gen_payment()
+
+        with requests_mock.Mocker(real_http=True, case_sensitive=False) as mocker:
+            mocker.post(
+                f"{base_url}orders/{mock_response_order.id}",
+                json=mock_response_order.serialize(),
+                status_code=200
+            )
+            mocker.get(
+                f"{base_url}payments/{mock_response_payment.id}",
+                json=mock_response_payment.serialize(),
+                status_code=200
+            )
+            result = self.client_set.client.update_return_payment_state_after_successful_refund(
+                mock_order.id,
+                mock_order.version,
+                mock_response_return_item.line_item_id,
+                "pm_1",
+                10000
+            )
+
+            self.assertEqual(result.return_info[1].items[0].payment_state, ReturnPaymentState.REFUNDED)
+
+    def test_update_return_payment_state_exception(self):
+        
+        base_url = self.client_set.get_base_url_from_client()
+        mock_error_response: CommercetoolsError = {
+            "message": "Could not update ReturnPaymentState",
+            "errors": [
+                {
+                    "code": "ConcurrentModification",
+                    "detailedErrorMessage": "Object [mock_order_id] has a "
+                                            "different version than expected. Expected: 3 - Actual: 2."
+                },
+            ],
+            "response": {},
+            "correlation_id": "123456"
+        }
+        mock_response_payment = gen_payment()
+
+        with requests_mock.Mocker(real_http=True, case_sensitive=False) as mocker:
+            mocker.post(
+                f"{base_url}orders/mock_order_id",
+                json=mock_error_response,
+                status_code=409
+            )
+
+            with self.assertRaises(OpenEdxFilterException):
+                self.client_set.client.update_return_payment_state_after_successful_refund(
+                    order_id="mock_order_id",
+                    order_version="2",
+                    return_line_item_return_id="mock_return_item_id",
+                    payment_intent_id="1",
+                    amount_in_cents=10000
+                )
