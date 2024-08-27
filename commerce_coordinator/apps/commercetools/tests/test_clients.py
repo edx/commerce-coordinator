@@ -473,6 +473,54 @@ class ClientTests(TestCase):
 
                 log_mock.assert_called_once_with(expected_message)
 
+    def test_successful_order_return_payment_state_update(self):
+        base_url = self.client_set.get_base_url_from_client()
+
+        # Mocked order to be passed in to update method
+        mock_order = gen_order("mock_order_id")
+        mock_order.version = "2"
+        mock_return_item = gen_return_item("mock_return_item_id", ReturnPaymentState.INITIAL)
+        mock_return_info = ReturnInfo(items=[mock_return_item])
+        mock_order.return_info.append(mock_return_info)
+
+        # Mocked expected order recieved after CT SDK call to update the order
+        mock_response_order = gen_order("mock_order_id")
+        mock_payment = gen_payment()
+        mock_response_order.version = "3"
+        mock_response_return_item = gen_return_item("mock_return_item_id", ReturnPaymentState.REFUNDED)
+        mock_response_return_info = ReturnInfo(items=[mock_response_return_item])
+        mock_response_order.return_info.append(mock_response_return_info)
+
+        with requests_mock.Mocker(real_http=True, case_sensitive=False) as mocker:
+            mocker.post(
+                f"{base_url}orders/mock_order_id",
+                json=mock_response_order.serialize(),
+                status_code=200
+            )
+            mocker.post(
+                f"{base_url}payments/{mock_payment.id}",
+                json=mock_payment.serialize(),
+                status_code=200
+            )
+            mocker.get(
+                f"{base_url}payments/key={mock_payment.id}",
+                json=mock_payment.serialize(),
+                status_code=200
+            )
+            mocker.get(
+                f"{base_url}orders/mock_order_id",
+                json=mock_response_order.serialize(),
+                status_code=200
+            )
+            result = self.client_set.client.update_return_payment_state_after_successful_refund(
+                mock_order.id,
+                mock_order.version,
+                mock_response_return_item.line_item_id,
+                mock_payment.id,
+                10000
+            )
+            self.assertEqual(result.return_info[1].items[0].payment_state, ReturnPaymentState.REFUNDED)
+
     def test_create_refund_transaction(self):
         base_url = self.client_set.get_base_url_from_client()
 
@@ -784,8 +832,6 @@ class ClientUpdateReturnTests(TestCase):
                 'get_payment_by_key': self.mock.get_payment_by_key,
                 'create_return_for_order': self.mock.create_return_for_order,
                 'create_return_payment_transaction': self.mock.create_return_payment_transaction
-                # 'update_return_payment_state_after_successful_refund':
-                #     self.mock.update_return_payment_state_after_successful_refund
             }
         )
 
@@ -793,46 +839,6 @@ class ClientUpdateReturnTests(TestCase):
         self.mock.order_mock.side_effect = None
         MonkeyPatch.unmonkey(CommercetoolsAPIClient)
         super().tearDown()
-
-    def test_successful_order_return_payment_state_update(self):
-        base_url = self.client_set.get_base_url_from_client()
-
-        # Mocked order to be passed in to update method
-        mock_order = gen_order("mock_order_id")
-        mock_order.version = "2"
-        mock_return_item = gen_return_item("mock_return_item_id", ReturnPaymentState.INITIAL)
-        mock_return_info = ReturnInfo(items=[mock_return_item])
-        mock_order.return_info.append(mock_return_info)
-
-        # Mocked expected order recieved after CT SDK call to update the order
-        mock_response_order = gen_order("mock_order_id")
-        mock_response_order.version = "3"
-        mock_response_return_item = gen_return_item("mock_return_item_id", ReturnPaymentState.REFUNDED)
-        mock_response_return_info = ReturnInfo(items=[mock_response_return_item])
-        mock_response_order.return_info.append(mock_response_return_info)
-
-        mock_response_payment = gen_payment()
-
-        with requests_mock.Mocker(real_http=True, case_sensitive=False) as mocker:
-            mocker.post(
-                f"{base_url}orders/{mock_response_order.id}",
-                json=mock_response_order.serialize(),
-                status_code=200
-            )
-            mocker.get(
-                f"{base_url}payments/{mock_response_payment.id}",
-                json=mock_response_payment.serialize(),
-                status_code=200
-            )
-            result = self.client_set.client.update_return_payment_state_after_successful_refund(
-                mock_order.id,
-                mock_order.version,
-                mock_response_return_item.line_item_id,
-                "pm_1",
-                10000
-            )
-
-            self.assertEqual(result.return_info[1].items[0].payment_state, ReturnPaymentState.REFUNDED)
 
     def test_update_return_payment_state_exception(self):
         mock_error_response: CommercetoolsError = CommercetoolsError(

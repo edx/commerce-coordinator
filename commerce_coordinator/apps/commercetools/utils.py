@@ -9,8 +9,6 @@ import logging
 from braze.client import BrazeClient
 from commercetools import CommercetoolsError
 from commercetools.platform.models import Customer, LineItem, Order, Payment, TransactionState, TransactionType
-from commercetools.platform.models import Order as CTOrder
-from commercetools.platform.models import Payment, TransactionState, TransactionType
 from django.conf import settings
 from django.urls import reverse
 
@@ -163,13 +161,18 @@ def has_full_refund_transaction(payment: Payment):
             return True
     return False
 
-def find_refund_transaction(order: CTOrder, amount: decimal):
+
+def find_refund_transaction(order: Order, amount: decimal):
+    """
+    Utility to find the refund transaction in a payment
+    """
     pmt = get_edx_successful_stripe_payment(order)
     for transaction in pmt.transactions:
         if transaction.type == TransactionType.REFUND:
             if decimal.Decimal(typed_money_to_string(transaction.amount, money_as_decimal_string=True)) == amount:
                 return transaction.id
     return {}
+
 
 def translate_stripe_refund_status_to_transaction_status(stripe_refund_status: str):
     """

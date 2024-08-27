@@ -214,14 +214,12 @@ class CreateReturnForCommercetoolsOrder(PipelineStep):
         try:
             ct_api_client = CommercetoolsAPIClient()
             order = ct_api_client.get_order_by_id(order_id=order_id)
-            intent_id = get_edx_payment_intent_id(order)
 
             if not is_commercetools_line_item_already_refunded(order, order_line_item_id):
                 returned_order = ct_api_client.create_return_for_order(
                     order_id=order.id,
                     order_version=order.version,
-                    order_line_item_id=order_line_item_id,
-                    payment_intent_id=intent_id
+                    order_line_item_id=order_line_item_id
                 )
 
                 returned_line_item_return_id = returned_order.return_info[0].items[0].id
@@ -256,8 +254,6 @@ class UpdateCommercetoolsOrderReturnPaymentStatus(PipelineStep):
 
     def run_filter(
         self,
-        payment_intent_id,
-        amount_in_cents,
         **kwargs
     ):
         """
@@ -279,8 +275,8 @@ class UpdateCommercetoolsOrderReturnPaymentStatus(PipelineStep):
             order_id=order.id,
             order_version=order.version,
             return_line_item_return_id=return_line_item_return_id,
-            payment_intent_id=payment_intent_id,
-            amount_in_cents= amount_in_cents
+            payment_intent_id=kwargs['payment_intent_id'],
+            amount_in_cents=kwargs['amount_in_cents']
         )
 
         return {
