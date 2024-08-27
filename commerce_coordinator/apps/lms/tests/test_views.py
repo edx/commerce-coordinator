@@ -127,7 +127,6 @@ class PaymentPageRedirectViewTests(APITestCase):
             )
             self.assertEqual(response.status_code, status.HTTP_303_SEE_OTHER)
 
-
     @patch("commerce_coordinator.apps.lms.filters.PaymentPageRedirectRequested.run_filter")
     def test_program_purchases_are_redirected_to_legacy(self, mock_payment_page_redirect):
         """

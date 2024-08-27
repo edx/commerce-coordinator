@@ -63,7 +63,6 @@ class PaymentPageRedirectView(APIView):
             logger.exception(f"Something went wrong! Exception raised in {self.get.__name__} with error {repr(e)}")
             return HttpResponseBadRequest('Something went wrong.')
 
-
     def _redirect_response_payment(self, request):
         """
         Redirect to desired checkout view
@@ -76,21 +75,21 @@ class PaymentPageRedirectView(APIView):
 
         get_items = list(self.request.GET.items())
         redirect_url = None
-        if  'bundle' in dict(get_items):
-            ecom_url = urljoin(settings.ECOMMERCE_URL, settings.ECOMMERCE_ADD_TO_BASKET_API_PATH)
-            redirect_url = self._add_query_params_to_redirect_url(
-                ecom_url,
-                get_items
+        if "bundle" in dict(get_items):
+            ecom_url = urljoin(
+                settings.ECOMMERCE_URL, settings.ECOMMERCE_ADD_TO_BASKET_API_PATH
             )
+            redirect_url = self._add_query_params_to_redirect_url(ecom_url, get_items)
         else:
             redirect_url_obj = PaymentPageRedirectRequested.run_filter(request)
             redirect_url = self._add_query_params_to_redirect_url(
-            redirect_url_obj['redirect_url'],
-            get_items
-        )
+                redirect_url_obj["redirect_url"], get_items
+            )
         redirect = HttpResponseRedirect(redirect_url, status=HTTP_303_SEE_OTHER)
         redirect.headers[HttpHeadersNames.CONTENT_TYPE.value] = MediaTypes.JSON.value
-        logger.debug(f'{self._redirect_response_payment.__qualname__} Redirecting 303 via {redirect}.')
+        logger.debug(
+            f"{self._redirect_response_payment.__qualname__} Redirecting 303 via {redirect}."
+        )
         return redirect
 
     @staticmethod
