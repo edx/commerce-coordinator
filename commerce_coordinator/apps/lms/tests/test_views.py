@@ -128,21 +128,25 @@ class PaymentPageRedirectViewTests(APITestCase):
             self.assertEqual(response.status_code, status.HTTP_303_SEE_OTHER)
 
 
-    @patch('commerce_coordinator.apps.lms.filters.PaymentPageRedirectRequested.run_filter')
+    @patch("commerce_coordinator.apps.lms.filters.PaymentPageRedirectRequested.run_filter")
     def test_program_purchases_are_redirected_to_legacy(self, mock_payment_page_redirect):
         """
         Program purchases are identified using the query param `bundle`.
-        For program purchases, the user should be redirected to the legacy ecommerce page without running pipeline steps.
+        For programs, the user should be redirected to the legacy ecommerce page without running pipeline steps.
         """
         self.client.login(username=self.test_user_username, password=self.test_user_password)
         self.client.force_authenticate(user=self.user)
         response = self.client.get(
             self.url,
-            {'sku': ['sku1'], 'course_run_key': 'course-v1:MichiganX+InjuryPreventionX+1T2021', 'bundle': ['123']}
+            {
+                "sku": ["sku1"],
+                "course_run_key": "course-v1:MichiganX+InjuryPreventionX+1T2021",
+                "bundle": ["123"],
+            },
         )
         self.assertTrue(response.url.startswith(settings.ECOMMERCE_URL))
         mock_payment_page_redirect.assert_not_called()
-        self.assertIn('bundle', response.url)
+        self.assertIn("bundle", response.url)
 
 
 @override_settings(COMMERCETOOLS_MERCHANT_CENTER_ORDERS_PAGE_URL='https://merchant-centre/orders')
