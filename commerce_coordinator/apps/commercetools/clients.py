@@ -45,8 +45,9 @@ from openedx_filters.exceptions import OpenEdxFilterException
 from commerce_coordinator.apps.commercetools.catalog_info.constants import DEFAULT_ORDER_EXPANSION, EdXFieldNames
 from commerce_coordinator.apps.commercetools.catalog_info.foundational_types import TwoUCustomTypes
 from commerce_coordinator.apps.commercetools.utils import (
+    find_refund_transaction,
     handle_commercetools_error,
-    translate_stripe_refund_status_to_transaction_status, find_refund_transaction
+    translate_stripe_refund_status_to_transaction_status
 )
 from commerce_coordinator.apps.core.constants import ORDER_HISTORY_PER_SYSTEM_REQ_LIMIT
 
