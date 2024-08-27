@@ -142,7 +142,7 @@ class PaymentPageRedirectViewTests(APITestCase):
         )
         self.assertTrue(response.url.startswith(settings.ECOMMERCE_URL))
         mock_payment_page_redirect.assert_not_called()
-        self.assertTrue('bundle' in response.url)
+        self.assertIn('bundle', response.url)
 
 
 @override_settings(COMMERCETOOLS_MERCHANT_CENTER_ORDERS_PAGE_URL='https://merchant-centre/orders')
