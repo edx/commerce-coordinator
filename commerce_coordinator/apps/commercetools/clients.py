@@ -401,20 +401,20 @@ class CommercetoolsAPIClient:
             if not payment_intent_id:
                 payment_intent_id = ''
             logger.info(f'Creating return for order - payment_intent_id: {payment_intent_id}')
+
+            payment = self.get_payment_by_key(payment_intent_id)
+            logger.info(f"Payment found: {payment}")
+            order = self.get_order_by_id(order_id=order_id)
+            transaction_id = find_refund_transaction(order, amount_in_cents)
             update_transaction_id_action = OrderSetReturnItemCustomTypeAction(
                 return_item_id=return_line_item_return_id,
                 type=CTTypeResourceIdentifier(
                     key='returnItemCustomType',
                 ),
                 fields=CTFieldContainer({
-                    'transactionId': payment_intent_id
+                    'transactionId': transaction_id
                 })
             )
-            payment = self.get_payment_by_key(payment_intent_id)
-            logger.info(f"Payment found: {payment}")
-            order = self.get_order_by_id(order_id=order_id)
-            transaction_id = find_refund_transaction(order, amount_in_cents)
-
             return_transaction_return_item_action = PaymentSetTransactionCustomTypeAction(
                 transaction_id=transaction_id,
                 type=CTTypeResourceIdentifier(key='transactionCustomType'),
