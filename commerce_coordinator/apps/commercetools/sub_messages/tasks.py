@@ -317,7 +317,8 @@ def fulfill_order_returned_signal_task(
                         properties=segment_event_properties
                     )
         else:  # pragma no cover
-            logger.info(f'[CT-{tag}] payment intent {payment_intent_id} not refunded. Sending Slack notification, message id: {message_id}')
+            logger.info(f'[CT-{tag}] payment intent {payment_intent_id} not refunded, '
+                        f'sending Slack notification, message id: {message_id}')
 
     logger.info(f'[CT-{tag}] Finished return for order: {order_id}, line item: {return_line_item_return_id}, '
                 f'message id: {message_id}')
