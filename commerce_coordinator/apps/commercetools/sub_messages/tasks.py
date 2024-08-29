@@ -280,7 +280,7 @@ def fulfill_order_returned_signal_task(
         if 'refund_response' in result and result['refund_response']:
             if result['refund_response'] == 'charge_already_refunded':
                 logger.info(f'[CT-{tag}] payment intent {payment_intent_id} already has refunded transaction, '
-                            f'sending Zendesk email, message id: {message_id}')
+                            f'sending Slack notification, message id: {message_id}')
             else:
                 logger.debug(f'[CT-{tag}] payment intent {payment_intent_id} refunded. message id: {message_id}')
                 segment_event_properties = _prepare_segment_event_properties(order, return_line_item_return_id)
@@ -317,7 +317,7 @@ def fulfill_order_returned_signal_task(
                         properties=segment_event_properties
                     )
         else:  # pragma no cover
-            logger.info(f'[CT-{tag}] payment intent {payment_intent_id} not refunded. message id: {message_id}')
+            logger.info(f'[CT-{tag}] payment intent {payment_intent_id} not refunded. Sending Slack notification, message id: {message_id}')
 
     logger.info(f'[CT-{tag}] Finished return for order: {order_id}, line item: {return_line_item_return_id}, '
                 f'message id: {message_id}')
