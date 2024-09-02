@@ -11,7 +11,9 @@ import stripe
 from commercetools import Client as CTClient
 from commercetools import CommercetoolsError
 from commercetools.platform.models import Customer as CTCustomer
+from commercetools.platform.models import CustomerChangeEmailAction, CustomerSetCustomFieldAction
 from commercetools.platform.models import CustomerSetCustomTypeAction as CTCustomerSetCustomTypeAction
+from commercetools.platform.models import CustomerSetFirstNameAction, CustomerSetLastNameAction
 from commercetools.platform.models import FieldContainer as CTFieldContainer
 from commercetools.platform.models import Money as CTMoney
 from commercetools.platform.models import Order as CTOrder
@@ -40,7 +42,10 @@ from openedx_filters.exceptions import OpenEdxFilterException
 
 from commerce_coordinator.apps.commercetools.catalog_info.constants import DEFAULT_ORDER_EXPANSION, EdXFieldNames
 from commerce_coordinator.apps.commercetools.catalog_info.foundational_types import TwoUCustomTypes
-from commerce_coordinator.apps.commercetools.utils import translate_stripe_refund_status_to_transaction_status
+from commerce_coordinator.apps.commercetools.utils import (
+    handle_commercetools_error,
+    translate_stripe_refund_status_to_transaction_status
+)
 from commerce_coordinator.apps.core.constants import ORDER_HISTORY_PER_SYSTEM_REQ_LIMIT
 
 logger = logging.getLogger(__name__)
@@ -362,9 +367,7 @@ class CommercetoolsAPIClient:
             )
             return returned_order
         except CommercetoolsError as err:
-            logger.error(f"[CommercetoolsError] Unable to create return for "
-                         f"order {order_id} with error correlation id {err.correlation_id} "
-                         f"and error/s: {err.errors}")
+            handle_commercetools_error(err, f"Unable to create return for order {order_id}")
             raise err
 
     def update_return_payment_state_after_successful_refund(self, order_id: str,
@@ -398,9 +401,7 @@ class CommercetoolsAPIClient:
             )
             return updated_order
         except CommercetoolsError as err:
-            logger.error(f"[CommercetoolsError] Unable to update ReturnPaymentState "
-                         f"of order {order_id} with error correlation id {err.correlation_id} "
-                         f"and error/s: {err.errors}")
+            handle_commercetools_error(err, f"Unable to update ReturnPaymentState of order {order_id}")
             raise OpenEdxFilterException(str(err)) from err
 
     def create_return_payment_transaction(
@@ -445,9 +446,9 @@ class CommercetoolsAPIClient:
 
             return returned_payment
         except CommercetoolsError as err:
-            logger.error(f"[CommercetoolsError] Unable to create refund payment transaction for "
-                         f"payment {payment_id} and stripe refund {stripe_refund.id} with "
-                         f"error correlation id {err.correlation_id} and error/s: {err.errors}")
+            context = f"Unable to create refund payment transaction for "\
+                      f"payment {payment_id} and stripe refund {stripe_refund.id}"
+            handle_commercetools_error(err, context)
             raise err
 
     def update_line_item_transition_state_on_fulfillment(self, order_id: str, order_version: int,
@@ -494,7 +495,59 @@ class CommercetoolsAPIClient:
                 return self.get_order_by_id(order_id)
         except CommercetoolsError as err:
             # Logs & ignores version conflict errors due to duplicate Commercetools messages
-            logger.error(f"[CommercetoolsError] Unable to update LineItemState "
-                         f"of order {order_id} with error correlation id {err.correlation_id} "
-                         f"and error/s: {err.errors}")
+            handle_commercetools_error(err, f"Unable to update LineItemState of order {order_id}")
             return None
+
+    def retire_customer_anonymize_fields(self, customer_id: str, customer_version: int,
+                                         retired_first_name: str, retired_last_name: str,
+                                         retired_email: str, retired_lms_username: str) -> CTCustomer:
+        """
+        Update Commercetools customer with anonymized fields
+        Args:
+            customer_id (str): Customer ID (UUID)
+            customer_version (int): Current version of customer
+            retired_first_name (str): anonymized customer first name value
+            retired_last_name (str): anonymized customer last name value
+            retired_email (str): anonymized customer email value
+            retired_lms_username (str): anonymized customer lms username value
+        Returns (CTCustomer): Updated customer object or
+        Raises Exception: Error if update was unsuccessful.
+        """
+
+        actions = []
+        update_retired_first_name_action = CustomerSetFirstNameAction(
+            first_name=retired_first_name
+        )
+
+        update_retired_last_name_action = CustomerSetLastNameAction(
+            last_name=retired_last_name
+        )
+
+        update_retired_email_action = CustomerChangeEmailAction(
+            email=retired_email
+        )
+
+        update_retired_lms_username_action = CustomerSetCustomFieldAction(
+            name="edx-lms_user_name",
+            value=retired_lms_username
+        )
+
+        actions.extend([
+            update_retired_first_name_action,
+            update_retired_last_name_action,
+            update_retired_email_action,
+            update_retired_lms_username_action
+        ])
+
+        try:
+            retired_customer = self.base_client.customers.update_by_id(
+                id=customer_id,
+                version=customer_version,
+                actions=actions
+            )
+            return retired_customer
+        except CommercetoolsError as err:
+            logger.error(f"[CommercetoolsError] Unable to anonymize customer fields for customer "
+                         f"with ID: {customer_id}, after LMS retirement with "
+                         f"error correlation id {err.correlation_id} and error/s: {err.errors}")
+            raise err

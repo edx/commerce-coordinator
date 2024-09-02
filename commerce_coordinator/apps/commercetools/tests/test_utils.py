@@ -1,6 +1,7 @@
 """
 Tests for Commerce tools utils
 """
+import hashlib
 import unittest
 from unittest.mock import MagicMock
 
@@ -23,6 +24,7 @@ from commerce_coordinator.apps.commercetools.tests.conftest import (
 )
 from commerce_coordinator.apps.commercetools.tests.constants import EXAMPLE_FULFILLMENT_SIGNAL_PAYLOAD
 from commerce_coordinator.apps.commercetools.utils import (
+    create_retired_fields,
     create_zendesk_ticket,
     extract_ct_order_information_for_braze_canvas,
     extract_ct_product_information_for_braze_canvas,
@@ -363,3 +365,24 @@ class TestSendRefundNotification(unittest.TestCase):
                 tags
             )
             mock_logger.assert_called_once_with(f'Failed to create ticket. Exception: {exc.value}')
+
+
+class TestRetirementAnonymizingTestCase(unittest.TestCase):
+    """
+    Tests for anonymizing/hashing incomming field values
+    in Create Retired Fields Utils class
+    """
+    def setUp(self):
+        self.field_value = "TestValue"
+        self.salt = "TestSalt"
+        self.salt_list = ["Salt1", "Salt2", self.salt]
+        self.expected_hash = hashlib.sha256((self.salt.encode() + self.field_value.lower().encode('utf-8'))).hexdigest()
+        self.expected_retired_field = f"retired_user_{self.expected_hash}"
+
+    def test_create_retired_fields(self):
+        result = create_retired_fields(self.field_value, self.salt_list)
+        self.assertEqual(result, self.expected_retired_field)
+
+    def test_create_retired_fields_with_invalid_salt_list(self):
+        with self.assertRaises(ValueError):
+            create_retired_fields(self.field_value, "invalid_salt_list")
