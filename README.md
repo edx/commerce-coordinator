@@ -144,9 +144,9 @@
 | commerce\_coordinator/apps/lms/tests/test\_clients.py                                  |       33 |        0 |       10 |        4 |     91% |53->51, 71->69, 73->84, 99->exit |
 | commerce\_coordinator/apps/lms/tests/test\_signals.py                                  |       18 |        0 |        5 |        2 |     91% |14->22, 21->14 |
 | commerce\_coordinator/apps/lms/tests/test\_tasks.py                                    |       52 |        0 |       10 |        4 |     94% |36->35, 108->110, 109->108, 110->109 |
-| commerce\_coordinator/apps/lms/tests/test\_views.py                                    |      202 |        0 |       53 |       22 |     91% |26->28, 27->26, 73->75, 74->73, 75->74, 79->exit, 101->100, 108->110, 109->108, 110->109, 114->exit, 227->226, 236->235, 251->250, 259->258, 266->275, 274->266, 275->274, 327->326, 336->335, 351->350, 359->358 |
+| commerce\_coordinator/apps/lms/tests/test\_views.py                                    |      210 |        0 |       55 |       23 |     91% |26->28, 27->26, 73->75, 74->73, 75->74, 79->exit, 101->100, 108->110, 109->108, 110->109, 114->exit, 131->130, 247->246, 256->255, 271->270, 279->278, 286->295, 294->286, 295->294, 347->346, 356->355, 371->370, 379->378 |
 | commerce\_coordinator/apps/lms/urls.py                                                 |        4 |        0 |        0 |        0 |    100% |           |
-| commerce\_coordinator/apps/lms/views.py                                                |      125 |        0 |       20 |        2 |     99% |90->89, 139->138 |
+| commerce\_coordinator/apps/lms/views.py                                                |      129 |        0 |       22 |        2 |     99% |96->95, 145->144 |
 | commerce\_coordinator/apps/rollout/\_\_init\_\_.py                                     |        0 |        0 |        0 |        0 |    100% |           |
 | commerce\_coordinator/apps/rollout/pipeline.py                                         |       48 |        1 |       12 |        1 |     97% |        96 |
 | commerce\_coordinator/apps/rollout/tests/test\_util\_functions.py                      |       23 |        0 |       20 |        9 |     79% |17->26, 25->17, 26->25, 29->39, 38->29, 39->38, 47->51, 50->47, 51->50 |
@@ -185,7 +185,7 @@
 | commerce\_coordinator/apps/titan/views.py                                              |       23 |        1 |        2 |        1 |     92% |        79 |
 | commerce\_coordinator/docker\_gunicorn\_configuration.py                               |       27 |       27 |       10 |        0 |      0% |      4-57 |
 | commerce\_coordinator/urls.py                                                          |       22 |        0 |        0 |        0 |    100% |           |
-|                                                                              **TOTAL** | **6686** |  **230** | **1615** |  **543** | **90%** |           |
+|                                                                              **TOTAL** | **6698** |  **230** | **1619** |  **544** | **90%** |           |
 
 
 ## Setup coverage badge
