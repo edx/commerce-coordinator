@@ -3,18 +3,13 @@ Helpers for the commercetools app.
 """
 
 import hashlib
-import json
 import logging
-from urllib.parse import urljoin
 
-import requests
 from braze.client import BrazeClient
 from commercetools import CommercetoolsError
 from commercetools.platform.models import Customer, LineItem, Order, Payment, TransactionState, TransactionType
 from django.conf import settings
 from django.urls import reverse
-
-from commerce_coordinator.apps.commercetools.catalog_info.edx_utils import get_edx_lms_user_name
 
 logger = logging.getLogger(__name__)
 
@@ -174,90 +169,6 @@ def translate_stripe_refund_status_to_transaction_status(stripe_refund_status: s
         'failed': TransactionState.FAILURE,
     }
     return translations.get(stripe_refund_status.lower(), stripe_refund_status)
-
-
-def send_refund_notification(user, order_id):
-    """
-    Notify the support team of the refund request.
-
-    Returns:
-        bool: True if we are able to send the notification.  In this case that means we were able to create
-              a ZenDesk ticket
-    """
-
-    tags = ['auto_refund']
-
-    # Build the information for the ZenDesk ticket
-    student = user
-    subject = "[Refund] User-Requested Refund"
-    body = generate_refund_notification_body(student, order_id)
-    requester_name = get_edx_lms_user_name(student)
-
-    return create_zendesk_ticket(requester_name, student.email, subject, body, tags)
-
-
-def generate_refund_notification_body(student, order_id):
-    """ Returns a refund notification message body."""
-
-    msg = f"""A refund request has been initiated for {get_edx_lms_user_name(student)} ({student.email}).
-    To process this request, please visit the link(s) below."""
-
-    commercetools_mc_orders_url = settings.COMMERCETOOLS_MERCHANT_CENTER_ORDERS_PAGE_URL
-    refund_urls = urljoin(commercetools_mc_orders_url, f'/{order_id}/')
-
-    # emails contained in this message could contain unicode characters so encode as such
-    return '{msg}\n\n{urls}'.format(msg=msg, urls='\n'.join(refund_urls))
-
-
-def create_zendesk_ticket(requester_name, requester_email, subject, body, tags=None):
-    """
-    Create a Zendesk ticket via API.
-
-    Returns:
-        bool: False if we are unable to create the ticket for any reason
-    """
-    if not (settings.ZENDESK_URL and settings.ZENDESK_USER and settings.ZENDESK_API_KEY):
-        logger.error('Zendesk is not configured. Cannot create a ticket.')
-        return False
-
-    # Copy the tags to avoid modifying the original list.
-    tags = set(tags or [])
-    tags.add('LMS')
-    tags = list(tags)
-
-    data = {
-        'ticket': {
-            'requester': {
-                'name': requester_name,
-                'email': str(requester_email)
-            },
-            'subject': subject,
-            'comment': {'body': body},
-            'tags': tags
-        }
-    }
-
-    # Encode the data to create a JSON payload
-    payload = json.dumps(data)
-
-    # Set the request parameters
-    url = urljoin(settings.ZENDESK_URL, '/api/v2/tickets.json')
-    user = f'{settings.ZENDESK_USER}/token'
-    pwd = settings.ZENDESK_API_KEY
-    headers = {'content-type': 'application/json'}
-
-    try:
-        response = requests.post(url, data=payload, auth=(user, pwd), headers=headers, timeout=1)
-        # Check for HTTP codes other than 201 (Created)
-        if response.status_code != 201:
-            logger.error('Failed to create ticket. Status: [%d], Body: [%s]', response.status_code, response.content)
-            return False
-        else:
-            logger.debug('Successfully created ticket.')
-    except Exception as exc:  # pylint: disable=broad-except
-        logger.exception(f'Failed to create ticket. Exception: {exc}')
-        return False
-    return True
 
 
 def _create_retired_hash_withsalt(value_to_retire, salt):
