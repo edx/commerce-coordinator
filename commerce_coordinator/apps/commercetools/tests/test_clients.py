@@ -17,8 +17,8 @@ from commercetools.platform.models import (
     TransactionState,
     TransactionType,
     Type,
-    TypeDraft,
-    TypedMoney
+    TypedMoney,
+    TypeDraft
 )
 from django.test import TestCase
 from mock import patch
@@ -35,9 +35,9 @@ from commerce_coordinator.apps.commercetools.tests.conftest import (
     gen_order,
     gen_order_history,
     gen_payment,
+    gen_payment_with_multiple_transactions,
     gen_retired_customer,
-    gen_return_item,
-    gen_payment_with_multiple_transactions
+    gen_return_item
 )
 from commerce_coordinator.apps.commercetools.tests.sub_messages.test_tasks import CommercetoolsAPIClientMock
 from commerce_coordinator.apps.core.constants import ORDER_HISTORY_PER_SYSTEM_REQ_LIMIT

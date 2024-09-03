@@ -1,12 +1,13 @@
 """
 Tests for Commerce tools utils
 """
+import decimal
 import hashlib
 import unittest
 from unittest.mock import MagicMock
 
 from braze.client import BrazeClient
-from commercetools.platform.models import TransactionState, TransactionType, TypedMoney, MoneyType
+from commercetools.platform.models import MoneyType, TransactionState, TransactionType, TypedMoney
 from django.conf import settings
 from django.test import override_settings
 from django.urls import reverse
@@ -22,8 +23,8 @@ from commerce_coordinator.apps.commercetools.utils import (
     create_retired_fields,
     extract_ct_order_information_for_braze_canvas,
     extract_ct_product_information_for_braze_canvas,
-    get_braze_client,
     find_refund_transaction,
+    get_braze_client,
     has_full_refund_transaction,
     has_refund_transaction,
     send_order_confirmation_email,
@@ -240,10 +241,14 @@ class TestFindRefundTransaction(unittest.TestCase):
                                                                     currency_code='USD',
                                                                     type=MoneyType.CENT_PRECISION,
                                                                     fraction_digits=2))
-        self.assertEqual(find_refund_transaction(payment, 2500), {})
+        self.assertEqual(find_refund_transaction(payment, decimal.Decimal(49.0)), payment.transactions[1].id)
 
     def test_has_no_matching_refund_transaction(self):
-        payment = gen_payment_with_multiple_transactions(TransactionType.CHARGE, 4900)
+        payment = gen_payment_with_multiple_transactions(TransactionType.CHARGE, 4900, TransactionType.REFUND,
+                                                         TypedMoney(cent_amount=4900,
+                                                                    currency_code='USD',
+                                                                    type=MoneyType.CENT_PRECISION,
+                                                                    fraction_digits=2))
         self.assertEqual(find_refund_transaction(payment, 4000), {})
 
 
