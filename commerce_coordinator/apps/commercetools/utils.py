@@ -162,12 +162,11 @@ def has_full_refund_transaction(payment: Payment):
     return False
 
 
-def find_refund_transaction(order: Order, amount: decimal):
+def find_refund_transaction(payment: Payment, amount: decimal):
     """
     Utility to find the refund transaction in a payment
     """
-    pmt = get_edx_successful_stripe_payment(order)
-    for transaction in pmt.transactions:
+    for transaction in payment.transactions:
         if transaction.type == TransactionType.REFUND:
             if decimal.Decimal(typed_money_to_string(transaction.amount, money_as_decimal_string=True)) == amount:
                 return transaction.id

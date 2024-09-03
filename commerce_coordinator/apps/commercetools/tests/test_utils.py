@@ -6,7 +6,7 @@ import unittest
 from unittest.mock import MagicMock
 
 from braze.client import BrazeClient
-from commercetools.platform.models import TransactionState, TransactionType
+from commercetools.platform.models import TransactionState, TransactionType, TypedMoney, MoneyType
 from django.conf import settings
 from django.test import override_settings
 from django.urls import reverse
@@ -23,6 +23,7 @@ from commerce_coordinator.apps.commercetools.utils import (
     extract_ct_order_information_for_braze_canvas,
     extract_ct_product_information_for_braze_canvas,
     get_braze_client,
+    find_refund_transaction,
     has_full_refund_transaction,
     has_refund_transaction,
     send_order_confirmation_email,
@@ -222,6 +223,28 @@ class TestHasFullRefundTransaction(unittest.TestCase):
     def test_has_no_refund_transaction(self):
         payment = gen_payment_with_multiple_transactions(TransactionType.CHARGE, 4900)
         self.assertFalse(has_full_refund_transaction(payment))
+
+
+class TestFindRefundTransaction(unittest.TestCase):
+    """
+    Tests for Find Refund Transaction Utils function
+    """
+
+    def test_has_no_refund_transaction(self):
+        payment = gen_payment_with_multiple_transactions(TransactionType.CHARGE, 4900)
+        self.assertEqual(find_refund_transaction(payment, 4900), {})
+
+    def test_has_matching_refund_transaction(self):
+        payment = gen_payment_with_multiple_transactions(TransactionType.CHARGE, 4900, TransactionType.REFUND,
+                                                         TypedMoney(cent_amount=4900,
+                                                                    currency_code='USD',
+                                                                    type=MoneyType.CENT_PRECISION,
+                                                                    fraction_digits=2))
+        self.assertEqual(find_refund_transaction(payment, 2500), {})
+
+    def test_has_no_matching_refund_transaction(self):
+        payment = gen_payment_with_multiple_transactions(TransactionType.CHARGE, 4900)
+        self.assertEqual(find_refund_transaction(payment, 4000), {})
 
 
 class TestTranslateStripeRefundStatus(unittest.TestCase):

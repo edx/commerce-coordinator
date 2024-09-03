@@ -8,14 +8,17 @@ from commercetools.platform.models import (
     Customer,
     CustomerDraft,
     CustomerPagedQueryResponse,
+    MoneyType,
     Order,
     OrderPagedQueryResponse,
     ReturnInfo,
     ReturnPaymentState,
     ReturnShipmentState,
     TransactionState,
+    TransactionType,
     Type,
-    TypeDraft
+    TypeDraft,
+    TypedMoney
 )
 from django.test import TestCase
 from mock import patch
@@ -33,7 +36,8 @@ from commerce_coordinator.apps.commercetools.tests.conftest import (
     gen_order_history,
     gen_payment,
     gen_retired_customer,
-    gen_return_item
+    gen_return_item,
+    gen_payment_with_multiple_transactions
 )
 from commerce_coordinator.apps.commercetools.tests.sub_messages.test_tasks import CommercetoolsAPIClientMock
 from commerce_coordinator.apps.core.constants import ORDER_HISTORY_PER_SYSTEM_REQ_LIMIT
@@ -485,7 +489,11 @@ class ClientTests(TestCase):
 
         # Mocked expected order recieved after CT SDK call to update the order
         mock_response_order = gen_order("mock_order_id")
-        mock_payment = gen_payment()
+        mock_payment = gen_payment_with_multiple_transactions(TransactionType.CHARGE, 4900, TransactionType.REFUND,
+                                                              TypedMoney(cent_amount=4900,
+                                                                         currency_code='USD',
+                                                                         type=MoneyType.CENT_PRECISION,
+                                                                         fraction_digits=2))
         mock_response_order.version = "3"
         mock_response_return_item = gen_return_item("mock_return_item_id", ReturnPaymentState.REFUNDED)
         mock_response_return_info = ReturnInfo(items=[mock_response_return_item])
@@ -828,7 +836,7 @@ class ClientUpdateReturnTests(TestCase):
             {
                 '__init__': lambda _: None,
                 'get_order_by_id': self.mock.get_order_by_id,
-                'get_customer_by_id': self.mock.get_customer_by_id,
+                # 'get_customer_by_id': self.mock.get_customer_by_id,
                 'get_payment_by_key': self.mock.get_payment_by_key,
                 'create_return_for_order': self.mock.create_return_for_order,
                 'create_return_payment_transaction': self.mock.create_return_payment_transaction
@@ -836,7 +844,7 @@ class ClientUpdateReturnTests(TestCase):
         )
 
     def tearDown(self):
-        self.mock.order_mock.side_effect = None
+        self.mock.payment_mock.side_effect = None
         MonkeyPatch.unmonkey(CommercetoolsAPIClient)
         super().tearDown()
 
@@ -851,10 +859,10 @@ class ClientUpdateReturnTests(TestCase):
             ], {}, "123456"
         )
 
-        def _throw(order_id):
+        def _throw(_payment_id):
             raise mock_error_response
 
-        self.mock.order_mock.side_effect = _throw
+        self.mock.payment_mock.side_effect = _throw
 
         with self.assertRaises(OpenEdxFilterException):
             self.client_set.client.update_return_payment_state_after_successful_refund(

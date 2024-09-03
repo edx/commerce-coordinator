@@ -393,7 +393,6 @@ class CommercetoolsAPIClient:
         try:
             logger.info(f"[CommercetoolsAPIClient] - Updating payment state for return "
                         f"with id {return_line_item_return_id} to '{ReturnPaymentState.REFUNDED}'.")
-
             return_payment_state_action = OrderSetReturnPaymentStateAction(
                 return_item_id=return_line_item_return_id,
                 payment_state=ReturnPaymentState.REFUNDED
@@ -401,11 +400,9 @@ class CommercetoolsAPIClient:
             if not payment_intent_id:
                 payment_intent_id = ''
             logger.info(f'Creating return for order - payment_intent_id: {payment_intent_id}')
-
             payment = self.get_payment_by_key(payment_intent_id)
             logger.info(f"Payment found: {payment}")
-            order = self.get_order_by_id(order_id=order_id)
-            transaction_id = find_refund_transaction(order, amount_in_cents)
+            transaction_id = find_refund_transaction(payment, amount_in_cents)
             update_transaction_id_action = OrderSetReturnItemCustomTypeAction(
                 return_item_id=return_line_item_return_id,
                 type=CTTypeResourceIdentifier(
@@ -429,7 +426,7 @@ class CommercetoolsAPIClient:
                 version=order_version,
                 actions=[return_payment_state_action, update_transaction_id_action]
             )
-            _ = self.base_client.payments.update_by_id(
+            self.base_client.payments.update_by_id(
                 id=payment.id,
                 version=payment.version,
                 actions=[return_transaction_return_item_action]
