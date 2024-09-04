@@ -872,3 +872,28 @@ class ClientUpdateReturnTests(TestCase):
                 payment_intent_id="1",
                 amount_in_cents=10000
             )
+
+    def test_update_return_payment_state_no_payment(self):
+        mock_error_response: CommercetoolsError = CommercetoolsError(
+            "Could not update ReturnPaymentState", [
+                {
+                    "code": "ConcurrentModification",
+                    "detailedErrorMessage": "Object [mock_order_id] has a "
+                                            "different version than expected. Expected: 3 - Actual: 2."
+                },
+            ], {}, "123456"
+        )
+
+        def _throw(_payment_id):
+            raise mock_error_response
+
+        self.mock.payment_mock.side_effect = _throw
+
+        with self.assertRaises(OpenEdxFilterException):
+            self.client_set.client.update_return_payment_state_after_successful_refund(
+                order_id="mock_order_id",
+                order_version="2",
+                return_line_item_return_id="mock_return_item_id",
+                payment_intent_id=None,
+                amount_in_cents=10000
+            )
