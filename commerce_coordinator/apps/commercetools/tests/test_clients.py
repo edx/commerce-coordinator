@@ -8,13 +8,16 @@ from commercetools.platform.models import (
     Customer,
     CustomerDraft,
     CustomerPagedQueryResponse,
+    MoneyType,
     Order,
     OrderPagedQueryResponse,
     ReturnInfo,
     ReturnPaymentState,
     ReturnShipmentState,
     TransactionState,
+    TransactionType,
     Type,
+    TypedMoney,
     TypeDraft
 )
 from django.test import TestCase
@@ -23,17 +26,20 @@ from openedx_filters.exceptions import OpenEdxFilterException
 
 from commerce_coordinator.apps.commercetools.catalog_info.constants import EdXFieldNames, TwoUKeys
 from commerce_coordinator.apps.commercetools.catalog_info.foundational_types import TwoUCustomTypes
-from commerce_coordinator.apps.commercetools.clients import PaginatedResult
+from commerce_coordinator.apps.commercetools.clients import CommercetoolsAPIClient, PaginatedResult
 from commerce_coordinator.apps.commercetools.tests.conftest import (
     APITestingSet,
+    MonkeyPatch,
     gen_example_customer,
     gen_line_item_state,
     gen_order,
     gen_order_history,
     gen_payment,
+    gen_payment_with_multiple_transactions,
     gen_retired_customer,
     gen_return_item
 )
+from commerce_coordinator.apps.commercetools.tests.sub_messages.test_tasks import CommercetoolsAPIClientMock
 from commerce_coordinator.apps.core.constants import ORDER_HISTORY_PER_SYSTEM_REQ_LIMIT
 from commerce_coordinator.apps.core.tests.utils import uuid4_str
 
@@ -483,6 +489,11 @@ class ClientTests(TestCase):
 
         # Mocked expected order recieved after CT SDK call to update the order
         mock_response_order = gen_order("mock_order_id")
+        mock_payment = gen_payment_with_multiple_transactions(TransactionType.CHARGE, 4900, TransactionType.REFUND,
+                                                              TypedMoney(cent_amount=4900,
+                                                                         currency_code='USD',
+                                                                         type=MoneyType.CENT_PRECISION,
+                                                                         fraction_digits=2))
         mock_response_order.version = "3"
         mock_response_return_item = gen_return_item("mock_return_item_id", ReturnPaymentState.REFUNDED)
         mock_response_return_info = ReturnInfo(items=[mock_response_return_item])
@@ -490,47 +501,33 @@ class ClientTests(TestCase):
 
         with requests_mock.Mocker(real_http=True, case_sensitive=False) as mocker:
             mocker.post(
-                f"{base_url}orders/{mock_response_order.id}",
+                f"{base_url}orders/mock_order_id",
                 json=mock_response_order.serialize(),
                 status_code=200
             )
-
+            mocker.post(
+                f"{base_url}payments/{mock_payment.id}",
+                json=mock_payment.serialize(),
+                status_code=200
+            )
+            mocker.get(
+                f"{base_url}payments/key={mock_payment.id}",
+                json=mock_payment.serialize(),
+                status_code=200
+            )
+            mocker.get(
+                f"{base_url}orders/mock_order_id",
+                json=mock_response_order.serialize(),
+                status_code=200
+            )
             result = self.client_set.client.update_return_payment_state_after_successful_refund(
                 mock_order.id,
                 mock_order.version,
-                mock_response_return_item.line_item_id
+                mock_response_return_item.line_item_id,
+                mock_payment.id,
+                10000
             )
-
             self.assertEqual(result.return_info[1].items[0].payment_state, ReturnPaymentState.REFUNDED)
-
-    def test_update_return_payment_state_exception(self):
-        base_url = self.client_set.get_base_url_from_client()
-        mock_error_response: CommercetoolsError = {
-            "message": "Could not update ReturnPaymentState",
-            "errors": [
-                {
-                    "code": "ConcurrentModification",
-                    "message": "Object [mock_order_id] has a "
-                               "different version than expected. Expected: 3 - Actual: 2."
-                },
-            ],
-            "response": {},
-            "correlation_id": "123456"
-        }
-
-        with requests_mock.Mocker(real_http=True, case_sensitive=False) as mocker:
-            mocker.post(
-                f"{base_url}orders/mock_order_id",
-                json=mock_error_response,
-                status_code=409
-            )
-
-            with self.assertRaises(OpenEdxFilterException):
-                self.client_set.client.update_return_payment_state_after_successful_refund(
-                    order_id="mock_order_id",
-                    order_version="2",
-                    return_line_item_return_id="mock_return_item_id"
-                )
 
     def test_create_refund_transaction(self):
         base_url = self.client_set.get_base_url_from_client()
@@ -823,3 +820,80 @@ class PaginatedResultsTest(TestCase):
 
         self.assertEqual(paginated.has_more(), False)
         self.assertEqual(paginated.next_offset(), 10)
+
+
+class ClientUpdateReturnTests(TestCase):
+    """Tests for the update_return_payment_state_after_successful_refund method"""
+    client_set: APITestingSet
+
+    def setUp(self):
+        super().setUp()
+        self.mock = CommercetoolsAPIClientMock()
+        self.client_set = APITestingSet.new_instance()
+
+        MonkeyPatch.monkey(
+            CommercetoolsAPIClient,
+            {
+                '__init__': lambda _: None,
+                'get_order_by_id': self.mock.get_order_by_id,
+                # 'get_customer_by_id': self.mock.get_customer_by_id,
+                'get_payment_by_key': self.mock.get_payment_by_key,
+                'create_return_for_order': self.mock.create_return_for_order,
+                'create_return_payment_transaction': self.mock.create_return_payment_transaction
+            }
+        )
+
+    def tearDown(self):
+        self.mock.payment_mock.side_effect = None
+        MonkeyPatch.unmonkey(CommercetoolsAPIClient)
+        super().tearDown()
+
+    def test_update_return_payment_state_exception(self):
+        mock_error_response: CommercetoolsError = CommercetoolsError(
+            "Could not update ReturnPaymentState", [
+                {
+                    "code": "ConcurrentModification",
+                    "detailedErrorMessage": "Object [mock_order_id] has a "
+                                            "different version than expected. Expected: 3 - Actual: 2."
+                },
+            ], {}, "123456"
+        )
+
+        def _throw(_payment_id):
+            raise mock_error_response
+
+        self.mock.payment_mock.side_effect = _throw
+
+        with self.assertRaises(OpenEdxFilterException):
+            self.client_set.client.update_return_payment_state_after_successful_refund(
+                order_id="mock_order_id",
+                order_version="2",
+                return_line_item_return_id="mock_return_item_id",
+                payment_intent_id="1",
+                amount_in_cents=10000
+            )
+
+    def test_update_return_payment_state_no_payment(self):
+        mock_error_response: CommercetoolsError = CommercetoolsError(
+            "Could not update ReturnPaymentState", [
+                {
+                    "code": "ConcurrentModification",
+                    "detailedErrorMessage": "Object [mock_order_id] has a "
+                                            "different version than expected. Expected: 3 - Actual: 2."
+                },
+            ], {}, "123456"
+        )
+
+        def _throw(_payment_id):
+            raise mock_error_response
+
+        self.mock.payment_mock.side_effect = _throw
+
+        with self.assertRaises(OpenEdxFilterException):
+            self.client_set.client.update_return_payment_state_after_successful_refund(
+                order_id="mock_order_id",
+                order_version="2",
+                return_line_item_return_id="mock_return_item_id",
+                payment_intent_id=None,
+                amount_in_cents=10000
+            )

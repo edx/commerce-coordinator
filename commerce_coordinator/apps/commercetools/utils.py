@@ -2,6 +2,7 @@
 Helpers for the commercetools app.
 """
 
+import decimal
 import hashlib
 import logging
 
@@ -10,6 +11,8 @@ from commercetools import CommercetoolsError
 from commercetools.platform.models import Customer, LineItem, Order, Payment, TransactionState, TransactionType
 from django.conf import settings
 from django.urls import reverse
+
+from commerce_coordinator.apps.commercetools.catalog_info.utils import typed_money_to_string
 
 logger = logging.getLogger(__name__)
 
@@ -157,6 +160,17 @@ def has_full_refund_transaction(payment: Payment):
         if transaction.type == TransactionType.REFUND and transaction.amount == charge_amount:  # pragma no cover
             return True
     return False
+
+
+def find_refund_transaction(payment: Payment, amount: decimal):
+    """
+    Utility to find the refund transaction in a payment
+    """
+    for transaction in payment.transactions:
+        if transaction.type == TransactionType.REFUND:
+            if decimal.Decimal(typed_money_to_string(transaction.amount, money_as_decimal_string=True)) == amount:
+                return transaction.id
+    return {}
 
 
 def translate_stripe_refund_status_to_transaction_status(stripe_refund_status: str):
