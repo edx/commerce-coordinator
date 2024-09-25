@@ -80,8 +80,39 @@ Local
   # You should see JSON output indicating that two receivers were called, one successful, and one with exception/traceback information.
   # In the shell where the server is running you should see log output indicating that two test receivers were called with the sender argument "Something".
 
+Setup with Commercetools
+=============================================
 
-Every time you develop something in this repo
+  1. Open the **`commerce_coordinator/settings/base.py`** file and update the `COMMERCETOOLS_CONFIG`.  
+     The values can be found at:
+     https://twou.frontastic.io/configuraaton?environment=development&project=checkout&locale=en_US
+
+  2. Update `COMMERCETOOLS_FRONTEND_URL` to:
+     `'http://localhost:3000/en/add-to-cart/'`
+
+  3. Go to the following URL to update the **waffle flags**:
+     http://localhost:8140/admin/waffle/flag/
+   
+     Add the `transition_to_commercetools.redirect_to_commercetools_checkout` flag with the **Everyone** attribute set to **Yes**.
+
+  4. Similarly, go to:
+     http://localhost:18000/admin/waffle/flag/
+
+     Add the `commerce.transition_to_coordinator.checkout` flag with the **Everyone** attribute set to **Yes**.
+
+
+Setup for running Refunds flow (**For refunds flow only**)
+=============================================
+
+Add the following inside your `'edx-platform/lms/envs/private.py'` file
+
+.. code-block:: console
+
+  COMMERCE_COORDINATOR_REFUND_SOURCE_SYSTEMS = ('commercetools',)
+  COMMERCE_COORDINATOR_URL_ROOT = 'http://host.docker.internal:8140'
+
+
+Every toou develop something in this repo
 =============================================
 .. code-block:: console
 
@@ -117,6 +148,9 @@ Local testing with Celery
 
   # Start redis in devstack from your local devstack directory
   make dev.up.redis
+
+  # Update the CELERY_BROKER_URL flag
+  Update CELERY_BROKER_URL to "redis://:password@localhost:6379/0" inside `commerce_coordinator/settings/local.py`
 
   # Start celery from the commerce-coordinator venv; this management command will auto-reload celery when python files are changed
   python manage.py celery
