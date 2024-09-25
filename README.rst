@@ -117,7 +117,7 @@ Setup for running Refunds flow (**For refunds flow only**)
   Add the `commerce.transition_to_coordinator.refunds` flag with the **Everyone** attribute set to **Yes**.
 
 
-Every toou develop something in this repo
+Every time you develop something in this repo
 =============================================
 .. code-block:: console
 
