@@ -104,12 +104,17 @@ Setup with Commercetools
 Setup for running Refunds flow (**For refunds flow only**)
 =============================================
 
-Add the following inside your `'edx-platform/lms/envs/private.py'` file
+  Add the following inside your `'edx-platform/lms/envs/private.py'` file
 
-.. code-block:: console
+  .. code-block:: console
 
-  COMMERCE_COORDINATOR_REFUND_SOURCE_SYSTEMS = ('commercetools',)
-  COMMERCE_COORDINATOR_URL_ROOT = 'http://host.docker.internal:8140'
+    COMMERCE_COORDINATOR_REFUND_SOURCE_SYSTEMS = ('commercetools',)
+    COMMERCE_COORDINATOR_URL_ROOT = 'http://host.docker.internal:8140'
+
+  Go to the following URL to update the **waffle flags**:
+  http://localhost:18000/admin/waffle/flag/
+
+  Add the `commerce.transition_to_coordinator.refunds` flag with the **Everyone** attribute set to **Yes**.
 
 
 Every toou develop something in this repo
