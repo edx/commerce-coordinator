@@ -81,7 +81,7 @@ Local
   # In the shell where the server is running you should see log output indicating that two test receivers were called with the sender argument "Something".
 
 Setup with Commercetools
-=============================================
+=========================
 
   1. Open the **`commerce_coordinator/settings/base.py`** file and update the `COMMERCETOOLS_CONFIG`.
      The values can be found at:
@@ -102,7 +102,7 @@ Setup with Commercetools
 
 
 Setup for running Refunds flow (**For refunds flow only**)
-=============================================
+==========================================================
 
   Add the following inside your `'edx-platform/lms/envs/private.py'` file
 
