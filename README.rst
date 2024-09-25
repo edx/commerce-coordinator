@@ -83,7 +83,7 @@ Local
 Setup with Commercetools
 =============================================
 
-  1. Open the **`commerce_coordinator/settings/base.py`** file and update the `COMMERCETOOLS_CONFIG`.  
+  1. Open the **`commerce_coordinator/settings/base.py`** file and update the `COMMERCETOOLS_CONFIG`.
      The values can be found at:
      https://twou.frontastic.io/configuraaton?environment=development&project=checkout&locale=en_US
 
@@ -92,7 +92,7 @@ Setup with Commercetools
 
   3. Go to the following URL to update the **waffle flags**:
      http://localhost:8140/admin/waffle/flag/
-   
+
      Add the `transition_to_commercetools.redirect_to_commercetools_checkout` flag with the **Everyone** attribute set to **Yes**.
 
   4. Similarly, go to:
