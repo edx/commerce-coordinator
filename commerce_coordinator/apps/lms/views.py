@@ -102,7 +102,7 @@ class PaymentPageRedirectView(APIView):
             url (str): A URL asa Python String
         """
 
-        query_params = list(params)
+        query_params = params
         query_params = urlencode(query_params, doseq=True)
         url = url + '?' + query_params if query_params else url
 
