@@ -73,7 +73,7 @@ class PaymentPageRedirectView(APIView):
             response (django.http.HttpResponseRedirect):
         """
 
-        get_items = list(self.request.GET.items())
+        get_items = list(self.request.GET.lists())
         redirect_url = None
         if "bundle" in dict(get_items):
             ecom_url = urljoin(
@@ -103,7 +103,7 @@ class PaymentPageRedirectView(APIView):
         """
 
         query_params = list(params)
-        query_params = urlencode(query_params, True)
+        query_params = urlencode(query_params, doseq=True)
         url = url + '?' + query_params if query_params else url
 
         return url
