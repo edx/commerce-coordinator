@@ -103,7 +103,7 @@ Local setup with Commercetools
 
      - COMMERCE_COORDINATOR_REFUND_SOURCE_SYSTEMS = ('commercetools',)
      - COMMERCE_COORDINATOR_URL_ROOT = 'http://localhost:8140'
-  
+
   4. For refunds flow, update this value and revert back after running refunds flow
 
      - COMMERCE_COORDINATOR_URL_ROOT = 'http://host.docker.internal:8140'
