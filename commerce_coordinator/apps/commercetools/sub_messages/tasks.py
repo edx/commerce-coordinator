@@ -26,8 +26,7 @@ from commerce_coordinator.apps.commercetools.signals import fulfill_order_placed
 from commerce_coordinator.apps.commercetools.utils import (
     extract_ct_order_information_for_braze_canvas,
     extract_ct_product_information_for_braze_canvas,
-    send_order_confirmation_email,
-    send_refund_notification
+    send_order_confirmation_email
 )
 from commerce_coordinator.apps.core.constants import ISO_8601_FORMAT
 from commerce_coordinator.apps.core.memcache import safe_key
@@ -280,9 +279,8 @@ def fulfill_order_returned_signal_task(
 
         if 'refund_response' in result and result['refund_response']:
             if result['refund_response'] == 'charge_already_refunded':
-                logger.info(f'[CT-{tag}] payment intent {payment_intent_id} already has refund transaction, '
-                            f'sending Zendesk email, message id: {message_id}')
-                send_refund_notification(customer, order_id)
+                logger.info(f'[CT-{tag}] payment intent {payment_intent_id} already has refunded transaction, '
+                            f'sending Slack notification, message id: {message_id}')
             else:
                 logger.debug(f'[CT-{tag}] payment intent {payment_intent_id} refunded. message id: {message_id}')
                 segment_event_properties = _prepare_segment_event_properties(order, return_line_item_return_id)
@@ -319,8 +317,8 @@ def fulfill_order_returned_signal_task(
                         properties=segment_event_properties
                     )
         else:  # pragma no cover
-            logger.info(f'[CT-{tag}] payment intent {payment_intent_id} not refunded. message id: {message_id}')
-            return send_refund_notification(customer, order_id)
+            logger.info(f'[CT-{tag}] payment intent {payment_intent_id} not refunded, '
+                        f'sending Slack notification, message id: {message_id}')
 
     logger.info(f'[CT-{tag}] Finished return for order: {order_id}, line item: {return_line_item_return_id}, '
                 f'message id: {message_id}')

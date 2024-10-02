@@ -214,6 +214,7 @@ class CreateReturnForCommercetoolsOrder(PipelineStep):
         try:
             ct_api_client = CommercetoolsAPIClient()
             order = ct_api_client.get_order_by_id(order_id=order_id)
+
             if not is_commercetools_line_item_already_refunded(order, order_line_item_id):
                 returned_order = ct_api_client.create_return_for_order(
                     order_id=order.id,
@@ -273,7 +274,9 @@ class UpdateCommercetoolsOrderReturnPaymentStatus(PipelineStep):
         updated_order = ct_api_client.update_return_payment_state_after_successful_refund(
             order_id=order.id,
             order_version=order.version,
-            return_line_item_return_id=return_line_item_return_id
+            return_line_item_return_id=return_line_item_return_id,
+            payment_intent_id=kwargs['payment_intent_id'],
+            amount_in_cents=kwargs['amount_in_cents']
         )
 
         return {

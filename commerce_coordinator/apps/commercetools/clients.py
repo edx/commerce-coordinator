@@ -3,6 +3,7 @@ API clients for commercetools app.
 """
 
 import datetime
+import decimal
 import logging
 from typing import Generic, List, Optional, Tuple, TypeVar, Union
 
@@ -19,11 +20,12 @@ from commercetools.platform.models import Money as CTMoney
 from commercetools.platform.models import Order as CTOrder
 from commercetools.platform.models import (
     OrderAddReturnInfoAction,
+    OrderSetReturnItemCustomTypeAction,
     OrderSetReturnPaymentStateAction,
     OrderTransitionLineItemStateAction
 )
 from commercetools.platform.models import Payment as CTPayment
-from commercetools.platform.models import PaymentAddTransactionAction
+from commercetools.platform.models import PaymentAddTransactionAction, PaymentSetTransactionCustomTypeAction
 from commercetools.platform.models import ProductVariant as CTProductVariant
 from commercetools.platform.models import (
     ReturnItemDraft,
@@ -43,6 +45,7 @@ from openedx_filters.exceptions import OpenEdxFilterException
 from commerce_coordinator.apps.commercetools.catalog_info.constants import DEFAULT_ORDER_EXPANSION, EdXFieldNames
 from commerce_coordinator.apps.commercetools.catalog_info.foundational_types import TwoUCustomTypes
 from commerce_coordinator.apps.commercetools.utils import (
+    find_refund_transaction,
     handle_commercetools_error,
     translate_stripe_refund_status_to_transaction_status
 )
@@ -372,7 +375,9 @@ class CommercetoolsAPIClient:
 
     def update_return_payment_state_after_successful_refund(self, order_id: str,
                                                             order_version: int,
-                                                            return_line_item_return_id: str) -> Union[CTOrder, None]:
+                                                            return_line_item_return_id: str,
+                                                            payment_intent_id: str,
+                                                            amount_in_cents: decimal) -> Union[CTOrder, None]:
         """
         Update paymentState on the LineItemReturnItem attached to the order.
         Updated by the Order ID (UUID)
@@ -388,17 +393,45 @@ class CommercetoolsAPIClient:
         try:
             logger.info(f"[CommercetoolsAPIClient] - Updating payment state for return "
                         f"with id {return_line_item_return_id} to '{ReturnPaymentState.REFUNDED}'.")
-
             return_payment_state_action = OrderSetReturnPaymentStateAction(
                 return_item_id=return_line_item_return_id,
                 payment_state=ReturnPaymentState.REFUNDED
             )
+            if not payment_intent_id:
+                payment_intent_id = ''
+            logger.info(f'Creating return for order - payment_intent_id: {payment_intent_id}')
+            payment = self.get_payment_by_key(payment_intent_id)
+            logger.info(f"Payment found: {payment}")
+            transaction_id = find_refund_transaction(payment, amount_in_cents)
+            update_transaction_id_action = OrderSetReturnItemCustomTypeAction(
+                return_item_id=return_line_item_return_id,
+                type=CTTypeResourceIdentifier(
+                    key='returnItemCustomType',
+                ),
+                fields=CTFieldContainer({
+                    'transactionId': transaction_id
+                })
+            )
+            return_transaction_return_item_action = PaymentSetTransactionCustomTypeAction(
+                transaction_id=transaction_id,
+                type=CTTypeResourceIdentifier(key='transactionCustomType'),
+                fields=CTFieldContainer({
+                    'returnItemId': return_line_item_return_id
+                })
+            )
+            logger.info(f"Update return payment state after successful refund - payment_intent_id: {payment_intent_id}")
 
             updated_order = self.base_client.orders.update_by_id(
                 id=order_id,
                 version=order_version,
-                actions=[return_payment_state_action]
+                actions=[return_payment_state_action, update_transaction_id_action]
             )
+            self.base_client.payments.update_by_id(
+                id=payment.id,
+                version=payment.version,
+                actions=[return_transaction_return_item_action]
+            )
+            logger.info("Updated transaction with return item id")
             return updated_order
         except CommercetoolsError as err:
             handle_commercetools_error(err, f"Unable to update ReturnPaymentState of order {order_id}")

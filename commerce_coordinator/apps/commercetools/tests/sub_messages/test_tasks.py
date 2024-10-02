@@ -317,14 +317,12 @@ class OrderReturnedMessageSignalTaskTests(TestCase):
         mock_values.customer_mock.assert_called_once_with(mock_values.customer_id)
         _stripe_api_mock.return_value.refund_payment_intent.assert_called_once()
 
-    @patch('commerce_coordinator.apps.commercetools.sub_messages.tasks.send_refund_notification')
     @patch('commerce_coordinator.apps.commercetools.sub_messages.tasks.get_edx_payment_intent_id')
     @patch('commerce_coordinator.apps.commercetools.sub_messages.tasks.OrderRefundRequested.run_filter')
     def test_refund_already_charged(
         self,
         _return_filter_mock: MagicMock,
         _mock_payment_intent: MagicMock,
-        _mock_zendesk: MagicMock
     ):
         """
         Check calling uut with mock_parameters yields call to client with
@@ -336,4 +334,3 @@ class OrderReturnedMessageSignalTaskTests(TestCase):
         _mock_payment_intent.return_value = 'mock_payment_intent_id'
 
         self.get_uut()(*self.unpack_for_uut(self.mock.example_payload))
-        _mock_zendesk.assert_called_once()
