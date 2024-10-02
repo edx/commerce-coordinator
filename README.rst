@@ -81,7 +81,7 @@ Local
   # In the shell where the server is running you should see log output indicating that two test receivers were called with the sender argument "Something".
 
 Local setup with Commercetools
-=========================
+===============================
 
   1. Update the following inside **`commerce_coordinator/settings/base.py`** file:
       1. `COMMERCETOOLS_CONFIG`,
