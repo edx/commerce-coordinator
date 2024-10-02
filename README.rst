@@ -83,38 +83,30 @@ Local
 Local setup with Commercetools
 =========================
 
-  1. Open the **`commerce_coordinator/settings/base.py`** file and update the `COMMERCETOOLS_CONFIG`.
-     The values can be found at:
-     https://twou.frontastic.io/configuraaton?environment=development&project=checkout&locale=en_US
+  1. Update the following inside **`commerce_coordinator/settings/base.py`** file:
+      1. `COMMERCETOOLS_CONFIG`,
+         The values can be found at:
+         https://twou.frontastic.io/configuraaton?environment=development&project=checkout&locale=en_US
 
-  2. Update `COMMERCETOOLS_FRONTEND_URL` to:
-     `'http://localhost:3000/en/add-to-cart/'`
+      2. `COMMERCETOOLS_FRONTEND_URL` = `'http://localhost:3000/en/add-to-cart/'`
 
-  3. Go to the following URL to update the **waffle flags**:
-     http://localhost:8140/admin/waffle/flag/
+  2. Update the following **waffle flags**:
+      1. Go to http://localhost:8140/admin/waffle/flag/ and add these flags
 
-     Add the `transition_to_commercetools.redirect_to_commercetools_checkout` flag with the **Everyone** attribute set to **Yes**.
+         - `transition_to_commercetools.redirect_to_commercetools_checkout` flag with the **Everyone** attribute set to **Yes**.
+      2. Go to http://localhost:18000/admin/waffle/flag/ and add these flags
 
-  4. Similarly, go to:
-     http://localhost:18000/admin/waffle/flag/
+         - `commerce.transition_to_coordinator.checkout` flag with the **Everyone** attribute set to **Yes**
+         - `commerce.transition_to_coordinator.refunds` flag with the **Everyone** attribute set to **Yes**
 
-     Add the `commerce.transition_to_coordinator.checkout` flag with the **Everyone** attribute set to **Yes**.
+  3. Update the following inside your `'edx-platform/lms/envs/private.py'` file:
 
+     - COMMERCE_COORDINATOR_REFUND_SOURCE_SYSTEMS = ('commercetools',)
+     - COMMERCE_COORDINATOR_URL_ROOT = 'http://localhost:8140'
+  
+  4. For refunds flow, update this value and revert back after running refunds flow
 
-Local setup for running Refunds flow (**For refunds flow only**)
-==========================================================
-
-  Add the following inside your `'edx-platform/lms/envs/private.py'` file
-
-  .. code-block:: console
-
-    COMMERCE_COORDINATOR_REFUND_SOURCE_SYSTEMS = ('commercetools',)
-    COMMERCE_COORDINATOR_URL_ROOT = 'http://host.docker.internal:8140'
-
-  Go to the following URL to update the **waffle flags**:
-  http://localhost:18000/admin/waffle/flag/
-
-  Add the `commerce.transition_to_coordinator.refunds` flag with the **Everyone** attribute set to **Yes**.
+     - COMMERCE_COORDINATOR_URL_ROOT = 'http://host.docker.internal:8140'
 
 
 Every time you develop something in this repo
