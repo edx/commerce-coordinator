@@ -80,7 +80,7 @@ Local
   # You should see JSON output indicating that two receivers were called, one successful, and one with exception/traceback information.
   # In the shell where the server is running you should see log output indicating that two test receivers were called with the sender argument "Something".
 
-Setup with Commercetools
+Local setup with Commercetools
 =========================
 
   1. Open the **`commerce_coordinator/settings/base.py`** file and update the `COMMERCETOOLS_CONFIG`.
@@ -101,7 +101,7 @@ Setup with Commercetools
      Add the `commerce.transition_to_coordinator.checkout` flag with the **Everyone** attribute set to **Yes**.
 
 
-Setup for running Refunds flow (**For refunds flow only**)
+Local setup for running Refunds flow (**For refunds flow only**)
 ==========================================================
 
   Add the following inside your `'edx-platform/lms/envs/private.py'` file
