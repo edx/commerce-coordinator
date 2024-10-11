@@ -15,6 +15,24 @@ class TwoUKeys:
     SUCCESS_FULFILMENT_STATE = '2u-fulfillment-success-state'
     FAILURE_FULFILMENT_STATE = '2u-fulfillment-failure-state'
 
+    # Payment Custom Type Keys for PayPal
+    PAYPAL_PAYMENT_TYPE = 'paypal-payment-type'
+
+    # Payment Custom Fields Keys for PayPal
+    PAYPAL_ORDER_ID_FIELD_KEY = 'PayPalOrderId'
+    PAYPAL_CLIENT_TOKEN_REQUEST_FIELD_KEY = 'getClientTokenRequest'
+    PAYPAL_CLIENT_TOKEN_RESPONSE_FIELD_KEY = 'getClientTokenResponse'
+    PAYPAL_CREATE_ORDER_REQUEST_FIELD_KEY = 'createPayPalOrderRequest'
+    PAYPAL_CREATE_ORDER_RESPONSE_FIELD_KEY = 'createPayPalOrderResponse'
+    PAYPAL_CAPTURE_ORDER_REQUEST_FIELD_KEY = 'capturePayPalOrderRequest'
+    PAYPAL_CAPTURE_ORDER_RESPONSE_FIELD_KEY = 'capturePayPalOrderResponse'
+    PAYPAL_UPDATE_ORDER_REQUEST_FIELD_KEY = 'updatePayPalOrderRequest'
+    PAYPAL_UPDATE_ORDER_RESPONSE_FIELD_KEY = 'updatePayPalOrderResponse'
+
+    # Custom Objects keys
+    PAYPAL_CONNECTOR_CONTAINER = 'paypal-commercetools-connector'
+    PAYPAL_CONNECTOR_SETTINGS_KEY = 'settings'
+
 
 class EdXFieldNames:
     """edX Specific field names for use in Commercetools"""
