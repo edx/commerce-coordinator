@@ -218,7 +218,8 @@ class TwoUCustomObjects:
             "payLaterMessageTextColor": "black",  # "black" | "white" | "monochrome" | "grayscale"
             "payLaterMessageTextSize": "10",  # "10" | "11" | "12" | "13" | "14" | "15" | "16"
             "payLaterMessageTextAlign": "left",  # "left" | "center" | "right"
-            "payLaterMessageFlexColor": "blue",  # "blue" | "black" | "white" | "white-no-border" | "gray" | "monochrome" | "grayscale"
+            # "blue" | "black" | "white" | "white-no-border" | "gray" | "monochrome" | "grayscale"
+            "payLaterMessageFlexColor": "blue",
             "payLaterMessageFlexRatio": "1x1",  # "1x1" | "1x4" | "8x1" | "20x1"
             "threeDSOption": "",  # "" | "SCA_ALWAYS" | "SCA_WHEN_REQUIRED"
             "payPalIntent": "Capture",  # "Authorize" | "Capture"

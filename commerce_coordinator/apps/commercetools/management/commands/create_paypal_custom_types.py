@@ -22,7 +22,6 @@ class Command(CommercetoolsAPIClientCommand):
         except CommercetoolsError as ex:
             print(f"Error in creating/updating PayPal custom object: {str(ex)}")
 
-
         try:
             ret = self.ct_api_client.base_client.types.get_by_key(type_key)
             print(f"Payment custom type already exists: {json.dumps(ret.serialize())}")
