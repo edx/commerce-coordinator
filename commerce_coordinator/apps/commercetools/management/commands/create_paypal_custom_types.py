@@ -2,7 +2,7 @@ import json
 
 from commercetools import CommercetoolsError
 
-from commerce_coordinator.apps.commercetools.catalog_info.foundational_types import TwoUCustomTypes, TwoUCustomObjects
+from commerce_coordinator.apps.commercetools.catalog_info.foundational_types import TwoUCustomObjects, TwoUCustomTypes
 from commerce_coordinator.apps.commercetools.management.commands._ct_api_client_command import (
     CommercetoolsAPIClientCommand
 )
