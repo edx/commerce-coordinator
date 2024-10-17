@@ -58,6 +58,12 @@ class PaymentPageRedirectView(APIView):
         logger.debug(f'{self.get.__qualname__} headers: {request.headers}.')
 
         try:
+            user = request.user
+            user.add_lms_user_id("PaymentPageRedirectView GET method")
+            logger.info(
+                f"Received request to redirect user having lms_user_id: {user.lms_user_id} to checkout"
+                f" with query params: {list(self.request.GET.lists())}"
+            )
             return self._redirect_response_payment(request)
         except OpenEdxFilterException as e:
             logger.exception(f"Something went wrong! Exception raised in {self.get.__name__} with error {repr(e)}")
