@@ -4,11 +4,11 @@ LMS Celery tasks
 
 from celery import shared_task
 from celery.utils.log import get_task_logger
+from django.contrib.auth import get_user_model
 from requests import RequestException
 
 from commerce_coordinator.apps.commercetools.catalog_info.constants import TwoUKeys
 from commerce_coordinator.apps.commercetools.clients import CommercetoolsAPIClient
-from django.contrib.auth import get_user_model
 from commerce_coordinator.apps.lms.clients import LMSAPIClient
 
 # Use the special Celery logger for our tasks

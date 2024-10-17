@@ -74,7 +74,7 @@ class UserOrdersView(APIView):
 
     def get(self, request):
         """Return paginated response of user's order history."""
-        
+
         user = request.user
         user.add_lms_user_id("UserOrdersView GET method")
         # build parameters

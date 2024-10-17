@@ -40,7 +40,7 @@ class User(AbstractUser):
 
     def __str__(self):
         return str(self.get_full_name())
-    
+
     def add_lms_user_id(self, called_from):
         """
         If this user does not already have an LMS user id, look for the id in social auth. If the id can be found,
@@ -92,4 +92,3 @@ class User(AbstractUser):
         except Exception:  # pylint: disable=broad-except
             logger.warning('Exception retrieving lms_user_id from social_auth for user %s.', self.id, exc_info=True)
         return None, None
-
