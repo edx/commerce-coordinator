@@ -39,6 +39,8 @@ class RedirectReceiptView(APIView):
     def get(self, request):
         """Get the order history for the authenticated user."""
 
+        user = request.user
+        user.add_lms_user_id("RedirectReceiptView GET method")
         order_number = request.query_params.get('order_number', None)
 
         if not order_number:
@@ -73,6 +75,8 @@ class UserOrdersView(APIView):
     def get(self, request):
         """Return paginated response of user's order history."""
 
+        user = request.user
+        user.add_lms_user_id("UserOrdersView GET method")
         # build parameters
         params = {
             'username': request.user.username,
