@@ -16,6 +16,19 @@ class TwoUKeys:
     FAILURE_FULFILMENT_STATE = '2u-fulfillment-failure-state'
 
 
+    # Return Item Types
+    RETURN_ITEM_CUSTOM_TYPE = 'returnItemCustomType'
+
+    # Return Item Custom Fields
+    TRANSACTION_ID = 'transactionId'
+
+    # Transaction Types
+    TRANSACTION_CUSTOM_TYPE = 'transactionCustomType'
+
+    # Transaction Custom Fields
+    RETURN_ITEM_ID = 'returnItemId'
+
+
 class EdXFieldNames:
     """edX Specific field names for use in Commercetools"""
 
