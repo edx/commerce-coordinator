@@ -65,13 +65,7 @@ class User(AbstractUser):
                 )
                 logger.info(log_message)
             else:
-                log_message = (
-                    'No lms_user_id found in social auth with id %s '
-                    'for user %s. Called from %s',
-                    social_auth_id,
-                    self.id,
-                    called_from
-                )
+                log_message = f'No lms_user_id found in social auth for user {self.id}. Called from {called_from}'
                 logger.warning(log_message)
 
     def _get_lms_user_id_from_social_auth(self):
