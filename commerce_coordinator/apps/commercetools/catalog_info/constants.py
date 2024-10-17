@@ -15,7 +15,6 @@ class TwoUKeys:
     SUCCESS_FULFILMENT_STATE = '2u-fulfillment-success-state'
     FAILURE_FULFILMENT_STATE = '2u-fulfillment-failure-state'
 
-
     # Return Item Types
     RETURN_ITEM_CUSTOM_TYPE = 'returnItemCustomType'
 

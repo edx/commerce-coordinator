@@ -6,6 +6,7 @@ from commerce_coordinator.apps.commercetools.management.commands._ct_api_client_
     CommercetoolsAPIClientCommand
 )
 
+
 class Command(CommercetoolsAPIClientCommand):
     help = 'Create a custom type for transactions with field returnItemId'
 
