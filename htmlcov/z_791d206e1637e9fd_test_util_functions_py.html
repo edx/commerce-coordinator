@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
-    <title>Coverage for commerce_coordinator/apps/rollout/tests/test_util_functions.py: 79%</title>
+    <title>Coverage for commerce_coordinator/apps/rollout/tests/test_util_functions.py: 100%</title>
     <link rel="icon" sizes="32x32" href="favicon_32_cb_58284776.png">
     <link rel="stylesheet" href="style_cb_8e611ae1.css" type="text/css">
     <script src="coverage_html_cb_6fb7b396.js" defer></script>
@@ -12,7 +12,7 @@
     <div class="content">
         <h1>
             <span class="text">Coverage for </span><b>commerce_coordinator/apps/rollout/tests/test_util_functions.py</b>:
-            <span class="pc_cov">79%</span>
+            <span class="pc_cov">100%</span>
         </h1>
         <aside id="help_panel_wrapper">
             <input id="help_panel_state" type="checkbox">
@@ -59,15 +59,15 @@
             <button type="button" class="run button_toggle_run" value="run" data-shortcut="r" title="Toggle lines run">23<span class="text"> run</span></button>
             <button type="button" class="mis show_mis button_toggle_mis" value="mis" data-shortcut="m" title="Toggle lines missing">0<span class="text"> missing</span></button>
             <button type="button" class="exc show_exc button_toggle_exc" value="exc" data-shortcut="x" title="Toggle lines excluded">0<span class="text"> excluded</span></button>
-            <button type="button" class="par run show_par button_toggle_par" value="par" data-shortcut="p" title="Toggle lines partially run">9<span class="text"> partial</span></button>
+            <button type="button" class="par run show_par button_toggle_par" value="par" data-shortcut="p" title="Toggle lines partially run">0<span class="text"> partial</span></button>
         </h2>
         <p class="text">
             <a id="prevFileLink" class="nav" href="z_adbd8d6d7fb174e3_pipeline_py.html">&#xab; prev</a> &nbsp; &nbsp;
             <a id="indexLink" class="nav" href="index.html">&Hat; index</a> &nbsp; &nbsp;
             <a id="nextFileLink" class="nav" href="z_adbd8d6d7fb174e3_utils_py.html">&#xbb; next</a>
             &nbsp; &nbsp; &nbsp;
-            <a class="nav" href="https://coverage.readthedocs.io/en/7.6.1">coverage.py v7.6.1</a>,
-            created at 2024-10-02 11:46 +0000
+            <a class="nav" href="https://coverage.readthedocs.io/en/7.6.3">coverage.py v7.6.3</a>,
+            created at 2024-10-17 14:11 +0000
         </p>
         <aside class="hidden">
             <button type="button" class="button_next_chunk" data-shortcut="j"></button>
@@ -98,7 +98,7 @@
     <p class="pln"><span class="n"><a id="t14" href="#t14">14</a></span><span class="t">&nbsp;</span><span class="r"></span></p>
     <p class="run"><span class="n"><a id="t15" href="#t15">15</a></span><span class="t"><span class="op">@</span><span class="nam">ddt</span><span class="op">.</span><span class="nam">ddt</span>&nbsp;</span><span class="r"></span></p>
     <p class="run"><span class="n"><a id="t16" href="#t16">16</a></span><span class="t"><span class="key">class</span> <span class="nam">TestUtilityFunctions</span><span class="op">(</span><span class="nam">TestCase</span><span class="op">)</span><span class="op">:</span>&nbsp;</span><span class="r"></span></p>
-    <p class="par run show_par"><span class="n"><a id="t17" href="#t17">17</a></span><span class="t">    <span class="op">@</span><span class="nam">ddt</span><span class="op">.</span><span class="nam">data</span><span class="op">(</span>&nbsp;</span><span class="r"><span class="annotate short">17&#x202F;&#x219B;&#x202F;26</span><span class="annotate long">line 17 didn't jump to line 26</span></span></p>
+    <p class="run"><span class="n"><a id="t17" href="#t17">17</a></span><span class="t">    <span class="op">@</span><span class="nam">ddt</span><span class="op">.</span><span class="nam">data</span><span class="op">(</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t18" href="#t18">18</a></span><span class="t">        <span class="nam">name_test</span><span class="op">(</span><span class="str">"test edx order num success"</span><span class="op">,</span> <span class="op">(</span><span class="str">"EDX-100001"</span><span class="op">,</span> <span class="key">True</span><span class="op">)</span><span class="op">)</span><span class="op">,</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t19" href="#t19">19</a></span><span class="t">        <span class="nam">name_test</span><span class="op">(</span><span class="str">"test uuid fails"</span><span class="op">,</span> <span class="op">(</span><span class="str">"03376B46-F737-4D16-8096-D2CEE39758E7"</span><span class="op">,</span> <span class="key">False</span><span class="op">)</span><span class="op">)</span><span class="op">,</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t20" href="#t20">20</a></span><span class="t">        <span class="nam">name_test</span><span class="op">(</span><span class="str">"test invalid"</span><span class="op">,</span> <span class="op">(</span><span class="str">"meow"</span><span class="op">,</span> <span class="key">False</span><span class="op">)</span><span class="op">)</span><span class="op">,</span>&nbsp;</span><span class="r"></span></p>
@@ -106,11 +106,11 @@
     <p class="pln"><span class="n"><a id="t22" href="#t22">22</a></span><span class="t">        <span class="nam">name_test</span><span class="op">(</span><span class="str">"test tolerates blank but fails"</span><span class="op">,</span> <span class="op">(</span><span class="str">""</span><span class="op">,</span> <span class="key">False</span><span class="op">)</span><span class="op">)</span><span class="op">,</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t23" href="#t23">23</a></span><span class="t">        <span class="nam">name_test</span><span class="op">(</span><span class="str">"test tolerates w/s but fails"</span><span class="op">,</span> <span class="op">(</span><span class="str">"  "</span><span class="op">,</span> <span class="key">False</span><span class="op">)</span><span class="op">)</span><span class="op">,</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t24" href="#t24">24</a></span><span class="t">    <span class="op">)</span>&nbsp;</span><span class="r"></span></p>
-    <p class="par run show_par"><span class="n"><a id="t25" href="#t25">25</a></span><span class="t">    <span class="op">@</span><span class="nam">ddt</span><span class="op">.</span><span class="nam">unpack</span>&nbsp;</span><span class="r"><span class="annotate short">25&#x202F;&#x219B;&#x202F;17</span><span class="annotate long">line 25 didn't jump to line 17</span></span></p>
-    <p class="par run show_par"><span class="n"><a id="t26" href="#t26">26</a></span><span class="t">    <span class="key">def</span> <span class="nam">test_is_legacy_order</span><span class="op">(</span><span class="nam">self</span><span class="op">,</span> <span class="nam">value</span><span class="op">,</span> <span class="nam">expectation</span><span class="op">)</span><span class="op">:</span>&nbsp;</span><span class="r"><span class="annotate short">26&#x202F;&#x219B;&#x202F;25</span><span class="annotate long">line 26 didn't jump to line 25</span></span></p>
+    <p class="run"><span class="n"><a id="t25" href="#t25">25</a></span><span class="t">    <span class="op">@</span><span class="nam">ddt</span><span class="op">.</span><span class="nam">unpack</span>&nbsp;</span><span class="r"></span></p>
+    <p class="run"><span class="n"><a id="t26" href="#t26">26</a></span><span class="t">    <span class="key">def</span> <span class="nam">test_is_legacy_order</span><span class="op">(</span><span class="nam">self</span><span class="op">,</span> <span class="nam">value</span><span class="op">,</span> <span class="nam">expectation</span><span class="op">)</span><span class="op">:</span>&nbsp;</span><span class="r"></span></p>
     <p class="run"><span class="n"><a id="t27" href="#t27">27</a></span><span class="t">        <span class="nam">self</span><span class="op">.</span><span class="nam">assertEqual</span><span class="op">(</span><span class="nam">is_legacy_order</span><span class="op">(</span><span class="nam">value</span><span class="op">)</span><span class="op">,</span> <span class="nam">expectation</span><span class="op">)</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t28" href="#t28">28</a></span><span class="t">&nbsp;</span><span class="r"></span></p>
-    <p class="par run show_par"><span class="n"><a id="t29" href="#t29">29</a></span><span class="t">    <span class="op">@</span><span class="nam">ddt</span><span class="op">.</span><span class="nam">data</span><span class="op">(</span>&nbsp;</span><span class="r"><span class="annotate short">29&#x202F;&#x219B;&#x202F;39</span><span class="annotate long">line 29 didn't jump to line 39</span></span></p>
+    <p class="run"><span class="n"><a id="t29" href="#t29">29</a></span><span class="t">    <span class="op">@</span><span class="nam">ddt</span><span class="op">.</span><span class="nam">data</span><span class="op">(</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t30" href="#t30">30</a></span><span class="t">        <span class="nam">name_test</span><span class="op">(</span><span class="str">"test uc uuid passes"</span><span class="op">,</span> <span class="op">(</span><span class="str">"03376B46-F737-4D16-8096-D2CEE39758E7"</span><span class="op">,</span> <span class="key">True</span><span class="op">)</span><span class="op">)</span><span class="op">,</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t31" href="#t31">31</a></span><span class="t">        <span class="nam">name_test</span><span class="op">(</span><span class="str">"test lc uuid passes"</span><span class="op">,</span> <span class="op">(</span><span class="str">"5f274348-2559-4c36-9ad0-6b99c270ea53"</span><span class="op">,</span> <span class="key">True</span><span class="op">)</span><span class="op">)</span><span class="op">,</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t32" href="#t32">32</a></span><span class="t">        <span class="nam">name_test</span><span class="op">(</span><span class="str">"test failure on edx order numbers"</span><span class="op">,</span> <span class="op">(</span><span class="str">"EDX-100001"</span><span class="op">,</span> <span class="key">False</span><span class="op">)</span><span class="op">)</span><span class="op">,</span>&nbsp;</span><span class="r"></span></p>
@@ -119,8 +119,8 @@
     <p class="pln"><span class="n"><a id="t35" href="#t35">35</a></span><span class="t">        <span class="nam">name_test</span><span class="op">(</span><span class="str">"test tolerates blank but fails"</span><span class="op">,</span> <span class="op">(</span><span class="str">""</span><span class="op">,</span> <span class="key">False</span><span class="op">)</span><span class="op">)</span><span class="op">,</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t36" href="#t36">36</a></span><span class="t">        <span class="nam">name_test</span><span class="op">(</span><span class="str">"test tolerates w/s but fails"</span><span class="op">,</span> <span class="op">(</span><span class="str">"  "</span><span class="op">,</span> <span class="key">False</span><span class="op">)</span><span class="op">)</span><span class="op">,</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t37" href="#t37">37</a></span><span class="t">    <span class="op">)</span>&nbsp;</span><span class="r"></span></p>
-    <p class="par run show_par"><span class="n"><a id="t38" href="#t38">38</a></span><span class="t">    <span class="op">@</span><span class="nam">ddt</span><span class="op">.</span><span class="nam">unpack</span>&nbsp;</span><span class="r"><span class="annotate short">38&#x202F;&#x219B;&#x202F;29</span><span class="annotate long">line 38 didn't jump to line 29</span></span></p>
-    <p class="par run show_par"><span class="n"><a id="t39" href="#t39">39</a></span><span class="t">    <span class="key">def</span> <span class="nam">test_is_uuid</span><span class="op">(</span><span class="nam">self</span><span class="op">,</span> <span class="nam">value</span><span class="op">,</span> <span class="nam">expectation</span><span class="op">)</span><span class="op">:</span>&nbsp;</span><span class="r"><span class="annotate short">39&#x202F;&#x219B;&#x202F;38</span><span class="annotate long">line 39 didn't jump to line 38</span></span></p>
+    <p class="run"><span class="n"><a id="t38" href="#t38">38</a></span><span class="t">    <span class="op">@</span><span class="nam">ddt</span><span class="op">.</span><span class="nam">unpack</span>&nbsp;</span><span class="r"></span></p>
+    <p class="run"><span class="n"><a id="t39" href="#t39">39</a></span><span class="t">    <span class="key">def</span> <span class="nam">test_is_uuid</span><span class="op">(</span><span class="nam">self</span><span class="op">,</span> <span class="nam">value</span><span class="op">,</span> <span class="nam">expectation</span><span class="op">)</span><span class="op">:</span>&nbsp;</span><span class="r"></span></p>
     <p class="run"><span class="n"><a id="t40" href="#t40">40</a></span><span class="t">        <span class="nam">self</span><span class="op">.</span><span class="nam">assertEqual</span><span class="op">(</span><span class="nam">is_uuid</span><span class="op">(</span><span class="nam">value</span><span class="op">)</span><span class="op">,</span> <span class="nam">expectation</span><span class="op">)</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t41" href="#t41">41</a></span><span class="t">&nbsp;</span><span class="r"></span></p>
     <p class="run"><span class="n"><a id="t42" href="#t42">42</a></span><span class="t">    <span class="key">def</span> <span class="nam">test_get_order_return_info_return_items</span><span class="op">(</span><span class="nam">self</span><span class="op">)</span><span class="op">:</span>&nbsp;</span><span class="r"></span></p>
@@ -128,11 +128,11 @@
     <p class="pln"><span class="n"><a id="t44" href="#t44">44</a></span><span class="t">&nbsp;</span><span class="r"></span></p>
     <p class="run"><span class="n"><a id="t45" href="#t45">45</a></span><span class="t">        <span class="nam">self</span><span class="op">.</span><span class="nam">assertEqual</span><span class="op">(</span><span class="nam">len</span><span class="op">(</span><span class="nam">get_order_return_info_return_items</span><span class="op">(</span><span class="nam">order</span><span class="op">)</span><span class="op">)</span><span class="op">,</span> <span class="num">2</span><span class="op">)</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t46" href="#t46">46</a></span><span class="t">&nbsp;</span><span class="r"></span></p>
-    <p class="par run show_par"><span class="n"><a id="t47" href="#t47">47</a></span><span class="t">    <span class="op">@</span><span class="nam">ddt</span><span class="op">.</span><span class="nam">data</span><span class="op">(</span>&nbsp;</span><span class="r"><span class="annotate short">47&#x202F;&#x219B;&#x202F;51</span><span class="annotate long">line 47 didn't jump to line 51</span></span></p>
+    <p class="run"><span class="n"><a id="t47" href="#t47">47</a></span><span class="t">    <span class="op">@</span><span class="nam">ddt</span><span class="op">.</span><span class="nam">data</span><span class="op">(</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t48" href="#t48">48</a></span><span class="t">            <span class="op">{</span><span class="str">'line_item_id'</span><span class="op">:</span> <span class="str">'order_line_id'</span><span class="op">}</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t49" href="#t49">49</a></span><span class="t">    <span class="op">)</span>&nbsp;</span><span class="r"></span></p>
-    <p class="par run show_par"><span class="n"><a id="t50" href="#t50">50</a></span><span class="t">    <span class="op">@</span><span class="nam">ddt</span><span class="op">.</span><span class="nam">unpack</span>&nbsp;</span><span class="r"><span class="annotate short">50&#x202F;&#x219B;&#x202F;47</span><span class="annotate long">line 50 didn't jump to line 47</span></span></p>
-    <p class="par run show_par"><span class="n"><a id="t51" href="#t51">51</a></span><span class="t">    <span class="key">def</span> <span class="nam">test_is_commercetools_line_item_already_refunded</span><span class="op">(</span><span class="nam">self</span><span class="op">,</span> <span class="nam">line_item_id</span><span class="op">)</span><span class="op">:</span>&nbsp;</span><span class="r"><span class="annotate short">51&#x202F;&#x219B;&#x202F;50</span><span class="annotate long">line 51 didn't jump to line 50</span></span></p>
+    <p class="run"><span class="n"><a id="t50" href="#t50">50</a></span><span class="t">    <span class="op">@</span><span class="nam">ddt</span><span class="op">.</span><span class="nam">unpack</span>&nbsp;</span><span class="r"></span></p>
+    <p class="run"><span class="n"><a id="t51" href="#t51">51</a></span><span class="t">    <span class="key">def</span> <span class="nam">test_is_commercetools_line_item_already_refunded</span><span class="op">(</span><span class="nam">self</span><span class="op">,</span> <span class="nam">line_item_id</span><span class="op">)</span><span class="op">:</span>&nbsp;</span><span class="r"></span></p>
     <p class="run"><span class="n"><a id="t52" href="#t52">52</a></span><span class="t">        <span class="nam">order</span> <span class="op">=</span> <span class="nam">gen_order</span><span class="op">(</span><span class="nam">uuid4_str</span><span class="op">(</span><span class="op">)</span><span class="op">)</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t53" href="#t53">53</a></span><span class="t">&nbsp;</span><span class="r"></span></p>
     <p class="run"><span class="n"><a id="t54" href="#t54">54</a></span><span class="t">        <span class="nam">self</span><span class="op">.</span><span class="nam">assertTrue</span><span class="op">(</span><span class="nam">is_commercetools_line_item_already_refunded</span><span class="op">(</span><span class="nam">order</span><span class="op">,</span> <span class="nam">line_item_id</span><span class="op">)</span><span class="op">)</span>&nbsp;</span><span class="r"></span></p>
@@ -144,8 +144,8 @@
             <a class="nav" href="index.html">&Hat; index</a> &nbsp; &nbsp;
             <a class="nav" href="z_adbd8d6d7fb174e3_utils_py.html">&#xbb; next</a>
             &nbsp; &nbsp; &nbsp;
-            <a class="nav" href="https://coverage.readthedocs.io/en/7.6.1">coverage.py v7.6.1</a>,
-            created at 2024-10-02 11:46 +0000
+            <a class="nav" href="https://coverage.readthedocs.io/en/7.6.3">coverage.py v7.6.3</a>,
+            created at 2024-10-17 14:11 +0000
         </p>
     </div>
 </footer>
