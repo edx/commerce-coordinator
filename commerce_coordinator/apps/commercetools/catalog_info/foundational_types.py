@@ -188,6 +188,50 @@ class TwoUCustomTypes:
         ]
     )
 
+    RETURN_ITEM_TYPE_DRAFT = TypeDraft(
+       key=TwoUKeys.RETURN_ITEM_CUSTOM_TYPE,
+       name=ls({'en': 'Return Item Custom Type'}),
+       resource_type_ids=[ResourceTypeId.ORDER_RETURN_ITEM],
+       # ^^^ this cannot be updated, the whole type has to be unassigned, removed and replaced.
+       field_definitions=[
+            # Updating Field Definitions only supports:
+            # - basic field definitions changes, like label and input_hint, not type or
+            # - whether it is required or not.
+            # - It can add new ones.
+            # If you need something done that can't be, the whole type has to be unassigned, removed and replaced.
+
+            FieldDefinition(
+                type=CustomFieldStringType(),
+                name=TwoUKeys.TRANSACTION_ID,
+                required=False,
+                label=ls({'en': 'Transaction ID'}),
+                input_hint=TypeTextInputHint.SINGLE_LINE
+            )
+       ]
+    )
+
+    TRANSACTION_TYPE_DRAFT = TypeDraft(
+        key=TwoUKeys.TRANSACTION_CUSTOM_TYPE,
+        name=ls({'en': 'Transaction Custom Type'}),
+        resource_type_ids=[ResourceTypeId.TRANSACTION],
+        # ^^^ this cannot be updated, the whole type has to be unassigned, removed and replaced.
+        field_definitions=[
+            # Updating Field Definitions only supports:
+            # - basic field definitions changes, like label and input_hint, not type or
+            # - whether it is required or not.
+            # - It can add new ones.
+            # If you need something done that can't be, the whole type has to be unassigned, removed and replaced.
+
+            FieldDefinition(
+                type=CustomFieldStringType(),
+                name=TwoUKeys.RETURN_ITEM_ID,
+                required=False,
+                label=ls({'en': 'Return Item ID'}),
+                input_hint=TypeTextInputHint.SINGLE_LINE
+            )
+        ]
+    )
+
 
 class TwoUCustomObjects:
     PAYPAL_CUSTOM_OBJECT_DRAFT = CustomObjectDraft(

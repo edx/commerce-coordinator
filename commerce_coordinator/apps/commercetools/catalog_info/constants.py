@@ -33,6 +33,18 @@ class TwoUKeys:
     PAYPAL_CONNECTOR_CONTAINER = 'paypal-commercetools-connector'
     PAYPAL_CONNECTOR_SETTINGS_KEY = 'settings'
 
+    # Return Item Types
+    RETURN_ITEM_CUSTOM_TYPE = 'returnItemCustomType'
+
+    # Return Item Custom Fields
+    TRANSACTION_ID = 'transactionId'
+
+    # Transaction Types
+    TRANSACTION_CUSTOM_TYPE = 'transactionCustomType'
+
+    # Transaction Custom Fields
+    RETURN_ITEM_ID = 'returnItemId'
+
 
 class EdXFieldNames:
     """edX Specific field names for use in Commercetools"""
