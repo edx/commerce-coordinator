@@ -99,3 +99,6 @@ docs/_build/
 
 #transifex exe
 tx
+
+# Python version
+.python-version

@@ -1,5 +1,6 @@
 """ Tests for core models. """
 
+import mock
 from django.test import TestCase
 from django_dynamic_fixture import G
 from social_django.models import UserSocialAuth
@@ -43,3 +44,74 @@ class UserTests(TestCase):
         full_name = 'Bob'
         user = G(User, full_name=full_name)
         self.assertEqual(str(user), full_name)
+
+    def test_add_lms_user_id(self):
+        '''
+        Verify lms_user_id is added to user if exists in social_auth entry.
+        '''
+        full_name = 'Kosmo Kramer'
+        user = G(User, full_name=full_name)
+        assert user.lms_user_id is None
+
+        UserSocialAuth.objects.create(
+            user=user,
+            provider='edx-oauth2',
+            uid='1',
+            extra_data={'user_id': 1337, 'access_token': 'access_token_1'}
+        )
+
+        user.add_lms_user_id('Calling from test')
+        user.refresh_from_db()
+        assert user.lms_user_id == 1337
+
+    def test_add_lms_user_id_does_not_change_if_exists(self):
+        full_name = 'Elaine Benes'
+        user = G(User, full_name=full_name, lms_user_id=1234)
+        assert user.lms_user_id == 1234
+
+        UserSocialAuth.objects.create(
+            user=user,
+            provider='edx-oauth2',
+            uid='1',
+            extra_data={'user_id': 9999, 'access_token': 'access_token_1'}
+        )
+
+        user.add_lms_user_id('Calling from test')
+        user.refresh_from_db()
+        assert user.lms_user_id == 1234
+
+    def test_add_lms_user_id_not_added_if_no_auth_entries(self):
+        '''
+        If no auth_entries in social_auth, lms_user_id should not be updated.
+        '''
+        full_name = 'Newman...'
+        user = G(User, full_name=full_name)
+        assert user.lms_user_id is None
+
+        assert not UserSocialAuth.objects.filter(user=user).exists()
+
+        user.add_lms_user_id('Calling from test')
+        user.refresh_from_db()
+        assert user.lms_user_id is None
+
+    @mock.patch('commerce_coordinator.apps.core.models.User._get_lms_user_id_from_social_auth')
+    def test_add_lms_user_id_not_added_if_get_from_social_auth_fails(self, mock_get_lms_user_id_from_social_auth):
+        """
+        If fetching social auth entry excepts, lms_user_id should not be updated.
+        """
+        full_name = 'Jerry the Mouse'
+        user = G(User, full_name=full_name)
+        assert user.lms_user_id is None
+
+        UserSocialAuth.objects.create(
+            user=user,
+            provider='edx-oauth2',
+            uid='1',
+            extra_data={'user_id': 1337, 'access_token': 'access_token_1'}
+        )
+
+        mock_get_lms_user_id_from_social_auth.side_effect = Exception('Something went wrong')
+        with self.assertRaises(Exception):
+            user.add_lms_user_id('Calling from test')
+        user.refresh_from_db()
+        assert user.lms_user_id is None
