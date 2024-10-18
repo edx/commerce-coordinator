@@ -17,9 +17,9 @@
 | commerce\_coordinator/apps/api/v1/views.py                                             |        0 |        0 |        0 |        0 |    100% |           |
 | commerce\_coordinator/apps/commercetools/\_\_init\_\_.py                               |        0 |        0 |        0 |        0 |    100% |           |
 | commerce\_coordinator/apps/commercetools/authentication.py                             |        6 |        0 |        0 |        0 |    100% |           |
-| commerce\_coordinator/apps/commercetools/catalog\_info/constants.py                    |       23 |        3 |        0 |        0 |     87% |35, 38, 41 |
+| commerce\_coordinator/apps/commercetools/catalog\_info/constants.py                    |       35 |        3 |        0 |        0 |     91% |53, 56, 59 |
 | commerce\_coordinator/apps/commercetools/catalog\_info/edx\_utils.py                   |       48 |        0 |       10 |        0 |    100% |           |
-| commerce\_coordinator/apps/commercetools/catalog\_info/foundational\_types.py          |       13 |        0 |        0 |        0 |    100% |           |
+| commerce\_coordinator/apps/commercetools/catalog\_info/foundational\_types.py          |       15 |        0 |        0 |        0 |    100% |           |
 | commerce\_coordinator/apps/commercetools/catalog\_info/utils.py                        |       65 |        0 |       30 |        0 |    100% |           |
 | commerce\_coordinator/apps/commercetools/clients.py                                    |      186 |        0 |       12 |        0 |    100% |           |
 | commerce\_coordinator/apps/commercetools/constants.py                                  |        4 |        0 |        0 |        0 |    100% |           |
@@ -185,7 +185,7 @@
 | commerce\_coordinator/apps/titan/views.py                                              |       23 |        1 |        2 |        1 |     92% |        79 |
 | commerce\_coordinator/docker\_gunicorn\_configuration.py                               |       27 |       27 |       10 |        0 |      0% |      4-57 |
 | commerce\_coordinator/urls.py                                                          |       22 |        0 |        0 |        0 |    100% |           |
-|                                                                              **TOTAL** | **6721** |  **232** |  **460** |   **22** | **96%** |           |
+|                                                                              **TOTAL** | **6735** |  **232** |  **460** |   **22** | **96%** |           |
 
 
 ## Setup coverage badge
