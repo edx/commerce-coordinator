@@ -102,7 +102,7 @@ if sys.argv[-1] == 'tag':
 
 if sys.argv[-1] == 'ver_check':
     REQ_MAJOR = 3
-    REQ_MINOR = 8
+    REQ_MINOR = 12
     if sys.version_info.major != REQ_MAJOR or (sys.version_info.major == REQ_MAJOR and
                                                sys.version_info.minor != REQ_MINOR):
         print(f"This application only works on Python {REQ_MAJOR}.{REQ_MINOR}. Please check your environment.")
@@ -126,7 +126,7 @@ setup(
     ],
     include_package_data=True,
     install_requires=load_requirements('requirements/base.in'),
-    python_requires=">=3.8",
+    python_requires=">3.8",
     license="AGPL 3.0",
     zip_safe=False,
     keywords='Python edx',
@@ -138,6 +138,6 @@ setup(
         'License :: OSI Approved :: GNU Affero General Public License v3 or later (AGPLv3+)',
         'Natural Language :: English',
         'Programming Language :: Python :: 3',
-        'Programming Language :: Python :: 3.8',
+        'Programming Language :: Python :: 3.12',
     ],
 )
