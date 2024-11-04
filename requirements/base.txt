@@ -11,9 +11,9 @@ asgiref==3.7.2
     #   -r requirements/base.in
     #   django
     #   django-cors-headers
-async-timeout==4.0.3
+async-timeout==5.0.0
     # via redis
-attrs==23.2.0
+attrs==24.2.0
     # via -r requirements/base.in
 backoff==2.2.1
     # via segment-analytics-python
@@ -23,17 +23,17 @@ backports-zoneinfo[tzdata]==0.2.1
     #   django
     #   djangorestframework
     #   kombu
-billiard==4.2.0
+billiard==4.2.1
     # via celery
 celery[redis]==5.4.0
     # via -r requirements/base.in
-certifi==2024.6.2
+certifi==2024.8.30
     # via requests
-cffi==1.16.0
+cffi==1.17.1
     # via
     #   cryptography
     #   pynacl
-charset-normalizer==3.3.2
+charset-normalizer==3.4.0
     # via requests
 click==8.1.7
     # via
@@ -56,7 +56,7 @@ coreapi==2.3.3
     #   openapi-codec
 coreschema==0.0.4
     # via coreapi
-cryptography==42.0.8
+cryptography==43.0.3
     # via
     #   pyjwt
     #   social-auth-core
@@ -66,7 +66,7 @@ defusedxml==0.8.0rc2
     # via
     #   python3-openid
     #   social-auth-core
-django==4.2.13
+django==4.2.16
     # via
     #   -c requirements/common_constraints.txt
     #   -c requirements/constraints.txt
@@ -106,44 +106,44 @@ dnspython==2.6.1
     # via pymongo
 drf-jwt==1.19.2
     # via edx-drf-extensions
-edx-auth-backends==4.3.0
+edx-auth-backends==4.4.0
     # via -r requirements/base.in
 edx-braze-client==0.2.5
     # via -r requirements/base.in
 edx-django-release-util==1.4.0
     # via -r requirements/base.in
-edx-django-utils==5.14.2
+edx-django-utils==7.0.0
     # via
     #   -r requirements/base.in
     #   edx-drf-extensions
     #   edx-rest-api-client
-edx-drf-extensions==10.3.0
+edx-drf-extensions==10.5.0
     # via -r requirements/base.in
-edx-opaque-keys==2.10.0
+edx-opaque-keys==2.11.0
     # via edx-drf-extensions
-edx-rest-api-client==5.7.1
+edx-rest-api-client==6.0.0
     # via -r requirements/base.in
-idna==3.7
+idna==3.10
     # via requests
 itypes==1.2.0
     # via coreapi
 jinja2==3.1.4
     # via coreschema
-kombu==5.3.7
+kombu==5.4.2
     # via celery
 markupsafe==2.1.5
     # via
     #   jinja2
     #   werkzeug
-marshmallow==3.21.3
+marshmallow==3.22.0
     # via
     #   commercetools
     #   marshmallow-enum
 marshmallow-enum==1.5.1
     # via commercetools
-mysqlclient==2.2.4
+mysqlclient==2.2.5
     # via -r requirements/base.in
-newrelic==9.11.0
+newrelic==10.2.0
     # via edx-django-utils
 oauthlib==3.2.2
     # via
@@ -155,17 +155,17 @@ openedx-filters==1.9.0
     # via -r requirements/base.in
 packaging==24.1
     # via marshmallow
-pbr==6.0.0
+pbr==6.1.0
     # via stevedore
-pillow==10.3.0
+pillow==10.4.0
     # via -r requirements/base.in
-prompt-toolkit==3.0.47
+prompt-toolkit==3.0.48
     # via click-repl
-psutil==6.0.0
+psutil==6.1.0
     # via edx-django-utils
 pycparser==2.22
     # via cffi
-pyjwt[crypto]==2.8.0
+pyjwt[crypto]==2.9.0
     # via
     #   drf-jwt
     #   edx-auth-backends
@@ -173,7 +173,7 @@ pyjwt[crypto]==2.8.0
     #   edx-rest-api-client
     #   segment-analytics-python
     #   social-auth-core
-pymongo==4.7.3
+pymongo==4.10.1
     # via edx-opaque-keys
 pynacl==1.5.0
     # via edx-django-utils
@@ -184,13 +184,13 @@ python-dateutil==2.9.0.post0
     #   segment-analytics-python
 python3-openid==3.2.0
     # via social-auth-core
-pytz==2024.1
+pytz==2024.2
     # via
     #   -r requirements/base.in
     #   commercetools
-pyyaml==6.0.1
+pyyaml==6.0.2
     # via edx-django-release-util
-redis==5.0.7
+redis==5.2.0
     # via celery
 requests==2.32.3
     # via
@@ -201,7 +201,6 @@ requests==2.32.3
     #   requests-mock
     #   requests-oauthlib
     #   segment-analytics-python
-    #   slumber
     #   social-auth-core
     #   stripe
 requests-mock==1.12.1
@@ -210,32 +209,30 @@ requests-oauthlib==2.0.0
     # via
     #   commercetools
     #   social-auth-core
-segment-analytics-python==2.3.2
+segment-analytics-python==2.3.3
     # via -r requirements/base.in
 semantic-version==2.10.0
     # via edx-drf-extensions
-simplejson==3.19.2
+simplejson==3.19.3
     # via django-rest-swagger
 six==1.16.0
     # via
     #   edx-auth-backends
     #   edx-django-release-util
     #   python-dateutil
-slumber==0.7.1
-    # via edx-rest-api-client
-social-auth-app-django==5.4.1
+social-auth-app-django==5.4.2
     # via edx-auth-backends
 social-auth-core==4.5.4
     # via
     #   edx-auth-backends
     #   social-auth-app-django
-sqlparse==0.5.0
+sqlparse==0.5.1
     # via django
-stevedore==5.2.0
+stevedore==5.3.0
     # via
     #   edx-django-utils
     #   edx-opaque-keys
-stripe==10.0.0
+stripe==11.2.0
     # via -r requirements/base.in
 typing-extensions==4.12.2
     # via
@@ -243,13 +240,13 @@ typing-extensions==4.12.2
     #   edx-opaque-keys
     #   kombu
     #   stripe
-tzdata==2024.1
+tzdata==2024.2
     # via
     #   backports-zoneinfo
     #   celery
 uritemplate==4.1.1
     # via coreapi
-urllib3==2.2.2
+urllib3==2.2.3
     # via requests
 vine==5.1.0
     # via
@@ -258,9 +255,9 @@ vine==5.1.0
     #   kombu
 wcwidth==0.2.13
     # via prompt-toolkit
-webob==1.8.7
+webob==1.8.9
     # via commercetools
-werkzeug==3.0.3
+werkzeug==3.0.6
     # via commercetools
 wrapt==1.16.0
     # via commercetools
