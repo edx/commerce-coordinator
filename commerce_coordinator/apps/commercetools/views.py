@@ -3,6 +3,7 @@ Views for the commercetools app
 """
 import logging
 
+from datadog_checks.base import AgentCheck
 from rest_framework import status
 from rest_framework.authentication import SessionAuthentication
 from rest_framework.permissions import IsAdminUser
@@ -26,11 +27,14 @@ logger = logging.getLogger(__name__)
 
 
 # noinspection DuplicatedCode
-class OrderFulfillView(SingleInvocationAPIView):
+class OrderFulfillView(SingleInvocationAPIView, AgentCheck):
     """Order Fulfillment View"""
 
     authentication_classes = [JwtBearerAuthentication, SessionAuthentication]
     permission_classes = [IsAdminUser]
+
+    def check(self, instance):
+        self.gauge("hello.world", 1)
 
     def post(self, request):
         """Receive a message from commerce tools forwarded by aws event bridge"""
@@ -63,6 +67,8 @@ class OrderFulfillView(SingleInvocationAPIView):
             source_system=SOURCE_SYSTEM,
             message_id=message_id
         )
+
+        self.check({})
 
         return Response(status=status.HTTP_200_OK)
 
