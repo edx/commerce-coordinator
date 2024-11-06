@@ -9,6 +9,7 @@ from requests import RequestException
 
 from commerce_coordinator.apps.commercetools.catalog_info.constants import TwoUKeys
 from commerce_coordinator.apps.commercetools.catalog_info.edx_utils import (
+    get_course_mode_from_ct_order,
     get_edx_is_sanctioned,
     get_edx_items,
     get_edx_lms_user_id,
@@ -83,7 +84,7 @@ def fulfill_order_placed_message_signal_task(
         'order_id': order.id,
         'provider_id': None,
         'edx_lms_user_id': lms_user_id,
-        'course_mode': 'verified',
+        'course_mode': get_course_mode_from_ct_order(order=order),
         'date_placed': order.last_modified_at.strftime(ISO_8601_FORMAT),
         'source_system': source_system,
     }

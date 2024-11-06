@@ -40,6 +40,16 @@ def is_edx_lms_order(order: CTOrder) -> bool:
     return len(get_edx_items(order)) >= 1
 
 
+def get_course_mode_from_ct_order(order: CTOrder) -> str:
+    mode = 'verified'
+    for line_item in order.line_items:
+        for attribute in line_item.variant.attributes:
+            if attribute.name == 'mode':
+                mode = attribute.value
+
+    return mode
+
+
 def get_edx_lms_user_id(customer: CTCustomer):
     return customer.custom.fields[EdXFieldNames.LMS_USER_ID]
 
