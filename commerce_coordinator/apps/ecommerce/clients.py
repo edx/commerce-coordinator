@@ -38,14 +38,13 @@ class EcommerceAPIClient(BaseEdxOAuthClient):
             resource_url = urljoin_directory(self.api_base_url, '/orders')
             start_time = datetime.now()
             logger.info(
-                '[UserOrdersView] [EcommerceAPIClient] - Legacy ecommerce get_orders API called at: %s',
+                '[UserOrdersView] Legacy ecommerce get_orders API called at: %s',
                 start_time
             )
             response = self.client.get(resource_url, params=query_params)
             end_time = datetime.now()
             logger.info(
-                '[UserOrdersView] [EcommerceAPIClient] \
-                    - Legacy ecommerce get_orders API finished at: %s with total duration: %s',
+                '[UserOrdersView] Legacy ecommerce get_orders API finished at: %s with total duration: %s',
                 end_time, end_time - start_time
             )
             response.raise_for_status()
