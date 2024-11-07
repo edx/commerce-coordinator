@@ -317,7 +317,7 @@ class OrderReturnedMessageSignalTaskTests(TestCase):
         mock_values.customer_mock.assert_called_once_with(mock_values.customer_id)
         _stripe_api_mock.return_value.refund_payment_intent.assert_called_once()
 
-    @patch('commerce_coordinator.apps.commercetools.sub_messages.tasks.get_edx_payment_intent_id')
+    @patch('commerce_coordinator.apps.commercetools.sub_messages.tasks.get_edx_payment_interface_id')
     @patch('commerce_coordinator.apps.commercetools.sub_messages.tasks.OrderRefundRequested.run_filter')
     def test_refund_already_charged(
         self,
