@@ -259,8 +259,9 @@ class CommercetoolsAPIClient:
                     f"customer with ID {customer.id}")
         order_where_clause = f"orderState=\"{order_state}\""
 
+        start_time = datetime.datetime.now()
         logger.info(
-            "[UserOrdersView] [CommercetoolsAPIClient] - Get orders query call started at %s", datetime.datetime.now())
+            "[UserOrdersView] [CommercetoolsAPIClient] - Get orders query call started at %s", start_time)
         values = self.base_client.orders.query(
             where=["customerId=:cid", order_where_clause],
             predicate_var={'cid': customer.id},
@@ -269,12 +270,22 @@ class CommercetoolsAPIClient:
             offset=offset,
             expand=list(expand)
         )
+        end_time = datetime.datetime.now()
         logger.info(
-            "[UserOrdersView] [CommercetoolsAPIClient] - Get orders query call finished at %s",
-            datetime.datetime.now()
+            "[UserOrdersView] [CommercetoolsAPIClient] - Get orders query call finished at %s with total duration: %s",
+            end_time, end_time - start_time
         )
 
-        return PaginatedResult(values.results, values.total, values.offset)
+        start_time = datetime.datetime.now()
+        logger.info('[UserOrdersView] [CommercetoolsAPIClient] - Pagination of CT orders started at %s',
+                    start_time)
+        result = PaginatedResult(values.results, values.total, values.offset)
+        end_time = datetime.datetime.now()
+        logger.info(
+            '[UserOrdersView] [CommercetoolsAPIClient] - \
+                Pagination of CT orders finished at %s with total duration: %s', end_time, end_time - start_time)
+
+        return result
 
     def get_orders_for_customer(self, edx_lms_user_id: int, offset=0,
                                 limit=ORDER_HISTORY_PER_SYSTEM_REQ_LIMIT) -> (PaginatedResult[CTOrder], CTCustomer):
