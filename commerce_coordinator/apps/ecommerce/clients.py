@@ -34,17 +34,17 @@ class EcommerceAPIClient(BaseEdxOAuthClient):
         See sample response in tests.py
 
         """
-        logger.info('[UserOrdersView] EcommerceAPIClient - get_orders method called at %s', datetime.now())
+        logger.info('[UserOrdersView] [EcommerceAPIClient] - get_orders method called at %s', datetime.now())
 
         try:
             resource_url = urljoin_directory(self.api_base_url, '/orders')
             logger.info(
-                '[UserOrdersView] EcommerceAPIClient - Legacy ecommerce get_orders API called at: %s',
+                '[UserOrdersView] [EcommerceAPIClient] - Legacy ecommerce get_orders API called at: %s',
                 datetime.now()
             )
             response = self.client.get(resource_url, params=query_params)
             logger.info(
-                '[UserOrdersView] EcommerceAPIClient - Legacy ecommerce get_orders API finished at: %s',
+                '[UserOrdersView] [EcommerceAPIClient] - Legacy ecommerce get_orders API finished at: %s',
                 datetime.now()
             )
             response.raise_for_status()
@@ -53,5 +53,5 @@ class EcommerceAPIClient(BaseEdxOAuthClient):
             self.log_request_exception(logger, exc)
             raise
 
-        logger.info('[UserOrdersView] EcommerceAPIClient - get_orders method finished at %s', datetime.now())
+        logger.info('[UserOrdersView] [EcommerceAPIClient] - get_orders method finished at %s', datetime.now())
         return response.json()
