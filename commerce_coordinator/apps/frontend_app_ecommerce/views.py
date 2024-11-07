@@ -99,8 +99,8 @@ class UserOrdersView(APIView):
         logger.info("[UserOrdersView] Pipline filter run started at: %s", start_time)
         order_data = OrderHistoryRequested.run_filter(request, params)
         end_time = datetime.now()
-        logger.info("[UserOrdersView] Pipline filter run finished at: %s with total duration: %s", end_time,
-           end_time - start_time)
+        logger.info("[UserOrdersView] Pipline filter run finished at: %s with total duration: %s",
+                    end_time, end_time - start_time)
 
         output_orders = []
 

@@ -299,7 +299,7 @@ class CommercetoolsAPIClient:
         start_time = datetime.datetime.now()
         logger.info(
             "[UserOrdersView] For CT orders get customer id from lms id call started at %s",
-           start_time
+            start_time
         )
         customer = self.get_customer_by_lms_user_id(edx_lms_user_id)
         end_time = datetime.datetime.now()
