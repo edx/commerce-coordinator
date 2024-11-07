@@ -258,6 +258,9 @@ class CommercetoolsAPIClient:
         logger.info(f"[CommercetoolsAPIClient] - Attempting to find all completed orders for "
                     f"customer with ID {customer.id}")
         order_where_clause = f"orderState=\"{order_state}\""
+
+        logger.info(
+            "[UserOrdersView] [CommercetoolsAPIClient] - Get orders query call started at %s", datetime.datetime.now())
         values = self.base_client.orders.query(
             where=["customerId=:cid", order_where_clause],
             predicate_var={'cid': customer.id},
@@ -265,6 +268,10 @@ class CommercetoolsAPIClient:
             limit=limit,
             offset=offset,
             expand=list(expand)
+        )
+        logger.info(
+            "[UserOrdersView] [CommercetoolsAPIClient] - Get orders query call finished at %s",
+            datetime.datetime.now()
         )
 
         return PaginatedResult(values.results, values.total, values.offset)
@@ -278,12 +285,24 @@ class CommercetoolsAPIClient:
             offset:
             limit:
         """
+        logger.info(
+            "[UserOrdersView] [CommercetoolsAPIClient] - Getting customer if from lms id call started at %s",
+            datetime.datetime.now()
+        )
         customer = self.get_customer_by_lms_user_id(edx_lms_user_id)
+        logger.info(
+            "[UserOrdersView] [CommercetoolsAPIClient] - Getting customer if from lms id call finished at %s",
+            datetime.datetime.now()
+        )
 
         if customer is None:  # pragma: no cover
             raise ValueError(f'Unable to locate customer with ID #{edx_lms_user_id}')
 
+        logger.info("[UserOrdersView] [CommercetoolsAPIClient] - Get orders call started at %s",
+                    datetime.datetime.now())
         orders = self.get_orders(customer, offset, limit)
+        logger.info("[UserOrdersView] [CommercetoolsAPIClient] - Get orders call finished at %s",
+                    datetime.datetime.now())
 
         return orders, customer
 

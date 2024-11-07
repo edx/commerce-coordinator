@@ -2,6 +2,7 @@
 Commercetools filter pipelines
 """
 import decimal
+from datetime import datetime
 from logging import getLogger
 
 import attrs
@@ -44,26 +45,49 @@ class GetCommercetoolsOrders(PipelineStep):
             order_data: any preliminary orders (from an earlier pipeline step) we want to append to
         Returns:
         """
+        log.info("[UserOrdersView] [GetCommercetoolsOrders] Starting pipeline step execution at %s", datetime.now())
 
         if not is_redirect_to_commercetools_enabled_for_user(request):
             return PipelineCommand.CONTINUE.value
 
         try:
             ct_api_client = CommercetoolsAPIClient()
+            log.info(
+                "[UserOrdersView] [GetCommercetoolsOrders] get_orders_for_customer call started at %s",
+                datetime.now()
+            )
             ct_orders = ct_api_client.get_orders_for_customer(
                 edx_lms_user_id=params["edx_lms_user_id"],
                 limit=params["page_size"],
                 offset=params["page"] * params["page_size"]
             )
+            log.info(
+                "[UserOrdersView] [GetCommercetoolsOrders] get_orders_for_customer call finished at %s",
+                datetime.now()
+            )
 
+            log.info(
+                "[UserOrdersView] [GetCommercetoolsOrders] orders to attrs objects processing started at %s",
+                datetime.now()
+            )
             # noinspection PyTypeChecker
             converted_orders = [attrs.asdict(order_from_commercetools(x, ct_orders[1]))
                                 for x in ct_orders[0].results]
+            log.info(
+                "[UserOrdersView] [GetCommercetoolsOrders] orders to attrs objects processing finished at %s",
+                datetime.now()
+            )
 
+            log.info("[UserOrdersView] [GetCommercetoolsOrders] Orders rebuild call started at %s", datetime.now())
             order_data.append(
                 ct_orders[0].rebuild(converted_orders)
             )
+            log.info("[UserOrdersView] [GetCommercetoolsOrders] Orders rebuild call finished at %s", datetime.now())
 
+            log.info(
+                "[UserOrdersView] [GetCommercetoolsOrders] Completed pipeline step execution at %s",
+                datetime.now()
+            )
             return {
                 "order_data": order_data
             }
