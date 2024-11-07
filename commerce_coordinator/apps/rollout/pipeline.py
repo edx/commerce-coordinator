@@ -43,7 +43,9 @@ class GetActiveOrderManagementSystem(PipelineStep):
         commercetools_available_course = None
 
         if course_run and is_redirect_to_commercetools_enabled_for_user(request):
+            print('\n\n\n\n\ncourse_run, is_redirect_to_commercetools_enabled_for_user', course_run, is_redirect_to_commercetools_enabled_for_user(request))
             try:
+                course_run = 'course-v1:MichiganX+InjuryPreventionX+1T2021'
                 ct_api_client = CommercetoolsAPIClient()
                 commercetools_available_course = ct_api_client.get_product_variant_by_course_run(course_run)
             except HTTPError as exc:  # pragma no cover
@@ -53,6 +55,7 @@ class GetActiveOrderManagementSystem(PipelineStep):
                     f'for course_run: {course_run} with exception: {exc}'
                 )
 
+        print('\n\n\n\n\ncommercetools_available_course', commercetools_available_course)
         if commercetools_available_course and not is_user_enterprise_learner(request):
             active_order_management_system = COMMERCETOOLS_FRONTEND
         elif sku:

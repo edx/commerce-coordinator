@@ -7,6 +7,10 @@ import logging
 from openedx_filters import PipelineStep
 from stripe.error import StripeError
 
+from commerce_coordinator.apps.commercetools.catalog_info.constants import EDX_STRIPE_PAYMENT_INTERFACE_NAME, \
+    EDX_PAYPAL_PAYMENT_INTERFACE_NAME
+from commerce_coordinator.apps.commercetools.catalog_info.edx_utils import get_edx_paypal_payment_transaction_id
+from commerce_coordinator.apps.commercetools.clients import CommercetoolsAPIClient, payments_controller
 from commerce_coordinator.apps.core.constants import PaymentMethod, PipelineCommand
 from commerce_coordinator.apps.stripe.clients import StripeAPIClient
 from commerce_coordinator.apps.stripe.constants import Currency
@@ -214,21 +218,26 @@ class GetPaymentIntentReceipt(PipelineStep):
     """ Pull the receipt if the payment_intent is set """
 
     # pylint: disable=unused-argument
-    def run_filter(self, payment_intent_id=None, **params):
+    def run_filter(self, payment_service_provider, payment_intent_id=None, **params):
         tag = type(self).__name__
 
-        if payment_intent_id is None:
-            logger.debug(f'[{tag}] payment_intent_id not set, skipping.')
-            return PipelineCommand.CONTINUE.value
+        if payment_service_provider == EDX_STRIPE_PAYMENT_INTERFACE_NAME:
+            if payment_intent_id is None:
+                logger.debug(f'[{tag}] payment_intent_id not set, skipping.')
+                return PipelineCommand.CONTINUE.value
 
-        stripe_api_client = StripeAPIClient()
+            stripe_api_client = StripeAPIClient()
 
-        payment_intent = stripe_api_client.retrieve_payment_intent(
-            payment_intent_id,
-            ["latest_charge"]
-        )
+            payment_intent = stripe_api_client.retrieve_payment_intent(
+                payment_intent_id,
+                ["latest_charge"]
+            )
 
-        receipt_url = payment_intent.latest_charge.receipt_url
+            receipt_url = payment_intent.latest_charge.receipt_url
+        elif payment_service_provider == EDX_PAYPAL_PAYMENT_INTERFACE_NAME:
+            # this can be achieved by introducing a new step in the filter. doing here for poc
+            receipt_url = 'https://sandbox.paypal.com/myaccount/activities'
+            payment_intent = None
 
         return {
             'payment_intent': payment_intent,
@@ -245,6 +254,7 @@ class RefundPaymentIntent(PipelineStep):
         self,
         order_id,
         payment_intent_id,
+        payment_service_provider,
         amount_in_cents,
         has_been_refunded,
         **kwargs
@@ -271,19 +281,43 @@ class RefundPaymentIntent(PipelineStep):
                 'refund_response': "charge_already_refunded"
             }
 
-        stripe_api_client = StripeAPIClient()
+        print('\n\n\n\n\n\n Inside RefundPaymentIntent \n\n\n\n\n\n')
 
-        try:
-            ret_val = stripe_api_client.refund_payment_intent(
-                payment_intent_id=payment_intent_id,
-                amount=amount_in_cents,
-                order_uuid=order_id
-            )
+        if payment_service_provider == EDX_STRIPE_PAYMENT_INTERFACE_NAME:
+            stripe_api_client = StripeAPIClient()
+
+            try:
+                ret_val = stripe_api_client.refund_payment_intent(
+                    payment_intent_id=payment_intent_id,
+                    amount=amount_in_cents,
+                    order_uuid=order_id
+                )
+                return {
+                    'refund_response': ret_val
+                }
+            except StripeError as ex:  # pragma: no cover
+                logger.info(f'[CT-{tag}] Unsuccessful Stripe refund with details:'
+                            f'[order_id: {order_id}, payment_intent_id: {payment_intent_id}'
+                            f'message_id: {kwargs["message_id"]}')
+                raise StripeIntentRefundAPIError from ex
+        elif payment_service_provider == EDX_PAYPAL_PAYMENT_INTERFACE_NAME:
+            # this can be achieved by introducing a new step in the filter. doing here for poc
+            from paypalserversdk.api_helper import ApiHelper
+            import json
+
+            print('\n\n\n\n\n\n Refunding the Paypal Order here \n\n\n\n\n\n')
+            ct_api_client = CommercetoolsAPIClient()
+            ct_order = ct_api_client.get_order_by_id(order_id=order_id)
+            capture_id = get_edx_paypal_payment_transaction_id(ct_order)
+            collect = {"capture_id": capture_id, "prefer": "return=minimal"}
+            refund_response = payments_controller.captures_refund(collect)
+
+            print("\n\n\n\n\n PAYPAL REFUND result:", refund_response)
+            print("\n\n\n\n\n PAYPAL REFUND result.body:", refund_response.body)
+            print("\n\n\n\n\n PAYPAL REFUND ApiHelper.json_serialize result.body:", ApiHelper.json_serialize(refund_response.body))
+            print("\n\n\n\n\n PAYPAL REFUND json.loads(ApiHelper.json_serialize(refund_response.body)):", json.loads(ApiHelper.json_serialize(refund_response.body)))
+            print("\n\n\n\n\n PAYPAL REFUND json.loads(ApiHelper.json_serialize(refund_response.body)).id:", json.loads(ApiHelper.json_serialize(refund_response.body)).get('id'))
+
             return {
-                'refund_response': ret_val
+                'refund_response': json.loads(ApiHelper.json_serialize(refund_response.body))
             }
-        except StripeError as ex:  # pragma: no cover
-            logger.info(f'[CT-{tag}] Unsuccessful Stripe refund with details:'
-                        f'[order_id: {order_id}, payment_intent_id: {payment_intent_id}'
-                        f'message_id: {kwargs["message_id"]}')
-            raise StripeIntentRefundAPIError from ex

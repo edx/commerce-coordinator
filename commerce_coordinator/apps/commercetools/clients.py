@@ -47,7 +47,7 @@ from commerce_coordinator.apps.commercetools.catalog_info.foundational_types imp
 from commerce_coordinator.apps.commercetools.utils import (
     find_refund_transaction,
     handle_commercetools_error,
-    translate_stripe_refund_status_to_transaction_status
+    translate_stripe_refund_status_to_transaction_status, translate_paypal_refund_status_to_transaction_status
 )
 from commerce_coordinator.apps.core.constants import ORDER_HISTORY_PER_SYSTEM_REQ_LIMIT
 
@@ -484,6 +484,48 @@ class CommercetoolsAPIClient:
             handle_commercetools_error(err, context)
             raise err
 
+    def create_paypal_return_payment_transaction(
+            self, payment, paypal_refund) -> CTPayment:
+        try:
+            logger.info(f"[CommercetoolsAPIClient] - Creating refund transaction for payment with ID {payment.id} "
+                        f"following successful Paypal refund {paypal_refund.get('id')}")
+
+            amount_as_money = CTMoney(
+                cent_amount=payment.amount_planned.cent_amount,
+                currency_code=payment.amount_planned.currency_code.upper()
+            )
+            print('\n\n\n\n amount_as_money', amount_as_money)
+            transaction_draft = TransactionDraft(
+                type=TransactionType.REFUND,
+                amount=amount_as_money,
+                timestamp=datetime.datetime.utcfromtimestamp(
+                    getattr(paypal_refund, 'create_time', datetime.datetime.now().timestamp())),
+                state=translate_paypal_refund_status_to_transaction_status(paypal_refund.get('status')),
+                interaction_id=paypal_refund.get('id')
+            )
+            print('\n\n\n\n transaction_draft', transaction_draft)
+            print('\n\n\n\n datetime', datetime.datetime.utcfromtimestamp(
+                    getattr(paypal_refund, 'create_time', datetime.datetime.now().timestamp())))
+
+            add_transaction_action = PaymentAddTransactionAction(
+                transaction=transaction_draft
+            )
+
+            returned_payment = self.base_client.payments.update_by_id(
+                id=payment.id,
+                version=payment.version,
+                actions=[add_transaction_action]
+            )
+            print('\n\n\n\n returned_payment', returned_payment)
+
+
+            return returned_payment
+        except CommercetoolsError as err:
+            context = f"Unable to create refund payment transaction for "\
+                      f"payment {payment.id} and paypal refund {paypal_refund.get('id')}"
+            handle_commercetools_error(err, context)
+            raise err
+
     def update_line_item_transition_state_on_fulfillment(self, order_id: str, order_version: int,
                                                          line_item_id: str, item_quantity: int,
                                                          from_state_id: str, new_state_key: str) -> CTOrder:
@@ -584,3 +626,39 @@ class CommercetoolsAPIClient:
                          f"with ID: {customer_id}, after LMS retirement with "
                          f"error correlation id {err.correlation_id} and error/s: {err.errors}")
             raise err
+
+
+from paypalserversdk.http.auth.o_auth_2 import ClientCredentialsAuthCredentials
+from paypalserversdk.logging.configuration.api_logging_configuration import (
+    LoggingConfiguration,
+    RequestLoggingConfiguration,
+    ResponseLoggingConfiguration,
+)
+from paypalserversdk.paypalserversdk_client import PaypalserversdkClient
+from paypalserversdk.controllers.orders_controller import OrdersController
+from paypalserversdk.controllers.payments_controller import PaymentsController
+from paypalserversdk.models.amount_with_breakdown import AmountWithBreakdown
+from paypalserversdk.models.checkout_payment_intent import CheckoutPaymentIntent
+from paypalserversdk.models.order_request import OrderRequest
+from paypalserversdk.models.purchase_unit_request import PurchaseUnitRequest
+from paypalserversdk.api_helper import ApiHelper
+
+paypal_client: PaypalserversdkClient = PaypalserversdkClient(
+    client_credentials_auth_credentials=ClientCredentialsAuthCredentials(
+        o_auth_client_id=settings.PAYPAL_CLIENT_ID,
+        o_auth_client_secret=settings.PAYPAL_CLIENT_SECRET,
+    ),
+    logging_configuration=LoggingConfiguration(
+        log_level=logging.INFO,
+        # Disable masking of sensitive headers for Sandbox testing.
+        # This should be set to True (the default if unset)in production.
+        mask_sensitive_headers=False,
+        request_logging_config=RequestLoggingConfiguration(
+            log_headers=True, log_body=True
+        ),
+        response_logging_config=ResponseLoggingConfiguration(
+            log_headers=True, log_body=True
+        ),
+    ),
+)
+payments_controller: PaymentsController = paypal_client.payments

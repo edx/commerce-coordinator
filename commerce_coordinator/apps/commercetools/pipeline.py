@@ -11,9 +11,11 @@ from openedx_filters import PipelineStep
 from openedx_filters.exceptions import OpenEdxFilterException
 from requests import HTTPError
 
+from commerce_coordinator.apps.commercetools.catalog_info.constants import EDX_STRIPE_PAYMENT_INTERFACE_NAME, \
+    EDX_PAYPAL_PAYMENT_INTERFACE_NAME
 from commerce_coordinator.apps.commercetools.catalog_info.edx_utils import (
-    get_edx_payment_intent_id,
-    get_edx_refund_amount
+    get_edx_payment_interface_id,
+    get_edx_refund_amount,
 )
 from commerce_coordinator.apps.commercetools.clients import CommercetoolsAPIClient
 from commerce_coordinator.apps.commercetools.constants import COMMERCETOOLS_ORDER_MANAGEMENT_SYSTEM
@@ -106,19 +108,22 @@ class FetchOrderDetailsByOrderNumber(PipelineStep):
                 "order_data": ct_order,
             }
 
-            intent_id = get_edx_payment_intent_id(ct_order)
+            interface_id, payment_service_provider = get_edx_payment_interface_id(ct_order)
+            print('\n\n\n\n\n FetchOrderDetailsByOrderNumber interface_id, payment_service_provider', interface_id, payment_service_provider)
 
-            if intent_id:
-                ct_payment = ct_api_client.get_payment_by_key(intent_id)
-                ret_val['payment_intent_id'] = intent_id
+            if interface_id:
+                ct_payment = ct_api_client.get_payment_by_key(interface_id)
+                ret_val['payment_intent_id'] = interface_id
                 ret_val['amount_in_cents'] = get_edx_refund_amount(ct_order)
                 ret_val['has_been_refunded'] = has_refund_transaction(ct_payment)
                 ret_val['payment_data'] = ct_payment
+                ret_val['payment_service_provider'] = payment_service_provider
             else:
                 ret_val['payment_intent_id'] = None
                 ret_val['amount_in_cents'] = decimal.Decimal(0.00)
                 ret_val['has_been_refunded'] = False
                 ret_val['payment_data'] = None
+                ret_val['payment_service_provider'] = None
 
             return ret_val
         except CommercetoolsError as err:  # pragma no cover
@@ -160,19 +165,21 @@ class FetchOrderDetailsByOrderID(PipelineStep):
                 "order_id": ct_order.id
             }
 
-            intent_id = get_edx_payment_intent_id(ct_order)
+            interface_id, payment_service_provider = get_edx_payment_interface_id(ct_order)
 
-            if intent_id:
-                ct_payment = ct_api_client.get_payment_by_key(intent_id)
-                ret_val['payment_intent_id'] = intent_id
+            if interface_id and payment_service_provider:
+                ct_payment = ct_api_client.get_payment_by_key(interface_id)
+                ret_val['payment_intent_id'] = interface_id
                 ret_val['amount_in_cents'] = get_edx_refund_amount(ct_order)
                 ret_val['has_been_refunded'] = has_refund_transaction(ct_payment)
                 ret_val['payment_data'] = ct_payment
+                ret_val['payment_service_provider'] = payment_service_provider
             else:
                 ret_val['payment_intent_id'] = None
                 ret_val['amount_in_cents'] = decimal.Decimal(0.00)
                 ret_val['has_been_refunded'] = False
                 ret_val['payment_data'] = None
+                ret_val['payment_service_provider'] = None
 
             return ret_val
         except CommercetoolsError as err:  # pragma no cover
@@ -296,8 +303,14 @@ class CreateReturnPaymentTransaction(PipelineStep):
         active_order_management_system,
         payment_data,
         has_been_refunded,
+        payment_service_provider,
         **kwargs
     ):  # pylint: disable=arguments-differ
+        print('\n\n\n\n CreateReturnPaymentTransaction refund_response', refund_response)
+        print('\n\n\n\n CreateReturnPaymentTransaction payment_data', payment_data)
+        print('\n\n\n\n CreateReturnPaymentTransaction has_been_refunded', has_been_refunded)
+        print('\n\n\n\n CreateReturnPaymentTransaction payment_service_provider', payment_service_provider)
+        print('\n\n\n\n CreateReturnPaymentTransaction **kwargs', kwargs)
         """
         Execute a filter with the signature specified.
         Arguments:
@@ -328,11 +341,17 @@ class CreateReturnPaymentTransaction(PipelineStep):
                 payment_key = refund_response['payment_intent']
                 payment_on_order = ct_api_client.get_payment_by_key(payment_key)
 
-            updated_payment = ct_api_client.create_return_payment_transaction(
-                payment_id=payment_on_order.id,
-                payment_version=payment_on_order.version,
-                stripe_refund=refund_response
-            )
+            if payment_service_provider == EDX_STRIPE_PAYMENT_INTERFACE_NAME:
+                updated_payment = ct_api_client.create_return_payment_transaction(
+                    payment_id=payment_on_order.id,
+                    payment_version=payment_on_order.version,
+                    stripe_refund=refund_response
+                )
+            elif payment_service_provider == EDX_PAYPAL_PAYMENT_INTERFACE_NAME:
+                updated_payment = ct_api_client.create_paypal_return_payment_transaction(
+                    payment=payment_on_order,
+                    paypal_refund=refund_response
+                )
 
             return {
                 'returned_payment': updated_payment

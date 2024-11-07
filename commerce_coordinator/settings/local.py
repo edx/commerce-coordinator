@@ -7,6 +7,7 @@ ALLOWED_HOSTS += (
     'host.docker.internal',
     'localhost',
     '.ngrok-free.app',
+    '.share.zrok.io'
 )
 
 INSTALLED_APPS += (
@@ -17,6 +18,7 @@ INSTALLED_APPS += (
 CORS_ORIGIN_WHITELIST = [
     'http://localhost:1996',  # frontend-app-ecommerce
     'http://localhost:1998',  # frontend-app-payment
+    'https://bo1qumbnpc79.share.zrok.io',
 ]
 # END CORS CONFIGURATION
 
@@ -138,8 +140,8 @@ PAYMENT_PROCESSOR_CONFIG = {
             'log_level': 'debug',
             'max_network_retries': 0,
             'proxy': None,
-            'publishable_key': 'SET-ME-PLEASE',
-            'secret_key': 'SET-ME-PLEASE',
+            'publishable_key': 'pk_test_51Ls7QSH4caH7G0X1prLj26IWylx2AP5vGA3nd4GMGPRXjVQlA9HATsF2aC5QhbeGNnTr2xijDLQPQzqefrMvHvke00L5eGLK4N',
+            'secret_key': 'sk_test_51Ls7QSH4caH7G0X1EYdtyB8nd9mZxOkpm8qDg4cv2GPVYZkP0tGttGn7DAJgBZMWyxme3Gjro8u6ClqbnDwxcAH9001GSoURRk',
             'source_system_identifier': 'edx/commerce_coordinator?v=1',
             'webhook_endpoint_secret': 'SET-ME-PLEASE',
         },

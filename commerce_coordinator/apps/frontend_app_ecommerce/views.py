@@ -58,6 +58,8 @@ class RedirectReceiptView(APIView):
             order_number=params['order_number']
         )
 
+        print('\n\n\n\n\nredirect_url:', redirect_url, '\n\n\n\n\n')
+
         if redirect_url:
             redirect = HttpResponseRedirect(redirect_url, status=HTTP_303_SEE_OTHER)
             redirect.headers[HttpHeadersNames.CACHE_CONTROL.value] = "max-age=2591000"  # 16ish mins short of 30 days

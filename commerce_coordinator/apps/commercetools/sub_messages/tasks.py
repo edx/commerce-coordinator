@@ -14,9 +14,8 @@ from commerce_coordinator.apps.commercetools.catalog_info.edx_utils import (
     get_edx_lms_user_id,
     get_edx_lms_user_name,
     get_edx_order_workflow_state_key,
-    get_edx_payment_intent_id,
     get_edx_product_course_run_key,
-    is_edx_lms_order
+    is_edx_lms_order, get_edx_payment_interface_id
 )
 from commerce_coordinator.apps.commercetools.clients import CommercetoolsAPIClient
 from commerce_coordinator.apps.commercetools.constants import EMAIL_NOTIFICATION_CACHE_TTL_SECS
@@ -49,6 +48,9 @@ def fulfill_order_placed_message_signal_task(
 
     tag = "fulfill_order_placed_message_signal_task"
 
+    print('\n\n\n\ninside fulfill_order_placed_message_signal_task = ', f'[CT-{tag}] Processing order {order_id}, '
+                f'line item {line_item_state_id}, source system {source_system}, message id: {message_id}')
+
     logger.info(f'[CT-{tag}] Processing order {order_id}, '
                 f'line item {line_item_state_id}, source system {source_system}, message id: {message_id}')
 
@@ -61,12 +63,16 @@ def fulfill_order_placed_message_signal_task(
                      f'message id: {message_id}')
         return False
 
+    print('\n\n\n\ninside fulfill_order_placed_message_signal_task order = ', order)
+
     try:
         customer = client.get_customer_by_id(order.customer_id)
     except CommercetoolsError as err:  # pragma no cover
         logger.error(f'[CT-{tag}]  Customer not found: {order.customer_id} for order {order_id} with '
                      f'CT error {err}, {err.errors}, message id: {message_id}')
         return False
+
+    print('\n\n\n\ninside fulfill_order_placed_message_signal_task customer = ', customer)
 
     if not (customer and order and is_edx_lms_order(order)):
         logger.debug(f'[CT-{tag}] order {order_id} is not an edX order, message id: {message_id}')
@@ -121,6 +127,8 @@ def fulfill_order_placed_message_signal_task(
         serializer.is_valid(raise_exception=True)  # pragma no cover
 
         payload = serializer.validated_data
+        print('\n\n\n\nsending fulfill_order_placed_signal payload = ', payload)
+
         fulfill_order_placed_signal.send_robust(
             sender=fulfill_order_placed_message_signal_task,
             **payload
@@ -265,7 +273,10 @@ def fulfill_order_returned_signal_task(
         logger.debug(f'[CT-{tag}] order {order_id} is not an edX order, message id: {message_id}')
         return True
 
-    payment_intent_id = get_edx_payment_intent_id(order)
+    print('\n\n\n\ninside fulfill_order_returned_signal_task order = ', order)
+    payment_intent_id, psp = get_edx_payment_interface_id(order)
+    print('\n\n\n\ninside fulfill_order_returned_signal_task payment_intent_id = ', payment_intent_id, psp)
+
     lms_user_name = get_edx_lms_user_name(customer)
     lms_user_id = get_edx_lms_user_id(customer)
 

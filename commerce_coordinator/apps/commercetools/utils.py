@@ -184,6 +184,18 @@ def translate_stripe_refund_status_to_transaction_status(stripe_refund_status: s
     }
     return translations.get(stripe_refund_status.lower(), stripe_refund_status)
 
+def translate_paypal_refund_status_to_transaction_status(paypal_refund_status: str):
+    """
+    Utility to translate stripe's refund object's status attribute to a valid CT transaction state
+    """
+    translations = {
+        'completed': TransactionState.SUCCESS,
+    }
+    print('\n\n\n\n\n\n translate_paypal_refund_status_to_transaction_status paypal_refund_status ', paypal_refund_status, type(paypal_refund_status))
+    print('\n\n\n\n\n\n translate_paypal_refund_status_to_transaction_status return ', translations.get(paypal_refund_status.lower(), paypal_refund_status))
+    print('\n\n\n\n\n\n translate_paypal_refund_status_to_transaction_status TransactionState.SUCCESS ', TransactionState.SUCCESS)
+    return translations.get(paypal_refund_status.lower(), paypal_refund_status)
+
 
 def _create_retired_hash_withsalt(value_to_retire, salt):
     """
