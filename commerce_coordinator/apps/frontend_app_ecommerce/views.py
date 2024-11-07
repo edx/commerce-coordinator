@@ -74,8 +74,8 @@ class UserOrdersView(APIView):
 
     def get(self, request):
         """Return paginated response of user's order history."""
-
-        logger.info("[UserOrdersView] GET method started at: %s", datetime.now())
+        request_start_time = datetime.now()
+        logger.info("[UserOrdersView] GET method started at: %s", request_start_time)
 
         user = request.user
         user.add_lms_user_id("UserOrdersView GET method")
@@ -95,25 +95,38 @@ class UserOrdersView(APIView):
         if not request.user.lms_user_id:  # pragma: no cover
             raise PermissionDenied(detail="Could not detect LMS user id.")
 
-        logger.info("[UserOrdersView] Filter run started at: %s", datetime.now())
+        start_time = datetime.now()
+        logger.info("[UserOrdersView] Filter run started at: %s", start_time)
         order_data = OrderHistoryRequested.run_filter(request, params)
-        logger.info("[UserOrdersView] Filter run finished at: %s", datetime.now())
+        end_time = datetime.now()
+        logger.info("[UserOrdersView] Filter run finished at: %s with total duration: %s", end_time,
+           end_time - start_time)
 
         output_orders = []
 
-        logger.info("[UserOrdersView] Looping through results starting at: %s", datetime.now())
+        start_time = datetime.now()
+        logger.info("[UserOrdersView] Looping through results starting at: %s", start_time)
         for order_set in order_data:
             output_orders.extend(order_set['results'])
-        logger.info("[UserOrdersView] Looping through results finished at: %s", datetime.now())
 
-        logger.info("[UserOrdersView] Sorting results for output starting at: %s", datetime.now())
+        end_time = datetime.now()
+        logger.info("[UserOrdersView] Looping through results finished at: %s with total duration: %s",end_time,
+            end_time - start_time)
+
+        start_time = datetime.now()
+        logger.info("[UserOrdersView] Sorting results for output starting at: %s", start_time)
         output = {
             "count": request.query_params['page_size'],  # This suppresses the ecomm mfe Order History Pagination ctrl
             "next": None,
             "previous": None,
             "results": sorted(output_orders, key=lambda item: date_conv(item["date_placed"]), reverse=True)
         }
-        logger.info("[UserOrdersView] Sorting results for output finished at: %s", datetime.now())
 
-        logger.info("[UserOrdersView] GET method finished at: %s", datetime.now())
+        end_time = datetime.now()
+        logger.info("[UserOrdersView] Sorting results for output finished at: %s with total duration: %s",
+                    end_time, end_time - start_time)
+
+        request_end_time = datetime.now()
+        logger.info("[UserOrdersView] GET method finished at: %s with total duration: %s", request_end_time,
+                    request_end_time - request_start_time)
         return Response(output)

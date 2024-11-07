@@ -45,7 +45,8 @@ class GetCommercetoolsOrders(PipelineStep):
             order_data: any preliminary orders (from an earlier pipeline step) we want to append to
         Returns:
         """
-        log.info("[UserOrdersView] [GetCommercetoolsOrders] Starting pipeline step execution at %s", datetime.now())
+        method_start_time = datetime.now()
+        log.info("[UserOrdersView] [GetCommercetoolsOrders] Starting pipeline step execution at %s", method_start_time)
 
         if not is_redirect_to_commercetools_enabled_for_user(request):
             return PipelineCommand.CONTINUE.value
@@ -58,27 +59,35 @@ class GetCommercetoolsOrders(PipelineStep):
                 offset=params["page"] * params["page_size"]
             )
 
+            start_time = datetime.now()
             log.info(
                 "[UserOrdersView] [GetCommercetoolsOrders] orders to attrs objects processing started at %s",
-                datetime.now()
+                start_time
             )
             # noinspection PyTypeChecker
             converted_orders = [attrs.asdict(order_from_commercetools(x, ct_orders[1]))
                                 for x in ct_orders[0].results]
+            end_time = datetime.now()
             log.info(
-                "[UserOrdersView] [GetCommercetoolsOrders] orders to attrs objects processing finished at %s",
-                datetime.now()
+                "[UserOrdersView] [GetCommercetoolsOrders] \
+                    orders to attrs objects processing finished at %s with total duration: %s",
+                end_time, end_time - start_time
             )
 
-            log.info("[UserOrdersView] [GetCommercetoolsOrders] Orders rebuild call started at %s", datetime.now())
+            start_time = datetime.now()
+            log.info("[UserOrdersView] [GetCommercetoolsOrders] Orders rebuild call started at %s", start_time)
             order_data.append(
                 ct_orders[0].rebuild(converted_orders)
             )
-            log.info("[UserOrdersView] [GetCommercetoolsOrders] Orders rebuild call finished at %s", datetime.now())
+            end_time = datetime.now()
+            log.info("[UserOrdersView] [GetCommercetoolsOrders] \
+                Orders rebuild call finished at %s with total duration: %s", end_time, end_time - start_time)
 
+            method_end_time = datetime.now()
             log.info(
-                "[UserOrdersView] [GetCommercetoolsOrders] Completed pipeline step execution at %s",
-                datetime.now()
+                "[UserOrdersView] [GetCommercetoolsOrders] \
+                    Completed pipeline step execution at %s with total duration: %s",
+                method_end_time, method_end_time - method_start_time
             )
             return {
                 "order_data": order_data

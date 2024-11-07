@@ -40,7 +40,8 @@ class GetEcommerceOrders(PipelineStep):
             params: arguments passed through from the original order history url querystring
             order_data: any preliminary orders (from an earlier pipeline step) we want to append to
         """
-        log.info("[UserOrdersView] [GetEcommerceOrders] Starting pipeline step execution at %s", datetime.now())
+        start_time = datetime.now()
+        log.info("[UserOrdersView] [GetEcommerceOrders] Starting pipeline step execution at %s", start_time)
 
         new_params = params.copy()
         # Ecommerce starts pagination from 1, other systems from 0, since the invoker assumes 0, we're always 1 off.
@@ -52,7 +53,10 @@ class GetEcommerceOrders(PipelineStep):
 
             order_data.append(ecommerce_response)
 
-            log.info("[UserOrdersView] [GetEcommerceOrders] Completed pipeline step execution at %s", datetime.now())
+            end_time = datetime.now()
+            log.info(
+                "[UserOrdersView] [GetEcommerceOrders] Completed pipeline step execution at %s with total duration: %s",
+                end_time, end_time - start_time)
             return {
                 "order_data": order_data
             }

@@ -285,24 +285,29 @@ class CommercetoolsAPIClient:
             offset:
             limit:
         """
+        start_time = datetime.datetime.now()
         logger.info(
             "[UserOrdersView] [CommercetoolsAPIClient] - Getting customer if from lms id call started at %s",
-            datetime.datetime.now()
+           start_time
         )
         customer = self.get_customer_by_lms_user_id(edx_lms_user_id)
+        end_time = datetime.datetime.now()
         logger.info(
-            "[UserOrdersView] [CommercetoolsAPIClient] - Getting customer if from lms id call finished at %s",
-            datetime.datetime.now()
+            "[UserOrdersView] [CommercetoolsAPIClient] - \
+                Getting customer if from lms id call finished at %s with total duration: %s",
+            end_time, end_time - start_time
         )
 
         if customer is None:  # pragma: no cover
             raise ValueError(f'Unable to locate customer with ID #{edx_lms_user_id}')
 
+        start_time = datetime.datetime.now()
         logger.info("[UserOrdersView] [CommercetoolsAPIClient] - Get orders call started at %s",
-                    datetime.datetime.now())
+                    start_time)
         orders = self.get_orders(customer, offset, limit)
-        logger.info("[UserOrdersView] [CommercetoolsAPIClient] - Get orders call finished at %s",
-                    datetime.datetime.now())
+        end_time = datetime.datetime.now()
+        logger.info("[UserOrdersView] [CommercetoolsAPIClient] - \
+            Get orders call finished at %s with total duration: %s", end_time, end_time - start_time)
 
         return orders, customer
 
