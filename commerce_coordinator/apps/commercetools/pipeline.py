@@ -52,18 +52,10 @@ class GetCommercetoolsOrders(PipelineStep):
 
         try:
             ct_api_client = CommercetoolsAPIClient()
-            log.info(
-                "[UserOrdersView] [GetCommercetoolsOrders] get_orders_for_customer call started at %s",
-                datetime.now()
-            )
             ct_orders = ct_api_client.get_orders_for_customer(
                 edx_lms_user_id=params["edx_lms_user_id"],
                 limit=params["page_size"],
                 offset=params["page"] * params["page_size"]
-            )
-            log.info(
-                "[UserOrdersView] [GetCommercetoolsOrders] get_orders_for_customer call finished at %s",
-                datetime.now()
             )
 
             log.info(
