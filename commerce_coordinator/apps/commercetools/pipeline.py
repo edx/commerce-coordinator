@@ -2,6 +2,7 @@
 Commercetools filter pipelines
 """
 import decimal
+from datetime import datetime
 from logging import getLogger
 
 import attrs
@@ -44,6 +45,8 @@ class GetCommercetoolsOrders(PipelineStep):
             order_data: any preliminary orders (from an earlier pipeline step) we want to append to
         Returns:
         """
+        method_start_time = datetime.now()
+        log.info("[UserOrdersView] Starting CT orders pipeline step execution at %s", method_start_time)
 
         if not is_redirect_to_commercetools_enabled_for_user(request):
             return PipelineCommand.CONTINUE.value
@@ -56,14 +59,34 @@ class GetCommercetoolsOrders(PipelineStep):
                 offset=params["page"] * params["page_size"]
             )
 
+            start_time = datetime.now()
+            log.info(
+                "[UserOrdersView] CT orders to attrs objects processing started at %s",
+                start_time
+            )
             # noinspection PyTypeChecker
             converted_orders = [attrs.asdict(order_from_commercetools(x, ct_orders[1]))
                                 for x in ct_orders[0].results]
+            end_time = datetime.now()
+            log.info(
+                "[UserOrdersView] CT orders to attrs objects processing finished at %s with total duration: %ss",
+                end_time, (end_time - start_time).total_seconds()
+            )
 
+            start_time = datetime.now()
+            log.info("[UserOrdersView] CT orders rebuild call started at %s", start_time)
             order_data.append(
                 ct_orders[0].rebuild(converted_orders)
             )
+            end_time = datetime.now()
+            log.info("[UserOrdersView] CT orders rebuild call finished at %s with total duration: %ss",
+                     end_time, (end_time - start_time).total_seconds())
 
+            method_end_time = datetime.now()
+            log.info(
+                "[UserOrdersView] Completed CT pipeline step execution at %s with total duration: %ss",
+                method_end_time, (method_end_time - method_start_time).total_seconds()
+            )
             return {
                 "order_data": order_data
             }
