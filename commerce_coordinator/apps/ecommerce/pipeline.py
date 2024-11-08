@@ -55,8 +55,8 @@ class GetEcommerceOrders(PipelineStep):
 
             end_time = datetime.now()
             log.info(
-                "[UserOrdersView] Completed Ecommerce pipeline step execution at %s with total duration: %s",
-                end_time, end_time - start_time)
+                "[UserOrdersView] Completed Ecommerce pipeline step execution at %s with total duration: %ss",
+                end_time, (end_time - start_time).total_seconds())
             return {
                 "order_data": order_data
             }

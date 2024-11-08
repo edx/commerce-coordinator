@@ -44,8 +44,8 @@ class EcommerceAPIClient(BaseEdxOAuthClient):
             response = self.client.get(resource_url, params=query_params)
             end_time = datetime.now()
             logger.info(
-                '[UserOrdersView] Legacy ecommerce get_orders API finished at: %s with total duration: %s',
-                end_time, end_time - start_time
+                '[UserOrdersView] Legacy ecommerce get_orders API finished at: %s with total duration: %ss',
+                end_time, (end_time - start_time).total_seconds()
             )
             response.raise_for_status()
             self.log_request_response(logger, response)

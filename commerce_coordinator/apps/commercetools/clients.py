@@ -272,8 +272,8 @@ class CommercetoolsAPIClient:
         )
         end_time = datetime.datetime.now()
         logger.info(
-            "[UserOrdersView] Get CT orders query call finished at %s with total duration: %s",
-            end_time, end_time - start_time
+            "[UserOrdersView] Get CT orders query call finished at %s with total duration: %ss",
+            end_time, (end_time - start_time).total_seconds()
         )
 
         start_time = datetime.datetime.now()
@@ -282,8 +282,8 @@ class CommercetoolsAPIClient:
         result = PaginatedResult(values.results, values.total, values.offset)
         end_time = datetime.datetime.now()
         logger.info(
-            '[UserOrdersView] Pagination of CT orders finished at %s with total duration: %s',
-            end_time, end_time - start_time)
+            '[UserOrdersView] Pagination of CT orders finished at %s with total duration: %ss',
+            end_time, (end_time - start_time).total_seconds())
 
         return result
 
@@ -304,8 +304,8 @@ class CommercetoolsAPIClient:
         customer = self.get_customer_by_lms_user_id(edx_lms_user_id)
         end_time = datetime.datetime.now()
         logger.info(
-            "[UserOrdersView] For CT orders get customer id from lms id call finished at %s with total duration: %s",
-            end_time, end_time - start_time
+            "[UserOrdersView] For CT orders get customer id from lms id call finished at %s with total duration: %ss",
+            end_time, (end_time - start_time).total_seconds()
         )
 
         if customer is None:  # pragma: no cover
@@ -316,8 +316,8 @@ class CommercetoolsAPIClient:
                     start_time)
         orders = self.get_orders(customer, offset, limit)
         end_time = datetime.datetime.now()
-        logger.info("[UserOrdersView] Get CT orders call finished at %s with total duration: %s",
-                    end_time, end_time - start_time)
+        logger.info("[UserOrdersView] Get CT orders call finished at %s with total duration: %ss",
+                    end_time, (end_time - start_time).total_seconds())
 
         return orders, customer
 

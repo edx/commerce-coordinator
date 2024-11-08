@@ -69,8 +69,8 @@ class GetCommercetoolsOrders(PipelineStep):
                                 for x in ct_orders[0].results]
             end_time = datetime.now()
             log.info(
-                "[UserOrdersView] CT orders to attrs objects processing finished at %s with total duration: %s",
-                end_time, end_time - start_time
+                "[UserOrdersView] CT orders to attrs objects processing finished at %s with total duration: %ss",
+                end_time, (end_time - start_time).total_seconds()
             )
 
             start_time = datetime.now()
@@ -79,13 +79,13 @@ class GetCommercetoolsOrders(PipelineStep):
                 ct_orders[0].rebuild(converted_orders)
             )
             end_time = datetime.now()
-            log.info("[UserOrdersView] CT orders rebuild call finished at %s with total duration: %s",
-                     end_time, end_time - start_time)
+            log.info("[UserOrdersView] CT orders rebuild call finished at %s with total duration: %ss",
+                     end_time, (end_time - start_time).total_seconds())
 
             method_end_time = datetime.now()
             log.info(
-                "[UserOrdersView] Completed CT pipeline step execution at %s with total duration: %s",
-                method_end_time, method_end_time - method_start_time
+                "[UserOrdersView] Completed CT pipeline step execution at %s with total duration: %ss",
+                method_end_time, (method_end_time - method_start_time).total_seconds()
             )
             return {
                 "order_data": order_data

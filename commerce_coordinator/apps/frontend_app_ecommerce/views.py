@@ -99,8 +99,8 @@ class UserOrdersView(APIView):
         logger.info("[UserOrdersView] Pipline filter run started at: %s", start_time)
         order_data = OrderHistoryRequested.run_filter(request, params)
         end_time = datetime.now()
-        logger.info("[UserOrdersView] Pipline filter run finished at: %s with total duration: %s",
-                    end_time, end_time - start_time)
+        logger.info("[UserOrdersView] Pipline filter run finished at: %s with total duration: %ss",
+                    end_time, (end_time - start_time).total_seconds())
 
         output_orders = []
 
@@ -111,8 +111,8 @@ class UserOrdersView(APIView):
 
         end_time = datetime.now()
         logger.info(
-            "[UserOrdersView] Looping through combined orders results finished at: %s with total duration: %s",
-            end_time, end_time - start_time)
+            "[UserOrdersView] Looping through combined orders results finished at: %s with total duration: %ss",
+            end_time, (end_time - start_time).total_seconds())
 
         start_time = datetime.now()
         logger.info("[UserOrdersView] Sorting combined orders results for output starting at: %s", start_time)
@@ -125,10 +125,10 @@ class UserOrdersView(APIView):
 
         end_time = datetime.now()
         logger.info(
-            "[UserOrdersView] Sorting combined orders results for output finished at: %s with total duration: %s",
-            end_time, end_time - start_time)
+            "[UserOrdersView] Sorting combined orders results for output finished at: %s with total duration: %ss",
+            end_time, (end_time - start_time).total_seconds())
 
         request_end_time = datetime.now()
-        logger.info("[UserOrdersView] GET method finished at: %s with total duration: %s", request_end_time,
-                    request_end_time - request_start_time)
+        logger.info("[UserOrdersView] GET method finished at: %s with total duration: %ss", request_end_time,
+                    (request_end_time - request_start_time).total_seconds())
         return Response(output)
