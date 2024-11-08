@@ -31,6 +31,7 @@ Initial Setup: steps and confirmation
 
 Note: this setup process is temporary; we will be working on a Tutor plugin
 
+
 Local
 ======
 
