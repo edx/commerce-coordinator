@@ -84,7 +84,6 @@ def fulfill_order_placed_message_signal_task(
         'order_id': order.id,
         'provider_id': None,
         'edx_lms_user_id': lms_user_id,
-        'course_mode': get_course_mode_from_ct_order(order=order),
         'date_placed': order.last_modified_at.strftime(ISO_8601_FORMAT),
         'source_system': source_system,
     }
@@ -113,6 +112,7 @@ def fulfill_order_placed_message_signal_task(
             **default_params,
             'course_id': get_edx_product_course_run_key(item),  # likely not correct
             'line_item_id': item.id,
+            'course_mode': get_course_mode_from_ct_order(item),
             'item_quantity': item.quantity,
             'line_item_state_id': line_item_state_id,
             'message_id': message_id

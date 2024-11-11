@@ -60,7 +60,7 @@ class TestEdXFunctions(unittest.TestCase):
         self.assertTrue(is_edx_lms_order(self.order))
 
     def test_get_course_mode_from_ct_order(self):
-        self.assertEqual(get_course_mode_from_ct_order(self.order), 'certified')
+        self.assertEqual(get_course_mode_from_ct_order(get_edx_items(self.order)[0]), 'certified')
 
     def test_get_edx_lms_user_id(self):
         self.assertEqual(get_edx_lms_user_id(self.user), DEFAULT_EDX_LMS_USER_ID)
