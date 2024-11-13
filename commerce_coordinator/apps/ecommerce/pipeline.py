@@ -1,6 +1,7 @@
 """
 Ecommerce filter pipelines
 """
+from datetime import datetime
 from logging import getLogger
 
 from django.conf import settings
@@ -39,6 +40,8 @@ class GetEcommerceOrders(PipelineStep):
             params: arguments passed through from the original order history url querystring
             order_data: any preliminary orders (from an earlier pipeline step) we want to append to
         """
+        start_time = datetime.now()
+        log.info("[UserOrdersView] Starting Ecommerce pipeline step execution at %s", start_time)
 
         new_params = params.copy()
         # Ecommerce starts pagination from 1, other systems from 0, since the invoker assumes 0, we're always 1 off.
@@ -50,6 +53,10 @@ class GetEcommerceOrders(PipelineStep):
 
             order_data.append(ecommerce_response)
 
+            end_time = datetime.now()
+            log.info(
+                "[UserOrdersView] Completed Ecommerce pipeline step execution at %s with total duration: %ss",
+                end_time, (end_time - start_time).total_seconds())
             return {
                 "order_data": order_data
             }
