@@ -2,6 +2,7 @@
 API clients for ecommerce app.
 """
 import logging
+from datetime import datetime
 
 from django.conf import settings
 from requests.exceptions import RequestException
@@ -35,10 +36,21 @@ class EcommerceAPIClient(BaseEdxOAuthClient):
         """
         try:
             resource_url = urljoin_directory(self.api_base_url, '/orders')
+            start_time = datetime.now()
+            logger.info(
+                '[UserOrdersView] Legacy ecommerce get_orders API called at: %s',
+                start_time
+            )
             response = self.client.get(resource_url, params=query_params)
+            end_time = datetime.now()
+            logger.info(
+                '[UserOrdersView] Legacy ecommerce get_orders API finished at: %s with total duration: %ss',
+                end_time, (end_time - start_time).total_seconds()
+            )
             response.raise_for_status()
             self.log_request_response(logger, response)
         except RequestException as exc:
             self.log_request_exception(logger, exc)
             raise
+
         return response.json()

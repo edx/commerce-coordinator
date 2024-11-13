@@ -74,6 +74,8 @@ class UserOrdersView(APIView):
 
     def get(self, request):
         """Return paginated response of user's order history."""
+        request_start_time = datetime.now()
+        logger.info("[UserOrdersView] GET method started at: %s", request_start_time)
 
         user = request.user
         user.add_lms_user_id("UserOrdersView GET method")
@@ -93,13 +95,27 @@ class UserOrdersView(APIView):
         if not request.user.lms_user_id:  # pragma: no cover
             raise PermissionDenied(detail="Could not detect LMS user id.")
 
+        start_time = datetime.now()
+        logger.info("[UserOrdersView] Pipline filter run started at: %s", start_time)
         order_data = OrderHistoryRequested.run_filter(request, params)
+        end_time = datetime.now()
+        logger.info("[UserOrdersView] Pipline filter run finished at: %s with total duration: %ss",
+                    end_time, (end_time - start_time).total_seconds())
 
         output_orders = []
 
+        start_time = datetime.now()
+        logger.info("[UserOrdersView] Looping through combined orders results starting at: %s", start_time)
         for order_set in order_data:
             output_orders.extend(order_set['results'])
 
+        end_time = datetime.now()
+        logger.info(
+            "[UserOrdersView] Looping through combined orders results finished at: %s with total duration: %ss",
+            end_time, (end_time - start_time).total_seconds())
+
+        start_time = datetime.now()
+        logger.info("[UserOrdersView] Sorting combined orders results for output starting at: %s", start_time)
         output = {
             "count": request.query_params['page_size'],  # This suppresses the ecomm mfe Order History Pagination ctrl
             "next": None,
@@ -107,4 +123,12 @@ class UserOrdersView(APIView):
             "results": sorted(output_orders, key=lambda item: date_conv(item["date_placed"]), reverse=True)
         }
 
+        end_time = datetime.now()
+        logger.info(
+            "[UserOrdersView] Sorting combined orders results for output finished at: %s with total duration: %ss",
+            end_time, (end_time - start_time).total_seconds())
+
+        request_end_time = datetime.now()
+        logger.info("[UserOrdersView] GET method finished at: %s with total duration: %ss", request_end_time,
+                    (request_end_time - request_start_time).total_seconds())
         return Response(output)
