@@ -40,11 +40,25 @@ def is_edx_lms_order(order: CTOrder) -> bool:
     return len(get_edx_items(order)) >= 1
 
 
+def get_line_item_attribute(in_line_item, in_attribute_name):  # pragma no cover
+    """Utility to get line item's attribute's value."""
+    attribute_value = None
+    for attribute in in_line_item.variant.attributes:
+        if attribute.name == in_attribute_name and hasattr(attribute, 'value'):
+            if isinstance(attribute.value, dict):
+                attribute_value = attribute.value.get('label', None)
+            elif isinstance(attribute.value, str):
+                attribute_value = attribute.value
+            break
+
+    return attribute_value
+
+
 def get_course_mode_from_ct_order(line_item: CTLineItem) -> str:
+    course_mode = get_line_item_attribute(line_item, 'mode')
     mode = 'verified'
-    for attribute in line_item.variant.attributes:
-        if attribute.name == 'mode':
-            mode = attribute.value
+    if course_mode is not None:
+        mode = course_mode
 
     return mode
 

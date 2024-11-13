@@ -17,6 +17,7 @@ from commerce_coordinator.apps.commercetools.catalog_info.edx_utils import (
     get_edx_order_workflow_state_key,
     get_edx_payment_intent_id,
     get_edx_product_course_run_key,
+    get_line_item_attribute,
     is_edx_lms_order
 )
 from commerce_coordinator.apps.commercetools.clients import CommercetoolsAPIClient
@@ -203,19 +204,6 @@ def fulfill_order_returned_signal_task(
 ):
     """Celery task for an order return (and refunded) message."""
 
-    def _get_line_item_attribute(in_line_item, in_attribute_name):  # pragma no cover
-        """Utility to get line item's attribute's value."""
-        attribute_value = None
-        for attribute in in_line_item.variant.attributes:
-            if attribute.name == in_attribute_name and hasattr(attribute, 'value'):
-                if isinstance(attribute.value, dict):
-                    attribute_value = attribute.value.get('label', None)
-                elif isinstance(attribute.value, str):
-                    attribute_value = attribute.value
-                break
-
-        return attribute_value
-
     def _cents_to_dollars(in_amount):
         return in_amount.cent_amount / pow(
             10, in_amount.fraction_digits
@@ -300,10 +288,10 @@ def fulfill_order_returned_signal_task(
                         'name': line_item.name['en-US'],
                         'price': _cents_to_dollars(line_item.price.value),
                         'quantity': line_item.quantity,
-                        'category': _get_line_item_attribute(line_item, 'primary-subject-area'),
+                        'category': get_line_item_attribute(line_item, 'primary-subject-area'),
                         'image_url': line_item.variant.images[0].url if line_item.variant.images else None,
-                        'brand': _get_line_item_attribute(line_item, 'brand-text'),
-                        'url': _get_line_item_attribute(line_item, 'url-course'),
+                        'brand': get_line_item_attribute(line_item, 'brand-text'),
+                        'url': get_line_item_attribute(line_item, 'url-course'),
                         'lob': 'edX',  # TODO: Decision was made to hardcode this value for phase 1.
                         'product_type': line_item.product_type.obj.name
                         if hasattr(line_item.product_type.obj, 'name') else None
