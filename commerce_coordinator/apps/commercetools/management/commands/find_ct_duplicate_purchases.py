@@ -19,6 +19,8 @@ class Command(CommercetoolsAPIClientCommand):
         order_state = "Complete"
         # TODO: Change for your use case
         last_modified_at = "2024-10-23T00:00:00"
+        limit = 500
+        offset = 0
 
         orders_result = self.ct_api_client.base_client.orders.query(
             where=[
@@ -26,8 +28,8 @@ class Command(CommercetoolsAPIClientCommand):
                 f'lastModifiedAt>"{last_modified_at}"',
             ],
             sort=["completedAt desc", "lastModifiedAt desc"],
-            limit=500,
-            offset=0,
+            limit=limit,
+            offset=offset,
         )
 
         orders = orders_result.results
