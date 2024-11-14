@@ -9,7 +9,6 @@ from requests import RequestException
 
 from commerce_coordinator.apps.commercetools.catalog_info.constants import TwoUKeys
 from commerce_coordinator.apps.commercetools.catalog_info.edx_utils import (
-    get_course_mode_from_ct_order,
     get_edx_is_sanctioned,
     get_edx_items,
     get_edx_lms_user_id,
@@ -17,8 +16,11 @@ from commerce_coordinator.apps.commercetools.catalog_info.edx_utils import (
     get_edx_order_workflow_state_key,
     get_edx_payment_intent_id,
     get_edx_product_course_run_key,
-    get_line_item_attribute,
     is_edx_lms_order
+)
+from commerce_coordinator.apps.commercetools.catalog_info.utils import (
+    get_course_mode_from_ct_order,
+    get_line_item_attribute
 )
 from commerce_coordinator.apps.commercetools.clients import CommercetoolsAPIClient
 from commerce_coordinator.apps.commercetools.constants import EMAIL_NOTIFICATION_CACHE_TTL_SECS

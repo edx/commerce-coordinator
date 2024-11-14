@@ -6,7 +6,6 @@ from commercetools.platform.models import Customer as CTCustomer
 from commercetools.platform.models import Order as CTOrder
 
 from commerce_coordinator.apps.commercetools.catalog_info.edx_utils import (
-    get_course_mode_from_ct_order,
     get_edx_items,
     get_edx_lms_user_id,
     get_edx_lms_user_name,
@@ -58,9 +57,6 @@ class TestEdXFunctions(unittest.TestCase):
 
     def test_is_edx_lms_order(self):
         self.assertTrue(is_edx_lms_order(self.order))
-
-    def test_get_course_mode_from_ct_order(self):
-        self.assertEqual(get_course_mode_from_ct_order(get_edx_items(self.order)[0]), 'certified')
 
     def test_get_edx_lms_user_id(self):
         self.assertEqual(get_edx_lms_user_id(self.user), DEFAULT_EDX_LMS_USER_ID)
