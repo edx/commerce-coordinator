@@ -20,7 +20,7 @@
 | commerce\_coordinator/apps/commercetools/catalog\_info/constants.py                    |       39 |        3 |        0 |        0 |     92% |65, 68, 71 |
 | commerce\_coordinator/apps/commercetools/catalog\_info/edx\_utils.py                   |       48 |        0 |       10 |        0 |    100% |           |
 | commerce\_coordinator/apps/commercetools/catalog\_info/foundational\_types.py          |       17 |        0 |        0 |        0 |    100% |           |
-| commerce\_coordinator/apps/commercetools/catalog\_info/utils.py                        |       65 |        0 |       30 |        0 |    100% |           |
+| commerce\_coordinator/apps/commercetools/catalog\_info/utils.py                        |       69 |        0 |       30 |        0 |    100% |           |
 | commerce\_coordinator/apps/commercetools/clients.py                                    |      203 |        0 |       12 |        0 |    100% |           |
 | commerce\_coordinator/apps/commercetools/constants.py                                  |        4 |        0 |        0 |        0 |    100% |           |
 | commerce\_coordinator/apps/commercetools/data.py                                       |       42 |        0 |        8 |        0 |    100% |           |
@@ -31,13 +31,13 @@
 | commerce\_coordinator/apps/commercetools/sub\_messages/\_\_init\_\_.py                 |        0 |        0 |        0 |        0 |    100% |           |
 | commerce\_coordinator/apps/commercetools/sub\_messages/signals\_delayed.py             |       16 |        0 |        0 |        0 |    100% |           |
 | commerce\_coordinator/apps/commercetools/sub\_messages/signals\_dispatch.py            |        4 |        0 |        0 |        0 |    100% |           |
-| commerce\_coordinator/apps/commercetools/sub\_messages/tasks.py                        |      104 |        0 |       14 |        1 |     99% |  275->323 |
+| commerce\_coordinator/apps/commercetools/sub\_messages/tasks.py                        |      105 |        0 |       14 |        1 |     99% |  266->314 |
 | commerce\_coordinator/apps/commercetools/tasks.py                                      |       31 |        0 |        2 |        0 |    100% |           |
 | commerce\_coordinator/apps/commercetools/tests/\_\_init\_\_.py                         |        0 |        0 |        0 |        0 |    100% |           |
 | commerce\_coordinator/apps/commercetools/tests/\_test\_cases.py                        |       25 |        0 |        2 |        1 |     96% |  36->exit |
 | commerce\_coordinator/apps/commercetools/tests/catalog\_info/\_\_init\_\_.py           |        0 |        0 |        0 |        0 |    100% |           |
 | commerce\_coordinator/apps/commercetools/tests/catalog\_info/test\_edx\_utils.py       |       39 |        1 |        2 |        1 |     95% |        69 |
-| commerce\_coordinator/apps/commercetools/tests/catalog\_info/test\_utils.py            |       76 |        0 |        4 |        0 |    100% |           |
+| commerce\_coordinator/apps/commercetools/tests/catalog\_info/test\_utils.py            |       90 |        0 |        4 |        0 |    100% |           |
 | commerce\_coordinator/apps/commercetools/tests/conftest.py                             |      111 |        4 |        8 |        1 |     96% |87, 90, 92, 132 |
 | commerce\_coordinator/apps/commercetools/tests/constants.py                            |        9 |        0 |        0 |        0 |    100% |           |
 | commerce\_coordinator/apps/commercetools/tests/mocks.py                                |       45 |        0 |        0 |        0 |    100% |           |
@@ -185,7 +185,7 @@
 | commerce\_coordinator/apps/titan/views.py                                              |       23 |        1 |        2 |        1 |     92% |        79 |
 | commerce\_coordinator/docker\_gunicorn\_configuration.py                               |       27 |       27 |       10 |        0 |      0% |      4-57 |
 | commerce\_coordinator/urls.py                                                          |       22 |        0 |        0 |        0 |    100% |           |
-|                                                                              **TOTAL** | **6797** |  **232** |  **460** |   **22** | **96%** |           |
+|                                                                              **TOTAL** | **6816** |  **232** |  **460** |   **22** | **96%** |           |
 
 
 ## Setup coverage badge
