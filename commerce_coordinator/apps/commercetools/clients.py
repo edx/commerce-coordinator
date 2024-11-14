@@ -298,40 +298,12 @@ class CommercetoolsAPIClient:
             offset:
             limit:
         """
-<<<<<<< Updated upstream
         start_time = datetime.datetime.now()
         logger.info(
             "[UserOrdersView] For CT orders get customer id from lms id call started at %s",
             start_time
         )
-=======
-<<<<<<< Updated upstream
->>>>>>> Stashed changes
-        customer = self.get_customer_by_lms_user_id(edx_lms_user_id)
-        end_time = datetime.datetime.now()
-        logger.info(
-            "[UserOrdersView] For CT orders get customer id from lms id call finished at %s with total duration: %ss",
-            end_time, (end_time - start_time).total_seconds()
-        )
 
-        if customer is None:  # pragma: no cover
-            raise ValueError(f'Unable to locate customer with ID #{edx_lms_user_id}')
-
-        start_time = datetime.datetime.now()
-        logger.info("[UserOrdersView] Get CT orders call started at %s",
-                    start_time)
-        orders = self.get_orders(customer, offset, limit)
-<<<<<<< Updated upstream
-        end_time = datetime.datetime.now()
-        logger.info("[UserOrdersView] Get CT orders call finished at %s with total duration: %ss",
-                    end_time, (end_time - start_time).total_seconds())
-=======
-=======
-        start_time = datetime.datetime.now()
-        logger.info(
-            "[UserOrdersView] For CT orders get customer id from lms id call started at %s",
-            start_time
-        )
         if not customer_id:
             customer = self.get_customer_by_lms_user_id(edx_lms_user_id)
 
@@ -339,7 +311,6 @@ class CommercetoolsAPIClient:
                 raise ValueError(f'Unable to locate customer with ID #{edx_lms_user_id}')
 
             customer_id = customer.id
-            logger.info(f"Found customer with ID #{customer_id}")
         else:
             if email is None or username is None:  # pragma: no cover
                 raise ValueError("If customer_id is provided, both email and username must be provided")
@@ -367,8 +338,6 @@ class CommercetoolsAPIClient:
         end_time = datetime.datetime.now()
         logger.info("[UserOrdersView] Get CT orders call finished at %s with total duration: %ss",
                     end_time, (end_time - start_time).total_seconds())
->>>>>>> Stashed changes
->>>>>>> Stashed changes
 
         return orders, customer
 
