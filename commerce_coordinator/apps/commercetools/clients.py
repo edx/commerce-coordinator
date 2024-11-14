@@ -5,8 +5,8 @@ API clients for commercetools app.
 import datetime
 import decimal
 import logging
-from typing import Generic, List, Optional, Tuple, TypeVar, Union
 from types import SimpleNamespace
+from typing import Generic, List, Optional, Tuple, TypeVar, Union
 
 import requests
 import stripe
