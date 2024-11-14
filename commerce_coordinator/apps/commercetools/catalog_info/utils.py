@@ -3,6 +3,7 @@ from typing import Dict, List, Optional, Union
 from commercetools.platform.models import Attribute as CTAttribute
 from commercetools.platform.models import CentPrecisionMoney as CTCentPrecisionMoney
 from commercetools.platform.models import HighPrecisionMoney as CTHighPrecisionMoney
+from commercetools.platform.models import LineItem as CTLineItem
 from commercetools.platform.models import LocalizedString as CTLocalizedString
 from commercetools.platform.models import MoneyType as CTMoneyType
 from commercetools.platform.models import Price as CTPrice
@@ -30,6 +31,25 @@ def ls(string_dict: LSLike) -> CTLocalizedString:
         string_dict[Languages.US_ENGLISH] = string_dict[Languages.ENGLISH]
 
     return string_dict
+
+
+def get_line_item_attribute(in_line_item, in_attribute_name):  # pragma no cover
+    """Utility to get line item's attribute's value."""
+    attribute_value = None
+    for attribute in in_line_item.variant.attributes:
+        if attribute.name == in_attribute_name and hasattr(attribute, 'value'):
+            if isinstance(attribute.value, dict):
+                attribute_value = attribute.value.get('label', None)
+            elif isinstance(attribute.value, str):
+                attribute_value = attribute.value
+            break
+
+    return attribute_value
+
+
+def get_course_mode_from_ct_order(line_item: CTLineItem) -> str:
+    course_mode = get_line_item_attribute(line_item, 'mode')
+    return course_mode or 'verified'
 
 
 def ls_eq(a: LSLike, b: LSLike) -> bool:
