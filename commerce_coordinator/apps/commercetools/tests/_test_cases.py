@@ -41,7 +41,7 @@ class MonkeyPatchedGetOrderTestCase(TestCase):
         # noinspection PyUnusedLocal
         # pylint: disable=unused-argument # needed for kwargs
         def _get_orders_for_customer(
-            _, edx_lms_user_id: int, offset=0,
+            _, edx_lms_user_id: int, offset=0, customer_id=None, email=None, username=None,
                 limit=ORDER_HISTORY_PER_SYSTEM_REQ_LIMIT
         ) -> (PaginatedResult[CTOrder], CTCustomer):
             return (

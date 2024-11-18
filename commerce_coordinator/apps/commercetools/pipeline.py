@@ -54,6 +54,9 @@ class GetCommercetoolsOrders(PipelineStep):
         try:
             ct_api_client = CommercetoolsAPIClient()
             ct_orders = ct_api_client.get_orders_for_customer(
+                customer_id=params["customer_id"],
+                email=params["email"],
+                username=params["username"],
                 edx_lms_user_id=params["edx_lms_user_id"],
                 limit=params["page_size"],
                 offset=params["page"] * params["page_size"]
