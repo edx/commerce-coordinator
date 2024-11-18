@@ -260,9 +260,6 @@ class CommercetoolsAPIClient:
                     f"customer with ID {customer_id}")
         order_where_clause = f"orderState=\"{order_state}\""
 
-        start_time = datetime.datetime.now()
-        logger.info(
-            "[UserOrdersView] Get CT orders query call started at %s", start_time)
         values = self.base_client.orders.query(
             where=["customerId=:cid", order_where_clause],
             predicate_var={'cid': customer_id},
@@ -271,22 +268,8 @@ class CommercetoolsAPIClient:
             offset=offset,
             expand=list(expand)
         )
-        end_time = datetime.datetime.now()
-        logger.info(
-            "[UserOrdersView] Get CT orders query call finished at %s with total duration: %ss",
-            end_time, (end_time - start_time).total_seconds()
-        )
 
-        start_time = datetime.datetime.now()
-        logger.info('[UserOrdersView] Pagination of CT orders started at %s',
-                    start_time)
-        result = PaginatedResult(values.results, values.total, values.offset)
-        end_time = datetime.datetime.now()
-        logger.info(
-            '[UserOrdersView] Pagination of CT orders finished at %s with total duration: %ss',
-            end_time, (end_time - start_time).total_seconds())
-
-        return result
+        return PaginatedResult(values.results, values.total, values.offset)
 
     def get_orders_for_customer(self, edx_lms_user_id: int, offset=0, limit=ORDER_HISTORY_PER_SYSTEM_REQ_LIMIT,
                                 customer_id=None, email=None,
@@ -298,12 +281,6 @@ class CommercetoolsAPIClient:
             offset:
             limit:
         """
-        start_time = datetime.datetime.now()
-        logger.info(
-            "[UserOrdersView] For CT orders get customer id from lms id call started at %s",
-            start_time
-        )
-
         if not customer_id:
             customer = self.get_customer_by_lms_user_id(edx_lms_user_id)
 
@@ -325,19 +302,7 @@ class CommercetoolsAPIClient:
                 )
             )
 
-        end_time = datetime.datetime.now()
-        logger.info(
-            "[UserOrdersView] For CT orders get customer id from lms id call finished at %s with total duration: %ss",
-            end_time, (end_time - start_time).total_seconds()
-        )
-
-        start_time = datetime.datetime.now()
-        logger.info("[UserOrdersView] Get CT orders call started at %s",
-                    start_time)
         orders = self.get_orders(customer_id, offset, limit)
-        end_time = datetime.datetime.now()
-        logger.info("[UserOrdersView] Get CT orders call finished at %s with total duration: %ss",
-                    end_time, (end_time - start_time).total_seconds())
 
         return orders, customer
 
