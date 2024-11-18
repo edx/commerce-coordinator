@@ -2,7 +2,6 @@
 Commercetools filter pipelines
 """
 import decimal
-from datetime import datetime
 from logging import getLogger
 
 import attrs

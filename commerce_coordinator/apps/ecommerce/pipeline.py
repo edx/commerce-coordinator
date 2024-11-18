@@ -1,7 +1,6 @@
 """
 Ecommerce filter pipelines
 """
-from datetime import datetime
 from logging import getLogger
 
 from django.conf import settings

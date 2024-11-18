@@ -2,7 +2,6 @@
 API clients for ecommerce app.
 """
 import logging
-from datetime import datetime
 
 from django.conf import settings
 from requests.exceptions import RequestException
