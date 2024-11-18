@@ -1,14 +1,19 @@
 """ Commcercetools API Utilities """
+from typing import Union
 from unittest import TestCase
 
 import ddt
 import pytest
-from commercetools.platform.models import CentPrecisionMoney, HighPrecisionMoney, Price
+from commercetools.platform.models import CentPrecisionMoney, HighPrecisionMoney
+from commercetools.platform.models import Order as CTOrder
+from commercetools.platform.models import Price
 from currencies import Currency
 
 from commerce_coordinator.apps.commercetools.catalog_info.constants import Languages
+from commerce_coordinator.apps.commercetools.catalog_info.edx_utils import get_edx_items
 from commerce_coordinator.apps.commercetools.catalog_info.utils import (
     attribute_dict,
+    get_course_mode_from_ct_order,
     ls,
     ls_eq,
     price_to_string,
@@ -16,7 +21,8 @@ from commerce_coordinator.apps.commercetools.catalog_info.utils import (
     typed_money_to_string,
     un_ls
 )
-from commerce_coordinator.apps.core.tests.utils import name_test
+from commerce_coordinator.apps.commercetools.tests.conftest import gen_order
+from commerce_coordinator.apps.core.tests.utils import name_test, uuid4_str
 
 # <Country>_<Currency>
 JAPAN_YEN = "JPY"  # 0 fractional digits
@@ -29,11 +35,24 @@ OMAN_RIAL = "OMR"  # 3 fractional digits
 class LocalizedStringsTests(TestCase):
     """ Localized String Utility Tests"""
 
+    order: Union[CTOrder, None]
+
+    def setUp(self):
+        self.order = gen_order(uuid4_str())
+        super().setUp()
+
+    def tearDown(self):
+        self.order = None
+        super().tearDown()
+
     # ls()
     def test_single_unknown_key_ls_creation(self):
         string = "test"
         result = ls({'ZZ': string})
         self.assertEqual(result, {'ZZ': string, Languages.ENGLISH: string, Languages.US_ENGLISH: string})
+
+    def test_get_course_mode_from_ct_order(self):
+        self.assertEqual(get_course_mode_from_ct_order(get_edx_items(self.order)[0]), 'professional')
 
     def test_single_key_ls_creation(self):
         string = "test-2"
