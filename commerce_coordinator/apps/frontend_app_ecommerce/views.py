@@ -81,7 +81,9 @@ class UserOrdersView(APIView):
         user.add_lms_user_id("UserOrdersView GET method")
         # build parameters
         params = {
+            'customer_id': request.query_params.get('customer_id'),
             'username': request.user.username,
+            'email': request.user.email,
             "edx_lms_user_id": request.user.lms_user_id,
             "page": 0,
             "page_size": ORDER_HISTORY_PER_SYSTEM_REQ_LIMIT
