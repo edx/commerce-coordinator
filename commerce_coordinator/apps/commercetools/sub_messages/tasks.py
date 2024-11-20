@@ -104,6 +104,8 @@ def fulfill_order_placed_message_signal_task(
             line_item_state_id,
             TwoUKeys.PROCESSING_FULFILMENT_STATE
         )
+        if not updated_order:
+            return True
 
         # from here we will always be transitioning from a 'Fulfillment Processing' state
         line_item_state_id = client.get_state_by_key(TwoUKeys.PROCESSING_FULFILMENT_STATE).id
