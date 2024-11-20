@@ -66,36 +66,53 @@ class Client:
 
     def log_request_response(self, ext_logger, response):
         """
-        Log requests.Request Response.
+        Log requests.Request responses with detailed information.
 
         Args:
             ext_logger: The logger of the module the Client (or Client-
                 derived class) is running in.
             response: A successful Response object from the requests library.
         """
-        ext_logger.debug('Request URL: %s', response.request.url)
-        ext_logger.debug('Request method: %s', response.request.method)
-        ext_logger.debug('Request body: %s', response.request.body)
-        ext_logger.debug('Request headers: %s', response.request.headers)
-        ext_logger.debug('Response status: %s %s', response.status_code, response.reason)
-        ext_logger.debug('Response text: %s', response.text)
+        # Extract request details and response information
+        request_url = response.request.url
+        request_body = response.request.body if response.request.body else 'N/A'
+        request_headers = response.request.headers if response.request.headers else 'N/A'
+        status_code = response.status_code
+        response_body = response.text if response.text else 'N/A'
+
+        # Log the detailed message
+        ext_logger.debug(
+            f"The API client call for url: {request_url} "
+            f"with request_body: {request_body}, "
+            f"request_headers: {request_headers} "
+            f"was successful with status_code: {status_code}, "
+            f"response_body: {response_body}"
+        )
 
     def log_request_exception(self, ext_logger, exc):
         """
-        Log requests.Request exceptions.
+        Log requests.Request exceptions with detailed information.
 
         Args:
             ext_logger: The logger of the module the Client (or Client-
                 derived class) is running in.
-            response: A RequestException object from the requests library.
+            exc: A RequestException object from the requests library.
         """
-        ext_logger.error(exc)
-        ext_logger.info('Request URL: %s', exc.request.url)
-        ext_logger.info('Request method: %s', exc.request.method)
-        ext_logger.info('Request body: %s', exc.request.body)
-        ext_logger.debug('Request headers: %s', exc.request.headers)
-        ext_logger.info('Response status: %s %s', exc.response.status_code, exc.response.reason)
-        ext_logger.info('Response body: %s', exc.response.text)
+        # Extract request details and error information
+        request_url = exc.request.url
+        request_body = exc.request.body if exc.request.body else 'N/A'
+        request_headers = exc.request.headers if exc.request.headers else 'N/A'
+        status_code = exc.response.status_code if exc.response else 'N/A'
+        response_body = exc.response.text if exc.response else 'N/A'
+
+        # Log the detailed error message
+        ext_logger.error(
+            f"The API client call for url: {request_url} "
+            f"with request_body: {request_body}, "
+            f"request_headers: {request_headers} failed with "
+            f"status_code: {status_code}, response_body: {response_body} "
+            f"and error: {exc}"
+        )
 
 
 class BaseEdxOAuthClient(Client):

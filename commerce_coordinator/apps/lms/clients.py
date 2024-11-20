@@ -40,18 +40,22 @@ class LMSAPIClient(BaseEdxOAuthClient):
         Intended use is on SDN check failure.
         """
         try:
-            logger.info(f'Calling LMS to deactivate account for user with username {username}'
-                        f'after receiving subsctiption message with ID: {ct_message_id}')
+            logger.info(
+                f"[LMSAPIClient] Initiating account deactivation for user '{username}'. "
+                f"Triggered by subscription message ID: {ct_message_id}."
+            )
             response = self.client.post(
                 self.deactivate_user_api_url.format(username=username),
                 timeout=self.normal_timeout,
             )
             response.raise_for_status()
         except (ConnectionError, RequestException) as exc:
-            logger.info(f'Unsuccessful call to LMS to deactivate account for user with username {username}'
-                        f'with details: [message_id: {ct_message_id}]')
+            logger.error(
+                f"[LMSAPIClient] Failed to deactivate account for user '{username}' "
+                f"(Subscription Message ID: {ct_message_id}). Error: {exc}"
+            )
             logger.exception(
-                f'An error occurred while deactivating account for user with username {username}: {exc}'
+                f"[LMSAPIClient] Exception occurred while deactivating account for user '{username}'."
             )
             raise
 
@@ -62,11 +66,11 @@ class LMSAPIClient(BaseEdxOAuthClient):
             fulfillment_logging_obj
     ):
         """
-        Send a POST request to LMS Enrollment API endpoint
+        Send a POST request to LMS Enrollment API endpoint.
         Arguments:
             enrollment_data: dictionary to send to the API resource.
         Returns:
-            dict: Dictionary represention of JSON returned from API
+            dict: Dictionary representation of JSON returned from API.
         """
         return self.post(
             url=self.api_enrollment_base_url,
@@ -78,7 +82,7 @@ class LMSAPIClient(BaseEdxOAuthClient):
 
     def post(self, url, json, line_item_state_payload, logging_obj, timeout=None):
         """
-        Send a POST request to a url with json payload.
+        Send a POST request to a URL with JSON payload.
         """
         if not timeout:   # pragma no cover
             timeout = self.normal_timeout
@@ -103,26 +107,28 @@ class LMSAPIClient(BaseEdxOAuthClient):
                 'is_fulfilled': True
             }
             logger.info(
-                f"Successful fulfillment for user: {logging_obj['user']} with details: "
-                f"[lms user id: {logging_obj['lms_user_id']}, order id: {logging_obj['order_id']}, "
-                f"course id: {logging_obj['course_id']}, message_id: {logging_obj['message_id']}, "
-                f"celery_task_id: {logging_obj['celery_task_id']}]"
+                f"[LMSAPIClient] Successful fulfillment for user '{logging_obj['user']}'. "
+                f"Details: [LMS User ID: {logging_obj['lms_user_id']}, Order ID: {logging_obj['order_id']}, "
+                f"Course ID: {logging_obj['course_id']}, Subscription Message ID: {logging_obj['message_id']}, "
+                f"Celery Task ID: {logging_obj['celery_task_id']}]."
             )
         except RequestException as exc:
             self.log_request_exception(logger, exc)
+
             fulfill_line_item_state_payload = {
                 **line_item_state_payload,
                 'is_fulfilled': False
             }
+
             fulfillment_completed_signal.send_robust(
                 sender=self.__class__,
                 **fulfill_line_item_state_payload
             )
-            logger.info(
-                f"Unsuccessful fulfillment for user: {logging_obj['user']} with details: "
-                f"[lms user id: {logging_obj['lms_user_id']}, order id: {logging_obj['order_id']}, "
-                f"course id: {logging_obj['course_id']}, message_id: {logging_obj['message_id']}, "
-                f"celery_task_id: {logging_obj['celery_task_id']}]"
+            logger.error(
+                f"[LMSAPIClient] Unsuccessful fulfillment for user '{logging_obj['user']}'. "
+                f"Details: [LMS User ID: {logging_obj['lms_user_id']}, Order ID: {logging_obj['order_id']}, "
+                f"Course ID: {logging_obj['course_id']}, Subscription Message ID: {logging_obj['message_id']}, "
+                f"Celery Task ID: {logging_obj['celery_task_id']}]. Error: {exc}"
             )
             raise
 
