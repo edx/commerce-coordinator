@@ -138,13 +138,13 @@ class ValidateOrderReadyForDraftPayment(PipelineStep):
                          basket_id)
             return PipelineCommand.HALT.value
         elif recent_payment['state'] == PaymentState.FAILED.value:
-            logger.debug('Failed payment [%s] found. Continue pipeline for order: [%s]',
-                         recent_payment['payment_number'],
-                         basket_id)
+            logger.info('Failed payment [%s] found. Continue pipeline for order: [%s]',
+                        recent_payment['payment_number'],
+                        basket_id)
             return PipelineCommand.CONTINUE.value
-        logger.debug('Draft payment [%s] exists. Add draft payment to pipeline for order: [%s]',
-                     recent_payment['payment_number'],
-                     basket_id)
+        logger.info('Draft payment [%s] exists. Add draft payment to pipeline for order: [%s]',
+                    recent_payment['payment_number'],
+                    basket_id)
         return {
             'payment_data': recent_payment
         }

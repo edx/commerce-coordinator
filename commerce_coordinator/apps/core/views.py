@@ -130,7 +130,7 @@ class SingleInvocationAPIView(APIView):
         key = SingleInvocationAPIView._view_cache_key(view, identifier)
         cache_value = TieredCache.get_cached_response(key)
         if cache_value.is_found or cache_value.get_value_or_default(False):
-            logger.debug(f'[CT-{view}] Currently processing request for %s, ignoring invocation', identifier)
+            logger.info(f'[CT-{view}] Currently processing request for %s, ignoring invocation', identifier)
             return True
         return False
 
