@@ -470,8 +470,8 @@ class ClientTests(TestCase):
                 exception = cm.exception
 
                 expected_message = (
-                    f"[CommercetoolsError] Unable to create return for "
-                    f"order mock_order_id "
+                    f"[CommercetoolsError] [CommercetoolsAPIClient.create_return_for_order] "
+                    f"Unable to create return for order mock_order_id "
                     f"- Correlation ID: {exception.correlation_id}, Details: {exception.errors}"
                 )
 
@@ -604,7 +604,8 @@ class ClientTests(TestCase):
                 exception = cm.exception
 
                 expected_message = (
-                    f"[CommercetoolsError] Unable to create refund payment transaction for "
+                    f"[CommercetoolsError] [CommercetoolsAPIClient.create_return_payment_transaction] "
+                    f"Unable to create refund payment transaction for "
                     f"payment mock_payment_id, refund {mock_stripe_refund.id} with PSP: stripe_edx "
                     f"- Correlation ID: {exception.correlation_id}, Details: {exception.errors}"
                 )
@@ -672,7 +673,7 @@ class ClientTests(TestCase):
                 status_code=409
             )
 
-            with patch('commerce_coordinator.apps.commercetools.clients.logging.Logger.info') as log_mock:
+            with patch('commerce_coordinator.apps.commercetools.clients.logging.Logger.error') as log_mock:
                 self.client_set.client.update_line_item_transition_state_on_fulfillment(
                     "mock_order_id",
                     1,
@@ -683,7 +684,8 @@ class ClientTests(TestCase):
                 )
 
                 expected_message = (
-                    f"[CommercetoolsError] Unable to update LineItemState "
+                    f"[CommercetoolsError] [CommercetoolsAPIClient.update_line_item_state_on_fulfillment_completion] "
+                    f"Unable to update LineItemState "
                     f"of order mock_order_id "
                     f"- Correlation ID: {mock_error_response['correlation_id']}, "
                     f"Details: {mock_error_response['errors']}"
@@ -763,7 +765,8 @@ class ClientTests(TestCase):
                 )
 
                 expected_message = (
-                    f"[CommercetoolsError] Failed to update LineItemStates "
+                    f"[CommercetoolsError] [CommercetoolsAPIClient.update_line_items_transition_state] "
+                    f"Failed to update LineItemStates "
                     f"for order ID 'mock_order_id'. Line Item IDs: {mock_order.line_items[0].id} "
                     f"- Correlation ID: {mock_error_response['correlation_id']}, "
                     f"Details: {mock_error_response['errors']}"
@@ -795,8 +798,8 @@ class ClientTests(TestCase):
             )
 
             expected_message = (
-                f"The line item {line_item_id} already has the correct state {mock_line_item_state.key}. "
-                f"Not attempting to transition LineItemState"
+                f"[CommercetoolsAPIClient] - The line item {line_item_id} already has the correct state "
+                f"{mock_line_item_state.key}. Not attempting to transition LineItemState for order id mock_order_id"
             )
 
             log_mock.assert_called_with(expected_message)
