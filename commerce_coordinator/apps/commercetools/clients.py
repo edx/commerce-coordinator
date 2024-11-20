@@ -547,7 +547,7 @@ class CommercetoolsAPIClient:
                 return self.get_order_by_id(order_id)
         except CommercetoolsError as err:
             # Logs & ignores version conflict errors due to duplicate Commercetools messages
-            handle_commercetools_error(err, f"Unable to update LineItemState of order {order_id}")
+            handle_commercetools_error(err, f"Unable to update LineItemState of order {order_id}", True)
             return None
 
     def retire_customer_anonymize_fields(self, customer_id: str, customer_version: int,
