@@ -73,12 +73,13 @@ class Client:
                 derived class) is running in.
             response: A successful Response object from the requests library.
         """
-        ext_logger.debug('Request URL: %s', response.request.url)
-        ext_logger.debug('Request method: %s', response.request.method)
-        ext_logger.debug('Request body: %s', response.request.body)
-        ext_logger.debug('Request headers: %s', response.request.headers)
-        ext_logger.debug('Response status: %s %s', response.status_code, response.reason)
-        ext_logger.debug('Response text: %s', response.text)
+        ext_logger.debug(
+            f"The API client call for url: {response.request.url} "
+            f"with request_body: {response.request.body or 'N/A'}, "
+            f"request_headers: {response.request.headers or 'N/A'} "
+            f"was successful with status_code: {response.status_code}, "
+            f"response_body: {response.text or 'N/A'}"
+        )
 
     def log_request_exception(self, ext_logger, exc):
         """
@@ -87,15 +88,16 @@ class Client:
         Args:
             ext_logger: The logger of the module the Client (or Client-
                 derived class) is running in.
-            response: A RequestException object from the requests library.
+            exc: A RequestException object from the requests library.
         """
-        ext_logger.error(exc)
-        ext_logger.info('Request URL: %s', exc.request.url)
-        ext_logger.info('Request method: %s', exc.request.method)
-        ext_logger.info('Request body: %s', exc.request.body)
-        ext_logger.debug('Request headers: %s', exc.request.headers)
-        ext_logger.info('Response status: %s %s', exc.response.status_code, exc.response.reason)
-        ext_logger.info('Response body: %s', exc.response.text)
+        ext_logger.error(
+            f"The API client call for url: {exc.request.url} "
+            f"with request_body: {exc.request.body or 'N/A'}, "
+            f"request_headers: {exc.request.headers or 'N/A'} failed with "
+            f"status_code: {exc.response.status_code if exc.response else 'N/A'}, "
+            f"response_body: {exc.response.text if exc.response else 'N/A'} "
+            f"and error: {exc}"
+        )
 
 
 class BaseEdxOAuthClient(Client):
