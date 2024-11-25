@@ -103,12 +103,13 @@ class UserOrdersView(APIView):
                 output_orders.extend(order_set['results'])
 
             output = {
-                "count": request.query_params['page_size'],  # This suppresses the ecomm mfe Order History Pagination ctrl
+                # This suppresses the ecomm mfe Order History Pagination control
+                "count": request.query_params['page_size'],
                 "next": None,
                 "previous": None,
                 "results": sorted(output_orders, key=lambda item: date_conv(item["date_placed"]), reverse=True)
             }
 
             return Response(output)
-        except Exception as exc:
+        except Exception as exc:  # pylint: disable=broad-except
             return Response(status=HTTP_400_BAD_REQUEST, data=str(exc))
