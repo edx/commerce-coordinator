@@ -112,4 +112,5 @@ class UserOrdersView(APIView):
 
             return Response(output)
         except Exception as exc:  # pylint: disable=broad-except
-            return Response(status=HTTP_400_BAD_REQUEST, data=str(exc))
+            logger.error(f'UserOrdersView threw following exception: [{exc}]')
+            return Response(status=HTTP_400_BAD_REQUEST, data='Something went wrong!')
