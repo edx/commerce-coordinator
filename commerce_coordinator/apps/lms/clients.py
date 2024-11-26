@@ -1,6 +1,8 @@
 """
 API clients for LMS app.
 """
+import json as Json
+
 from celery.utils.log import get_task_logger
 from django.conf import settings
 from requests.exceptions import RequestException
@@ -118,8 +120,10 @@ class LMSAPIClient(BaseEdxOAuthClient):
                 sender=self.__class__,
                 **fulfill_line_item_state_payload
             )
+            error_message = Json.loads(exc.response.text).get('message')
             logger.info(
-                f"Unsuccessful fulfillment for user: {logging_obj['user']} with details: "
+                f"Unsuccessful fulfillment for user: {logging_obj['user']} "
+                f"due to {error_message} with details: "
                 f"[lms user id: {logging_obj['lms_user_id']}, order id: {logging_obj['order_id']}, "
                 f"course id: {logging_obj['course_id']}, message_id: {logging_obj['message_id']}, "
                 f"celery_task_id: {logging_obj['celery_task_id']}]"
