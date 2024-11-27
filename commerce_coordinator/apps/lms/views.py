@@ -17,6 +17,7 @@ from rest_framework.views import APIView
 
 from commerce_coordinator.apps.core.constants import HttpHeadersNames, MediaTypes
 from commerce_coordinator.apps.lms.filters import (
+    CheckFirstTimeDiscountEligibility,
     OrderRefundRequested,
     PaymentPageRedirectRequested,
     UserRetirementRequested
@@ -27,6 +28,11 @@ from commerce_coordinator.apps.lms.serializers import (
     enrollment_attribute_key
 )
 from commerce_coordinator.apps.rollout.utils import is_legacy_order
+
+
+from edx_rest_framework_extensions.permissions import LoginRedirectIfUnauthenticated
+from rest_framework.exceptions import PermissionDenied
+from rest_framework.throttling import UserRateThrottle
 
 logger = logging.getLogger(__name__)
 
@@ -334,3 +340,24 @@ class RetirementView(APIView):
             logger.exception(f"[RefundView] Exception raised in {self.post.__name__} with error {repr(e)}")
             return Response('Exception occurred while retiring Commercetools customer',
                             status=HTTP_500_INTERNAL_SERVER_ERROR)
+
+
+class FirstTimeDiscountEligibleView(APIView):
+    """View to check if a user is eligible for a first time discount"""
+    permission_classes = [LoginRedirectIfUnauthenticated]
+    throttle_classes = [UserRateThrottle]
+
+    def get(self, request):
+        """Return paginated response of user's order history."""
+        email = request.query_params.get('email')
+
+        if not email:  # pragma: no cover
+            raise PermissionDenied(detail="Could not detect user email.")
+
+        result = CheckFirstTimeDiscountEligibility.run_filter(email=email)
+
+        output = {
+            "is_eligible": result.get('is_eligible', True)
+        }
+
+        return Response(output)

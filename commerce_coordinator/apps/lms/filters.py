@@ -64,3 +64,22 @@ class UserRetirementRequested(OpenEdxPublicFilter):
         """
 
         return super().run_pipeline(lms_user_id=lms_user_id)
+
+
+class CheckFirstTimeDiscountEligibility(OpenEdxPublicFilter):
+    """
+    Filter to check if a user is eligible for a first time discount
+    """
+    # See pipeline step configuration OPEN_EDX_FILTERS_CONFIG dict in `settings/base.py`
+    filter_type = "org.edx.coordinator.lms.check.first.time.discount.eligibility.v1"
+
+    @classmethod
+    def run_filter(cls, email):
+        """
+        Call the PipelineStep(s) defined for this filter.
+        Arguments:
+            username: Username of the user
+        Returns:
+            is_eligible (bool): True if the user is eligible for a first time discount
+        """
+        return super().run_pipeline(email=email)

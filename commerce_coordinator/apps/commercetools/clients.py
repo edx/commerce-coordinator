@@ -603,3 +603,38 @@ class CommercetoolsAPIClient:
                          f"with ID: {customer_id}, after LMS retirement with "
                          f"error correlation id {err.correlation_id} and error/s: {err.errors}")
             raise err
+
+    def is_first_time_discount_eligible(self, email: str) -> bool:
+        """
+        Check if a user is eligible for a first time discount
+        Args:
+            username (str): Username of the user
+        Returns (bool): True if the user is eligible for a first time discount
+        """
+        FIRST_TIME_DISCOUNT_CODES = ['EDXWELCOME', 'NEW2EDX']
+
+        try:
+            discounts = self.base_client.discount_codes.query(
+                where="code in :discountCodes",
+                predicate_var={'discountCodes': FIRST_TIME_DISCOUNT_CODES}
+            )
+            discount_ids = [discount.id for discount in discounts.results]
+
+            discounted_orders = self.base_client.orders.query(
+                where=[
+                    "customerEmail=:email",
+                    "orderState=:orderState",
+                    "discountCodes(discountCode(id in :discountIds))"
+                ],
+                predicate_var={'email': email, 'discountIds': discount_ids, 'orderState': 'Complete'}
+            )
+
+            if discounted_orders.total > 0:
+                return False
+
+            return True
+        except CommercetoolsError as err:
+            # Logs & ignores version conflict errors due to duplicate Commercetools messages
+            handle_commercetools_error(err, f"Unable to check if user {email} is eligible for a "
+                                            f"first time discount", True)
+            return True
