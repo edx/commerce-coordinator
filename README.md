@@ -117,9 +117,9 @@
 | commerce\_coordinator/apps/frontend\_app\_ecommerce/tests/\_\_init\_\_.py              |       14 |        0 |        0 |        0 |    100% |           |
 | commerce\_coordinator/apps/frontend\_app\_ecommerce/tests/conftest.py                  |       17 |        0 |        0 |        0 |    100% |           |
 | commerce\_coordinator/apps/frontend\_app\_ecommerce/tests/test\_filters.py             |       14 |        0 |        0 |        0 |    100% |           |
-| commerce\_coordinator/apps/frontend\_app\_ecommerce/tests/test\_views.py               |      120 |        0 |        2 |        0 |    100% |           |
+| commerce\_coordinator/apps/frontend\_app\_ecommerce/tests/test\_views.py               |      127 |        0 |        2 |        0 |    100% |           |
 | commerce\_coordinator/apps/frontend\_app\_ecommerce/urls.py                            |        4 |        0 |        0 |        0 |    100% |           |
-| commerce\_coordinator/apps/frontend\_app\_ecommerce/views.py                           |       47 |        0 |        8 |        0 |    100% |           |
+| commerce\_coordinator/apps/frontend\_app\_ecommerce/views.py                           |       51 |        0 |        8 |        0 |    100% |           |
 | commerce\_coordinator/apps/frontend\_app\_payment/\_\_init\_\_.py                      |        0 |        0 |        0 |        0 |    100% |           |
 | commerce\_coordinator/apps/frontend\_app\_payment/constants.py                         |        1 |        0 |        0 |        0 |    100% |           |
 | commerce\_coordinator/apps/frontend\_app\_payment/exceptions.py                        |        9 |        0 |        0 |        0 |    100% |           |
@@ -185,7 +185,7 @@
 | commerce\_coordinator/apps/titan/views.py                                              |       23 |        1 |        2 |        1 |     92% |        79 |
 | commerce\_coordinator/docker\_gunicorn\_configuration.py                               |       27 |       27 |       10 |        0 |      0% |      4-57 |
 | commerce\_coordinator/urls.py                                                          |       22 |        0 |        0 |        0 |    100% |           |
-|                                                                              **TOTAL** | **6768** |  **234** |  **464** |   **23** | **96%** |           |
+|                                                                              **TOTAL** | **6779** |  **234** |  **464** |   **23** | **96%** |           |
 
 
 ## Setup coverage badge
