@@ -611,12 +611,10 @@ class CommercetoolsAPIClient:
             username (str): Username of the user
         Returns (bool): True if the user is eligible for a first time discount
         """
-        FIRST_TIME_DISCOUNT_CODES = ['EDXWELCOME', 'NEW2EDX']
-
         try:
             discounts = self.base_client.discount_codes.query(
                 where="code in :discountCodes",
-                predicate_var={'discountCodes': FIRST_TIME_DISCOUNT_CODES}
+                predicate_var={'discountCodes': settings.COMMERCETOOLS_FIRST_TIME_DISCOUNTS}
             )
             discount_ids = [discount.id for discount in discounts.results]
 
