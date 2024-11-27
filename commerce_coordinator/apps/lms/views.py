@@ -343,7 +343,7 @@ class FirstTimeDiscountEligibleView(APIView):
     throttle_classes = [UserRateThrottle]
 
     def get(self, request):
-        """Return paginated response of user's order history."""
+        """Return True if user is eligible for a first time discount."""
         email = request.query_params.get('email')
 
         if not email:  # pragma: no cover

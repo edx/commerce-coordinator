@@ -419,10 +419,10 @@ class CheckCommercetoolsDiscountEligibility(PipelineStep):
         """
         Execute a filter with the signature specified.
         Arguments:
-            username: Username of the user
+            email: Email of the user
             kwargs: The keyword arguments passed through from the filter
         Returns:
-            first_time_discount_eligible (bool): True if the user is eligible for a first time discount
+            is_eligible (bool): True if the user is eligible for a first time discount
         """
         tag = type(self).__name__
 

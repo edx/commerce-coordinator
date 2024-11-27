@@ -608,7 +608,7 @@ class CommercetoolsAPIClient:
         """
         Check if a user is eligible for a first time discount
         Args:
-            username (str): Username of the user
+            email (str): Email of the user
         Returns (bool): True if the user is eligible for a first time discount
         """
         try:

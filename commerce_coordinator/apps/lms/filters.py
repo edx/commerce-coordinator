@@ -78,7 +78,7 @@ class CheckFirstTimeDiscountEligibility(OpenEdxPublicFilter):
         """
         Call the PipelineStep(s) defined for this filter.
         Arguments:
-            username: Username of the user
+            email: Email of the user
         Returns:
             is_eligible (bool): True if the user is eligible for a first time discount
         """
