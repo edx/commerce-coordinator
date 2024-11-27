@@ -44,6 +44,7 @@ class OrdersViewTests(TestCase):
     test_user_username = 'test'  # Different from ORDER_HISTORY_GET_PARAMETERS username.
     test_user_email = 'test@example.com'
     test_user_password = 'secret'
+    url = reverse('frontend_app_ecommerce:order_history')
 
     def setUp(self):
         """Create test user before test starts."""
@@ -69,7 +70,7 @@ class OrdersViewTests(TestCase):
         self.client.login(username=self.test_user_username, password=self.test_user_password)
 
         # Perform POST
-        response = self.client.post(reverse('frontend_app_ecommerce:order_history'), ORDER_HISTORY_GET_PARAMETERS)
+        response = self.client.post(self.url, ORDER_HISTORY_GET_PARAMETERS)
 
         # Check 405 Method Not Allowed
         self.assertEqual(response.status_code, 405)
@@ -78,7 +79,7 @@ class OrdersViewTests(TestCase):
         """Check unauthorized users querying orders are redirected to login page."""
 
         # Perform GET without logging in.
-        response = self.client.get(reverse('frontend_app_ecommerce:order_history'), ORDER_HISTORY_GET_PARAMETERS)
+        response = self.client.get(self.url, ORDER_HISTORY_GET_PARAMETERS)
 
         # Check 302 Found with redirect to login page.
         self.assertEqual(response.status_code, 302)
@@ -91,7 +92,7 @@ class OrdersViewTests(TestCase):
         self.client.login(username=self.test_user_username, password=self.test_user_password)
 
         # Perform GET
-        response = self.client.get(reverse('frontend_app_ecommerce:order_history'), ORDER_HISTORY_GET_PARAMETERS)
+        response = self.client.get(self.url, ORDER_HISTORY_GET_PARAMETERS)
         # Check 200 OK
         self.assertEqual(response.status_code, 200)
 
@@ -104,7 +105,7 @@ class OrdersViewTests(TestCase):
         self.client.login(username=self.test_user_username, password=self.test_user_password)
 
         # Perform GET
-        response = self.client.get(reverse('frontend_app_ecommerce:order_history'), ORDER_HISTORY_GET_PARAMETERS)
+        response = self.client.get(self.url, ORDER_HISTORY_GET_PARAMETERS)
 
         # Check expected response
         self.assertEqual(response.json()['results'][1], ECOMMERCE_REQUEST_EXPECTED_RESPONSE['results'][0])
@@ -116,13 +117,32 @@ class OrdersViewTests(TestCase):
         self.client.login(username=self.test_user_username, password=self.test_user_password)
 
         # Perform GET
-        self.client.get(reverse('frontend_app_ecommerce:order_history'), ORDER_HISTORY_GET_PARAMETERS)
+        self.client.get(self.url, ORDER_HISTORY_GET_PARAMETERS)
 
         # Get username sent to ecommerce client
         request_username = mock_ecommerce_client.call_args.args[0]['username']
 
         # Check username is passed to ecommerce client
         self.assertEqual(request_username, self.test_user_username)
+
+    @patch(
+        'commerce_coordinator.apps.commercetools.pipeline.GetCommercetoolsOrders.run_filter',
+        side_effect=Exception('Something went wrong')
+    )
+    def test_view_crashes_with_some_error(self, _mock_pipeline, _mock_ctorders, _mock_ecommerce_client):
+        """Check exception is handled gracefully if pipeline crashes."""
+
+        # Login
+        self.client.login(username=self.test_user_username, password=self.test_user_password)
+
+        # Perform GET request
+        response = self.client.get(self.url, ORDER_HISTORY_GET_PARAMETERS)
+
+        # Assert the response status is 400
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+
+        # Assert the response content matches the error message
+        self.assertEqual(response.data, 'Something went wrong!')
 
 
 @ddt.ddt
