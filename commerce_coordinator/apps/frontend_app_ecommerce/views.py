@@ -10,7 +10,7 @@ from django.http import HttpResponseBadRequest, HttpResponseNotFound, HttpRespon
 from edx_rest_framework_extensions.permissions import LoginRedirectIfUnauthenticated
 from rest_framework.exceptions import PermissionDenied
 from rest_framework.response import Response
-from rest_framework.status import HTTP_303_SEE_OTHER
+from rest_framework.status import HTTP_303_SEE_OTHER, HTTP_400_BAD_REQUEST
 from rest_framework.throttling import UserRateThrottle
 from rest_framework.views import APIView
 
@@ -94,18 +94,23 @@ class UserOrdersView(APIView):
         if not request.user.lms_user_id:  # pragma: no cover
             raise PermissionDenied(detail="Could not detect LMS user id.")
 
-        order_data = OrderHistoryRequested.run_filter(request, params)
+        try:
+            order_data = OrderHistoryRequested.run_filter(request, params)
 
-        output_orders = []
+            output_orders = []
 
-        for order_set in order_data:
-            output_orders.extend(order_set['results'])
+            for order_set in order_data:
+                output_orders.extend(order_set['results'])
 
-        output = {
-            "count": request.query_params['page_size'],  # This suppresses the ecomm mfe Order History Pagination ctrl
-            "next": None,
-            "previous": None,
-            "results": sorted(output_orders, key=lambda item: date_conv(item["date_placed"]), reverse=True)
-        }
+            output = {
+                # This suppresses the ecomm mfe Order History Pagination control
+                "count": request.query_params['page_size'],
+                "next": None,
+                "previous": None,
+                "results": sorted(output_orders, key=lambda item: date_conv(item["date_placed"]), reverse=True)
+            }
 
-        return Response(output)
+            return Response(output)
+        except Exception as exc:  # pylint: disable=broad-except
+            logger.error(f'[UserOrdersView] An error occured while fetching Order History.\n Data: [{exc}]')
+            return Response(status=HTTP_400_BAD_REQUEST, data='Something went wrong!')
