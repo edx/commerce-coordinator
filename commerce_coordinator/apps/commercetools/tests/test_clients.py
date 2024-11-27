@@ -803,6 +803,99 @@ class ClientTests(TestCase):
 
                 log_mock.assert_called_once_with(expected_message)
 
+    def test_is_first_time_discount_eligible_success(self):
+        base_url = self.client_set.get_base_url_from_client()
+        email = 'email@example.com'
+
+        mock_discount_codes = {
+            "results": [
+                {"id": "discount-id-1"},
+                {"id": "discount-id-2"}
+            ]
+        }
+
+        mock_orders = {
+            "total": 0
+        }
+
+        with requests_mock.Mocker(real_http=True, case_sensitive=False) as mocker:
+            mocker.get(
+                f"{base_url}discount-codes",
+                json=mock_discount_codes,
+                status_code=200
+            )
+
+            mocker.get(
+                f"{base_url}orders",
+                json=mock_orders,
+                status_code=200
+            )
+
+            result = self.client_set.client.is_first_time_discount_eligible(email)
+            self.assertTrue(result)
+
+    def test_is_first_time_discount_eligible_not_eligible(self):
+        base_url = self.client_set.get_base_url_from_client()
+        email = 'email@example.com'
+
+        mock_discount_codes = {
+            "results": [
+                {"id": "discount-id-1"},
+                {"id": "discount-id-2"}
+            ]
+        }
+
+        mock_orders = {
+            "total": 1
+        }
+
+        with requests_mock.Mocker(real_http=True, case_sensitive=False) as mocker:
+            mocker.get(
+                f"{base_url}discount-codes",
+                json=mock_discount_codes,
+                status_code=200
+            )
+
+            mocker.get(
+                f"{base_url}orders",
+                json=mock_orders,
+                status_code=200
+            )
+
+            result = self.client_set.client.is_first_time_discount_eligible(email)
+            self.assertFalse(result)
+
+    def test_is_first_time_discount_eligible_invalid_email(self):
+        invalid_email = "invalid_email@example.com"
+        base_url = self.client_set.get_base_url_from_client()
+
+        mock_discount_codes = {
+            "results": [
+                {"id": "discount-id-1"},
+                {"id": "discount-id-2"}
+            ]
+        }
+
+        mock_orders = {
+            "total": 0
+        }
+
+        with requests_mock.Mocker(real_http=True, case_sensitive=False) as mocker:
+            mocker.get(
+                f"{base_url}discount-codes",
+                json=mock_discount_codes,
+                status_code=200
+            )
+
+            mocker.get(
+                f"{base_url}orders",
+                json=mock_orders,
+                status_code=200
+            )
+
+            result = self.client_set.client.is_first_time_discount_eligible(invalid_email)
+            self.assertTrue(result)
+
 
 class PaginatedResultsTest(TestCase):
     """Tests for the simple logic in our Paginated Results Class"""
