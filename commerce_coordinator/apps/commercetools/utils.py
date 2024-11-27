@@ -35,9 +35,13 @@ def get_braze_client():
     )
 
 
-def handle_commercetools_error(err: CommercetoolsError, context: str):
+def handle_commercetools_error(err: CommercetoolsError, context: str, is_info=False):
+    """Handles commercetools errors."""
     error_message = f"[CommercetoolsError] {context} - Correlation ID: {err.correlation_id}, Details: {err.errors}"
-    logger.error(error_message)
+    if is_info:
+        logger.info(error_message)
+    else:
+        logger.error(error_message)
 
 
 def send_order_confirmation_email(
