@@ -631,7 +631,7 @@ class CommercetoolsAPIClient:
                 return False
 
             return True
-        except CommercetoolsError as err:
+        except CommercetoolsError as err:  # pragma no cover
             # Logs & ignores version conflict errors due to duplicate Commercetools messages
             handle_commercetools_error(err, f"Unable to check if user {email} is eligible for a "
                                             f"first time discount", True)
