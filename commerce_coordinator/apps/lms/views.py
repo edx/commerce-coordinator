@@ -8,7 +8,7 @@ from django.conf import settings
 from django.http import HttpResponseBadRequest, HttpResponseRedirect
 from edx_rest_framework_extensions.permissions import LoginRedirectIfUnauthenticated
 from openedx_filters.exceptions import OpenEdxFilterException
-from rest_framework.exceptions import ValidationError
+from rest_framework.exceptions import PermissionDenied, ValidationError
 from rest_framework.permissions import IsAdminUser
 from rest_framework.response import Response
 from rest_framework.status import HTTP_200_OK, HTTP_303_SEE_OTHER, HTTP_400_BAD_REQUEST, HTTP_500_INTERNAL_SERVER_ERROR
@@ -28,11 +28,6 @@ from commerce_coordinator.apps.lms.serializers import (
     enrollment_attribute_key
 )
 from commerce_coordinator.apps.rollout.utils import is_legacy_order
-
-
-from edx_rest_framework_extensions.permissions import LoginRedirectIfUnauthenticated
-from rest_framework.exceptions import PermissionDenied
-from rest_framework.throttling import UserRateThrottle
 
 logger = logging.getLogger(__name__)
 
