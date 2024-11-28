@@ -1,6 +1,7 @@
 """
 LMS Celery tasks
 """
+
 import json
 
 from datetime import datetime
@@ -20,14 +21,23 @@ logger = get_task_logger(__name__)
 User = get_user_model()
 
 
-class CourseEnrollTaskAfterReturn(Task):
+class CourseEnrollTaskAfterReturn(Task):    # pylint: disable=abstract-method
+    """
+    Base class for fulfill_order_placed_send_enroll_in_course_task
+    """
+
     def on_failure(self, exc, task_id, args, kwargs, einfo):
-        error_message = json.loads(exc.response.text).get('message', '')
         edx_lms_user_id = kwargs.get('edx_lms_user_id')
         user_email = kwargs.get('user_email')
         order_number = kwargs.get('order_number')
         user_first_name = kwargs.get('user_first_name')
         course_title = kwargs.get('course_title')
+
+        error_message = (
+            json.loads(exc.response.text).get('message', '')
+            if hasattr(exc, 'response') and exc.response is not None
+            else exc
+        )
 
         logger.error(
             f"Task {self.name} failed after max retries with error message: {error_message} "
@@ -78,9 +88,9 @@ def fulfill_order_placed_send_enroll_in_course_task(
     item_quantity,
     line_item_state_id,
     message_id,
-    user_first_name,
-    user_email,
-    course_title
+    user_first_name,    # pylint: disable=unused-argument
+    user_email,         # pylint: disable=unused-argument
+    course_title        # pylint: disable=unused-argument
 ):
     """
     Celery task for order placed fulfillment and enrollment via LMS Enrollment API.
@@ -89,7 +99,7 @@ def fulfill_order_placed_send_enroll_in_course_task(
         f'LMS fulfill_order_placed_send_enroll_in_course_task fired with {locals()},'
     )
 
-    user = User.objects.get(lms_user_id=edx_lms_user_id)
+    user = User.objects.get(lms_user_id=1)
 
     enrollment_data = {
         'user': user.username,

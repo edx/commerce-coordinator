@@ -284,6 +284,7 @@ DEFAULT_EDX_LMS_USER_ID = 127
 
 def gen_customer(email: str, un: str):
     return CTCustomer(
+        first_name='John',
         email=email,
         custom=CTCustomFields(
             type=CTTypeReference(
