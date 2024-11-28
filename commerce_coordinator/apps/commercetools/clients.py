@@ -5,6 +5,7 @@ API clients for commercetools app.
 import datetime
 import decimal
 import logging
+from types import SimpleNamespace
 from typing import Generic, List, Optional, Tuple, TypeVar, Union
 
 import requests
@@ -235,7 +236,7 @@ class CommercetoolsAPIClient:
         logger.info(f"[CommercetoolsAPIClient] - Attempting to find order with number {order_number}")
         return self.base_client.orders.get_by_order_number(order_number, expand=list(expand))
 
-    def get_orders(self, customer: CTCustomer, offset=0,
+    def get_orders(self, customer_id: str, offset=0,
                    limit=ORDER_HISTORY_PER_SYSTEM_REQ_LIMIT,
                    expand: ExpandList = DEFAULT_ORDER_EXPANSION,
                    order_state="Complete") -> PaginatedResult[CTOrder]:
@@ -256,39 +257,23 @@ class CommercetoolsAPIClient:
 
         """
         logger.info(f"[CommercetoolsAPIClient] - Attempting to find all completed orders for "
-                    f"customer with ID {customer.id}")
+                    f"customer with ID {customer_id}")
         order_where_clause = f"orderState=\"{order_state}\""
 
-        start_time = datetime.datetime.now()
-        logger.info(
-            "[UserOrdersView] Get CT orders query call started at %s", start_time)
         values = self.base_client.orders.query(
             where=["customerId=:cid", order_where_clause],
-            predicate_var={'cid': customer.id},
+            predicate_var={'cid': customer_id},
             sort=["completedAt desc", "lastModifiedAt desc"],
             limit=limit,
             offset=offset,
             expand=list(expand)
         )
-        end_time = datetime.datetime.now()
-        logger.info(
-            "[UserOrdersView] Get CT orders query call finished at %s with total duration: %ss",
-            end_time, (end_time - start_time).total_seconds()
-        )
 
-        start_time = datetime.datetime.now()
-        logger.info('[UserOrdersView] Pagination of CT orders started at %s',
-                    start_time)
-        result = PaginatedResult(values.results, values.total, values.offset)
-        end_time = datetime.datetime.now()
-        logger.info(
-            '[UserOrdersView] Pagination of CT orders finished at %s with total duration: %ss',
-            end_time, (end_time - start_time).total_seconds())
+        return PaginatedResult(values.results, values.total, values.offset)
 
-        return result
-
-    def get_orders_for_customer(self, edx_lms_user_id: int, offset=0,
-                                limit=ORDER_HISTORY_PER_SYSTEM_REQ_LIMIT) -> (PaginatedResult[CTOrder], CTCustomer):
+    def get_orders_for_customer(self, edx_lms_user_id: int, offset=0, limit=ORDER_HISTORY_PER_SYSTEM_REQ_LIMIT,
+                                customer_id=None, email=None,
+                                username=None) -> (PaginatedResult[CTOrder], CTCustomer):
         """
 
         Args:
@@ -296,28 +281,28 @@ class CommercetoolsAPIClient:
             offset:
             limit:
         """
-        start_time = datetime.datetime.now()
-        logger.info(
-            "[UserOrdersView] For CT orders get customer id from lms id call started at %s",
-            start_time
-        )
-        customer = self.get_customer_by_lms_user_id(edx_lms_user_id)
-        end_time = datetime.datetime.now()
-        logger.info(
-            "[UserOrdersView] For CT orders get customer id from lms id call finished at %s with total duration: %ss",
-            end_time, (end_time - start_time).total_seconds()
-        )
+        if not customer_id:
+            customer = self.get_customer_by_lms_user_id(edx_lms_user_id)
 
-        if customer is None:  # pragma: no cover
-            raise ValueError(f'Unable to locate customer with ID #{edx_lms_user_id}')
+            if customer is None:  # pragma: no cover
+                raise ValueError(f'Unable to locate customer with ID #{edx_lms_user_id}')
 
-        start_time = datetime.datetime.now()
-        logger.info("[UserOrdersView] Get CT orders call started at %s",
-                    start_time)
-        orders = self.get_orders(customer, offset, limit)
-        end_time = datetime.datetime.now()
-        logger.info("[UserOrdersView] Get CT orders call finished at %s with total duration: %ss",
-                    end_time, (end_time - start_time).total_seconds())
+            customer_id = customer.id
+        else:
+            if email is None or username is None:  # pragma: no cover
+                raise ValueError("If customer_id is provided, both email and username must be provided")
+
+            customer = SimpleNamespace(
+                id=customer_id,
+                email=email,
+                custom=SimpleNamespace(
+                    fields={
+                        EdXFieldNames.LMS_USER_NAME: username
+                    }
+                )
+            )
+
+        orders = self.get_orders(customer_id, offset, limit)
 
         return orders, customer
 
@@ -562,7 +547,7 @@ class CommercetoolsAPIClient:
                 return self.get_order_by_id(order_id)
         except CommercetoolsError as err:
             # Logs & ignores version conflict errors due to duplicate Commercetools messages
-            handle_commercetools_error(err, f"Unable to update LineItemState of order {order_id}")
+            handle_commercetools_error(err, f"Unable to update LineItemState of order {order_id}", True)
             return None
 
     def retire_customer_anonymize_fields(self, customer_id: str, customer_version: int,

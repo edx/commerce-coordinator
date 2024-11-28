@@ -48,6 +48,9 @@ class PipelineTests(MonkeyPatchedGetOrderTestCase):
             request,
             {
                 "edx_lms_user_id": 127,
+                "customer_id": None,
+                "email": "test@example.com",
+                "username": "test",
                 "page_size": ORDER_HISTORY_PER_SYSTEM_REQ_LIMIT,
                 "page": 0,
             },

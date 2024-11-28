@@ -10,7 +10,7 @@ from django.http import HttpResponseBadRequest, HttpResponseNotFound, HttpRespon
 from edx_rest_framework_extensions.permissions import LoginRedirectIfUnauthenticated
 from rest_framework.exceptions import PermissionDenied
 from rest_framework.response import Response
-from rest_framework.status import HTTP_303_SEE_OTHER
+from rest_framework.status import HTTP_303_SEE_OTHER, HTTP_400_BAD_REQUEST
 from rest_framework.throttling import UserRateThrottle
 from rest_framework.views import APIView
 
@@ -74,14 +74,13 @@ class UserOrdersView(APIView):
 
     def get(self, request):
         """Return paginated response of user's order history."""
-        request_start_time = datetime.now()
-        logger.info("[UserOrdersView] GET method started at: %s", request_start_time)
-
         user = request.user
         user.add_lms_user_id("UserOrdersView GET method")
         # build parameters
         params = {
+            'customer_id': request.query_params.get('customer_id'),
             'username': request.user.username,
+            'email': request.user.email,
             "edx_lms_user_id": request.user.lms_user_id,
             "page": 0,
             "page_size": ORDER_HISTORY_PER_SYSTEM_REQ_LIMIT
@@ -95,40 +94,23 @@ class UserOrdersView(APIView):
         if not request.user.lms_user_id:  # pragma: no cover
             raise PermissionDenied(detail="Could not detect LMS user id.")
 
-        start_time = datetime.now()
-        logger.info("[UserOrdersView] Pipline filter run started at: %s", start_time)
-        order_data = OrderHistoryRequested.run_filter(request, params)
-        end_time = datetime.now()
-        logger.info("[UserOrdersView] Pipline filter run finished at: %s with total duration: %ss",
-                    end_time, (end_time - start_time).total_seconds())
+        try:
+            order_data = OrderHistoryRequested.run_filter(request, params)
 
-        output_orders = []
+            output_orders = []
 
-        start_time = datetime.now()
-        logger.info("[UserOrdersView] Looping through combined orders results starting at: %s", start_time)
-        for order_set in order_data:
-            output_orders.extend(order_set['results'])
+            for order_set in order_data:
+                output_orders.extend(order_set['results'])
 
-        end_time = datetime.now()
-        logger.info(
-            "[UserOrdersView] Looping through combined orders results finished at: %s with total duration: %ss",
-            end_time, (end_time - start_time).total_seconds())
+            output = {
+                # This suppresses the ecomm mfe Order History Pagination control
+                "count": request.query_params['page_size'],
+                "next": None,
+                "previous": None,
+                "results": sorted(output_orders, key=lambda item: date_conv(item["date_placed"]), reverse=True)
+            }
 
-        start_time = datetime.now()
-        logger.info("[UserOrdersView] Sorting combined orders results for output starting at: %s", start_time)
-        output = {
-            "count": request.query_params['page_size'],  # This suppresses the ecomm mfe Order History Pagination ctrl
-            "next": None,
-            "previous": None,
-            "results": sorted(output_orders, key=lambda item: date_conv(item["date_placed"]), reverse=True)
-        }
-
-        end_time = datetime.now()
-        logger.info(
-            "[UserOrdersView] Sorting combined orders results for output finished at: %s with total duration: %ss",
-            end_time, (end_time - start_time).total_seconds())
-
-        request_end_time = datetime.now()
-        logger.info("[UserOrdersView] GET method finished at: %s with total duration: %ss", request_end_time,
-                    (request_end_time - request_start_time).total_seconds())
-        return Response(output)
+            return Response(output)
+        except Exception as exc:  # pylint: disable=broad-except
+            logger.error(f'[UserOrdersView] An error occured while fetching Order History.\n Data: [{exc}]')
+            return Response(status=HTTP_400_BAD_REQUEST, data='Something went wrong!')

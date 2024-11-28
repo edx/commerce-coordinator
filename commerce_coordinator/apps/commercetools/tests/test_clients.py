@@ -672,7 +672,7 @@ class ClientTests(TestCase):
                 status_code=409
             )
 
-            with patch('commerce_coordinator.apps.commercetools.clients.logging.Logger.error') as log_mock:
+            with patch('commerce_coordinator.apps.commercetools.clients.logging.Logger.info') as log_mock:
                 self.client_set.client.update_line_item_transition_state_on_fulfillment(
                     "mock_order_id",
                     1,
@@ -689,7 +689,7 @@ class ClientTests(TestCase):
                     f"Details: {mock_error_response['errors']}"
                 )
 
-                log_mock.assert_called_once_with(expected_message)
+                log_mock.assert_called_with(expected_message)
 
     @patch('commerce_coordinator.apps.commercetools.clients.CommercetoolsAPIClient.get_state_by_id')
     @patch('commerce_coordinator.apps.commercetools.clients.CommercetoolsAPIClient.get_order_by_id')
