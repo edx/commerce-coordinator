@@ -36,7 +36,7 @@ class CourseEnrollTaskAfterReturn(Task):    # pylint: disable=abstract-method
         error_message = (
             json.loads(exc.response.text).get('message', '')
             if hasattr(exc, 'response') and exc.response is not None
-            else exc
+            else str(exc)
         )
 
         logger.error(

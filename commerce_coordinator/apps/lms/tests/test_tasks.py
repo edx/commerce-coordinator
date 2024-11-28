@@ -3,7 +3,7 @@ LMS app Task Tests
 """
 
 import logging
-from unittest.mock import patch, sentinel, Mock
+from unittest.mock import Mock, patch, sentinel
 
 from django.test import TestCase
 from requests import RequestException
