@@ -99,7 +99,7 @@ def fulfill_order_placed_send_enroll_in_course_task(
         f'LMS fulfill_order_placed_send_enroll_in_course_task fired with {locals()},'
     )
 
-    user = User.objects.get(lms_user_id=1)
+    user = User.objects.get(lms_user_id=edx_lms_user_id)
 
     enrollment_data = {
         'user': user.username,

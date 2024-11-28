@@ -75,7 +75,6 @@ extensions = [
 # A list of warning types to suppress arbitrary warning messages.
 suppress_warnings = [
     'image.nonlocal_uri',
-    'role:setting',
 ]
 
 # Add any paths that contain templates here, relative to this directory.
@@ -557,3 +556,8 @@ def setup(app):
     """Sphinx extension: run sphinx-apidoc."""
     event = 'builder-inited'
     app.connect(event, on_init)
+
+rst_prolog = """
+.. role:: setting
+.. role:: sig
+"""
