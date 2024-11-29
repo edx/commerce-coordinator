@@ -1,8 +1,8 @@
 """
 Commercetools filter pipelines
 """
-from datetime import datetime
 import decimal
+from datetime import datetime
 from logging import getLogger
 
 import attrs

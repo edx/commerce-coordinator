@@ -187,13 +187,13 @@ class CommercetoolsAPIClient:
 
         edx_lms_user_id_key = EdXFieldNames.LMS_USER_ID
 
-        start_time = datetime.now()
+        start_time = datetime.datetime.now()
         results = self.base_client.customers.query(
             where=f'custom(fields({edx_lms_user_id_key}=:id))',
             limit=2,
             predicate_var={'id': f"{lms_user_id}"}
         )
-        duration = (datetime.now() - start_time).total_seconds()
+        duration = (datetime.datetime.now() - start_time).total_seconds()
         logger.info(f"[Performance Check] - customerId query took {duration} seconds")
 
         if results.count > 1:
@@ -333,9 +333,9 @@ class CommercetoolsAPIClient:
         Args:
             cr_id: variant course run key
         """
-        start_time = datetime.now()
+        start_time = datetime.datetime.now()
         results = self.base_client.product_projections.search(False, filter=f"variants.sku:\"{cr_id}\"").results
-        duration = (datetime.now() - start_time).total_seconds()
+        duration = (datetime.datetime.now() - start_time).total_seconds()
         logger.info(
             f"[Performance Check] get_product_variant_by_course_run took {duration} seconds")
 

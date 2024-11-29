@@ -3,6 +3,7 @@ LMS Celery tasks
 """
 
 from datetime import datetime
+
 from celery import shared_task
 from celery.utils.log import get_task_logger
 from django.contrib.auth import get_user_model
