@@ -2,6 +2,7 @@
 LMS Celery tasks
 """
 
+from datetime import datetime
 from celery import shared_task
 from celery.utils.log import get_task_logger
 from django.contrib.auth import get_user_model
@@ -92,7 +93,10 @@ def fulfill_order_placed_send_enroll_in_course_task(
         client = CommercetoolsAPIClient()
         # A retry means the current line item state on the order would be a failure state
         line_item_state_id = client.get_state_by_key(TwoUKeys.FAILURE_FULFILMENT_STATE).id
+        start_time = datetime.now()
         order_version = client.get_order_by_id(order_id).version
+        duration = (datetime.now() - start_time).total_seconds()
+        logger.info(f"[Performance Check] get_order_by_id call took {duration} seconds")
 
     line_item_state_payload = {
         'order_id': order_id,

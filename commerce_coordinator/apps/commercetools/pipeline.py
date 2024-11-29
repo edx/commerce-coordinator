@@ -1,6 +1,7 @@
 """
 Commercetools filter pipelines
 """
+from datetime import datetime
 import decimal
 from logging import getLogger
 
@@ -102,7 +103,10 @@ class FetchOrderDetailsByOrderNumber(PipelineStep):
 
         try:
             ct_api_client = CommercetoolsAPIClient()
+            start_time = datetime.now()
             ct_order = ct_api_client.get_order_by_number(order_number=order_number)
+            duration = (datetime.now() - start_time).total_seconds()
+            log.info(f"[Performance Check] get_order_by_number call took {duration} seconds")
 
             ret_val = {
                 "order_data": ct_order,
@@ -155,7 +159,10 @@ class FetchOrderDetailsByOrderID(PipelineStep):
 
         try:
             ct_api_client = CommercetoolsAPIClient()
+            start_time = datetime.now()
             ct_order = ct_api_client.get_order_by_id(order_id=order_id)
+            duration = (datetime.now() - start_time).total_seconds()
+            log.info(f"[Performance Check] get_order_by_id call took {duration} seconds")
 
             ret_val = {
                 "order_data": ct_order,
