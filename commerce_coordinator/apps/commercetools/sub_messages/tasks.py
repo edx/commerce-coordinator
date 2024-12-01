@@ -1,8 +1,6 @@
 """
 Commercetools Subscription Message tasks (Celery)
 """
-from datetime import datetime
-
 from celery import shared_task
 from celery.utils.log import get_task_logger
 from commercetools import CommercetoolsError
@@ -61,10 +59,7 @@ def fulfill_order_placed_message_signal_task(
     client = CommercetoolsAPIClient()
 
     try:
-        start_time = datetime.now()
         order = client.get_order_by_id(order_id)
-        duration = (datetime.now() - start_time).total_seconds()
-        logger.info(f"[Performance Check] get_order_by_id call took {duration} seconds")
     except CommercetoolsError as err:  # pragma no cover
         logger.error(f'[CT-{tag}] Order not found: {order_id} with CT error {err}, {err.errors},'
                      f'message id: {message_id}')
