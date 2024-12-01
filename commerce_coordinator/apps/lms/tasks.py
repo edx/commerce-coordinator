@@ -1,16 +1,18 @@
 """
 LMS Celery tasks
 """
+import json
 
 from datetime import datetime
 
-from celery import shared_task
+from celery import Task, shared_task
 from celery.utils.log import get_task_logger
 from django.contrib.auth import get_user_model
 from requests import RequestException
 
 from commerce_coordinator.apps.commercetools.catalog_info.constants import TwoUKeys
 from commerce_coordinator.apps.commercetools.clients import CommercetoolsAPIClient
+from commerce_coordinator.apps.commercetools.utils import send_fulfillment_error_email
 from commerce_coordinator.apps.lms.clients import LMSAPIClient
 
 # Use the special Celery logger for our tasks
@@ -18,7 +20,48 @@ logger = get_task_logger(__name__)
 User = get_user_model()
 
 
-@shared_task(bind=True, autoretry_for=(RequestException,), retry_kwargs={'max_retries': 5, 'countdown': 3})
+class CourseEnrollTaskAfterReturn(Task):
+    def on_failure(self, exc, task_id, args, kwargs, einfo):
+        error_message = json.loads(exc.response.text).get('message', '')
+        edx_lms_user_id = kwargs.get('edx_lms_user_id')
+        user_email = kwargs.get('user_email')
+        order_number = kwargs.get('order_number')
+        user_first_name = kwargs.get('user_first_name')
+        course_title = kwargs.get('course_title')
+
+        logger.error(
+            f"Task {self.name} failed after max retries with error message: {error_message} "
+            f"for user with User Id: {edx_lms_user_id}, Email: {user_email}, "
+            f"Order Number: {order_number}, Course Title: {course_title}"
+        )
+
+        if (
+            self.request.retries >= self.max_retries
+            and "course mode is expired or otherwise unavailable for course run" in error_message
+        ):
+
+            logger.info(
+                f"Sending Fulfillment Error Email for user with "
+                f"User ID: {edx_lms_user_id}, Email: {user_email}, "
+                f"Order Number: {order_number}, Course Title: {course_title}"
+            )
+
+            canvas_entry_properties = {
+                'order_number': order_number,
+                'product_type': 'course',
+                'product_name': course_title,
+                'first_name': user_first_name,
+            }
+            # Send failure notification email
+            send_fulfillment_error_email(edx_lms_user_id, user_email, canvas_entry_properties)
+
+
+@shared_task(
+    bind=True,
+    autoretry_for=(RequestException,),
+    retry_kwargs={'max_retries': 5, 'countdown': 3},
+    base=CourseEnrollTaskAfterReturn,
+)
 def fulfill_order_placed_send_enroll_in_course_task(
     self,
     course_id,
@@ -34,7 +77,10 @@ def fulfill_order_placed_send_enroll_in_course_task(
     line_item_id,
     item_quantity,
     line_item_state_id,
-    message_id
+    message_id,
+    user_first_name,
+    user_email,
+    course_title
 ):
     """
     Celery task for order placed fulfillment and enrollment via LMS Enrollment API.

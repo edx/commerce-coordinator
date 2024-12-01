@@ -65,6 +65,27 @@ def send_order_confirmation_email(
         logger.exception(f"Encountered exception sending Order confirmation email. Exception: {exc}")
 
 
+def send_fulfillment_error_email(
+    lms_user_id, lms_user_email, canvas_entry_properties
+):
+    """ Sends fulfillment error email via Braze. """
+    recipients = [{"external_user_id": lms_user_id, "attributes": {
+        "email": lms_user_email,
+    }}]
+    canvas_id = settings.BRAZE_CT_FULFILLMENT_ERROR_CANVAS_ID
+
+    try:
+        braze_client = get_braze_client()
+        if braze_client:
+            braze_client.send_canvas_message(
+                canvas_id=canvas_id,
+                recipients=recipients,
+                canvas_entry_properties=canvas_entry_properties,
+            )
+    except Exception as exc:  # pylint: disable=broad-exception-caught
+        logger.exception(f"Encountered exception sending Fulfillment Error email. Exception: {exc}")
+
+
 def format_amount_for_braze_canvas(centAmount):
     """
     Utility to convert amount to dollar with 2 decimals percision. Also adds the Dollar signs to resulting value.
