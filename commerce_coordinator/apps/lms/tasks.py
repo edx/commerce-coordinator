@@ -3,7 +3,6 @@ LMS Celery tasks
 """
 
 import json
-
 from datetime import datetime
 
 from celery import Task, shared_task
@@ -45,9 +44,13 @@ class CourseEnrollTaskAfterReturn(Task):    # pylint: disable=abstract-method
             f"Order Number: {order_number}, Course Title: {course_title}"
         )
 
+        # This error is returned from LMS if the course mode is unsupported
+        # https://github.com/openedx/edx-platform/blob/master/openedx/core/djangoapps/enrollments/views.py#L870
+        course_mode_expired_error = "course mode is expired or otherwise unavailable for course run"
+
         if (
             self.request.retries >= self.max_retries
-            and "course mode is expired or otherwise unavailable for course run" in error_message
+            and course_mode_expired_error in error_message
         ):
 
             logger.info(
