@@ -125,7 +125,10 @@ def fulfill_order_placed_message_signal_task(
             'course_mode': get_course_mode_from_ct_order(item),
             'item_quantity': item.quantity,
             'line_item_state_id': line_item_state_id,
-            'message_id': message_id
+            'message_id': message_id,
+            'user_first_name': customer.first_name,
+            'user_email': customer.email,
+            'course_title': item.name.get('en-US', '')
         })
 
         # the following throws and thus doesn't need to be a conditional
