@@ -12,7 +12,7 @@ from requests import RequestException
 
 from commerce_coordinator.apps.commercetools.catalog_info.constants import TwoUKeys
 from commerce_coordinator.apps.commercetools.clients import CommercetoolsAPIClient
-from commerce_coordinator.apps.commercetools.utils import send_fulfillment_error_email
+from commerce_coordinator.apps.commercetools.utils import send_unsupported_mode_fulfillment_error_email
 from commerce_coordinator.apps.lms.clients import LMSAPIClient
 
 # Use the special Celery logger for our tasks
@@ -34,39 +34,36 @@ class CourseEnrollTaskAfterReturn(Task):    # pylint: disable=abstract-method
 
         error_message = (
             json.loads(exc.response.text).get('message', '')
-            if hasattr(exc, 'response') and exc.response is not None
+            if isinstance(exc, RequestException) and exc.response is not None
             else str(exc)
         )
 
         logger.error(
-            f"Task {self.name} failed after max retries with error message: {error_message} "
-            f"for user with User Id: {edx_lms_user_id}, Email: {user_email}, "
-            f"Order Number: {order_number}, Course Title: {course_title}"
+            f"Post-purchase fulfillment task {self.name} failed after max "
+            f"retries with the error message: {error_message} "
+            f"for user with user Id: {edx_lms_user_id}, email: {user_email}, "
+            f"order number: {order_number}, and course title: {course_title}"
         )
 
         # This error is returned from LMS if the course mode is unsupported
         # https://github.com/openedx/edx-platform/blob/master/openedx/core/djangoapps/enrollments/views.py#L870
         course_mode_expired_error = "course mode is expired or otherwise unavailable for course run"
 
-        if (
-            self.request.retries >= self.max_retries
-            and course_mode_expired_error in error_message
-        ):
-
+        if course_mode_expired_error in error_message:
             logger.info(
-                f"Sending Fulfillment Error Email for user with "
-                f"User ID: {edx_lms_user_id}, Email: {user_email}, "
-                f"Order Number: {order_number}, Course Title: {course_title}"
+                f"Sending unsupported course mode fulfillment error email "
+                f"for the user with user ID: {edx_lms_user_id}, email: {user_email}, "
+                f"order number: {order_number}, and course title: {course_title}"
             )
 
             canvas_entry_properties = {
                 'order_number': order_number,
-                'product_type': 'course',
+                'product_type': 'course',  # TODO: Fetch product type from commercetools product object
                 'product_name': course_title,
                 'first_name': user_first_name,
             }
             # Send failure notification email
-            send_fulfillment_error_email(edx_lms_user_id, user_email, canvas_entry_properties)
+            send_unsupported_mode_fulfillment_error_email(edx_lms_user_id, user_email, canvas_entry_properties)
 
 
 @shared_task(
