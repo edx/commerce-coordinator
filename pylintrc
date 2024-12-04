@@ -291,6 +291,7 @@ disable =
 	django-not-configured,
 	consider-using-with,
 	bad-option-value,
+	too-many-positional-arguments
 
 [REPORTS]
 output-format = text
@@ -387,4 +388,4 @@ int-import-graph =
 [EXCEPTIONS]
 overgeneral-exceptions = builtins.Exception
 
-# c7aa11095d3af8c5ffe7c05c3048b8ac45fdbc57
+# b23ca960adcfedcbb4d66893ab4094db594ffca4
