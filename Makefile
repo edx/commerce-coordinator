@@ -176,6 +176,10 @@ dev.down: # Kills containers and all of their data that isn't in volumes
 dev.stop: # Stops containers so they can be restarted
 	docker-compose stop
 
+dev.multistack.up:
+	bash find-start-lms.sh
+	docker-compose up -d
+
 dev.multistack.stop:
 	docker compose -p devstack stop
 	docker compose stop
@@ -198,9 +202,6 @@ db-shell: # Run the app shell as root, enter the app's database
 
 %-attach:
 	docker attach commerce_coordinator.$*
-
-github_docker_auth:
-	echo "$$DOCKERHUB_PASSWORD" | docker login -u "$$DOCKERHUB_USERNAME" --password-stdin
 
 selfcheck: ## check that the Makefile is well-formed
 	@echo "The Makefile is well-formed."
