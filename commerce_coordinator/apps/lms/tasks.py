@@ -95,10 +95,7 @@ def fulfill_order_placed_send_enroll_in_course_task(
     """
     Celery task for order placed fulfillment and enrollment via LMS Enrollment API.
     """
-    logger.info(
-        f'LMS fulfill_order_placed_send_enroll_in_course_task fired with {locals()},'
-    )
-
+    logger.info(f"[fulfill_order_task] Starting task with Order ID: {order_id}, Line Item ID: {line_item_id}.")
     user = User.objects.get(lms_user_id=edx_lms_user_id)
 
     enrollment_data = {
@@ -147,6 +144,7 @@ def fulfill_order_placed_send_enroll_in_course_task(
 
     # Updating the order version and stateID after the transition to 'Fulfillment Failure'
     if self.request.retries > 0:
+        logger.warning(f"[fulfill_order_task] Retry {self.request.retries} for Order ID {order_id}.")
         client = CommercetoolsAPIClient()
         # A retry means the current line item state on the order would be a failure state
         line_item_state_id = client.get_state_by_key(TwoUKeys.FAILURE_FULFILMENT_STATE).id
