@@ -399,6 +399,12 @@ OPEN_EDX_FILTERS_CONFIG = {
         "pipeline": [
             'commerce_coordinator.apps.commercetools.pipeline.AnonymizeRetiredUser',
         ]
+    },
+    'org.edx.coordinator.lms.check.first.time.discount.eligibility.v1': {
+        'fail_silently': False,
+        'pipeline': [
+            'commerce_coordinator.apps.commercetools.pipeline.CheckCommercetoolsDiscountEligibility',
+        ]
     }
 }
 
@@ -453,6 +459,8 @@ COMMERCETOOLS_CONFIG = {
 
 # Checkout view urls
 COMMERCETOOLS_FRONTEND_URL = 'http://localhost:3000/SET-ME'
+
+COMMERCETOOLS_FIRST_TIME_DISCOUNTS = ('EDXWELCOME', 'NEW2EDX')
 
 COMMERCETOOLS_MERCHANT_CENTER_ORDERS_PAGE_URL = \
     f'https://mc.{_COMMERCETOOLS_CONFIG_GEO}.commercetools.com/{COMMERCETOOLS_CONFIG["projectKey"]}/orders'
