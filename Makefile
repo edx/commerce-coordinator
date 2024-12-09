@@ -155,16 +155,10 @@ start-devstack: ## run a local development copy of the server
 open-devstack: ## open a shell on the server started by start-devstack
 	docker exec -it commerce-coordinator /edx/app/commerce-coordinator/devstack.sh open
 
-pkg-devstack: ## build the commerce-coordinator image from the latest configuration and code
-	docker build -t commerce-coordinator:latest -f docker/build/commerce-coordinator/Dockerfile git://github.com/openedx/configuration
-
 detect_changed_source_translations: ## check if translation files are up-to-date
 	cd commerce_coordinator && i18n_tool changed
 
 validate_translations: fake_translations detect_changed_source_translations ## install fake translations and check if translation files are up-to-date
-
-docker_build:
-	docker build . -f Dockerfile -t openedx/commerce-coordinator
 
 dev.provision_docker: # start LMS, and Setup a clean commerce-coordinator stack.
 	bash provision-commerce-coordinator.sh
@@ -176,9 +170,6 @@ dev.run_test_query:
 dev.up: # Starts all containers
 	docker-compose up -d
 
-dev.up.build:
-	docker-compose up -d --build
-
 dev.down: # Kills containers and all of their data that isn't in volumes
 	docker-compose down
 
@@ -187,7 +178,7 @@ dev.stop: # Stops containers so they can be restarted
 
 dev.multistack.up:
 	bash find-start-lms.sh
-	docker-compose up -d --build
+	docker-compose up -d
 
 dev.multistack.stop:
 	docker compose -p devstack stop
@@ -211,19 +202,6 @@ db-shell: # Run the app shell as root, enter the app's database
 
 %-attach:
 	docker attach commerce_coordinator.$*
-
-github_docker_build:
-	docker build . -f Dockerfile --target app -t openedx/commerce-coordinator
-
-github_docker_tag: github_docker_build
-	docker tag openedx/commerce-coordinator openedx/commerce-coordinator:${GITHUB_SHA}
-
-github_docker_auth:
-	echo "$$DOCKERHUB_PASSWORD" | docker login -u "$$DOCKERHUB_USERNAME" --password-stdin
-
-github_docker_push: github_docker_tag github_docker_auth ## push to docker hub
-	docker push 'openedx/commerce-coordinator:latest'
-	docker push "openedx/commerce-coordinator:${GITHUB_SHA}"
 
 selfcheck: ## check that the Makefile is well-formed
 	@echo "The Makefile is well-formed."

@@ -7,6 +7,7 @@ ALLOWED_HOSTS += (
     'host.docker.internal',
     'localhost',
     '.ngrok-free.app',
+    '.share.zrok.io',
 )
 
 INSTALLED_APPS += (

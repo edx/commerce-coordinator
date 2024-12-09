@@ -14,8 +14,7 @@ services:
     container_name: commerce-coordinator.memcache
 
   app:
-    image: devstack # this should exist locally from previous devstack, we will build our Dockerfile
-    build: .        # Build Dockerfile if we need to.
+    image: edxops/commerce-coordinator-dev
     container_name: commerce-coordinator.app
     volumes:
       - .:/edx/app/commerce-coordinator/

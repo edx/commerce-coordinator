@@ -3,7 +3,7 @@ LMS app Task Tests
 """
 
 import logging
-from unittest.mock import patch, sentinel
+from unittest.mock import Mock, patch, sentinel
 
 from django.test import TestCase
 from requests import RequestException
@@ -49,7 +49,10 @@ class FulfillOrderPlacedSendEnrollInCourseTaskTest(TestCase):
             values['line_item_id'],
             values['item_quantity'],
             values['line_item_state_id'],
-            values['message_id']
+            values['message_id'],
+            values['user_first_name'],
+            values['user_email'],
+            values['course_title']
         )
 
     def setUp(self):
@@ -130,3 +133,42 @@ class FulfillOrderPlacedSendEnrollInCourseTaskTest(TestCase):
 
         mock_ct_get_state.assert_called_with(TwoUKeys.FAILURE_FULFILMENT_STATE)
         mock_ct_get_order.assert_called_with(EXAMPLE_FULFILLMENT_SIGNAL_PAYLOAD.get('order_id'))
+
+    @patch('commerce_coordinator.apps.lms.tasks.send_unsupported_mode_fulfillment_error_email')
+    @patch.object(fulfill_order_placed_send_enroll_in_course_task, 'max_retries', 5)
+    def test_fulfillment_error_email_is_sent_on_failure(
+            self, mock_send_email, mock_client
+    ):    # pylint: disable=unused-argument
+        """
+        Test that `on_failure` sends the appropriate failure email.
+        """
+        mock_response = Mock()
+        mock_response.text = '{"message": "course mode is expired or otherwise unavailable for course run"}'
+        exception = RequestException("400 Bad Request")
+        exception.response = mock_response
+
+        exc = exception
+        task_id = "test_task_id"
+        args = []
+        kwargs = EXAMPLE_FULFILLMENT_SIGNAL_PAYLOAD
+        einfo = Mock()
+
+        fulfill_order_placed_send_enroll_in_course_task.push_request(retries=5)
+        fulfill_order_placed_send_enroll_in_course_task.on_failure(
+            exc=exc,
+            task_id=task_id,
+            args=args,
+            kwargs=kwargs,
+            einfo=einfo
+        )
+
+        mock_send_email.assert_called_once_with(
+            EXAMPLE_FULFILLMENT_SIGNAL_PAYLOAD['edx_lms_user_id'],
+            EXAMPLE_FULFILLMENT_SIGNAL_PAYLOAD['user_email'],
+            {
+                'order_number': EXAMPLE_FULFILLMENT_SIGNAL_PAYLOAD['order_number'],
+                'product_type': 'course',
+                'product_name': EXAMPLE_FULFILLMENT_SIGNAL_PAYLOAD['course_title'],
+                'first_name': EXAMPLE_FULFILLMENT_SIGNAL_PAYLOAD['user_first_name'],
+            }
+        )
