@@ -26,5 +26,3 @@ class GetPayPalPaymentReceipt(PipelineStep):
             return {
                 'redirect_url': redirect_url,
             }
-
-        return None
