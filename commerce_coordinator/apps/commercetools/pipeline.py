@@ -12,6 +12,7 @@ from openedx_filters import PipelineStep
 from openedx_filters.exceptions import OpenEdxFilterException
 from requests import HTTPError
 
+from commerce_coordinator.apps.commercetools.catalog_info.constants import EDX_STRIPE_PAYMENT_INTERFACE_NAME
 from commerce_coordinator.apps.commercetools.catalog_info.edx_utils import (
     get_edx_payment_intent_id,
     get_edx_refund_amount,
