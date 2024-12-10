@@ -12,8 +12,10 @@ from openedx_filters import PipelineStep
 from openedx_filters.exceptions import OpenEdxFilterException
 from requests import HTTPError
 
+from commerce_coordinator.apps.commercetools.catalog_info.constants import EDX_STRIPE_PAYMENT_INTERFACE_NAME
 from commerce_coordinator.apps.commercetools.catalog_info.edx_utils import (
     get_edx_payment_intent_id,
+    get_edx_payment_service_provider,
     get_edx_refund_amount
 )
 from commerce_coordinator.apps.commercetools.clients import CommercetoolsAPIClient
@@ -108,20 +110,23 @@ class FetchOrderDetailsByOrderNumber(PipelineStep):
             duration = (datetime.now() - start_time).total_seconds()
             log.info(f"[Performance Check] get_order_by_number call took {duration} seconds")
 
+            psp = get_edx_payment_service_provider(ct_order)
+
+            intent_id = None
+            if psp == EDX_STRIPE_PAYMENT_INTERFACE_NAME:
+                intent_id = get_edx_payment_intent_id(ct_order)
+
             ret_val = {
                 "order_data": ct_order,
+                "psp": psp,
+                "payment_intent_id": intent_id
             }
-
-            intent_id = get_edx_payment_intent_id(ct_order)
-
             if intent_id:
                 ct_payment = ct_api_client.get_payment_by_key(intent_id)
-                ret_val['payment_intent_id'] = intent_id
                 ret_val['amount_in_cents'] = get_edx_refund_amount(ct_order)
                 ret_val['has_been_refunded'] = has_refund_transaction(ct_payment)
                 ret_val['payment_data'] = ct_payment
             else:
-                ret_val['payment_intent_id'] = None
                 ret_val['amount_in_cents'] = decimal.Decimal(0.00)
                 ret_val['has_been_refunded'] = False
                 ret_val['payment_data'] = None
