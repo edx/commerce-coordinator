@@ -53,6 +53,7 @@ PROJECT_APPS = (
     'commerce_coordinator.apps.frontend_app_payment.apps.FrontendAppPaymentConfig',
     'commerce_coordinator.apps.lms.apps.LmsConfig',
     'commerce_coordinator.apps.stripe.apps.StripeConfig',
+    'commerce_coordinator.apps.paypal.apps.PaypalConfig',
     'commerce_coordinator.apps.titan.apps.TitanConfig',
     'commerce_coordinator.apps.commercetools',
 )
@@ -374,7 +375,8 @@ OPEN_EDX_FILTERS_CONFIG = {
             'commerce_coordinator.apps.ecommerce.pipeline.GetLegacyEcommerceReceiptRedirectUrl',
             'commerce_coordinator.apps.rollout.pipeline.HaltIfRedirectUrlProvided',
             'commerce_coordinator.apps.commercetools.pipeline.FetchOrderDetailsByOrderNumber',
-            'commerce_coordinator.apps.stripe.pipeline.GetPaymentIntentReceipt'
+            'commerce_coordinator.apps.stripe.pipeline.GetPaymentIntentReceipt',
+            'commerce_coordinator.apps.paypal.pipeline.GetPayPalPaymentReceipt'
         ]
     },
     "org.edx.coordinator.lms.order.refund.requested.v1": {
@@ -474,3 +476,7 @@ BRAZE_CT_FULFILLMENT_UNSUPPORTED_MODE_ERROR_CANVAS_ID = ''
 SEGMENT_KEY = None
 
 FAVICON_URL = "https://edx-cdn.org/v3/prod/favicon.ico"
+
+# PAYPAL SETTINIS
+PAYPAL_BASE_URL = ""
+PAYPAL_USER_ACTIVITES_URL = ""
