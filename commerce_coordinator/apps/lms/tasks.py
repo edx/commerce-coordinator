@@ -2,13 +2,17 @@
 LMS Celery tasks
 """
 
-from celery import shared_task
+import json
+from datetime import datetime
+
+from celery import Task, shared_task
 from celery.utils.log import get_task_logger
 from django.contrib.auth import get_user_model
 from requests import RequestException
 
 from commerce_coordinator.apps.commercetools.catalog_info.constants import TwoUKeys
 from commerce_coordinator.apps.commercetools.clients import CommercetoolsAPIClient
+from commerce_coordinator.apps.commercetools.utils import send_unsupported_mode_fulfillment_error_email
 from commerce_coordinator.apps.lms.clients import LMSAPIClient
 
 # Use the special Celery logger for our tasks
@@ -16,7 +20,58 @@ logger = get_task_logger(__name__)
 User = get_user_model()
 
 
-@shared_task(bind=True, autoretry_for=(RequestException,), retry_kwargs={'max_retries': 5, 'countdown': 3})
+class CourseEnrollTaskAfterReturn(Task):    # pylint: disable=abstract-method
+    """
+    Base class for fulfill_order_placed_send_enroll_in_course_task
+    """
+
+    def on_failure(self, exc, task_id, args, kwargs, einfo):
+        edx_lms_user_id = kwargs.get('edx_lms_user_id')
+        user_email = kwargs.get('user_email')
+        order_number = kwargs.get('order_number')
+        user_first_name = kwargs.get('user_first_name')
+        course_title = kwargs.get('course_title')
+
+        error_message = (
+            json.loads(exc.response.text).get('message', '')
+            if isinstance(exc, RequestException) and exc.response is not None
+            else str(exc)
+        )
+
+        logger.error(
+            f"Post-purchase fulfillment task {self.name} failed after max "
+            f"retries with the error message: {error_message} "
+            f"for user with user Id: {edx_lms_user_id}, email: {user_email}, "
+            f"order number: {order_number}, and course title: {course_title}"
+        )
+
+        # This error is returned from LMS if the course mode is unsupported
+        # https://github.com/openedx/edx-platform/blob/master/openedx/core/djangoapps/enrollments/views.py#L870
+        course_mode_expired_error = "course mode is expired or otherwise unavailable for course run"
+
+        if course_mode_expired_error in error_message:
+            logger.info(
+                f"Sending unsupported course mode fulfillment error email "
+                f"for the user with user ID: {edx_lms_user_id}, email: {user_email}, "
+                f"order number: {order_number}, and course title: {course_title}"
+            )
+
+            canvas_entry_properties = {
+                'order_number': order_number,
+                'product_type': 'course',  # TODO: Fetch product type from commercetools product object
+                'product_name': course_title,
+                'first_name': user_first_name,
+            }
+            # Send failure notification email
+            send_unsupported_mode_fulfillment_error_email(edx_lms_user_id, user_email, canvas_entry_properties)
+
+
+@shared_task(
+    bind=True,
+    autoretry_for=(RequestException,),
+    retry_kwargs={'max_retries': 5, 'countdown': 3},
+    base=CourseEnrollTaskAfterReturn,
+)
 def fulfill_order_placed_send_enroll_in_course_task(
     self,
     course_id,
@@ -32,7 +87,10 @@ def fulfill_order_placed_send_enroll_in_course_task(
     line_item_id,
     item_quantity,
     line_item_state_id,
-    message_id
+    message_id,
+    user_first_name,    # pylint: disable=unused-argument
+    user_email,         # pylint: disable=unused-argument
+    course_title        # pylint: disable=unused-argument
 ):
     """
     Celery task for order placed fulfillment and enrollment via LMS Enrollment API.
@@ -92,7 +150,10 @@ def fulfill_order_placed_send_enroll_in_course_task(
         client = CommercetoolsAPIClient()
         # A retry means the current line item state on the order would be a failure state
         line_item_state_id = client.get_state_by_key(TwoUKeys.FAILURE_FULFILMENT_STATE).id
+        start_time = datetime.now()
         order_version = client.get_order_by_id(order_id).version
+        duration = (datetime.now() - start_time).total_seconds()
+        logger.info(f"[Performance Check] get_order_by_id call took {duration} seconds")
 
     line_item_state_payload = {
         'order_id': order_id,

@@ -187,11 +187,14 @@ class CommercetoolsAPIClient:
 
         edx_lms_user_id_key = EdXFieldNames.LMS_USER_ID
 
+        start_time = datetime.datetime.now()
         results = self.base_client.customers.query(
             where=f'custom(fields({edx_lms_user_id_key}=:id))',
             limit=2,
             predicate_var={'id': f"{lms_user_id}"}
         )
+        duration = (datetime.datetime.now() - start_time).total_seconds()
+        logger.info(f"[Performance Check] - customerId query took {duration} seconds")
 
         if results.count > 1:
             # We are unable due to CT Limitations to enforce unique LMS ID values on Customers on the catalog side, so
@@ -260,6 +263,7 @@ class CommercetoolsAPIClient:
                     f"customer with ID {customer_id}")
         order_where_clause = f"orderState=\"{order_state}\""
 
+        start_time = datetime.datetime.now()
         values = self.base_client.orders.query(
             where=["customerId=:cid", order_where_clause],
             predicate_var={'cid': customer_id},
@@ -268,6 +272,8 @@ class CommercetoolsAPIClient:
             offset=offset,
             expand=list(expand)
         )
+        duration = (datetime.datetime.now() - start_time).total_seconds()
+        logger.info(f"[Performance Check] get_orders call took {duration} seconds")
 
         return PaginatedResult(values.results, values.total, values.offset)
 
@@ -327,7 +333,11 @@ class CommercetoolsAPIClient:
         Args:
             cr_id: variant course run key
         """
+        start_time = datetime.datetime.now()
         results = self.base_client.product_projections.search(False, filter=f"variants.sku:\"{cr_id}\"").results
+        duration = (datetime.datetime.now() - start_time).total_seconds()
+        logger.info(
+            f"[Performance Check] get_product_variant_by_course_run took {duration} seconds")
 
         if len(results) < 1:  # pragma no cover
             return None

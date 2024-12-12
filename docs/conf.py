@@ -556,3 +556,10 @@ def setup(app):
     """Sphinx extension: run sphinx-apidoc."""
     event = 'builder-inited'
     app.connect(event, on_init)
+
+# celery.Task has some roles inside the library that are not recognized by Sphinx
+# and causing errors, so we add them here to avoid the errors.
+rst_prolog = """
+.. role:: setting
+.. role:: sig
+"""
