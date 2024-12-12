@@ -30,6 +30,7 @@ def update_line_item_state_on_fulfillment_completion(
     """
     client = CommercetoolsAPIClient()
     try:
+        logger.info(f"[update_line_item_state] Updating line item {line_item_id} for order {order_id}.")
         updated_order = client.update_line_item_transition_state_on_fulfillment(
             order_id,
             order_version,
@@ -38,10 +39,11 @@ def update_line_item_state_on_fulfillment_completion(
             from_state_id,
             to_state_key
         )
+        logger.info(f"[update_line_item_state] Successfully updated line item {line_item_id} for order {order_id}.")
         return updated_order
     except CommercetoolsError as err:
-        logger.error(f"Unable to update line item [ {line_item_id} ] state on fulfillment "
-                     f"result with error {err.errors} and correlation id {err.correlation_id}")
+        logger.error(f"[update_line_item_state] Failed to update line item {line_item_id} for order {order_id} "
+                     f"with error: {err.errors} and Correlation ID: {err.correlation_id}")
         return None
 
 
@@ -58,9 +60,12 @@ def refund_from_stripe_task(
     stripe_refund = stripe.Refund.construct_from(stripe_refund, stripe.api_key)
     client = CommercetoolsAPIClient()
     try:
+        logger.info(
+            f"[refund_from_stripe_task] Initiating refund transaction for Payment Intent ID {payment_intent_id} "
+            f"and Stripe Refund ID {stripe_refund.id}.")
         payment = client.get_payment_by_key(payment_intent_id)
         if has_full_refund_transaction(payment):
-            logger.info(f"Stripe charge.refunded event received, but Payment with ID {payment.id} "
+            logger.info(f"[refund_from_stripe_task] Event received, but Payment with ID {payment.id} "
                         f"already has a full refund. Skipping task to add refund transaction")
             return None
         updated_payment = client.create_return_payment_transaction(
@@ -68,9 +73,10 @@ def refund_from_stripe_task(
             payment_version=payment.version,
             stripe_refund=stripe_refund
         )
+        logger.info(f"[refund_from_stripe_task] Successfully created refund transaction for Payment {payment.id}.")
         return updated_payment
     except CommercetoolsError as err:
-        logger.error(f"Unable to create refund transaction for payment [ {payment.id} ] "
+        logger.error(f"[refund_from_stripe_task] Unable to create refund transaction for payment [ {payment.id} ] "
                      f"on Stripe refund {stripe_refund.id} "
                      f"with error {err.errors} and correlation id {err.correlation_id}")
         return None
