@@ -271,6 +271,7 @@ class CommercetoolsDiscountEligibilityPipelineTests(TestCase):
     """Commercetools pipeline testcase for checking discount eligibility in CT"""
     def setUp(self) -> None:
         self.mock_email = "mock_email@example.com"
+        self.mock_code = "mock_code"
         self.mock_eligible_result = True
         self.mock_ineligible_result = False
 
@@ -281,7 +282,7 @@ class CommercetoolsDiscountEligibilityPipelineTests(TestCase):
     def test_pipeline_eligible(self, mock_is_eligible):
         pipe = CheckCommercetoolsDiscountEligibility("test_pipe", None)
         mock_is_eligible.return_value = self.mock_eligible_result
-        ret = pipe.run_filter(self.mock_email)
+        ret = pipe.run_filter(self.mock_email, self.mock_code)
         result_data = ret['is_eligible']
         self.assertEqual(result_data, self.mock_eligible_result)
 
@@ -292,6 +293,6 @@ class CommercetoolsDiscountEligibilityPipelineTests(TestCase):
     def test_pipeline_ineligible(self, mock_is_eligible):
         pipe = CheckCommercetoolsDiscountEligibility("test_pipe", None)
         mock_is_eligible.return_value = self.mock_ineligible_result
-        ret = pipe.run_filter(self.mock_email)
+        ret = pipe.run_filter(self.mock_email, self.mock_code)
         result_data = ret['is_eligible']
         self.assertEqual(result_data, self.mock_ineligible_result)

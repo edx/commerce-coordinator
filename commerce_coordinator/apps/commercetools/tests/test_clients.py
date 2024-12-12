@@ -806,75 +806,71 @@ class ClientTests(TestCase):
     def test_is_first_time_discount_eligible_success(self):
         base_url = self.client_set.get_base_url_from_client()
         email = 'email@example.com'
+        code = 'discount-code'
 
-        mock_discount_codes = {
+        mock_orders = {
+            "total": 1,
             "results": [
-                {"id": "discount-id-1"},
-                {"id": "discount-id-2"}
+                {
+                    "discountCodes": [
+                        {
+                            "discountCode": {
+                                "obj": {
+                                    "code": 'another-code'
+                                }
+                            }
+                        }
+                    ]
+                }
             ]
         }
 
-        mock_orders = {
-            "total": 0
-        }
-
         with requests_mock.Mocker(real_http=True, case_sensitive=False) as mocker:
-            mocker.get(
-                f"{base_url}discount-codes",
-                json=mock_discount_codes,
-                status_code=200
-            )
-
             mocker.get(
                 f"{base_url}orders",
                 json=mock_orders,
                 status_code=200
             )
 
-            result = self.client_set.client.is_first_time_discount_eligible(email)
+            result = self.client_set.client.is_first_time_discount_eligible(email, code)
             self.assertTrue(result)
 
-    def test_is_first_time_discount_eligible_not_eligible(self):
+    def test_is_first_time_discount_not_eligible(self):
         base_url = self.client_set.get_base_url_from_client()
         email = 'email@example.com'
+        code = 'discount-code'
 
-        mock_discount_codes = {
+        mock_orders = {
+            "total": 1,
             "results": [
-                {"id": "discount-id-1"},
-                {"id": "discount-id-2"}
+                {
+                    "discountCodes": [
+                        {
+                            "discountCode": {
+                                "obj": {
+                                    "code": code
+                                }
+                            }
+                        }
+                    ]
+                }
             ]
         }
 
-        mock_orders = {
-            "total": 1
-        }
-
         with requests_mock.Mocker(real_http=True, case_sensitive=False) as mocker:
-            mocker.get(
-                f"{base_url}discount-codes",
-                json=mock_discount_codes,
-                status_code=200
-            )
-
             mocker.get(
                 f"{base_url}orders",
                 json=mock_orders,
                 status_code=200
             )
 
-            result = self.client_set.client.is_first_time_discount_eligible(email)
+            result = self.client_set.client.is_first_time_discount_eligible(email, code)
             self.assertFalse(result)
 
     def test_is_first_time_discount_eligible_invalid_email(self):
         invalid_email = "invalid_email@example.com"
+        code = 'discount-code'
         base_url = self.client_set.get_base_url_from_client()
-
-        mock_discount_codes = {
-            "results": [
-                {"id": "discount-id-1"},
-                {"id": "discount-id-2"}
-            ]
-        }
 
         mock_orders = {
             "total": 0
@@ -882,18 +878,12 @@ class ClientTests(TestCase):
 
         with requests_mock.Mocker(real_http=True, case_sensitive=False) as mocker:
             mocker.get(
-                f"{base_url}discount-codes",
-                json=mock_discount_codes,
-                status_code=200
-            )
-
-            mocker.get(
                 f"{base_url}orders",
                 json=mock_orders,
                 status_code=200
             )
 
-            result = self.client_set.client.is_first_time_discount_eligible(invalid_email)
+            result = self.client_set.client.is_first_time_discount_eligible(invalid_email, code)
             self.assertTrue(result)
 
 

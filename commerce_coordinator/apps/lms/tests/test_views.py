@@ -393,6 +393,7 @@ class FirstTimeDiscountEligibleViewTests(APITestCase):
     test_user_username = 'test'
     test_user_email = 'test@example.com'
     test_user_password = 'secret'
+    test_discount = 'first_time_discount'
 
     url = reverse('lms:first_time_discount_eligible')
 
@@ -421,11 +422,11 @@ class FirstTimeDiscountEligibleViewTests(APITestCase):
         self.authenticate_user()
         mock_filter.return_value = {'is_eligible': True}
 
-        response = self.client.get(self.url, {'email': self.test_user_email})
+        response = self.client.get(self.url, {'email': self.test_user_email, 'code': self.test_discount})
 
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(response.data, {"is_eligible": True})
-        mock_filter.assert_called_once_with(email=self.test_user_email)
+        mock_filter.assert_called_once_with(email=self.test_user_email, code='first_time_discount')
 
     @patch('commerce_coordinator.apps.lms.views.CheckFirstTimeDiscountEligibility.run_filter')
     def test_get_with_valid_email_eligibility_false(self, mock_filter):
@@ -435,11 +436,11 @@ class FirstTimeDiscountEligibleViewTests(APITestCase):
         self.authenticate_user()
         mock_filter.return_value = {'is_eligible': False}
 
-        response = self.client.get(self.url, {'email': self.test_user_email})
+        response = self.client.get(self.url, {'email': self.test_user_email, 'code': self.test_discount})
 
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(response.data, {"is_eligible": False})
-        mock_filter.assert_called_once_with(email=self.test_user_email)
+        mock_filter.assert_called_once_with(email=self.test_user_email, code=self.test_discount)
 
     def test_get_with_missing_email_fails(self):
         """
@@ -450,4 +451,4 @@ class FirstTimeDiscountEligibleViewTests(APITestCase):
         response = self.client.get(self.url)
 
         self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
-        self.assertEqual(response.data, {'detail': 'Could not detect user email.'})
+        self.assertEqual(response.data, {'detail': 'Could not detect user email or discount code.'})
