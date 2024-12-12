@@ -8,7 +8,7 @@ from django.conf import settings
 from django.http import HttpResponseBadRequest, HttpResponseRedirect
 from edx_rest_framework_extensions.permissions import LoginRedirectIfUnauthenticated
 from openedx_filters.exceptions import OpenEdxFilterException
-from rest_framework.exceptions import ValidationError
+from rest_framework.exceptions import PermissionDenied, ValidationError
 from rest_framework.permissions import IsAdminUser
 from rest_framework.response import Response
 from rest_framework.status import HTTP_200_OK, HTTP_303_SEE_OTHER, HTTP_400_BAD_REQUEST, HTTP_500_INTERNAL_SERVER_ERROR
@@ -17,6 +17,7 @@ from rest_framework.views import APIView
 
 from commerce_coordinator.apps.core.constants import HttpHeadersNames, MediaTypes
 from commerce_coordinator.apps.lms.filters import (
+    CheckFirstTimeDiscountEligibility,
     OrderRefundRequested,
     PaymentPageRedirectRequested,
     UserRetirementRequested
@@ -334,3 +335,25 @@ class RetirementView(APIView):
             logger.exception(f"[RefundView] Exception raised in {self.post.__name__} with error {repr(e)}")
             return Response('Exception occurred while retiring Commercetools customer',
                             status=HTTP_500_INTERNAL_SERVER_ERROR)
+
+
+class FirstTimeDiscountEligibleView(APIView):
+    """View to check if a user is eligible for a first time discount"""
+    permission_classes = [LoginRedirectIfUnauthenticated]
+    throttle_classes = [UserRateThrottle]
+
+    def get(self, request):
+        """Return True if user is eligible for a first time discount."""
+        email = request.query_params.get('email')
+        code = request.query_params.get('code')
+
+        if not email or not code:  # pragma: no cover
+            raise PermissionDenied(detail="Could not detect user email or discount code.")
+
+        result = CheckFirstTimeDiscountEligibility.run_filter(email=email, code=code)
+
+        output = {
+            "is_eligible": result.get('is_eligible', True)
+        }
+
+        return Response(output)
