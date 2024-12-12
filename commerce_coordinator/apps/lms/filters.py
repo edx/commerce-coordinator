@@ -74,12 +74,13 @@ class CheckFirstTimeDiscountEligibility(OpenEdxPublicFilter):
     filter_type = "org.edx.coordinator.lms.check.first.time.discount.eligibility.v1"
 
     @classmethod
-    def run_filter(cls, email):
+    def run_filter(cls, email, code):
         """
         Call the PipelineStep(s) defined for this filter.
         Arguments:
             email: Email of the user
+            code: First time discount code
         Returns:
             is_eligible (bool): True if the user is eligible for a first time discount
         """
-        return super().run_pipeline(email=email)
+        return super().run_pipeline(email=email, code=code)

@@ -345,11 +345,12 @@ class FirstTimeDiscountEligibleView(APIView):
     def get(self, request):
         """Return True if user is eligible for a first time discount."""
         email = request.query_params.get('email')
+        code = request.query_params.get('code')
 
-        if not email:  # pragma: no cover
-            raise PermissionDenied(detail="Could not detect user email.")
+        if not email or not code:  # pragma: no cover
+            raise PermissionDenied(detail="Could not detect user email or discount code.")
 
-        result = CheckFirstTimeDiscountEligibility.run_filter(email=email)
+        result = CheckFirstTimeDiscountEligibility.run_filter(email=email, code=code)
 
         output = {
             "is_eligible": result.get('is_eligible', True)

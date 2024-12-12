@@ -415,11 +415,12 @@ class CheckCommercetoolsDiscountEligibility(PipelineStep):
     """
     Checks if a user is eligible for a first time discount in Commercetools.
     """
-    def run_filter(self, email):  # pylint: disable=arguments-differ
+    def run_filter(self, email, code):  # pylint: disable=arguments-differ
         """
         Execute a filter with the signature specified.
         Arguments:
             email: Email of the user
+            code: First time discount code
             kwargs: The keyword arguments passed through from the filter
         Returns:
             is_eligible (bool): True if the user is eligible for a first time discount
@@ -428,7 +429,7 @@ class CheckCommercetoolsDiscountEligibility(PipelineStep):
 
         try:
             ct_api_client = CommercetoolsAPIClient()
-            is_eligible = ct_api_client.is_first_time_discount_eligible(email)
+            is_eligible = ct_api_client.is_first_time_discount_eligible(email, code)
 
             return {
                 'is_eligible': is_eligible
