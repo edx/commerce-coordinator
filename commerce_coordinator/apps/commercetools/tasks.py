@@ -56,7 +56,6 @@ def refund_from_stripe_task(
     Celery task for a refund registered in Stripe dashboard and need to create
     refund payment transaction record via Commercetools API.
     """
-    # Celery serializes stripe_refund to a dict, so we need to explictly convert it back to a Refund object
     client = CommercetoolsAPIClient()
     try:
         payment = client.get_payment_by_key(payment_intent_id)
@@ -72,7 +71,7 @@ def refund_from_stripe_task(
         return updated_payment
     except CommercetoolsError as err:
         logger.error(f"Unable to create refund transaction for payment [ {payment.id} ] "
-                     f"on Stripe refund {stripe_refund.id} "
+                     f"on Stripe refund {stripe_refund['id']} "
                      f"with error {err.errors} and correlation id {err.correlation_id}")
         return None
 
