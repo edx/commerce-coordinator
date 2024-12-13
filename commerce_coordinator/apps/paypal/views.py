@@ -2,8 +2,9 @@
 Paypal app views
 """
 
-import logging
 import base64
+import logging
+from urllib.parse import urlparse
 import zlib
 
 import requests
@@ -21,30 +22,39 @@ from commerce_coordinator.apps.commercetools.clients import CommercetoolsAPIClie
 from commerce_coordinator.apps.paypal.signals import payment_refunded_signal
 
 from .models import KeyValueCache
-from urllib.parse import urlparse
+
 
 
 logger = logging.getLogger(__name__)
 
 
 class PayPalWebhookView(SingleInvocationAPIView):
+    """
+    PayPal webhook view
+    """
     ALLOWED_DOMAINS = ['www.paypal.com', 'api.paypal.com', 'api.sandbox.paypal.com', 'www.sandbox.paypal.com']
     http_method_names = ["post"]
     authentication_classes = []
     permission_classes = [AllowAny]
 
     def _get_certificate(self, url):
+        """
+        Get certificate from the given URL
+        """
         try:
             cache = KeyValueCache.objects.get(cache_key=url)
             return cache.value
-        except KeyValueCache.DoesNotExist:
-            if not self.is_valid_url(url):
-                raise ValueError("Invalid or untrusted URL provided")
-            r = requests.get(url)
+        except Exception as e:  # pylint: disable=broad-exception-caught
+            if not self._is_valid_url(url):
+                raise ValueError("Invalid or untrusted URL provided") from e
+            r = requests.get(url) # pylint: disable=missing-timeout
             KeyValueCache.objects.create(cache_key=url, cache_value=r.text)
             return r.text
-        
+
     def _is_valid_url(self, url):
+        """
+        Check if the given URL is valid
+        """
         try:
             parsed_url = urlparse(url)
             if parsed_url.scheme not in ['http', 'https']:
@@ -52,10 +62,13 @@ class PayPalWebhookView(SingleInvocationAPIView):
             if parsed_url.netloc not in self.ALLOWED_DOMAINS:
                 return False
             return True
-        except Exception:
+        except Exception:  # pylint: disable=broad-exception-caught
             return False
 
     def post(self, request):
+        """
+        Handle POST request
+        """
         tag = type(self).__name__
         body = request.body
 
@@ -84,7 +97,7 @@ class PayPalWebhookView(SingleInvocationAPIView):
             public_key.verify(
                 signature, message.encode("utf-8"), padding.PKCS1v15(), hashes.SHA256()
             )
-        except Exception:
+        except Exception:  # pylint: disable=broad-exception-caught
             return Response(status=status.HTTP_400_BAD_REQUEST)
 
         if request.data.get("event_type") == "PAYMENT.CAPTURE.REFUNDED":
