@@ -605,7 +605,7 @@ class ClientTests(TestCase):
 
                 expected_message = (
                     f"[CommercetoolsError] Unable to create refund payment transaction for "
-                    f"payment mock_payment_id and refund {mock_stripe_refund.id} "
+                    f"payment mock_payment_id, refund {mock_stripe_refund.id} with PSP: stripe_edx "
                     f"- Correlation ID: {exception.correlation_id}, Details: {exception.errors}"
                 )
 

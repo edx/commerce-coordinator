@@ -15,8 +15,6 @@ auth.Permission:
   ".. no_pii:": "This model has no PII"
 contenttypes.ContentType:
   ".. no_pii:": "This model has no PII"
-paypal.KeyValueCache:
-  ".. no_pii:": "This model has no PII"
 sessions.Session:
   ".. no_pii:": "This model has no PII"
 social_django.Association:

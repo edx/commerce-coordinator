@@ -78,7 +78,7 @@ def refund_from_stripe_task(
 
 @shared_task(autoretry_for=(CommercetoolsError,), retry_kwargs={'max_retries': 5, 'countdown': 3})
 def refund_from_paypal_task(
-    paypal_order_id,
+    paypal_capture_id,
     refund
 ):
     """
@@ -87,7 +87,7 @@ def refund_from_paypal_task(
     """
     client = CommercetoolsAPIClient()
     try:
-        payment = client.get_payment_by_key(paypal_order_id)
+        payment = client.get_payment_by_transaction_interaction_id(paypal_capture_id)
         updated_payment = client.create_return_payment_transaction(
             payment_id=payment.id,
             payment_version=payment.version,
@@ -96,7 +96,7 @@ def refund_from_paypal_task(
         )
         return updated_payment
     except CommercetoolsError as err:
-        logger.error(f"Unable to create refund transaction for payment [ {paypal_order_id} ] "
+        logger.error(f"Unable to create refund transaction for payment {payment.key} "
                      f"on PayPal refund {refund.id} "
                      f"with error {err.errors} and correlation id {err.correlation_id}")
         return None
