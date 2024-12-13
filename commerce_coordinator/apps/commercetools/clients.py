@@ -106,6 +106,7 @@ class PaginatedResult(Generic[T]):
     def rebuild(self, results: List[T]):
         return PaginatedResult(results, total=self.total, offset=self.offset)
 
+
 class Refund(TypedDict):
     """
     Refund object definition
@@ -115,6 +116,7 @@ class Refund(TypedDict):
     currency: str
     created: Union[str, int]
     status: str
+
 
 class CommercetoolsAPIClient:
     """Commercetools API Client"""
@@ -578,7 +580,7 @@ class CommercetoolsAPIClient:
             )
             raise OpenEdxFilterException(str(err)) from err
 
-    def _preprocess_refund_object(self, refund: Refund, psp:str) -> Refund:
+    def _preprocess_refund_object(self, refund: Refund, psp: str) -> Refund:
         """
         Pre process refund object based on PSP
         """
