@@ -22,7 +22,7 @@ from commercetools.platform.models import (
     OrderAddReturnInfoAction,
     OrderSetReturnItemCustomTypeAction,
     OrderSetReturnPaymentStateAction,
-    OrderTransitionLineItemStateAction
+    OrderTransitionLineItemStateAction,
 )
 from commercetools.platform.models import Payment as CTPayment
 from commercetools.platform.models import PaymentAddTransactionAction, PaymentSetTransactionCustomTypeAction
@@ -33,7 +33,7 @@ from commercetools.platform.models import (
     ReturnShipmentState,
     StateResourceIdentifier,
     TransactionDraft,
-    TransactionType
+    TransactionType,
 )
 from commercetools.platform.models import Type as CTType
 from commercetools.platform.models import TypeDraft as CTTypeDraft
@@ -46,13 +46,13 @@ from commerce_coordinator.apps.commercetools.catalog_info.constants import (
     DEFAULT_ORDER_EXPANSION,
     EDX_PAYPAL_PAYMENT_INTERFACE_NAME,
     EDX_STRIPE_PAYMENT_INTERFACE_NAME,
-    EdXFieldNames
+    EdXFieldNames,
 )
 from commerce_coordinator.apps.commercetools.catalog_info.foundational_types import TwoUCustomTypes
 from commerce_coordinator.apps.commercetools.utils import (
     find_refund_transaction,
     handle_commercetools_error,
-    translate_refund_status_to_transaction_status
+    translate_refund_status_to_transaction_status,
 )
 from commerce_coordinator.apps.core.constants import ORDER_HISTORY_PER_SYSTEM_REQ_LIMIT
 
@@ -93,6 +93,7 @@ class Refund(TypedDict):
     """
     Refund object definition
     """
+
     id: str
     amount: Union[str, int]
     currency: str
@@ -141,9 +142,7 @@ class CommercetoolsAPIClient:
         except CommercetoolsError as _:  # pragma: no cover
             # commercetools.exceptions.CommercetoolsError: The Resource with key 'edx-user_information' was not found.
             pass
-        except (
-            requests.exceptions.HTTPError
-        ) as _:  # The test framework doesn't wrap to CommercetoolsError
+        except requests.exceptions.HTTPError as _:  # The test framework doesn't wrap to CommercetoolsError
             pass
 
         if not type_exists:
@@ -151,9 +150,7 @@ class CommercetoolsAPIClient:
 
         return type_object
 
-    def tag_customer_with_lms_user_info(
-        self, customer: CTCustomer, lms_user_id: int, lms_user_name: str
-    ) -> CTCustomer:
+    def tag_customer_with_lms_user_info(self, customer: CTCustomer, lms_user_id: int, lms_user_name: str) -> CTCustomer:
         """
         Updates a CoCo Customer Object with what we are currently using for LMS Identifiers
         Args:
@@ -167,9 +164,7 @@ class CommercetoolsAPIClient:
         # All updates to CT Core require the version of the object you are working on as protection from out of band
         #   updates; this does mean we have to fetch every (primary) object we want to chain.
 
-        type_object = self.ensure_custom_type_exists(
-            TwoUCustomTypes.CUSTOMER_TYPE_DRAFT
-        )
+        type_object = self.ensure_custom_type_exists(TwoUCustomTypes.CUSTOMER_TYPE_DRAFT)
 
         # A customer can only have one custom type associated to it, and thus only one set of custom fields. THUS...
         #   They can't be required, and shouldn't entirely be relied upon; Once a proper Type is changed, the old values
@@ -214,9 +209,7 @@ class CommercetoolsAPIClient:
              is returned.
         """
 
-        logger.info(
-            f"[CommercetoolsAPIClient] - Attempting to get customer with LMS user id: {lms_user_id}"
-        )
+        logger.info(f"[CommercetoolsAPIClient] - Attempting to get customer with LMS user id: {lms_user_id}")
 
         edx_lms_user_id_key = EdXFieldNames.LMS_USER_ID
 
@@ -237,24 +230,17 @@ class CommercetoolsAPIClient:
                 f"user id: {lms_user_id}, raising error"
             )
             raise ValueError(
-                "More than one user was returned from the catalog with this edX LMS User ID, these must "
-                "be unique."
+                "More than one user was returned from the catalog with this edX LMS User ID, these must " "be unique."
             )
 
         if results.count == 0:
-            logger.info(
-                f"[CommercetoolsAPIClient] - No customer found with LMS user id: {lms_user_id}"
-            )
+            logger.info(f"[CommercetoolsAPIClient] - No customer found with LMS user id: {lms_user_id}")
             return None
         else:
-            logger.info(
-                f"[CommercetoolsAPIClient] - Customer found with LMS user id: {lms_user_id}"
-            )
+            logger.info(f"[CommercetoolsAPIClient] - Customer found with LMS user id: {lms_user_id}")
             return results.results[0]
 
-    def get_order_by_id(
-        self, order_id: str, expand: ExpandList = DEFAULT_ORDER_EXPANSION
-    ) -> CTOrder:
+    def get_order_by_id(self, order_id: str, expand: ExpandList = DEFAULT_ORDER_EXPANSION) -> CTOrder:
         """
         Fetch an order by the Order ID (UUID)
 
@@ -264,14 +250,10 @@ class CommercetoolsAPIClient:
 
         Returns (CTOrder): Order with Expanded Properties
         """
-        logger.info(
-            f"[CommercetoolsAPIClient] - Attempting to find order with id: {order_id}"
-        )
+        logger.info(f"[CommercetoolsAPIClient] - Attempting to find order with id: {order_id}")
         return self.base_client.orders.get_by_id(order_id, expand=list(expand))
 
-    def get_order_by_number(
-        self, order_number: str, expand: ExpandList = DEFAULT_ORDER_EXPANSION
-    ) -> CTOrder:
+    def get_order_by_number(self, order_number: str, expand: ExpandList = DEFAULT_ORDER_EXPANSION) -> CTOrder:
         """
         Fetch an order by the Order Number (Human readable order number)
 
@@ -281,12 +263,8 @@ class CommercetoolsAPIClient:
 
         Returns (CTOrder): Order with Expanded Properties
         """
-        logger.info(
-            f"[CommercetoolsAPIClient] - Attempting to find order with number {order_number}"
-        )
-        return self.base_client.orders.get_by_order_number(
-            order_number, expand=list(expand)
-        )
+        logger.info(f"[CommercetoolsAPIClient] - Attempting to find order with number {order_number}")
+        return self.base_client.orders.get_by_order_number(order_number, expand=list(expand))
 
     def get_orders(
         self,
@@ -312,8 +290,7 @@ class CommercetoolsAPIClient:
 
         """
         logger.info(
-            f"[CommercetoolsAPIClient] - Attempting to find all completed orders for "
-            f"customer with ID {customer_id}"
+            f"[CommercetoolsAPIClient] - Attempting to find all completed orders for " f"customer with ID {customer_id}"
         )
         order_where_clause = f'orderState="{order_state}"'
 
@@ -351,16 +328,12 @@ class CommercetoolsAPIClient:
             customer = self.get_customer_by_lms_user_id(edx_lms_user_id)
 
             if customer is None:  # pragma: no cover
-                raise ValueError(
-                    f"Unable to locate customer with ID #{edx_lms_user_id}"
-                )
+                raise ValueError(f"Unable to locate customer with ID #{edx_lms_user_id}")
 
             customer_id = customer.id
         else:
             if email is None or username is None:  # pragma: no cover
-                raise ValueError(
-                    "If customer_id is provided, both email and username must be provided"
-                )
+                raise ValueError("If customer_id is provided, both email and username must be provided")
 
             customer = SimpleNamespace(
                 id=customer_id,
@@ -373,57 +346,37 @@ class CommercetoolsAPIClient:
         return orders, customer
 
     def get_customer_by_id(self, customer_id: str) -> CTCustomer:
-        logger.info(
-            f"[CommercetoolsAPIClient] - Attempting to find customer with ID {customer_id}"
-        )
+        logger.info(f"[CommercetoolsAPIClient] - Attempting to find customer with ID {customer_id}")
         return self.base_client.customers.get_by_id(customer_id)
 
     def get_state_by_id(self, state_id: str) -> CTLineItemState:
-        logger.info(
-            f"[CommercetoolsAPIClient] - Attempting to find state with id {state_id}"
-        )
+        logger.info(f"[CommercetoolsAPIClient] - Attempting to find state with id {state_id}")
         return self.base_client.states.get_by_id(state_id)
 
     def get_state_by_key(self, state_key: str) -> CTLineItemState:
-        logger.info(
-            f"[CommercetoolsAPIClient] - Attempting to find state with key {state_key}"
-        )
+        logger.info(f"[CommercetoolsAPIClient] - Attempting to find state with key {state_key}")
         return self.base_client.states.get_by_key(state_key)
 
     def get_payment_by_key(self, payment_key: str) -> CTPayment:
-        logger.info(
-            f"[CommercetoolsAPIClient] - Attempting to find payment with key {payment_key}"
-        )
+        logger.info(f"[CommercetoolsAPIClient] - Attempting to find payment with key {payment_key}")
         return self.base_client.payments.get_by_key(payment_key)
 
-    def get_payment_by_transaction_interaction_id(
-        self, interaction_id: str
-    ) -> CTPayment:
+    def get_payment_by_transaction_interaction_id(self, interaction_id: str) -> CTPayment:
         """
         Fetch a payment by the transaction interaction ID
         """
-        logger.info(
-            f"[CommercetoolsAPIClient] - Attempting to find payment with interaction ID {interaction_id}"
-        )
-        return self.base_client.payments.query(
-            where=f'transactions(interactionId="{interaction_id}")'
-        ).results[0]
+        logger.info(f"[CommercetoolsAPIClient] - Attempting to find payment with interaction ID {interaction_id}")
+        return self.base_client.payments.query(where=f'transactions(interactionId="{interaction_id}")').results[0]
 
-    def get_product_variant_by_course_run(
-        self, cr_id: str
-    ) -> Optional[CTProductVariant]:
+    def get_product_variant_by_course_run(self, cr_id: str) -> Optional[CTProductVariant]:
         """
         Args:
             cr_id: variant course run key
         """
         start_time = datetime.datetime.now()
-        results = self.base_client.product_projections.search(
-            False, filter=f'variants.sku:"{cr_id}"'
-        ).results
+        results = self.base_client.product_projections.search(False, filter=f'variants.sku:"{cr_id}"').results
         duration = (datetime.datetime.now() - start_time).total_seconds()
-        logger.info(
-            f"[Performance Check] get_product_variant_by_course_run took {duration} seconds"
-        )
+        logger.info(f"[Performance Check] get_product_variant_by_course_run took {duration} seconds")
 
         if len(results) < 1:  # pragma no cover
             return None
@@ -447,9 +400,7 @@ class CommercetoolsAPIClient:
 
         return matching_variant_list[0]
 
-    def create_return_for_order(
-        self, order_id: str, order_version: int, order_line_item_id: str
-    ) -> CTOrder:
+    def create_return_for_order(self, order_id: str, order_version: int, order_line_item_id: str) -> CTOrder:
         """
         Creates refund/return for Commercetools order
         Args:
@@ -462,8 +413,7 @@ class CommercetoolsAPIClient:
 
         try:
             return_item_draft_comment = (
-                f"Creating return item for order {order_id} with "
-                f"order line item ID {order_line_item_id}"
+                f"Creating return item for order {order_id} with " f"order line item ID {order_line_item_id}"
             )
 
             logger.info(f"[CommercetoolsAPIClient] - {return_item_draft_comment}")
@@ -482,9 +432,7 @@ class CommercetoolsAPIClient:
             )
             return returned_order
         except CommercetoolsError as err:
-            handle_commercetools_error(
-                err, f"Unable to create return for order {order_id}"
-            )
+            handle_commercetools_error(err, f"Unable to create return for order {order_id}")
             raise err
 
     def update_return_payment_state_after_successful_refund(
@@ -518,9 +466,7 @@ class CommercetoolsAPIClient:
             )
             if not payment_intent_id:
                 payment_intent_id = ""
-            logger.info(
-                f"Creating return for order - payment_intent_id: {payment_intent_id}"
-            )
+            logger.info(f"Creating return for order - payment_intent_id: {payment_intent_id}")
             payment = self.get_payment_by_key(payment_intent_id)
             logger.info(f"Payment found: {payment}")
             transaction_id = find_refund_transaction(payment, amount_in_cents)
@@ -531,18 +477,12 @@ class CommercetoolsAPIClient:
                 ),
                 fields=CTFieldContainer({"transactionId": transaction_id}),
             )
-            return_transaction_return_item_action = (
-                PaymentSetTransactionCustomTypeAction(
-                    transaction_id=transaction_id,
-                    type=CTTypeResourceIdentifier(key="transactionCustomType"),
-                    fields=CTFieldContainer(
-                        {"returnItemId": return_line_item_return_id}
-                    ),
-                )
+            return_transaction_return_item_action = PaymentSetTransactionCustomTypeAction(
+                transaction_id=transaction_id,
+                type=CTTypeResourceIdentifier(key="transactionCustomType"),
+                fields=CTFieldContainer({"returnItemId": return_line_item_return_id}),
             )
-            logger.info(
-                f"Update return payment state after successful refund - payment_intent_id: {payment_intent_id}"
-            )
+            logger.info(f"Update return payment state after successful refund - payment_intent_id: {payment_intent_id}")
 
             updated_order = self.base_client.orders.update_by_id(
                 id=order_id,
@@ -557,9 +497,7 @@ class CommercetoolsAPIClient:
             logger.info("Updated transaction with return item id")
             return updated_order
         except CommercetoolsError as err:
-            handle_commercetools_error(
-                err, f"Unable to update ReturnPaymentState of order {order_id}"
-            )
+            handle_commercetools_error(err, f"Unable to update ReturnPaymentState of order {order_id}")
             raise OpenEdxFilterException(str(err)) from err
 
     def _preprocess_refund_object(self, refund: Refund, psp: str) -> Refund:
@@ -577,11 +515,7 @@ class CommercetoolsAPIClient:
         return refund
 
     def create_return_payment_transaction(
-        self,
-        payment_id: str,
-        payment_version: int,
-        refund: Refund,
-        psp=EDX_STRIPE_PAYMENT_INTERFACE_NAME
+        self, payment_id: str, payment_version: int, refund: Refund, psp=EDX_STRIPE_PAYMENT_INTERFACE_NAME
     ) -> CTPayment:
         """
         Create Commercetools payment transaction for refund
@@ -600,9 +534,7 @@ class CommercetoolsAPIClient:
             refund = self._preprocess_refund_object(refund, psp)
 
             amount_as_money = CTMoney(
-                cent_amount=float(
-                    refund["amount"]
-                ),
+                cent_amount=float(refund["amount"]),
                 currency_code=refund["currency"],
             )
 
@@ -614,9 +546,7 @@ class CommercetoolsAPIClient:
                 interaction_id=refund["id"],
             )
 
-            add_transaction_action = PaymentAddTransactionAction(
-                transaction=transaction_draft
-            )
+            add_transaction_action = PaymentAddTransactionAction(transaction=transaction_draft)
 
             returned_payment = self.base_client.payments.update_by_id(
                 id=payment_id, version=payment_version, actions=[add_transaction_action]
@@ -625,8 +555,7 @@ class CommercetoolsAPIClient:
             return returned_payment
         except CommercetoolsError as err:
             context = (
-                f"Unable to create refund payment transaction for "
-                f"payment {payment_id} and refund {refund['id']}"
+                f"Unable to create refund payment transaction for " f"payment {payment_id} and refund {refund['id']}"
             )
             handle_commercetools_error(err, context)
             raise err
@@ -670,12 +599,10 @@ class CommercetoolsAPIClient:
                     to_state=StateResourceIdentifier(key=new_state_key),
                 )
 
-                updated_fulfillment_line_item_order = (
-                    self.base_client.orders.update_by_id(
-                        id=order_id,
-                        version=order_version,
-                        actions=[transition_line_item_state_action],
-                    )
+                updated_fulfillment_line_item_order = self.base_client.orders.update_by_id(
+                    id=order_id,
+                    version=order_version,
+                    actions=[transition_line_item_state_action],
                 )
 
                 return updated_fulfillment_line_item_order
@@ -687,9 +614,7 @@ class CommercetoolsAPIClient:
                 return self.get_order_by_id(order_id)
         except CommercetoolsError as err:
             # Logs & ignores version conflict errors due to duplicate Commercetools messages
-            handle_commercetools_error(
-                err, f"Unable to update LineItemState of order {order_id}", True
-            )
+            handle_commercetools_error(err, f"Unable to update LineItemState of order {order_id}", True)
             return None
 
     def retire_customer_anonymize_fields(
@@ -715,13 +640,9 @@ class CommercetoolsAPIClient:
         """
 
         actions = []
-        update_retired_first_name_action = CustomerSetFirstNameAction(
-            first_name=retired_first_name
-        )
+        update_retired_first_name_action = CustomerSetFirstNameAction(first_name=retired_first_name)
 
-        update_retired_last_name_action = CustomerSetLastNameAction(
-            last_name=retired_last_name
-        )
+        update_retired_last_name_action = CustomerSetLastNameAction(last_name=retired_last_name)
 
         update_retired_email_action = CustomerChangeEmailAction(email=retired_email)
 
