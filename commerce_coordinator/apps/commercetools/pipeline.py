@@ -340,7 +340,7 @@ class CreateReturnPaymentTransaction(PipelineStep):
             updated_payment = ct_api_client.create_return_payment_transaction(
                 payment_id=payment_on_order.id,
                 payment_version=payment_on_order.version,
-                stripe_refund=refund_response
+                refund=refund_response
             )
 
             return {

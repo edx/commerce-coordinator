@@ -598,7 +598,7 @@ class ClientTests(TestCase):
                     self.client_set.client.create_return_payment_transaction(
                         payment_id="mock_payment_id",
                         payment_version=1,
-                        stripe_refund=mock_stripe_refund
+                        refund=mock_stripe_refund
                     )
 
                 exception = cm.exception
