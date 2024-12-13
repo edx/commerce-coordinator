@@ -230,7 +230,7 @@ class CommercetoolsAPIClient:
                 f"user id: {lms_user_id}, raising error"
             )
             raise ValueError(
-                "More than one user was returned from the catalog with this edX LMS User ID, these must " "be unique."
+                "More than one user was returned from the catalog with this edX LMS User ID, these must be unique."
             )
 
         if results.count == 0:
@@ -505,6 +505,7 @@ class CommercetoolsAPIClient:
         Pre process refund object based on PSP
         """
         if psp == EDX_PAYPAL_PAYMENT_INTERFACE_NAME:
+            # Paypal sends amount in dollars and CT expects it in cents
             refund["amount"] = float(refund["amount"]) * 100
             refund["created"] = datetime.datetime.fromisoformat(refund["created"])
         else:
@@ -522,19 +523,19 @@ class CommercetoolsAPIClient:
         Args:
             payment_id (str): Payment ID (UUID)
             payment_version (int): Current version of payment
-            refund (stripe.Refund): Refund object
+            refund (Refund): Refund object
         Returns (CTPayment): Updated payment object or
         Raises Exception: Error if creation was unsuccessful.
         """
         try:
             logger.info(
                 f"[CommercetoolsAPIClient] - Creating refund transaction for payment with ID {payment_id} "
-                f"following successful refund {refund['id']}"
+                f"following successful refund {refund['id']} in PSP: {psp}"
             )
             refund = self._preprocess_refund_object(refund, psp)
 
             amount_as_money = CTMoney(
-                cent_amount=float(refund["amount"]),
+                cent_amount=int(refund["amount"]),
                 currency_code=refund["currency"],
             )
 
@@ -555,7 +556,8 @@ class CommercetoolsAPIClient:
             return returned_payment
         except CommercetoolsError as err:
             context = (
-                f"Unable to create refund payment transaction for " f"payment {payment_id} and refund {refund['id']}"
+                f"Unable to create refund payment transaction for payment {payment_id}, refund {refund['id']} "
+                f"with PSP: {psp}"
             )
             handle_commercetools_error(err, context)
             raise err
@@ -586,7 +588,7 @@ class CommercetoolsAPIClient:
         from_state_key = self.get_state_by_id(from_state_id).key
 
         logger.info(
-            f"[CommercetoolsAPIClient] - Transitioning line item state for order with ID {order_id}"
+            f"[CommercetoolsAPIClient] - Transitioning line item state for order with ID {order_id} "
             f"from {from_state_key} to {new_state_key}"
         )
 

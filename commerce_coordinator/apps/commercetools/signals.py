@@ -60,6 +60,6 @@ def refund_from_paypal(**kwargs):
     Create a refund transaction in Commercetools based on a refund created from the PayPal dashboard
     """
     async_result = refund_from_paypal_task.delay(
-        paypal_order_id=kwargs["paypal_order_id"], refund=kwargs["refund"]
+        paypal_capture_id=kwargs["paypal_capture_id"], refund=kwargs["refund"]
     )
     return async_result.id
