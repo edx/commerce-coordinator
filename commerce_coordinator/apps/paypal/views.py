@@ -21,23 +21,39 @@ from commerce_coordinator.apps.commercetools.clients import CommercetoolsAPIClie
 from commerce_coordinator.apps.paypal.signals import payment_refunded_signal
 
 from .models import KeyValueCache
+from urllib.parse import urlparse
+
 
 logger = logging.getLogger(__name__)
 
 
 class PayPalWebhookView(SingleInvocationAPIView):
+    ALLOWED_DOMAINS = ['www.paypal.com', 'api.paypal.com', 'api.sandbox.paypal.com', 'www.sandbox.paypal.com']
     http_method_names = ["post"]
     authentication_classes = []
     permission_classes = [AllowAny]
 
-    def get_certificate(self, url):
+    def _get_certificate(self, url):
         try:
             cache = KeyValueCache.objects.get(cache_key=url)
             return cache.value
         except KeyValueCache.DoesNotExist:
+            if not self.is_valid_url(url):
+                raise ValueError("Invalid or untrusted URL provided")
             r = requests.get(url)
             KeyValueCache.objects.create(cache_key=url, cache_value=r.text)
             return r.text
+        
+    def _is_valid_url(self, url):
+        try:
+            parsed_url = urlparse(url)
+            if parsed_url.scheme not in ['http', 'https']:
+                return False
+            if parsed_url.netloc not in self.ALLOWED_DOMAINS:
+                return False
+            return True
+        except Exception:
+            return False
 
     def post(self, request):
         tag = type(self).__name__
@@ -57,7 +73,7 @@ class PayPalWebhookView(SingleInvocationAPIView):
 
         signature = base64.b64decode(request.headers.get("paypal-transmission-sig"))
 
-        certificate = self.get_certificate(request.headers.get("paypal-cert-url"))
+        certificate = self._get_certificate(request.headers.get("paypal-cert-url"))
         cert = x509.load_pem_x509_certificate(
             certificate.encode("utf-8"), default_backend()
         )
