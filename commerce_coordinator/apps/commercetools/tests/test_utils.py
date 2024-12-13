@@ -29,7 +29,7 @@ from commerce_coordinator.apps.commercetools.utils import (
     has_refund_transaction,
     send_order_confirmation_email,
     send_unsupported_mode_fulfillment_error_email,
-    translate_stripe_refund_status_to_transaction_status
+    translate_refund_status_to_transaction_status
 )
 
 
@@ -313,17 +313,17 @@ class TestTranslateStripeRefundStatus(unittest.TestCase):
     """
 
     def test_translate_stripe_refund_status_succeeded(self):
-        self.assertEqual(translate_stripe_refund_status_to_transaction_status('succeeded'), TransactionState.SUCCESS)
+        self.assertEqual(translate_refund_status_to_transaction_status('succeeded'), TransactionState.SUCCESS)
 
     def test_translate_stripe_refund_status_pending(self):
-        self.assertEqual(translate_stripe_refund_status_to_transaction_status('pending'), TransactionState.PENDING)
+        self.assertEqual(translate_refund_status_to_transaction_status('pending'), TransactionState.PENDING)
 
     def test_translate_stripe_refund_status_failed(self):
-        self.assertEqual(translate_stripe_refund_status_to_transaction_status('failed'), TransactionState.FAILURE)
+        self.assertEqual(translate_refund_status_to_transaction_status('failed'), TransactionState.FAILURE)
 
     def test_translate_stripe_refund_status_other(self):
         # Test for an unknown status
-        self.assertEqual(translate_stripe_refund_status_to_transaction_status('unknown_status'), 'unknown_status')
+        self.assertEqual(translate_refund_status_to_transaction_status('unknown_status'), 'unknown_status')
 
 
 class TestRetirementAnonymizingTestCase(unittest.TestCase):
