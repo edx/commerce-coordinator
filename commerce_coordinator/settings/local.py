@@ -144,6 +144,9 @@ PAYMENT_PROCESSOR_CONFIG = {
             'source_system_identifier': 'edx/commerce_coordinator?v=1',
             'webhook_endpoint_secret': 'SET-ME-PLEASE',
         },
+        "paypal": {
+            "paypal_webhook_id": "SET-ME-PLEASE",
+        },
     },
 }
 
