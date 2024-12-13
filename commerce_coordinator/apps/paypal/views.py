@@ -41,12 +41,12 @@ class PayPalWebhookView(SingleInvocationAPIView):
         """
         Get certificate from the given URL
         """
+        if not self._is_valid_url(url):
+            raise ValueError("Invalid or untrusted URL provided")
         try:
-            if not self._is_valid_url(url):
-                raise ValueError("Invalid or untrusted URL provided") from e
             cache = KeyValueCache.objects.get(cache_key=url)
             return cache.value
-        except Exception as e:  # pylint: disable=broad-exception-caught
+        except KeyValueCache.DoesNotExist:
             r = requests.get(url) # pylint: disable=missing-timeout
             KeyValueCache.objects.create(cache_key=url, cache_value=r.text)
             return r.text
