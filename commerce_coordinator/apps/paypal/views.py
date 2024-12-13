@@ -24,7 +24,6 @@ from commerce_coordinator.apps.paypal.signals import payment_refunded_signal
 from .models import KeyValueCache
 
 
-
 logger = logging.getLogger(__name__)
 
 
@@ -47,7 +46,7 @@ class PayPalWebhookView(SingleInvocationAPIView):
             cache = KeyValueCache.objects.get(cache_key=url)
             return cache.value
         except KeyValueCache.DoesNotExist:
-            r = requests.get(url) # pylint: disable=missing-timeout
+            r = requests.get(url)  # pylint: disable=missing-timeout
             KeyValueCache.objects.create(cache_key=url, cache_value=r.text)
             return r.text
 
