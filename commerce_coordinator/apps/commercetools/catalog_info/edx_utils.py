@@ -11,6 +11,7 @@ from commercetools.platform.models import TransactionType
 
 from commerce_coordinator.apps.commercetools.catalog_info.constants import (
     EDX_STRIPE_PAYMENT_INTERFACE_NAME,
+    EDX_PAYPAL_PAYMENT_INTERFACE_NAME,
     PAYMENT_STATUS_INTERFACE_CODE_SUCCEEDED,
     EdXFieldNames,
     TwoUKeys
@@ -58,21 +59,20 @@ def get_edx_successful_stripe_payment(order: CTOrder) -> Union[CTPayment, None]:
     return None
 
 
-def get_edx_payment_intent_id(order: CTOrder) -> Union[str, None]:
-    pmt = get_edx_successful_stripe_payment(order)
-    if pmt:
-        return pmt.interface_id
-    return None
-
-
-# TODO update get_edx_successful_stripe_payment to accommodate this util logic
-# and replace it with that.
+# TODO remove get_edx_successful_stripe_payment if there is no more use.
 def get_edx_successful_payment_info(order: CTOrder):
     for pr in order.payment_info.payments:
         pmt = pr.obj
         if pmt.payment_status.interface_code == PAYMENT_STATUS_INTERFACE_CODE_SUCCEEDED and pmt.interface_id:
-            return pmt.interface_id, pmt.payment_method_info.payment_interface
+            return pmt, pmt.payment_method_info.payment_interface
     return None, None
+
+
+def get_edx_payment_intent_id(order: CTOrder) -> Union[str, None]:
+    pmt, _ = get_edx_successful_payment_info(order)
+    if pmt:
+        return pmt.interface_id
+    return None
 
 
 def get_edx_order_workflow_state_key(order: CTOrder) -> Optional[str]:
@@ -88,7 +88,7 @@ def get_edx_is_sanctioned(order: CTOrder) -> bool:
 
 def get_edx_refund_amount(order: CTOrder) -> decimal:
     refund_amount = decimal.Decimal(0.00)
-    pmt = get_edx_successful_stripe_payment(order)
+    pmt, _ = get_edx_successful_payment_info(order)
     for transaction in pmt.transactions:
         if transaction.type == TransactionType.CHARGE:  # pragma no cover
             refund_amount += decimal.Decimal(typed_money_to_string(transaction.amount, money_as_decimal_string=True))
