@@ -24,6 +24,7 @@ from commerce_coordinator.apps.paypal.signals import payment_refunded_signal
 
 logger = logging.getLogger(__name__)
 
+WEBHOOK_ID = settings.PAYMENT_PROCESSOR_CONFIG['edx']['paypal']['paypal_webhook_id']
 
 class PayPalWebhookView(SingleInvocationAPIView):
     """
@@ -66,12 +67,13 @@ class PayPalWebhookView(SingleInvocationAPIView):
         body = request.body
         tag = type(self).__name__
         twou_order_number = request.data.get("resource").get("invoice_id", None)
-        event_type = request.data.get("event_type")\
+        event_type = request.data.get("event_type")
+        webhook_id = WEBHOOK_ID
 
         transmission_id = request.headers.get("paypal-transmission-id")
         timestamp = request.headers.get("paypal-transmission-time")
         crc = zlib.crc32(body)
-        webhook_id = settings.PAYPAL_WEBHOOK_ID
+
         message = f"{transmission_id}|{timestamp}|{webhook_id}|{crc}"
 
         signature = base64.b64decode(request.headers.get("paypal-transmission-sig"))

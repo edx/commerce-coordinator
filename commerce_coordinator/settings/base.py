@@ -419,6 +419,7 @@ EDX_DRF_EXTENSIONS = {
 }
 
 STRIPE_WEBHOOK_ENDPOINT_SECRET = 'SET-ME-PLEASE'
+PAYPAL_WEBHOOK_ID=""
 
 # PAYMENT PROCESSING
 PAYMENT_PROCESSOR_CONFIG = {
@@ -436,6 +437,7 @@ PAYMENT_PROCESSOR_CONFIG = {
         },
         'paypal': {
             'user_activity_page_url': '',
+            'paypal_webhook_id': PAYPAL_WEBHOOK_ID,
         },
     },
 }
