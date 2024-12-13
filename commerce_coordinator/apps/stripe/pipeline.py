@@ -215,14 +215,14 @@ class GetPaymentIntentReceipt(PipelineStep):
     """ Pull the receipt if the payment_intent is set """
 
     # pylint: disable=unused-argument
-    def run_filter(self, payment_intent_id=None, psp=None, **params):
+    def run_filter(self, psp=None, payment_intent_id=None, **params):
         tag = type(self).__name__
 
-        if psp == EDX_STRIPE_PAYMENT_INTERFACE_NAME and payment_intent_id is None:
+        if payment_intent_id is None:
             logger.debug(f'[{tag}] payment_intent_id not set, skipping.')
             return PipelineCommand.CONTINUE.value
 
-        elif psp == EDX_STRIPE_PAYMENT_INTERFACE_NAME:
+        if psp == EDX_STRIPE_PAYMENT_INTERFACE_NAME:
             stripe_api_client = StripeAPIClient()
             payment_intent = stripe_api_client.retrieve_payment_intent(
                 payment_intent_id,
@@ -234,10 +234,7 @@ class GetPaymentIntentReceipt(PipelineStep):
                 'payment_intent': payment_intent,
                 'redirect_url': receipt_url
             }
-        else:
-            return {
-                'psp': psp
-            }
+        return None
 
 
 class RefundPaymentIntent(PipelineStep):

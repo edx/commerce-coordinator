@@ -53,7 +53,7 @@ PROJECT_APPS = (
     'commerce_coordinator.apps.frontend_app_payment.apps.FrontendAppPaymentConfig',
     'commerce_coordinator.apps.lms.apps.LmsConfig',
     'commerce_coordinator.apps.stripe.apps.StripeConfig',
-    'commerce_coordinator.apps.paypal.apps.PaypalConfig',
+    'commerce_coordinator.apps.paypal.apps.PayPalConfig',
     'commerce_coordinator.apps.titan.apps.TitanConfig',
     'commerce_coordinator.apps.commercetools',
 )
@@ -431,6 +431,9 @@ PAYMENT_PROCESSOR_CONFIG = {
             'source_system_identifier': 'edx/commerce_coordinator?v=1',
             'webhook_endpoint_secret': STRIPE_WEBHOOK_ENDPOINT_SECRET,
         },
+        'paypal': {
+            'user_activity_page_url': '',
+        },
     },
 }
 # END PAYMENT PROCESSING
@@ -476,7 +479,3 @@ BRAZE_CT_FULFILLMENT_UNSUPPORTED_MODE_ERROR_CANVAS_ID = ''
 SEGMENT_KEY = None
 
 FAVICON_URL = "https://edx-cdn.org/v3/prod/favicon.ico"
-
-# PAYPAL SETTINIS
-PAYPAL_BASE_URL = ""
-PAYPAL_USER_ACTIVITES_URL = ""

@@ -3,12 +3,13 @@ Pipelines for paypal app
 """
 
 import logging
-from urllib.parse import urlencode, urljoin
+from urllib.parse import urlencode
 
 from django.conf import settings
 from openedx_filters import PipelineStep
 
 from commerce_coordinator.apps.commercetools.catalog_info.constants import EDX_PAYPAL_PAYMENT_INTERFACE_NAME
+from commerce_coordinator.apps.core.constants import PipelineCommand
 
 logger = logging.getLogger(__name__)
 
@@ -16,16 +17,16 @@ logger = logging.getLogger(__name__)
 class GetPayPalPaymentReceipt(PipelineStep):
     """ Purpare PayPal payment recipt  """
 
-    def run_filter(self, psp=None, **params):
-        if psp == EDX_PAYPAL_PAYMENT_INTERFACE_NAME:
-            base_url = settings.PAYPAL_BASE_URL
-            activities_url = settings.PAYPAL_USER_ACTIVITES_URL
-            query_params = {'free_text_search': params.get('order_number')}
+    def run_filter(self, psp=None, payment_intent_id=None, **params):
 
-            redirect_url = urljoin(base_url, activities_url) + '?' + urlencode(query_params)
+        if payment_intent_id is None or psp != EDX_PAYPAL_PAYMENT_INTERFACE_NAME:
+            return PipelineCommand.CONTINUE.value
 
-            return {
-                'redirect_url': redirect_url,
-            }
+        activity_page_url = settings.PAYMENT_PROCESSOR_CONFIG['edx']['paypal']['user_activity_page_url']
+        query_params = {'free_text_search': params.get('order_number')}
 
-        return None
+        redirect_url = activity_page_url + '?' + urlencode(query_params)
+
+        return {
+            'redirect_url': redirect_url,
+        }
