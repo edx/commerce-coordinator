@@ -198,16 +198,18 @@ def find_refund_transaction(payment: Payment, amount: decimal):
     return {}
 
 
-def translate_stripe_refund_status_to_transaction_status(stripe_refund_status: str):
+def translate_refund_status_to_transaction_status(refund_status: str):
     """
-    Utility to translate stripe's refund object's status attribute to a valid CT transaction state
+    Utility to translate refund object's status attribute to a valid CT transaction state
     """
     translations = {
         'succeeded': TransactionState.SUCCESS,
+        'completed': TransactionState.SUCCESS,
         'pending': TransactionState.PENDING,
         'failed': TransactionState.FAILURE,
+        'canceled': TransactionState.FAILURE,
     }
-    return translations.get(stripe_refund_status.lower(), stripe_refund_status)
+    return translations.get(refund_status.lower(), refund_status)
 
 
 def _create_retired_hash_withsalt(value_to_retire, salt):

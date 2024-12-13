@@ -331,6 +331,9 @@ CC_SIGNALS = {
     'commerce_coordinator.apps.stripe.signals.payment_refunded_signal': [
         'commerce_coordinator.apps.commercetools.signals.refund_from_stripe',
     ],
+    "commerce_coordinator.apps.paypal.signals.payment_refunded_signal": [
+        "commerce_coordinator.apps.commercetools.signals.refund_from_paypal",
+    ],
 }
 
 # Default timeouts for requests
