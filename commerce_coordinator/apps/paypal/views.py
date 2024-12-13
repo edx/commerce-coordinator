@@ -4,25 +4,24 @@ Paypal app views
 
 import base64
 import logging
-from urllib.parse import urlparse
 import zlib
+from urllib.parse import urlparse
 
 import requests
 from cryptography import x509
-from rest_framework.permissions import AllowAny
 from cryptography.hazmat.backends import default_backend
 from cryptography.hazmat.primitives import hashes
 from cryptography.hazmat.primitives.asymmetric import padding
 from django.conf import settings
 from rest_framework import status
+from rest_framework.permissions import AllowAny
 from rest_framework.response import Response
-from commerce_coordinator.apps.core.views import SingleInvocationAPIView
-from commerce_coordinator.apps.commercetools.clients import CommercetoolsAPIClient
 
+from commerce_coordinator.apps.commercetools.clients import CommercetoolsAPIClient
+from commerce_coordinator.apps.core.views import SingleInvocationAPIView
 from commerce_coordinator.apps.paypal.signals import payment_refunded_signal
 
 from .models import KeyValueCache
-
 
 logger = logging.getLogger(__name__)
 

@@ -38,9 +38,9 @@ from commerce_coordinator.apps.ecommerce import urls as ecommerce_urls
 from commerce_coordinator.apps.frontend_app_ecommerce import urls as unified_orders_urls
 from commerce_coordinator.apps.frontend_app_payment import urls as frontend_app_payment_urls
 from commerce_coordinator.apps.lms import urls as lms_urls
+from commerce_coordinator.apps.paypal import urls as paypal_urls
 from commerce_coordinator.apps.stripe import urls as stripe_urls
 from commerce_coordinator.apps.titan import urls as titan_urls
-from commerce_coordinator.apps.paypal import urls as paypal_urls
 from commerce_coordinator.settings.base import FAVICON_URL
 
 admin.autodiscover()
