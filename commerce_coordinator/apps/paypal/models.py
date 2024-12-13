@@ -5,5 +5,5 @@ from django.db import models
 
 
 class KeyValueCache(models.Model):
-    key = models.CharField(max_length=255, unique=True)
-    value = models.TextField()
+    cache_key = models.CharField(max_length=255, unique=True)
+    cache_value = models.TextField()

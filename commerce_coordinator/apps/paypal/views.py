@@ -32,11 +32,11 @@ class PayPalWebhookView(SingleInvocationAPIView):
 
     def get_certificate(self, url):
         try:
-            cache = KeyValueCache.objects.get(key=url)
+            cache = KeyValueCache.objects.get(cache_key=url)
             return cache.value
         except KeyValueCache.DoesNotExist:
             r = requests.get(url)
-            KeyValueCache.objects.create(key=url, value=r.text)
+            KeyValueCache.objects.create(cache_key=url, cache_value=r.text)
             return r.text
 
     def post(self, request):
