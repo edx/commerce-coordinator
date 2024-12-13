@@ -6,23 +6,15 @@ import datetime
 import decimal
 import logging
 from types import SimpleNamespace
-from typing import Generic, List, Optional, Tuple, TypeVar, TypedDict, Union
+from typing import Generic, List, Optional, Tuple, TypedDict, TypeVar, Union
 
 import requests
 from commercetools import Client as CTClient
 from commercetools import CommercetoolsError
 from commercetools.platform.models import Customer as CTCustomer
-from commercetools.platform.models import (
-    CustomerChangeEmailAction,
-    CustomerSetCustomFieldAction,
-)
-from commercetools.platform.models import (
-    CustomerSetCustomTypeAction as CTCustomerSetCustomTypeAction,
-)
-from commercetools.platform.models import (
-    CustomerSetFirstNameAction,
-    CustomerSetLastNameAction,
-)
+from commercetools.platform.models import CustomerChangeEmailAction, CustomerSetCustomFieldAction
+from commercetools.platform.models import CustomerSetCustomTypeAction as CTCustomerSetCustomTypeAction
+from commercetools.platform.models import CustomerSetFirstNameAction, CustomerSetLastNameAction
 from commercetools.platform.models import FieldContainer as CTFieldContainer
 from commercetools.platform.models import Money as CTMoney
 from commercetools.platform.models import Order as CTOrder
@@ -30,13 +22,10 @@ from commercetools.platform.models import (
     OrderAddReturnInfoAction,
     OrderSetReturnItemCustomTypeAction,
     OrderSetReturnPaymentStateAction,
-    OrderTransitionLineItemStateAction,
+    OrderTransitionLineItemStateAction
 )
 from commercetools.platform.models import Payment as CTPayment
-from commercetools.platform.models import (
-    PaymentAddTransactionAction,
-    PaymentSetTransactionCustomTypeAction,
-)
+from commercetools.platform.models import PaymentAddTransactionAction, PaymentSetTransactionCustomTypeAction
 from commercetools.platform.models import ProductVariant as CTProductVariant
 from commercetools.platform.models import (
     ReturnItemDraft,
@@ -44,35 +33,28 @@ from commercetools.platform.models import (
     ReturnShipmentState,
     StateResourceIdentifier,
     TransactionDraft,
-    TransactionType,
+    TransactionType
 )
 from commercetools.platform.models import Type as CTType
 from commercetools.platform.models import TypeDraft as CTTypeDraft
-from commercetools.platform.models import (
-    TypeResourceIdentifier as CTTypeResourceIdentifier,
-)
+from commercetools.platform.models import TypeResourceIdentifier as CTTypeResourceIdentifier
 from commercetools.platform.models.state import State as CTLineItemState
 from django.conf import settings
 from openedx_filters.exceptions import OpenEdxFilterException
 
 from commerce_coordinator.apps.commercetools.catalog_info.constants import (
     DEFAULT_ORDER_EXPANSION,
-    EdXFieldNames,
+    EDX_PAYPAL_PAYMENT_INTERFACE_NAME,
+    EDX_STRIPE_PAYMENT_INTERFACE_NAME,
+    EdXFieldNames
 )
-from commerce_coordinator.apps.commercetools.catalog_info.foundational_types import (
-    TwoUCustomTypes,
-)
+from commerce_coordinator.apps.commercetools.catalog_info.foundational_types import TwoUCustomTypes
 from commerce_coordinator.apps.commercetools.utils import (
     find_refund_transaction,
     handle_commercetools_error,
-    translate_refund_status_to_transaction_status,
+    translate_refund_status_to_transaction_status
 )
 from commerce_coordinator.apps.core.constants import ORDER_HISTORY_PER_SYSTEM_REQ_LIMIT
-
-from commerce_coordinator.apps.commercetools.catalog_info.constants import (
-    EDX_STRIPE_PAYMENT_INTERFACE_NAME,
-    EDX_PAYPAL_PAYMENT_INTERFACE_NAME
-)
 
 logger = logging.getLogger(__name__)
 

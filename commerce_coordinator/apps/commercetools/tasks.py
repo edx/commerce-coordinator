@@ -10,9 +10,9 @@ from commercetools import CommercetoolsError
 from django.conf import settings
 
 from commerce_coordinator.apps.commercetools.catalog_info.constants import EDX_PAYPAL_PAYMENT_INTERFACE_NAME
+
 from .clients import CommercetoolsAPIClient
 from .utils import has_full_refund_transaction
-
 
 logger = logging.getLogger(__name__)
 

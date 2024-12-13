@@ -6,14 +6,11 @@ import logging
 
 from commerce_coordinator.apps.commercetools.catalog_info.constants import TwoUKeys
 from commerce_coordinator.apps.commercetools.tasks import (
-    refund_from_stripe_task,
     refund_from_paypal_task,
-    update_line_item_state_on_fulfillment_completion,
+    refund_from_stripe_task,
+    update_line_item_state_on_fulfillment_completion
 )
-from commerce_coordinator.apps.core.signal_helpers import (
-    CoordinatorSignal,
-    log_receiver,
-)
+from commerce_coordinator.apps.core.signal_helpers import CoordinatorSignal, log_receiver
 
 logger = logging.getLogger(__name__)
 
