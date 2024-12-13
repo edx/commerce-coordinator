@@ -12,10 +12,9 @@ from openedx_filters import PipelineStep
 from openedx_filters.exceptions import OpenEdxFilterException
 from requests import HTTPError
 
-from commerce_coordinator.apps.commercetools.catalog_info.constants import EDX_STRIPE_PAYMENT_INTERFACE_NAME
 from commerce_coordinator.apps.commercetools.catalog_info.edx_utils import (
     get_edx_payment_intent_id,
-    get_edx_payment_service_provider,
+    get_edx_payment_info,
     get_edx_refund_amount
 )
 from commerce_coordinator.apps.commercetools.clients import CommercetoolsAPIClient
@@ -110,11 +109,7 @@ class FetchOrderDetailsByOrderNumber(PipelineStep):
             duration = (datetime.now() - start_time).total_seconds()
             log.info(f"[Performance Check] get_order_by_number call took {duration} seconds")
 
-            psp = get_edx_payment_service_provider(ct_order)
-
-            intent_id = None
-            if psp == EDX_STRIPE_PAYMENT_INTERFACE_NAME:
-                intent_id = get_edx_payment_intent_id(ct_order)
+            intent_id, psp = get_edx_payment_info(ct_order)
 
             ret_val = {
                 "order_data": ct_order,

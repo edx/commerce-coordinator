@@ -53,7 +53,7 @@ PROJECT_APPS = (
     'commerce_coordinator.apps.frontend_app_payment.apps.FrontendAppPaymentConfig',
     'commerce_coordinator.apps.lms.apps.LmsConfig',
     'commerce_coordinator.apps.stripe.apps.StripeConfig',
-    'commerce_coordinator.apps.paypal.apps.PaypalConfig',
+    'commerce_coordinator.apps.paypal.apps.PayPalConfig',
     'commerce_coordinator.apps.titan.apps.TitanConfig',
     'commerce_coordinator.apps.commercetools',
 )
@@ -477,6 +477,5 @@ SEGMENT_KEY = None
 
 FAVICON_URL = "https://edx-cdn.org/v3/prod/favicon.ico"
 
-# PAYPAL SETTINIS
-PAYPAL_BASE_URL = ""
-PAYPAL_USER_ACTIVITES_URL = ""
+# PAYPAL SETTINGS
+PAYPAL_USER_ACTIVITY_PAGE_URL = ""

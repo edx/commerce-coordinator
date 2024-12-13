@@ -11,7 +11,7 @@ from commercetools.platform.models import TransactionType
 
 from commerce_coordinator.apps.commercetools.catalog_info.constants import (
     EDX_STRIPE_PAYMENT_INTERFACE_NAME,
-    STRIPE_PAYMENT_STATUS_INTERFACE_CODE_SUCCEEDED,
+    PAYMENT_STATUS_INTERFACE_CODE_SUCCEEDED,
     EdXFieldNames,
     TwoUKeys
 )
@@ -51,7 +51,7 @@ def get_edx_lms_user_name(customer: CTCustomer):
 def get_edx_successful_stripe_payment(order: CTOrder) -> Union[CTPayment, None]:
     for pr in order.payment_info.payments:
         pmt = pr.obj
-        if pmt.payment_status.interface_code == STRIPE_PAYMENT_STATUS_INTERFACE_CODE_SUCCEEDED \
+        if pmt.payment_status.interface_code == PAYMENT_STATUS_INTERFACE_CODE_SUCCEEDED \
             and pmt.payment_method_info.payment_interface == EDX_STRIPE_PAYMENT_INTERFACE_NAME and \
                 pmt.interface_id:
             return pmt
@@ -64,11 +64,15 @@ def get_edx_payment_intent_id(order: CTOrder) -> Union[str, None]:
         return pmt.interface_id
     return None
 
-
-def get_edx_payment_service_provider(order: CTOrder) -> Union[str, None]:
+# TODO update get_edx_successful_stripe_payment to accommodate this util logic
+# and replace it with that. 
+def get_edx_payment_info(order: CTOrder):
     for pr in order.payment_info.payments:
-        return pr.obj.payment_method_info.payment_interface
-    return None
+        pmt = pr.obj
+        if pmt.payment_status.interface_code == PAYMENT_STATUS_INTERFACE_CODE_SUCCEEDED \
+        and pmt.interface_id:
+            return pmt.interface_id, pmt.payment_method_info.payment_interface
+    return None, None
 
 
 def get_edx_order_workflow_state_key(order: CTOrder) -> Optional[str]:
