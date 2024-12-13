@@ -209,7 +209,7 @@ def translate_refund_status_to_transaction_status(refund_status: str):
         'failed': TransactionState.FAILURE,
         'canceled': TransactionState.FAILURE,
     }
-    return translations.get(refund_status.lower(), refund_status)
+    return translations.get(refund_status.lower(), TransactionState.SUCCESS)
 
 
 def _create_retired_hash_withsalt(value_to_retire, salt):

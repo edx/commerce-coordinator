@@ -75,18 +75,14 @@ class PayPalWebhookView(SingleInvocationAPIView):
         crc = zlib.crc32(body)
 
         message = f"{transmission_id}|{timestamp}|{webhook_id}|{crc}"
-
         signature = base64.b64decode(request.headers.get("paypal-transmission-sig"))
-
         certificate = self._get_certificate(request.headers.get("paypal-cert-url"))
-
         cert = x509.load_pem_x509_certificate(
             certificate.encode("utf-8"), default_backend()
         )
         public_key = cert.public_key()
 
         try:
-            # TODO: In future we can move this logic over to redis to avoid hitting the database
             public_key.verify(
                 signature, message.encode("utf-8"), padding.PKCS1v15(), hashes.SHA256()
             )
