@@ -22,7 +22,7 @@ from commercetools.platform.models import (
     OrderAddReturnInfoAction,
     OrderSetReturnItemCustomTypeAction,
     OrderSetReturnPaymentStateAction,
-    OrderTransitionLineItemStateAction,
+    OrderTransitionLineItemStateAction
 )
 from commercetools.platform.models import Payment as CTPayment
 from commercetools.platform.models import PaymentAddTransactionAction, PaymentSetTransactionCustomTypeAction
@@ -33,7 +33,7 @@ from commercetools.platform.models import (
     ReturnShipmentState,
     StateResourceIdentifier,
     TransactionDraft,
-    TransactionType,
+    TransactionType
 )
 from commercetools.platform.models import Type as CTType
 from commercetools.platform.models import TypeDraft as CTTypeDraft
@@ -46,13 +46,13 @@ from commerce_coordinator.apps.commercetools.catalog_info.constants import (
     DEFAULT_ORDER_EXPANSION,
     EDX_PAYPAL_PAYMENT_INTERFACE_NAME,
     EDX_STRIPE_PAYMENT_INTERFACE_NAME,
-    EdXFieldNames,
+    EdXFieldNames
 )
 from commerce_coordinator.apps.commercetools.catalog_info.foundational_types import TwoUCustomTypes
 from commerce_coordinator.apps.commercetools.utils import (
     find_refund_transaction,
     handle_commercetools_error,
-    translate_refund_status_to_transaction_status,
+    translate_refund_status_to_transaction_status
 )
 from commerce_coordinator.apps.core.constants import ORDER_HISTORY_PER_SYSTEM_REQ_LIMIT
 

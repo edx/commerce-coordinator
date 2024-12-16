@@ -3,7 +3,7 @@ Paypal views test cases
 """
 import base64
 import zlib
-from unittest.mock import patch, MagicMock
+from unittest.mock import MagicMock, patch
 
 from django.conf import settings
 from django.urls import reverse

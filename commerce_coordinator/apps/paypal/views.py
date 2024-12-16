@@ -21,7 +21,6 @@ from rest_framework.throttling import UserRateThrottle
 from commerce_coordinator.apps.core.views import SingleInvocationAPIView
 from commerce_coordinator.apps.paypal.signals import payment_refunded_signal
 
-
 logger = logging.getLogger(__name__)
 
 WEBHOOK_ID = settings.PAYMENT_PROCESSOR_CONFIG['edx']['paypal']['paypal_webhook_id']
