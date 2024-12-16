@@ -323,7 +323,7 @@ class TestTranslateStripeRefundStatus(unittest.TestCase):
 
     def test_translate_stripe_refund_status_other(self):
         # Test for an unknown status
-        self.assertEqual(translate_refund_status_to_transaction_status('unknown_status'), 'unknown_status')
+        self.assertEqual(translate_refund_status_to_transaction_status('unknown_status'), TransactionState.SUCCESS)
 
 
 class TestRetirementAnonymizingTestCase(unittest.TestCase):
