@@ -75,11 +75,6 @@ def get_edx_successful_payment_info(order: CTOrder):
     return None, None
 
 
-def get_edx_payment_service_provider(order: CTOrder) -> Union[str, None]:
-    for pr in order.payment_info.payments:
-        return pr.obj.payment_method_info.payment_interface
-
-
 def get_edx_order_workflow_state_key(order: CTOrder) -> Optional[str]:
     order_workflow_state = None
     if order.state and order.state.obj:  # it should never be that we have one and not the other. # pragma no cover
