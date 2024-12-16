@@ -67,7 +67,7 @@
             <a id="nextFileLink" class="nav" href="z_8cc48e724f8ddd1d_test_views_py.html">&#xbb; next</a>
             &nbsp; &nbsp; &nbsp;
             <a class="nav" href="https://coverage.readthedocs.io/en/7.6.4">coverage.py v7.6.4</a>,
-            created at 2024-12-16 08:29 +0000
+            created at 2024-12-16 10:22 +0000
         </p>
         <aside class="hidden">
             <button type="button" class="button_next_chunk" data-shortcut="j"></button>
@@ -113,7 +113,7 @@
     <p class="pln"><span class="n"><a id="t29" href="#t29">29</a></span><span class="t">    <span class="nam">has_refund_transaction</span><span class="op">,</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t30" href="#t30">30</a></span><span class="t">    <span class="nam">send_order_confirmation_email</span><span class="op">,</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t31" href="#t31">31</a></span><span class="t">    <span class="nam">send_unsupported_mode_fulfillment_error_email</span><span class="op">,</span>&nbsp;</span><span class="r"></span></p>
-    <p class="pln"><span class="n"><a id="t32" href="#t32">32</a></span><span class="t">    <span class="nam">translate_stripe_refund_status_to_transaction_status</span>&nbsp;</span><span class="r"></span></p>
+    <p class="pln"><span class="n"><a id="t32" href="#t32">32</a></span><span class="t">    <span class="nam">translate_refund_status_to_transaction_status</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t33" href="#t33">33</a></span><span class="t"><span class="op">)</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t34" href="#t34">34</a></span><span class="t">&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t35" href="#t35">35</a></span><span class="t">&nbsp;</span><span class="r"></span></p>
@@ -397,17 +397,17 @@
     <p class="pln"><span class="n"><a id="t313" href="#t313">313</a></span><span class="t"><span class="str">    """</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t314" href="#t314">314</a></span><span class="t">&nbsp;</span><span class="r"></span></p>
     <p class="run"><span class="n"><a id="t315" href="#t315">315</a></span><span class="t">    <span class="key">def</span> <span class="nam">test_translate_stripe_refund_status_succeeded</span><span class="op">(</span><span class="nam">self</span><span class="op">)</span><span class="op">:</span>&nbsp;</span><span class="r"></span></p>
-    <p class="run"><span class="n"><a id="t316" href="#t316">316</a></span><span class="t">        <span class="nam">self</span><span class="op">.</span><span class="nam">assertEqual</span><span class="op">(</span><span class="nam">translate_stripe_refund_status_to_transaction_status</span><span class="op">(</span><span class="str">'succeeded'</span><span class="op">)</span><span class="op">,</span> <span class="nam">TransactionState</span><span class="op">.</span><span class="nam">SUCCESS</span><span class="op">)</span>&nbsp;</span><span class="r"></span></p>
+    <p class="run"><span class="n"><a id="t316" href="#t316">316</a></span><span class="t">        <span class="nam">self</span><span class="op">.</span><span class="nam">assertEqual</span><span class="op">(</span><span class="nam">translate_refund_status_to_transaction_status</span><span class="op">(</span><span class="str">'succeeded'</span><span class="op">)</span><span class="op">,</span> <span class="nam">TransactionState</span><span class="op">.</span><span class="nam">SUCCESS</span><span class="op">)</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t317" href="#t317">317</a></span><span class="t">&nbsp;</span><span class="r"></span></p>
     <p class="run"><span class="n"><a id="t318" href="#t318">318</a></span><span class="t">    <span class="key">def</span> <span class="nam">test_translate_stripe_refund_status_pending</span><span class="op">(</span><span class="nam">self</span><span class="op">)</span><span class="op">:</span>&nbsp;</span><span class="r"></span></p>
-    <p class="run"><span class="n"><a id="t319" href="#t319">319</a></span><span class="t">        <span class="nam">self</span><span class="op">.</span><span class="nam">assertEqual</span><span class="op">(</span><span class="nam">translate_stripe_refund_status_to_transaction_status</span><span class="op">(</span><span class="str">'pending'</span><span class="op">)</span><span class="op">,</span> <span class="nam">TransactionState</span><span class="op">.</span><span class="nam">PENDING</span><span class="op">)</span>&nbsp;</span><span class="r"></span></p>
+    <p class="run"><span class="n"><a id="t319" href="#t319">319</a></span><span class="t">        <span class="nam">self</span><span class="op">.</span><span class="nam">assertEqual</span><span class="op">(</span><span class="nam">translate_refund_status_to_transaction_status</span><span class="op">(</span><span class="str">'pending'</span><span class="op">)</span><span class="op">,</span> <span class="nam">TransactionState</span><span class="op">.</span><span class="nam">PENDING</span><span class="op">)</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t320" href="#t320">320</a></span><span class="t">&nbsp;</span><span class="r"></span></p>
     <p class="run"><span class="n"><a id="t321" href="#t321">321</a></span><span class="t">    <span class="key">def</span> <span class="nam">test_translate_stripe_refund_status_failed</span><span class="op">(</span><span class="nam">self</span><span class="op">)</span><span class="op">:</span>&nbsp;</span><span class="r"></span></p>
-    <p class="run"><span class="n"><a id="t322" href="#t322">322</a></span><span class="t">        <span class="nam">self</span><span class="op">.</span><span class="nam">assertEqual</span><span class="op">(</span><span class="nam">translate_stripe_refund_status_to_transaction_status</span><span class="op">(</span><span class="str">'failed'</span><span class="op">)</span><span class="op">,</span> <span class="nam">TransactionState</span><span class="op">.</span><span class="nam">FAILURE</span><span class="op">)</span>&nbsp;</span><span class="r"></span></p>
+    <p class="run"><span class="n"><a id="t322" href="#t322">322</a></span><span class="t">        <span class="nam">self</span><span class="op">.</span><span class="nam">assertEqual</span><span class="op">(</span><span class="nam">translate_refund_status_to_transaction_status</span><span class="op">(</span><span class="str">'failed'</span><span class="op">)</span><span class="op">,</span> <span class="nam">TransactionState</span><span class="op">.</span><span class="nam">FAILURE</span><span class="op">)</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t323" href="#t323">323</a></span><span class="t">&nbsp;</span><span class="r"></span></p>
     <p class="run"><span class="n"><a id="t324" href="#t324">324</a></span><span class="t">    <span class="key">def</span> <span class="nam">test_translate_stripe_refund_status_other</span><span class="op">(</span><span class="nam">self</span><span class="op">)</span><span class="op">:</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t325" href="#t325">325</a></span><span class="t">        <span class="com"># Test for an unknown status</span>&nbsp;</span><span class="r"></span></p>
-    <p class="run"><span class="n"><a id="t326" href="#t326">326</a></span><span class="t">        <span class="nam">self</span><span class="op">.</span><span class="nam">assertEqual</span><span class="op">(</span><span class="nam">translate_stripe_refund_status_to_transaction_status</span><span class="op">(</span><span class="str">'unknown_status'</span><span class="op">)</span><span class="op">,</span> <span class="str">'unknown_status'</span><span class="op">)</span>&nbsp;</span><span class="r"></span></p>
+    <p class="run"><span class="n"><a id="t326" href="#t326">326</a></span><span class="t">        <span class="nam">self</span><span class="op">.</span><span class="nam">assertEqual</span><span class="op">(</span><span class="nam">translate_refund_status_to_transaction_status</span><span class="op">(</span><span class="str">'unknown_status'</span><span class="op">)</span><span class="op">,</span> <span class="nam">TransactionState</span><span class="op">.</span><span class="nam">SUCCESS</span><span class="op">)</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t327" href="#t327">327</a></span><span class="t">&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t328" href="#t328">328</a></span><span class="t">&nbsp;</span><span class="r"></span></p>
     <p class="run"><span class="n"><a id="t329" href="#t329">329</a></span><span class="t"><span class="key">class</span> <span class="nam">TestRetirementAnonymizingTestCase</span><span class="op">(</span><span class="nam">unittest</span><span class="op">.</span><span class="nam">TestCase</span><span class="op">)</span><span class="op">:</span>&nbsp;</span><span class="r"></span></p>
@@ -438,7 +438,7 @@
             <a class="nav" href="z_8cc48e724f8ddd1d_test_views_py.html">&#xbb; next</a>
             &nbsp; &nbsp; &nbsp;
             <a class="nav" href="https://coverage.readthedocs.io/en/7.6.4">coverage.py v7.6.4</a>,
-            created at 2024-12-16 08:29 +0000
+            created at 2024-12-16 10:22 +0000
         </p>
     </div>
 </footer>
