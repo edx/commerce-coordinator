@@ -598,14 +598,14 @@ class ClientTests(TestCase):
                     self.client_set.client.create_return_payment_transaction(
                         payment_id="mock_payment_id",
                         payment_version=1,
-                        stripe_refund=mock_stripe_refund
+                        refund=mock_stripe_refund
                     )
 
                 exception = cm.exception
 
                 expected_message = (
                     f"[CommercetoolsError] Unable to create refund payment transaction for "
-                    f"payment mock_payment_id and stripe refund {mock_stripe_refund.id} "
+                    f"payment mock_payment_id, refund {mock_stripe_refund.id} with PSP: stripe_edx "
                     f"- Correlation ID: {exception.correlation_id}, Details: {exception.errors}"
                 )
 

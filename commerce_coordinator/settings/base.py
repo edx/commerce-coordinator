@@ -331,6 +331,9 @@ CC_SIGNALS = {
     'commerce_coordinator.apps.stripe.signals.payment_refunded_signal': [
         'commerce_coordinator.apps.commercetools.signals.refund_from_stripe',
     ],
+    "commerce_coordinator.apps.paypal.signals.payment_refunded_signal": [
+        "commerce_coordinator.apps.commercetools.signals.refund_from_paypal",
+    ],
 }
 
 # Default timeouts for requests
@@ -416,6 +419,7 @@ EDX_DRF_EXTENSIONS = {
 }
 
 STRIPE_WEBHOOK_ENDPOINT_SECRET = 'SET-ME-PLEASE'
+PAYPAL_WEBHOOK_ID = 'SET-ME-PLEASE'
 
 # PAYMENT PROCESSING
 PAYMENT_PROCESSOR_CONFIG = {
@@ -433,6 +437,7 @@ PAYMENT_PROCESSOR_CONFIG = {
         },
         'paypal': {
             'user_activity_page_url': '',
+            'paypal_webhook_id': PAYPAL_WEBHOOK_ID,
         },
     },
 }

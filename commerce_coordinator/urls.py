@@ -38,6 +38,7 @@ from commerce_coordinator.apps.ecommerce import urls as ecommerce_urls
 from commerce_coordinator.apps.frontend_app_ecommerce import urls as unified_orders_urls
 from commerce_coordinator.apps.frontend_app_payment import urls as frontend_app_payment_urls
 from commerce_coordinator.apps.lms import urls as lms_urls
+from commerce_coordinator.apps.paypal import urls as paypal_urls
 from commerce_coordinator.apps.stripe import urls as stripe_urls
 from commerce_coordinator.apps.titan import urls as titan_urls
 from commerce_coordinator.settings.base import FAVICON_URL
@@ -63,6 +64,7 @@ urlpatterns = oauth2_urlpatterns + [
     re_path(r'^orders/unified/', include(unified_orders_urls), name='frontend_app_ecommerce'),
     re_path(r'^frontend-app-payment/', include(frontend_app_payment_urls)),
     re_path(r'^stripe/', include(stripe_urls)),
+    re_path(r'^paypal/', include(paypal_urls)),
 
     # Browser automated hits, this will limit 404s in logging
     re_path(r'^$', lambda r: JsonResponse(data=[

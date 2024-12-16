@@ -234,7 +234,8 @@ class GetPaymentIntentReceipt(PipelineStep):
                 'payment_intent': payment_intent,
                 'redirect_url': receipt_url
             }
-        return None
+
+        return PipelineCommand.CONTINUE.value
 
 
 class RefundPaymentIntent(PipelineStep):
