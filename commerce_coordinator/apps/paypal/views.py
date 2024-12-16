@@ -102,6 +102,8 @@ class PayPalWebhookView(SingleInvocationAPIView):
                 self.mark_running(tag, refund_id)
             refund_urls = request.data.get("resource").get("links", [])
             paypal_capture_id = None
+            # Getting the capture ID from the links in the refund event as it is not
+            # present in the payload and is required for initiating the refund.
             for link in refund_urls:
                 if link.get("rel") == "up" and "captures" in link.get("href"):
                     paypal_capture_id = link.get("href").split("/")[-1]
