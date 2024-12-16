@@ -26,6 +26,7 @@ logger = logging.getLogger(__name__)
 
 WEBHOOK_ID = settings.PAYMENT_PROCESSOR_CONFIG['edx']['paypal']['paypal_webhook_id']
 
+
 class PayPalWebhookView(SingleInvocationAPIView):
     """
     PayPal webhook view
