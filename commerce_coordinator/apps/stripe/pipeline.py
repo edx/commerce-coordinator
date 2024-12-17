@@ -263,9 +263,6 @@ class RefundPaymentIntent(PipelineStep):
         """
 
         tag = type(self).__name__
-        print('\n\n\n\n\n\nRefundPaymentIntent psp = ', psp)
-        print('\n\n\n\n\n\nRefundPaymentIntent payment_intent_id = ', payment_intent_id)
-        print('\n\n\n\n\n\nRefundPaymentIntent amount_in_cents = ', amount_in_cents)
 
         if psp != EDX_STRIPE_PAYMENT_INTERFACE_NAME or not payment_intent_id or not amount_in_cents:  # pragma: no cover
             logger.info(f'[{tag}] payment_intent_id or amount_in_cents not set, skipping.')

@@ -3,12 +3,12 @@
 from unittest import TestCase
 from unittest.mock import patch
 
-from commerce_coordinator.apps.commercetools.catalog_info.constants import EDX_STRIPE_PAYMENT_INTERFACE_NAME
 from commercetools.platform.models import ReturnInfo, ReturnPaymentState, ReturnShipmentState, TransactionType
 from django.contrib.auth import get_user_model
 from django.test import RequestFactory
 from rest_framework.test import APITestCase
 
+from commerce_coordinator.apps.commercetools.catalog_info.constants import EDX_STRIPE_PAYMENT_INTERFACE_NAME
 from commerce_coordinator.apps.commercetools.constants import COMMERCETOOLS_ORDER_MANAGEMENT_SYSTEM
 from commerce_coordinator.apps.commercetools.pipeline import (
     AnonymizeRetiredUser,
@@ -148,6 +148,7 @@ class CommercetoolsOrLegacyEcommerceRefundPipelineTests(APITestCase):
             refund_response={"payment_intent": "mock_payment_intent"},
             active_order_management_system=COMMERCETOOLS_ORDER_MANAGEMENT_SYSTEM,
             has_been_refunded=False,
+            payment_intent_id="pi_4MtwBwLkdIwGlenn28a3tqPa",
             psp=EDX_STRIPE_PAYMENT_INTERFACE_NAME
         )
         mock_payment_result = ret['returned_payment']
@@ -170,6 +171,7 @@ class CommercetoolsOrLegacyEcommerceRefundPipelineTests(APITestCase):
             refund_response={"payment_intent": "mock_payment_intent"},
             active_order_management_system=COMMERCETOOLS_ORDER_MANAGEMENT_SYSTEM,
             has_been_refunded=False,
+            payment_intent_id="pi_4MtwBwLkdIwGlenn28a3tqPa",
             psp=EDX_STRIPE_PAYMENT_INTERFACE_NAME
         )
         mock_payment_result = ret['returned_payment']
@@ -188,6 +190,7 @@ class CommercetoolsOrLegacyEcommerceRefundPipelineTests(APITestCase):
             refund_response="charge_already_refunded",
             active_order_management_system=COMMERCETOOLS_ORDER_MANAGEMENT_SYSTEM,
             has_been_refunded=True,
+            payment_intent_id="pi_4MtwBwLkdIwGlenn28a3tqPa",
             psp=EDX_STRIPE_PAYMENT_INTERFACE_NAME
         )
         mock_logger.assert_called_once_with('[CreateReturnPaymentTransaction] refund has already been processed, '

@@ -127,8 +127,6 @@ class OrderReturnedView(SingleInvocationAPIView):
             **request.data
         }
 
-        print('\n\n\n\n\n\nrequest.data', request.data)
-
         logger.debug(f'[CT-{tag}] Message received from commercetools with details: {input_data}')
 
         message_details = OrderReturnedViewMessageInputSerializer(data=input_data)

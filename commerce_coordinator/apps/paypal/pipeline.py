@@ -6,12 +6,12 @@ import logging
 from urllib.parse import urlencode
 
 from django.conf import settings
-from commerce_coordinator.apps.paypal.clients import PayPalClient
-from commerce_coordinator.apps.core.constants import PipelineCommand
 from openedx_filters import PipelineStep
 from requests import RequestException
 
 from commerce_coordinator.apps.commercetools.catalog_info.constants import EDX_PAYPAL_PAYMENT_INTERFACE_NAME
+from commerce_coordinator.apps.core.constants import PipelineCommand
+from commerce_coordinator.apps.paypal.clients import PayPalClient
 
 logger = logging.getLogger(__name__)
 
@@ -71,7 +71,7 @@ class RefundPayPalPayment(PipelineStep):
         try:
             paypal_client = PayPalClient()
             paypal_refund_response = paypal_client.refund_order(capture_id=ct_transaction_interaction_id)
-            print('\n\n\n\n\n paypal_refund_response = ', paypal_refund_response)
+
             return {
                 'refund_response': paypal_refund_response,
             }
@@ -81,6 +81,4 @@ class RefundPayPalPayment(PipelineStep):
                         f'message_id: {kwargs["message_id"]} '
                         f'exception: {ex}')
 
-            raise RequestException(str(ex))
-
-
+            raise RequestException(str(ex)) from ex

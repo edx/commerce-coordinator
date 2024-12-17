@@ -10,8 +10,6 @@ from commercetools.platform.models import ProductVariant as CTProductVariant
 from commercetools.platform.models import TransactionType
 
 from commerce_coordinator.apps.commercetools.catalog_info.constants import (
-    EDX_STRIPE_PAYMENT_INTERFACE_NAME,
-    EDX_PAYPAL_PAYMENT_INTERFACE_NAME,
     PAYMENT_STATUS_INTERFACE_CODE_SUCCEEDED,
     EdXFieldNames,
     TwoUKeys
@@ -49,17 +47,6 @@ def get_edx_lms_user_name(customer: CTCustomer):
     return customer.custom.fields[EdXFieldNames.LMS_USER_NAME]
 
 
-def get_edx_successful_stripe_payment(order: CTOrder) -> Union[CTPayment, None]:
-    for pr in order.payment_info.payments:
-        pmt = pr.obj
-        if pmt.payment_status.interface_code == PAYMENT_STATUS_INTERFACE_CODE_SUCCEEDED \
-            and pmt.payment_method_info.payment_interface == EDX_STRIPE_PAYMENT_INTERFACE_NAME and \
-                pmt.interface_id:
-            return pmt
-    return None
-
-
-# TODO remove get_edx_successful_stripe_payment if there is no more use.
 def get_edx_successful_payment_info(order: CTOrder):
     for pr in order.payment_info.payments:
         pmt = pr.obj
@@ -90,9 +77,7 @@ def get_edx_refund_info(payment: CTPayment) -> decimal:
     refund_amount = decimal.Decimal(0.00)
     interaction_id = None
     for transaction in payment.transactions:
-        print('\n\n\n\n\n\nget_edx_refund_amount transaction.type = ', transaction.type)
         if transaction.type == TransactionType.CHARGE:  # pragma no cover
-            print('\n\n\n\n\n\nget_edx_refund_amount transaction.amount = ', transaction.amount)
             refund_amount += decimal.Decimal(typed_money_to_string(transaction.amount, money_as_decimal_string=True))
             interaction_id = transaction.interaction_id
             return refund_amount, interaction_id

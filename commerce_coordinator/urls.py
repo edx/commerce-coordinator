@@ -43,9 +43,6 @@ from commerce_coordinator.apps.stripe import urls as stripe_urls
 from commerce_coordinator.apps.titan import urls as titan_urls
 from commerce_coordinator.settings.base import FAVICON_URL
 
-from commerce_coordinator.apps.paypal.clients import PayPalClient
-
-paypal_client = PayPalClient()
 
 admin.autodiscover()
 
@@ -74,7 +71,6 @@ urlpatterns = oauth2_urlpatterns + [
     re_path(r'^$', lambda r: JsonResponse(data=[
         "Welcome to Commerce Coordinator",
         "This is an API app that provides a backend for Commerce.",
-        str(paypal_client),
     ], status=status.HTTP_200_OK, safe=False), name='root'),
 
     path('favicon.ico', RedirectView.as_view(url=FAVICON_URL), name='favicon'),
@@ -89,4 +85,3 @@ if settings.DEBUG and os.environ.get('ENABLE_DJANGO_TOOLBAR', False):  # pragma:
     import debug_toolbar
 
     urlpatterns.append(re_path(r'^__debug__/', include(debug_toolbar.urls)))
-

@@ -13,8 +13,8 @@ from openedx_filters.exceptions import OpenEdxFilterException
 from requests import HTTPError
 
 from commerce_coordinator.apps.commercetools.catalog_info.constants import (
-    EDX_STRIPE_PAYMENT_INTERFACE_NAME,
-    EDX_PAYPAL_PAYMENT_INTERFACE_NAME
+    EDX_PAYPAL_PAYMENT_INTERFACE_NAME,
+    EDX_STRIPE_PAYMENT_INTERFACE_NAME
 )
 from commerce_coordinator.apps.commercetools.catalog_info.edx_utils import (
     get_edx_refund_info,
@@ -337,7 +337,6 @@ class CreateReturnPaymentTransaction(PipelineStep):
                 payment_on_order = ct_api_client.get_payment_by_key(payment_key)
             elif psp == EDX_PAYPAL_PAYMENT_INTERFACE_NAME:
                 payment_on_order = ct_api_client.get_payment_by_key(payment_intent_id)
-                print('\n\n\n paypal payment_on_order = ', payment_on_order)
 
             updated_payment = ct_api_client.create_return_payment_transaction(
                 payment_id=payment_on_order.id,

@@ -147,8 +147,6 @@ openedx-filters==1.11.0
     # via -r requirements/base.in
 packaging==24.1
     # via marshmallow
-paypal-server-sdk==0.5.1
-    # via -r requirements/base.in
 pbr==6.1.0
     # via stevedore
 pillow==11.0.0
