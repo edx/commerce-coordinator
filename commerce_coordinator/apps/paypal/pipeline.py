@@ -9,6 +9,7 @@ from django.conf import settings
 from commerce_coordinator.apps.paypal.clients import PayPalClient
 from commerce_coordinator.apps.core.constants import PipelineCommand
 from openedx_filters import PipelineStep
+from requests import RequestException
 
 from commerce_coordinator.apps.commercetools.catalog_info.constants import EDX_PAYPAL_PAYMENT_INTERFACE_NAME
 
@@ -43,6 +44,7 @@ class RefundPayPalPayment(PipelineStep):
         order_id,
         amount_in_cents,
         has_been_refunded,
+        ct_transaction_interaction_id,
         psp,
         **kwargs
     ):  # pylint: disable=arguments-differ
@@ -57,7 +59,7 @@ class RefundPayPalPayment(PipelineStep):
 
         tag = type(self).__name__
 
-        if psp != EDX_PAYPAL_PAYMENT_INTERFACE_NAME and not amount_in_cents:
+        if psp != EDX_PAYPAL_PAYMENT_INTERFACE_NAME or not amount_in_cents or not ct_transaction_interaction_id:
             return PipelineCommand.CONTINUE.value
 
         if has_been_refunded:
@@ -66,16 +68,19 @@ class RefundPayPalPayment(PipelineStep):
                 'refund_response': "charge_already_refunded"
             }
 
-        paypal_client = PayPalClient()
         try:
-            paypal_refund_response = paypal_client.refund_order(order_id=order_id)
+            paypal_client = PayPalClient()
+            paypal_refund_response = paypal_client.refund_order(capture_id=ct_transaction_interaction_id)
+            print('\n\n\n\n\n paypal_refund_response = ', paypal_refund_response)
             return {
-                'refund_response': paypal_refund_response
+                'refund_response': paypal_refund_response,
             }
         except Exception as ex:
-            logger.info(f'[CT-{tag}] Unsuccessful PayPal refund with details:'
-                        f'[order_id: {order_id}'
-                        f'message_id: {kwargs["message_id"]}')
-            raise Exception from ex
+            logger.error(f'[CT-{tag}] Unsuccessful PayPal refund with details: '
+                        f'[order_id: {order_id} '
+                        f'message_id: {kwargs["message_id"]} '
+                        f'exception: {ex}')
+
+            raise RequestException(str(ex))
 
 

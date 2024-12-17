@@ -17,7 +17,7 @@ from commerce_coordinator.apps.commercetools.catalog_info.constants import (
     EDX_PAYPAL_PAYMENT_INTERFACE_NAME
 )
 from commerce_coordinator.apps.commercetools.catalog_info.edx_utils import (
-    get_edx_refund_amount,
+    get_edx_refund_info,
     get_edx_successful_payment_info
 )
 from commerce_coordinator.apps.commercetools.clients import CommercetoolsAPIClient
@@ -169,11 +169,14 @@ class FetchOrderDetailsByOrderID(PipelineStep):
 
             if payment:
                 ct_payment = ct_api_client.get_payment_by_key(payment.interface_id)
-                ret_val['amount_in_cents'] = get_edx_refund_amount(ct_order)
+                refund_amount, ct_transaction_interaction_id = get_edx_refund_info(ct_payment)
+                ret_val['amount_in_cents'] = refund_amount
+                ret_val['ct_transaction_interaction_id'] = ct_transaction_interaction_id
                 ret_val['has_been_refunded'] = has_refund_transaction(ct_payment)
                 ret_val['payment_data'] = ct_payment
             else:
                 ret_val['amount_in_cents'] = decimal.Decimal(0.00)
+                ret_val['ct_transaction_interaction_id'] = None
                 ret_val['has_been_refunded'] = False
                 ret_val['payment_data'] = None
 
@@ -299,6 +302,7 @@ class CreateReturnPaymentTransaction(PipelineStep):
         active_order_management_system,
         payment_data,
         has_been_refunded,
+        payment_intent_id,
         psp,
         **kwargs
     ):  # pylint: disable=arguments-differ
@@ -332,7 +336,8 @@ class CreateReturnPaymentTransaction(PipelineStep):
                 payment_key = refund_response['payment_intent']
                 payment_on_order = ct_api_client.get_payment_by_key(payment_key)
             elif psp == EDX_PAYPAL_PAYMENT_INTERFACE_NAME:
-                payment_on_order = ct_api_client.get_payment_by_transaction_interaction_id(refund_response['paypal_capture_id'])
+                payment_on_order = ct_api_client.get_payment_by_key(payment_intent_id)
+                print('\n\n\n paypal payment_on_order = ', payment_on_order)
 
             updated_payment = ct_api_client.create_return_payment_transaction(
                 payment_id=payment_on_order.id,
@@ -345,6 +350,7 @@ class CreateReturnPaymentTransaction(PipelineStep):
                 'returned_payment': updated_payment
             }
         except CommercetoolsError as err:  # pragma no cover
+            error_message = "unknown"
             if psp == EDX_STRIPE_PAYMENT_INTERFACE_NAME:
                 error_message = f"[payment_intent_id: {refund_response['payment_intent']}, "
             elif psp == EDX_PAYPAL_PAYMENT_INTERFACE_NAME:
@@ -356,6 +362,11 @@ class CreateReturnPaymentTransaction(PipelineStep):
             log.exception(f"[{tag}] Commercetools Error: {err}, {err.errors}")
             return PipelineCommand.CONTINUE.value
         except HTTPError as err:  # pragma no cover
+            error_message = "unknown"
+            if psp == EDX_STRIPE_PAYMENT_INTERFACE_NAME:
+                error_message = f"[payment_intent_id: {refund_response['payment_intent']}, "
+            elif psp == EDX_PAYPAL_PAYMENT_INTERFACE_NAME:
+                error_message = f"[paypal_capture_id: {refund_response['paypal_capture_id']}, "
             log.info(f"[{tag}] Unsuccessful attempt to create refund payment transaction with details: "
                      f"psp: {psp}, "
                      f"{error_message}"

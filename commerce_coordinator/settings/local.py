@@ -147,8 +147,8 @@ PAYMENT_PROCESSOR_CONFIG = {
         'paypal': {
             'user_activity_page_url': 'https://sandbox.paypal.com/myaccount/activities/',
             'paypal_webhook_id': 'SET-ME-PLEASE',
-            'client_id': '',
-            'client_secret': '',
+            'client_id': 'ASoOt8z1BmLEzJGLV-N_gWP083ghlpWaj9eOj4BxQ9k8rQ-jDoSO5e_5-gRR3uzwp-hOt_YmfzKsnrFV',
+            'client_secret': 'EL_StzjNHS0lUbtVLPOUxC-fa27E4x12WIAN4XRHjYNNYM3kkUNxXoaFd_XextoDC1h3TvF9vuC74J1Z',
         },
     },
 }

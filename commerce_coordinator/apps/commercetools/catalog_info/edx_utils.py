@@ -86,10 +86,15 @@ def get_edx_is_sanctioned(order: CTOrder) -> bool:
     return get_edx_order_workflow_state_key(order) == TwoUKeys.SDN_SANCTIONED_ORDER_STATE
 
 
-def get_edx_refund_amount(order: CTOrder) -> decimal:
+def get_edx_refund_info(payment: CTPayment) -> decimal:
     refund_amount = decimal.Decimal(0.00)
-    pmt, _ = get_edx_successful_payment_info(order)
-    for transaction in pmt.transactions:
+    interaction_id = None
+    for transaction in payment.transactions:
+        print('\n\n\n\n\n\nget_edx_refund_amount transaction.type = ', transaction.type)
         if transaction.type == TransactionType.CHARGE:  # pragma no cover
+            print('\n\n\n\n\n\nget_edx_refund_amount transaction.amount = ', transaction.amount)
             refund_amount += decimal.Decimal(typed_money_to_string(transaction.amount, money_as_decimal_string=True))
-    return refund_amount
+            interaction_id = transaction.interaction_id
+            return refund_amount, interaction_id
+    return refund_amount, interaction_id
+
