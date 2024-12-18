@@ -330,6 +330,7 @@ class CreateReturnPaymentTransaction(PipelineStep):
 
         ct_api_client = CommercetoolsAPIClient()
         try:
+            payment_on_order = None
             if payment_data is not None:
                 payment_on_order = payment_data
             elif psp == EDX_STRIPE_PAYMENT_INTERFACE_NAME:

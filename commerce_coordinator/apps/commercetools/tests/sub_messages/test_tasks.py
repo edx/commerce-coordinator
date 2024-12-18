@@ -274,7 +274,12 @@ class OrderReturnedMessageSignalTaskTests(TestCase):
     @patch('commerce_coordinator.apps.commercetools.sub_messages.tasks.is_edx_lms_order')
     @patch('commerce_coordinator.apps.stripe.pipeline.StripeAPIClient')
     @patch.object(CommercetoolsAPIClientMock, 'payment_mock', new_callable=MagicMock)
-    def test_correct_arguments_passed_already_refunded_doest_break(self, _stripe_api_mock, _lms_signal, custom_payment_mock):
+    def test_correct_arguments_passed_already_refunded_doest_break(
+        self,
+        _stripe_api_mock,
+        _lms_signal,
+        custom_payment_mock
+    ):
         """
         Check calling uut with mock_parameters yields call to client with
         expected_data.
