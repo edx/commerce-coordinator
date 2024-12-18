@@ -511,7 +511,7 @@ class CommercetoolsAPIClient:
         else:
             refund["created"] = datetime.datetime.utcfromtimestamp(refund["created"])
 
-        refund["status"] = translate_refund_status_to_transaction_status(refund["status"].lower())
+        refund["status"] = translate_refund_status_to_transaction_status(refund["status"])
         refund["currency"] = refund["currency"].upper()
         return refund
 

@@ -257,7 +257,7 @@ class RefundPaymentIntent(PipelineStep):
         Arguments:
             order_id (str): The identifier of the order.
             payment_intent_id (str): The Stripe PaymentIntent id to look up.
-            refund_amount (decimal): Total amount to refund
+            amount_in_cents (decimal): Total amount to refund
             has_been_refunded (bool): Has this payment been refunded
             kwargs: arguments passed through from the filter.
         """

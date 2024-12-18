@@ -77,9 +77,9 @@ def get_edx_refund_info(payment: CTPayment) -> decimal:
     refund_amount = decimal.Decimal(0.00)
     interaction_id = None
     for transaction in payment.transactions:
-
         if transaction.type == TransactionType.CHARGE:  # pragma no cover
             refund_amount += decimal.Decimal(typed_money_to_string(transaction.amount, money_as_decimal_string=True))
             interaction_id = transaction.interaction_id
             return refund_amount, interaction_id
+
     return refund_amount, interaction_id

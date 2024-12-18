@@ -293,7 +293,7 @@ class UpdateCommercetoolsOrderReturnPaymentStatus(PipelineStep):
 class CreateReturnPaymentTransaction(PipelineStep):
     """
     Creates a Transaction for a return payment of a Commercetools order
-    based on Stripes or PayPal refund object on a refunded charge.
+    based on PSP refund object on a refunded charge.
     """
 
     def run_filter(
@@ -352,7 +352,7 @@ class CreateReturnPaymentTransaction(PipelineStep):
         except CommercetoolsError as err:  # pragma no cover
             error_message = "unknown"
             if psp == EDX_STRIPE_PAYMENT_INTERFACE_NAME:
-                error_message = f"[payment_intent_id: {refund_response['payment_intent']}, "
+                error_message = f"[stripe_payment_intent_id: {refund_response['payment_intent']}, "
             elif psp == EDX_PAYPAL_PAYMENT_INTERFACE_NAME:
                 error_message = f"[paypal_capture_id: {refund_response['paypal_capture_id']}, "
             log.info(f"[{tag}] Unsuccessful attempt to create refund payment transaction with details: "
@@ -364,7 +364,7 @@ class CreateReturnPaymentTransaction(PipelineStep):
         except HTTPError as err:  # pragma no cover
             error_message = "unknown"
             if psp == EDX_STRIPE_PAYMENT_INTERFACE_NAME:
-                error_message = f"[payment_intent_id: {refund_response['payment_intent']}, "
+                error_message = f"[stripe_payment_intent_id: {refund_response['payment_intent']}, "
             elif psp == EDX_PAYPAL_PAYMENT_INTERFACE_NAME:
                 error_message = f"[paypal_capture_id: {refund_response['paypal_capture_id']}, "
             log.info(f"[{tag}] Unsuccessful attempt to create refund payment transaction with details: "

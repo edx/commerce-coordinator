@@ -4,7 +4,7 @@
 #
 #    make upgrade
 #
-amqp==5.3.1
+amqp==5.2.0
     # via
     #   -r requirements/test.txt
     #   kombu
@@ -27,12 +27,12 @@ asgiref==3.7.2
     #   -r requirements/test.txt
     #   django
     #   django-cors-headers
-astroid==3.3.6
+astroid==3.3.5
     # via
     #   -r requirements/test.txt
     #   pylint
     #   pylint-celery
-attrs==24.3.0
+attrs==24.2.0
     # via -r requirements/test.txt
 backoff==2.2.1
     # via
@@ -52,7 +52,7 @@ cachetools==5.5.0
     #   tox
 celery[redis]==5.4.0
     # via -r requirements/test.txt
-certifi==2024.12.14
+certifi==2024.8.30
     # via
     #   -r requirements/test.txt
     #   requests
@@ -96,7 +96,7 @@ click-repl==0.3.0
     # via
     #   -r requirements/test.txt
     #   celery
-code-annotations==2.1.0
+code-annotations==1.8.0
     # via
     #   -r requirements/test.txt
     #   edx-lint
@@ -115,11 +115,11 @@ coreschema==0.0.4
     # via
     #   -r requirements/test.txt
     #   coreapi
-coverage[toml]==7.6.9
+coverage[toml]==7.6.4
     # via
     #   -r requirements/test.txt
     #   pytest-cov
-cryptography==44.0.0
+cryptography==43.0.3
     # via
     #   -r requirements/test.txt
     #   pyjwt
@@ -141,7 +141,7 @@ distlib==0.3.9
     # via
     #   -r requirements/test.txt
     #   virtualenv
-django==4.2.17
+django==4.2.16
     # via
     #   -c requirements/common_constraints.txt
     #   -c requirements/constraints.txt
@@ -173,7 +173,7 @@ django-extensions==3.2.3
     # via -r requirements/test.txt
 django-rest-swagger==2.2.0
     # via -r requirements/test.txt
-django-waffle==4.2.0
+django-waffle==4.1.0
     # via
     #   -r requirements/test.txt
     #   edx-django-utils
@@ -200,7 +200,7 @@ edx-braze-client==0.2.5
     # via -r requirements/test.txt
 edx-django-release-util==1.4.0
     # via -r requirements/test.txt
-edx-django-utils==7.1.0
+edx-django-utils==7.0.0
     # via
     #   -r requirements/test.txt
     #   edx-drf-extensions
@@ -226,6 +226,8 @@ idna==3.10
     # via
     #   -r requirements/test.txt
     #   requests
+importlib-metadata==8.5.0
+    # via twine
 iniconfig==2.0.0
     # via
     #   -r requirements/test.txt
@@ -271,7 +273,7 @@ markupsafe==3.0.2
     #   -r requirements/test.txt
     #   jinja2
     #   werkzeug
-marshmallow==3.23.1
+marshmallow==3.23.0
     # via
     #   -r requirements/test.txt
     #   commercetools
@@ -296,13 +298,13 @@ msgpack==1.1.0
     # via
     #   -r requirements/test.txt
     #   cachecontrol
-mysqlclient==2.2.6
+mysqlclient==2.2.5
     # via -r requirements/test.txt
-newrelic==10.4.0
+newrelic==10.2.0
     # via
     #   -r requirements/test.txt
     #   edx-django-utils
-nh3==0.2.20
+nh3==0.2.18
     # via readme-renderer
 oauthlib==3.2.2
     # via
@@ -313,16 +315,15 @@ openapi-codec==1.3.2
     # via
     #   -r requirements/test.txt
     #   django-rest-swagger
-openedx-filters==1.12.0
+openedx-filters==1.11.0
     # via -r requirements/test.txt
-packaging==24.2
+packaging==24.1
     # via
     #   -r requirements/test.txt
     #   marshmallow
     #   pyproject-api
     #   pytest
     #   tox
-    #   twine
 paypal-server-sdk==0.5.1
     # via -r requirements/test.txt
 pbr==6.1.0
@@ -331,7 +332,7 @@ pbr==6.1.0
     #   stevedore
 pillow==11.0.0
     # via -r requirements/test.txt
-pkginfo==1.12.0
+pkginfo==1.10.0
     # via twine
 platformdirs==4.3.6
     # via
@@ -364,7 +365,7 @@ pygments==2.18.0
     # via
     #   readme-renderer
     #   rich
-pyjwt[crypto]==2.10.1
+pyjwt[crypto]==2.9.0
     # via
     #   -r requirements/test.txt
     #   drf-jwt
@@ -373,7 +374,7 @@ pyjwt[crypto]==2.10.1
     #   edx-rest-api-client
     #   segment-analytics-python
     #   social-auth-core
-pylint==3.3.2
+pylint==3.3.1
     # via
     #   -r requirements/test.txt
     #   edx-lint
@@ -405,7 +406,7 @@ pyproject-api==1.8.0
     # via
     #   -r requirements/test.txt
     #   tox
-pytest==8.3.4
+pytest==8.3.3
     # via
     #   -r requirements/test.txt
     #   pytest-cov
@@ -417,7 +418,6 @@ pytest-django==4.9.0
 python-dateutil==2.9.0.post0
     # via
     #   -r requirements/test.txt
-    #   apimatic-core
     #   celery
     #   segment-analytics-python
 python-slugify==8.0.4
@@ -440,16 +440,13 @@ pyyaml==6.0.2
     #   responses
 readme-renderer==44.0
     # via twine
-redis==5.2.1
+redis==5.2.0
     # via
     #   -r requirements/test.txt
     #   celery
 requests==2.32.3
     # via
     #   -r requirements/test.txt
-    #   apimatic-core
-    #   apimatic-requests-client-adapter
-    #   cachecontrol
     #   commercetools
     #   coreapi
     #   edx-drf-extensions
@@ -477,7 +474,7 @@ responses==0.25.3
     # via -r requirements/test.txt
 rfc3986==2.0.0
     # via twine
-rich==13.9.4
+rich==13.9.3
     # via twine
 segment-analytics-python==2.3.3
     # via -r requirements/test.txt
@@ -489,7 +486,7 @@ simplejson==3.19.3
     # via
     #   -r requirements/test.txt
     #   django-rest-swagger
-six==1.17.0
+six==1.16.0
     # via
     #   -r requirements/test.txt
     #   edx-auth-backends
@@ -507,18 +504,18 @@ social-auth-core==4.5.4
     #   -r requirements/test.txt
     #   edx-auth-backends
     #   social-auth-app-django
-sqlparse==0.5.3
+sqlparse==0.5.1
     # via
     #   -r requirements/test.txt
     #   django
     #   django-debug-toolbar
-stevedore==5.4.0
+stevedore==5.3.0
     # via
     #   -r requirements/test.txt
     #   code-annotations
     #   edx-django-utils
     #   edx-opaque-keys
-stripe==11.3.0
+stripe==11.2.0
     # via -r requirements/test.txt
 testfixtures==8.3.0
     # via -r requirements/test.txt
@@ -532,7 +529,7 @@ tomlkit==0.13.2
     #   pylint
 tox==4.23.2
     # via -r requirements/test.txt
-twine==6.0.1
+twine==5.1.1
     # via -r requirements/quality.in
 typing-extensions==4.12.2
     # via
@@ -560,7 +557,7 @@ vine==5.1.0
     #   amqp
     #   celery
     #   kombu
-virtualenv==20.28.0
+virtualenv==20.27.1
     # via
     #   -r requirements/test.txt
     #   tox
@@ -572,14 +569,13 @@ webob==1.8.9
     # via
     #   -r requirements/test.txt
     #   commercetools
-werkzeug==3.1.3
+werkzeug==3.0.6
     # via
     #   -r requirements/test.txt
     #   commercetools
-wrapt==1.17.0
+wrapt==1.16.0
     # via
     #   -r requirements/test.txt
     #   commercetools
-
-# The following packages are considered to be unsafe in a requirements file:
-# setuptools
+zipp==3.20.2
+    # via importlib-metadata
