@@ -51,10 +51,13 @@ def get_edx_successful_payment_info(order: CTOrder):
     for pr in order.payment_info.payments:
         pmt = pr.obj
         if pmt.payment_status.interface_code == PAYMENT_STATUS_INTERFACE_CODE_SUCCEEDED and pmt.interface_id:
-            return pmt, pmt.payment_method_info.payment_interface
+            ct_payment_provider_id = pmt.payment_method_info.payment_interface
+            return pmt, ct_payment_provider_id
     return None, None
 
 
+# TODO update function and its return value name
+# the return value could be either stripe payment intent id or PayPal order ID
 def get_edx_payment_intent_id(order: CTOrder) -> Union[str, None]:
     pmt, _ = get_edx_successful_payment_info(order)
     if pmt:
