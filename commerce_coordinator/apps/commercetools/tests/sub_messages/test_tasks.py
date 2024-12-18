@@ -1,6 +1,6 @@
 """Commercetools Task Tests"""
 import logging
-from unittest import skip, TestCase
+from unittest import TestCase, skip
 from unittest.mock import MagicMock, call, patch
 
 from commercetools.platform.models import Order as CTOrder
