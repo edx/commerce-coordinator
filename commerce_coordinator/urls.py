@@ -43,7 +43,6 @@ from commerce_coordinator.apps.stripe import urls as stripe_urls
 from commerce_coordinator.apps.titan import urls as titan_urls
 from commerce_coordinator.settings.base import FAVICON_URL
 
-
 admin.autodiscover()
 
 urlpatterns = oauth2_urlpatterns + [

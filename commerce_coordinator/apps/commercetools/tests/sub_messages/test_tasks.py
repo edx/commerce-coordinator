@@ -273,12 +273,14 @@ class OrderReturnedMessageSignalTaskTests(TestCase):
     # todo this flow is broken
     @patch('commerce_coordinator.apps.commercetools.sub_messages.tasks.is_edx_lms_order')
     @patch('commerce_coordinator.apps.stripe.pipeline.StripeAPIClient')
-    def test_correct_arguments_passed_already_refunded_doest_break(self, _stripe_api_mock, _lms_signal):
+    @patch.object(CommercetoolsAPIClientMock, 'payment_mock', new_callable=MagicMock)
+    def test_correct_arguments_passed_already_refunded_doest_break(self, _stripe_api_mock, _lms_signal, custom_payment_mock):
         """
         Check calling uut with mock_parameters yields call to client with
         expected_data.
         """
         mock_values = self.mock
+        custom_payment_mock.return_value = CTPaymentByKey()
 
         ret_val = self.get_uut()(*self.unpack_for_uut(self.mock.example_payload))
 

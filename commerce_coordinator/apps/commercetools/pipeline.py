@@ -117,7 +117,7 @@ class FetchOrderDetailsByOrderNumber(PipelineStep):
             ret_val = {
                 "order_data": ct_order,
                 "psp": psp,
-                "payment_intent_id": payment.interface_id
+                "payment_intent_id": payment.interface_id if payment else None
             }
 
             return ret_val
@@ -298,12 +298,12 @@ class CreateReturnPaymentTransaction(PipelineStep):
 
     def run_filter(
         self,
-        refund_response,
         active_order_management_system,
         payment_data,
         has_been_refunded,
         payment_intent_id,
         psp,
+        refund_response=None,
         **kwargs
     ):  # pylint: disable=arguments-differ
         """

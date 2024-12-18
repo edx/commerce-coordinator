@@ -4,20 +4,34 @@
 #
 #    make upgrade
 #
-amqp==5.2.0
+amqp==5.3.1
     # via
     #   -r requirements/base.txt
     #   kombu
+apimatic-core==0.2.17
+    # via
+    #   -r requirements/base.txt
+    #   paypal-server-sdk
+apimatic-core-interfaces==0.1.5
+    # via
+    #   -r requirements/base.txt
+    #   apimatic-core
+    #   apimatic-requests-client-adapter
+    #   paypal-server-sdk
+apimatic-requests-client-adapter==0.1.6
+    # via
+    #   -r requirements/base.txt
+    #   paypal-server-sdk
 asgiref==3.7.2
     # via
     #   -r requirements/base.txt
     #   django
     #   django-cors-headers
-astroid==3.3.5
+astroid==3.3.6
     # via
     #   pylint
     #   pylint-celery
-attrs==24.2.0
+attrs==24.3.0
     # via -r requirements/base.txt
 backoff==2.2.1
     # via
@@ -27,11 +41,15 @@ billiard==4.2.1
     # via
     #   -r requirements/base.txt
     #   celery
+cachecontrol==0.12.14
+    # via
+    #   -r requirements/base.txt
+    #   apimatic-requests-client-adapter
 cachetools==5.5.0
     # via tox
 celery[redis]==5.4.0
     # via -r requirements/base.txt
-certifi==2024.8.30
+certifi==2024.12.14
     # via
     #   -r requirements/base.txt
     #   requests
@@ -71,7 +89,7 @@ click-repl==0.3.0
     # via
     #   -r requirements/base.txt
     #   celery
-code-annotations==1.8.0
+code-annotations==2.1.0
     # via
     #   -r requirements/test.in
     #   edx-lint
@@ -88,11 +106,11 @@ coreschema==0.0.4
     # via
     #   -r requirements/base.txt
     #   coreapi
-coverage[toml]==7.6.4
+coverage[toml]==7.6.9
     # via
     #   -r requirements/test.in
     #   pytest-cov
-cryptography==43.0.3
+cryptography==44.0.0
     # via
     #   -r requirements/base.txt
     #   pyjwt
@@ -138,7 +156,7 @@ django-extensions==3.2.3
     # via -r requirements/base.txt
 django-rest-swagger==2.2.0
     # via -r requirements/base.txt
-django-waffle==4.1.0
+django-waffle==4.2.0
     # via
     #   -r requirements/base.txt
     #   edx-django-utils
@@ -163,7 +181,7 @@ edx-braze-client==0.2.5
     # via -r requirements/base.txt
 edx-django-release-util==1.4.0
     # via -r requirements/base.txt
-edx-django-utils==7.0.0
+edx-django-utils==7.1.0
     # via
     #   -r requirements/base.txt
     #   edx-drf-extensions
@@ -199,6 +217,14 @@ jinja2==3.1.4
     #   -r requirements/base.txt
     #   code-annotations
     #   coreschema
+jsonpickle==3.3.0
+    # via
+    #   -r requirements/base.txt
+    #   apimatic-core
+jsonpointer==2.4
+    # via
+    #   -r requirements/base.txt
+    #   apimatic-core
 kombu==5.4.2
     # via
     #   -r requirements/base.txt
@@ -208,7 +234,7 @@ markupsafe==3.0.2
     #   -r requirements/base.txt
     #   jinja2
     #   werkzeug
-marshmallow==3.23.0
+marshmallow==3.23.1
     # via
     #   -r requirements/base.txt
     #   commercetools
@@ -221,9 +247,13 @@ mccabe==0.7.0
     # via pylint
 mock==5.1.0
     # via -r requirements/test.in
-mysqlclient==2.2.5
+msgpack==1.1.0
+    # via
+    #   -r requirements/base.txt
+    #   cachecontrol
+mysqlclient==2.2.6
     # via -r requirements/base.txt
-newrelic==10.2.0
+newrelic==10.4.0
     # via
     #   -r requirements/base.txt
     #   edx-django-utils
@@ -236,15 +266,17 @@ openapi-codec==1.3.2
     # via
     #   -r requirements/base.txt
     #   django-rest-swagger
-openedx-filters==1.11.0
+openedx-filters==1.12.0
     # via -r requirements/base.txt
-packaging==24.1
+packaging==24.2
     # via
     #   -r requirements/base.txt
     #   marshmallow
     #   pyproject-api
     #   pytest
     #   tox
+paypal-server-sdk==0.5.1
+    # via -r requirements/base.txt
 pbr==6.1.0
     # via
     #   -r requirements/base.txt
@@ -272,7 +304,7 @@ pycparser==2.22
     # via
     #   -r requirements/base.txt
     #   cffi
-pyjwt[crypto]==2.9.0
+pyjwt[crypto]==2.10.1
     # via
     #   -r requirements/base.txt
     #   drf-jwt
@@ -281,7 +313,7 @@ pyjwt[crypto]==2.9.0
     #   edx-rest-api-client
     #   segment-analytics-python
     #   social-auth-core
-pylint==3.3.1
+pylint==3.3.2
     # via
     #   edx-lint
     #   pylint-celery
@@ -305,7 +337,7 @@ pynacl==1.5.0
     #   edx-django-utils
 pyproject-api==1.8.0
     # via tox
-pytest==8.3.3
+pytest==8.3.4
     # via
     #   -r requirements/test.in
     #   pytest-cov
@@ -317,6 +349,7 @@ pytest-django==4.9.0
 python-dateutil==2.9.0.post0
     # via
     #   -r requirements/base.txt
+    #   apimatic-core
     #   celery
     #   segment-analytics-python
 python-slugify==8.0.4
@@ -335,13 +368,16 @@ pyyaml==6.0.2
     #   code-annotations
     #   edx-django-release-util
     #   responses
-redis==5.2.0
+redis==5.2.1
     # via
     #   -r requirements/base.txt
     #   celery
 requests==2.32.3
     # via
     #   -r requirements/base.txt
+    #   apimatic-core
+    #   apimatic-requests-client-adapter
+    #   cachecontrol
     #   commercetools
     #   coreapi
     #   edx-drf-extensions
@@ -373,7 +409,7 @@ simplejson==3.19.3
     # via
     #   -r requirements/base.txt
     #   django-rest-swagger
-six==1.16.0
+six==1.17.0
     # via
     #   -r requirements/base.txt
     #   edx-auth-backends
@@ -389,17 +425,17 @@ social-auth-core==4.5.4
     #   -r requirements/base.txt
     #   edx-auth-backends
     #   social-auth-app-django
-sqlparse==0.5.1
+sqlparse==0.5.3
     # via
     #   -r requirements/base.txt
     #   django
-stevedore==5.3.0
+stevedore==5.4.0
     # via
     #   -r requirements/base.txt
     #   code-annotations
     #   edx-django-utils
     #   edx-opaque-keys
-stripe==11.2.0
+stripe==11.3.0
     # via -r requirements/base.txt
 testfixtures==8.3.0
     # via -r requirements/test.in
@@ -434,7 +470,7 @@ vine==5.1.0
     #   amqp
     #   celery
     #   kombu
-virtualenv==20.27.1
+virtualenv==20.28.0
     # via tox
 wcwidth==0.2.13
     # via
@@ -444,11 +480,14 @@ webob==1.8.9
     # via
     #   -r requirements/base.txt
     #   commercetools
-werkzeug==3.0.6
+werkzeug==3.1.3
     # via
     #   -r requirements/base.txt
     #   commercetools
-wrapt==1.16.0
+wrapt==1.17.0
     # via
     #   -r requirements/base.txt
     #   commercetools
+
+# The following packages are considered to be unsafe in a requirements file:
+# setuptools

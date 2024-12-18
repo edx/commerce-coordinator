@@ -23,6 +23,7 @@ from commercetools.platform.models import ReturnPaymentState, ReturnShipmentStat
 from commercetools.platform.models import Transaction as CTTransaction
 from commercetools.platform.models import TransactionState, TransactionType
 from commercetools.platform.models import TypeReference as CTTypeReference
+from commercetools.platform.models import TypedMoney as CTTypedMoney
 from commercetools.platform.models.state import State as CTLineItemState
 from commercetools.platform.models.state import StateTypeEnum as CTStateType
 from commercetools.testing import BackendRepository
