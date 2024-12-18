@@ -83,4 +83,3 @@ def get_edx_refund_info(payment: CTPayment) -> decimal:
             interaction_id = transaction.interaction_id
             return refund_amount, interaction_id
     return refund_amount, interaction_id
-

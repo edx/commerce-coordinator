@@ -20,13 +20,12 @@ class PayPalClient:
             ),
         )
 
-
     def refund_order(self, capture_id):
         """
         Capture PayPal refund.
 
         Args:
-            capture_id (str): The identifier of the PayPal order to cpture refund.
+            capture_id (str): The identifier of the PayPal order to capture refund.
 
         Returns:
             The response from PayPal.

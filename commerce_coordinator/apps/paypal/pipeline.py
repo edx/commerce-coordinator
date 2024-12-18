@@ -77,8 +77,8 @@ class RefundPayPalPayment(PipelineStep):
             }
         except Exception as ex:
             logger.error(f'[CT-{tag}] Unsuccessful PayPal refund with details: '
-                        f'[order_id: {order_id} '
-                        f'message_id: {kwargs["message_id"]} '
-                        f'exception: {ex}')
+                         f'[order_id: {order_id} '
+                         f'message_id: {kwargs["message_id"]} '
+                         f'exception: {ex}')
 
             raise RequestException(str(ex)) from ex
