@@ -89,8 +89,8 @@ def refund_from_paypal_task(
     try:
         payment = client.get_payment_by_transaction_interaction_id(paypal_capture_id)
         if has_full_refund_transaction(payment):
-            logger.info(f"PayPal payment.capture.refunded event received, but Payment with ID {payment.id} "
-                        f"already has a refund with id:{refund.id}. Skipping task to add refund transaction.")
+            logger.info(f"PayPal PAYMENT.CAPTURE.REFUNDED event received, but Payment with ID {payment.id} "
+                        f"already has a refund with ID: {refund.get('id')}. Skipping task to add refund transaction.")
             return None
         updated_payment = client.create_return_payment_transaction(
             payment_id=payment.id,
@@ -101,6 +101,6 @@ def refund_from_paypal_task(
         return updated_payment
     except CommercetoolsError as err:
         logger.error(f"Unable to create refund transaction for payment {payment.key} "
-                     f"on PayPal refund {refund.id} "
+                     f"on PayPal refund {refund.get('id')} "
                      f"with error {err.errors} and correlation id {err.correlation_id}")
         return None
