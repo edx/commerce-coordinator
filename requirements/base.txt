@@ -6,6 +6,15 @@
 #
 amqp==5.2.0
     # via kombu
+apimatic-core==0.2.17
+    # via paypal-server-sdk
+apimatic-core-interfaces==0.1.5
+    # via
+    #   apimatic-core
+    #   apimatic-requests-client-adapter
+    #   paypal-server-sdk
+apimatic-requests-client-adapter==0.1.6
+    # via paypal-server-sdk
 asgiref==3.7.2
     # via
     #   -r requirements/base.in
@@ -17,6 +26,8 @@ backoff==2.2.1
     # via segment-analytics-python
 billiard==4.2.1
     # via celery
+cachecontrol==0.12.14
+    # via apimatic-requests-client-adapter
 celery[redis]==5.4.0
     # via -r requirements/base.in
 certifi==2024.8.30
@@ -121,6 +132,10 @@ itypes==1.2.0
     # via coreapi
 jinja2==3.1.4
     # via coreschema
+jsonpickle==3.3.0
+    # via apimatic-core
+jsonpointer==2.4
+    # via apimatic-core
 kombu==5.4.2
     # via celery
 markupsafe==3.0.2
@@ -133,6 +148,8 @@ marshmallow==3.23.0
     #   marshmallow-enum
 marshmallow-enum==1.5.1
     # via commercetools
+msgpack==1.1.0
+    # via cachecontrol
 mysqlclient==2.2.5
     # via -r requirements/base.in
 newrelic==10.2.0
@@ -147,6 +164,8 @@ openedx-filters==1.11.0
     # via -r requirements/base.in
 packaging==24.1
     # via marshmallow
+paypal-server-sdk==0.5.1
+    # via -r requirements/base.in
 pbr==6.1.0
     # via stevedore
 pillow==11.0.0

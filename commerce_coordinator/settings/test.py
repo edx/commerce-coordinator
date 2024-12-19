@@ -18,6 +18,8 @@ PAYMENT_PROCESSOR_CONFIG = {
         'paypal': {
             'user_activity_page_url': 'https://test.paypal.com/myaccount/activities/',
             'paypal_webhook_id': PAYPAL_WEBHOOK_ID,
+            'client_id': '',
+            'client_secret': '',
         },
     },
 }

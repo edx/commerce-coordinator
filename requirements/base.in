@@ -25,6 +25,7 @@ edx-rest-api-client
 mysqlclient
 openedx-filters
 Pillow
+paypal-server-sdk
 pytz
 segment-analytics-python
 stripe
