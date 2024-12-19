@@ -395,6 +395,7 @@ OPEN_EDX_FILTERS_CONFIG = {
             'commerce_coordinator.apps.rollout.pipeline.DetermineActiveOrderManagementSystemByOrderID',
             'commerce_coordinator.apps.commercetools.pipeline.FetchOrderDetailsByOrderID',
             'commerce_coordinator.apps.stripe.pipeline.RefundPaymentIntent',
+            'commerce_coordinator.apps.paypal.pipeline.RefundPayPalPayment',
             'commerce_coordinator.apps.commercetools.pipeline.CreateReturnPaymentTransaction',
             'commerce_coordinator.apps.commercetools.pipeline.UpdateCommercetoolsOrderReturnPaymentStatus',
         ]
@@ -438,6 +439,8 @@ PAYMENT_PROCESSOR_CONFIG = {
         'paypal': {
             'user_activity_page_url': '',
             'paypal_webhook_id': PAYPAL_WEBHOOK_ID,
+            'client_id': '',
+            'client_secret': '',
         },
     },
 }

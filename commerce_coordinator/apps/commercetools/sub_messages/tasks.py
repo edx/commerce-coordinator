@@ -270,9 +270,9 @@ def fulfill_order_returned_signal_task(
     lms_user_name = get_edx_lms_user_name(customer)
     lms_user_id = get_edx_lms_user_id(customer)
 
-    logger.info(f'[CT-{tag}] calling stripe to refund payment intent {payment_intent_id}, message id: {message_id}')
+    logger.info(f'[CT-{tag}] calling PSP to refund payment "{payment_intent_id}", message id: {message_id}')
 
-    # Return payment if payment intent id is set
+    # Return payment if payment id is set
     if payment_intent_id is not None:
         result = OrderRefundRequested.run_filter(
             order_id=order_id, return_line_item_return_id=return_line_item_return_id, message_id=message_id

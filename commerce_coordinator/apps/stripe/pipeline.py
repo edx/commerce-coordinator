@@ -218,7 +218,7 @@ class GetPaymentIntentReceipt(PipelineStep):
     def run_filter(self, psp=None, payment_intent_id=None, **params):
         tag = type(self).__name__
 
-        if payment_intent_id is None:
+        if psp == EDX_STRIPE_PAYMENT_INTERFACE_NAME and payment_intent_id is None:
             logger.debug(f'[{tag}] payment_intent_id not set, skipping.')
             return PipelineCommand.CONTINUE.value
 
@@ -249,6 +249,7 @@ class RefundPaymentIntent(PipelineStep):
         payment_intent_id,
         amount_in_cents,
         has_been_refunded,
+        psp,
         **kwargs
     ):  # pylint: disable=arguments-differ
         """
@@ -263,7 +264,7 @@ class RefundPaymentIntent(PipelineStep):
 
         tag = type(self).__name__
 
-        if not payment_intent_id or not amount_in_cents:  # pragma: no cover
+        if psp != EDX_STRIPE_PAYMENT_INTERFACE_NAME or not payment_intent_id or not amount_in_cents:  # pragma: no cover
             logger.info(f'[{tag}] payment_intent_id or amount_in_cents not set, skipping.')
             return PipelineCommand.CONTINUE.value
 

@@ -8,6 +8,20 @@ amqp==5.2.0
     # via
     #   -r requirements/validation.txt
     #   kombu
+apimatic-core==0.2.17
+    # via
+    #   -r requirements/validation.txt
+    #   paypal-server-sdk
+apimatic-core-interfaces==0.1.5
+    # via
+    #   -r requirements/validation.txt
+    #   apimatic-core
+    #   apimatic-requests-client-adapter
+    #   paypal-server-sdk
+apimatic-requests-client-adapter==0.1.6
+    # via
+    #   -r requirements/validation.txt
+    #   paypal-server-sdk
 asgiref==3.7.2
     # via
     #   -r requirements/validation.txt
@@ -32,6 +46,10 @@ build==1.2.2.post1
     # via
     #   -r requirements/pip-tools.txt
     #   pip-tools
+cachecontrol==0.12.14
+    # via
+    #   -r requirements/validation.txt
+    #   apimatic-requests-client-adapter
 cachetools==5.5.0
     # via
     #   -r requirements/validation.txt
@@ -254,6 +272,14 @@ jinja2==3.1.4
     #   code-annotations
     #   coreschema
     #   diff-cover
+jsonpickle==3.3.0
+    # via
+    #   -r requirements/validation.txt
+    #   apimatic-core
+jsonpointer==2.4
+    # via
+    #   -r requirements/validation.txt
+    #   apimatic-core
 keyring==25.5.0
     # via
     #   -r requirements/validation.txt
@@ -301,6 +327,10 @@ more-itertools==10.5.0
     #   -r requirements/validation.txt
     #   jaraco-classes
     #   jaraco-functools
+msgpack==1.1.0
+    # via
+    #   -r requirements/validation.txt
+    #   cachecontrol
 mysqlclient==2.2.5
     # via -r requirements/validation.txt
 newrelic==10.2.0
@@ -333,6 +363,8 @@ packaging==24.1
     #   tox
 path==16.16.0
     # via edx-i18n-tools
+paypal-server-sdk==0.5.1
+    # via -r requirements/validation.txt
 pbr==6.1.0
     # via
     #   -r requirements/validation.txt

@@ -12,6 +12,20 @@ amqp==5.2.0
     # via
     #   -r requirements/test.txt
     #   kombu
+apimatic-core==0.2.17
+    # via
+    #   -r requirements/test.txt
+    #   paypal-server-sdk
+apimatic-core-interfaces==0.1.5
+    # via
+    #   -r requirements/test.txt
+    #   apimatic-core
+    #   apimatic-requests-client-adapter
+    #   paypal-server-sdk
+apimatic-requests-client-adapter==0.1.6
+    # via
+    #   -r requirements/test.txt
+    #   paypal-server-sdk
 asgiref==3.7.2
     # via
     #   -r requirements/test.txt
@@ -41,6 +55,10 @@ build==1.2.2.post1
     #   kombu
 beautifulsoup4==4.12.3
     # via pydata-sphinx-theme
+cachecontrol==0.12.14
+    # via
+    #   -r requirements/test.txt
+    #   apimatic-requests-client-adapter
 cachetools==5.5.0
     # via
     #   -r requirements/test.txt
@@ -256,6 +274,14 @@ jinja2==3.1.4
     #   code-annotations
     #   coreschema
     #   sphinx
+jsonpickle==3.3.0
+    # via
+    #   -r requirements/test.txt
+    #   apimatic-core
+jsonpointer==2.4
+    # via
+    #   -r requirements/test.txt
+    #   apimatic-core
 keyring==25.5.0
     # via twine
 kombu==5.4.2
@@ -290,6 +316,10 @@ more-itertools==10.5.0
     # via
     #   jaraco-classes
     #   jaraco-functools
+msgpack==1.1.0
+    # via
+    #   -r requirements/test.txt
+    #   cachecontrol
 mysqlclient==2.2.5
     # via -r requirements/test.txt
 newrelic==10.2.0
@@ -319,6 +349,8 @@ packaging==24.1
     #   pytest
     #   sphinx
     #   tox
+paypal-server-sdk==0.5.1
+    # via -r requirements/test.txt
 pbr==6.1.0
     # via
     #   -r requirements/test.txt
