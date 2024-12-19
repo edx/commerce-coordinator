@@ -88,6 +88,10 @@ def refund_from_paypal_task(
     client = CommercetoolsAPIClient()
     try:
         payment = client.get_payment_by_transaction_interaction_id(paypal_capture_id)
+        if has_full_refund_transaction(payment):
+            logger.info(f"PayPal payment.capture.refunded event received, but Payment with ID {payment.id} "
+                        f"already has a refund with id:{refund.id}. Skipping task to add refund transaction.")
+            return None
         updated_payment = client.create_return_payment_transaction(
             payment_id=payment.id,
             payment_version=payment.version,
