@@ -67,7 +67,7 @@
             <a id="nextFileLink" class="nav" href="z_72e25f89af3afb71_tasks_py.html">&#xbb; next</a>
             &nbsp; &nbsp; &nbsp;
             <a class="nav" href="https://coverage.readthedocs.io/en/7.6.4">coverage.py v7.6.4</a>,
-            created at 2024-12-16 10:22 +0000
+            created at 2024-12-19 08:50 +0000
         </p>
         <aside class="hidden">
             <button type="button" class="button_next_chunk" data-shortcut="j"></button>
@@ -354,9 +354,9 @@
     <p class="run"><span class="n"><a id="t270" href="#t270">270</a></span><span class="t">    <span class="nam">lms_user_name</span> <span class="op">=</span> <span class="nam">get_edx_lms_user_name</span><span class="op">(</span><span class="nam">customer</span><span class="op">)</span>&nbsp;</span><span class="r"></span></p>
     <p class="run"><span class="n"><a id="t271" href="#t271">271</a></span><span class="t">    <span class="nam">lms_user_id</span> <span class="op">=</span> <span class="nam">get_edx_lms_user_id</span><span class="op">(</span><span class="nam">customer</span><span class="op">)</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t272" href="#t272">272</a></span><span class="t">&nbsp;</span><span class="r"></span></p>
-    <p class="run"><span class="n"><a id="t273" href="#t273">273</a></span><span class="t">    <span class="nam">logger</span><span class="op">.</span><span class="nam">info</span><span class="op">(</span><span class="fst">f'</span><span class="fst">[CT-</span><span class="op">{</span><span class="nam">tag</span><span class="op">}</span><span class="fst">] calling stripe to refund payment intent </span><span class="op">{</span><span class="nam">payment_intent_id</span><span class="op">}</span><span class="fst">, message id: </span><span class="op">{</span><span class="nam">message_id</span><span class="op">}</span><span class="fst">'</span><span class="op">)</span>&nbsp;</span><span class="r"></span></p>
+    <p class="run"><span class="n"><a id="t273" href="#t273">273</a></span><span class="t">    <span class="nam">logger</span><span class="op">.</span><span class="nam">info</span><span class="op">(</span><span class="fst">f'</span><span class="fst">[CT-</span><span class="op">{</span><span class="nam">tag</span><span class="op">}</span><span class="fst">] calling PSP to refund payment "</span><span class="op">{</span><span class="nam">payment_intent_id</span><span class="op">}</span><span class="fst">", message id: </span><span class="op">{</span><span class="nam">message_id</span><span class="op">}</span><span class="fst">'</span><span class="op">)</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t274" href="#t274">274</a></span><span class="t">&nbsp;</span><span class="r"></span></p>
-    <p class="pln"><span class="n"><a id="t275" href="#t275">275</a></span><span class="t">    <span class="com"># Return payment if payment intent id is set</span>&nbsp;</span><span class="r"></span></p>
+    <p class="pln"><span class="n"><a id="t275" href="#t275">275</a></span><span class="t">    <span class="com"># Return payment if payment id is set</span>&nbsp;</span><span class="r"></span></p>
     <p class="par run show_par"><span class="n"><a id="t276" href="#t276">276</a></span><span class="t">    <span class="key">if</span> <span class="nam">payment_intent_id</span> <span class="key">is</span> <span class="key">not</span> <span class="key">None</span><span class="op">:</span>&nbsp;</span><span class="r"><span class="annotate short">276&#x202F;&#x219B;&#x202F;324</span><span class="annotate long">line 276 didn't jump to line 324 because the condition on line 276 was always true</span></span></p>
     <p class="run"><span class="n"><a id="t277" href="#t277">277</a></span><span class="t">        <span class="nam">result</span> <span class="op">=</span> <span class="nam">OrderRefundRequested</span><span class="op">.</span><span class="nam">run_filter</span><span class="op">(</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t278" href="#t278">278</a></span><span class="t">            <span class="nam">order_id</span><span class="op">=</span><span class="nam">order_id</span><span class="op">,</span> <span class="nam">return_line_item_return_id</span><span class="op">=</span><span class="nam">return_line_item_return_id</span><span class="op">,</span> <span class="nam">message_id</span><span class="op">=</span><span class="nam">message_id</span>&nbsp;</span><span class="r"></span></p>
@@ -418,7 +418,7 @@
             <a class="nav" href="z_72e25f89af3afb71_tasks_py.html">&#xbb; next</a>
             &nbsp; &nbsp; &nbsp;
             <a class="nav" href="https://coverage.readthedocs.io/en/7.6.4">coverage.py v7.6.4</a>,
-            created at 2024-12-16 10:22 +0000
+            created at 2024-12-19 08:50 +0000
         </p>
     </div>
 </footer>
