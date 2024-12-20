@@ -81,6 +81,19 @@ EXAMPLE_UPDATE_LINE_ITEM_SIGNAL_PAYLOAD = {
     'to_state_key': TwoUKeys.SUCCESS_FULFILMENT_STATE
 }
 
+EXAMPLE_UPDATE_ALL_LINE_ITEMS_SIGNAL_PAYLOAD = {
+    'order_id': '61ec1afa-1b0e-4234-ae28-f997728054fa',
+    'order_version': 2,
+    'line_items': [
+        {
+            'line_item_id': '822d77c4-00a6-4fb9-909b-094ef0b8c4b9',
+            'item_quantity': 1,
+        }
+    ],
+    'from_state_id': '8f2e888e-9777-4557-9a7f-c649153770c2',
+    'to_state_key': TwoUKeys.SUCCESS_FULFILMENT_STATE
+}
+
 EXAMPLE_RETURNED_ORDER_STRIPE_SIGNAL_PAYLOAD = {
     'payment_intent_id': 'pi_3PNWMsH4caH7G0X109NekCG5',
     'stripe_refund': {

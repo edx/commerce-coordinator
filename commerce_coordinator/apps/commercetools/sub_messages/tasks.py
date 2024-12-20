@@ -98,19 +98,22 @@ def fulfill_order_placed_message_signal_task(
     canvas_entry_properties = {"products": []}
     canvas_entry_properties.update(extract_ct_order_information_for_braze_canvas(customer, order))
 
+    logger.info(
+        f"[CT-{tag}] Transitioning all line items for order {order.id} to {TwoUKeys.PROCESSING_FULFILMENT_STATE}"
+    )
+    updated_order = client.update_all_line_items_transition_state_on_fulfillment(
+        order_id=order.id,
+        order_version=order.version,
+        line_items=get_edx_items(order),
+        from_state_id=line_item_state_id,
+        new_state_key=TwoUKeys.PROCESSING_FULFILMENT_STATE
+    )
+    if not updated_order:
+        return True
+
     for item in get_edx_items(order):
         logger.debug(f'[CT-{tag}] processing edX order {order_id}, line item {item.variant.sku}, '
                      f'message id: {message_id}')
-        updated_order = client.update_line_item_transition_state_on_fulfillment(
-            order.id,
-            order.version,
-            item.id,
-            item.quantity,
-            line_item_state_id,
-            TwoUKeys.PROCESSING_FULFILMENT_STATE
-        )
-        if not updated_order:
-            return True
 
         # from here we will always be transitioning from a 'Fulfillment Processing' state
         line_item_state_id = client.get_state_by_key(TwoUKeys.PROCESSING_FULFILMENT_STATE).id
