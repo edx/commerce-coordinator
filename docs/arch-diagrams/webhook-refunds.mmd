@@ -1,0 +1,17 @@
+sequenceDiagram
+    actor Support
+    participant PSP as Stripe/PayPal
+    participant CC as Commerce Coordinator
+    participant CoCo
+    note over Support, PSP: Support Issues Refund<br>from PSP Dashboard
+    Support ->> PSP: Issue Refund
+    activate PSP
+    PSP -->> PSP: Issues Refund to User
+    PSP -->> PSP: Triggers refund Webhook
+    PSP ->> CC: Hits WebhookView() Endpoint
+    deactivate PSP
+    activate CC
+    CC -->> CC: Sends payment_refunded_signal<br> signal
+    CC -->> CC: Triggers refund_from_stripe_task<br> worker task
+    CC ->> CoCo: Adds Refund Transaction<br> to Payment Obj
+    deactivate CC

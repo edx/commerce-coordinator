@@ -1,0 +1,45 @@
+sequenceDiagram
+    actor User as User
+    participant LMS as LMS
+    participant CC
+    participant CoCo
+    participant AWS as AWS EventBridge
+    participant PSP as Stripe/PayPal
+
+    note over User,LMS: User Unenrolls from Course
+    User ->> LMS: Click on Gear CTA -> Click "Unenroll" -> Answer Question
+    LMS ->> LMS: Determines Which System to Hit
+    LMS ->> LMS: Checks Source System of Enrollment Attributes<br>(COMMERCE_COORDINATOR_REFUND_SOURCE_SYSTEMS)
+
+    critical Create Refund
+        LMS ->> CC: Hits RefundView() Endpoint
+        activate CC
+        CC ->> CoCo: Create ReturnItemDraft
+        activate CoCo
+        CoCo ->> CoCo: Creates LineItemReturnItem
+        CoCo ->> CoCo: Shipment State Transitions to "Returned"
+        CoCo ->> CoCo: Payment State Transitions to "Initial"
+        CoCo -->> CC: Response
+        deactivate CoCo
+        CC -->> LMS: Response
+        deactivate CC
+    end
+
+    CoCo ->> AWS: Emits LineItemReturnItem Subscription Message
+    AWS ->> CC: Hits OrderReturnedView() Endpoint
+    CC ->> CC: Receives message from CoCo via AWS EventBridge <br> with details of ReturnItem
+    CC ->> CC: Triggers fulfill_order_returned_signal<br> worker_task
+    CC ->> PSP: Issue Credit
+    activate PSP
+    PSP -->> CC: Response
+    deactivate PSP
+    CC ->> CoCo: Add Refund Transaction to Payment Obj
+    activate CoCo
+    CoCo -->> CC: Response
+    deactivate CoCo
+    CC ->> CoCo: Update Refund Status
+    activate CoCo
+    CoCo -->> CC: Response
+    deactivate CoCo
+    note over User,LMS: LMS Unenrolls User
+    LMS -->> User: Removes Course from Dashboard

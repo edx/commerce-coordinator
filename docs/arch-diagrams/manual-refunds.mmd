@@ -1,0 +1,23 @@
+sequenceDiagram
+    actor Support
+    participant CoCo
+    participant AWS EventBridge
+    participant Commerce Coordinator
+    participant PSP as Stripe/PayPal
+    Support->>CoCo: Create ReturnItem
+    CoCo->>AWS EventBridge: Emits LineItemReturnItem Subscription Message
+    AWS EventBridge->>Commerce Coordinator: Hits OrderReturnedView() Endpoint
+    Commerce Coordinator->>Commerce Coordinator: Receives message from CoCo via AWS EventBridge<br> with details of the ReturnItem
+    Commerce Coordinator->>Commerce Coordinator: Triggers fulfill_order_returned_signal<br> worker task
+    Commerce Coordinator->>PSP: Issue Credit
+    activate PSP
+    PSP-->>Commerce Coordinator: Response
+    deactivate PSP
+    Commerce Coordinator->>CoCo: Add Refund Transaction to Payment Obj
+    activate CoCo
+    CoCo-->>Commerce Coordinator: Response
+    deactivate CoCo
+    Commerce Coordinator->>CoCo: Update Refund Status
+    activate CoCo
+    CoCo-->>Commerce Coordinator: Response
+    deactivate CoCo
