@@ -717,7 +717,7 @@ class ClientTests(TestCase):
                 status_code=200
             )
 
-            result = self.client_set.client.update_all_line_items_transition_state_on_fulfillment(
+            result = self.client_set.client.update_line_items_transition_state(
                 mock_order.id,
                 mock_order.version,
                 mock_order.line_items,
@@ -754,7 +754,7 @@ class ClientTests(TestCase):
             )
 
             with patch('commerce_coordinator.apps.commercetools.clients.logging.Logger.info') as log_mock:
-                self.client_set.client.update_all_line_items_transition_state_on_fulfillment(
+                self.client_set.client.update_line_items_transition_state(
                     mock_order.id,
                     mock_order.version,
                     mock_order.line_items,
@@ -763,8 +763,8 @@ class ClientTests(TestCase):
                 )
 
                 expected_message = (
-                    f"[CommercetoolsError] Unable to update all LineItemStates "
-                    f"of order mock_order_id "
+                    f"[CommercetoolsError] Failed to update LineItemStates "
+                    f"for order ID 'mock_order_id'. Line Item IDs: {mock_order.line_items[0].id} "
                     f"- Correlation ID: {mock_error_response['correlation_id']}, "
                     f"Details: {mock_error_response['errors']}"
                 )

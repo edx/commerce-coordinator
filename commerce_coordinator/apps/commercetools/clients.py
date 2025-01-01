@@ -620,7 +620,7 @@ class CommercetoolsAPIClient:
             handle_commercetools_error(err, f"Unable to update LineItemState of order {order_id}", True)
             return None
 
-    def update_all_line_items_transition_state_on_fulfillment(
+    def update_line_items_transition_state(
             self,
             order_id: str,
             order_version: int,
@@ -644,8 +644,10 @@ class CommercetoolsAPIClient:
         from_state_key = self.get_state_by_id(from_state_id).key
 
         logger.info(
-            f"[CommercetoolsAPIClient] - Transitioning all line item states for order with ID {order_id} "
-            f"from {from_state_key} to {new_state_key}"
+            f"[CommercetoolsAPIClient] - Transitioning line item states for order ID '{order_id}'. "
+            f"From State: '{from_state_key}' "
+            f"To State: '{new_state_key}' "
+            f"Line Item IDs: {', '.join(item.id for item in line_items)}"
         )
 
         try:
@@ -660,13 +662,11 @@ class CommercetoolsAPIClient:
                     for item in line_items
                 ]
 
-                updated_fulfillment_line_item_order = self.base_client.orders.update_by_id(
+                return self.base_client.orders.update_by_id(
                     id=order_id,
                     version=order_version,
                     actions=actions,
                 )
-
-                return updated_fulfillment_line_item_order
             else:
                 logger.info(
                     f"All line items already have the correct state {new_state_key}. "
@@ -675,7 +675,12 @@ class CommercetoolsAPIClient:
                 return self.get_order_by_id(order_id)
         except CommercetoolsError as err:
             # Logs & ignores version conflict errors due to duplicate Commercetools messages
-            handle_commercetools_error(err, f"Unable to update all LineItemStates of order {order_id}", True)
+            handle_commercetools_error(
+                err,
+                f"Failed to update LineItemStates for order ID '{order_id}'. "
+                f"Line Item IDs: {', '.join(item.id for item in line_items)}",
+                True
+            )
             return None
 
     def retire_customer_anonymize_fields(

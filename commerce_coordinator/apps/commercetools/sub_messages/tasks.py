@@ -101,7 +101,7 @@ def fulfill_order_placed_message_signal_task(
     logger.info(
         f"[CT-{tag}] Transitioning all line items for order {order.id} to {TwoUKeys.PROCESSING_FULFILMENT_STATE}"
     )
-    updated_order = client.update_all_line_items_transition_state_on_fulfillment(
+    updated_order = client.update_line_items_transition_state(
         order_id=order.id,
         order_version=order.version,
         line_items=get_edx_items(order),
