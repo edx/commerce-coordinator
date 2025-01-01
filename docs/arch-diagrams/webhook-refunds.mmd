@@ -12,6 +12,6 @@ sequenceDiagram
     deactivate PSP
     activate CC
     CC -->> CC: Sends payment_refunded_signal<br> signal
-    CC -->> CC: Triggers refund_from_stripe_task<br> worker task
+    CC -->> CC: Triggers refund_from_<stripe/paypal>_task<br> worker task
     CC ->> CoCo: Adds Refund Transaction<br> to Payment Obj
     deactivate CC
