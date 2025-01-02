@@ -87,6 +87,7 @@ class CommercetoolsAPIClientMock(MagicMock):
         self.get_state_by_key = self.state_by_key_mock
         self.get_payment_by_key = self.payment_mock
         self.update_line_item_transition_state_on_fulfillment = self.updated_line_item_mock
+        self.update_line_items_transition_state = self.updated_line_item_mock
         self.create_return_for_order = self.create_return_item_mock
         self.create_return_payment_transaction = self.payment_mock
         self.update_return_payment_state_after_successful_refund = self.order_mock

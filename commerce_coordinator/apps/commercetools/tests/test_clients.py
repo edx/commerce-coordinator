@@ -692,6 +692,86 @@ class ClientTests(TestCase):
                 log_mock.assert_called_with(expected_message)
 
     @patch('commerce_coordinator.apps.commercetools.clients.CommercetoolsAPIClient.get_state_by_id')
+    def test_successful_order_all_line_items_state_update(self, mock_state_by_id):
+        base_url = self.client_set.get_base_url_from_client()
+
+        mock_order = gen_order("mock_order_id")
+        mock_order.version = "2"
+        mock_line_item_state = gen_line_item_state()
+        mock_line_item_state.key = TwoUKeys.PROCESSING_FULFILMENT_STATE
+        mock_order.line_items[0].state[0].state = mock_line_item_state
+
+        mock_state_by_id().return_value = mock_line_item_state
+
+        mock_response_order = gen_order("mock_order_id")
+        mock_response_order.version = 3
+        mock_response_line_item_state = gen_line_item_state()
+        mock_response_line_item_state.id = "mock_success_id"
+        mock_response_line_item_state.key = TwoUKeys.SUCCESS_FULFILMENT_STATE
+        mock_response_order.line_items[0].state[0].state = mock_response_line_item_state
+
+        with requests_mock.Mocker(real_http=True, case_sensitive=False) as mocker:
+            mocker.post(
+                f"{base_url}orders/{mock_response_order.id}",
+                json=mock_response_order.serialize(),
+                status_code=200
+            )
+
+            result = self.client_set.client.update_line_items_transition_state(
+                mock_order.id,
+                mock_order.version,
+                mock_order.line_items,
+                TwoUKeys.PENDING_FULFILMENT_STATE,
+                TwoUKeys.SUCCESS_FULFILMENT_STATE
+            )
+
+            self.assertEqual(result.line_items[0].state[0].state.id, mock_response_line_item_state.id)
+
+    @patch('commerce_coordinator.apps.commercetools.clients.CommercetoolsAPIClient.get_state_by_id')
+    def test_update_all_line_items_state_exception(self, mock_state_by_id):
+        mock_order = gen_order("mock_order_id")
+        mock_order.version = "1"
+        base_url = self.client_set.get_base_url_from_client()
+        mock_state_by_id().return_value = gen_line_item_state()
+        mock_error_response: CommercetoolsError = {
+            "message": "Could not create return for order mock_order_id",
+            "errors": [
+                {
+                    "code": "ConcurrentModification",
+                    "message": "Object [mock_order_id] has a "
+                               "different version than expected. Expected: 2 - Actual: 1."
+                },
+            ],
+            "response": {},
+            "correlation_id": "None"
+        }
+
+        with requests_mock.Mocker(real_http=True, case_sensitive=False) as mocker:
+            mocker.post(
+                f"{base_url}orders/mock_order_id",
+                json=mock_error_response,
+                status_code=409
+            )
+
+            with patch('commerce_coordinator.apps.commercetools.clients.logging.Logger.info') as log_mock:
+                self.client_set.client.update_line_items_transition_state(
+                    mock_order.id,
+                    mock_order.version,
+                    mock_order.line_items,
+                    TwoUKeys.PENDING_FULFILMENT_STATE,
+                    TwoUKeys.SUCCESS_FULFILMENT_STATE
+                )
+
+                expected_message = (
+                    f"[CommercetoolsError] Failed to update LineItemStates "
+                    f"for order ID 'mock_order_id'. Line Item IDs: {mock_order.line_items[0].id} "
+                    f"- Correlation ID: {mock_error_response['correlation_id']}, "
+                    f"Details: {mock_error_response['errors']}"
+                )
+
+                log_mock.assert_called_with(expected_message)
+
+    @patch('commerce_coordinator.apps.commercetools.clients.CommercetoolsAPIClient.get_state_by_id')
     @patch('commerce_coordinator.apps.commercetools.clients.CommercetoolsAPIClient.get_order_by_id')
     def test_order_line_item_in_correct_state(self, mock_order_by_id, mock_state_by_id):
         mock_order = gen_order("mock_order_id")

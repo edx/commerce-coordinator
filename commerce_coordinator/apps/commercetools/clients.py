@@ -16,6 +16,7 @@ from commercetools.platform.models import CustomerChangeEmailAction, CustomerSet
 from commercetools.platform.models import CustomerSetCustomTypeAction as CTCustomerSetCustomTypeAction
 from commercetools.platform.models import CustomerSetFirstNameAction, CustomerSetLastNameAction
 from commercetools.platform.models import FieldContainer as CTFieldContainer
+from commercetools.platform.models import LineItem as CTLineItem
 from commercetools.platform.models import Money as CTMoney
 from commercetools.platform.models import Order as CTOrder
 from commercetools.platform.models import (
@@ -617,6 +618,69 @@ class CommercetoolsAPIClient:
         except CommercetoolsError as err:
             # Logs & ignores version conflict errors due to duplicate Commercetools messages
             handle_commercetools_error(err, f"Unable to update LineItemState of order {order_id}", True)
+            return None
+
+    def update_line_items_transition_state(
+            self,
+            order_id: str,
+            order_version: int,
+            line_items: List[CTLineItem],
+            from_state_id: str,
+            new_state_key: str,
+    ) -> CTOrder:
+        """
+        Update Commercetools order line item state for all items in one call.
+        Args:
+            order_id (str): Order ID (UUID)
+            order_version (int): Current version of order
+            line_items (List[object]): List of line item objects
+            from_state_id (str): ID of LineItemState to transition from
+            new_state_key (str): Key of LineItemState to transition to
+        Returns (CTOrder): Updated order object or
+        Returns (CTOrder): Current un-updated order
+        Raises Exception: Error if update was unsuccessful.
+        """
+
+        from_state_key = self.get_state_by_id(from_state_id).key
+
+        logger.info(
+            f"[CommercetoolsAPIClient] - Transitioning line item states for order ID '{order_id}'. "
+            f"From State: '{from_state_key}' "
+            f"To State: '{new_state_key}' "
+            f"Line Item IDs: {', '.join(item.id for item in line_items)}"
+        )
+
+        try:
+            if new_state_key != from_state_key:
+                actions = [
+                    OrderTransitionLineItemStateAction(
+                        line_item_id=item.id,
+                        quantity=item.quantity,
+                        from_state=StateResourceIdentifier(key=from_state_key),
+                        to_state=StateResourceIdentifier(key=new_state_key),
+                    )
+                    for item in line_items
+                ]
+
+                return self.base_client.orders.update_by_id(
+                    id=order_id,
+                    version=order_version,
+                    actions=actions,
+                )
+            else:
+                logger.info(
+                    f"All line items already have the correct state {new_state_key}. "
+                    "Not attempting to transition LineItemState"
+                )
+                return self.get_order_by_id(order_id)
+        except CommercetoolsError as err:
+            # Logs & ignores version conflict errors due to duplicate Commercetools messages
+            handle_commercetools_error(
+                err,
+                f"Failed to update LineItemStates for order ID '{order_id}'. "
+                f"Line Item IDs: {', '.join(item.id for item in line_items)}",
+                True
+            )
             return None
 
     def retire_customer_anonymize_fields(
