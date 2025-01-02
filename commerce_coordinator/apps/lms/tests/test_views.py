@@ -382,3 +382,88 @@ class RetirementViewTests(APITestCase):
         response = self.client.post(self.url, self.valid_payload, format='json')
 
         self.assertEqual(response.status_code, status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+
+@ddt.ddt
+class FirstTimeDiscountEligibleViewTests(APITestCase):
+    """
+    Tests for the FirstTimeDiscountEligibleView to check if a user is eligible for a first-time discount.
+    """
+
+    test_user_username = 'test'
+    test_user_email = 'test@example.com'
+    test_user_password = 'secret'
+    test_discount = 'first_time_discount'
+
+    valid_payload = {
+        'email': test_user_email,
+        'code': test_discount,
+    }
+
+    invalid_payload = {
+        'email': None,
+        'code': 'any_discount',
+    }
+
+    url = reverse('lms:first_time_discount_eligible')
+
+    def setUp(self):
+        super().setUp()
+        self.user = User.objects.create_user(
+            self.test_user_username,
+            self.test_user_email,
+            self.test_user_password,
+            is_staff=True,
+        )
+
+    def tearDown(self):
+        super().tearDown()
+        self.client.logout()
+
+    def authenticate_user(self):
+        self.client.login(username=self.test_user_username, password=self.test_user_password)
+        self.client.force_authenticate(user=self.user)
+
+    @patch(
+        'commerce_coordinator.apps.commercetools.clients.CommercetoolsAPIClient'
+        '.is_first_time_discount_eligible'
+    )
+    def test_get_with_valid_email_eligibility_true(self, mock_is_first_time_discount_eligible):
+        """
+        Test case where the user is eligible for a first-time discount.
+        """
+        self.authenticate_user()
+        mock_is_first_time_discount_eligible.return_value = True
+
+        response = self.client.post(self.url, self.valid_payload, format='json')
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.data, {"is_eligible": True})
+        mock_is_first_time_discount_eligible.assert_called_once_with(self.test_user_email, self.test_discount)
+
+    @patch(
+        'commerce_coordinator.apps.commercetools.clients.CommercetoolsAPIClient'
+        '.is_first_time_discount_eligible'
+    )
+    def test_get_with_valid_email_eligibility_false(self, mock_is_first_time_discount_eligible):
+        """
+        Test case where the user is not eligible for a first-time discount.
+        """
+        self.authenticate_user()
+        mock_is_first_time_discount_eligible.return_value = False
+
+        response = self.client.post(self.url, self.valid_payload, format='json')
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.data, {"is_eligible": False})
+        mock_is_first_time_discount_eligible.assert_called_once_with(self.test_user_email, self.test_discount)
+
+    def test_get_with_missing_email_fails(self):
+        """
+        Test case where the email is not provided in the request query params.
+        """
+        self.authenticate_user()
+
+        response = self.client.post(self.url, self.invalid_payload, format='json')
+
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)

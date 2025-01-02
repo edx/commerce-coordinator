@@ -84,3 +84,11 @@ class UserRetiredInputSerializer(CoordinatorSerializer):
     Serializer for User Deactivation/Retirement input validation
     """
     edx_lms_user_id = serializers.IntegerField(allow_null=False)
+
+
+class FirstTimeDiscountInputSerializer(CoordinatorSerializer):
+    """
+    Serializer for First Time Discount input validation
+    """
+    email = serializers.EmailField(required=True)
+    code = serializers.CharField(required=True)

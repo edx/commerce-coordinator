@@ -4,10 +4,12 @@ Views for the ecommerce app
 import logging
 from urllib.parse import urlencode, urljoin
 
+from commercetools import CommercetoolsError
 from django.conf import settings
 from django.http import HttpResponseBadRequest, HttpResponseRedirect
 from edx_rest_framework_extensions.permissions import LoginRedirectIfUnauthenticated
 from openedx_filters.exceptions import OpenEdxFilterException
+from requests import HTTPError
 from rest_framework.exceptions import ValidationError
 from rest_framework.permissions import IsAdminUser
 from rest_framework.response import Response
@@ -15,6 +17,7 @@ from rest_framework.status import HTTP_200_OK, HTTP_303_SEE_OTHER, HTTP_400_BAD_
 from rest_framework.throttling import UserRateThrottle
 from rest_framework.views import APIView
 
+from commerce_coordinator.apps.commercetools.clients import CommercetoolsAPIClient
 from commerce_coordinator.apps.core.constants import HttpHeadersNames, MediaTypes
 from commerce_coordinator.apps.lms.filters import (
     OrderRefundRequested,
@@ -23,6 +26,7 @@ from commerce_coordinator.apps.lms.filters import (
 )
 from commerce_coordinator.apps.lms.serializers import (
     CourseRefundInputSerializer,
+    FirstTimeDiscountInputSerializer,
     UserRetiredInputSerializer,
     enrollment_attribute_key
 )
@@ -334,3 +338,32 @@ class RetirementView(APIView):
             logger.exception(f"[RefundView] Exception raised in {self.post.__name__} with error {repr(e)}")
             return Response('Exception occurred while retiring Commercetools customer',
                             status=HTTP_500_INTERNAL_SERVER_ERROR)
+
+
+class FirstTimeDiscountEligibleView(APIView):
+    """View to check if a user is eligible for a first time discount"""
+    permission_classes = [IsAdminUser]
+    throttle_classes = (UserRateThrottle,)
+
+    def post(self, request):
+        """Return True if user is eligible for a first time discount."""
+        validator = FirstTimeDiscountInputSerializer(data=request.data)
+        validator.is_valid(raise_exception=True)
+
+        email = validator.validated_data['email']
+        code = validator.validated_data['code']
+
+        try:
+            ct_api_client = CommercetoolsAPIClient()
+            is_eligible = ct_api_client.is_first_time_discount_eligible(email, code)
+
+            output = {
+                'is_eligible': is_eligible
+            }
+            return Response(output)
+        except CommercetoolsError as err:  # pragma no cover
+            logger.exception(f"[FirstTimeDiscountEligibleView] Commercetools Error: {err}, {err.errors}")
+        except HTTPError as err:  # pragma no cover
+            logger.exception(f"[FirstTimeDiscountEligibleView] HTTP Error: {err}")
+
+        return Response({'is_eligible': True})
