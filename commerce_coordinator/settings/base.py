@@ -399,12 +399,6 @@ OPEN_EDX_FILTERS_CONFIG = {
         "pipeline": [
             'commerce_coordinator.apps.commercetools.pipeline.AnonymizeRetiredUser',
         ]
-    },
-    'org.edx.coordinator.lms.check.first.time.discount.eligibility.v1': {
-        'fail_silently': False,
-        'pipeline': [
-            'commerce_coordinator.apps.commercetools.pipeline.CheckCommercetoolsDiscountEligibility',
-        ]
     }
 }
 

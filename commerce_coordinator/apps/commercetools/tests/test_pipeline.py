@@ -11,7 +11,6 @@ from rest_framework.test import APITestCase
 from commerce_coordinator.apps.commercetools.constants import COMMERCETOOLS_ORDER_MANAGEMENT_SYSTEM
 from commerce_coordinator.apps.commercetools.pipeline import (
     AnonymizeRetiredUser,
-    CheckCommercetoolsDiscountEligibility,
     CreateReturnForCommercetoolsOrder,
     CreateReturnPaymentTransaction,
     GetCommercetoolsOrders,
@@ -265,34 +264,3 @@ class AnonymizeRetiredUserPipelineTests(TestCase):
         ret = pipe.run_filter(lms_user_id=self.mock_lms_user_id)
         result_data = ret['returned_customer']
         self.assertEqual(result_data, self.update_customer_response)
-
-
-class CommercetoolsDiscountEligibilityPipelineTests(TestCase):
-    """Commercetools pipeline testcase for checking discount eligibility in CT"""
-    def setUp(self) -> None:
-        self.mock_email = "mock_email@example.com"
-        self.mock_code = "mock_code"
-        self.mock_eligible_result = True
-        self.mock_ineligible_result = False
-
-    @patch(
-        'commerce_coordinator.apps.commercetools.clients.CommercetoolsAPIClient'
-        '.is_first_time_discount_eligible'
-    )
-    def test_pipeline_eligible(self, mock_is_eligible):
-        pipe = CheckCommercetoolsDiscountEligibility("test_pipe", None)
-        mock_is_eligible.return_value = self.mock_eligible_result
-        ret = pipe.run_filter(self.mock_email, self.mock_code)
-        result_data = ret['is_eligible']
-        self.assertEqual(result_data, self.mock_eligible_result)
-
-    @patch(
-        'commerce_coordinator.apps.commercetools.clients.CommercetoolsAPIClient'
-        '.is_first_time_discount_eligible'
-    )
-    def test_pipeline_ineligible(self, mock_is_eligible):
-        pipe = CheckCommercetoolsDiscountEligibility("test_pipe", None)
-        mock_is_eligible.return_value = self.mock_ineligible_result
-        ret = pipe.run_filter(self.mock_email, self.mock_code)
-        result_data = ret['is_eligible']
-        self.assertEqual(result_data, self.mock_ineligible_result)

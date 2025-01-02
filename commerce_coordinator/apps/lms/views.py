@@ -4,26 +4,29 @@ Views for the ecommerce app
 import logging
 from urllib.parse import urlencode, urljoin
 
+from commercetools import CommercetoolsError
 from django.conf import settings
 from django.http import HttpResponseBadRequest, HttpResponseRedirect
 from edx_rest_framework_extensions.permissions import LoginRedirectIfUnauthenticated
 from openedx_filters.exceptions import OpenEdxFilterException
-from rest_framework.exceptions import PermissionDenied, ValidationError
+from requests import HTTPError
+from rest_framework.exceptions import ValidationError
 from rest_framework.permissions import IsAdminUser
 from rest_framework.response import Response
 from rest_framework.status import HTTP_200_OK, HTTP_303_SEE_OTHER, HTTP_400_BAD_REQUEST, HTTP_500_INTERNAL_SERVER_ERROR
 from rest_framework.throttling import UserRateThrottle
 from rest_framework.views import APIView
 
+from commerce_coordinator.apps.commercetools.clients import CommercetoolsAPIClient
 from commerce_coordinator.apps.core.constants import HttpHeadersNames, MediaTypes
 from commerce_coordinator.apps.lms.filters import (
-    CheckFirstTimeDiscountEligibility,
     OrderRefundRequested,
     PaymentPageRedirectRequested,
     UserRetirementRequested
 )
 from commerce_coordinator.apps.lms.serializers import (
     CourseRefundInputSerializer,
+    FirstTimeDiscountInputSerializer,
     UserRetiredInputSerializer,
     enrollment_attribute_key
 )
@@ -339,21 +342,28 @@ class RetirementView(APIView):
 
 class FirstTimeDiscountEligibleView(APIView):
     """View to check if a user is eligible for a first time discount"""
-    permission_classes = [LoginRedirectIfUnauthenticated]
-    throttle_classes = [UserRateThrottle]
+    permission_classes = [IsAdminUser]
+    throttle_classes = (UserRateThrottle,)
 
-    def get(self, request):
+    def post(self, request):
         """Return True if user is eligible for a first time discount."""
-        email = request.query_params.get('email')
-        code = request.query_params.get('code')
+        validator = FirstTimeDiscountInputSerializer(data=request.data)
+        validator.is_valid(raise_exception=True)
 
-        if not email or not code:  # pragma: no cover
-            raise PermissionDenied(detail="Could not detect user email or discount code.")
+        email = validator.validated_data['email']
+        code = validator.validated_data['code']
 
-        result = CheckFirstTimeDiscountEligibility.run_filter(email=email, code=code)
+        try:
+            ct_api_client = CommercetoolsAPIClient()
+            is_eligible = ct_api_client.is_first_time_discount_eligible(email, code)
 
-        output = {
-            "is_eligible": result.get('is_eligible', True)
-        }
+            output = {
+                'is_eligible': is_eligible
+            }
+            return Response(output)
+        except CommercetoolsError as err:  # pragma no cover
+            logger.exception(f"[FirstTimeDiscountEligibleView] Commercetools Error: {err}, {err.errors}")
+        except HTTPError as err:  # pragma no cover
+            logger.exception(f"[FirstTimeDiscountEligibleView] HTTP Error: {err}")
 
-        return Response(output)
+        return Response({'is_eligible': True})

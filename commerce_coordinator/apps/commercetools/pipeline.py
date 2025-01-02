@@ -416,34 +416,3 @@ class AnonymizeRetiredUser(PipelineStep):
         except HTTPError as err:  # pragma no cover
             log.exception(f"[{tag}] HTTP Error: {err}")
             return PipelineCommand.CONTINUE.value
-
-
-class CheckCommercetoolsDiscountEligibility(PipelineStep):
-    """
-    Checks if a user is eligible for a first time discount in Commercetools.
-    """
-    def run_filter(self, email, code):  # pylint: disable=arguments-differ
-        """
-        Execute a filter with the signature specified.
-        Arguments:
-            email: Email of the user
-            code: First time discount code
-            kwargs: The keyword arguments passed through from the filter
-        Returns:
-            is_eligible (bool): True if the user is eligible for a first time discount
-        """
-        tag = type(self).__name__
-
-        try:
-            ct_api_client = CommercetoolsAPIClient()
-            is_eligible = ct_api_client.is_first_time_discount_eligible(email, code)
-
-            return {
-                'is_eligible': is_eligible
-            }
-        except CommercetoolsError as err:  # pragma no cover
-            log.exception(f"[{tag}] Commercetools Error: {err}, {err.errors}")
-            return PipelineCommand.CONTINUE.value
-        except HTTPError as err:  # pragma no cover
-            log.exception(f"[{tag}] HTTP Error: {err}")
-            return PipelineCommand.CONTINUE.value
