@@ -10,8 +10,7 @@ from commercetools.platform.models import ProductVariant as CTProductVariant
 from commercetools.platform.models import TransactionType
 
 from commerce_coordinator.apps.commercetools.catalog_info.constants import (
-    EDX_STRIPE_PAYMENT_INTERFACE_NAME,
-    STRIPE_PAYMENT_STATUS_INTERFACE_CODE_SUCCEEDED,
+    PAYMENT_STATUS_INTERFACE_CODE_SUCCEEDED,
     EdXFieldNames,
     TwoUKeys
 )
@@ -48,18 +47,19 @@ def get_edx_lms_user_name(customer: CTCustomer):
     return customer.custom.fields[EdXFieldNames.LMS_USER_NAME]
 
 
-def get_edx_successful_stripe_payment(order: CTOrder) -> Union[CTPayment, None]:
+def get_edx_successful_payment_info(order: CTOrder):
     for pr in order.payment_info.payments:
         pmt = pr.obj
-        if pmt.payment_status.interface_code == STRIPE_PAYMENT_STATUS_INTERFACE_CODE_SUCCEEDED \
-            and pmt.payment_method_info.payment_interface == EDX_STRIPE_PAYMENT_INTERFACE_NAME and \
-                pmt.interface_id:
-            return pmt
-    return None
+        if pmt.payment_status.interface_code == PAYMENT_STATUS_INTERFACE_CODE_SUCCEEDED and pmt.interface_id:
+            ct_payment_provider_id = pmt.payment_method_info.payment_interface
+            return pmt, ct_payment_provider_id
+    return None, None
 
 
+# TODO update function and its return value name
+# the return value could be either stripe payment intent id or PayPal order ID
 def get_edx_payment_intent_id(order: CTOrder) -> Union[str, None]:
-    pmt = get_edx_successful_stripe_payment(order)
+    pmt, _ = get_edx_successful_payment_info(order)
     if pmt:
         return pmt.interface_id
     return None
@@ -76,10 +76,13 @@ def get_edx_is_sanctioned(order: CTOrder) -> bool:
     return get_edx_order_workflow_state_key(order) == TwoUKeys.SDN_SANCTIONED_ORDER_STATE
 
 
-def get_edx_refund_amount(order: CTOrder) -> decimal:
+def get_edx_refund_info(payment: CTPayment) -> decimal:
     refund_amount = decimal.Decimal(0.00)
-    pmt = get_edx_successful_stripe_payment(order)
-    for transaction in pmt.transactions:
+    interaction_id = None
+    for transaction in payment.transactions:
         if transaction.type == TransactionType.CHARGE:  # pragma no cover
             refund_amount += decimal.Decimal(typed_money_to_string(transaction.amount, money_as_decimal_string=True))
-    return refund_amount
+            interaction_id = transaction.interaction_id
+            return refund_amount, interaction_id
+
+    return refund_amount, interaction_id

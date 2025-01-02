@@ -53,6 +53,7 @@ PROJECT_APPS = (
     'commerce_coordinator.apps.frontend_app_payment.apps.FrontendAppPaymentConfig',
     'commerce_coordinator.apps.lms.apps.LmsConfig',
     'commerce_coordinator.apps.stripe.apps.StripeConfig',
+    'commerce_coordinator.apps.paypal.apps.PayPalConfig',
     'commerce_coordinator.apps.titan.apps.TitanConfig',
     'commerce_coordinator.apps.commercetools',
 )
@@ -330,6 +331,9 @@ CC_SIGNALS = {
     'commerce_coordinator.apps.stripe.signals.payment_refunded_signal': [
         'commerce_coordinator.apps.commercetools.signals.refund_from_stripe',
     ],
+    "commerce_coordinator.apps.paypal.signals.payment_refunded_signal": [
+        "commerce_coordinator.apps.commercetools.signals.refund_from_paypal",
+    ],
 }
 
 # Default timeouts for requests
@@ -374,7 +378,8 @@ OPEN_EDX_FILTERS_CONFIG = {
             'commerce_coordinator.apps.ecommerce.pipeline.GetLegacyEcommerceReceiptRedirectUrl',
             'commerce_coordinator.apps.rollout.pipeline.HaltIfRedirectUrlProvided',
             'commerce_coordinator.apps.commercetools.pipeline.FetchOrderDetailsByOrderNumber',
-            'commerce_coordinator.apps.stripe.pipeline.GetPaymentIntentReceipt'
+            'commerce_coordinator.apps.stripe.pipeline.GetPaymentIntentReceipt',
+            'commerce_coordinator.apps.paypal.pipeline.GetPayPalPaymentReceipt'
         ]
     },
     "org.edx.coordinator.lms.order.refund.requested.v1": {
@@ -390,6 +395,7 @@ OPEN_EDX_FILTERS_CONFIG = {
             'commerce_coordinator.apps.rollout.pipeline.DetermineActiveOrderManagementSystemByOrderID',
             'commerce_coordinator.apps.commercetools.pipeline.FetchOrderDetailsByOrderID',
             'commerce_coordinator.apps.stripe.pipeline.RefundPaymentIntent',
+            'commerce_coordinator.apps.paypal.pipeline.RefundPayPalPayment',
             'commerce_coordinator.apps.commercetools.pipeline.CreateReturnPaymentTransaction',
             'commerce_coordinator.apps.commercetools.pipeline.UpdateCommercetoolsOrderReturnPaymentStatus',
         ]
@@ -414,6 +420,7 @@ EDX_DRF_EXTENSIONS = {
 }
 
 STRIPE_WEBHOOK_ENDPOINT_SECRET = 'SET-ME-PLEASE'
+PAYPAL_WEBHOOK_ID = 'SET-ME-PLEASE'
 
 # PAYMENT PROCESSING
 PAYMENT_PROCESSOR_CONFIG = {
@@ -428,6 +435,12 @@ PAYMENT_PROCESSOR_CONFIG = {
             'secret_key': 'SET-ME-PLEASE',
             'source_system_identifier': 'edx/commerce_coordinator?v=1',
             'webhook_endpoint_secret': STRIPE_WEBHOOK_ENDPOINT_SECRET,
+        },
+        'paypal': {
+            'user_activity_page_url': '',
+            'paypal_webhook_id': PAYPAL_WEBHOOK_ID,
+            'client_id': '',
+            'client_secret': '',
         },
     },
 }

@@ -119,7 +119,7 @@ class ReturnedOrderfromStripeTaskTest(TestCase):
         mock_client().create_return_payment_transaction.assert_called_once_with(
             payment_id=mock_payment.id,
             payment_version=mock_payment.version,
-            stripe_refund=mock_stripe_refund
+            refund=mock_stripe_refund
         )
 
     def test_full_refund_already_exists(self, mock_client):

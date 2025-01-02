@@ -3,9 +3,11 @@ import logging
 from unittest import TestCase
 from unittest.mock import MagicMock, call, patch
 
+from commercetools.platform.models import MoneyType as CTMoneyType
 from commercetools.platform.models import Order as CTOrder
 from commercetools.platform.models import ReturnInfo as CTReturnInfo
 from commercetools.platform.models import ReturnPaymentState as CTReturnPaymentState
+from commercetools.platform.models import TypedMoney as CTTypedMoney
 from edx_django_utils.cache import TieredCache
 
 from commerce_coordinator.apps.commercetools.clients import CommercetoolsAPIClient
@@ -85,6 +87,7 @@ class CommercetoolsAPIClientMock(MagicMock):
         self.get_state_by_key = self.state_by_key_mock
         self.get_payment_by_key = self.payment_mock
         self.update_line_item_transition_state_on_fulfillment = self.updated_line_item_mock
+        self.update_line_items_transition_state = self.updated_line_item_mock
         self.create_return_for_order = self.create_return_item_mock
         self.create_return_payment_transaction = self.payment_mock
         self.update_return_payment_state_after_successful_refund = self.order_mock
@@ -252,6 +255,18 @@ class OrderReturnedMessageSignalTaskTests(TestCase):
                     self.mock.update_return_payment_state_after_successful_refund
             }
         )
+        # TODO: Properly mock the Payment object.
+        payment = self.mock.get_payment_by_key.return_value
+        amount = CTTypedMoney(
+            currency_code='USD',
+            cent_amount=1000,
+            type=CTMoneyType.CENT_PRECISION,
+            fraction_digits=2,
+        )
+        for transaction in payment.transactions:
+            transaction.amount = amount
+
+        self.payment_mock = payment
 
     def tearDown(self):
         MonkeyPatch.unmonkey(CommercetoolsAPIClient)
@@ -270,7 +285,6 @@ class OrderReturnedMessageSignalTaskTests(TestCase):
     def get_uut():
         return fulfill_order_returned_uut
 
-    # todo this flow is broken
     @patch('commerce_coordinator.apps.commercetools.sub_messages.tasks.is_edx_lms_order')
     @patch('commerce_coordinator.apps.stripe.pipeline.StripeAPIClient')
     def test_correct_arguments_passed_already_refunded_doest_break(self, _stripe_api_mock, _lms_signal):
@@ -279,7 +293,6 @@ class OrderReturnedMessageSignalTaskTests(TestCase):
         expected_data.
         """
         mock_values = self.mock
-
         ret_val = self.get_uut()(*self.unpack_for_uut(self.mock.example_payload))
 
         self.assertTrue(ret_val)

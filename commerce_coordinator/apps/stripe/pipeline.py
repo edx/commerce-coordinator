@@ -7,6 +7,7 @@ import logging
 from openedx_filters import PipelineStep
 from stripe.error import StripeError
 
+from commerce_coordinator.apps.commercetools.catalog_info.constants import EDX_STRIPE_PAYMENT_INTERFACE_NAME
 from commerce_coordinator.apps.core.constants import PaymentMethod, PipelineCommand
 from commerce_coordinator.apps.stripe.clients import StripeAPIClient
 from commerce_coordinator.apps.stripe.constants import Currency
@@ -214,26 +215,27 @@ class GetPaymentIntentReceipt(PipelineStep):
     """ Pull the receipt if the payment_intent is set """
 
     # pylint: disable=unused-argument
-    def run_filter(self, payment_intent_id=None, **params):
+    def run_filter(self, psp=None, payment_intent_id=None, **params):
         tag = type(self).__name__
 
-        if payment_intent_id is None:
+        if psp == EDX_STRIPE_PAYMENT_INTERFACE_NAME and payment_intent_id is None:
             logger.debug(f'[{tag}] payment_intent_id not set, skipping.')
             return PipelineCommand.CONTINUE.value
 
-        stripe_api_client = StripeAPIClient()
+        if psp == EDX_STRIPE_PAYMENT_INTERFACE_NAME:
+            stripe_api_client = StripeAPIClient()
+            payment_intent = stripe_api_client.retrieve_payment_intent(
+                payment_intent_id,
+                ["latest_charge"]
+            )
+            receipt_url = payment_intent.latest_charge.receipt_url
 
-        payment_intent = stripe_api_client.retrieve_payment_intent(
-            payment_intent_id,
-            ["latest_charge"]
-        )
+            return {
+                'payment_intent': payment_intent,
+                'redirect_url': receipt_url
+            }
 
-        receipt_url = payment_intent.latest_charge.receipt_url
-
-        return {
-            'payment_intent': payment_intent,
-            'redirect_url': receipt_url
-        }
+        return PipelineCommand.CONTINUE.value
 
 
 class RefundPaymentIntent(PipelineStep):
@@ -247,6 +249,7 @@ class RefundPaymentIntent(PipelineStep):
         payment_intent_id,
         amount_in_cents,
         has_been_refunded,
+        psp,
         **kwargs
     ):  # pylint: disable=arguments-differ
         """
@@ -261,7 +264,7 @@ class RefundPaymentIntent(PipelineStep):
 
         tag = type(self).__name__
 
-        if not payment_intent_id or not amount_in_cents:  # pragma: no cover
+        if psp != EDX_STRIPE_PAYMENT_INTERFACE_NAME or not payment_intent_id or not amount_in_cents:  # pragma: no cover
             logger.info(f'[{tag}] payment_intent_id or amount_in_cents not set, skipping.')
             return PipelineCommand.CONTINUE.value
 

@@ -9,6 +9,8 @@ from celery import shared_task
 from commercetools import CommercetoolsError
 from django.conf import settings
 
+from commerce_coordinator.apps.commercetools.catalog_info.constants import EDX_PAYPAL_PAYMENT_INTERFACE_NAME
+
 from .clients import CommercetoolsAPIClient
 from .utils import has_full_refund_transaction
 
@@ -54,8 +56,6 @@ def refund_from_stripe_task(
     Celery task for a refund registered in Stripe dashboard and need to create
     refund payment transaction record via Commercetools API.
     """
-    # Celery serializes stripe_refund to a dict, so we need to explictly convert it back to a Refund object
-    stripe_refund = stripe.Refund.construct_from(stripe_refund, stripe.api_key)
     client = CommercetoolsAPIClient()
     try:
         payment = client.get_payment_by_key(payment_intent_id)
@@ -66,11 +66,41 @@ def refund_from_stripe_task(
         updated_payment = client.create_return_payment_transaction(
             payment_id=payment.id,
             payment_version=payment.version,
-            stripe_refund=stripe_refund
+            refund=stripe_refund
         )
         return updated_payment
     except CommercetoolsError as err:
         logger.error(f"Unable to create refund transaction for payment [ {payment.id} ] "
-                     f"on Stripe refund {stripe_refund.id} "
+                     f"on Stripe refund {stripe_refund['id']} "
+                     f"with error {err.errors} and correlation id {err.correlation_id}")
+        return None
+
+
+@shared_task(autoretry_for=(CommercetoolsError,), retry_kwargs={'max_retries': 5, 'countdown': 3})
+def refund_from_paypal_task(
+    paypal_capture_id,
+    refund
+):
+    """
+    Celery task for a refund registered in PayPal dashboard and need to create
+    refund payment transaction record via Commercetools API.
+    """
+    client = CommercetoolsAPIClient()
+    try:
+        payment = client.get_payment_by_transaction_interaction_id(paypal_capture_id)
+        if has_full_refund_transaction(payment):
+            logger.info(f"PayPal PAYMENT.CAPTURE.REFUNDED event received, but Payment with ID {payment.id} "
+                        f"already has a refund with ID: {refund.get('id')}. Skipping task to add refund transaction.")
+            return None
+        updated_payment = client.create_return_payment_transaction(
+            payment_id=payment.id,
+            payment_version=payment.version,
+            refund=refund,
+            psp=EDX_PAYPAL_PAYMENT_INTERFACE_NAME,
+        )
+        return updated_payment
+    except CommercetoolsError as err:
+        logger.error(f"Unable to create refund transaction for payment {payment.key} "
+                     f"on PayPal refund {refund.get('id')} "
                      f"with error {err.errors} and correlation id {err.correlation_id}")
         return None
