@@ -21,7 +21,7 @@
 | commerce\_coordinator/apps/commercetools/catalog\_info/edx\_utils.py                   |       49 |        2 |       10 |        1 |     95% |    65, 88 |
 | commerce\_coordinator/apps/commercetools/catalog\_info/foundational\_types.py          |       17 |        0 |        0 |        0 |    100% |           |
 | commerce\_coordinator/apps/commercetools/catalog\_info/utils.py                        |       69 |        0 |       30 |        0 |    100% |           |
-| commerce\_coordinator/apps/commercetools/clients.py                                    |      229 |        7 |       16 |        2 |     96% |339, 369-370, 510-511, 671-675 |
+| commerce\_coordinator/apps/commercetools/clients.py                                    |      240 |        7 |       22 |        2 |     97% |339, 369-370, 510-511, 671-675 |
 | commerce\_coordinator/apps/commercetools/constants.py                                  |        4 |        0 |        0 |        0 |    100% |           |
 | commerce\_coordinator/apps/commercetools/data.py                                       |       42 |        0 |        8 |        0 |    100% |           |
 | commerce\_coordinator/apps/commercetools/filters.py                                    |        6 |        0 |        0 |        0 |    100% |           |
@@ -45,7 +45,7 @@
 | commerce\_coordinator/apps/commercetools/tests/sub\_messages/test\_signals\_delayed.py |       45 |        0 |        0 |        0 |    100% |           |
 | commerce\_coordinator/apps/commercetools/tests/sub\_messages/test\_tasks.py            |      168 |        0 |        2 |        0 |    100% |           |
 | commerce\_coordinator/apps/commercetools/tests/test\_authentication.py                 |       25 |        0 |        0 |        0 |    100% |           |
-| commerce\_coordinator/apps/commercetools/tests/test\_clients.py                        |      392 |        0 |        4 |        0 |    100% |           |
+| commerce\_coordinator/apps/commercetools/tests/test\_clients.py                        |      419 |        0 |        4 |        0 |    100% |           |
 | commerce\_coordinator/apps/commercetools/tests/test\_data.py                           |       87 |        0 |        6 |        0 |    100% |           |
 | commerce\_coordinator/apps/commercetools/tests/test\_pipeline.py                       |      139 |        0 |        0 |        0 |    100% |           |
 | commerce\_coordinator/apps/commercetools/tests/test\_signals.py                        |       40 |        0 |        0 |        0 |    100% |           |
@@ -135,7 +135,7 @@
 | commerce\_coordinator/apps/lms/\_\_init\_\_.py                                         |        0 |        0 |        0 |        0 |    100% |           |
 | commerce\_coordinator/apps/lms/clients.py                                              |       40 |        0 |        0 |        0 |    100% |           |
 | commerce\_coordinator/apps/lms/filters.py                                              |       11 |        0 |        0 |        0 |    100% |           |
-| commerce\_coordinator/apps/lms/serializers.py                                          |       25 |        0 |        0 |        0 |    100% |           |
+| commerce\_coordinator/apps/lms/serializers.py                                          |       28 |        0 |        0 |        0 |    100% |           |
 | commerce\_coordinator/apps/lms/signal\_handlers.py                                     |        8 |        0 |        0 |        0 |    100% |           |
 | commerce\_coordinator/apps/lms/signals.py                                              |        3 |        0 |        0 |        0 |    100% |           |
 | commerce\_coordinator/apps/lms/tasks.py                                                |       43 |        0 |        6 |        0 |    100% |           |
@@ -144,9 +144,9 @@
 | commerce\_coordinator/apps/lms/tests/test\_clients.py                                  |       33 |        0 |        0 |        0 |    100% |           |
 | commerce\_coordinator/apps/lms/tests/test\_signals.py                                  |       18 |        0 |        0 |        0 |    100% |           |
 | commerce\_coordinator/apps/lms/tests/test\_tasks.py                                    |       67 |        0 |        0 |        0 |    100% |           |
-| commerce\_coordinator/apps/lms/tests/test\_views.py                                    |      210 |        0 |        0 |        0 |    100% |           |
+| commerce\_coordinator/apps/lms/tests/test\_views.py                                    |      248 |        0 |        0 |        0 |    100% |           |
 | commerce\_coordinator/apps/lms/urls.py                                                 |        4 |        0 |        0 |        0 |    100% |           |
-| commerce\_coordinator/apps/lms/views.py                                                |      132 |        0 |       14 |        0 |    100% |           |
+| commerce\_coordinator/apps/lms/views.py                                                |      149 |        1 |       14 |        0 |     99% |       369 |
 | commerce\_coordinator/apps/paypal/\_\_init\_\_.py                                      |        0 |        0 |        0 |        0 |    100% |           |
 | commerce\_coordinator/apps/paypal/clients.py                                           |       18 |        9 |        2 |        0 |     45% | 16, 34-50 |
 | commerce\_coordinator/apps/paypal/pipeline.py                                          |       32 |       10 |        6 |        1 |     66% |     65-84 |
@@ -194,7 +194,7 @@
 | commerce\_coordinator/apps/titan/views.py                                              |       23 |        1 |        2 |        1 |     92% |        79 |
 | commerce\_coordinator/docker\_gunicorn\_configuration.py                               |       27 |       27 |       10 |        0 |      0% |      4-57 |
 | commerce\_coordinator/urls.py                                                          |       23 |        0 |        0 |        0 |    100% |           |
-|                                                                              **TOTAL** | **7158** |  **269** |  **500** |   **33** | **95%** |           |
+|                                                                              **TOTAL** | **7254** |  **270** |  **506** |   **33** | **95%** |           |
 
 
 ## Setup coverage badge
