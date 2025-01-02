@@ -78,11 +78,11 @@ def fulfill_order_placed_message_signal_task(
         return False
 
     if not (customer and order and is_edx_lms_order(order)):
-        logger.debug(f'[CT-{tag}] order {order_id} is not an edX order, message id: {message_id}')
+        logger.info(f'[CT-{tag}] order {order_id} is not an edX order, message id: {message_id}')
 
         return True
 
-    logger.debug(f'[CT-{tag}] processing edX order {order_id}, message id: {message_id}')
+    logger.info(f'[CT-{tag}] processing edX order {order_id}, message id: {message_id}')
 
     lms_user_id = get_edx_lms_user_id(customer)
 
@@ -99,8 +99,8 @@ def fulfill_order_placed_message_signal_task(
     canvas_entry_properties.update(extract_ct_order_information_for_braze_canvas(customer, order))
 
     for item in get_edx_items(order):
-        logger.debug(f'[CT-{tag}] processing edX order {order_id}, line item {item.variant.sku}, '
-                     f'message id: {message_id}')
+        logger.info(f'[CT-{tag}] processing edX order {order_id}, line item {item.variant.sku}, '
+                    f'message id: {message_id}')
         updated_order = client.update_line_item_transition_state_on_fulfillment(
             order.id,
             order.version,
@@ -263,7 +263,7 @@ def fulfill_order_returned_signal_task(
         return False
 
     if not (customer and order and is_edx_lms_order(order)):  # pragma no cover
-        logger.debug(f'[CT-{tag}] order {order_id} is not an edX order, message id: {message_id}')
+        logger.info(f'[CT-{tag}] order {order_id} is not an edX order, message id: {message_id}')
         return True
 
     payment_intent_id = get_edx_payment_intent_id(order)
@@ -283,13 +283,13 @@ def fulfill_order_returned_signal_task(
                 logger.info(f'[CT-{tag}] payment intent {payment_intent_id} already has refunded transaction, '
                             f'sending Slack notification, message id: {message_id}')
             else:
-                logger.debug(f'[CT-{tag}] payment intent {payment_intent_id} refunded. message id: {message_id}')
+                logger.info(f'[CT-{tag}] payment intent {payment_intent_id} refunded. message id: {message_id}')
                 segment_event_properties = _prepare_segment_event_properties(order, return_line_item_return_id)
 
                 for line_item in get_edx_items(order):
                     course_run = get_edx_product_course_run_key(line_item)
                     # TODO: Remove LMS Enrollment
-                    logger.debug(
+                    logger.info(
                         f'[CT-{tag}] calling lms to unenroll user {lms_user_name} in {course_run}'
                         f', message id: {message_id}'
                     )

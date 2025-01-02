@@ -40,7 +40,7 @@ def log_drf_exceptions(exc, context):
         'type: [%s], via [%s] on path: [%s] with exception: [%s].',
         status_code, view_name, exception_type, method, path, exc,
     )
-    logger.debug(
+    logger.info(
         'Context for DRF Exception in APIView: status code: [%s] on '
         'view: [%s] of type: [%s], via [%s] on path: [%s] with exception: [%s], '
         'from request query_params: [%s], and data: [%s].',

@@ -93,7 +93,7 @@ class PaymentPageRedirectView(APIView):
             )
         redirect = HttpResponseRedirect(redirect_url, status=HTTP_303_SEE_OTHER)
         redirect.headers[HttpHeadersNames.CONTENT_TYPE.value] = MediaTypes.JSON.value
-        logger.debug(
+        logger.info(
             f"{self._redirect_response_payment.__qualname__} Redirecting 303 via {redirect}."
         )
         return redirect

@@ -46,8 +46,8 @@ class OrderFulfillView(APIView):
         fulfill_order_placed_signal.send_robust which processed the
         request.
         """
-        logger.debug(f'Titan OrderFulfillView.post() request object: {request.data}.')
-        logger.debug(f'Titan OrderFulfillView.post() headers: {request.headers}.')
+        logger.info(f'Titan OrderFulfillView.post() request object: {request.data}.')
+        logger.info(f'Titan OrderFulfillView.post() headers: {request.headers}.')
 
         params = {
             'course_id': request.data.get('course_id'),

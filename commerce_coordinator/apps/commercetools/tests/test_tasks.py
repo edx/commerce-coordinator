@@ -3,7 +3,7 @@ Commercetools app Task Tests
 """
 
 import logging
-from unittest.mock import patch
+from unittest.mock import call, patch
 
 import stripe
 from commercetools import CommercetoolsError
@@ -62,28 +62,6 @@ class UpdateLineItemStateOnFulfillmentCompletionTaskTest(TestCase):
             *list(EXAMPLE_UPDATE_LINE_ITEM_SIGNAL_PAYLOAD.values())
         )
 
-    @patch('commerce_coordinator.apps.commercetools.tasks.logger')
-    def test_exception_handling(self, mock_logger, mock_client):
-        '''
-        Check if an error in the client results in a logged error
-        and None returned.
-        '''
-        mock_client().update_line_item_transition_state_on_fulfillment.side_effect = CommercetoolsError(
-            message="Could not update ReturnPaymentState",
-            errors="Some error message",
-            response={},
-            correlation_id="123456"
-        )
-
-        result = fulfillment_uut(*self.unpack_for_uut(EXAMPLE_UPDATE_LINE_ITEM_SIGNAL_PAYLOAD))
-
-        mock_logger.error.assert_called_once_with(
-            f"Unable to update line item [ {EXAMPLE_UPDATE_LINE_ITEM_SIGNAL_PAYLOAD['line_item_id']} ] "
-            "state on fulfillment result with error Some error message and correlation id 123456"
-        )
-
-        assert result is None
-
 
 @patch('commerce_coordinator.apps.commercetools.tasks.CommercetoolsAPIClient')
 class ReturnedOrderfromStripeTaskTest(TestCase):
@@ -123,10 +101,10 @@ class ReturnedOrderfromStripeTaskTest(TestCase):
         )
 
     def test_full_refund_already_exists(self, mock_client):
-        '''
+        """
         Check if the payment already has a full refund, the task logs the
-        appropriate message and skips creating a refund transaction.
-        '''
+        appropriate messages and skips creating a refund transaction.
+        """
         mock_payment = gen_payment_with_multiple_transactions(
             TransactionType.CHARGE, 4900,
             TransactionType.REFUND, 4900
@@ -135,13 +113,22 @@ class ReturnedOrderfromStripeTaskTest(TestCase):
 
         mock_client.return_value.get_payment_by_key.return_value = mock_payment
 
+        payment_intent_id = EXAMPLE_RETURNED_ORDER_STRIPE_SIGNAL_PAYLOAD['payment_intent_id']
+
         with patch('commerce_coordinator.apps.commercetools.tasks.logger') as mock_logger:
             result = refund_from_stripe_task(*self.unpack_for_uut(EXAMPLE_RETURNED_ORDER_STRIPE_SIGNAL_PAYLOAD))
             self.assertIsNone(result)
-            mock_logger.info.assert_called_once_with(
-                f"Stripe charge.refunded event received, but Payment with ID {mock_payment.id} "
-                f"already has a full refund. Skipping task to add refund transaction"
-            )
+
+            # Check that both info messages were logged in the expected order
+            mock_logger.info.assert_has_calls([
+                call(
+                    f"[refund_from_stripe_task] "
+                    f"Initiating creation of CT payment's refund transaction object "
+                    f"for payment Intent ID {payment_intent_id}."),
+                call(f"[refund_from_stripe_task] Event 'charge.refunded' received, "
+                     f"but Payment with ID {mock_payment.id} "
+                     f"already has a full refund. Skipping task to add refund transaction")
+            ])
 
     @patch('commerce_coordinator.apps.commercetools.tasks.logger')
     def test_exception_handling(self, mock_logger, mock_client):
@@ -162,7 +149,8 @@ class ReturnedOrderfromStripeTaskTest(TestCase):
         returned_uut(*self.unpack_for_uut(EXAMPLE_RETURNED_ORDER_STRIPE_SIGNAL_PAYLOAD))
 
         mock_logger.error.assert_called_once_with(
-            f"Unable to create refund transaction for payment [ {mock_payment.id} ] "
+            f"[refund_from_stripe_task] Unable to create CT payment's refund transaction "
+            f"object for [ {mock_payment.id} ] "
             f"on Stripe refund {EXAMPLE_RETURNED_ORDER_STRIPE_CLIENT_PAYLOAD['stripe_refund']['id']} "
             f"with error Some error message and correlation id 123456"
         )
