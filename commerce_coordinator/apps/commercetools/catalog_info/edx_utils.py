@@ -80,13 +80,30 @@ def get_edx_is_sanctioned(order: CTOrder) -> bool:
     return get_edx_order_workflow_state_key(order) == TwoUKeys.SDN_SANCTIONED_ORDER_STATE
 
 
-def get_edx_refund_info(payment: CTPayment) -> decimal:
-    refund_amount = decimal.Decimal(0.00)
+def _cents_to_dollars(in_amount):
+    return in_amount.cent_amount / pow(
+        10, in_amount.fraction_digits
+        if hasattr(in_amount, 'fraction_digits')
+        else 2
+    )
+
+def get_line_item_discounted_price(order: CTOrder, return_line_item_id: str):
+    if len(order.line_items) > 1:
+        for line_item in get_edx_items(order):
+            if line_item.id == return_line_item_id:
+                return _cents_to_dollars(line_item.total_price)
+    elif len(order.line_items) == 1:
+        return _cents_to_dollars(order.total_price)
+    return decimal.Decimal(0.00)
+
+def get_edx_refund_info(payment: CTPayment, order: CTOrder, return_line_item_id: str) -> (decimal.Decimal, str):
     interaction_id = None
+
     for transaction in payment.transactions:
         if transaction.type == TransactionType.CHARGE:  # pragma no cover
-            refund_amount += decimal.Decimal(typed_money_to_string(transaction.amount, money_as_decimal_string=True))
             interaction_id = transaction.interaction_id
-            return refund_amount, interaction_id
+
+    refund_amount = get_line_item_discounted_price(order, return_line_item_id)
+    print('\n\n\n\n\n line item price = ',refund_amount, '\n\n\n\n\n')
 
     return refund_amount, interaction_id

@@ -244,6 +244,7 @@ def fulfill_order_sanctioned_message_signal_task(
 def fulfill_order_returned_signal_task(
     order_id,
     return_line_item_return_id,
+    return_line_item_id,
     message_id
 ):
     """Celery task for an order return (and refunded) message."""
@@ -309,7 +310,10 @@ def fulfill_order_returned_signal_task(
     # Return payment if payment id is set
     if psp_payment_id is not None:
         result = OrderRefundRequested.run_filter(
-            order_id=order_id, return_line_item_return_id=return_line_item_return_id, message_id=message_id
+            order_id=order_id,
+            return_line_item_return_id=return_line_item_return_id,
+            return_line_item_id=return_line_item_id,
+            message_id=message_id
         )
 
         if 'refund_response' in result and result['refund_response']:
