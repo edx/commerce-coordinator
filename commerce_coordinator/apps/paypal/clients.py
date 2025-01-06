@@ -20,7 +20,7 @@ class PayPalClient:
             ),
         )
 
-    def refund_order(self, capture_id):
+    def refund_order(self, capture_id, amount):
         """
         Capture PayPal refund.
 
@@ -34,7 +34,16 @@ class PayPalClient:
         paypal_client = self.paypal_client
         payments_controller: PaymentsController = paypal_client.payments
 
-        collect = {"capture_id": capture_id, "prefer": "return=representation"}
+        collect = {
+            "capture_id": capture_id,
+            "prefer": "return=representation",
+            "body": {
+                "amount": {
+                    "value": amount,
+                    "currency_code": "USD"
+                }
+            }
+        }
         refund_response = payments_controller.captures_refund(collect)
 
         if refund_response.body:

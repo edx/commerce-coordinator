@@ -157,3 +157,6 @@ class OrderReturnedViewMessageInputSerializer(CoordinatorSerializer):
 
     def get_return_line_item_return_id(self):
         return self.get_return_info().get('id', None)
+
+    def get_return_line_item_id(self):
+        return self.get_return_info().get('lineItemId', None)
