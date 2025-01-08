@@ -60,6 +60,8 @@ class RefundPayPalPayment(PipelineStep):
         tag = type(self).__name__
 
         if psp != EDX_PAYPAL_PAYMENT_INTERFACE_NAME or not amount_in_cents or not ct_transaction_interaction_id:
+            logger.info(f'[{tag}] capture_id or amount_in_cents not set, '
+                        f'skipping refund for order: {order_id} with psp: {psp}')
             return PipelineCommand.CONTINUE.value
 
         if has_been_refunded:

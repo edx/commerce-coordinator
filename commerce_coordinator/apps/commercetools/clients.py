@@ -531,7 +531,7 @@ class CommercetoolsAPIClient:
         try:
             logger.info(
                 f"[CommercetoolsAPIClient] - Creating refund transaction for payment with ID {payment_id} "
-                f"following successful refund {refund['id']} in PSP: {psp}"
+                f"following successful refund {refund.get('id')} in PSP: {psp}"
             )
             refund = self._preprocess_refund_object(refund, psp)
 
