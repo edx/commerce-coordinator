@@ -148,8 +148,8 @@
 | commerce\_coordinator/apps/lms/urls.py                                                 |        4 |        0 |        0 |        0 |    100% |           |
 | commerce\_coordinator/apps/lms/views.py                                                |      149 |        1 |       14 |        0 |     99% |       369 |
 | commerce\_coordinator/apps/paypal/\_\_init\_\_.py                                      |        0 |        0 |        0 |        0 |    100% |           |
-| commerce\_coordinator/apps/paypal/clients.py                                           |       18 |        9 |        2 |        0 |     45% | 16, 34-50 |
-| commerce\_coordinator/apps/paypal/pipeline.py                                          |       32 |       10 |        6 |        1 |     66% |     65-84 |
+| commerce\_coordinator/apps/paypal/clients.py                                           |       19 |        9 |        2 |        0 |     48% | 17, 40-56 |
+| commerce\_coordinator/apps/paypal/pipeline.py                                          |       33 |       10 |        6 |        1 |     67% |     67-86 |
 | commerce\_coordinator/apps/paypal/signals.py                                           |        2 |        0 |        0 |        0 |    100% |           |
 | commerce\_coordinator/apps/paypal/tests/\_\_init\_\_.py                                |        0 |        0 |        0 |        0 |    100% |           |
 | commerce\_coordinator/apps/paypal/tests/test\_pipeline.py                              |       16 |        0 |        0 |        0 |    100% |           |
@@ -194,7 +194,7 @@
 | commerce\_coordinator/apps/titan/views.py                                              |       23 |        1 |        2 |        1 |     92% |        79 |
 | commerce\_coordinator/docker\_gunicorn\_configuration.py                               |       27 |       27 |       10 |        0 |      0% |      4-57 |
 | commerce\_coordinator/urls.py                                                          |       23 |        0 |        0 |        0 |    100% |           |
-|                                                                              **TOTAL** | **7254** |  **270** |  **506** |   **33** | **95%** |           |
+|                                                                              **TOTAL** | **7256** |  **270** |  **506** |   **33** | **95%** |           |
 
 
 ## Setup coverage badge
