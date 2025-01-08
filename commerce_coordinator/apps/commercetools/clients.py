@@ -433,7 +433,8 @@ class CommercetoolsAPIClient:
             )
             return returned_order
         except CommercetoolsError as err:
-            handle_commercetools_error(err, f"Unable to create return for order {order_id}")
+            handle_commercetools_error("[CommercetoolsAPIClient.create_return_for_order]",
+                                       err, f"Unable to create return for order {order_id}")
             raise err
 
     def update_return_payment_state_after_successful_refund(
@@ -498,7 +499,8 @@ class CommercetoolsAPIClient:
             logger.info("Updated transaction with return item id")
             return updated_order
         except CommercetoolsError as err:
-            handle_commercetools_error(err, f"Unable to update ReturnPaymentState of order {order_id}")
+            handle_commercetools_error("[CommercetoolsAPIClient.update_return_payment_state_after_successful_refund]",
+                                       err, f"Unable to update ReturnPaymentState of order {order_id}")
             raise OpenEdxFilterException(str(err)) from err
 
     def _preprocess_refund_object(self, refund: Refund, psp: str) -> Refund:
@@ -560,7 +562,7 @@ class CommercetoolsAPIClient:
                 f"Unable to create refund payment transaction for payment {payment_id}, refund {refund['id']} "
                 f"with PSP: {psp}"
             )
-            handle_commercetools_error(err, context)
+            handle_commercetools_error("[CommercetoolsAPIClient.create_return_payment_transaction]", err, context)
             raise err
 
     def update_line_item_transition_state_on_fulfillment(
@@ -611,13 +613,15 @@ class CommercetoolsAPIClient:
                 return updated_fulfillment_line_item_order
             else:
                 logger.info(
-                    f"The line item {line_item_id} already has the correct state {new_state_key}. "
-                    "Not attempting to transition LineItemState"
+                    f"[CommercetoolsAPIClient] - The line item {line_item_id} "
+                    f"already has the correct state {new_state_key}. "
+                    f"Not attempting to transition LineItemState for order id {order_id}"
                 )
                 return self.get_order_by_id(order_id)
         except CommercetoolsError as err:
+            context_prefix = "[CommercetoolsAPIClient.update_line_item_state_on_fulfillment_completion]"
             # Logs & ignores version conflict errors due to duplicate Commercetools messages
-            handle_commercetools_error(err, f"Unable to update LineItemState of order {order_id}", True)
+            handle_commercetools_error(context_prefix, err, f"Unable to update LineItemState of order {order_id}")
             return None
 
     def update_line_items_transition_state(
@@ -676,6 +680,7 @@ class CommercetoolsAPIClient:
         except CommercetoolsError as err:
             # Logs & ignores version conflict errors due to duplicate Commercetools messages
             handle_commercetools_error(
+                "[CommercetoolsAPIClient.update_line_items_transition_state]",
                 err,
                 f"Failed to update LineItemStates for order ID '{order_id}'. "
                 f"Line Item IDs: {', '.join(item.id for item in line_items)}",
@@ -770,6 +775,7 @@ class CommercetoolsAPIClient:
             return True
         except CommercetoolsError as err:  # pragma no cover
             # Logs & ignores version conflict errors due to duplicate Commercetools messages
-            handle_commercetools_error(err, f"Unable to check if user {email} is eligible for a "
+            handle_commercetools_error("[CommercetoolsAPIClient.is_first_time_discount_eligible]",
+                                       err, f"Unable to check if user {email} is eligible for a "
                                             f"first time discount", True)
             return True

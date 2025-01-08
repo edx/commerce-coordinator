@@ -7,6 +7,7 @@ from datetime import datetime
 
 from celery import Task, shared_task
 from celery.utils.log import get_task_logger
+from commercetools import CommercetoolsError
 from django.contrib.auth import get_user_model
 from requests import RequestException
 
@@ -68,7 +69,7 @@ class CourseEnrollTaskAfterReturn(Task):    # pylint: disable=abstract-method
 
 @shared_task(
     bind=True,
-    autoretry_for=(RequestException,),
+    autoretry_for=(RequestException, CommercetoolsError),
     retry_kwargs={'max_retries': 5, 'countdown': 3},
     base=CourseEnrollTaskAfterReturn,
 )
@@ -95,10 +96,8 @@ def fulfill_order_placed_send_enroll_in_course_task(
     """
     Celery task for order placed fulfillment and enrollment via LMS Enrollment API.
     """
-    logger.info(
-        f'LMS fulfill_order_placed_send_enroll_in_course_task fired with {locals()},'
-    )
-
+    tag = "fulfill_order_placed_send_enroll_in_course_task"
+    logger.info(f"{tag} Starting task with details: {locals()}.")
     user = User.objects.get(lms_user_id=edx_lms_user_id)
 
     enrollment_data = {
@@ -147,6 +146,8 @@ def fulfill_order_placed_send_enroll_in_course_task(
 
     # Updating the order version and stateID after the transition to 'Fulfillment Failure'
     if self.request.retries > 0:
+        logger.warning(f"{tag} "
+                       f"Task retry count# {self.request.retries} for CT order ID {order_id}.")
         client = CommercetoolsAPIClient()
         # A retry means the current line item state on the order would be a failure state
         line_item_state_id = client.get_state_by_key(TwoUKeys.FAILURE_FULFILMENT_STATE).id
