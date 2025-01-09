@@ -35,7 +35,7 @@ class CourseEnrollTaskAfterReturn(Task):    # pylint: disable=abstract-method
 
         error_message = (
             json.loads(exc.response.text).get('message', '')
-            if isinstance(exc, RequestException) and exc.response is not None
+            if isinstance(exc, RequestException) and exc.response is not None and exc.response.text
             else str(exc)
         )
 
@@ -46,11 +46,7 @@ class CourseEnrollTaskAfterReturn(Task):    # pylint: disable=abstract-method
             f"order number: {order_number}, and course title: {course_title}"
         )
 
-        # This error is returned from LMS if the course mode is unsupported
-        # https://github.com/openedx/edx-platform/blob/master/openedx/core/djangoapps/enrollments/views.py#L870
-        course_mode_expired_error = "course mode is expired or otherwise unavailable for course run"
-
-        if course_mode_expired_error in error_message:
+        if isinstance(exc, RequestException):
             logger.info(
                 f"Sending unsupported course mode fulfillment error email "
                 f"for the user with user ID: {edx_lms_user_id}, email: {user_email}, "
