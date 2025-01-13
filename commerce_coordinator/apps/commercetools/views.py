@@ -45,6 +45,10 @@ class OrderFulfillView(SingleInvocationAPIView):
 
         message_details = OrderLineItemMessageInputSerializer(data=input_data)
         message_details.is_valid(raise_exception=True)
+        logger.info("Serialized message details: %s for order_id: %s",
+            message_details,
+            message_details.data["order_id"],
+        )
 
         order_id = message_details.data['order_id']
         line_item_state_id = message_details.data['to_state']['id']
@@ -55,7 +59,9 @@ class OrderFulfillView(SingleInvocationAPIView):
             return Response(status=status.HTTP_200_OK)
         else:
             self.mark_running(tag, order_id)
-
+        
+        logger.info("Sending fulfill_order_placed_message_signal for order_id: %s and line_item_state_id: %s",
+                    order_id, line_item_state_id)
         fulfill_order_placed_message_signal.send_robust(
             sender=self,
             order_id=order_id,
