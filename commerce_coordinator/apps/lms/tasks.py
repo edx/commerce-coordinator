@@ -35,7 +35,7 @@ class CourseEnrollTaskAfterReturn(Task):    # pylint: disable=abstract-method
 
         error_message = (
             json.loads(exc.response.text).get('message', '')
-            if isinstance(exc, RequestException) and exc.response is not None and exc.response.text
+            if isinstance(exc, RequestException) and exc.response is not None and getattr(exc.response, "text", '')
             else str(exc)
         )
 
@@ -46,7 +46,14 @@ class CourseEnrollTaskAfterReturn(Task):    # pylint: disable=abstract-method
             f"order number: {order_number}, and course title: {course_title}"
         )
 
-        if isinstance(exc, RequestException):
+        # These errors can be either returned from LMS enrollment API or can be due to connection timeouts.
+        fulfillment_error_messages = [
+            "course mode is expired or otherwise unavailable for course run",
+            "Read timed out.",
+            "Service Unavailable"
+        ]
+
+        if any(err_msg in error_message for err_msg in fulfillment_error_messages):
             logger.info(
                 f"Sending unsupported course mode fulfillment error email "
                 f"for the user with user ID: {edx_lms_user_id}, email: {user_email}, "
