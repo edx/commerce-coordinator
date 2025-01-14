@@ -45,7 +45,8 @@ class OrderFulfillView(SingleInvocationAPIView):
 
         message_details = OrderLineItemMessageInputSerializer(data=input_data)
         message_details.is_valid(raise_exception=True)
-        logger.info("Serialized message details: %s for order_id: %s",
+        logger.info(
+            "Serialized message details: %s for order_id: %s",
             message_details,
             message_details.data["order_id"],
         )
