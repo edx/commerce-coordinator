@@ -59,7 +59,7 @@ class OrderFulfillView(SingleInvocationAPIView):
             return Response(status=status.HTTP_200_OK)
         else:
             self.mark_running(tag, order_id)
-        
+
         logger.info("Sending fulfill_order_placed_message_signal for order_id: %s and line_item_state_id: %s",
                     order_id, line_item_state_id)
         fulfill_order_placed_message_signal.send_robust(
