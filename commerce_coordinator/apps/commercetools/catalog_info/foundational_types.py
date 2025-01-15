@@ -232,6 +232,22 @@ class TwoUCustomTypes:
         ]
     )
 
+    PARENT_LINE_ITEM_ID_TYPE_DRAFT = TypeDraft(
+        key=TwoUKeys.PARENT_LINE_ITEM_TYPE,
+        name=ls({'en': 'Parent Line Item ID Type'}),
+        resource_type_ids=[ResourceTypeId.LINE_ITEM],
+        
+        field_definitions=[
+            FieldDefinition(
+                type=CustomFieldStringType(),
+                name=TwoUKeys.PARENT_LINE_ITEM_ID,
+                required=False,
+                label=ls({'en': 'Parent Line Item ID'}),
+                input_hint=TypeTextInputHint.SINGLE_LINE
+            )
+        ]
+    )
+
 
 class TwoUCustomObjects:
     PAYPAL_CUSTOM_OBJECT_DRAFT = CustomObjectDraft(
