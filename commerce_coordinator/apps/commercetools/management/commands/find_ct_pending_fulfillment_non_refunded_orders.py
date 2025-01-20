@@ -1,5 +1,5 @@
 from commerce_coordinator.apps.commercetools.management.commands._ct_api_client_command import (
-    CommercetoolsAPIClientCommand,
+    CommercetoolsAPIClientCommand
 )
 from commerce_coordinator.apps.commercetools.utils import has_refund_transaction
 
