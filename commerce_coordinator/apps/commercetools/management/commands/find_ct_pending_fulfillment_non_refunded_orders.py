@@ -39,10 +39,7 @@ class Command(CommercetoolsAPIClientCommand):
                 refund_found = False
 
                 for payment_ref in payments:
-                    payment = (
-                        payment_ref.obj
-                    )  # Expand the payment reference to access the payment object
-                    refund_found = has_refund_transaction(payment)
+                    refund_found = has_refund_transaction(payment_ref.obj)
 
                     if refund_found:
                         break
