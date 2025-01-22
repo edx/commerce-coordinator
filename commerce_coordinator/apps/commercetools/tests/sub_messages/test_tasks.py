@@ -3,11 +3,9 @@ import logging
 from unittest import TestCase
 from unittest.mock import MagicMock, call, patch
 
-from commercetools.platform.models import MoneyType as CTMoneyType
 from commercetools.platform.models import Order as CTOrder
 from commercetools.platform.models import ReturnInfo as CTReturnInfo
 from commercetools.platform.models import ReturnPaymentState as CTReturnPaymentState
-from commercetools.platform.models import TypedMoney as CTTypedMoney
 from edx_django_utils.cache import TieredCache
 
 from commerce_coordinator.apps.commercetools.clients import CommercetoolsAPIClient
@@ -255,18 +253,6 @@ class OrderReturnedMessageSignalTaskTests(TestCase):
                     self.mock.update_return_payment_state_after_successful_refund
             }
         )
-        # TODO: Properly mock the Payment object.
-        payment = self.mock.get_payment_by_key.return_value
-        amount = CTTypedMoney(
-            currency_code='USD',
-            cent_amount=1000,
-            type=CTMoneyType.CENT_PRECISION,
-            fraction_digits=2,
-        )
-        for transaction in payment.transactions:
-            transaction.amount = amount
-
-        self.payment_mock = payment
 
     def tearDown(self):
         MonkeyPatch.unmonkey(CommercetoolsAPIClient)
@@ -330,12 +316,12 @@ class OrderReturnedMessageSignalTaskTests(TestCase):
         mock_values.customer_mock.assert_called_once_with(mock_values.customer_id)
         _stripe_api_mock.return_value.refund_payment_intent.assert_called_once()
 
-    @patch('commerce_coordinator.apps.commercetools.sub_messages.tasks.get_edx_payment_intent_id')
+    @patch('commerce_coordinator.apps.commercetools.sub_messages.tasks.get_edx_psp_payment_id')
     @patch('commerce_coordinator.apps.commercetools.sub_messages.tasks.OrderRefundRequested.run_filter')
     def test_refund_already_charged(
         self,
         _return_filter_mock: MagicMock,
-        _mock_payment_intent: MagicMock,
+        _mock_psp_payment_id: MagicMock,
     ):
         """
         Check calling uut with mock_parameters yields call to client with
@@ -344,6 +330,6 @@ class OrderReturnedMessageSignalTaskTests(TestCase):
         mock_values = self.mock
         mock_values.order_mock.return_value.return_info = []
         _return_filter_mock.return_value = {'refund_response': 'charge_already_refunded'}
-        _mock_payment_intent.return_value = 'mock_payment_intent_id'
+        _mock_psp_payment_id.return_value = 'mock_payment_intent_id'
 
         self.get_uut()(*self.unpack_for_uut(self.mock.example_payload))

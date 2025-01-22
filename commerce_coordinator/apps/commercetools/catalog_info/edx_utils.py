@@ -56,9 +56,11 @@ def get_edx_successful_payment_info(order: CTOrder):
     return None, None
 
 
-# TODO update function and its return value name
-# the return value could be either stripe payment intent id or PayPal order ID
-def get_edx_payment_intent_id(order: CTOrder) -> Union[str, None]:
+def get_edx_psp_payment_id(order: CTOrder) -> Union[str, None]:
+    """
+    Retrieve the payment service provider (PSP) payment ID from a given
+    order which could be either a Stripe payment intent ID or a PayPal order ID.
+    """
     pmt, _ = get_edx_successful_payment_info(order)
     if pmt:
         return pmt.interface_id
