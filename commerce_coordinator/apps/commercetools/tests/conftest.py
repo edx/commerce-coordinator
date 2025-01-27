@@ -14,6 +14,7 @@ from commercetools.platform.models import Customer as CTCustomer
 from commercetools.platform.models import CustomFields as CTCustomFields
 from commercetools.platform.models import FieldContainer as CTFieldContainer
 from commercetools.platform.models import LineItemReturnItem as CTLineItemReturnItem
+from commercetools.platform.models import MoneyType as CTMoneyType
 from commercetools.platform.models import Order as CTOrder
 from commercetools.platform.models import Payment as CTPayment
 from commercetools.platform.models import PaymentState
@@ -22,6 +23,7 @@ from commercetools.platform.models import ProductProjectionPagedSearchResponse a
 from commercetools.platform.models import ReturnPaymentState, ReturnShipmentState
 from commercetools.platform.models import Transaction as CTTransaction
 from commercetools.platform.models import TransactionState, TransactionType
+from commercetools.platform.models import TypedMoney as CTTypedMoney
 from commercetools.platform.models import TypeReference as CTTypeReference
 from commercetools.platform.models.state import State as CTLineItemState
 from commercetools.platform.models.state import StateTypeEnum as CTStateType
@@ -170,7 +172,12 @@ def gen_payment():
         amount_planned=4900,
         payment_method_info={},
         payment_status=PaymentState.PAID,
-        transactions=[gen_transaction(TransactionType.REFUND, 4900)],
+        transactions=[gen_transaction(TransactionType.REFUND, CTTypedMoney(
+            currency_code='USD',
+            cent_amount=1000,
+            type=CTMoneyType.CENT_PRECISION,
+            fraction_digits=2,
+        ))],
         interface_interactions=[]
     )
 
