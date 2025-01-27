@@ -269,7 +269,8 @@ def fulfill_order_returned_signal_task(
         logger.info(f'[CT-{tag}] order {order_id} is not an edX order, message id: {message_id}')
         return True
 
-    # psp_payment_id will be payment intent id for stripe and paypal order id for paypal
+    # Retrieve the payment service provider (PSP) payment ID from an order.
+    # Either Stripe Payment Intent ID Or PayPal Order ID
     psp_payment_id = get_edx_psp_payment_id(order)
     lms_user_name = get_edx_lms_user_name(customer)
     lms_user_id = get_edx_lms_user_id(customer)

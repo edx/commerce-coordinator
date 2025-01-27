@@ -58,8 +58,10 @@ def get_edx_successful_payment_info(order: CTOrder):
 
 def get_edx_psp_payment_id(order: CTOrder) -> Union[str, None]:
     """
-    Retrieve the payment service provider (PSP) payment ID from a given
-    order which could be either a Stripe payment intent ID or a PayPal order ID.
+    Retrieve the payment service provider (PSP) payment ID from an order.
+    Currently supports:
+        - Stripe: Payment Intent ID ("stripe_payment_intent_id")
+        - PayPal: Order ID ("paypal_order_id")
     """
     pmt, _ = get_edx_successful_payment_info(order)
     if pmt:
