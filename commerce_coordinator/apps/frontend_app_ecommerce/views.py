@@ -93,7 +93,7 @@ class UserOrdersView(APIView):
             raise PermissionDenied(detail="Could not detect username.")
         if not request.user.lms_user_id:  # pragma: no cover
             raise PermissionDenied(detail="Could not detect LMS user id.")
-        
+
         logger.info(
             "[UserOrdersView] Received request for retrieving order history for user: %s",
             request.user.lms_user_id,
