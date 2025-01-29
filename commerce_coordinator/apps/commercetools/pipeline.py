@@ -18,12 +18,13 @@ from commerce_coordinator.apps.commercetools.catalog_info.constants import (
 )
 from commerce_coordinator.apps.commercetools.catalog_info.edx_utils import (
     get_edx_refund_info,
-    get_edx_successful_payment_info
+    get_edx_successful_payment_info, get_edx_items
 )
 from commerce_coordinator.apps.commercetools.clients import CommercetoolsAPIClient
 from commerce_coordinator.apps.commercetools.constants import COMMERCETOOLS_ORDER_MANAGEMENT_SYSTEM
 from commerce_coordinator.apps.commercetools.data import order_from_commercetools
-from commerce_coordinator.apps.commercetools.utils import create_retired_fields, has_refund_transaction
+from commerce_coordinator.apps.commercetools.utils import create_retired_fields, has_refund_transaction, \
+    has_full_refund_transaction
 from commerce_coordinator.apps.core.constants import PipelineCommand
 from commerce_coordinator.apps.core.exceptions import InvalidFilterType
 from commerce_coordinator.apps.rollout.utils import (
@@ -132,7 +133,12 @@ class FetchOrderDetailsByOrderNumber(PipelineStep):
 class FetchOrderDetailsByOrderID(PipelineStep):
     """ Fetch the order details and if we can, set the PaymentIntent """
 
-    def run_filter(self, active_order_management_system, order_id, **kwargs):  # pylint: disable=arguments-differ
+    def run_filter(self,
+       active_order_management_system,
+       order_id,
+       return_line_item_id,
+       **kwargs
+   ):  # pylint: disable=arguments-differ
         """
         Execute a filter with the signature specified.
         Arguments:
@@ -169,10 +175,10 @@ class FetchOrderDetailsByOrderID(PipelineStep):
 
             if payment:
                 ct_payment = ct_api_client.get_payment_by_key(payment.interface_id)
-                refund_amount, ct_transaction_interaction_id = get_edx_refund_info(ct_payment)
+                refund_amount, ct_transaction_interaction_id = get_edx_refund_info(ct_payment, ct_order, return_line_item_id)
                 ret_val['amount_in_cents'] = refund_amount
                 ret_val['ct_transaction_interaction_id'] = ct_transaction_interaction_id
-                ret_val['has_been_refunded'] = has_refund_transaction(ct_payment)
+                ret_val['has_been_refunded'] = is_commercetools_line_item_already_refunded(ct_order, return_line_item_id) or has_full_refund_transaction(ct_payment)
                 ret_val['payment_data'] = ct_payment
             else:
                 ret_val['amount_in_cents'] = decimal.Decimal(0.00)
