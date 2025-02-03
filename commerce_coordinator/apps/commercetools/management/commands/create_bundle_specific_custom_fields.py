@@ -10,7 +10,7 @@ from commerce_coordinator.apps.commercetools.management.commands._ct_api_client_
 
 
 class Command(CommercetoolsAPIClientCommand):
-    help = 'Create custom fields for Program purchase'
+    help = 'Create custom fields for Bundle purchase'
 
     def handle_item_creation(self, custom_type):
         try:
@@ -28,6 +28,7 @@ class Command(CommercetoolsAPIClientCommand):
                     ret = self.ct_api_client.base_client.types.update_by_id(
                         data.get('id'), data.get('version'), actions=[update_action]
                     )
+                    print(f"Created field: {field.name} for custom type: {type_key} {json.dumps(ret.serialize())}")
 
         except CommercetoolsError as ex:
             ret = self.ct_api_client.base_client.types.create(custom_type)
@@ -35,5 +36,5 @@ class Command(CommercetoolsAPIClientCommand):
                 json.dumps(ret.serialize())}")
 
     def handle(self, *args, **options):
-        self.handle_item_creation(TwoUCustomTypes.PROGRAM_LINE_ITEM_TYPE_DRAFT)
+        self.handle_item_creation(TwoUCustomTypes.BUNDLE_LINE_ITEM_TYPE_DRAFT)
         self.handle_item_creation(TwoUCustomTypes.RETURN_ITEM_TYPE_DRAFT)

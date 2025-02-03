@@ -45,14 +45,14 @@ class TwoUKeys:
     # Transaction Custom Fields
     RETURN_ITEM_ID = 'returnItemId'
 
-    # Program specifiic Line Item Custom Types
-    PROGRAM_LINE_ITEMS_TYPE = 'programLineItemsCustomType'
+    # Bundle specifiic Line Item Custom Types
+    LINE_ITEM_BUNDLE_CUSTOM_TYPE = 'bundleLineItemsCustomType'
 
-    # ProgramID to store parent program
-    PROGRAM_ID_LINE_ITEM = 'programID'
+    # BundleId custom field to store parent Bundle
+    LINE_ITEM_BUNDLE_ID = 'bundleId'
 
-    # Entitlement ID to store with line item
-    ENTITLEMENT_ID_LINE_ITEM = 'edxLmsEntitlementId'
+    # Entitlement ID custom field to store with line item
+    LINE_ITEM_LMS_ENTITLEMENT_ID = 'edxLmsEntitlementId'
 
 
 class EdXFieldNames:

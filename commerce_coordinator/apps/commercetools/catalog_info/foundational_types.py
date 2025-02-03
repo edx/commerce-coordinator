@@ -209,7 +209,7 @@ class TwoUCustomTypes:
             ),
             FieldDefinition(
                 type=CustomFieldStringType(),
-                name=TwoUKeys.ENTITLEMENT_ID_LINE_ITEM,
+                name=TwoUKeys.LINE_ITEM_LMS_ENTITLEMENT_ID,
                 required=False,
                 label=ls({'en': 'edX LMS Entitlement ID'}),
                 input_hint=TypeTextInputHint.SINGLE_LINE
@@ -239,22 +239,22 @@ class TwoUCustomTypes:
         ]
     )
 
-    PROGRAM_LINE_ITEM_TYPE_DRAFT = TypeDraft(
-        key=TwoUKeys.PROGRAM_LINE_ITEMS_TYPE,
-        name=ls({'en': 'Program Specifiic Line Item Custom Types'}),
+    BUNDLE_LINE_ITEM_TYPE_DRAFT = TypeDraft(
+        key=TwoUKeys.LINE_ITEM_BUNDLE_CUSTOM_TYPE,
+        name=ls({'en': 'Bundle Specifiic Line Item Custom Types'}),
         resource_type_ids=[ResourceTypeId.LINE_ITEM],
 
         field_definitions=[
             FieldDefinition(
                 type=CustomFieldStringType(),
-                name=TwoUKeys.PROGRAM_ID_LINE_ITEM,
+                name=TwoUKeys.LINE_ITEM_BUNDLE_ID,
                 required=False,
-                label=ls({'en': 'Program ID'}),
+                label=ls({'en': 'Bundle ID'}),
                 input_hint=TypeTextInputHint.SINGLE_LINE
             ),
             FieldDefinition(
                 type=CustomFieldStringType(),
-                name=TwoUKeys.ENTITLEMENT_ID_LINE_ITEM,
+                name=TwoUKeys.LINE_ITEM_LMS_ENTITLEMENT_ID,
                 required=False,
                 label=ls({'en': 'edX LMS Entitlement ID'}),
                 input_hint=TypeTextInputHint.SINGLE_LINE
