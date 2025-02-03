@@ -206,6 +206,13 @@ class TwoUCustomTypes:
                 required=False,
                 label=ls({'en': 'Transaction ID'}),
                 input_hint=TypeTextInputHint.SINGLE_LINE
+            ),
+            FieldDefinition(
+                type=CustomFieldStringType(),
+                name=TwoUKeys.ENTITLEMENT_ID_LINE_ITEM,
+                required=False,
+                label=ls({'en': 'edX LMS Entitlement ID'}),
+                input_hint=TypeTextInputHint.SINGLE_LINE
             )
        ]
     )
@@ -232,17 +239,24 @@ class TwoUCustomTypes:
         ]
     )
 
-    PARENT_LINE_ITEM_ID_TYPE_DRAFT = TypeDraft(
-        key=TwoUKeys.PARENT_LINE_ITEM_TYPE,
-        name=ls({'en': 'Parent Line Item ID Type'}),
+    PROGRAM_LINE_ITEM_TYPE_DRAFT = TypeDraft(
+        key=TwoUKeys.PROGRAM_LINE_ITEMS_TYPE,
+        name=ls({'en': 'Program Specifiic Line Item Custom Types'}),
         resource_type_ids=[ResourceTypeId.LINE_ITEM],
         
         field_definitions=[
             FieldDefinition(
                 type=CustomFieldStringType(),
-                name=TwoUKeys.PARENT_LINE_ITEM_ID,
+                name=TwoUKeys.PROGRAM_ID_LINE_ITEM,
                 required=False,
-                label=ls({'en': 'Parent Line Item ID'}),
+                label=ls({'en': 'Program ID'}),
+                input_hint=TypeTextInputHint.SINGLE_LINE
+            ),
+            FieldDefinition(
+                type=CustomFieldStringType(),
+                name=TwoUKeys.ENTITLEMENT_ID_LINE_ITEM,
+                required=False,
+                label=ls({'en': 'edX LMS Entitlement ID'}),
                 input_hint=TypeTextInputHint.SINGLE_LINE
             )
         ]
