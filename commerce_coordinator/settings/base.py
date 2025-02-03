@@ -441,6 +441,7 @@ PAYMENT_PROCESSOR_CONFIG = {
             'paypal_webhook_id': PAYPAL_WEBHOOK_ID,
             'client_id': '',
             'client_secret': '',
+            'env': 'sandbox',
         },
     },
 }

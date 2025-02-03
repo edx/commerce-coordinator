@@ -7,6 +7,7 @@ from datetime import datetime
 
 from celery import Task, shared_task
 from celery.utils.log import get_task_logger
+from commercetools import CommercetoolsError
 from django.contrib.auth import get_user_model
 from requests import RequestException
 
@@ -34,7 +35,7 @@ class CourseEnrollTaskAfterReturn(Task):    # pylint: disable=abstract-method
 
         error_message = (
             json.loads(exc.response.text).get('message', '')
-            if isinstance(exc, RequestException) and exc.response is not None
+            if isinstance(exc, RequestException) and exc.response is not None and getattr(exc.response, "text", '')
             else str(exc)
         )
 
@@ -45,11 +46,14 @@ class CourseEnrollTaskAfterReturn(Task):    # pylint: disable=abstract-method
             f"order number: {order_number}, and course title: {course_title}"
         )
 
-        # This error is returned from LMS if the course mode is unsupported
-        # https://github.com/openedx/edx-platform/blob/master/openedx/core/djangoapps/enrollments/views.py#L870
-        course_mode_expired_error = "course mode is expired or otherwise unavailable for course run"
+        # These errors can be either returned from LMS enrollment API or can be due to connection timeouts.
+        fulfillment_error_messages = [
+            "course mode is expired or otherwise unavailable for course run",
+            "Read timed out.",
+            "Service Unavailable"
+        ]
 
-        if course_mode_expired_error in error_message:
+        if any(err_msg in error_message for err_msg in fulfillment_error_messages):
             logger.info(
                 f"Sending unsupported course mode fulfillment error email "
                 f"for the user with user ID: {edx_lms_user_id}, email: {user_email}, "
@@ -68,7 +72,7 @@ class CourseEnrollTaskAfterReturn(Task):    # pylint: disable=abstract-method
 
 @shared_task(
     bind=True,
-    autoretry_for=(RequestException,),
+    autoretry_for=(RequestException, CommercetoolsError),
     retry_kwargs={'max_retries': 5, 'countdown': 3},
     base=CourseEnrollTaskAfterReturn,
 )
@@ -95,10 +99,8 @@ def fulfill_order_placed_send_enroll_in_course_task(
     """
     Celery task for order placed fulfillment and enrollment via LMS Enrollment API.
     """
-    logger.info(
-        f'LMS fulfill_order_placed_send_enroll_in_course_task fired with {locals()},'
-    )
-
+    tag = "fulfill_order_placed_send_enroll_in_course_task"
+    logger.info(f"{tag} Starting task with details: {locals()}.")
     user = User.objects.get(lms_user_id=edx_lms_user_id)
 
     enrollment_data = {
@@ -147,6 +149,8 @@ def fulfill_order_placed_send_enroll_in_course_task(
 
     # Updating the order version and stateID after the transition to 'Fulfillment Failure'
     if self.request.retries > 0:
+        logger.warning(f"{tag} "
+                       f"Task retry count# {self.request.retries} for CT order ID {order_id}.")
         client = CommercetoolsAPIClient()
         # A retry means the current line item state on the order would be a failure state
         line_item_state_id = client.get_state_by_key(TwoUKeys.FAILURE_FULFILMENT_STATE).id

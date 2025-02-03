@@ -343,7 +343,7 @@ class RetirementView(APIView):
 class FirstTimeDiscountEligibleView(APIView):
     """View to check if a user is eligible for a first time discount"""
     permission_classes = [IsAdminUser]
-    throttle_classes = (UserRateThrottle,)
+    throttle_classes = []
 
     def post(self, request):
         """Return True if user is eligible for a first time discount."""

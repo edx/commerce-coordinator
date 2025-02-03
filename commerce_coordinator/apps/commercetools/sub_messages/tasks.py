@@ -16,8 +16,8 @@ from commerce_coordinator.apps.commercetools.catalog_info.edx_utils import (
     get_edx_lms_user_id,
     get_edx_lms_user_name,
     get_edx_order_workflow_state_key,
-    get_edx_payment_intent_id,
     get_edx_product_course_run_key,
+    get_edx_psp_payment_id,
     is_edx_lms_order
 )
 from commerce_coordinator.apps.commercetools.catalog_info.utils import (
@@ -78,11 +78,11 @@ def fulfill_order_placed_message_signal_task(
         return False
 
     if not (customer and order and is_edx_lms_order(order)):
-        logger.debug(f'[CT-{tag}] order {order_id} is not an edX order, message id: {message_id}')
+        logger.info(f'[CT-{tag}] order {order_id} is not an edX order, message id: {message_id}')
 
         return True
 
-    logger.debug(f'[CT-{tag}] processing edX order {order_id}, message id: {message_id}')
+    logger.info(f'[CT-{tag}] processing edX order {order_id}, message id: {message_id}')
 
     lms_user_id = get_edx_lms_user_id(customer)
 
@@ -266,33 +266,35 @@ def fulfill_order_returned_signal_task(
         return False
 
     if not (customer and order and is_edx_lms_order(order)):  # pragma no cover
-        logger.debug(f'[CT-{tag}] order {order_id} is not an edX order, message id: {message_id}')
+        logger.info(f'[CT-{tag}] order {order_id} is not an edX order, message id: {message_id}')
         return True
 
-    payment_intent_id = get_edx_payment_intent_id(order)
+    # Retrieve the payment service provider (PSP) payment ID from an order.
+    # Either Stripe Payment Intent ID Or PayPal Order ID
+    psp_payment_id = get_edx_psp_payment_id(order)
     lms_user_name = get_edx_lms_user_name(customer)
     lms_user_id = get_edx_lms_user_id(customer)
 
-    logger.info(f'[CT-{tag}] calling PSP to refund payment "{payment_intent_id}", message id: {message_id}')
+    logger.info(f'[CT-{tag}] calling PSP to refund payment "{psp_payment_id}", message id: {message_id}')
 
     # Return payment if payment id is set
-    if payment_intent_id is not None:
+    if psp_payment_id is not None:
         result = OrderRefundRequested.run_filter(
             order_id=order_id, return_line_item_return_id=return_line_item_return_id, message_id=message_id
         )
 
         if 'refund_response' in result and result['refund_response']:
             if result['refund_response'] == 'charge_already_refunded':
-                logger.info(f'[CT-{tag}] payment intent {payment_intent_id} already has refunded transaction, '
+                logger.info(f'[CT-{tag}] payment {psp_payment_id} already has refunded transaction, '
                             f'sending Slack notification, message id: {message_id}')
             else:
-                logger.debug(f'[CT-{tag}] payment intent {payment_intent_id} refunded. message id: {message_id}')
+                logger.info(f'[CT-{tag}] payment {psp_payment_id} refunded for message id: {message_id}')
                 segment_event_properties = _prepare_segment_event_properties(order, return_line_item_return_id)
 
                 for line_item in get_edx_items(order):
                     course_run = get_edx_product_course_run_key(line_item)
                     # TODO: Remove LMS Enrollment
-                    logger.debug(
+                    logger.info(
                         f'[CT-{tag}] calling lms to unenroll user {lms_user_name} in {course_run}'
                         f', message id: {message_id}'
                     )
@@ -321,7 +323,7 @@ def fulfill_order_returned_signal_task(
                         properties=segment_event_properties
                     )
         else:  # pragma no cover
-            logger.info(f'[CT-{tag}] payment intent {payment_intent_id} not refunded, '
+            logger.info(f'[CT-{tag}] payment {psp_payment_id} not refunded, '
                         f'sending Slack notification, message id: {message_id}')
 
     logger.info(f'[CT-{tag}] Finished return for order: {order_id}, line item: {return_line_item_return_id}, '

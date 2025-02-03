@@ -61,9 +61,8 @@ class TitanAPIClient(Client):
                 headers=headers,
             )
             response.raise_for_status()
-            self.log_request_response(logger, response)
         except RequestException as exc:
-            self.log_request_exception(logger, exc)
+            self.log_request_exception("[TitanAPIClient]", logger, exc)
             raise
         return response.json()
 
