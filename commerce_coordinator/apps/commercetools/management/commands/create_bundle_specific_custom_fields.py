@@ -36,5 +36,5 @@ class Command(CommercetoolsAPIClientCommand):
                 json.dumps(ret.serialize())}")
 
     def handle(self, *args, **options):
-        self.handle_item_creation(TwoUCustomTypes.BUNDLE_LINE_ITEM_TYPE_DRAFT)
+        self.handle_item_creation(TwoUCustomTypes.LINE_ITEMS_BUNDLE_TYPE_DRAFT)
         self.handle_item_creation(TwoUCustomTypes.RETURN_ITEM_TYPE_DRAFT)

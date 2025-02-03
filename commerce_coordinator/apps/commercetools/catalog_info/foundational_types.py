@@ -239,9 +239,9 @@ class TwoUCustomTypes:
         ]
     )
 
-    BUNDLE_LINE_ITEM_TYPE_DRAFT = TypeDraft(
+    LINE_ITEMS_BUNDLE_TYPE_DRAFT = TypeDraft(
         key=TwoUKeys.LINE_ITEM_BUNDLE_CUSTOM_TYPE,
-        name=ls({'en': 'Bundle Specifiic Line Item Custom Types'}),
+        name=ls({'en': "Line Item's Bundle Custom Type"}),
         resource_type_ids=[ResourceTypeId.LINE_ITEM],
 
         field_definitions=[

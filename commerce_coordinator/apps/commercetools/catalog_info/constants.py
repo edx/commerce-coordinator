@@ -46,13 +46,13 @@ class TwoUKeys:
     RETURN_ITEM_ID = 'returnItemId'
 
     # Bundle specifiic Line Item Custom Types
-    LINE_ITEM_BUNDLE_CUSTOM_TYPE = 'bundleLineItemsCustomType'
+    LINE_ITEM_BUNDLE_CUSTOM_TYPE = 'lineItemsBundleCustomType'
 
     # BundleId custom field to store parent Bundle
     LINE_ITEM_BUNDLE_ID = 'bundleId'
 
     # Entitlement ID custom field to store with line item
-    LINE_ITEM_LMS_ENTITLEMENT_ID = 'edxLmsEntitlementId'
+    LINE_ITEM_LMS_ENTITLEMENT_ID = 'edxLMSEntitlementId'
 
 
 class EdXFieldNames:
