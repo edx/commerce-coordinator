@@ -17,7 +17,8 @@ class Command(CommercetoolsAPIClientCommand):
             type_key = custom_type.key
             ret = self.ct_api_client.base_client.types.get_by_key(type_key)
             data = ret.serialize()
-            print(f"{custom_type.resource_type_ids[0]} custom type with field {type_key} already exists: \n{json.dumps(data)}")
+            print(f"{custom_type.resource_type_ids[0]} custom type with field {type_key} already exists: \n{
+                json.dumps(data)}")
 
             existing_fields = [field.get('name') for field in data.get('fieldDefinitions', [])]
 
@@ -30,7 +31,8 @@ class Command(CommercetoolsAPIClientCommand):
 
         except CommercetoolsError as ex:
             ret = self.ct_api_client.base_client.types.create(custom_type)
-            print(f"Created {custom_type.resource_type_ids[0]} custom type with field {type_key}: {json.dumps(ret.serialize())}")
+            print(f"Created {custom_type.resource_type_ids[0]} custom type with field {type_key}: {
+                json.dumps(ret.serialize())}")
 
     def handle(self, *args, **options):
         self.handle_item_creation(TwoUCustomTypes.PROGRAM_LINE_ITEM_TYPE_DRAFT)

@@ -243,7 +243,7 @@ class TwoUCustomTypes:
         key=TwoUKeys.PROGRAM_LINE_ITEMS_TYPE,
         name=ls({'en': 'Program Specifiic Line Item Custom Types'}),
         resource_type_ids=[ResourceTypeId.LINE_ITEM],
-        
+
         field_definitions=[
             FieldDefinition(
                 type=CustomFieldStringType(),

@@ -47,12 +47,13 @@ class TwoUKeys:
 
     # Program specifiic Line Item Custom Types
     PROGRAM_LINE_ITEMS_TYPE = 'programLineItemsCustomType'
-    
+
     # ProgramID to store parent program
     PROGRAM_ID_LINE_ITEM = 'programID'
 
     # Entitlement ID to store with line item
     ENTITLEMENT_ID_LINE_ITEM = 'edxLmsEntitlementId'
+
 
 class EdXFieldNames:
     """edX Specific field names for use in Commercetools"""
