@@ -8,7 +8,7 @@ from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
-from .filters import ActiveOrderRequested, PaymentProcessingRequested, PaymentRequested
+from .filters import ActiveOrderRequested, PaymentProcessingRequested
 from .serializers import (
     GetActiveOrderInputSerializer,
     PaymentProcessInputSerializer
