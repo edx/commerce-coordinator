@@ -54,7 +54,6 @@ PROJECT_APPS = (
     'commerce_coordinator.apps.lms.apps.LmsConfig',
     'commerce_coordinator.apps.stripe.apps.StripeConfig',
     'commerce_coordinator.apps.paypal.apps.PayPalConfig',
-    'commerce_coordinator.apps.titan.apps.TitanConfig',
     'commerce_coordinator.apps.commercetools',
 )
 

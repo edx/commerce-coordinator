@@ -74,8 +74,6 @@ urlpatterns = oauth2_urlpatterns + [
 
     path('favicon.ico', RedirectView.as_view(url=FAVICON_URL), name='favicon'),
 
-    # To Disable Soon
-    re_path(r'^titan/', include(titan_urls), name='titan'),
     # DEMO: Currently this is only test code, we may want to decouple LMS code here at some point...
     re_path(r'^demo_lms/', include(demo_lms_urls))
 ]

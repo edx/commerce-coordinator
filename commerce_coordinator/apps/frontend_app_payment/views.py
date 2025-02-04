@@ -97,30 +97,6 @@ class PaymentGetView(APIView):
         return Response(output_serializer.data)
 
 
-class DraftPaymentCreateView(APIView):
-    """Create Draft Payment View."""
-    authentication_classes = (JwtAuthentication,)
-    permission_classes = (IsAuthenticated,)
-
-    def get(self, request):
-        """Gets initial information required to collect payment details on a basket."""
-        params = {
-            'edx_lms_user_id': request.user.lms_user_id,
-        }
-        input_serializer = DraftPaymentCreateViewInputSerializer(data=params)
-        input_serializer.is_valid(raise_exception=True)
-        params = input_serializer.data
-        try:
-            payment_details = DraftPaymentRequested.run_filter(**params)
-            if payment_details and payment_details['capture_context']['state'] == PaymentState.COMPLETED.value:
-                payment_details['capture_context'] = {}
-        except NoActiveOrder:
-            logger.debug('[DraftPaymentCreateView] No active order found for user: %s, '
-                         'returning empty caputre_context', request.user.lms_user_id)
-            payment_details = {'capture_context': {}}
-        return Response(payment_details)
-
-
 class GetActiveOrderView(APIView):
     """Get Active Order View"""
     authentication_classes = (JwtAuthentication,)
