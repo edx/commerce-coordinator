@@ -19,7 +19,10 @@
       },
       "productType": {
         "typeId": "product-type",
-        "id": "b2aa56d2-7b98-4d51-9d70-81d675a45686"
+        "id": "b2aa56d2-7b98-4d51-9d70-81d675a45686",
+        "obj": {
+          "name": "Self Paced Course"
+        }
       },
       "variant": {
         "id": 1,

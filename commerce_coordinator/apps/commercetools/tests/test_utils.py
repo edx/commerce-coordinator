@@ -193,7 +193,7 @@ class TestBrazeHelpers(unittest.TestCase):
             'price': '$49.00',
             'start_date': '2021-04-19',
             'title': 'Injury Prevention for Children & Teens',
-            'type': 'course'
+            'type': 'Self Paced Course'
         }
         assert result == expected
 

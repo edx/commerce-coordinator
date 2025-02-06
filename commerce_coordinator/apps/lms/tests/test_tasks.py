@@ -52,7 +52,8 @@ class FulfillOrderPlacedSendEnrollInCourseTaskTest(TestCase):
             values['message_id'],
             values['user_first_name'],
             values['user_email'],
-            values['course_title']
+            values['course_title'],
+            values['product_type']
         )
 
     def setUp(self):
@@ -167,7 +168,7 @@ class FulfillOrderPlacedSendEnrollInCourseTaskTest(TestCase):
             EXAMPLE_FULFILLMENT_SIGNAL_PAYLOAD['user_email'],
             {
                 'order_number': EXAMPLE_FULFILLMENT_SIGNAL_PAYLOAD['order_number'],
-                'product_type': 'course',
+                'product_type': EXAMPLE_FULFILLMENT_SIGNAL_PAYLOAD['product_type'],
                 'product_name': EXAMPLE_FULFILLMENT_SIGNAL_PAYLOAD['course_title'],
                 'first_name': EXAMPLE_FULFILLMENT_SIGNAL_PAYLOAD['user_first_name'],
             }

@@ -51,7 +51,7 @@ def convert_line_item(li: CTLineItem, payment_state: str) -> Line:
         quantity=li.quantity,
         course_organization=get_line_item_attribute(li, 'brand-text'),
         description=un_ls(li.name),
-        status=payment_state, # The value for payment state is Paid instead of PAID
+        status=payment_state,  # The value for payment state is Paid instead of PAID
         line_price_excl_tax=price_to_string(li.price, money_as_decimal_string=SEND_MONEY_AS_DECIMAL_STRING),
         unit_price_excl_tax=price_to_string(li.price, money_as_decimal_string=SEND_MONEY_AS_DECIMAL_STRING)
     )

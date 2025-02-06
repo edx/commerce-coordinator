@@ -39,6 +39,7 @@ class FulfillOrderPlacedSendEnrollInCourseTest(CoordinatorSignalReceiverTestCase
         'user_first_name': 14,
         'user_email': 15,
         'course_title': 16,
+        'product_type': 'Self Paced Course'
     }
 
     def test_correct_arguments_passed(self, mock_task):

@@ -14,7 +14,6 @@ from commerce_coordinator.apps.stripe.constants import Currency
 from commerce_coordinator.apps.stripe.exceptions import (
     StripeIntentCreateAPIError,
     StripeIntentRefundAPIError,
-    StripeIntentRetrieveAPIError,
     StripeIntentUpdateAPIError
 )
 from commerce_coordinator.apps.stripe.filters import PaymentDraftCreated
