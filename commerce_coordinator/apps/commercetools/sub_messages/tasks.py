@@ -309,7 +309,7 @@ def fulfill_order_returned_signal_task(
                         'image_url': line_item.variant.images[0].url if line_item.variant.images else None,
                         'brand': get_line_item_attribute(line_item, 'brand-text'),
                         'url': get_line_item_attribute(line_item, 'url-course'),
-                        'lob': 'edX',  # TODO: Decision was made to hardcode this value for phase 1.
+                        'lob': get_line_item_attribute(line_item, 'lob') or 'edx',
                         'product_type': line_item.product_type.obj.name
                         if hasattr(line_item.product_type.obj, 'name') else None
                     }
