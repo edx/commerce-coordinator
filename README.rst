@@ -18,11 +18,6 @@ The core of the Coordinator will allow commerce workflows to be tailored by comb
 
 For more details, please see the `architectural decision docs <docs/decisions>`_
 
-Documentation
-*************
-
-(TODO: `Set up documentation <https://openedx.atlassian.net/wiki/spaces/DOC/pages/21627535/Publish+Documentation+on+Read+the+Docs>`_)
-
 Development Workflow
 ********************
 
