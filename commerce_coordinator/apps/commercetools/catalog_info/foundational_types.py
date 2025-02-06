@@ -206,6 +206,13 @@ class TwoUCustomTypes:
                 required=False,
                 label=ls({'en': 'Transaction ID'}),
                 input_hint=TypeTextInputHint.SINGLE_LINE
+            ),
+            FieldDefinition(
+                type=CustomFieldStringType(),
+                name=TwoUKeys.LINE_ITEM_LMS_ENTITLEMENT_ID,
+                required=False,
+                label=ls({'en': 'edX LMS Entitlement ID'}),
+                input_hint=TypeTextInputHint.SINGLE_LINE
             )
        ]
     )
@@ -227,6 +234,29 @@ class TwoUCustomTypes:
                 name=TwoUKeys.RETURN_ITEM_ID,
                 required=False,
                 label=ls({'en': 'Return Item ID'}),
+                input_hint=TypeTextInputHint.SINGLE_LINE
+            )
+        ]
+    )
+
+    LINE_ITEMS_BUNDLE_TYPE_DRAFT = TypeDraft(
+        key=TwoUKeys.LINE_ITEM_BUNDLE_CUSTOM_TYPE,
+        name=ls({'en': "Line Item's Bundle Custom Type"}),
+        resource_type_ids=[ResourceTypeId.LINE_ITEM],
+
+        field_definitions=[
+            FieldDefinition(
+                type=CustomFieldStringType(),
+                name=TwoUKeys.LINE_ITEM_BUNDLE_ID,
+                required=False,
+                label=ls({'en': 'Bundle ID'}),
+                input_hint=TypeTextInputHint.SINGLE_LINE
+            ),
+            FieldDefinition(
+                type=CustomFieldStringType(),
+                name=TwoUKeys.LINE_ITEM_LMS_ENTITLEMENT_ID,
+                required=False,
+                label=ls({'en': 'edX LMS Entitlement ID'}),
                 input_hint=TypeTextInputHint.SINGLE_LINE
             )
         ]
