@@ -9,9 +9,7 @@ from rest_framework.response import Response
 from rest_framework.views import APIView
 
 from .filters import PaymentProcessingRequested
-from .serializers import (
-    PaymentProcessInputSerializer
-)
+from .serializers import PaymentProcessInputSerializer
 
 logger = logging.getLogger(__name__)
 
