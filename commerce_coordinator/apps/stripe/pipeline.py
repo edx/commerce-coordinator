@@ -70,45 +70,6 @@ class CreateOrGetStripeDraftPayment(PipelineStep):
         }
 
 
-class GetStripeDraftPayment(PipelineStep):
-    """
-    Retrieve a PaymentIntent from Stripe.
-    """
-
-    def run_filter(self, **kwargs):
-        """
-        Executes a filter with the signature specified.
-
-        Args:
-            kwargs['payment_data'] (dict): The payment object.
-            kwargs['payment_intent_data'] (dict): Optional. If truthy, skip this pipeline step.
-        """
-        # Payment intent already retrieved:
-        if kwargs.get('payment_intent_data'):
-            return PipelineCommand.CONTINUE.value
-
-        # No existing payment:
-        payment_data = kwargs.get('payment_data')
-        if not payment_data:
-            return PipelineCommand.CONTINUE.value
-
-        payment_intent_id = payment_data['key_id']
-
-        stripe_api_client = StripeAPIClient()
-        try:
-            payment_intent = stripe_api_client.retrieve_payment_intent(payment_intent_id)
-        except StripeError as ex:
-            raise StripeIntentRetrieveAPIError from ex
-
-        # TODO: THES-260: Fix mixup of key_id and client_secret
-        payment_data['key_id'] = payment_intent['client_secret']
-
-        return {
-            'payment_data': payment_data,
-            'payment_intent_data': payment_intent,
-        }
-
-
 class UpdateStripePayment(PipelineStep):
     """
     Update stripe payment with the latest information.

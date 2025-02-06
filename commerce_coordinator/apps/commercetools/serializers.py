@@ -90,6 +90,7 @@ class OrderFulfillViewInputSerializer(CoordinatorSerializer):
     course_title = serializers.CharField(allow_null=False)
     user_first_name = serializers.CharField(allow_null=False)
     user_email = serializers.EmailField(allow_null=False)
+    product_type = serializers.CharField(allow_null=False)
 
 
 class OrderReturnedViewMessageLineItemReturnItemSerializer(CoordinatorSerializer):

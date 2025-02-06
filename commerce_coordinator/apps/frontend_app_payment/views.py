@@ -8,30 +8,12 @@ from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
-from .filters import ActiveOrderRequested, PaymentProcessingRequested
+from .filters import PaymentProcessingRequested
 from .serializers import (
-    GetActiveOrderInputSerializer,
     PaymentProcessInputSerializer
 )
 
 logger = logging.getLogger(__name__)
-
-
-class GetActiveOrderView(APIView):
-    """Get Active Order View"""
-    authentication_classes = (JwtAuthentication,)
-    permission_classes = (IsAuthenticated,)
-
-    def get(self, request):
-        """return the user's current active order"""
-        params = {
-            'edx_lms_user_id': request.user.lms_user_id
-        }
-        input_serializer = GetActiveOrderInputSerializer(data=params)
-        input_serializer.is_valid(raise_exception=True)
-        params = input_serializer.data
-        order_data = ActiveOrderRequested.run_filter(params)
-        return Response(order_data)
 
 
 class PaymentProcessView(APIView):

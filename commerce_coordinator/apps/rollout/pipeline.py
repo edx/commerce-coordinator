@@ -47,7 +47,6 @@ class GetActiveOrderManagementSystem(PipelineStep):
                 ct_api_client = CommercetoolsAPIClient()
                 commercetools_available_course = ct_api_client.get_product_variant_by_course_run(course_run)
             except HTTPError as exc:  # pragma no cover
-                # TODO: FIX Per SONIC-354
                 logger.exception(
                     f'[get_product_variant_by_course_run] Failed to get CT course '
                     f'for course_run: {course_run} with exception: {exc}'

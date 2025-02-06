@@ -117,8 +117,7 @@ def extract_ct_product_information_for_braze_canvas(item: LineItem):
     duration_unit = attributes_dict.get('duration-unit', {}).get('label', 'weeks')
 
     result = {
-        # TODO: Modify this to use actual product type from CT. Post R0.1
-        "type": "course",
+        "type": item.product_type.obj.name,
         "title": title,
         "image_url": image_url,
         "partner_name": partner_name,
