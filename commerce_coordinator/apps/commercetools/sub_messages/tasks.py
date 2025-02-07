@@ -294,7 +294,7 @@ def fulfill_order_returned_signal_task(
 
                 for line_item in get_edx_items(order):
                     course_run = get_edx_product_course_run_key(line_item)
-                    # TODO: Remove LMS Enrollment
+                    # TODO: Remove LMS Enrollment. To be done in SONIC-96
                     logger.info(
                         f'[CT-{tag}] calling lms to unenroll user {lms_user_name} in {course_run}'
                         f', message id: {message_id}'

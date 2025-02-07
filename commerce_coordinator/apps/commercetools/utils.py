@@ -137,7 +137,7 @@ def extract_ct_order_information_for_braze_canvas(customer: Customer, order: Ord
     formatted_order_placement_date = order_placed_on.strftime('%b %d, %Y')
     formatted_order_placement_time = order_placed_on.strftime("%I:%M %p (%Z)")
     # calculate subtotal by adding discount back if any discount is applied.
-    # TODO: Post R0.1 add support for all discount types here.
+    # TODO: Post R0.1 add support for all discount types here. To be done in SONIC-897.
     subtotal = (((order.total_price.cent_amount +
                   order.discount_on_total_price.discounted_amount.cent_amount))
                 if order.discount_on_total_price else order.total_price.cent_amount)
@@ -152,7 +152,7 @@ def extract_ct_order_information_for_braze_canvas(customer: Customer, order: Ord
         "subtotal":  format_amount_for_braze_canvas(subtotal),
         "total": format_amount_for_braze_canvas(order.total_price.cent_amount),
     }
-    # TODO: Post R0.1 add support for all discount types here.
+    # TODO: Post R0.1 add support for all discount types here. To be done in SONIC-897.
     if order.discount_codes and order.discount_on_total_price:
         canvas_entry_properties.update({
             "discount_code": order.discount_codes[0].discount_code.obj.code,
