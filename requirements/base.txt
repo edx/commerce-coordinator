@@ -4,23 +4,23 @@
 #
 #    make upgrade
 #
-amqp==5.2.0
+amqp==5.3.1
     # via kombu
-apimatic-core==0.2.17
+apimatic-core==0.2.18
     # via paypal-server-sdk
-apimatic-core-interfaces==0.1.5
+apimatic-core-interfaces==0.1.6
     # via
     #   apimatic-core
     #   apimatic-requests-client-adapter
     #   paypal-server-sdk
-apimatic-requests-client-adapter==0.1.6
+apimatic-requests-client-adapter==0.1.7
     # via paypal-server-sdk
 asgiref==3.7.2
     # via
     #   -r requirements/base.in
     #   django
     #   django-cors-headers
-attrs==24.2.0
+attrs==25.1.0
     # via -r requirements/base.in
 backoff==2.2.1
     # via segment-analytics-python
@@ -30,15 +30,15 @@ cachecontrol==0.12.14
     # via apimatic-requests-client-adapter
 celery[redis]==5.4.0
     # via -r requirements/base.in
-certifi==2024.8.30
+certifi==2025.1.31
     # via requests
 cffi==1.17.1
     # via
     #   cryptography
     #   pynacl
-charset-normalizer==3.4.0
+charset-normalizer==3.4.1
     # via requests
-click==8.1.7
+click==8.1.8
     # via
     #   celery
     #   click-didyoumean
@@ -59,7 +59,7 @@ coreapi==2.3.3
     #   openapi-codec
 coreschema==0.0.4
     # via coreapi
-cryptography==43.0.3
+cryptography==44.0.0
     # via
     #   pyjwt
     #   social-auth-core
@@ -69,7 +69,7 @@ defusedxml==0.8.0rc2
     # via
     #   python3-openid
     #   social-auth-core
-django==4.2.16
+django==4.2.19
     # via
     #   -c requirements/common_constraints.txt
     #   -c requirements/constraints.txt
@@ -86,7 +86,7 @@ django==4.2.16
     #   edx-drf-extensions
     #   openedx-filters
     #   social-auth-app-django
-django-cors-headers==4.6.0
+django-cors-headers==4.7.0
     # via -r requirements/base.in
 django-crum==0.7.9
     # via edx-django-utils
@@ -94,7 +94,7 @@ django-extensions==3.2.3
     # via -r requirements/base.in
 django-rest-swagger==2.2.0
     # via -r requirements/base.in
-django-waffle==4.1.0
+django-waffle==4.2.0
     # via
     #   -r requirements/base.in
     #   edx-django-utils
@@ -115,22 +115,24 @@ edx-braze-client==0.2.5
     # via -r requirements/base.in
 edx-django-release-util==1.4.0
     # via -r requirements/base.in
-edx-django-utils==7.0.0
+edx-django-utils==7.1.0
     # via
     #   -r requirements/base.in
     #   edx-drf-extensions
     #   edx-rest-api-client
 edx-drf-extensions==10.5.0
     # via -r requirements/base.in
-edx-opaque-keys==2.11.0
-    # via edx-drf-extensions
+edx-opaque-keys[django]==2.11.0
+    # via
+    #   edx-drf-extensions
+    #   openedx-filters
 edx-rest-api-client==6.0.0
     # via -r requirements/base.in
 idna==3.10
     # via requests
 itypes==1.2.0
     # via coreapi
-jinja2==3.1.4
+jinja2==3.1.5
     # via coreschema
 jsonpickle==3.3.0
     # via apimatic-core
@@ -142,7 +144,7 @@ markupsafe==3.0.2
     # via
     #   jinja2
     #   werkzeug
-marshmallow==3.23.0
+marshmallow==3.26.1
     # via
     #   commercetools
     #   marshmallow-enum
@@ -150,9 +152,9 @@ marshmallow-enum==1.5.1
     # via commercetools
 msgpack==1.1.0
     # via cachecontrol
-mysqlclient==2.2.5
+mysqlclient==2.2.7
     # via -r requirements/base.in
-newrelic==10.2.0
+newrelic==10.6.0
     # via edx-django-utils
 oauthlib==3.2.2
     # via
@@ -160,23 +162,23 @@ oauthlib==3.2.2
     #   social-auth-core
 openapi-codec==1.3.2
     # via django-rest-swagger
-openedx-filters==1.11.0
+openedx-filters==1.13.0
     # via -r requirements/base.in
-packaging==24.1
+packaging==24.2
     # via marshmallow
-paypal-server-sdk==0.5.1
+paypal-server-sdk==0.6.1
     # via -r requirements/base.in
-pbr==6.1.0
+pbr==6.1.1
     # via stevedore
-pillow==11.0.0
+pillow==11.1.0
     # via -r requirements/base.in
-prompt-toolkit==3.0.48
+prompt-toolkit==3.0.50
     # via click-repl
-psutil==6.1.0
+psutil==6.1.1
     # via edx-django-utils
 pycparser==2.22
     # via cffi
-pyjwt[crypto]==2.9.0
+pyjwt[crypto]==2.10.1
     # via
     #   drf-jwt
     #   edx-auth-backends
@@ -184,27 +186,31 @@ pyjwt[crypto]==2.9.0
     #   edx-rest-api-client
     #   segment-analytics-python
     #   social-auth-core
-pymongo==4.10.1
+pymongo==4.11
     # via edx-opaque-keys
 pynacl==1.5.0
     # via edx-django-utils
 python-dateutil==2.9.0.post0
     # via
     #   -r requirements/base.in
+    #   apimatic-core
     #   celery
     #   segment-analytics-python
 python3-openid==3.2.0
     # via social-auth-core
-pytz==2024.2
+pytz==2025.1
     # via
     #   -r requirements/base.in
     #   commercetools
 pyyaml==6.0.2
     # via edx-django-release-util
-redis==5.2.0
+redis==5.2.1
     # via celery
 requests==2.32.3
     # via
+    #   apimatic-core
+    #   apimatic-requests-client-adapter
+    #   cachecontrol
     #   commercetools
     #   coreapi
     #   edx-drf-extensions
@@ -226,7 +232,7 @@ semantic-version==2.10.0
     # via edx-drf-extensions
 simplejson==3.19.3
     # via django-rest-swagger
-six==1.16.0
+six==1.17.0
     # via
     #   edx-auth-backends
     #   edx-django-release-util
@@ -237,26 +243,28 @@ social-auth-core==4.5.4
     # via
     #   edx-auth-backends
     #   social-auth-app-django
-sqlparse==0.5.1
+sqlparse==0.5.3
     # via django
-stevedore==5.3.0
+stevedore==5.4.0
     # via
     #   edx-django-utils
     #   edx-opaque-keys
-stripe==11.2.0
+stripe==11.5.0
     # via -r requirements/base.in
 typing-extensions==4.12.2
     # via
     #   edx-opaque-keys
     #   stripe
-tzdata==2024.2
+tzdata==2025.1
     # via
     #   celery
     #   kombu
 uritemplate==4.1.1
     # via coreapi
 urllib3==2.2.3
-    # via requests
+    # via
+    #   -c requirements/common_constraints.txt
+    #   requests
 vine==5.1.0
     # via
     #   amqp
@@ -266,7 +274,10 @@ wcwidth==0.2.13
     # via prompt-toolkit
 webob==1.8.9
     # via commercetools
-werkzeug==3.0.6
+werkzeug==3.1.3
     # via commercetools
-wrapt==1.16.0
+wrapt==1.17.2
     # via commercetools
+
+# The following packages are considered to be unsafe in a requirements file:
+# setuptools
