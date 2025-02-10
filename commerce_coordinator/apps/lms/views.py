@@ -31,7 +31,6 @@ from commerce_coordinator.apps.lms.serializers import (
     enrollment_attribute_key
 )
 from commerce_coordinator.apps.rollout.utils import is_legacy_order
-from commerce_coordinator.apps.rollout.waffle import is_program_redirection_to_ct_enabled
 
 logger = logging.getLogger(__name__)
 
@@ -86,7 +85,7 @@ class PaymentPageRedirectView(APIView):
 
         get_items = list(self.request.GET.lists())
         redirect_url = None
-        if "bundle" in dict(get_items) and not is_program_redirection_to_ct_enabled(request):
+        if "bundle" in dict(get_items):
             ecom_url = urljoin(
                 settings.ECOMMERCE_URL, settings.ECOMMERCE_ADD_TO_BASKET_API_PATH
             )
