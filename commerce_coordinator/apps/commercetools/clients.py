@@ -369,6 +369,28 @@ class CommercetoolsAPIClient:
         logger.info(f"[CommercetoolsAPIClient] - Attempting to find payment with interaction ID {interaction_id}")
         return self.base_client.payments.query(where=f'transactions(interactionId="{interaction_id}")').results[0]
 
+    def get_product_variant_by_program(self, product_id: str) -> Optional[CTProductVariant]:
+        """
+        Fetches a program from Commercetools.
+        Args:
+            product_id: The ID of the program (bundle) to fetch.
+        Returns:
+            CTProductVariant if found, None otherwise.
+        """
+        start_time = datetime.datetime.now()
+        try:
+            product_projection = self.base_client.product_projections.get_by_key(product_id)
+        except CommercetoolsError as exc:
+            logger.exception(
+                f'[get_product_variant_by_program] Failed to get CT program for product_id: {product_id} '
+                f'with exception: {exc}'
+            )
+            return None
+
+        duration = (datetime.datetime.now() - start_time).total_seconds()
+        logger.info(f"[Performance Check] get_product_variant_by_program took {duration} seconds")
+        return product_projection
+
     def get_product_variant_by_course_run(self, cr_id: str) -> Optional[CTProductVariant]:
         """
         Args:
