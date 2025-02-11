@@ -83,30 +83,23 @@ Local
 Local setup with Commercetools
 ===============================
 
-  1. Update the following inside **`commerce_coordinator/settings/base.py`** file:
-      1. `COMMERCETOOLS_CONFIG`,
-         The values can be found at:
-         https://twou.frontastic.io/configuraaton?environment=development&project=checkout&locale=en_US
+1. Update the following inside **`commerce_coordinator/settings/base.py`** file:
+    1. `COMMERCETOOLS_CONFIG`, The values can be found at: https://twou.frontastic.io/configuraaton?environment=development&project=checkout&locale=en_US
+    2. `COMMERCETOOLS_FRONTEND_URL` = `'http://localhost:3000/en/add-to-cart/'`
 
-      2. `COMMERCETOOLS_FRONTEND_URL` = `'http://localhost:3000/en/add-to-cart/'`
+2. Update the following **waffle flags**:
+    1. Go to http://localhost:8140/admin/waffle/flag/ and add these flags
+        - `transition_to_commercetools.redirect_to_commercetools_checkout` flag with the **Everyone** attribute set to **Yes**.
+    2. Go to http://localhost:18000/admin/waffle/flag/ and add these flags
+        - `commerce.transition_to_coordinator.checkout` flag with the **Everyone** attribute set to **Yes**
+        - `commerce.transition_to_coordinator.refunds` flag with the **Everyone** attribute set to **Yes**
 
-  2. Update the following **waffle flags**:
-      1. Go to http://localhost:8140/admin/waffle/flag/ and add these flags
+3. Update the following inside your `'edx-platform/lms/envs/private.py'` file:
+    - COMMERCE_COORDINATOR_REFUND_SOURCE_SYSTEMS = ('commercetools',)
+    - COMMERCE_COORDINATOR_URL_ROOT = 'http://localhost:8140'
 
-         - `transition_to_commercetools.redirect_to_commercetools_checkout` flag with the **Everyone** attribute set to **Yes**.
-      2. Go to http://localhost:18000/admin/waffle/flag/ and add these flags
-
-         - `commerce.transition_to_coordinator.checkout` flag with the **Everyone** attribute set to **Yes**
-         - `commerce.transition_to_coordinator.refunds` flag with the **Everyone** attribute set to **Yes**
-
-  3. Update the following inside your `'edx-platform/lms/envs/private.py'` file:
-
-     - COMMERCE_COORDINATOR_REFUND_SOURCE_SYSTEMS = ('commercetools',)
-     - COMMERCE_COORDINATOR_URL_ROOT = 'http://localhost:8140'
-
-  4. For refunds flow, update this value and revert back after running refunds flow
-
-     - COMMERCE_COORDINATOR_URL_ROOT = 'http://host.docker.internal:8140'
+4. For refunds flow, update this value and revert back after running refunds flow
+    - COMMERCE_COORDINATOR_URL_ROOT = 'http://host.docker.internal:8140'
 
 
 Every time you develop something in this repo
@@ -153,16 +146,17 @@ Local testing with Celery
   python manage.py celery
 
   # More test URLs you can hit in the browser or pipe through jq (https://stedolan.github.io/jq/) to make the output more readable:
-  ⫸ curl -s "http://localhost:8140/demo_lms/test_celery_signal/" | jq '.'
- {
-  "<function test_celery_signal_task at 0x10e17a9d0>": ""
- }
- ⫸ curl -s "http://localhost:8140/demo_lms/demo_purchase_complete/" | jq '.'
- {
-  "<function demo_purchase_complete_order_history at 0x10e18a430>": "",
-  "<function demo_purchase_complete_send_confirmation_email at 0x10e18a5e0>": "",
-  "<function demo_purchase_complete_enroll_in_course at 0x10e18a670>": ""
- }
+  curl -s "http://localhost:8140/demo_lms/test_celery_signal/" | jq '.'
+  {
+      "<function test_celery_signal_task at 0x10e17a9d0>": ""
+  }
+
+  curl -s "http://localhost:8140/demo_lms/demo_purchase_complete/" | jq '.'
+  {
+      "<function demo_purchase_complete_order_history at 0x10e18a430>": "",
+      "<function demo_purchase_complete_send_confirmation_email at 0x10e18a5e0>": "",
+      "<function demo_purchase_complete_enroll_in_course at 0x10e18a670>": ""
+  }
 
 With Docker (Not currently supported)
 =====================================
