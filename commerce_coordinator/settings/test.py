@@ -75,7 +75,7 @@ CC_SIGNALS = {
     'commerce_coordinator.apps.stripe.signals.payment_processed_signal': [
         'commerce_coordinator.apps.titan.signals.payment_processed_save',
     ],
-    'commerce_coordinator.apps.commercetools.signals.fulfill_order_placed_signal': [
+    'commerce_coordinator.apps.commercetools.signals.fulfill_order_placed_send_enroll_in_course_signal': [
         'commerce_coordinator.apps.lms.signal_handlers.fulfill_order_placed_send_enroll_in_course',
     ],
     'commerce_coordinator.apps.lms.signals.fulfillment_completed_signal': [

@@ -28,7 +28,10 @@ from commerce_coordinator.apps.commercetools.clients import CommercetoolsAPIClie
 from commerce_coordinator.apps.commercetools.constants import EMAIL_NOTIFICATION_CACHE_TTL_SECS
 from commerce_coordinator.apps.commercetools.filters import OrderRefundRequested
 from commerce_coordinator.apps.commercetools.serializers import OrderFulfillViewInputSerializer
-from commerce_coordinator.apps.commercetools.signals import fulfill_order_placed_signal
+from commerce_coordinator.apps.commercetools.signals import (
+    fulfill_order_placed_send_enroll_in_course_signal,
+    fulfill_order_placed_send_entitlement_signal
+)
 from commerce_coordinator.apps.commercetools.utils import (
     extract_ct_order_information_for_braze_canvas,
     extract_ct_product_information_for_braze_canvas,
@@ -121,6 +124,12 @@ def fulfill_order_placed_message_signal_task(
         updated_order_version = updated_order.version
         default_params['order_version'] = updated_order_version
 
+        bundle_id = (
+            item.custom.fields.get(TwoUKeys.LINE_ITEM_BUNDLE_ID)
+            if item.custom
+            else None
+        )
+
         serializer = OrderFulfillViewInputSerializer(data={
             **default_params,
             'course_id': get_edx_product_course_run_key(item),  # likely not correct
@@ -138,10 +147,18 @@ def fulfill_order_placed_message_signal_task(
         serializer.is_valid(raise_exception=True)  # pragma no cover
 
         payload = serializer.validated_data
-        fulfill_order_placed_signal.send_robust(
-            sender=fulfill_order_placed_message_signal_task,
-            **payload
-        )
+
+        if bundle_id:
+            fulfill_order_placed_send_entitlement_signal.send_robust(
+                sender=fulfill_order_placed_message_signal_task,
+                **payload
+            )
+        else:
+            fulfill_order_placed_send_enroll_in_course_signal.send_robust(
+                sender=fulfill_order_placed_message_signal_task,
+                **payload
+            )
+
         product_information = extract_ct_product_information_for_braze_canvas(item)
         canvas_entry_properties["products"].append(product_information)
 

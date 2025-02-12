@@ -14,7 +14,8 @@ from commerce_coordinator.apps.core.signal_helpers import CoordinatorSignal, log
 
 logger = logging.getLogger(__name__)
 
-fulfill_order_placed_signal = CoordinatorSignal()
+fulfill_order_placed_send_enroll_in_course_signal = CoordinatorSignal()
+fulfill_order_placed_send_entitlement_signal = CoordinatorSignal()
 
 
 @log_receiver(logger)
