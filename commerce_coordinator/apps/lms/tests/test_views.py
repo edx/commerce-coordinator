@@ -135,17 +135,29 @@ class PaymentPageRedirectViewTests(APITestCase):
         """
         self.client.login(username=self.test_user_username, password=self.test_user_password)
         self.client.force_authenticate(user=self.user)
+
+        mock_payment_page_redirect.return_value = {
+            "redirect_url": settings.ECOMMERCE_URL
+        }
+
+        skus = ["sku1", "sku2", "sku3"]
         response = self.client.get(
             self.url,
             {
-                "sku": ["sku1"],
+                "sku": skus,
                 "course_run_key": "course-v1:MichiganX+InjuryPreventionX+1T2021",
-                "bundle": ["123"],
+                "bundle": "123",
             },
         )
+
+        self.assertEqual(response.status_code, 303)
         self.assertTrue(response.url.startswith(settings.ECOMMERCE_URL))
-        mock_payment_page_redirect.assert_not_called()
-        self.assertIn("bundle", response.url)
+        self.assertIn("bundle=123", response.url)
+
+        for sku in skus:
+            self.assertIn(f"sku={sku}", response.url)
+
+        mock_payment_page_redirect.assert_called_once()
 
 
 @override_settings(COMMERCETOOLS_MERCHANT_CENTER_ORDERS_PAGE_URL='https://merchant-centre/orders')

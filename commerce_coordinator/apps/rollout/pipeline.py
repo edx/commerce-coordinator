@@ -14,7 +14,10 @@ from commerce_coordinator.apps.ecommerce.constants import ECOMMERCE_ORDER_MANAGE
 from commerce_coordinator.apps.enterprise_learner.utils import is_user_enterprise_learner
 from commerce_coordinator.apps.frontend_app_payment.constants import FRONTEND_APP_PAYMENT_CHECKOUT
 from commerce_coordinator.apps.rollout.utils import is_legacy_order
-from commerce_coordinator.apps.rollout.waffle import is_redirect_to_commercetools_enabled_for_user
+from commerce_coordinator.apps.rollout.waffle import (
+    is_program_redirection_to_ct_enabled,
+    is_redirect_to_commercetools_enabled_for_user
+)
 
 logger = logging.getLogger(__name__)
 
@@ -38,9 +41,27 @@ class GetActiveOrderManagementSystem(PipelineStep):
                             redirect_to_commercetools_checkout flag is enabled and course_run_key
                             and sku query params exist and detect which checkout to redirect to
         """
-        sku = request.query_params.get('sku', '').strip()
+        sku_params = request.query_params.getlist('sku')
         course_run = request.query_params.get('course_run_key', '').strip()
+        bundle = request.query_params.get('bundle', '').strip()
         commercetools_available_course = None
+
+        ct_api_client = CommercetoolsAPIClient()
+
+        if bundle and is_program_redirection_to_ct_enabled(request):
+            try:
+                commercetools_available_program = ct_api_client.get_product_by_program_id(bundle)
+                if commercetools_available_program:
+                    return {ACTIVE_ORDER_MANAGEMENT_SYSTEM_KEY: COMMERCETOOLS_FRONTEND}
+                logger.warning(
+                    f'[get_product_by_program_id] Program {bundle} not found in Commercetools. '
+                    f'Please ensure it is properly synced.'
+                )
+            except HTTPError as exc:
+                logger.exception(
+                    f'[get_product_by_program_id] Failed to get CT program '
+                    f'for product_id: {bundle} with exception: {exc}'
+                )
 
         if course_run and is_redirect_to_commercetools_enabled_for_user(request):
             try:
@@ -55,7 +76,7 @@ class GetActiveOrderManagementSystem(PipelineStep):
 
         if commercetools_available_course and not is_user_enterprise_learner(request):
             active_order_management_system = COMMERCETOOLS_FRONTEND
-        elif sku:
+        elif sku_params:
             active_order_management_system = FRONTEND_APP_PAYMENT_CHECKOUT
         else:
             logger.exception('An error occurred while determining the active order management system.'
