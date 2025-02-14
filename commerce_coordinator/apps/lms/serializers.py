@@ -78,6 +78,7 @@ class CourseRefundInputSerializer(CoordinatorSerializer):
         """ Converts serializer data to a dict of {f"{namespace}.{name}": value, ... n} """
         return dict([EnrollmentAttributeSerializer.dict_tuple(e) for e in self.data['enrollment_attributes']])
 
+
 class EntitlementRefundInputSerializer(CoordinatorSerializer):
     """
     Serializer for Entitlement Refund input validation.

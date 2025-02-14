@@ -31,6 +31,7 @@ from commerce_coordinator.apps.lms.serializers import (
     UserRetiredInputSerializer,
     enrollment_attribute_key
 )
+from commerce_coordinator.apps.lms.utils import get_line_item_from_entitlement
 from commerce_coordinator.apps.rollout.utils import is_legacy_order
 
 logger = logging.getLogger(__name__)
@@ -228,9 +229,9 @@ class RefundView(APIView):
                 input_details.is_valid(raise_exception=True)
             except ValidationError as e:
                 logger.exception(f"[RefundView] Exception raised validating input {self.post.__name__} with error "
-                                f"{repr(e)}, input: {input_data}.")
+                                 f"{repr(e)}, input: {input_data}.")
                 return Response('Invalid input provided', status=HTTP_400_BAD_REQUEST)
-            
+
             username = input_details.data['username']
             order_number = input_details.data.get('order_number')
             entitlement_id = input_details.data.get('entitlement_id')
@@ -238,27 +239,19 @@ class RefundView(APIView):
                         f"order_number: {order_number}, Entitlement ID: {entitlement_id}.")
 
             try:
-                ct_api_client = CommercetoolsAPIClient()
-                ct_order = ct_api_client.get_order_by_number(order_number=order_number)
-
-                order_id = ct_order.id
-
-                order_line_item_id = None
-                for line_item in ct_order.line_items:
-                    if line_item.custom.fields.get('edxLMSEntitlementId', '') == entitlement_id:
-                        order_line_item_id = line_item.id
+                order_id, order_line_item_id = get_line_item_from_entitlement(order_number, entitlement_id)
 
             except CommercetoolsError as err:  # pragma no cover
-                logger.exception(f"[{type.post.__name__}] Commercetools Error: {err}, {err.errors}")
+                logger.exception(f"[RefundView] Commercetools Error: {err}, {err.errors}")
                 return Response('Error while fetching order', status=HTTP_400_BAD_REQUEST)
-            
+
         else:
             input_details = CourseRefundInputSerializer(data=input_data)
             try:
                 input_details.is_valid(raise_exception=True)
             except ValidationError as e:
                 logger.exception(f"[RefundView] Exception raised validating input {self.post.__name__} with error "
-                                f"{repr(e)}, input: {input_data}.")
+                                 f"{repr(e)}, input: {input_data}.")
                 return Response('Invalid input provided', status=HTTP_400_BAD_REQUEST)
 
             course_id = input_details.data['course_id']
@@ -271,7 +264,6 @@ class RefundView(APIView):
 
             order_line_item_id = enrollment_attributes.get(enrollment_attribute_key('order', 'line_item_id'), None)
             order_id = enrollment_attributes.get(enrollment_attribute_key('order', 'order_id'), None)
-        
 
         if not order_id:
             logger.error(f"[RefundView] Failed processing refund for username: {username}, "
