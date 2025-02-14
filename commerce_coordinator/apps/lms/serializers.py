@@ -78,6 +78,25 @@ class CourseRefundInputSerializer(CoordinatorSerializer):
         """ Converts serializer data to a dict of {f"{namespace}.{name}": value, ... n} """
         return dict([EnrollmentAttributeSerializer.dict_tuple(e) for e in self.data['enrollment_attributes']])
 
+class EntitlementRefundInputSerializer(CoordinatorSerializer):
+    """
+    Serializer for Entitlement Refund input validation.
+
+    Input data should look like this:
+
+    .. code-block:: json
+
+        {
+            "entitlement_id": "course-v1:edX+DemoX+DemoC",
+            "username": "johndoe",
+            "order_number": "2u-20XXXXXXXX"
+        }
+
+    """
+    entitlement_id = serializers.CharField(required=True, allow_null=False, allow_blank=False)
+    username = serializers.CharField(required=True, allow_null=False, allow_blank=False)
+    order_number = serializers.CharField(required=True, allow_null=False, allow_blank=False)
+
 
 class UserRetiredInputSerializer(CoordinatorSerializer):
     """
