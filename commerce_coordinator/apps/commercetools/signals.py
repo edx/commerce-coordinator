@@ -18,6 +18,7 @@ logger = logging.getLogger(__name__)
 fulfill_order_placed_send_enroll_in_course_signal = CoordinatorSignal()
 fulfill_order_placed_send_entitlement_signal = CoordinatorSignal()
 
+
 @log_receiver(logger)
 def entitlement_fulfillment_completed(**kwargs):
     """
@@ -41,6 +42,7 @@ def entitlement_fulfillment_completed(**kwargs):
     )
 
     return result
+
 
 @log_receiver(logger)
 def fulfill_order_completed_send_line_item_state(**kwargs):

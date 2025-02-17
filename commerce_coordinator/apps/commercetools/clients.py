@@ -618,7 +618,7 @@ class CommercetoolsAPIClient:
                 ))
 
             if actions:
-               return self.base_client.orders.update_by_id(
+                return self.base_client.orders.update_by_id(
                     id=order_id,
                     version=order_version,
                     actions=actions,

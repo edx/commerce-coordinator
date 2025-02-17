@@ -6,10 +6,7 @@ from django.conf import settings
 from requests.exceptions import RequestException
 
 from commerce_coordinator.apps.core.clients import BaseEdxOAuthClient, urljoin_directory
-from commerce_coordinator.apps.lms.signals import (
-   entitlement_fulfillment_completed_signal,
-   fulfillment_completed_signal
-)
+from commerce_coordinator.apps.lms.signals import entitlement_fulfillment_completed_signal, fulfillment_completed_signal
 
 # Use special Celery logger for tasks client calls.
 logger = get_task_logger(__name__)

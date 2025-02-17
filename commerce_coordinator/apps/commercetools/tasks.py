@@ -44,6 +44,7 @@ def update_line_item_on_entitlement_fulfillment_completion(
     )
     return updated_order
 
+
 def update_line_item_state_on_fulfillment_completion(
     order_id,
     order_version,
