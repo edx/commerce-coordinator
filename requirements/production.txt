@@ -87,14 +87,14 @@ coreschema==0.0.4
     # via
     #   -r requirements/base.txt
     #   coreapi
-cryptography==44.0.0
+cryptography==44.0.1
     # via
     #   -r requirements/base.txt
     #   pyjwt
     #   social-auth-core
 currencies==2020.12.12
     # via -r requirements/base.txt
-defusedxml==0.8.0rc2
+defusedxml==0.7.1
     # via
     #   -r requirements/base.txt
     #   python3-openid
@@ -161,7 +161,7 @@ edx-opaque-keys[django]==2.11.0
     #   -r requirements/base.txt
     #   edx-drf-extensions
     #   openedx-filters
-edx-rest-api-client==6.0.0
+edx-rest-api-client==6.1.0
     # via -r requirements/base.txt
 gevent==24.11.1
     # via -r requirements/production.in
@@ -235,7 +235,7 @@ packaging==24.2
     #   -r requirements/base.txt
     #   gunicorn
     #   marshmallow
-paypal-server-sdk==0.6.1
+paypal-server-sdk==0.5.1
     # via -r requirements/base.txt
 pbr==6.1.1
     # via
@@ -247,7 +247,7 @@ prompt-toolkit==3.0.50
     # via
     #   -r requirements/base.txt
     #   click-repl
-psutil==6.1.1
+psutil==7.0.0
     # via
     #   -r requirements/base.txt
     #   edx-django-utils
@@ -266,7 +266,7 @@ pyjwt[crypto]==2.10.1
     #   social-auth-core
 pymemcache==4.0.0
     # via -r requirements/production.in
-pymongo==4.11
+pymongo==4.11.1
     # via
     #   -r requirements/base.txt
     #   edx-opaque-keys
@@ -337,11 +337,11 @@ six==1.17.0
     #   edx-auth-backends
     #   edx-django-release-util
     #   python-dateutil
-social-auth-app-django==5.4.2
+social-auth-app-django==5.4.3
     # via
     #   -r requirements/base.txt
     #   edx-auth-backends
-social-auth-core==4.5.4
+social-auth-core==4.5.6
     # via
     #   -r requirements/base.txt
     #   edx-auth-backends

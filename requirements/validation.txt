@@ -144,17 +144,16 @@ coreschema==0.0.4
     #   -r requirements/quality.txt
     #   -r requirements/test.txt
     #   coreapi
-coverage[toml]==7.6.11
+coverage[toml]==7.6.12
     # via
     #   -r requirements/quality.txt
     #   -r requirements/test.txt
     #   pytest-cov
-cryptography==44.0.0
+cryptography==44.0.1
     # via
     #   -r requirements/quality.txt
     #   -r requirements/test.txt
     #   pyjwt
-    #   secretstorage
     #   social-auth-core
 currencies==2020.12.12
     # via
@@ -164,7 +163,7 @@ ddt==1.7.2
     # via
     #   -r requirements/quality.txt
     #   -r requirements/test.txt
-defusedxml==0.8.0rc2
+defusedxml==0.7.1
     # via
     #   -r requirements/quality.txt
     #   -r requirements/test.txt
@@ -279,7 +278,7 @@ edx-opaque-keys[django]==2.11.0
     #   -r requirements/test.txt
     #   edx-drf-extensions
     #   openedx-filters
-edx-rest-api-client==6.0.0
+edx-rest-api-client==6.1.0
     # via
     #   -r requirements/quality.txt
     #   -r requirements/test.txt
@@ -325,11 +324,6 @@ jaraco-functools==4.1.0
     # via
     #   -r requirements/quality.txt
     #   keyring
-jeepney==0.8.0
-    # via
-    #   -r requirements/quality.txt
-    #   keyring
-    #   secretstorage
 jinja2==3.1.5
     # via
     #   -r requirements/quality.txt
@@ -436,7 +430,7 @@ packaging==24.2
     #   pytest
     #   tox
     #   twine
-paypal-server-sdk==0.6.1
+paypal-server-sdk==0.5.1
     # via
     #   -r requirements/quality.txt
     #   -r requirements/test.txt
@@ -467,7 +461,7 @@ prompt-toolkit==3.0.50
     #   -r requirements/quality.txt
     #   -r requirements/test.txt
     #   click-repl
-psutil==6.1.1
+psutil==7.0.0
     # via
     #   -r requirements/quality.txt
     #   -r requirements/test.txt
@@ -520,7 +514,7 @@ pylint-plugin-utils==0.8.2
     #   -r requirements/test.txt
     #   pylint-celery
     #   pylint-django
-pymongo==4.11
+pymongo==4.11.1
     # via
     #   -r requirements/quality.txt
     #   -r requirements/test.txt
@@ -545,7 +539,7 @@ pytest-cov==6.0.0
     # via
     #   -r requirements/quality.txt
     #   -r requirements/test.txt
-pytest-django==4.9.0
+pytest-django==4.10.0
     # via
     #   -r requirements/quality.txt
     #   -r requirements/test.txt
@@ -634,10 +628,6 @@ rich==13.9.4
     # via
     #   -r requirements/quality.txt
     #   twine
-secretstorage==3.3.3
-    # via
-    #   -r requirements/quality.txt
-    #   keyring
 segment-analytics-python==2.3.3
     # via
     #   -r requirements/quality.txt
@@ -664,12 +654,12 @@ snowballstemmer==2.2.0
     # via
     #   -r requirements/quality.txt
     #   pydocstyle
-social-auth-app-django==5.4.2
+social-auth-app-django==5.4.3
     # via
     #   -r requirements/quality.txt
     #   -r requirements/test.txt
     #   edx-auth-backends
-social-auth-core==4.5.4
+social-auth-core==4.5.6
     # via
     #   -r requirements/quality.txt
     #   -r requirements/test.txt
@@ -743,7 +733,7 @@ vine==5.1.0
     #   amqp
     #   celery
     #   kombu
-virtualenv==20.29.1
+virtualenv==20.29.2
     # via
     #   -r requirements/quality.txt
     #   -r requirements/test.txt

@@ -115,21 +115,20 @@ coreschema==0.0.4
     # via
     #   -r requirements/test.txt
     #   coreapi
-coverage[toml]==7.6.11
+coverage[toml]==7.6.12
     # via
     #   -r requirements/test.txt
     #   pytest-cov
-cryptography==44.0.0
+cryptography==44.0.1
     # via
     #   -r requirements/test.txt
     #   pyjwt
-    #   secretstorage
     #   social-auth-core
 currencies==2020.12.12
     # via -r requirements/test.txt
 ddt==1.7.2
     # via -r requirements/test.txt
-defusedxml==0.8.0rc2
+defusedxml==0.7.1
     # via
     #   -r requirements/test.txt
     #   python3-openid
@@ -217,7 +216,7 @@ edx-opaque-keys[django]==2.11.0
     #   -r requirements/test.txt
     #   edx-drf-extensions
     #   openedx-filters
-edx-rest-api-client==6.0.0
+edx-rest-api-client==6.1.0
     # via -r requirements/test.txt
 filelock==3.17.0
     # via
@@ -249,10 +248,6 @@ jaraco-context==6.0.1
     # via keyring
 jaraco-functools==4.1.0
     # via keyring
-jeepney==0.8.0
-    # via
-    #   keyring
-    #   secretstorage
 jinja2==3.1.5
     # via
     #   -r requirements/test.txt
@@ -331,8 +326,10 @@ packaging==24.2
     #   pytest
     #   tox
     #   twine
-paypal-server-sdk==0.6.1
-    # via -r requirements/test.txt
+paypal-server-sdk==0.5.1
+    # via
+    #   -c requirements/constraints.txt
+    #   -r requirements/test.txt
 pbr==6.1.1
     # via
     #   -r requirements/test.txt
@@ -354,7 +351,7 @@ prompt-toolkit==3.0.50
     # via
     #   -r requirements/test.txt
     #   click-repl
-psutil==6.1.1
+psutil==7.0.0
     # via
     #   -r requirements/test.txt
     #   edx-django-utils
@@ -399,7 +396,7 @@ pylint-plugin-utils==0.8.2
     #   -r requirements/test.txt
     #   pylint-celery
     #   pylint-django
-pymongo==4.11
+pymongo==4.11.1
     # via
     #   -r requirements/test.txt
     #   edx-opaque-keys
@@ -418,7 +415,7 @@ pytest==8.3.4
     #   pytest-django
 pytest-cov==6.0.0
     # via -r requirements/test.txt
-pytest-django==4.9.0
+pytest-django==4.10.0
     # via -r requirements/test.txt
 python-dateutil==2.9.0.post0
     # via
@@ -486,8 +483,6 @@ rfc3986==2.0.0
     # via twine
 rich==13.9.4
     # via twine
-secretstorage==3.3.3
-    # via keyring
 segment-analytics-python==2.3.3
     # via -r requirements/test.txt
 semantic-version==2.10.0
@@ -507,11 +502,11 @@ six==1.17.0
     #   python-dateutil
 snowballstemmer==2.2.0
     # via pydocstyle
-social-auth-app-django==5.4.2
+social-auth-app-django==5.4.3
     # via
     #   -r requirements/test.txt
     #   edx-auth-backends
-social-auth-core==4.5.4
+social-auth-core==4.5.6
     # via
     #   -r requirements/test.txt
     #   edx-auth-backends
@@ -570,7 +565,7 @@ vine==5.1.0
     #   amqp
     #   celery
     #   kombu
-virtualenv==20.29.1
+virtualenv==20.29.2
     # via
     #   -r requirements/test.txt
     #   tox
