@@ -8,6 +8,7 @@ from commerce_coordinator.apps.commercetools.catalog_info.constants import TwoUK
 from commerce_coordinator.apps.commercetools.tasks import (
     refund_from_paypal_task,
     refund_from_stripe_task,
+    update_line_item_on_entitlement_fulfillment_completion,
     update_line_item_state_on_fulfillment_completion
 )
 from commerce_coordinator.apps.core.signal_helpers import CoordinatorSignal, log_receiver
@@ -17,6 +18,29 @@ logger = logging.getLogger(__name__)
 fulfill_order_placed_send_enroll_in_course_signal = CoordinatorSignal()
 fulfill_order_placed_send_entitlement_signal = CoordinatorSignal()
 
+@log_receiver(logger)
+def entitlement_fulfillment_completed(**kwargs):
+    """
+   Update the line item of the order placed in Commercetools based on LMS entitlement
+    """
+    is_fulfilled = kwargs["is_fulfilled"]
+
+    if is_fulfilled:
+        to_state_key = TwoUKeys.SUCCESS_FULFILMENT_STATE
+    else:
+        to_state_key = TwoUKeys.FAILURE_FULFILMENT_STATE
+
+    result = update_line_item_on_entitlement_fulfillment_completion(
+        entitlement_uuid=kwargs.get("entitlement_uuid", ""),
+        order_id=kwargs["order_id"],
+        order_version=kwargs["order_version"],
+        line_item_id=kwargs["line_item_id"],
+        item_quantity=kwargs["item_quantity"],
+        from_state_id=kwargs["line_item_state_id"],
+        to_state_key=to_state_key,
+    )
+
+    return result
 
 @log_receiver(logger)
 def fulfill_order_completed_send_line_item_state(**kwargs):

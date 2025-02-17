@@ -6,7 +6,10 @@ from django.conf import settings
 from requests.exceptions import RequestException
 
 from commerce_coordinator.apps.core.clients import BaseEdxOAuthClient, urljoin_directory
-from commerce_coordinator.apps.lms.signals import fulfillment_completed_signal
+from commerce_coordinator.apps.lms.signals import (
+   entitlement_fulfillment_completed_signal,
+   fulfillment_completed_signal
+)
 
 # Use special Celery logger for tasks client calls.
 logger = get_task_logger(__name__)
@@ -123,6 +126,11 @@ class LMSAPIClient(BaseEdxOAuthClient):
         """
         Send a POST request to a URL with JSON payload.
         """
+        signal = (
+            entitlement_fulfillment_completed_signal
+            if fulfillment_type == "entitlement"
+            else fulfillment_completed_signal
+        )
         if not timeout:   # pragma no cover
             timeout = self.normal_timeout
         try:
@@ -140,7 +148,7 @@ class LMSAPIClient(BaseEdxOAuthClient):
                 timeout=timeout,
             )
             response.raise_for_status()
-            fulfill_line_item_state_payload = {
+            payload = {
                 **line_item_state_payload,
                 'is_fulfilled': True
             }
@@ -150,6 +158,18 @@ class LMSAPIClient(BaseEdxOAuthClient):
                 f"course ID: {logging_obj['course_id']}, CT subscription message ID: {logging_obj['message_id']}, "
                 f"celery task ID: {logging_obj['celery_task_id']}."
             )
+
+            response_json = response.json()
+
+            if fulfillment_type == "entitlement":
+                payload['entitlement_uuid'] = response_json.get('uuid')
+
+            signal.send_robust(
+                sender=self.__class__,
+                **payload
+            )
+
+            return response_json
         except RequestException as exc:
             context_prefix = (
                 f"[LMSAPIClient.post.{fulfillment_type}] lms_user_id:{logging_obj['lms_user_id']}, "
@@ -158,19 +178,13 @@ class LMSAPIClient(BaseEdxOAuthClient):
             )
             self.log_request_exception(context_prefix, logger, exc)
 
-            fulfill_line_item_state_payload = {
+            payload = {
                 **line_item_state_payload,
                 'is_fulfilled': False
             }
 
-            fulfillment_completed_signal.send_robust(
+            signal.send_robust(
                 sender=self.__class__,
-                **fulfill_line_item_state_payload
+                **payload
             )
             raise
-
-        fulfillment_completed_signal.send_robust(
-            sender=self.__class__,
-            **fulfill_line_item_state_payload
-        )
-        return response.json()
