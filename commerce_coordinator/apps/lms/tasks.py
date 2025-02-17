@@ -13,6 +13,7 @@ from requests import RequestException
 
 from commerce_coordinator.apps.commercetools.catalog_info.constants import TwoUKeys
 from commerce_coordinator.apps.commercetools.clients import CommercetoolsAPIClient
+from commerce_coordinator.apps.commercetools.constants import CT_ORDER_PRODUCT_TYPE_FOR_BRAZE
 from commerce_coordinator.apps.commercetools.utils import send_unsupported_mode_fulfillment_error_email
 from commerce_coordinator.apps.lms.clients import LMSAPIClient
 
@@ -61,9 +62,11 @@ class CourseEnrollTaskAfterReturn(Task):    # pylint: disable=abstract-method
                 f"order number: {order_number}, and course title: {course_title}"
             )
 
+            braze_product_type = CT_ORDER_PRODUCT_TYPE_FOR_BRAZE.get(product_type, 'course')
+
             canvas_entry_properties = {
                 'order_number': order_number,
-                'product_type': product_type,
+                'product_type': braze_product_type,
                 'product_name': course_title,
                 'first_name': user_first_name,
             }

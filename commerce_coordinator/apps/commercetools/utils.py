@@ -13,6 +13,7 @@ from django.conf import settings
 from django.urls import reverse
 
 from commerce_coordinator.apps.commercetools.catalog_info.utils import typed_money_to_string
+from commerce_coordinator.apps.commercetools.constants import CT_ORDER_PRODUCT_TYPE_FOR_BRAZE
 
 logger = logging.getLogger(__name__)
 
@@ -116,8 +117,10 @@ def extract_ct_product_information_for_braze_canvas(item: LineItem):
 
     duration_unit = attributes_dict.get('duration-unit', {}).get('label', 'weeks')
 
+    product_type = CT_ORDER_PRODUCT_TYPE_FOR_BRAZE.get(item.product_type.obj.key, 'course')
+
     result = {
-        "type": item.product_type.obj.name,
+        "type": product_type,
         "title": title,
         "image_url": image_url,
         "partner_name": partner_name,

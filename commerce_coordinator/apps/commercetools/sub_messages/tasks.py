@@ -132,7 +132,7 @@ def fulfill_order_placed_message_signal_task(
             'user_first_name': customer.first_name,
             'user_email': customer.email,
             'course_title': item.name.get('en-US', ''),
-            'product_type': item.product_type.obj.name
+            'product_type': item.product_type.obj.key
         })
 
         # the following throws and thus doesn't need to be a conditional
