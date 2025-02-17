@@ -613,6 +613,44 @@ class ClientTests(TestCase):
                 log_mock.assert_called_once_with(expected_message)
 
     @patch('commerce_coordinator.apps.commercetools.clients.CommercetoolsAPIClient.get_state_by_id')
+    def test_successful_order_line_item_update_on_entitlement_fulfillment(self, mockstate_by_id):
+        base_url = self.client_set.get_base_url_from_client()
+
+        mock_order = gen_order("mock_order_id")
+        mock_order.version = "2"
+        mock_line_item_state = gen_line_item_state()
+        mock_line_item_state.key = TwoUKeys.PROCESSING_FULFILMENT_STATE
+        mock_order.line_items[0].state[0].state = mock_line_item_state
+
+        mockstate_by_id().return_value = mock_line_item_state
+
+        mock_response_order = gen_order("mock_order_id")
+        mock_response_order.version = 3
+        mock_response_line_item_state = gen_line_item_state()
+        mock_response_line_item_state.id = "mock_success_id"
+        mock_response_line_item_state.key = TwoUKeys.SUCCESS_FULFILMENT_STATE
+        mock_response_order.line_items[0].state[0].state = mock_response_line_item_state
+
+        with requests_mock.Mocker(real_http=True, case_sensitive=False) as mocker:
+            mocker.post(
+                f"{base_url}orders/{mock_response_order.id}",
+                json=mock_response_order.serialize(),
+                status_code=200
+            )
+
+            result = self.client_set.client.update_line_item_on_entitlement_fulfillment(
+                "mock_entitlement_uuid",
+                mock_order.id,
+                mock_order.version,
+                mock_order.line_items[0].id,
+                1,
+                mock_order.line_items[0].state[0].state.id,
+                TwoUKeys.SUCCESS_FULFILMENT_STATE
+            )
+
+            self.assertEqual(result.line_items[0].state[0].state.id, mock_response_line_item_state.id)
+
+    @patch('commerce_coordinator.apps.commercetools.clients.CommercetoolsAPIClient.get_state_by_id')
     def test_successful_order_line_item_state_update(self, mock_state_by_id):
         base_url = self.client_set.get_base_url_from_client()
 
