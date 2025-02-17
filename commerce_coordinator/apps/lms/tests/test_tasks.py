@@ -9,6 +9,7 @@ from django.test import TestCase
 from requests import RequestException
 
 from commerce_coordinator.apps.commercetools.catalog_info.constants import TwoUKeys
+from commerce_coordinator.apps.commercetools.constants import CT_ORDER_PRODUCT_TYPE_FOR_BRAZE
 from commerce_coordinator.apps.commercetools.tests.conftest import gen_line_item_state, gen_order
 from commerce_coordinator.apps.core.models import User
 from commerce_coordinator.apps.lms.tasks import fulfill_order_placed_send_enroll_in_course_task
@@ -163,12 +164,16 @@ class FulfillOrderPlacedSendEnrollInCourseTaskTest(TestCase):
             einfo=einfo
         )
 
+        braze_product_type = CT_ORDER_PRODUCT_TYPE_FOR_BRAZE.get(
+            EXAMPLE_FULFILLMENT_SIGNAL_PAYLOAD['product_type'], 'course'
+        )
+
         mock_send_email.assert_called_once_with(
             EXAMPLE_FULFILLMENT_SIGNAL_PAYLOAD['edx_lms_user_id'],
             EXAMPLE_FULFILLMENT_SIGNAL_PAYLOAD['user_email'],
             {
                 'order_number': EXAMPLE_FULFILLMENT_SIGNAL_PAYLOAD['order_number'],
-                'product_type': EXAMPLE_FULFILLMENT_SIGNAL_PAYLOAD['product_type'],
+                'product_type': braze_product_type,
                 'product_name': EXAMPLE_FULFILLMENT_SIGNAL_PAYLOAD['course_title'],
                 'first_name': EXAMPLE_FULFILLMENT_SIGNAL_PAYLOAD['user_first_name'],
             }
