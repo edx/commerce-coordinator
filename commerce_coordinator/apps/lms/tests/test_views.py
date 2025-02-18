@@ -6,6 +6,7 @@ from urllib.parse import unquote
 
 import ddt
 import requests_mock
+from commercetools.exceptions import CommercetoolsError
 from django.conf import settings
 from django.contrib.auth import get_user_model
 from django.test import override_settings
@@ -221,6 +222,12 @@ class RefundViewTests(APITestCase):
         }]
     }
 
+    entitlement_valid_payload = {
+        'username': 'testuser',
+        'order_number': 'ORDER123',
+        'entitlement_id': 'ENTITLEMENT123'
+    }
+
     invalid_payload = {
         'course_id': '',
         'username': ''
@@ -304,6 +311,45 @@ class RefundViewTests(APITestCase):
         response = self.client.post(self.url, local_invalid_payload, format='json')
 
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+
+    @patch('commerce_coordinator.apps.lms.views.get_line_item_from_entitlement')
+    @patch('commerce_coordinator.apps.lms.views.OrderRefundRequested.run_filter')
+    def test_refund_entitlement_success(self, mock_run_filter, mock_get_line_item):
+        mock_run_filter.return_value = {'returned_order': True}
+        mock_get_line_item.return_value = ('order_id', 'line_item_id')
+        self.authenticate_user()
+        response = self.client.post(self.url, self.entitlement_valid_payload, format='json')
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+
+    @patch('commerce_coordinator.apps.lms.views.get_line_item_from_entitlement')
+    @patch('commerce_coordinator.apps.lms.views.OrderRefundRequested.run_filter')
+    def test_refund_entitlement_failure(self, mock_run_filter, mock_get_line_item):
+        mock_run_filter.return_value = {'returned_order': None}
+        mock_get_line_item.return_value = ('order_id', 'line_item_id')
+        self.authenticate_user()
+        response = self.client.post(self.url, self.entitlement_valid_payload, format='json')
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+
+    @patch('commerce_coordinator.apps.lms.views.get_line_item_from_entitlement')
+    def test_refund_entitlement_commercetools_error(self, mock_get_line_item):
+        mock_get_line_item.side_effect = CommercetoolsError(
+            message="Could not create return transaction",
+            errors="Some error message",
+            response={}
+        )
+        self.authenticate_user()
+        response = self.client.post(self.url, self.entitlement_valid_payload, format='json')
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+
+    @patch('commerce_coordinator.apps.lms.views.OrderRefundRequested.run_filter')
+    def test_post_with_invalid_entitlement_data_fails(self, mock_filter):
+        self.authenticate_user()
+        invalid_payload = copy.deepcopy(self.entitlement_valid_payload)
+        invalid_payload['entitlement_id'] = ''
+        response = self.client.post(self.url, invalid_payload, format='json')
+
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        mock_filter.assert_not_called()
 
 
 @ddt.ddt

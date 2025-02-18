@@ -12,7 +12,8 @@ def get_line_item_from_entitlement(order_number: str, entitlement_id: str) -> tu
         entitlement_id (str): The entitlement ID to search for.
 
     Returns:
-        tuple[str, str]: A tuple containing the order ID and the matching line item ID (if found, otherwise an empty string).
+        tuple[str, str]: A tuple containing the order ID and the matching line item ID (if found,
+        otherwise an empty string).
     """
     ct_api_client = CommercetoolsAPIClient()
     ct_order = ct_api_client.get_order_by_number(order_number=order_number)

@@ -267,8 +267,8 @@ class RefundView(APIView):
 
             if not order_id:
                 logger.error(f"[RefundView] Failed processing refund for username: {username}, "
-                            f"course_id: {course_id} the enrollment_attributes array requires an orders: order_id "
-                            f"attribute.")
+                             f"course_id: {course_id} the enrollment_attributes array requires an orders: order_id "
+                             f"attribute.")
                 return Response('the enrollment_attributes array requires an orders: order_id '
                                 'attribute.', status=HTTP_400_BAD_REQUEST)
 
