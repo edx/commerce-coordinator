@@ -129,12 +129,16 @@ def fulfill_order_placed_message_signal_task(
             if item.custom
             else None
         )
+        is_bundle = bool(bundle_id)
 
         serializer = OrderFulfillViewInputSerializer(data={
             **default_params,
-            'course_id': get_edx_product_course_run_key(item),  # likely not correct
+            # Due to CT Variant SKU storing different values for course and entitlement models
+            # For bundle purchases, the course_id is the course_uuid
+            # For non-bundles purchase, the course_id is the course_run_key
+            'course_id': get_edx_product_course_run_key(item),
             'line_item_id': item.id,
-            'course_mode': get_course_mode_from_ct_order(item),
+            'course_mode': get_course_mode_from_ct_order(item, is_bundle),
             'item_quantity': item.quantity,
             'line_item_state_id': line_item_state_id,
             'message_id': message_id,
@@ -148,7 +152,7 @@ def fulfill_order_placed_message_signal_task(
 
         payload = serializer.validated_data
 
-        if bundle_id:
+        if is_bundle:
             fulfill_order_placed_send_entitlement_signal.send_robust(
                 sender=fulfill_order_placed_message_signal_task,
                 **payload
