@@ -228,8 +228,8 @@ class RefundView(APIView):
             try:
                 input_details.is_valid(raise_exception=True)
             except ValidationError as e:
-                logger.exception(f"[RefundView] Exception raised validating input {self.post.__name__} with error "
-                                 f"{repr(e)}, input: {input_data}.")
+                logger.exception(f"[RefundView] Exception raised validating entitlement refund input "
+                                 f"{self.post.__name__} with error {repr(e)}, input: {input_data}.")
                 return Response('Invalid input provided', status=HTTP_400_BAD_REQUEST)
 
             username = input_details.data['username']
@@ -250,8 +250,8 @@ class RefundView(APIView):
             try:
                 input_details.is_valid(raise_exception=True)
             except ValidationError as e:
-                logger.exception(f"[RefundView] Exception raised validating input {self.post.__name__} with error "
-                                 f"{repr(e)}, input: {input_data}.")
+                logger.exception(f"[RefundView] Exception raised validating course refund  input "
+                                 f"{self.post.__name__} with error {repr(e)}, input: {input_data}.")
                 return Response('Invalid input provided', status=HTTP_400_BAD_REQUEST)
 
             course_id = input_details.data['course_id']
@@ -265,17 +265,17 @@ class RefundView(APIView):
             order_line_item_id = enrollment_attributes.get(enrollment_attribute_key('order', 'line_item_id'), None)
             order_id = enrollment_attributes.get(enrollment_attribute_key('order', 'order_id'), None)
 
-        if not order_id:
-            logger.error(f"[RefundView] Failed processing refund for username: {username}, "
-                         f"course_id: {course_id} the enrollment_attributes array requires an orders: order_id "
-                         f"attribute.")
-            return Response('the enrollment_attributes array requires an orders: order_id '
-                            'attribute.', status=HTTP_400_BAD_REQUEST)
+            if not order_id:
+                logger.error(f"[RefundView] Failed processing refund for username: {username}, "
+                            f"course_id: {course_id} the enrollment_attributes array requires an orders: order_id "
+                            f"attribute.")
+                return Response('the enrollment_attributes array requires an orders: order_id '
+                                'attribute.', status=HTTP_400_BAD_REQUEST)
 
         if not order_line_item_id:
             log_msg = (
                 f"[RefundView] Failed processing refund for order {order_id} for username: {username}, "
-                f"entitlement_id: {entitlement_id}. Line item does not exist."
+                f"entitlement_id: {entitlement_id}. Line item does not exist in commercetools Order."
             ) if entitlement_refund else (
                 f"[RefundView] Failed processing refund for order {order_id} for username: {username}, "
                 f"course_id: {course_id} the enrollment_attributes array requires an orders: line_item_id "
