@@ -118,7 +118,7 @@ class UserOrdersView(APIView):
             return Response(output)
         except Exception as exc:  # pylint: disable=broad-except
             logger.error(
-                "[UserOrdersView] An error occured while fetching Order History for user: %s with error: %s",
+                "[UserOrdersView] An error occured while fetching Order History for user: %s with error message: %s",
                 request.user.lms_user_id,
                 exc,
             )
