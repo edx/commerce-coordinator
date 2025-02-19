@@ -62,11 +62,9 @@ class CourseEnrollTaskAfterReturn(Task):    # pylint: disable=abstract-method
                 f"order number: {order_number}, and course title: {course_title}"
             )
 
-            braze_product_type = CT_ORDER_PRODUCT_TYPE_FOR_BRAZE.get(product_type, 'course')
-
             canvas_entry_properties = {
                 'order_number': order_number,
-                'product_type': braze_product_type,
+                'product_type': CT_ORDER_PRODUCT_TYPE_FOR_BRAZE.get(product_type, 'course'),
                 'product_name': course_title,
                 'first_name': user_first_name,
             }
