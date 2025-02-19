@@ -26,7 +26,8 @@ from commerce_coordinator.apps.commercetools.catalog_info.utils import (
 )
 from commerce_coordinator.apps.commercetools.clients import CommercetoolsAPIClient
 from commerce_coordinator.apps.commercetools.constants import (
-    CT_ORDER_PRODUCT_TYPE_FOR_BRAZE, EMAIL_NOTIFICATION_CACHE_TTL_SECS
+    CT_ORDER_PRODUCT_TYPE_FOR_BRAZE,
+    EMAIL_NOTIFICATION_CACHE_TTL_SECS
 )
 from commerce_coordinator.apps.commercetools.filters import OrderRefundRequested
 from commerce_coordinator.apps.commercetools.serializers import OrderFulfillViewInputSerializer
