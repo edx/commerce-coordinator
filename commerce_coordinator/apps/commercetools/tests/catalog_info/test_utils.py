@@ -52,7 +52,10 @@ class LocalizedStringsTests(TestCase):
         self.assertEqual(result, {'ZZ': string, Languages.ENGLISH: string, Languages.US_ENGLISH: string})
 
     def test_get_course_mode_from_ct_order(self):
-        self.assertEqual(get_course_mode_from_ct_order(get_edx_items(self.order)[0]), 'professional')
+        self.assertEqual(get_course_mode_from_ct_order(get_edx_items(self.order)[0], False), 'professional')
+
+    def test_get_course_mode_from_program_ct_order(self):
+        self.assertEqual(get_course_mode_from_ct_order(get_edx_items(self.order)[0], True), 'professional')
 
     def test_single_key_ls_creation(self):
         string = "test-2"
