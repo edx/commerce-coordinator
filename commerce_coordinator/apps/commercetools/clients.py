@@ -377,11 +377,9 @@ class CommercetoolsAPIClient:
         Returns:
             CTProductVariant if found, None otherwise.
         """
-        product_projection = self.base_client.product_projections.get_by_key(program_id)
+        results = self.base_client.product_projections.search(False, filter=f'key:"{program_id}"').results
 
-        if not product_projection:
-            return None
-        return product_projection
+        return results[0] if results else None
 
     def get_product_variant_by_course_run(self, cr_id: str) -> Optional[CTProductVariant]:
         """

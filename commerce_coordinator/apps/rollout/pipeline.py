@@ -38,35 +38,38 @@ class GetActiveOrderManagementSystem(PipelineStep):
         Returns:
             dict:
                 active_order_management_system: result from pipeline steps to determine if
-                            redirect_to_commercetools_checkout flag is enabled and course_run_key
-                            and sku query params exist and detect which checkout to redirect to
+                            redirect_to_commercetools_checkout flag is enabled and course_run_key,
+                            sku, and bundle query params exist and detect which checkout to redirect to
         """
         sku_params = request.query_params.getlist('sku')
         course_run = request.query_params.get('course_run_key', '').strip()
         bundle = request.query_params.get('bundle', '').strip()
-        commercetools_available_course = None
+        commercetools_available_product = None
+
+        if is_user_enterprise_learner(request):
+            return {
+                ACTIVE_ORDER_MANAGEMENT_SYSTEM_KEY: FRONTEND_APP_PAYMENT_CHECKOUT
+            }
 
         ct_api_client = CommercetoolsAPIClient()
 
         if bundle and is_program_redirection_to_ct_enabled(request):
             try:
-                commercetools_available_program = ct_api_client.get_product_by_program_id(bundle)
-                if commercetools_available_program:
-                    return {ACTIVE_ORDER_MANAGEMENT_SYSTEM_KEY: COMMERCETOOLS_FRONTEND}
-                logger.warning(
-                    f'[get_product_by_program_id] Program {bundle} not found in Commercetools. '
-                    f'Please ensure it is properly synced.'
-                )
+                commercetools_available_product = ct_api_client.get_product_by_program_id(bundle)
+                if not commercetools_available_product:
+                    logger.warning(
+                        f'[get_product_by_program_id] Program {bundle} not found in Commercetools. '
+                        f'Please ensure it is properly synced.'
+                    )
             except HTTPError as exc:
                 logger.exception(
                     f'[get_product_by_program_id] Failed to get CT program '
                     f'for product_id: {bundle} with exception: {exc}'
                 )
-
-        if course_run and is_redirect_to_commercetools_enabled_for_user(request):
+        elif course_run and is_redirect_to_commercetools_enabled_for_user(request):
             try:
                 ct_api_client = CommercetoolsAPIClient()
-                commercetools_available_course = ct_api_client.get_product_variant_by_course_run(course_run)
+                commercetools_available_product = ct_api_client.get_product_variant_by_course_run(course_run)
             except HTTPError as exc:  # pragma no cover
                 # TODO: FIX Per SONIC-354
                 logger.exception(
@@ -74,14 +77,14 @@ class GetActiveOrderManagementSystem(PipelineStep):
                     f'for course_run: {course_run} with exception: {exc}'
                 )
 
-        if commercetools_available_course and not is_user_enterprise_learner(request):
+        if commercetools_available_product:
             active_order_management_system = COMMERCETOOLS_FRONTEND
-        elif sku_params:
+        elif bundle or sku_params:
             active_order_management_system = FRONTEND_APP_PAYMENT_CHECKOUT
         else:
             logger.exception('An error occurred while determining the active order management system.'
-                             'No waffle flag, course_run_key or sku value found')
-            raise OpenEdxFilterException('Neither course_run_key and waffle flag value nor sku found.'
+                             'No waffle flag, course_run_key, sku or bundle id value found')
+            raise OpenEdxFilterException('Neither course_run_key and waffle flag value, sku nor bundle id found.'
                                          'Unable to determine active order management system.')
 
         return {
