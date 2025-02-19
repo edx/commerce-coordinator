@@ -13,6 +13,7 @@ from requests import RequestException
 
 from commerce_coordinator.apps.commercetools.catalog_info.constants import TwoUKeys
 from commerce_coordinator.apps.commercetools.clients import CommercetoolsAPIClient
+from commerce_coordinator.apps.commercetools.constants import CT_ORDER_PRODUCT_TYPE_FOR_BRAZE
 from commerce_coordinator.apps.commercetools.utils import send_unsupported_mode_fulfillment_error_email
 from commerce_coordinator.apps.lms.clients import LMSAPIClient
 
@@ -32,6 +33,7 @@ class CourseEnrollTaskAfterReturn(Task):    # pylint: disable=abstract-method
         order_number = kwargs.get('order_number')
         user_first_name = kwargs.get('user_first_name')
         course_title = kwargs.get('course_title')
+        product_type = kwargs.get('product_type')
 
         error_message = (
             json.loads(exc.response.text).get('message', '')
@@ -62,7 +64,7 @@ class CourseEnrollTaskAfterReturn(Task):    # pylint: disable=abstract-method
 
             canvas_entry_properties = {
                 'order_number': order_number,
-                'product_type': 'course',  # TODO: Fetch product type from commercetools product object
+                'product_type': CT_ORDER_PRODUCT_TYPE_FOR_BRAZE.get(product_type, 'course'),
                 'product_name': course_title,
                 'first_name': user_first_name,
             }
@@ -94,7 +96,8 @@ def fulfill_order_placed_send_enroll_in_course_task(
     message_id,
     user_first_name,    # pylint: disable=unused-argument
     user_email,         # pylint: disable=unused-argument
-    course_title        # pylint: disable=unused-argument
+    course_title,        # pylint: disable=unused-argument
+    product_type        # pylint: disable=unused-argument
 ):
     """
     Celery task for order placed fulfillment and enrollment via LMS Enrollment API.

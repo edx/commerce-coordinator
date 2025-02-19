@@ -32,7 +32,7 @@ class OrderPaymentState(Enum):
 
 class PaymentState(Enum):
     """
-    Enum for Payment states, Controlled by Titan's System.
+    Enum for Payment states.
     """
     CHECKOUT = 'checkout'
     COMPLETED = 'completed'

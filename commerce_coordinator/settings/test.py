@@ -63,18 +63,6 @@ CC_SIGNALS = {
         'commerce_coordinator.apps.demo_lms.signals.demo_enroll_learner_in_course',
     ],
     # Actual Production Signals
-    'commerce_coordinator.apps.ecommerce.signals.enrollment_code_redemption_requested_signal': [
-        'commerce_coordinator.apps.titan.signals.enrollment_code_redemption_requested_create_order',
-    ],
-    'commerce_coordinator.apps.titan.signals.fulfill_order_placed_signal': [
-        'commerce_coordinator.apps.lms.signal_handlers.fulfill_order_placed_send_enroll_in_course',
-    ],
-    'commerce_coordinator.apps.ecommerce.signals.order_created_signal': [
-        'commerce_coordinator.apps.titan.signals.order_created_save',
-    ],
-    'commerce_coordinator.apps.stripe.signals.payment_processed_signal': [
-        'commerce_coordinator.apps.titan.signals.payment_processed_save',
-    ],
     'commerce_coordinator.apps.commercetools.signals.fulfill_order_placed_signal': [
         'commerce_coordinator.apps.lms.signal_handlers.fulfill_order_placed_send_enroll_in_course',
     ],

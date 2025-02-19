@@ -33,6 +33,7 @@ EXAMPLE_FULFILLMENT_SIGNAL_PAYLOAD: Dict[str, Union[str, bool, int, None]] = {
     'user_first_name': 'test',
     'user_email': 'test@example.com',
     'course_title': 'Demonstration Course',
+    'product_type': 'edx_course'
 }
 
 EXAMPLE_FULFILLMENT_REQUEST_PAYLOAD = {
