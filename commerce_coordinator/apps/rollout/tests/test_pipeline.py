@@ -1,15 +1,15 @@
 from unittest import TestCase
-from unittest.mock import patch, MagicMock
-from requests import HTTPError
+from unittest.mock import MagicMock, patch
 
 from openedx_filters.exceptions import OpenEdxFilterException
+from requests import HTTPError
 
 from commerce_coordinator.apps.commercetools_frontend.constants import COMMERCETOOLS_FRONTEND
-from commerce_coordinator.apps.rollout.pipeline import (
-    GetActiveOrderManagementSystem,
-    ACTIVE_ORDER_MANAGEMENT_SYSTEM_KEY
-)
 from commerce_coordinator.apps.frontend_app_payment.constants import FRONTEND_APP_PAYMENT_CHECKOUT
+from commerce_coordinator.apps.rollout.pipeline import (
+    ACTIVE_ORDER_MANAGEMENT_SYSTEM_KEY,
+    GetActiveOrderManagementSystem
+)
 
 
 class TestGetActiveOrderManagementSystem(TestCase):
