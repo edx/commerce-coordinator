@@ -134,6 +134,8 @@ def fulfill_order_placed_message_signal_task(
         )
         is_bundle = bool(bundle_id)
 
+        program = client.get_product_by_program_id(bundle_id) if is_bundle else None
+
         serializer = OrderFulfillViewInputSerializer(data={
             **default_params,
             # Due to CT Variant SKU storing different values for course and entitlement models
@@ -147,7 +149,7 @@ def fulfill_order_placed_message_signal_task(
             'message_id': message_id,
             'user_first_name': customer.first_name,
             'user_email': customer.email,
-            'course_title': item.name.get('en-US', ''),
+            'product_title': program.name['en-US'] if program else item.name.get('en-US', ''),
             'product_type': item.product_type.obj.key
         })
 

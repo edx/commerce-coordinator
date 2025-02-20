@@ -141,7 +141,7 @@ class FulfillOrderPlacedSendEnrollInCourseTaskTest(TestCase):
         mock_ct_get_state.assert_called_with(TwoUKeys.FAILURE_FULFILMENT_STATE)
         mock_ct_get_order.assert_called_with(EXAMPLE_FULFILLMENT_SIGNAL_PAYLOAD.get('order_id'))
 
-    @patch('commerce_coordinator.apps.lms.tasks.send_unsupported_mode_fulfillment_error_email')
+    @patch('commerce_coordinator.apps.lms.tasks.send_fulfillment_error_email')
     @patch.object(fulfill_order_placed_send_enroll_in_course_task, 'max_retries', 5)
     def test_fulfillment_error_email_is_sent_on_failure(
             self, mock_send_email, mock_client
