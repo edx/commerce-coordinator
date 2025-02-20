@@ -86,17 +86,10 @@ class PaymentPageRedirectView(APIView):
         """
 
         get_items = list(self.request.GET.lists())
-        redirect_url = None
-        if "bundle" in dict(get_items):
-            ecom_url = urljoin(
-                settings.ECOMMERCE_URL, settings.ECOMMERCE_ADD_TO_BASKET_API_PATH
-            )
-            redirect_url = self._add_query_params_to_redirect_url(ecom_url, get_items)
-        else:
-            redirect_url_obj = PaymentPageRedirectRequested.run_filter(request)
-            redirect_url = self._add_query_params_to_redirect_url(
-                redirect_url_obj["redirect_url"], get_items
-            )
+        redirect_url_obj = PaymentPageRedirectRequested.run_filter(request)
+        redirect_url = self._add_query_params_to_redirect_url(
+            redirect_url_obj["redirect_url"], get_items
+        )
         redirect = HttpResponseRedirect(redirect_url, status=HTTP_303_SEE_OTHER)
         redirect.headers[HttpHeadersNames.CONTENT_TYPE.value] = MediaTypes.JSON.value
         logger.debug(
