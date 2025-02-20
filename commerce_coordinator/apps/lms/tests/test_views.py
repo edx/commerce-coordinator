@@ -143,8 +143,6 @@ class PaymentPageRedirectViewTests(APITestCase):
                 json=gen_program_search_result().serialize()
             )
 
-            print('\n\n\n\n\n test = ', gen_program_search_result().serialize())
-
             ret_program = self.client_set.client.get_product_by_program_id(
                 '818aff6f-1a39-4515-8779-dfebc0742d8e'
             )

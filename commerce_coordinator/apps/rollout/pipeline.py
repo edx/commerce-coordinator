@@ -41,7 +41,7 @@ class GetActiveOrderManagementSystem(PipelineStep):
                             redirect_to_commercetools_checkout flag is enabled and course_run_key,
                             sku, and bundle query params exist and detect which checkout to redirect to
         """
-        sku_params = request.query_params.getlist('sku')
+        sku_params = [sku.strip() for sku in request.query_params.getlist('sku')]
         course_run = request.query_params.get('course_run_key', '').strip()
         bundle = request.query_params.get('bundle', '').strip()
         commercetools_available_product = None
@@ -83,9 +83,9 @@ class GetActiveOrderManagementSystem(PipelineStep):
             active_order_management_system = FRONTEND_APP_PAYMENT_CHECKOUT
         else:
             logger.exception('An error occurred while determining the active order management system.'
-                             'No waffle flag, course_run_key, sku or bundle id value found')
-            raise OpenEdxFilterException('Neither course_run_key and waffle flag value, sku nor bundle id found.'
-                                         'Unable to determine active order management system.')
+                             'Neither the course_run_key, waffle flag value, sku(s) nor the bundle id were found.')
+            raise OpenEdxFilterException('Neither the course_run_key, waffle flag value, sku(s) nor the bundle id '
+                                         'were found. Unable to determine active order management system.')
 
         return {
             ACTIVE_ORDER_MANAGEMENT_SYSTEM_KEY: active_order_management_system
