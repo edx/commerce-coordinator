@@ -41,7 +41,7 @@ from commerce_coordinator.apps.commercetools.utils import (
 from commerce_coordinator.apps.core.constants import ISO_8601_FORMAT
 from commerce_coordinator.apps.core.memcache import safe_key
 from commerce_coordinator.apps.core.segment import track
-from commerce_coordinator.apps.core.tasks import acquire_task_lock, release_task_lock, TASK_LOCK_RETRY
+from commerce_coordinator.apps.core.tasks import TASK_LOCK_RETRY, acquire_task_lock, release_task_lock
 from commerce_coordinator.apps.lms.clients import LMSAPIClient
 
 # Use the special Celery logger for our tasks
@@ -275,7 +275,7 @@ def fulfill_order_returned_signal_task(
     def _log_error_and_release_lock(log_message):
         logger.error(log_message)
         release_task_lock(task_key)
-        
+
     def _log_info_and_release_lock(log_message):
         logger.error(log_message)
         release_task_lock(task_key)
@@ -324,7 +324,7 @@ def fulfill_order_returned_signal_task(
                 return_line_item_id=return_line_item_id,
                 message_id=message_id
             )
-        except Exception as exc:
+        except Exception as exc:    # pylint: disable=broad-except
             _log_error_and_release_lock(
                 f'[CT-{tag}] Unsuccessful refund with details: '
                 f'[order_id: {order_id} '

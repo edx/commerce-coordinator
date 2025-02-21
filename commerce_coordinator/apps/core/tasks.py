@@ -5,7 +5,6 @@ from celery import shared_task
 from celery.utils.log import get_task_logger
 from django.core.cache import cache
 
-
 TASK_LOCK_EXPIRE = 60 * 1  # Lock expires in 1 minute
 TASK_LOCK_RETRY = 3  # Retry acquiring lock after 3 sceonds
 
@@ -31,7 +30,7 @@ def acquire_task_lock(task_id):
     Returns true if the task_id was not already locked; false if it was.
     """
     # cache.add fails if the key already exists
-    
+
     key = f"task-{task_id}"
     succeeded = cache.add(key, 'true', TASK_LOCK_EXPIRE)
     if not succeeded:

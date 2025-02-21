@@ -87,6 +87,7 @@ def _cents_to_dollars(in_amount):
         else 2
     )
 
+
 def get_line_item_discounted_price(order: CTOrder, return_line_item_id: str):
     if len(order.line_items) > 1:
         for line_item in get_edx_items(order):
@@ -95,6 +96,7 @@ def get_line_item_discounted_price(order: CTOrder, return_line_item_id: str):
     elif len(order.line_items) == 1:
         return _cents_to_dollars(order.total_price)
     return decimal.Decimal(0.00)
+
 
 def get_edx_refund_info(payment: CTPayment, order: CTOrder, return_line_item_id: str) -> (decimal.Decimal, str):
     interaction_id = None

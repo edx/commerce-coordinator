@@ -154,7 +154,7 @@ class OrderReturnedView(SingleInvocationAPIView):
             )
 
         return Response(status=status.HTTP_200_OK)
-    
+
     def get_return_line_item_return_id(self, return_items):
         return return_items.get('id', None)
 
