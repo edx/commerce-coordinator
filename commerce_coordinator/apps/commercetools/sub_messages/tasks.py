@@ -25,7 +25,10 @@ from commerce_coordinator.apps.commercetools.catalog_info.utils import (
     get_line_item_attribute
 )
 from commerce_coordinator.apps.commercetools.clients import CommercetoolsAPIClient
-from commerce_coordinator.apps.commercetools.constants import EMAIL_NOTIFICATION_CACHE_TTL_SECS
+from commerce_coordinator.apps.commercetools.constants import (
+    CT_ORDER_PRODUCT_TYPE_FOR_BRAZE,
+    EMAIL_NOTIFICATION_CACHE_TTL_SECS
+)
 from commerce_coordinator.apps.commercetools.filters import OrderRefundRequested
 from commerce_coordinator.apps.commercetools.serializers import OrderFulfillViewInputSerializer
 from commerce_coordinator.apps.commercetools.signals import (
@@ -144,7 +147,8 @@ def fulfill_order_placed_message_signal_task(
             'message_id': message_id,
             'user_first_name': customer.first_name,
             'user_email': customer.email,
-            'course_title': item.name.get('en-US', '')
+            'course_title': item.name.get('en-US', ''),
+            'product_type': item.product_type.obj.key
         })
 
         # the following throws and thus doesn't need to be a conditional
@@ -314,7 +318,7 @@ def fulfill_order_returned_signal_task(
 
                 for line_item in get_edx_items(order):
                     course_run = get_edx_product_course_run_key(line_item)
-                    # TODO: Remove LMS Enrollment
+                    # TODO: Remove LMS Enrollment. To be done in SONIC-96
                     logger.info(
                         f'[CT-{tag}] calling lms to unenroll user {lms_user_name} in {course_run}'
                         f', message id: {message_id}'
@@ -331,7 +335,7 @@ def fulfill_order_returned_signal_task(
                         'brand': get_line_item_attribute(line_item, 'brand-text'),
                         'url': get_line_item_attribute(line_item, 'url-course'),
                         'lob': get_line_item_attribute(line_item, 'lob') or 'edx',
-                        'product_type': line_item.product_type.obj.name
+                        'product_type': CT_ORDER_PRODUCT_TYPE_FOR_BRAZE.get(line_item.product_type.obj.key, 'course')
                         if hasattr(line_item.product_type.obj, 'name') else None
                     }
                     segment_event_properties['products'].append(product)

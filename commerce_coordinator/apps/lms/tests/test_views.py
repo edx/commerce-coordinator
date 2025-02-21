@@ -47,8 +47,6 @@ class PaymentPageRedirectViewTests(APITestCase):
             self.test_user_username,
             self.test_user_email,
             self.test_user_password,
-            # TODO: Remove is_staff=True
-            is_staff=True,
         )
 
     def tearDown(self):

@@ -17,7 +17,7 @@ class Command(CommercetoolsAPIClientCommand):
     def handle(self, *args, **options):
 
         order_state = "Complete"
-        # TODO: Change for your use case
+        # Change for your use case
         last_modified_at = "2024-10-23T00:00:00"
         limit = 500
         offset = 0
