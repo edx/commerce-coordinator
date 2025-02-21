@@ -27,8 +27,8 @@ from commerce_coordinator.apps.commercetools.utils import (
     get_braze_client,
     has_full_refund_transaction,
     has_refund_transaction,
-    send_order_confirmation_email,
     send_fulfillment_error_email,
+    send_order_confirmation_email,
     translate_refund_status_to_transaction_status
 )
 
@@ -178,7 +178,7 @@ class TestBrazeHelpers(unittest.TestCase):
                 recipients=[{"external_user_id": lms_user_id, "attributes": {"email": lms_user_email}}],
                 canvas_entry_properties=canvas_entry_properties,
             )
-            mock_logger.assert_called_once_with('Encountered exception sending Fulfillment unsupported mode error '
+            mock_logger.assert_called_once_with('Encountered exception sending Fulfillment error '
                                                 'email. Exception: Error sending Braze email')
 
     def test_extract_ct_product_information_for_braze_canvas(self):

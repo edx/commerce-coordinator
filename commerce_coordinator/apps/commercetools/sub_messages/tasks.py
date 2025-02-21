@@ -149,7 +149,7 @@ def fulfill_order_placed_message_signal_task(
             'message_id': message_id,
             'user_first_name': customer.first_name,
             'user_email': customer.email,
-            'product_title': program.name['en-US'] if program else item.name.get('en-US', ''),
+            'product_title': program.name.get('en-US', '') if program else item.name.get('en-US', ''),
             'product_type': item.product_type.obj.key
         })
 
