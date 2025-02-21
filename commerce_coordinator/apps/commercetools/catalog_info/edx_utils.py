@@ -104,6 +104,5 @@ def get_edx_refund_info(payment: CTPayment, order: CTOrder, return_line_item_id:
             interaction_id = transaction.interaction_id
 
     refund_amount = get_line_item_discounted_price(order, return_line_item_id)
-    print('\n\n\n\n\n line item price = ',refund_amount, '\n\n\n\n\n')
 
     return refund_amount, interaction_id

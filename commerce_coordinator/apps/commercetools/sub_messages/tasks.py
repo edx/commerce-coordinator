@@ -1,6 +1,7 @@
 """
 Commercetools Subscription Message tasks (Celery)
 """
+import time
 from datetime import datetime
 
 from celery import shared_task
@@ -40,6 +41,7 @@ from commerce_coordinator.apps.commercetools.utils import (
 from commerce_coordinator.apps.core.constants import ISO_8601_FORMAT
 from commerce_coordinator.apps.core.memcache import safe_key
 from commerce_coordinator.apps.core.segment import track
+from commerce_coordinator.apps.core.tasks import acquire_task_lock, release_task_lock, TASK_LOCK_RETRY
 from commerce_coordinator.apps.lms.clients import LMSAPIClient
 
 # Use the special Celery logger for our tasks
@@ -268,6 +270,20 @@ def fulfill_order_returned_signal_task(
 
     tag = "fulfill_order_returned_signal_task"
 
+    task_key = f'{tag}-{order_id}'
+
+    def _log_error_and_release_lock(log_message):
+        logger.error(log_message)
+        release_task_lock(task_key)
+        
+    def _log_info_and_release_lock(log_message):
+        logger.error(log_message)
+        release_task_lock(task_key)
+
+    while not acquire_task_lock(task_key):
+        logger.info(f"Task {task_key} is locked. Retrying in {TASK_LOCK_RETRY} seconds...")
+        time.sleep(TASK_LOCK_RETRY)  # Wait before retrying
+
     logger.info(f'[CT-{tag}] Processing return for order: {order_id}, line item: {return_line_item_return_id}, '
                 f'message id: {message_id}')
 
@@ -276,19 +292,19 @@ def fulfill_order_returned_signal_task(
     try:
         order = client.get_order_by_id(order_id)
     except CommercetoolsError as err:  # pragma no cover
-        logger.error(f'[CT-{tag}] Order not found: {order_id} with CT error {err}, {err.errors}'
-                     f', message id: {message_id}')
+        _log_error_and_release_lock(f'[CT-{tag}] Order not found: {order_id} with CT error {err}, {err.errors}'
+                                    f', message id: {message_id}')
         return False
 
     try:
         customer = client.get_customer_by_id(order.customer_id)
     except CommercetoolsError as err:  # pragma no cover
-        logger.error(f'[CT-{tag}] Customer not found: {order.customer_id} for order {order_id} with '
-                     f'CT error {err}, {err.errors}, message id: {message_id}')
+        _log_error_and_release_lock(f'[CT-{tag}] Customer not found: {order.customer_id} for order {order_id} with '
+                                    f'CT error {err}, {err.errors}, message id: {message_id}')
         return False
 
     if not (customer and order and is_edx_lms_order(order)):  # pragma no cover
-        logger.info(f'[CT-{tag}] order {order_id} is not an edX order, message id: {message_id}')
+        _log_info_and_release_lock(f'[CT-{tag}] order {order_id} is not an edX order, message id: {message_id}')
         return True
 
     # Retrieve the payment service provider (PSP) payment ID from an order.
@@ -351,7 +367,9 @@ def fulfill_order_returned_signal_task(
             logger.info(f'[CT-{tag}] payment {psp_payment_id} not refunded, '
                         f'sending Slack notification, message id: {message_id}')
 
-    logger.info(f'[CT-{tag}] Finished return for order: {order_id}, line item: {return_line_item_return_id}, '
-                f'message id: {message_id}')
+    _log_info_and_release_lock(
+        f'[CT-{tag}] Finished return for order: {order_id}, line item: {return_line_item_return_id}, '
+        f'message id: {message_id}'
+    )
 
     return True
