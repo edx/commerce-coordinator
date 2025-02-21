@@ -6,7 +6,7 @@ from celery.utils.log import get_task_logger
 from django.core.cache import cache
 
 
-TASK_LOCK_EXPIRE = 60 * 10  # Lock expires in 10 minutes
+TASK_LOCK_EXPIRE = 60 * 1  # Lock expires in 1 minute
 TASK_LOCK_RETRY = 3  # Retry acquiring lock after 3 sceonds
 
 
