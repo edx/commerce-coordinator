@@ -317,12 +317,21 @@ def fulfill_order_returned_signal_task(
 
     # Return payment if payment id is set
     if psp_payment_id is not None:
-        result = OrderRefundRequested.run_filter(
-            order_id=order_id,
-            return_line_item_return_id=return_line_item_return_id,
-            return_line_item_id=return_line_item_id,
-            message_id=message_id
-        )
+        try:
+            result = OrderRefundRequested.run_filter(
+                order_id=order_id,
+                return_line_item_return_id=return_line_item_return_id,
+                return_line_item_id=return_line_item_id,
+                message_id=message_id
+            )
+        except Exception as exc:
+            _log_error_and_release_lock(
+                f'[CT-{tag}] Unsuccessful refund with details: '
+                f'[order_id: {order_id} '
+                f'message_id: {message_id} '
+                f'exception: {exc}'
+            )
+            return False
 
         if 'refund_response' in result and result['refund_response']:
             if result['refund_response'] == 'charge_already_refunded':
