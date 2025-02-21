@@ -1154,3 +1154,36 @@ class ClientUpdateReturnTests(TestCase):
                 payment_intent_id=None,
                 amount_in_cents=10000
             )
+
+    def test_get_product_by_program_id(self):
+        base_url = self.client_set.get_base_url_from_client()
+        program_id = "mock_program_id"
+        expected_product = {
+            "id": "mock_product_id",
+            "key": program_id,
+            "name": {"en": "Mock Product"}
+        }
+
+        with requests_mock.Mocker(real_http=True, case_sensitive=False) as mocker:
+            mocker.get(
+                f"{base_url}product-projections/search?filter=key%3A%22{program_id}%22",
+                json={"results": [expected_product], "total": 1}
+            )
+
+            result = self.client_set.client.get_product_by_program_id(program_id)
+            self.assertIsNotNone(result)
+            self.assertEqual(result.id, expected_product["id"])
+            self.assertEqual(result.key, expected_product["key"])
+
+    def test_get_product_by_program_id_not_found(self):
+        base_url = self.client_set.get_base_url_from_client()
+        program_id = "non_existent_program_id"
+
+        with requests_mock.Mocker(real_http=True, case_sensitive=False) as mocker:
+            mocker.get(
+                f"{base_url}product-projections/search?filter=key%3A%22{program_id}%22",
+                json={"results": [], "total": 0}
+            )
+
+            result = self.client_set.client.get_product_by_program_id(program_id)
+            self.assertIsNone(result)
