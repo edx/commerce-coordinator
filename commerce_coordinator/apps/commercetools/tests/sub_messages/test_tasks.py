@@ -45,6 +45,7 @@ def gen_example_fulfill_payload():
         'order_number': '2U-000000',
         'line_item_state_id': uuid4_str(),
         'order_line_id': uuid4_str(),
+        'return_line_item_return_id': uuid4_str(),
         'source_system': SOURCE_SYSTEM,
         'message_id': uuid4_str()
     }
@@ -267,6 +268,7 @@ class OrderReturnedMessageSignalTaskTests(TestCase):
         return (
             values['order_id'],
             values['order_line_id'],
+            values['return_line_item_return_id'],
             values['message_id']
         )
 

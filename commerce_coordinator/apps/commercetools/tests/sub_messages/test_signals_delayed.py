@@ -85,6 +85,7 @@ class ReturnedOrderPlacedMessageSignalTest(CoordinatorSignalReceiverTestCase):
     mock_parameters = {
         'order_id': uuid4_str(),
         'return_line_item_return_id': uuid4_str(),
+        'return_line_item_id': uuid4_str(),
         'message_id': uuid4_str()
     }
 

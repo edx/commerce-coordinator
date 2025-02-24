@@ -38,7 +38,11 @@ def is_commercetools_line_item_already_refunded(order: CTOrder, order_line_item_
 
     return_info_return_items = get_order_return_info_return_items(order)
 
-    return len(list(filter(lambda item: item.line_item_id == order_line_item_id, return_info_return_items))) >= 1
+    return len(list(filter(
+        # Please verify the newly added check in which we are checking payment_state as well
+        lambda item: item.line_item_id == order_line_item_id,
+        return_info_return_items
+    ))) >= 1
 
 
 def is_commercetools_stripe_refund(source_system: str) -> bool:

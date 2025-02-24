@@ -42,6 +42,7 @@ def fulfill_order_returned_signal(**kwargs):
     async_result = fulfill_order_returned_signal_task.delay(
         order_id=kwargs['order_id'],
         return_line_item_return_id=kwargs['return_line_item_return_id'],
+        return_line_item_id=kwargs['return_line_item_id'],
         message_id=kwargs['message_id']
     )
     return async_result.id
