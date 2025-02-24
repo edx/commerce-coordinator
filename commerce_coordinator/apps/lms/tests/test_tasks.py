@@ -295,3 +295,56 @@ class FulfillOrderPlacedSendEntitlementTaskTest(TestCase):
                 'first_name': EXAMPLE_FULFILLMENT_SIGNAL_PAYLOAD['user_first_name'],
             }
         )
+
+        @patch('commerce_coordinator.apps.commercetools.sub_messages.tasks.TieredCache')
+        @patch('commerce_coordinator.apps.commercetools.sub_messages.tasks.send_fulfillment_error_email')
+        @patch.object(fulfill_order_placed_send_entitlement_task, 'max_retries', 5)
+        def test_failure_email_is_sent_once_for_multiple_failures(self, mock_send_email, mock_tiered_cache):
+            mock_response = Mock()
+            mock_response.text = '{"message": "Some test error"}'
+            exception = RequestException("400 Bad Request")
+            exception.response = mock_response
+
+            exc = exception
+            task_id = "test_task_id"
+            args = []
+            EXAMPLE_FULFILLMENT_SIGNAL_PAYLOAD['product_type'] = 'program'
+            kwargs = EXAMPLE_FULFILLMENT_SIGNAL_PAYLOAD
+            einfo = Mock()
+
+            # First Failure, Email will be sent
+            fulfill_order_placed_send_entitlement_task.push_request(retries=5)
+            fulfill_order_placed_send_entitlement_task.on_failure(
+                exc=exc,
+                task_id=task_id,
+                args=args,
+                kwargs=kwargs,
+                einfo=einfo
+            )
+
+            mock_tiered_cache.get_cached_response.return_value.is_found = False
+
+            mock_send_email.assert_called_once()
+            mock_send_email.assert_called_once_with(
+                EXAMPLE_FULFILLMENT_SIGNAL_PAYLOAD['edx_lms_user_id'],
+                EXAMPLE_FULFILLMENT_SIGNAL_PAYLOAD['user_email'],
+                {
+                    'order_number': EXAMPLE_FULFILLMENT_SIGNAL_PAYLOAD['order_number'],
+                    'product_type': 'program',
+                    'product_name': EXAMPLE_FULFILLMENT_SIGNAL_PAYLOAD['product_title'],
+                    'first_name': EXAMPLE_FULFILLMENT_SIGNAL_PAYLOAD['user_first_name'],
+                }
+            )
+
+            # Second Failure, Email will not be sent
+            fulfill_order_placed_send_entitlement_task.on_failure(
+                exc=exc,
+                task_id=task_id,
+                args=args,
+                kwargs=kwargs,
+                einfo=einfo
+            )
+
+            mock_tiered_cache.get_cached_response.return_value.is_found = True
+
+            mock_send_email.assert_not_called()
