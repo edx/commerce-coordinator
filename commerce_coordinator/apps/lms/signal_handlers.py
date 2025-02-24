@@ -34,7 +34,7 @@ def fulfill_order_placed_send_enroll_in_course(**kwargs):
         message_id=kwargs['message_id'],
         user_first_name=kwargs['user_first_name'],
         user_email=kwargs['user_email'],
-        course_title=kwargs['course_title'],
+        product_title=kwargs['product_title'],
         product_type=kwargs['product_type']
     )
     return async_result.id
@@ -59,6 +59,7 @@ def fulfill_order_placed_send_entitlement(**kwargs):
         message_id=kwargs['message_id'],
         user_first_name=kwargs['user_first_name'],
         user_email=kwargs['user_email'],
-        course_title=kwargs['course_title']
+        product_title=kwargs['product_title'],
+        product_type=kwargs['product_type']
     )
     return async_result.id
