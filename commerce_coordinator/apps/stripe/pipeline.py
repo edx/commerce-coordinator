@@ -12,10 +12,8 @@ from commerce_coordinator.apps.core.constants import PaymentMethod, PipelineComm
 from commerce_coordinator.apps.stripe.clients import StripeAPIClient
 from commerce_coordinator.apps.stripe.constants import Currency
 from commerce_coordinator.apps.stripe.exceptions import (
-    StripeIntentConfirmAPIError,
     StripeIntentCreateAPIError,
     StripeIntentRefundAPIError,
-    StripeIntentRetrieveAPIError,
     StripeIntentUpdateAPIError
 )
 from commerce_coordinator.apps.stripe.filters import PaymentDraftCreated
@@ -71,79 +69,6 @@ class CreateOrGetStripeDraftPayment(PipelineStep):
         }
 
 
-class GetStripeDraftPayment(PipelineStep):
-    """
-    Retrieve a PaymentIntent from Stripe.
-    """
-
-    def run_filter(self, **kwargs):
-        """
-        Executes a filter with the signature specified.
-
-        Args:
-            kwargs['payment_data'] (dict): The payment object.
-            kwargs['payment_intent_data'] (dict): Optional. If truthy, skip this pipeline step.
-        """
-        # Payment intent already retrieved:
-        if kwargs.get('payment_intent_data'):
-            return PipelineCommand.CONTINUE.value
-
-        # No existing payment:
-        payment_data = kwargs.get('payment_data')
-        if not payment_data:
-            return PipelineCommand.CONTINUE.value
-
-        payment_intent_id = payment_data['key_id']
-
-        stripe_api_client = StripeAPIClient()
-        try:
-            payment_intent = stripe_api_client.retrieve_payment_intent(payment_intent_id)
-        except StripeError as ex:
-            raise StripeIntentRetrieveAPIError from ex
-
-        # TODO: THES-260: Fix mixup of key_id and client_secret
-        payment_data['key_id'] = payment_intent['client_secret']
-
-        return {
-            'payment_data': payment_data,
-            'payment_intent_data': payment_intent,
-        }
-
-
-class UpdateStripeDraftPayment(PipelineStep):
-    """
-    Adds titan orders to the order data list.
-    """
-
-    def run_filter(self, edx_lms_user_id, order_data, payment_data, **kwargs):  # pylint: disable=arguments-differ
-        """
-        Execute a filter with the signature specified.
-
-        Args:
-            edx_lms_user_id: LMS User ID
-            order_data: Order Data
-            payment_data: Payment Data
-            kwargs: arguments passed through from the filter.
-        """
-
-        stripe_api_client = StripeAPIClient()
-        try:
-            payment_intent = stripe_api_client.update_payment_intent(
-                edx_lms_user_id=edx_lms_user_id,
-                payment_intent_id=payment_data['key_id'],
-                order_uuid=payment_data['order_uuid'],
-                current_payment_number=payment_data['payment_number'],
-                amount_in_cents=convert_dollars_in_cents(order_data['item_total']),
-                currency=Currency.USD.value,
-            )
-        except StripeError as ex:
-            raise StripeIntentUpdateAPIError from ex
-
-        return {
-            'payment_intent_data': payment_intent,
-        }
-
-
 class UpdateStripePayment(PipelineStep):
     """
     Update stripe payment with the latest information.
@@ -183,31 +108,6 @@ class UpdateStripePayment(PipelineStep):
 
         return {
             'provider_response_body': provider_response_body,
-        }
-
-
-class ConfirmPayment(PipelineStep):
-    """
-    Adds titan orders to the order data list.
-    """
-
-    def run_filter(self, payment_data, **kwargs):  # pylint: disable=arguments-differ
-        """
-        Execute a filter with the signature specified.
-        Arguments:
-            kwargs: arguments passed through from the filter.
-        """
-
-        stripe_api_client = StripeAPIClient()
-        try:
-            payment_intent = stripe_api_client.confirm_payment_intent(
-                payment_intent_id=payment_data['key_id'],
-            )
-        except StripeError as ex:
-            raise StripeIntentConfirmAPIError from ex
-
-        return {
-            'payment_intent_data': payment_intent,
         }
 
 
