@@ -9,12 +9,17 @@ from celery import Task, shared_task
 from celery.utils.log import get_task_logger
 from commercetools import CommercetoolsError
 from django.contrib.auth import get_user_model
+from edx_django_utils.cache import TieredCache
 from requests import RequestException
 
 from commerce_coordinator.apps.commercetools.catalog_info.constants import TwoUKeys
 from commerce_coordinator.apps.commercetools.clients import CommercetoolsAPIClient
-from commerce_coordinator.apps.commercetools.constants import CT_ORDER_PRODUCT_TYPE_FOR_BRAZE
+from commerce_coordinator.apps.commercetools.constants import (
+    CT_ORDER_PRODUCT_TYPE_FOR_BRAZE,
+    EMAIL_NOTIFICATION_CACHE_TTL_SECS
+)
 from commerce_coordinator.apps.commercetools.utils import send_fulfillment_error_email
+from commerce_coordinator.apps.core.memcache import safe_key
 from commerce_coordinator.apps.lms.clients import LMSAPIClient
 
 # Use the special Celery logger for our tasks
@@ -98,7 +103,12 @@ class CourseEntitlementTaskAfterReturn(Task):  # pylint: disable=abstract-method
             f"order number: {order_number}, and program title: {product_title}"
         )
 
-        if error_message:
+        cache_key = safe_key(key=order_number, key_prefix='send_fulfillment_error_email', version='1')
+        cache_entry = TieredCache.get_cached_response(cache_key)
+
+        if error_message and not cache_entry.is_found:
+            TieredCache.set_all_tiers(cache_key, value="SENT", django_cache_timeout=EMAIL_NOTIFICATION_CACHE_TTL_SECS)
+
             logger.info(
                 f"Sending course entitlement fulfillment error email "
                 f"for the user with user ID: {edx_lms_user_id}, email: {user_email}, "
