@@ -58,7 +58,7 @@ cachecontrol==0.12.14
     # via
     #   -r requirements/test.txt
     #   apimatic-requests-client-adapter
-cachetools==5.5.1
+cachetools==5.5.2
     # via
     #   -r requirements/test.txt
     #   tox
@@ -135,6 +135,7 @@ cryptography==44.0.1
     # via
     #   -r requirements/test.txt
     #   pyjwt
+    #   secretstorage
     #   social-auth-core
 currencies==2020.12.12
     # via -r requirements/test.txt
@@ -263,6 +264,10 @@ jaraco-context==6.0.1
     # via keyring
 jaraco-functools==4.1.0
     # via keyring
+jeepney==0.8.0
+    # via
+    #   keyring
+    #   secretstorage
 jinja2==3.1.5
     # via
     #   -r requirements/test.txt
@@ -332,13 +337,14 @@ openapi-codec==1.3.2
     # via
     #   -r requirements/test.txt
     #   django-rest-swagger
-openedx-filters==1.13.0
+openedx-filters==2.0.1
     # via -r requirements/test.txt
 packaging==24.2
     # via
     #   -r requirements/test.txt
     #   build
     #   marshmallow
+    #   pydata-sphinx-theme
     #   pyproject-api
     #   pytest
     #   sphinx
@@ -377,7 +383,7 @@ pycparser==2.22
     # via
     #   -r requirements/test.txt
     #   cffi
-pydata-sphinx-theme==0.16.1
+pydata-sphinx-theme==0.15.4
     # via sphinx-book-theme
 pygments==2.19.1
     # via
@@ -508,13 +514,17 @@ rfc3986==2.0.0
     # via twine
 rich==13.9.4
     # via twine
+roman-numerals-py==3.1.0
+    # via sphinx
+secretstorage==3.3.3
+    # via keyring
 segment-analytics-python==2.3.3
     # via -r requirements/test.txt
 semantic-version==2.10.0
     # via
     #   -r requirements/test.txt
     #   edx-drf-extensions
-simplejson==3.19.3
+simplejson==3.20.1
     # via
     #   -r requirements/test.txt
     #   django-rest-swagger
@@ -538,12 +548,12 @@ social-auth-core==4.5.6
     #   social-auth-app-django
 soupsieve==2.6
     # via beautifulsoup4
-sphinx==8.1.3
+sphinx==8.2.1
     # via
     #   -r requirements/doc.in
     #   pydata-sphinx-theme
     #   sphinx-book-theme
-sphinx-book-theme==1.1.3
+sphinx-book-theme==1.1.4
     # via -r requirements/doc.in
 sphinxcontrib-applehelp==2.0.0
     # via sphinx
@@ -561,7 +571,7 @@ sqlparse==0.5.3
     # via
     #   -r requirements/test.txt
     #   django
-stevedore==5.4.0
+stevedore==5.4.1
     # via
     #   -r requirements/test.txt
     #   code-annotations
