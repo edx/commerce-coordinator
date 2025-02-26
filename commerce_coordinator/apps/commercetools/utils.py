@@ -186,12 +186,12 @@ def has_full_refund_transaction(payment: Payment):
     return False
 
 
-def is_transaction_already_refunded(payment: Payment, iteraction_id: str):
+def is_transaction_already_refunded(payment: Payment, interaction_id: str):
     """
     Utility to determine if a transaction has already been refunded
     """
     for transaction in payment.transactions:
-        if transaction.type == TransactionType.REFUND and transaction.interaction_id == iteraction_id:
+        if transaction.type == TransactionType.REFUND and transaction.interaction_id == interaction_id:
             return True
     return False
 

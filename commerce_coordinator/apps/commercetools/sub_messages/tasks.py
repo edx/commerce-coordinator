@@ -282,7 +282,7 @@ def fulfill_order_returned_signal_task(
         release_task_lock(task_key)
 
     def _log_info_and_release_lock(log_message):
-        logger.error(log_message)
+        logger.info(log_message)
         release_task_lock(task_key)
 
     while not acquire_task_lock(task_key):

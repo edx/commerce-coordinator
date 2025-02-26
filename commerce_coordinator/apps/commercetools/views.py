@@ -139,11 +139,11 @@ class OrderReturnedView(SingleInvocationAPIView):
             return_line_item_id = self.get_return_line_item_id(item)
             message_id = message_details.data['message_id']
 
-            if self._is_running(tag, f'{return_line_item_return_id}1'):  # pragma no cover
+            if self._is_running(tag, f'{return_line_item_return_id}'):  # pragma no cover
                 self.meta_should_mark_not_running = False
                 return Response(status=status.HTTP_200_OK)
             else:
-                self.mark_running(tag, f'{return_line_item_return_id}1')
+                self.mark_running(tag, f'{return_line_item_return_id}')
 
             fulfill_order_returned_signal.send_robust(
                 sender=self,

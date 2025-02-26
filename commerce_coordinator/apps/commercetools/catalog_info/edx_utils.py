@@ -14,7 +14,7 @@ from commerce_coordinator.apps.commercetools.catalog_info.constants import (
     EdXFieldNames,
     TwoUKeys
 )
-from commerce_coordinator.apps.commercetools.catalog_info.utils import typed_money_to_string
+from commerce_coordinator.apps.commercetools.catalog_info.utils import check_is_bundle
 
 
 def get_edx_product_course_run_key(prodvar_or_li: Union[CTProductVariant, CTLineItem]) -> str:
@@ -88,14 +88,13 @@ def _cents_to_dollars(in_amount):
     )
 
 
-def get_line_item_discounted_price(order: CTOrder, return_line_item_id: str):
-    if len(order.line_items) > 1:
+def get_line_item_price_to_refund(order: CTOrder, return_line_item_id: str):
+    if check_is_bundle(order.line_items):
         for line_item in get_edx_items(order):
             if line_item.id == return_line_item_id:
                 return _cents_to_dollars(line_item.total_price)
-    elif len(order.line_items) == 1:
-        return _cents_to_dollars(order.total_price)
-    return decimal.Decimal(0.00)
+
+    return _cents_to_dollars(order.total_price)
 
 
 def get_edx_refund_info(payment: CTPayment, order: CTOrder, return_line_item_id: str) -> (decimal.Decimal, str):
@@ -105,6 +104,6 @@ def get_edx_refund_info(payment: CTPayment, order: CTOrder, return_line_item_id:
         if transaction.type == TransactionType.CHARGE:  # pragma no cover
             interaction_id = transaction.interaction_id
 
-    refund_amount = get_line_item_discounted_price(order, return_line_item_id)
+    refund_amount = get_line_item_price_to_refund(order, return_line_item_id)
 
     return refund_amount, interaction_id

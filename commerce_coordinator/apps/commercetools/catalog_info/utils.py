@@ -14,7 +14,8 @@ from commerce_coordinator.apps.commercetools.catalog_info.constants import (
     HIDE_CODE_FOR_CURRENCIES,
     LS_OUT_PREFERENCES,
     SEND_MONEY_AS_DECIMAL_STRING,
-    Languages
+    Languages,
+    TwoUKeys
 )
 
 LSLike = Union[Dict[str, str], CTLocalizedString]
@@ -184,3 +185,27 @@ def attribute_dict(attr_list: Optional[List[CTAttribute]]) -> Optional[dict]:
     if len(attr_list) >= 1:
         return dict([(d.name, d.value) for d in attr_list])
     return None
+
+def get_line_item_bundle_id(line_item):
+    """
+    Retrieve the bundle ID from a line item's custom fields.
+    Args:
+        line_item (object): The line item object which contains custom fields.
+    Returns:
+        str or None: The bundle ID if it exists, otherwise None.
+    """
+    return (
+            line_item.custom.fields.get(TwoUKeys.LINE_ITEM_BUNDLE_ID)
+            if line_item.custom
+            else None
+        )
+
+def check_is_bundle(line_items):
+    """
+    Checks if any of the line items in the provided list is part of a bundle.
+    Args:
+        line_items (list): A list of line items to check.
+    Returns:
+        bool: True if at least one line item is part of a bundle, False otherwise.
+    """
+    return any(bool(get_line_item_bundle_id(line_item)) for line_item in line_items)
