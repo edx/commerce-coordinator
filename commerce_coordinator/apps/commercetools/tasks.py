@@ -3,13 +3,17 @@ Commercetools tasks
 """
 
 import logging
+import time
 
+from edx_django_utils.cache import TieredCache
 import stripe
 from celery import shared_task
 from commercetools import CommercetoolsError
 from django.conf import settings
 
 from commerce_coordinator.apps.commercetools.catalog_info.constants import EDX_PAYPAL_PAYMENT_INTERFACE_NAME
+from commerce_coordinator.apps.core.memcache import safe_key
+from commerce_coordinator.apps.core.tasks import TASK_LOCK_EXPIRE, TASK_LOCK_RETRY, acquire_task_lock, release_task_lock
 
 from .clients import CommercetoolsAPIClient
 from .utils import has_full_refund_transaction
@@ -19,7 +23,8 @@ logger = logging.getLogger(__name__)
 stripe.api_key = settings.PAYMENT_PROCESSOR_CONFIG['edx']['stripe']['secret_key']
 
 
-def update_line_item_on_entitlement_fulfillment_completion(
+@shared_task()
+def entitlement_fulfillment_completed_task(
     entitlement_uuid,
     order_id,
     order_version,
@@ -31,17 +36,53 @@ def update_line_item_on_entitlement_fulfillment_completion(
     """
     Task for updating order line item on entitlement fulfillment completion via Commercetools API.
     """
-    client = CommercetoolsAPIClient()
+    tag = "entitlement_fulfillment_completed_task"
+    task_key = safe_key(key=order_id, key_prefix=tag, version='1')
 
-    updated_order = client.update_line_item_on_entitlement_fulfillment(
-        entitlement_uuid,
-        order_id,
-        order_version,
-        line_item_id,
-        item_quantity,
-        from_state_id,
-        to_state_key
+    def _log_error_and_release_lock(log_message):
+        logger.error(log_message)
+        release_task_lock(task_key)
+
+    def _log_info_and_release_lock(log_message):
+        logger.info(log_message)
+        release_task_lock(task_key)
+
+    while not acquire_task_lock(task_key):
+        logger.info(f"Task {task_key} is locked. Retrying in {TASK_LOCK_RETRY} seconds...")
+        time.sleep(TASK_LOCK_RETRY)  # Wait before retrying
+
+    try:
+        current_order_version = order_version
+
+
+        cache_key = safe_key(key=order_id, key_prefix=
+                             'order_version_for'+tag, version='1')
+        cache_entry = TieredCache.get_cached_response(cache_key)
+        if cache_entry.is_found:
+            current_order_version = cache_entry.value
+
+        client = CommercetoolsAPIClient()
+        updated_order = client.update_line_item_on_entitlement_fulfillment(
+            entitlement_uuid,
+            order_id,
+            current_order_version,
+            line_item_id,
+            item_quantity,
+            from_state_id,
+            to_state_key
+        )
+
+        TieredCache.set_all_tiers(cache_key, value=updated_order.version,django_cache_timeout=TASK_LOCK_EXPIRE)
+    except Exception:  # pylint: disable=broad-except
+        _log_error_and_release_lock(
+            f'[CT-{tag}] Error updating line item {line_item_id} for entitlement {entitlement_uuid} and order {order_id}. '
+        )
+        return None
+
+    _log_info_and_release_lock(
+        f'[CT-{tag}] Line item {line_item_id} updated for entitlement {entitlement_uuid} and order {order_id}.'
     )
+
     return updated_order
 
 
