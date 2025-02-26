@@ -25,9 +25,7 @@ from commerce_coordinator.apps.commercetools.catalog_info.utils import (
     get_line_item_attribute
 )
 from commerce_coordinator.apps.commercetools.clients import CommercetoolsAPIClient
-from commerce_coordinator.apps.commercetools.constants import (
-    EMAIL_NOTIFICATION_CACHE_TTL_SECS
-)
+from commerce_coordinator.apps.commercetools.constants import EMAIL_NOTIFICATION_CACHE_TTL_SECS
 from commerce_coordinator.apps.commercetools.filters import OrderRefundRequested
 from commerce_coordinator.apps.commercetools.serializers import OrderFulfillViewInputSerializer
 from commerce_coordinator.apps.commercetools.signals import fulfill_order_placed_signal
