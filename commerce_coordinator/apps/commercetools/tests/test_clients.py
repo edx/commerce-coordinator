@@ -613,97 +613,6 @@ class ClientTests(TestCase):
                 log_mock.assert_called_once_with(expected_message)
 
     @patch('commerce_coordinator.apps.commercetools.clients.CommercetoolsAPIClient.get_state_by_id')
-    def test_successful_order_line_item_update_on_entitlement_fulfillment(self, mockstate_by_id):
-        base_url = self.client_set.get_base_url_from_client()
-
-        mock_order = gen_order("mock_order_id")
-        mock_order.version = "2"
-        mock_line_item_state = gen_line_item_state()
-        mock_line_item_state.key = TwoUKeys.PROCESSING_FULFILMENT_STATE
-        mock_order.line_items[0].state[0].state = mock_line_item_state
-
-        mockstate_by_id().return_value = mock_line_item_state
-
-        mock_response_order = gen_order("mock_order_id")
-        mock_response_order.version = 3
-        mock_response_line_item_state = gen_line_item_state()
-        mock_response_line_item_state.id = "mock_success_id"
-        mock_response_line_item_state.key = TwoUKeys.SUCCESS_FULFILMENT_STATE
-        mock_response_order.line_items[0].state[0].state = mock_response_line_item_state
-
-        with requests_mock.Mocker(real_http=True, case_sensitive=False) as mocker:
-            mocker.post(
-                f"{base_url}orders/{mock_order.id}",
-                json=mock_response_order.serialize(),
-                status_code=200
-            )
-
-            result = self.client_set.client.update_line_item_on_entitlement_fulfillment(
-                "mock_entitlement_uuid",
-                mock_order.id,
-                mock_order.version,
-                mock_order.line_items[0].id,
-                1,
-                mock_order.line_items[0].state[0].state.id,
-                TwoUKeys.SUCCESS_FULFILMENT_STATE
-            )
-
-            self.assertEqual(result.line_items[0].state[0].state.id, mock_response_line_item_state.id)
-
-    @patch('commerce_coordinator.apps.commercetools.clients.CommercetoolsAPIClient.get_state_by_id')
-    def test_exception_order_line_item_update_on_entitlement_fulfillment(self, mockstate_by_id):
-        base_url = self.client_set.get_base_url_from_client()
-
-        mock_order = gen_order("mock_order_id")
-        mock_order.version = "2"
-        mock_line_item_state = gen_line_item_state()
-        mock_line_item_state.key = TwoUKeys.PROCESSING_FULFILMENT_STATE
-        mock_order.line_items[0].state[0].state = mock_line_item_state
-
-        mockstate_by_id().return_value = mock_line_item_state
-
-        mock_error_response: CommercetoolsError = {
-            "message": "",
-            "errors": [
-                {
-                    "code": "ConcurrentModification",
-                    "message": "Object [mock_order_id] has a "
-                               "different version than expected. Expected: 3 - Actual: 2."
-                },
-            ],
-            "response": {},
-            "correlation_id": "None"
-        }
-
-        with requests_mock.Mocker(real_http=True, case_sensitive=False) as mocker:
-            mocker.post(
-                f"{base_url}orders/{mock_order.id}",
-                json=mock_error_response,
-                status_code=409
-            )
-
-            with patch('commerce_coordinator.apps.commercetools.clients.logging.Logger.error') as log_mock:
-                self.client_set.client.update_line_item_on_entitlement_fulfillment(
-                    "mock_entitlement_uuid",
-                    mock_order.id,
-                    mock_order.version,
-                    mock_order.line_items[0].id,
-                    1,
-                    mock_order.line_items[0].state[0].state.id,
-                    TwoUKeys.SUCCESS_FULFILMENT_STATE
-                )
-
-                expected_message = (
-                    f"[CommercetoolsError] "
-                    f"[CommercetoolsAPIClient.update_line_item_on_entitlement_fulfillment] "
-                    f"Unable to update LineItem of order mock_order_id - "
-                    f"Correlation ID: {mock_error_response['correlation_id']}, "
-                    f"Details: {mock_error_response['errors']}"
-                )
-
-                log_mock.assert_called_with(expected_message)
-
-    @patch('commerce_coordinator.apps.commercetools.clients.CommercetoolsAPIClient.get_state_by_id')
     def test_successful_order_line_item_state_update(self, mock_state_by_id):
         base_url = self.client_set.get_base_url_from_client()
 
@@ -729,7 +638,8 @@ class ClientTests(TestCase):
                 status_code=200
             )
 
-            result = self.client_set.client.update_line_item_transition_state_on_fulfillment(
+            result = self.client_set.client.update_line_item_on_fulfillment(
+                '',
                 mock_order.id,
                 mock_order.version,
                 mock_order.line_items[0].id,
@@ -765,7 +675,8 @@ class ClientTests(TestCase):
             )
 
             with patch('commerce_coordinator.apps.commercetools.clients.logging.Logger.error') as log_mock:
-                self.client_set.client.update_line_item_transition_state_on_fulfillment(
+                self.client_set.client.update_line_item_on_fulfillment(
+                    '',
                     "mock_order_id",
                     1,
                     "mock_order_line_item_id",
@@ -775,8 +686,8 @@ class ClientTests(TestCase):
                 )
 
                 expected_message = (
-                    f"[CommercetoolsError] [CommercetoolsAPIClient.update_line_item_state_on_fulfillment_completion] "
-                    f"Unable to update LineItemState "
+                    f"[CommercetoolsError] [CommercetoolsAPIClient.update_line_item_on_fulfillment] "
+                    f"Unable to update LineItem "
                     f"of order mock_order_id "
                     f"- Correlation ID: {mock_error_response['correlation_id']}, "
                     f"Details: {mock_error_response['errors']}"
@@ -879,7 +790,8 @@ class ClientTests(TestCase):
         mock_order_by_id.return_value = mock_order
 
         with patch('commerce_coordinator.apps.commercetools.clients.logging.Logger.info') as log_mock:
-            result = self.client_set.client.update_line_item_transition_state_on_fulfillment(
+            result = self.client_set.client.update_line_item_on_fulfillment(
+                '',
                 mock_order.id,
                 mock_order.version,
                 line_item_id,

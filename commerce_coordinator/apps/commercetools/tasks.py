@@ -24,7 +24,7 @@ stripe.api_key = settings.PAYMENT_PROCESSOR_CONFIG['edx']['stripe']['secret_key'
 
 
 @shared_task()
-def entitlement_fulfillment_completed_task(
+def fulfillment_completed_update_ct_line_item_task(
     entitlement_uuid,
     order_id,
     order_version,
@@ -34,10 +34,12 @@ def entitlement_fulfillment_completed_task(
     to_state_key
 ):
     """
-    Task for updating order line item on entitlement fulfillment completion via Commercetools API.
+    Task for updating order line item on fulfillment completion via Commercetools API.
     """
-    tag = "entitlement_fulfillment_completed_task"
+    tag = "fulfillment_completed_update_ct_line_item_task"
     task_key = safe_key(key=order_id, key_prefix=tag, version='1')
+    cache_key = safe_key(key=order_id, key_prefix='order_version_for'+tag, version='1')
+    entitlement_info = f'and entitlement {entitlement_uuid}.' if entitlement_uuid else '.'
 
     def _log_error_and_release_lock(log_message):
         logger.error(log_message)
@@ -54,15 +56,12 @@ def entitlement_fulfillment_completed_task(
     try:
         current_order_version = order_version
 
-
-        cache_key = safe_key(key=order_id, key_prefix=
-                             'order_version_for'+tag, version='1')
         cache_entry = TieredCache.get_cached_response(cache_key)
         if cache_entry.is_found:
             current_order_version = cache_entry.value
 
         client = CommercetoolsAPIClient()
-        updated_order = client.update_line_item_on_entitlement_fulfillment(
+        updated_order = client.update_line_item_on_fulfillment(
             entitlement_uuid,
             order_id,
             current_order_version,
@@ -75,38 +74,14 @@ def entitlement_fulfillment_completed_task(
         TieredCache.set_all_tiers(cache_key, value=updated_order.version,django_cache_timeout=TASK_LOCK_EXPIRE)
     except Exception:  # pylint: disable=broad-except
         _log_error_and_release_lock(
-            f'[CT-{tag}] Error updating line item {line_item_id} for entitlement {entitlement_uuid} and order {order_id}. '
+            f'[CT-{tag}] Error updating line item {line_item_id} for order {order_id}' + entitlement_info
         )
         return None
 
     _log_info_and_release_lock(
-        f'[CT-{tag}] Line item {line_item_id} updated for entitlement {entitlement_uuid} and order {order_id}.'
+        f'[CT-{tag}] Line item {line_item_id} updated for order {order_id} ' + entitlement_info
     )
 
-    return updated_order
-
-
-def update_line_item_state_on_fulfillment_completion(
-    order_id,
-    order_version,
-    line_item_id,
-    item_quantity,
-    from_state_id,
-    to_state_key
-):
-    """
-    Task for fulfillment completed and order line item state update via Commercetools API.
-    """
-    client = CommercetoolsAPIClient()
-
-    updated_order = client.update_line_item_transition_state_on_fulfillment(
-        order_id,
-        order_version,
-        line_item_id,
-        item_quantity,
-        from_state_id,
-        to_state_key
-    )
     return updated_order
 
 
