@@ -5,11 +5,11 @@ Commercetools tasks
 import logging
 import time
 
-from edx_django_utils.cache import TieredCache
 import stripe
 from celery import shared_task
 from commercetools import CommercetoolsError
 from django.conf import settings
+from django.core.cache import cache
 
 from commerce_coordinator.apps.commercetools.catalog_info.constants import EDX_PAYPAL_PAYMENT_INTERFACE_NAME
 from commerce_coordinator.apps.core.memcache import safe_key
@@ -54,11 +54,8 @@ def fulfillment_completed_update_ct_line_item_task(
         time.sleep(TASK_LOCK_RETRY)  # Wait before retrying
 
     try:
-        current_order_version = order_version
-
-        cache_entry = TieredCache.get_cached_response(cache_key)
-        if cache_entry.is_found:
-            current_order_version = cache_entry.value
+        cache_entry = cache.get(cache_key, None)
+        current_order_version = cache_entry if cache_entry else order_version
 
         client = CommercetoolsAPIClient()
         updated_order = client.update_line_item_on_fulfillment(
@@ -71,7 +68,7 @@ def fulfillment_completed_update_ct_line_item_task(
             to_state_key
         )
 
-        TieredCache.set_all_tiers(cache_key, value=updated_order.version,django_cache_timeout=TASK_LOCK_EXPIRE)
+        cache.set(key=cache_key, value=updated_order.version, timeout=TASK_LOCK_EXPIRE)
     except Exception:  # pylint: disable=broad-except
         _log_error_and_release_lock(
             f'[CT-{tag}] Error updating line item {line_item_id} for order {order_id}' + entitlement_info
