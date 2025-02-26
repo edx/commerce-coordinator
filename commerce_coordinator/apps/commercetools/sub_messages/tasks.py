@@ -26,7 +26,6 @@ from commerce_coordinator.apps.commercetools.catalog_info.utils import (
 )
 from commerce_coordinator.apps.commercetools.clients import CommercetoolsAPIClient
 from commerce_coordinator.apps.commercetools.constants import (
-    CT_ORDER_PRODUCT_TYPE_FOR_BRAZE,
     EMAIL_NOTIFICATION_CACHE_TTL_SECS
 )
 from commerce_coordinator.apps.commercetools.filters import OrderRefundRequested
@@ -314,7 +313,7 @@ def fulfill_order_returned_signal_task(
                         'brand': get_line_item_attribute(line_item, 'brand-text'),
                         'url': get_line_item_attribute(line_item, 'url-course'),
                         'lob': get_line_item_attribute(line_item, 'lob') or 'edx',
-                        'product_type': CT_ORDER_PRODUCT_TYPE_FOR_BRAZE.get(line_item.product_type.obj.key, 'course')
+                        'product_type': line_item.product_type.obj.name
                         if hasattr(line_item.product_type.obj, 'name') else None
                     }
                     segment_event_properties['products'].append(product)
