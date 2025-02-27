@@ -28,7 +28,10 @@ from commerce_coordinator.apps.commercetools.catalog_info.utils import (
     get_line_item_attribute
 )
 from commerce_coordinator.apps.commercetools.clients import CommercetoolsAPIClient
-from commerce_coordinator.apps.commercetools.constants import EMAIL_NOTIFICATION_CACHE_TTL_SECS
+from commerce_coordinator.apps.commercetools.constants import (
+    CT_ORDER_PRODUCT_TYPE_FOR_BRAZE,
+    EMAIL_NOTIFICATION_CACHE_TTL_SECS
+)
 from commerce_coordinator.apps.commercetools.filters import OrderRefundRequested
 from commerce_coordinator.apps.commercetools.serializers import OrderFulfillViewInputSerializer
 from commerce_coordinator.apps.commercetools.signals import (
@@ -360,31 +363,31 @@ def fulfill_order_returned_signal_task(order_id, return_items, message_id):
                             f'sending Slack notification, message id: {message_id}')
             else:
                 logger.info(f'[CT-{tag}] payment {psp_payment_id} refunded for message id: {message_id}')
+                segment_event_properties = _prepare_segment_event_properties(order, return_line_item_return_id)
 
-                total_amount = result.get('amount_in_cents')
-                refunded_line_item_ids = result.get('filtered_line_item_ids', return_line_item_ids)
-                returned_item_ids = [return_id for item_id, return_id in return_line_items.items()
-                                     if item_id in refunded_line_item_ids]
-                segment_event_properties = _prepare_segment_event_properties(
-                    order, total_amount, ', '.join(returned_item_ids), refunded_line_item_ids
-                )
-                line_items = get_edx_items(order)
-                is_bundle = check_is_bundle(line_items)
-                event_title = ''
+                for line_item in get_edx_items(order):
+                    course_run = get_edx_product_course_run_key(line_item)
+                    # TODO: Remove LMS Enrollment. To be done in SONIC-96
+                    logger.info(
+                        f'[CT-{tag}] calling lms to unenroll user {lms_user_name} in {course_run}'
+                        f', message id: {message_id}'
+                    )
 
-                for line_item in line_items:
-                    if line_item.id in refunded_line_item_ids:
-                        if not event_title:
-                            event_title = line_item.name['en-US']
-
-                        course_run = get_edx_product_course_run_key(line_item)
-                        # TODO: Remove LMS Enrollment. To be done in SONIC-96
-                        logger.info(
-                            f'[CT-{tag}] calling lms to unenroll user {lms_user_name} in {course_run}'
-                            f', message id: {message_id}'
-                        )
-                        product = _get_product_data(line_item, is_bundle)
-                        segment_event_properties['products'].append(product)
+                    product = {
+                        'product_id': line_item.product_key,
+                        'sku': line_item.variant.sku if hasattr(line_item.variant, 'sku') else None,
+                        'name': line_item.name['en-US'],
+                        'price': _cents_to_dollars(line_item.price.value),
+                        'quantity': line_item.quantity,
+                        'category': get_line_item_attribute(line_item, 'primary-subject-area'),
+                        'image_url': line_item.variant.images[0].url if line_item.variant.images else None,
+                        'brand': get_line_item_attribute(line_item, 'brand-text'),
+                        'url': get_line_item_attribute(line_item, 'url-course'),
+                        'lob': get_line_item_attribute(line_item, 'lob') or 'edx',
+                        'product_type': line_item.product_type.obj.name
+                        if hasattr(line_item.product_type.obj, 'name') else None
+                    }
+                    segment_event_properties['products'].append(product)
 
                 if segment_event_properties['products']:  # pragma no cover
                     segment_event_properties['title'] = event_title
