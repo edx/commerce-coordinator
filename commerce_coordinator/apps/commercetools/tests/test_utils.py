@@ -27,8 +27,8 @@ from commerce_coordinator.apps.commercetools.utils import (
     get_braze_client,
     has_full_refund_transaction,
     has_refund_transaction,
+    send_fulfillment_error_email,
     send_order_confirmation_email,
-    send_unsupported_mode_fulfillment_error_email,
     translate_refund_status_to_transaction_status
 )
 
@@ -133,7 +133,7 @@ class TestBrazeHelpers(unittest.TestCase):
         BRAZE_CT_FULFILLMENT_UNSUPPORTED_MODE_ERROR_CANVAS_ID="dummy_canvas"
     )
     @patch('commerce_coordinator.apps.commercetools.utils.get_braze_client')
-    def test_send_unsupported_mode_fulfillment_error_email_success(self, mock_get_braze_client):
+    def test_send_fulfillment_error_email_success(self, mock_get_braze_client):
         mock_braze_client = Mock()
         mock_get_braze_client.return_value = mock_braze_client
 
@@ -142,7 +142,7 @@ class TestBrazeHelpers(unittest.TestCase):
         lms_user_email = 'user@example.com'
 
         with patch.object(mock_braze_client, 'send_canvas_message') as mock_send_canvas_message:
-            send_unsupported_mode_fulfillment_error_email(
+            send_fulfillment_error_email(
                 lms_user_id, lms_user_email, canvas_entry_properties
             )
 
@@ -159,7 +159,7 @@ class TestBrazeHelpers(unittest.TestCase):
     )
     @patch('commerce_coordinator.apps.commercetools.utils.get_braze_client')
     @patch('commerce_coordinator.apps.commercetools.utils.logger.exception')
-    def test_send_unsupported_mode_fulfillment_error_email_failure(self, mock_logger, mock_get_braze_client):
+    def test_send_fulfillment_error_email_failure(self, mock_logger, mock_get_braze_client):
         mock_braze_client = Mock()
         mock_get_braze_client.return_value = mock_braze_client
 
@@ -169,7 +169,7 @@ class TestBrazeHelpers(unittest.TestCase):
 
         with patch.object(mock_braze_client, 'send_canvas_message') as mock_send_canvas_message:
             mock_send_canvas_message.side_effect = Exception('Error sending Braze email')
-            send_unsupported_mode_fulfillment_error_email(
+            send_fulfillment_error_email(
                 lms_user_id, lms_user_email, canvas_entry_properties
             )
 
@@ -178,7 +178,7 @@ class TestBrazeHelpers(unittest.TestCase):
                 recipients=[{"external_user_id": lms_user_id, "attributes": {"email": lms_user_email}}],
                 canvas_entry_properties=canvas_entry_properties,
             )
-            mock_logger.assert_called_once_with('Encountered exception sending Fulfillment unsupported mode error '
+            mock_logger.assert_called_once_with('Encountered exception sending Fulfillment error '
                                                 'email. Exception: Error sending Braze email')
 
     def test_extract_ct_product_information_for_braze_canvas(self):
