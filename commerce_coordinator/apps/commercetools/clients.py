@@ -710,6 +710,8 @@ class CommercetoolsAPIClient:
                 "[CommercetoolsAPIClient.update_line_items_transition_state]",
                 err,
                 f"Failed to update LineItemStates for order ID '{order_id}'. "
+                f"From State: '{from_state_key}' "
+                f"To State: '{new_state_key}' "
                 f"Line Item IDs: {', '.join(item.id for item in line_items)}",
                 True
             )
