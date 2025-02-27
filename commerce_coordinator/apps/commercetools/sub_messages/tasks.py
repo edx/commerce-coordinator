@@ -45,7 +45,7 @@ from commerce_coordinator.apps.commercetools.utils import (
 from commerce_coordinator.apps.core.constants import ISO_8601_FORMAT
 from commerce_coordinator.apps.core.memcache import safe_key
 from commerce_coordinator.apps.core.segment import track
-from commerce_coordinator.apps.core.tasks import TASK_LOCK_RETRY, acquire_task_lock, release_task_lock
+from commerce_coordinator.apps.core.tasks import TASK_LOCK_RETRY, LockBaseTask, acquire_task_lock, release_task_lock
 from commerce_coordinator.apps.lms.clients import LMSAPIClient
 
 # Use the special Celery logger for our tasks
@@ -282,9 +282,13 @@ def fulfill_order_returned_signal_task(
         logger.info(log_message)
         release_task_lock(task_key)
 
-    while not acquire_task_lock(task_key):
+    if not acquire_task_lock(task_key):
         logger.info(f"Task {task_key} is locked. Retrying in {TASK_LOCK_RETRY} seconds...")
-        time.sleep(TASK_LOCK_RETRY)  # Wait before retrying
+        fulfill_order_returned_signal_task.apply_async(
+            args=(order_id, return_line_item_return_id, return_line_item_id, message_id),
+            countdown=TASK_LOCK_RETRY
+        )
+        return
 
     logger.info(f'[CT-{tag}] Processing return for order: {order_id}, line item: {return_line_item_return_id}, '
                 f'message id: {message_id}')
@@ -296,14 +300,14 @@ def fulfill_order_returned_signal_task(
     except CommercetoolsError as err:  # pragma no cover
         _log_error_and_release_lock(f'[CT-{tag}] Order not found: {order_id} with CT error {err}, {err.errors}'
                                     f', message id: {message_id}')
-        return False
+        raise err
 
     try:
         customer = client.get_customer_by_id(order.customer_id)
     except CommercetoolsError as err:  # pragma no cover
         _log_error_and_release_lock(f'[CT-{tag}] Customer not found: {order.customer_id} for order {order_id} with '
                                     f'CT error {err}, {err.errors}, message id: {message_id}')
-        return False
+        raise err
 
     if not (customer and order and is_edx_lms_order(order)):  # pragma no cover
         _log_info_and_release_lock(f'[CT-{tag}] order {order_id} is not an edX order, message id: {message_id}')
@@ -333,7 +337,7 @@ def fulfill_order_returned_signal_task(
                 f'message_id: {message_id} '
                 f'exception: {exc}'
             )
-            return False
+            raise exc
 
         if 'refund_response' in result and result['refund_response']:
             if result['refund_response'] == 'charge_already_refunded':

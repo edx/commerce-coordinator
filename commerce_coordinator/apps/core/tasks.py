@@ -5,6 +5,8 @@ from celery import shared_task
 from celery.utils.log import get_task_logger
 from django.core.cache import cache
 
+from commerce_coordinator.apps.core.memcache import safe_key
+
 TASK_LOCK_EXPIRE = 60 * 1  # Lock expires in 1 minute
 TASK_LOCK_RETRY = 3  # Retry acquiring lock after 3 sceonds
 
@@ -30,7 +32,7 @@ def acquire_task_lock(task_id):
     Returns true if the task_id was not already locked; false if it was.
     """
     # cache.add fails if the key already exists
-    key = f"task-{task_id}"
+    key = safe_key(key=task_id, key_prefix='task', version='1')
     succeeded = cache.add(key, 'true', TASK_LOCK_EXPIRE)
     if not succeeded:
         logger.info("task_id '%s': already locked.", task_id)
@@ -45,5 +47,5 @@ def release_task_lock(task_id):
     """
     # According to Celery task cookbook, "Memcache delete is very slow, but we have
     # to use it to take advantage of using add() for atomic locking."
-    key = f"task-{task_id}"
+    key = safe_key(key=task_id, key_prefix='task', version='1')
     cache.delete(key)
