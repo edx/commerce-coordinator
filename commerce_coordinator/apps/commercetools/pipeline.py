@@ -136,7 +136,7 @@ class FetchOrderDetailsByOrderID(PipelineStep):
     def run_filter(self,
        active_order_management_system,
        order_id,
-       return_line_item_id,
+       return_line_item_ids,
        **kwargs
    ):  # pylint: disable=arguments-differ
         """
@@ -175,10 +175,12 @@ class FetchOrderDetailsByOrderID(PipelineStep):
 
             if payment:
                 ct_payment = ct_api_client.get_payment_by_key(payment.interface_id)
-                refund_amount, ct_transaction_interaction_id = get_edx_refund_info(ct_payment, ct_order, return_line_item_id)
+                refund_amount, ct_transaction_interaction_id = get_edx_refund_info(
+                    ct_payment, ct_order, return_line_item_ids)
                 ret_val['amount_in_cents'] = refund_amount
                 ret_val['ct_transaction_interaction_id'] = ct_transaction_interaction_id
-                ret_val['has_been_refunded'] = is_commercetools_line_item_already_refunded(ct_order, return_line_item_id) or has_full_refund_transaction(ct_payment)
+                ret_val['has_been_refunded'] = is_commercetools_line_item_already_refunded(
+                    ct_order, return_line_item_ids) or has_full_refund_transaction(ct_payment)
                 ret_val['payment_data'] = ct_payment
             else:
                 ret_val['amount_in_cents'] = decimal.Decimal(0.00)
@@ -274,18 +276,22 @@ class UpdateCommercetoolsOrderReturnPaymentStatus(PipelineStep):
         Returns:
             returned_order: the modified CT order
         """
+        tag = type(self).__name__
+
+        if kwargs.get('charge_already_refunded') or kwargs.get('has_been_refunded'):
+            log.info(f"[{tag}] refund has already been processed, skipping update payment status")
+            return PipelineCommand.CONTINUE.value
 
         order = kwargs['order_data']
-        if 'return_line_item_return_id' not in kwargs:
-            return_line_item_return_id = get_order_return_info_return_items(order)[0].id
-        else:
-            return_line_item_return_id = kwargs['return_line_item_return_id']
+        return_line_item_return_ids = kwargs['return_line_item_return_ids']
+        return_line_entitlement_ids = kwargs['return_line_entitlement_ids']
 
         ct_api_client = CommercetoolsAPIClient()
         updated_order = ct_api_client.update_return_payment_state_after_successful_refund(
             order_id=order.id,
             order_version=order.version,
-            return_line_item_return_id=return_line_item_return_id,
+            return_line_item_return_ids=return_line_item_return_ids,
+            return_line_entitlement_ids=return_line_entitlement_ids,
             payment_intent_id=kwargs['payment_intent_id'],
             amount_in_cents=kwargs['amount_in_cents']
         )

@@ -11,6 +11,7 @@ from requests import RequestException
 
 from commerce_coordinator.apps.commercetools.catalog_info.constants import TwoUKeys
 from commerce_coordinator.apps.commercetools.catalog_info.edx_utils import (
+    cents_to_dollars,
     get_edx_is_sanctioned,
     get_edx_items,
     get_edx_lms_user_id,
@@ -18,6 +19,7 @@ from commerce_coordinator.apps.commercetools.catalog_info.edx_utils import (
     get_edx_order_workflow_state_key,
     get_edx_product_course_run_key,
     get_edx_psp_payment_id,
+    get_line_item_lms_entitlement_id,
     is_edx_lms_order
 )
 from commerce_coordinator.apps.commercetools.catalog_info.utils import (
@@ -241,20 +243,8 @@ def fulfill_order_sanctioned_message_signal_task(
 
 # noinspection DuplicatedCode
 @shared_task(autoretry_for=(RequestException, CommercetoolsError), retry_kwargs={'max_retries': 5, 'countdown': 3})
-def fulfill_order_returned_signal_task(
-    order_id,
-    return_line_item_return_id,
-    return_line_item_id,
-    message_id
-):
+def fulfill_order_returned_signal_task(order_id, return_items, message_id):
     """Celery task for an order return (and refunded) message."""
-
-    def _cents_to_dollars(in_amount):
-        return in_amount.cent_amount / pow(
-            10, in_amount.fraction_digits
-            if hasattr(in_amount, 'fraction_digits')
-            else 2
-        )
 
     def _prepare_segment_event_properties(in_order, return_line_item_return_id):
         return {
@@ -263,12 +253,12 @@ def fulfill_order_returned_signal_task(
             'order_id': in_order.order_number,
             'checkout_id': in_order.cart.id,
             'return_id': return_line_item_return_id,
-            'total': _cents_to_dollars(in_order.taxed_price.total_gross),
+            'total': cents_to_dollars(in_order.taxed_price.total_gross),
             'currency': in_order.taxed_price.total_gross.currency_code,
-            'tax': _cents_to_dollars(in_order.taxed_price.total_tax),
+            'tax': cents_to_dollars(in_order.taxed_price.total_tax),
             'coupon': in_order.discount_codes[-1].discount_code.obj.code if in_order.discount_codes else None,
             'coupon_name': [discount.discount_code.obj.code for discount in in_order.discount_codes[:-1]],
-            'discount': _cents_to_dollars(
+            'discount': cents_to_dollars(
                 in_order.discount_on_total_price.discounted_amount) if in_order.discount_on_total_price else 0,
             'title': get_edx_items(in_order)[0].name['en-US'] if get_edx_items(in_order) else None,
             'products': []
@@ -276,7 +266,7 @@ def fulfill_order_returned_signal_task(
 
     tag = "fulfill_order_returned_signal_task"
 
-    logger.info(f'[CT-{tag}] Processing return for order: {order_id}, line item: {return_line_item_return_id}, '
+    logger.info(f'[CT-{tag}] Processing return for order: {order_id}, '
                 f'message id: {message_id}')
 
     client = CommercetoolsAPIClient()
@@ -286,14 +276,14 @@ def fulfill_order_returned_signal_task(
     except CommercetoolsError as err:  # pragma no cover
         logger.error(f'[CT-{tag}] Order not found: {order_id} with CT error {err}, {err.errors}'
                      f', message id: {message_id}')
-        return False
+        raise err
 
     try:
         customer = client.get_customer_by_id(order.customer_id)
     except CommercetoolsError as err:  # pragma no cover
         logger.error(f'[CT-{tag}] Customer not found: {order.customer_id} for order {order_id} with '
                      f'CT error {err}, {err.errors}, message id: {message_id}')
-        return False
+        raise err
 
     if not (customer and order and is_edx_lms_order(order)):  # pragma no cover
         logger.info(f'[CT-{tag}] order {order_id} is not an edX order, message id: {message_id}')
@@ -307,13 +297,22 @@ def fulfill_order_returned_signal_task(
 
     logger.info(f'[CT-{tag}] calling PSP to refund payment "{psp_payment_id}", message id: {message_id}')
 
+    return_line_item_ids = [line_item_return['lineItemId'] for line_item_return in return_items]
+    return_line_item_return_dict = {
+        line_item_return['lineItemId']: line_item_return['id'] for line_item_return in return_items}
+    return_line_item_return_ids = [line_item_return['id'] for line_item_return in return_items]
+    return_line_entitlement_ids = {
+        return_line_item_return_dict.get(line_item.id): get_line_item_lms_entitlement_id(line_item) 
+        for line_item in get_edx_items(order)}
+
     # Return payment if payment id is set
     if psp_payment_id is not None:
         result = OrderRefundRequested.run_filter(
             order_id=order_id,
-            return_line_item_return_id=return_line_item_return_id,
-            return_line_item_id=return_line_item_id,
-            message_id=message_id
+            return_line_item_ids=return_line_item_ids,
+            return_line_item_return_ids=return_line_item_return_ids,
+            return_line_entitlement_ids=return_line_entitlement_ids,
+            message_id=message_id,
         )
 
         if 'refund_response' in result and result['refund_response']:
@@ -322,31 +321,34 @@ def fulfill_order_returned_signal_task(
                             f'sending Slack notification, message id: {message_id}')
             else:
                 logger.info(f'[CT-{tag}] payment {psp_payment_id} refunded for message id: {message_id}')
-                segment_event_properties = _prepare_segment_event_properties(order, return_line_item_return_id)
-
+                
+                # TODO: DISCUSS WITH SHAFQAT
+                
+                segment_event_properties = _prepare_segment_event_properties(order, return_line_item_return_ids[0])
                 for line_item in get_edx_items(order):
-                    course_run = get_edx_product_course_run_key(line_item)
-                    # TODO: Remove LMS Enrollment. To be done in SONIC-96
-                    logger.info(
-                        f'[CT-{tag}] calling lms to unenroll user {lms_user_name} in {course_run}'
-                        f', message id: {message_id}'
-                    )
+                    if line_item.id in return_line_item_ids:
+                        course_run = get_edx_product_course_run_key(line_item)
+                        # TODO: Remove LMS Enrollment. To be done in SONIC-96
+                        logger.info(
+                            f'[CT-{tag}] calling lms to unenroll user {lms_user_name} in {course_run}'
+                            f', message id: {message_id}'
+                        )
 
-                    product = {
-                        'product_id': line_item.product_key,
-                        'sku': line_item.variant.sku if hasattr(line_item.variant, 'sku') else None,
-                        'name': line_item.name['en-US'],
-                        'price': _cents_to_dollars(line_item.price.value),
-                        'quantity': line_item.quantity,
-                        'category': get_line_item_attribute(line_item, 'primary-subject-area'),
-                        'image_url': line_item.variant.images[0].url if line_item.variant.images else None,
-                        'brand': get_line_item_attribute(line_item, 'brand-text'),
-                        'url': get_line_item_attribute(line_item, 'url-course'),
-                        'lob': get_line_item_attribute(line_item, 'lob') or 'edx',
-                        'product_type': CT_ORDER_PRODUCT_TYPE_FOR_BRAZE.get(line_item.product_type.obj.key, 'course')
-                        if hasattr(line_item.product_type.obj, 'name') else None
-                    }
-                    segment_event_properties['products'].append(product)
+                        product = {
+                            'product_id': line_item.product_key,
+                            'sku': line_item.variant.sku if hasattr(line_item.variant, 'sku') else None,
+                            'name': line_item.name['en-US'],
+                            'price': cents_to_dollars(line_item.price.value),
+                            'quantity': line_item.quantity,
+                            'category': get_line_item_attribute(line_item, 'primary-subject-area'),
+                            'image_url': line_item.variant.images[0].url if line_item.variant.images else None,
+                            'brand': get_line_item_attribute(line_item, 'brand-text'),
+                            'url': get_line_item_attribute(line_item, 'url-course'),
+                            'lob': get_line_item_attribute(line_item, 'lob') or 'edx',
+                            'product_type': CT_ORDER_PRODUCT_TYPE_FOR_BRAZE.get(line_item.product_type.obj.key, 'course')
+                            if hasattr(line_item.product_type.obj, 'name') else None
+                        }
+                        segment_event_properties['products'].append(product)
 
                 if segment_event_properties['products']:  # pragma no cover
                     # Emitting the 'Order Refunded' Segment event upon successfully processing a refund.
@@ -359,7 +361,7 @@ def fulfill_order_returned_signal_task(
             logger.info(f'[CT-{tag}] payment {psp_payment_id} not refunded, '
                         f'sending Slack notification, message id: {message_id}')
 
-    logger.info(f'[CT-{tag}] Finished return for order: {order_id}, line item: {return_line_item_return_id}, '
+    logger.info(f'[CT-{tag}] Finished return for order: {order_id}, line item: {return_line_item_ids}, '
                 f'message id: {message_id}')
 
     return True

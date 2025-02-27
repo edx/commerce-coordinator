@@ -32,7 +32,7 @@ def get_order_return_info_return_items(order: CTOrder) -> List[CTReturnItem]:
     return return_info_items
 
 
-def is_commercetools_line_item_already_refunded(order: CTOrder, order_line_item_id: str) -> bool:
+def is_commercetools_line_item_already_refunded(order: CTOrder, order_line_item_ids: List[str]) -> bool:
     """
     Determine if a return already exists for the Commercetools line item
     to prevent duplicate refunds/returns.
@@ -41,7 +41,7 @@ def is_commercetools_line_item_already_refunded(order: CTOrder, order_line_item_
     return_info_return_items = get_order_return_info_return_items(order)
 
     return len(list(filter(
-        lambda item: item.line_item_id == order_line_item_id and item.payment_state == ReturnPaymentState.REFUNDED,
+        lambda item: item.line_item_id in order_line_item_ids and item.payment_state == ReturnPaymentState.REFUNDED,
         return_info_return_items
     ))) >= 1
 

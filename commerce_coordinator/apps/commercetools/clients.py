@@ -455,7 +455,8 @@ class CommercetoolsAPIClient:
         self,
         order_id: str,
         order_version: int,
-        return_line_item_return_id: str,
+        return_line_item_return_ids: List[str],
+        return_line_entitlement_ids: dict,
         payment_intent_id: str,
         amount_in_cents: decimal,
     ) -> Union[CTOrder, None]:
@@ -474,11 +475,7 @@ class CommercetoolsAPIClient:
         try:
             logger.info(
                 f"[CommercetoolsAPIClient] - Updating payment state for return "
-                f"with id {return_line_item_return_id} to '{ReturnPaymentState.REFUNDED}'."
-            )
-            return_payment_state_action = OrderSetReturnPaymentStateAction(
-                return_item_id=return_line_item_return_id,
-                payment_state=ReturnPaymentState.REFUNDED,
+                f"with ids {return_line_item_return_ids} to '{ReturnPaymentState.REFUNDED}'."
             )
             if not payment_intent_id:
                 payment_intent_id = ""
@@ -486,24 +483,39 @@ class CommercetoolsAPIClient:
             payment = self.get_payment_by_key(payment_intent_id)
             logger.info(f"Payment found: {payment}")
             transaction_id = find_refund_transaction(payment, amount_in_cents)
-            update_transaction_id_action = OrderSetReturnItemCustomTypeAction(
-                return_item_id=return_line_item_return_id,
-                type=CTTypeResourceIdentifier(
-                    key="returnItemCustomType",
-                ),
-                fields=CTFieldContainer({"transactionId": transaction_id}),
-            )
+            return_payment_state_actions = []
+            update_transaction_id_actions = []
+            for return_line_item_return_id in return_line_item_return_ids:
+                return_payment_state_actions.append(OrderSetReturnPaymentStateAction(
+                    return_item_id=return_line_item_return_id,
+                    payment_state=ReturnPaymentState.REFUNDED,
+                ))
+                custom_fields = {
+                    "transactionId": transaction_id,
+                }
+                entitlement_id = return_line_entitlement_ids.get(return_line_item_return_id)
+                if entitlement_id:
+                    custom_fields[TwoUKeys.LINE_ITEM_LMS_ENTITLEMENT_ID] = entitlement_id
+                update_transaction_id_actions.append(OrderSetReturnItemCustomTypeAction(
+                    return_item_id=return_line_item_return_id,
+                    type=CTTypeResourceIdentifier(
+                        key="returnItemCustomType",
+                    ),
+                    fields=CTFieldContainer(custom_fields),
+                ))
+            
             return_transaction_return_item_action = PaymentSetTransactionCustomTypeAction(
                 transaction_id=transaction_id,
                 type=CTTypeResourceIdentifier(key="transactionCustomType"),
-                fields=CTFieldContainer({"returnItemId": return_line_item_return_id}),
+                # TODO: ask shafqat
+                fields=CTFieldContainer({"returnItemId": return_line_item_return_ids[0]}),
             )
             logger.info(f"Update return payment state after successful refund - payment_intent_id: {payment_intent_id}")
 
             updated_order = self.base_client.orders.update_by_id(
                 id=order_id,
                 version=order_version,
-                actions=[return_payment_state_action, update_transaction_id_action],
+                actions=return_payment_state_actions + update_transaction_id_actions,
             )
             self.base_client.payments.update_by_id(
                 id=payment.id,
