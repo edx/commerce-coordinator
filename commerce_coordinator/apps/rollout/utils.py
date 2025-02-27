@@ -5,6 +5,7 @@ from typing import List
 
 from commercetools.platform.models import Order as CTOrder
 from commercetools.platform.models import ReturnItem as CTReturnItem
+from commercetools.platform.models import ReturnPaymentState
 
 
 def is_legacy_order(order_number: str) -> bool:
@@ -40,7 +41,7 @@ def is_commercetools_line_item_already_refunded(order: CTOrder, order_line_item_
 
     return len(list(filter(
         # Please verify the newly added check in which we are checking payment_state as well
-        lambda item: item.line_item_id == order_line_item_id,
+        lambda item: item.line_item_id == order_line_item_id and item.payment_state == ReturnPaymentState.REFUNDED,
         return_info_return_items
     ))) >= 1
 

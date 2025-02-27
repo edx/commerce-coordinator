@@ -186,6 +186,7 @@ def attribute_dict(attr_list: Optional[List[CTAttribute]]) -> Optional[dict]:
         return dict([(d.name, d.value) for d in attr_list])
     return None
 
+
 def get_line_item_bundle_id(line_item):
     """
     Retrieve the bundle ID from a line item's custom fields.
@@ -199,6 +200,7 @@ def get_line_item_bundle_id(line_item):
             if line_item.custom
             else None
         )
+
 
 def check_is_bundle(line_items):
     """

@@ -12,6 +12,7 @@ from requests import RequestException
 
 from commerce_coordinator.apps.commercetools.catalog_info.constants import TwoUKeys
 from commerce_coordinator.apps.commercetools.catalog_info.edx_utils import (
+    cents_to_dollars,
     get_edx_is_sanctioned,
     get_edx_items,
     get_edx_lms_user_id,
@@ -248,13 +249,6 @@ def fulfill_order_returned_signal_task(
 ):
     """Celery task for an order return (and refunded) message."""
 
-    def _cents_to_dollars(in_amount):
-        return in_amount.cent_amount / pow(
-            10, in_amount.fraction_digits
-            if hasattr(in_amount, 'fraction_digits')
-            else 2
-        )
-
     def _prepare_segment_event_properties(in_order, return_line_item_return_id):
         return {
             'track_plan_id': 19,
@@ -262,12 +256,12 @@ def fulfill_order_returned_signal_task(
             'order_id': in_order.order_number,
             'checkout_id': in_order.cart.id,
             'return_id': return_line_item_return_id,
-            'total': _cents_to_dollars(in_order.taxed_price.total_gross),
+            'total': cents_to_dollars(in_order.taxed_price.total_gross),
             'currency': in_order.taxed_price.total_gross.currency_code,
-            'tax': _cents_to_dollars(in_order.taxed_price.total_tax),
+            'tax': cents_to_dollars(in_order.taxed_price.total_tax),
             'coupon': in_order.discount_codes[-1].discount_code.obj.code if in_order.discount_codes else None,
             'coupon_name': [discount.discount_code.obj.code for discount in in_order.discount_codes[:-1]],
-            'discount': _cents_to_dollars(
+            'discount': cents_to_dollars(
                 in_order.discount_on_total_price.discounted_amount) if in_order.discount_on_total_price else 0,
             'title': get_edx_items(in_order)[0].name['en-US'] if get_edx_items(in_order) else None,
             'products': []
@@ -358,7 +352,7 @@ def fulfill_order_returned_signal_task(
                         'product_id': line_item.product_key,
                         'sku': line_item.variant.sku if hasattr(line_item.variant, 'sku') else None,
                         'name': line_item.name['en-US'],
-                        'price': _cents_to_dollars(line_item.price.value),
+                        'price': cents_to_dollars(line_item.price.value),
                         'quantity': line_item.quantity,
                         'category': get_line_item_attribute(line_item, 'primary-subject-area'),
                         'image_url': line_item.variant.images[0].url if line_item.variant.images else None,
