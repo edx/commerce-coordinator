@@ -381,9 +381,10 @@ class FulfillOrderReturnedSignalTaskTests(TestCase):
         mock_values = _ct_client_init.return_value
         mock_values.get_order_by_id.side_effect = CommercetoolsError(
             message="Order not found", response={}, errors="Order not found")
-        ret_val = self.get_uut()(*self.unpack_for_uut(mock_values.example_payload))
+        with self.assertRaises(CommercetoolsError):
+            self.get_uut()(*self.unpack_for_uut(mock_values.example_payload))
 
-        self.assertFalse(ret_val)
+        self.assertRaises(CommercetoolsError)
         mock_values.order_mock.assert_called_once_with(mock_values.order_id)
 
     def test_customer_not_found(self, _ct_client_init: CommercetoolsAPIClientMock, _run_filter_mock):
@@ -393,9 +394,9 @@ class FulfillOrderReturnedSignalTaskTests(TestCase):
         mock_values = _ct_client_init.return_value
         mock_values.get_customer_by_id.side_effect = CommercetoolsError(
             message="Customer not found", response={}, errors="Customer not found")
-        ret_val = self.get_uut()(*self.unpack_for_uut(mock_values.example_payload))
+        with self.assertRaises(CommercetoolsError):
+            self.get_uut()(*self.unpack_for_uut(mock_values.example_payload))
 
-        self.assertFalse(ret_val)
         mock_values.order_mock.assert_called_once_with(mock_values.order_id)
         mock_values.customer_mock.assert_called_once_with(mock_values.customer_id)
 
@@ -430,8 +431,8 @@ class FulfillOrderReturnedSignalTaskTests(TestCase):
         """
         mock_values = _ct_client_init.return_value
         _run_filter_mock.side_effect = Exception("Refund failed")
-        ret_val = self.get_uut()(*self.unpack_for_uut(mock_values.example_payload))
+        with self.assertRaises(Exception):
+            self.get_uut()(*self.unpack_for_uut(mock_values.example_payload))
 
-        self.assertFalse(ret_val)
         mock_values.order_mock.assert_called_once_with(mock_values.order_id)
         mock_values.customer_mock.assert_called_once_with(mock_values.customer_id)

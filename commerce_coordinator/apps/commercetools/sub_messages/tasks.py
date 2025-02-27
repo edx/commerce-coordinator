@@ -1,7 +1,6 @@
 """
 Commercetools Subscription Message tasks (Celery)
 """
-import time
 from datetime import datetime
 
 from celery import shared_task
@@ -45,7 +44,7 @@ from commerce_coordinator.apps.commercetools.utils import (
 from commerce_coordinator.apps.core.constants import ISO_8601_FORMAT
 from commerce_coordinator.apps.core.memcache import safe_key
 from commerce_coordinator.apps.core.segment import track
-from commerce_coordinator.apps.core.tasks import TASK_LOCK_RETRY, LockBaseTask, acquire_task_lock, release_task_lock
+from commerce_coordinator.apps.core.tasks import TASK_LOCK_RETRY, acquire_task_lock, release_task_lock
 from commerce_coordinator.apps.lms.clients import LMSAPIClient
 
 # Use the special Celery logger for our tasks
@@ -288,7 +287,7 @@ def fulfill_order_returned_signal_task(
             args=(order_id, return_line_item_return_id, return_line_item_id, message_id),
             countdown=TASK_LOCK_RETRY
         )
-        return
+        return False
 
     logger.info(f'[CT-{tag}] Processing return for order: {order_id}, line item: {return_line_item_return_id}, '
                 f'message id: {message_id}')
@@ -330,7 +329,7 @@ def fulfill_order_returned_signal_task(
                 return_line_item_id=return_line_item_id,
                 message_id=message_id
             )
-        except Exception as exc:    # pylint: disable=broad-except
+        except Exception as exc:  # pragma no cover
             _log_error_and_release_lock(
                 f'[CT-{tag}] Unsuccessful refund with details: '
                 f'[order_id: {order_id} '
