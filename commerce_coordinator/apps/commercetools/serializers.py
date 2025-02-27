@@ -87,7 +87,7 @@ class OrderFulfillViewInputSerializer(CoordinatorSerializer):
     line_item_state_id = serializers.CharField(allow_null=False)
     edx_lms_user_id = serializers.IntegerField(allow_null=False)
     message_id = serializers.CharField(allow_null=False)
-    course_title = serializers.CharField(allow_null=False)
+    product_title = serializers.CharField(allow_null=False)
     user_first_name = serializers.CharField(allow_null=False)
     user_email = serializers.EmailField(allow_null=False)
     product_type = serializers.CharField(allow_null=False)
