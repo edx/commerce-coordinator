@@ -314,7 +314,7 @@ class OrderSanctionedViewTests(APITestCase):
        '.fulfill_order_returned_signal.send_robust',
        new_callable=SendRobustSignalMock)
 class OrderReturnedViewTests(APITestCase):
-    """Tests for order sanctioned view"""
+    """Tests for order returned view"""
     url = reverse('commercetools:returned')
 
     # Use the Django Rest Framework client for self.client
@@ -348,7 +348,7 @@ class OrderReturnedViewTests(APITestCase):
         new_callable=CTCustomerByIdMock
     )
     def test_view_returns_ok(self, _mock_customer, _mock_order, _mock_signal):
-        """Check authorized user requesting sanction receives a HTTP 200 OK."""
+        """Check authorized user requesting return receives a HTTP 200 OK."""
 
         # Login
         self.client.login(username=self.test_staff_username, password=self.test_password)
@@ -368,7 +368,7 @@ class OrderReturnedViewTests(APITestCase):
         new_callable=CTCustomerByIdMock
     )
     def test_view_returns_expected_error(self, _mock_customer, _mock_order, _mock_signal):
-        """Check an authorized account requesting fulfillment with bad inputs receive an expected error."""
+        """Check an authorized account requesting return with bad inputs receive an expected error."""
 
         # Login
         self.client.login(username=self.test_staff_username, password=self.test_password)
@@ -395,7 +395,7 @@ class OrderReturnedViewTests(APITestCase):
         new_callable=CTCustomerByIdMock
     )
     def test_view_returns_expected_error_no_order(self, mock_customer, _mock_order, _mock_signal):
-        """Check an authorized account requesting fulfillment unable to get customer receive an expected error."""
+        """Check an authorized account requesting return unable to get customer receive an expected error."""
         mock_customer.return_value = None
         # Login
         self.client.login(username=self.test_staff_username, password=self.test_password)
@@ -414,7 +414,7 @@ class OrderReturnedViewTests(APITestCase):
         new_callable=CTCustomerByIdMock
     )
     def test_view_returns_ok_bad_order_state(self, _mock_customer, _mock_order, _mock_signal):
-        """Check authorized user requesting sanction receives a HTTP 200 OK."""
+        """Check authorized user requesting return receives a HTTP 200 OK."""
 
         # Login
         self.client.login(username=self.test_staff_username, password=self.test_password)
@@ -434,7 +434,7 @@ class OrderReturnedViewTests(APITestCase):
         new_callable=CTCustomerByIdMock
     )
     def test_view_returns_ok_missing_order_state(self, _mock_customer, _mock_order, _mock_signal):
-        """Check authorized with missing order user requesting sanction receives a HTTP 200 OK."""
+        """Check authorized with missing order user requesting return receives a HTTP 200 OK."""
 
         # Login
         self.client.login(username=self.test_staff_username, password=self.test_password)

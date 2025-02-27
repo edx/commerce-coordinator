@@ -11,6 +11,7 @@ from requests import RequestException
 
 from commerce_coordinator.apps.commercetools.catalog_info.constants import TwoUKeys
 from commerce_coordinator.apps.commercetools.catalog_info.edx_utils import (
+    cents_to_dollars,
     get_edx_is_sanctioned,
     get_edx_items,
     get_edx_lms_user_id,
@@ -43,6 +44,7 @@ from commerce_coordinator.apps.commercetools.utils import (
 from commerce_coordinator.apps.core.constants import ISO_8601_FORMAT
 from commerce_coordinator.apps.core.memcache import safe_key
 from commerce_coordinator.apps.core.segment import track
+from commerce_coordinator.apps.core.tasks import TASK_LOCK_RETRY, acquire_task_lock, release_task_lock
 from commerce_coordinator.apps.lms.clients import LMSAPIClient
 
 # Use the special Celery logger for our tasks
@@ -244,16 +246,10 @@ def fulfill_order_sanctioned_message_signal_task(
 def fulfill_order_returned_signal_task(
     order_id,
     return_line_item_return_id,
+    return_line_item_id,
     message_id
 ):
     """Celery task for an order return (and refunded) message."""
-
-    def _cents_to_dollars(in_amount):
-        return in_amount.cent_amount / pow(
-            10, in_amount.fraction_digits
-            if hasattr(in_amount, 'fraction_digits')
-            else 2
-        )
 
     def _prepare_segment_event_properties(in_order, return_line_item_return_id):
         return {
@@ -262,18 +258,36 @@ def fulfill_order_returned_signal_task(
             'order_id': in_order.order_number,
             'checkout_id': in_order.cart.id,
             'return_id': return_line_item_return_id,
-            'total': _cents_to_dollars(in_order.taxed_price.total_gross),
+            'total': cents_to_dollars(in_order.taxed_price.total_gross),
             'currency': in_order.taxed_price.total_gross.currency_code,
-            'tax': _cents_to_dollars(in_order.taxed_price.total_tax),
+            'tax': cents_to_dollars(in_order.taxed_price.total_tax),
             'coupon': in_order.discount_codes[-1].discount_code.obj.code if in_order.discount_codes else None,
             'coupon_name': [discount.discount_code.obj.code for discount in in_order.discount_codes[:-1]],
-            'discount': _cents_to_dollars(
+            'discount': cents_to_dollars(
                 in_order.discount_on_total_price.discounted_amount) if in_order.discount_on_total_price else 0,
             'title': get_edx_items(in_order)[0].name['en-US'] if get_edx_items(in_order) else None,
             'products': []
         }
 
     tag = "fulfill_order_returned_signal_task"
+
+    task_key = f'{tag}-{order_id}'
+
+    def _log_error_and_release_lock(log_message):
+        logger.error(log_message)
+        release_task_lock(task_key)
+
+    def _log_info_and_release_lock(log_message):
+        logger.info(log_message)
+        release_task_lock(task_key)
+
+    if not acquire_task_lock(task_key):
+        logger.info(f"Task {task_key} is locked. Retrying in {TASK_LOCK_RETRY} seconds...")
+        fulfill_order_returned_signal_task.apply_async(
+            args=(order_id, return_line_item_return_id, return_line_item_id, message_id),
+            countdown=TASK_LOCK_RETRY
+        )
+        return False
 
     logger.info(f'[CT-{tag}] Processing return for order: {order_id}, line item: {return_line_item_return_id}, '
                 f'message id: {message_id}')
@@ -283,19 +297,19 @@ def fulfill_order_returned_signal_task(
     try:
         order = client.get_order_by_id(order_id)
     except CommercetoolsError as err:  # pragma no cover
-        logger.error(f'[CT-{tag}] Order not found: {order_id} with CT error {err}, {err.errors}'
-                     f', message id: {message_id}')
-        return False
+        _log_error_and_release_lock(f'[CT-{tag}] Order not found: {order_id} with CT error {err}, {err.errors}'
+                                    f', message id: {message_id}')
+        raise err
 
     try:
         customer = client.get_customer_by_id(order.customer_id)
     except CommercetoolsError as err:  # pragma no cover
-        logger.error(f'[CT-{tag}] Customer not found: {order.customer_id} for order {order_id} with '
-                     f'CT error {err}, {err.errors}, message id: {message_id}')
-        return False
+        _log_error_and_release_lock(f'[CT-{tag}] Customer not found: {order.customer_id} for order {order_id} with '
+                                    f'CT error {err}, {err.errors}, message id: {message_id}')
+        raise err
 
     if not (customer and order and is_edx_lms_order(order)):  # pragma no cover
-        logger.info(f'[CT-{tag}] order {order_id} is not an edX order, message id: {message_id}')
+        _log_info_and_release_lock(f'[CT-{tag}] order {order_id} is not an edX order, message id: {message_id}')
         return True
 
     # Retrieve the payment service provider (PSP) payment ID from an order.
@@ -308,9 +322,21 @@ def fulfill_order_returned_signal_task(
 
     # Return payment if payment id is set
     if psp_payment_id is not None:
-        result = OrderRefundRequested.run_filter(
-            order_id=order_id, return_line_item_return_id=return_line_item_return_id, message_id=message_id
-        )
+        try:
+            result = OrderRefundRequested.run_filter(
+                order_id=order_id,
+                return_line_item_return_id=return_line_item_return_id,
+                return_line_item_id=return_line_item_id,
+                message_id=message_id
+            )
+        except Exception as exc:  # pragma no cover
+            _log_error_and_release_lock(
+                f'[CT-{tag}] Unsuccessful refund with details: '
+                f'[order_id: {order_id} '
+                f'message_id: {message_id} '
+                f'exception: {exc}'
+            )
+            raise exc
 
         if 'refund_response' in result and result['refund_response']:
             if result['refund_response'] == 'charge_already_refunded':
@@ -332,7 +358,7 @@ def fulfill_order_returned_signal_task(
                         'product_id': line_item.product_key,
                         'sku': line_item.variant.sku if hasattr(line_item.variant, 'sku') else None,
                         'name': line_item.name['en-US'],
-                        'price': _cents_to_dollars(line_item.price.value),
+                        'price': cents_to_dollars(line_item.price.value),
                         'quantity': line_item.quantity,
                         'category': get_line_item_attribute(line_item, 'primary-subject-area'),
                         'image_url': line_item.variant.images[0].url if line_item.variant.images else None,
@@ -355,7 +381,9 @@ def fulfill_order_returned_signal_task(
             logger.info(f'[CT-{tag}] payment {psp_payment_id} not refunded, '
                         f'sending Slack notification, message id: {message_id}')
 
-    logger.info(f'[CT-{tag}] Finished return for order: {order_id}, line item: {return_line_item_return_id}, '
-                f'message id: {message_id}')
+    _log_info_and_release_lock(
+        f'[CT-{tag}] Finished return for order: {order_id}, line item: {return_line_item_return_id}, '
+        f'message id: {message_id}'
+    )
 
     return True

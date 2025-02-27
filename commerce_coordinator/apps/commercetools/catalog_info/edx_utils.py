@@ -14,7 +14,7 @@ from commerce_coordinator.apps.commercetools.catalog_info.constants import (
     EdXFieldNames,
     TwoUKeys
 )
-from commerce_coordinator.apps.commercetools.catalog_info.utils import typed_money_to_string
+from commerce_coordinator.apps.commercetools.catalog_info.utils import check_is_bundle
 
 
 def get_edx_product_course_run_key(prodvar_or_li: Union[CTProductVariant, CTLineItem]) -> str:
@@ -80,13 +80,51 @@ def get_edx_is_sanctioned(order: CTOrder) -> bool:
     return get_edx_order_workflow_state_key(order) == TwoUKeys.SDN_SANCTIONED_ORDER_STATE
 
 
-def get_edx_refund_info(payment: CTPayment) -> decimal:
-    refund_amount = decimal.Decimal(0.00)
+def cents_to_dollars(in_amount):
+    return in_amount.cent_amount / pow(
+        10, in_amount.fraction_digits
+        if hasattr(in_amount, 'fraction_digits')
+        else 2
+    )
+
+
+def get_line_item_price_to_refund(order: CTOrder, return_line_item_id: str) -> decimal.Decimal:
+    """
+    Calculate the refund amount for a specific line item in an order.
+
+    Args:
+        order (CTOrder): The order object containing line items.
+        return_line_item_id (str): The ID of the line item to be refunded.
+
+    Returns:
+        decimal.Decimal: The refund amount for the specified line item.
+    """
+    if check_is_bundle(order.line_items):
+        for line_item in get_edx_items(order):
+            if line_item.id == return_line_item_id:
+                return cents_to_dollars(line_item.total_price)
+
+    return cents_to_dollars(order.total_price)
+
+
+def get_edx_refund_info(payment: CTPayment, order: CTOrder, return_line_item_id: str) -> (decimal.Decimal, str):
+    """
+    Retrieve the refund amount and interaction ID for a given payment and order.
+
+    Args:
+        payment (CTPayment): The payment object containing transaction details.
+        order (CTOrder): The order object containing line items.
+        return_line_item_id (str): The ID of the line item to be refunded.
+
+    Returns:
+        tuple: A tuple containing the refund amount (decimal.Decimal) and the interaction ID (str).
+    """
     interaction_id = None
+
     for transaction in payment.transactions:
         if transaction.type == TransactionType.CHARGE:  # pragma no cover
-            refund_amount += decimal.Decimal(typed_money_to_string(transaction.amount, money_as_decimal_string=True))
             interaction_id = transaction.interaction_id
-            return refund_amount, interaction_id
+
+    refund_amount = get_line_item_price_to_refund(order, return_line_item_id)
 
     return refund_amount, interaction_id
