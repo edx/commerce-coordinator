@@ -1,8 +1,9 @@
 from unittest import TestCase
 
 import ddt
+from commercetools.platform.models import ReturnInfo, ReturnPaymentState
 
-from commerce_coordinator.apps.commercetools.tests.conftest import gen_order
+from commerce_coordinator.apps.commercetools.tests.conftest import gen_order, gen_return_item
 from commerce_coordinator.apps.core.tests.utils import name_test, uuid4_str
 from commerce_coordinator.apps.rollout.utils import (
     get_order_return_info_return_items,
@@ -50,5 +51,8 @@ class TestUtilityFunctions(TestCase):
     @ddt.unpack
     def test_is_commercetools_line_item_already_refunded(self, line_item_id):
         order = gen_order(uuid4_str())
+        mock_response_return_item = gen_return_item("order_line_id", ReturnPaymentState.REFUNDED)
+        mock_response_return_info = ReturnInfo(items=[mock_response_return_item])
+        order.return_info.append(mock_response_return_info)
 
         self.assertTrue(is_commercetools_line_item_already_refunded(order, line_item_id))

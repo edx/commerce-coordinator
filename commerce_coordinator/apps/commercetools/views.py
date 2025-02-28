@@ -132,8 +132,6 @@ class OrderReturnedView(SingleInvocationAPIView):
         message_details = OrderReturnedViewMessageInputSerializer(data=input_data)
         message_details.is_valid(raise_exception=True)
         order_id = message_details.data['order_id']
-        return_line_item_return_id = message_details.get_return_line_item_return_id()
-        message_id = message_details.data['message_id']
 
         if self._is_running(tag, order_id):  # pragma no cover
             self.meta_should_mark_not_running = False
@@ -141,10 +139,13 @@ class OrderReturnedView(SingleInvocationAPIView):
         else:
             self.mark_running(tag, order_id)
 
+        return_items = message_details.get_return_line_items()
+        message_id = message_details.data['message_id']
+
         fulfill_order_returned_signal.send_robust(
             sender=self,
             order_id=order_id,
-            return_line_item_return_id=return_line_item_return_id,
+            return_items=return_items,
             message_id=message_id
         )
 
