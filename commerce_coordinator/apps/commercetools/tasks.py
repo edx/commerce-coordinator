@@ -3,7 +3,6 @@ Commercetools tasks
 """
 
 import logging
-import time
 
 import stripe
 from celery import shared_task
@@ -23,7 +22,7 @@ logger = logging.getLogger(__name__)
 stripe.api_key = settings.PAYMENT_PROCESSOR_CONFIG['edx']['stripe']['secret_key']
 
 
-@shared_task()
+@shared_task(autoretry_for=(CommercetoolsError,), retry_kwargs={'max_retries': 5, 'countdown': 3})
 def fulfillment_completed_update_ct_line_item_task(
     entitlement_uuid,
     order_id,
@@ -49,12 +48,30 @@ def fulfillment_completed_update_ct_line_item_task(
         logger.info(log_message)
         release_task_lock(task_key)
 
-    while not acquire_task_lock(task_key):
-        logger.info(f"Task {task_key} is locked. Retrying in {TASK_LOCK_RETRY} seconds...")
-        time.sleep(TASK_LOCK_RETRY)  # Wait before retrying
+    if not acquire_task_lock(task_key):
+        logger.info(
+            f"Task {task_key} is locked. "
+            f"Exiting current task and retrying in {TASK_LOCK_RETRY} seconds..."
+        )
+        fulfillment_completed_update_ct_line_item_task.apply_async(
+            kwargs={
+                'entitlement_uuid': entitlement_uuid,
+                'order_id': order_id,
+                'order_version': order_version,
+                'line_item_id': line_item_id,
+                'item_quantity': item_quantity,
+                'from_state_id': from_state_id,
+                'to_state_key': to_state_key
+            },
+            countdown=TASK_LOCK_RETRY
+        )
+        return False
 
     try:
         cache_entry = cache.get(cache_key, None)
+        if cache_entry:
+            logger.info(f'[CT-{tag}] Found cache entry for order version {cache_entry} for cache key {cache_key}')
+
         current_order_version = cache_entry if cache_entry else order_version
 
         client = CommercetoolsAPIClient()
