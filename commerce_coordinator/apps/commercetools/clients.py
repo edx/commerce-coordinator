@@ -647,7 +647,12 @@ class CommercetoolsAPIClient:
             context_prefix = "[CommercetoolsAPIClient.update_line_item_on_fulfillment]"
             # Logs & ignores version conflict errors due to duplicate Commercetools messages
             handle_commercetools_error(
-                context_prefix, err, f"Unable to update LineItem of order {order_id}"
+                context_prefix, err,
+                f"Failed to update LineItem of order {order_id}"
+                f"From State: '{from_state_key}' "
+                f"To State: '{new_state_key}' "
+                f"And entitlement {entitlement_uuid} "
+                f"Line Item ID: {line_item_id}"
             )
             raise err
 

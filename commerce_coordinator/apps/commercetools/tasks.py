@@ -86,14 +86,19 @@ def fulfillment_completed_update_ct_line_item_task(
         )
 
         cache.set(key=cache_key, value=updated_order.version, timeout=TASK_LOCK_EXPIRE)
-    except Exception:  # pylint: disable=broad-except
+    except CommercetoolsError as err:
+        release_task_lock(task_key)
+        raise err
+    except:  # pylint: disable=bare-except # noqa: E722
         _log_error_and_release_lock(
-            f'[CT-{tag}] Error updating line item {line_item_id} for order {order_id}' + entitlement_info
+            f'[CT-{tag}] Unexpected error occurred while updating line item {line_item_id} for order {order_id}'
+            + entitlement_info
+            + 'Releasing lock.'
         )
         return None
 
     _log_info_and_release_lock(
-        f'[CT-{tag}] Line item {line_item_id} updated for order {order_id} ' + entitlement_info
+        f'[CT-{tag}] Line item {line_item_id} updated for order {order_id}' + entitlement_info
     )
 
     return updated_order
