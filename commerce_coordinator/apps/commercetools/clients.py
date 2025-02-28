@@ -503,7 +503,7 @@ class CommercetoolsAPIClient:
                     ),
                     fields=CTFieldContainer(custom_fields),
                 ))
-            
+
             return_transaction_return_item_action = PaymentSetTransactionCustomTypeAction(
                 transaction_id=transaction_id,
                 type=CTTypeResourceIdentifier(key="transactionCustomType"),

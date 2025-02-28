@@ -302,7 +302,7 @@ def fulfill_order_returned_signal_task(order_id, return_items, message_id):
         line_item_return['lineItemId']: line_item_return['id'] for line_item_return in return_items}
     return_line_item_return_ids = [line_item_return['id'] for line_item_return in return_items]
     return_line_entitlement_ids = {
-        return_line_item_return_dict.get(line_item.id): get_line_item_lms_entitlement_id(line_item) 
+        return_line_item_return_dict.get(line_item.id): get_line_item_lms_entitlement_id(line_item)
         for line_item in get_edx_items(order)}
 
     # Return payment if payment id is set
@@ -321,9 +321,8 @@ def fulfill_order_returned_signal_task(order_id, return_items, message_id):
                             f'sending Slack notification, message id: {message_id}')
             else:
                 logger.info(f'[CT-{tag}] payment {psp_payment_id} refunded for message id: {message_id}')
-                
+
                 # TODO: DISCUSS WITH SHAFQAT
-                
                 segment_event_properties = _prepare_segment_event_properties(order, return_line_item_return_ids[0])
                 for line_item in get_edx_items(order):
                     if line_item.id in return_line_item_ids:
@@ -345,8 +344,9 @@ def fulfill_order_returned_signal_task(order_id, return_items, message_id):
                             'brand': get_line_item_attribute(line_item, 'brand-text'),
                             'url': get_line_item_attribute(line_item, 'url-course'),
                             'lob': get_line_item_attribute(line_item, 'lob') or 'edx',
-                            'product_type': CT_ORDER_PRODUCT_TYPE_FOR_BRAZE.get(line_item.product_type.obj.key, 'course')
-                            if hasattr(line_item.product_type.obj, 'name') else None
+                            'product_type': CT_ORDER_PRODUCT_TYPE_FOR_BRAZE.get(
+                                line_item.product_type.obj.key, 'course'
+                            ) if hasattr(line_item.product_type.obj, 'name') else None
                         }
                         segment_event_properties['products'].append(product)
 

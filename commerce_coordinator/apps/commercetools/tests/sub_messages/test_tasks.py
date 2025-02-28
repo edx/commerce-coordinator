@@ -266,7 +266,10 @@ class OrderReturnedMessageSignalTaskTests(TestCase):
         """ Unpack the dictionary in the order required for the UUT """
         return (
             values['order_id'],
-            values['order_line_id'],
+            [{
+                'id': uuid4_str(),
+                'lineItemId': uuid4_str()
+            }],
             values['message_id']
         )
 

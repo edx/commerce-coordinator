@@ -523,7 +523,8 @@ class ClientTests(TestCase):
             result = self.client_set.client.update_return_payment_state_after_successful_refund(
                 mock_order.id,
                 mock_order.version,
-                mock_response_return_item.line_item_id,
+                [mock_response_return_item.line_item_id],
+                {mock_response_return_item.line_item_id: uuid4_str()},
                 mock_payment.id,
                 10000
             )
@@ -1125,7 +1126,8 @@ class ClientUpdateReturnTests(TestCase):
             self.client_set.client.update_return_payment_state_after_successful_refund(
                 order_id="mock_order_id",
                 order_version="2",
-                return_line_item_return_id="mock_return_item_id",
+                return_line_item_return_ids=["mock_return_item_id"],
+                return_line_entitlement_ids={'mock_return_item_id': 'mock_entitlement_id'},
                 payment_intent_id="1",
                 amount_in_cents=10000
             )
@@ -1150,7 +1152,8 @@ class ClientUpdateReturnTests(TestCase):
             self.client_set.client.update_return_payment_state_after_successful_refund(
                 order_id="mock_order_id",
                 order_version="2",
-                return_line_item_return_id="mock_return_item_id",
+                return_line_item_return_ids=["mock_return_item_id"],
+                return_line_entitlement_ids={'mock_return_item_id': 'mock_entitlement_id'},
                 payment_intent_id=None,
                 amount_in_cents=10000
             )

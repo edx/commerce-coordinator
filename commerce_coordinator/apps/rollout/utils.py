@@ -8,7 +8,6 @@ from commercetools.platform.models import ReturnItem as CTReturnItem
 from commercetools.platform.models import ReturnPaymentState
 
 
-
 def is_legacy_order(order_number: str) -> bool:
     """ Determine if an order is a Legacy Ecommerce order """
     if not order_number:
@@ -44,6 +43,7 @@ def is_commercetools_line_item_already_refunded(order: CTOrder, order_line_item_
         lambda item: item.line_item_id in order_line_item_ids and item.payment_state == ReturnPaymentState.REFUNDED,
         return_info_return_items
     ))) >= 1
+
 
 def is_commercetools_stripe_refund(source_system: str) -> bool:
     """

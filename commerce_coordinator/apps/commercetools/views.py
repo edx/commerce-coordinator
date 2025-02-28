@@ -133,7 +133,6 @@ class OrderReturnedView(SingleInvocationAPIView):
         message_details.is_valid(raise_exception=True)
         order_id = message_details.data['order_id']
 
-    
         if self._is_running(tag, f'{order_id}'):  # pragma no cover
             self.meta_should_mark_not_running = False
             return Response(status=status.HTTP_200_OK)

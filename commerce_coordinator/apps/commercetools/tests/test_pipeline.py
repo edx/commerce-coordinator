@@ -118,7 +118,12 @@ class CommercetoolsOrLegacyEcommerceRefundPipelineTests(APITestCase):
     @patch('commerce_coordinator.apps.rollout.utils.is_commercetools_line_item_already_refunded')
     @patch('commerce_coordinator.apps.commercetools.clients.CommercetoolsAPIClient.get_order_by_id')
     def test_commercetools_order_item_already_refunded(self, mock_order, mock_ct_refund):
-        mock_order.return_value = self.mock_response_order
+        mock_response_order = gen_order("mock_id")
+        mock_response_return_item = gen_return_item("order_line_id", ReturnPaymentState.REFUNDED)
+        mock_response_return_info = ReturnInfo(items=[mock_response_return_item])
+        mock_response_order.return_info.append(mock_response_return_info)
+
+        mock_order.return_value = mock_response_order
         mock_ct_refund.return_value = True
 
         refund_pipe = CreateReturnForCommercetoolsOrder("test_pipe", None)
@@ -222,8 +227,12 @@ class OrderReturnPipelineTests(TestCase):
 
         pipe = UpdateCommercetoolsOrderReturnPaymentStatus("test_pipe", None)
         mock_order_return_update.return_value = self.update_order_response
-        ret = pipe.run_filter(order_data=self.update_order_data, returned_order=self.update_order_data,
-                              payment_intent_id="mock_payment_intent_id", amount_in_cents=10000)
+        ret = pipe.run_filter(
+            order_data=self.update_order_data, returned_order=self.update_order_data,
+            payment_intent_id="mock_payment_intent_id", amount_in_cents=10000,
+            return_line_item_return_ids=["mock_return_item_id"],
+            return_line_entitlement_ids={'mock_return_item_id': 'mock_entitlement_id'}
+        )
         result_data = ret['returned_order']
         self.assertEqual(result_data, self.update_order_response)
         self.assertEqual(result_data.return_info[1].items[0].payment_state, ReturnPaymentState.REFUNDED)
