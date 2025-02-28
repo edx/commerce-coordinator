@@ -579,7 +579,7 @@ class CommercetoolsAPIClient:
             handle_commercetools_error("[CommercetoolsAPIClient.create_return_payment_transaction]", err, context)
             raise err
 
-    def update_line_item_on_entitlement_fulfillment(
+    def update_line_item_on_fulfillment(
         self,
         entitlement_uuid: str,
         order_id: str,
@@ -590,7 +590,7 @@ class CommercetoolsAPIClient:
         new_state_key: str,
     ) -> CTOrder:
         """
-        Update Commercetools order line item on successful LMS entitlement creation
+        Update Commercetools order line item on fulfillment.
         Args:
             entitlement_uuid (str): Entitlement UUID
             order_id (str): Order ID (UUID)
@@ -606,9 +606,6 @@ class CommercetoolsAPIClient:
         from_state_key = self.get_state_by_id(from_state_id).key
 
         logger.info(
-            f"[CommercetoolsAPIClient] - Adding entitlement_uuid for order with ID {order_id} "
-        )
-        logger.info(
             f"[CommercetoolsAPIClient] - Transitioning line item state for order with ID {order_id} "
             f"from {from_state_key} to {new_state_key}"
         )
@@ -616,6 +613,9 @@ class CommercetoolsAPIClient:
         try:
             actions = []
             if entitlement_uuid:
+                logger.info(
+                    f"[CommercetoolsAPIClient] - Adding entitlement_uuid for order with ID {order_id} "
+                )
                 actions.append(OrderSetLineItemCustomFieldAction(
                     line_item_id=line_item_id,
                     name=TwoUKeys.LINE_ITEM_LMS_ENTITLEMENT_ID,
@@ -644,71 +644,17 @@ class CommercetoolsAPIClient:
                 return self.get_order_by_id(order_id)
 
         except CommercetoolsError as err:
-            context_prefix = "[CommercetoolsAPIClient.update_line_item_on_entitlement_fulfillment]"
+            context_prefix = "[CommercetoolsAPIClient.update_line_item_on_fulfillment]"
             # Logs & ignores version conflict errors due to duplicate Commercetools messages
             handle_commercetools_error(
-                context_prefix, err, f"Unable to update LineItem of order {order_id}"
+                context_prefix, err,
+                f"Failed to update LineItem of order {order_id}"
+                f"From State: '{from_state_key}' "
+                f"To State: '{new_state_key}' "
+                f"And entitlement {entitlement_uuid} "
+                f"Line Item ID: {line_item_id}"
             )
-            return None
-
-    def update_line_item_transition_state_on_fulfillment(
-        self,
-        order_id: str,
-        order_version: int,
-        line_item_id: str,
-        item_quantity: int,
-        from_state_id: str,
-        new_state_key: str,
-    ) -> CTOrder:
-        """
-        Update Commercetools order line item state
-        Args:
-            order_id (str): Order ID (UUID)
-            order_version (int): Current version of order
-            line_item_id (str): ID of order line item
-            item_quantity (int): Count of variants in line item
-            from_state_id (str): ID of LineItemState to transition from
-            new_state_key (str): Key of LineItemState to transition to
-        Returns (CTOrder): Updated order object or
-        Returns (CTOrder): Current un-updated order
-        Raises Exception: Error if update was unsuccessful.
-        """
-
-        from_state_key = self.get_state_by_id(from_state_id).key
-
-        logger.info(
-            f"[CommercetoolsAPIClient] - Transitioning line item state for order with ID {order_id} "
-            f"from {from_state_key} to {new_state_key}"
-        )
-
-        try:
-            if new_state_key != from_state_key:
-                transition_line_item_state_action = OrderTransitionLineItemStateAction(
-                    line_item_id=line_item_id,
-                    quantity=item_quantity,
-                    from_state=StateResourceIdentifier(key=from_state_key),
-                    to_state=StateResourceIdentifier(key=new_state_key),
-                )
-
-                updated_fulfillment_line_item_order = self.base_client.orders.update_by_id(
-                    id=order_id,
-                    version=order_version,
-                    actions=[transition_line_item_state_action],
-                )
-
-                return updated_fulfillment_line_item_order
-            else:
-                logger.info(
-                    f"[CommercetoolsAPIClient] - The line item {line_item_id} "
-                    f"already has the correct state {new_state_key}. "
-                    f"Not attempting to transition LineItemState for order id {order_id}"
-                )
-                return self.get_order_by_id(order_id)
-        except CommercetoolsError as err:
-            context_prefix = "[CommercetoolsAPIClient.update_line_item_state_on_fulfillment_completion]"
-            # Logs & ignores version conflict errors due to duplicate Commercetools messages
-            handle_commercetools_error(context_prefix, err, f"Unable to update LineItemState of order {order_id}")
-            return None
+            raise err
 
     def update_line_items_transition_state(
             self,
@@ -769,10 +715,12 @@ class CommercetoolsAPIClient:
                 "[CommercetoolsAPIClient.update_line_items_transition_state]",
                 err,
                 f"Failed to update LineItemStates for order ID '{order_id}'. "
+                f"From State: '{from_state_key}' "
+                f"To State: '{new_state_key}' "
                 f"Line Item IDs: {', '.join(item.id for item in line_items)}",
                 True
             )
-            return None
+            raise err
 
     def retire_customer_anonymize_fields(
         self,

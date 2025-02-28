@@ -1,15 +1,23 @@
 """
 API clients for LMS app.
 """
+import enum
+
 from celery.utils.log import get_task_logger
 from django.conf import settings
 from requests.exceptions import RequestException
 
 from commerce_coordinator.apps.core.clients import BaseEdxOAuthClient, urljoin_directory
-from commerce_coordinator.apps.lms.signals import entitlement_fulfillment_completed_signal, fulfillment_completed_signal
+from commerce_coordinator.apps.lms.signals import fulfillment_completed_update_ct_line_item_signal
 
 # Use special Celery logger for tasks client calls.
 logger = get_task_logger(__name__)
+
+
+class FulfillmentType(enum.Enum):
+    """Type of fulfillment."""
+    ENROLLMENT = 'enrollment'
+    ENTITLEMENT = 'entitlement'
 
 
 class LMSAPIClient(BaseEdxOAuthClient):
@@ -81,7 +89,7 @@ class LMSAPIClient(BaseEdxOAuthClient):
             dict: Dictionary representation of JSON returned from API.
         """
         return self.post(
-            fulfillment_type="enrollment",
+            fulfillment_type=FulfillmentType.ENROLLMENT.value,
             url=self.api_enrollment_base_url,
             json=enrollment_data,
             line_item_state_payload=line_item_state_payload,
@@ -103,7 +111,7 @@ class LMSAPIClient(BaseEdxOAuthClient):
             dict: Dictionary representation of JSON returned from API.
         """
         return self.post(
-            fulfillment_type="entitlement",
+            fulfillment_type=FulfillmentType.ENTITLEMENT.value,
             url=self.api_entitlement_base_url,
             json=entitlement_data,
             line_item_state_payload=line_item_state_payload,
@@ -123,11 +131,6 @@ class LMSAPIClient(BaseEdxOAuthClient):
         """
         Send a POST request to a URL with JSON payload.
         """
-        signal = (
-            entitlement_fulfillment_completed_signal
-            if fulfillment_type == "entitlement"
-            else fulfillment_completed_signal
-        )
         if not timeout:   # pragma no cover
             timeout = self.normal_timeout
         try:
@@ -158,10 +161,10 @@ class LMSAPIClient(BaseEdxOAuthClient):
 
             response_json = response.json()
 
-            if fulfillment_type == "entitlement":
+            if fulfillment_type == FulfillmentType.ENTITLEMENT.value:
                 payload['entitlement_uuid'] = response_json.get('uuid')
 
-            signal.send_robust(
+            fulfillment_completed_update_ct_line_item_signal.send_robust(
                 sender=self.__class__,
                 **payload
             )
@@ -180,7 +183,7 @@ class LMSAPIClient(BaseEdxOAuthClient):
                 'is_fulfilled': False
             }
 
-            signal.send_robust(
+            fulfillment_completed_update_ct_line_item_signal.send_robust(
                 sender=self.__class__,
                 **payload
             )

@@ -58,8 +58,8 @@ class GetActiveOrderManagementSystem(PipelineStep):
                 commercetools_available_product = ct_api_client.get_product_by_program_id(bundle)
                 if not commercetools_available_product:
                     logger.warning(
-                        f'[get_product_by_program_id] Program {bundle} not found in Commercetools. '
-                        f'Please ensure it is properly synced.'
+                        f'[get_product_by_program_id] Program not found in Commercetools. '
+                        f'Program product id: {bundle}. Please ensure it is properly synced.'
                     )
             except HTTPError as exc:
                 logger.exception(
