@@ -40,7 +40,6 @@ class UpdateLineItemStateOnFulfillmentCompletionTaskTest(TestCase):
     def unpack_for_uut(values):
         """ Unpack the dictionary in the order required for the UUT """
         return (
-            None,
             values['entitlement_uuid'],
             values['order_id'],
             values['order_version'],
