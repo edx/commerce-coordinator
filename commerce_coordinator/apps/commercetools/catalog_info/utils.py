@@ -47,9 +47,8 @@ def get_line_item_attribute(in_line_item, in_attribute_name):  # pragma no cover
     return attribute_value
 
 
-def get_course_mode_from_ct_order(line_item: CTLineItem, is_bundle=False) -> str:
-    mode_attribute = 'entitlement-mode' if is_bundle else 'mode'
-    course_mode = get_line_item_attribute(line_item, mode_attribute)
+def get_course_mode_from_ct_order(line_item: CTLineItem) -> str:
+    course_mode = get_line_item_attribute(line_item, 'mode')
     return course_mode or 'verified'
 
 

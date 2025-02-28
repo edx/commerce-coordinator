@@ -309,11 +309,8 @@ CC_SIGNALS = {
     'commerce_coordinator.apps.commercetools.signals.fulfill_order_placed_send_entitlement_signal': [
         'commerce_coordinator.apps.lms.signal_handlers.fulfill_order_placed_send_entitlement',
     ],
-    'commerce_coordinator.apps.lms.signals.fulfillment_completed_signal': [
-        'commerce_coordinator.apps.commercetools.signals.fulfill_order_completed_send_line_item_state',
-    ],
-    'commerce_coordinator.apps.lms.signals.entitlement_fulfillment_completed_signal': [
-        'commerce_coordinator.apps.commercetools.signals.entitlement_fulfillment_completed',
+    'commerce_coordinator.apps.lms.signals.fulfillment_completed_update_ct_line_item_signal': [
+        'commerce_coordinator.apps.commercetools.signals.fulfillment_completed_update_ct_line_item',
     ],
     'commerce_coordinator.apps.commercetools.sub_messages.signals_dispatch.fulfill_order_placed_message_signal': [
         'commerce_coordinator.apps.commercetools.sub_messages.signals_delayed.fulfill_order_placed_message_signal',
