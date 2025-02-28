@@ -84,7 +84,7 @@ def refund_from_stripe_task(
             f"[refund_from_stripe_task] Initiating creation of CT payment's refund transaction object "
             f"for payment Intent ID {payment_intent_id}.")
         payment = client.get_payment_by_key(payment_intent_id)
-        if has_full_refund_transaction(payment)or is_transaction_already_refunded(payment, stripe_refund['id']):
+        if has_full_refund_transaction(payment) or is_transaction_already_refunded(payment, stripe_refund['id']):
             logger.info(f"[refund_from_stripe_task] Event 'charge.refunded' received, but Payment with ID {payment.id} "
                         f"already has a full refund. Skipping task to add refund transaction")
             return None

@@ -176,8 +176,7 @@ class FetchOrderDetailsByOrderID(PipelineStep):
                     ct_payment, ct_order, return_line_item_ids)
                 ret_val['amount_in_cents'] = refund_amount
                 ret_val['ct_transaction_interaction_id'] = ct_transaction_interaction_id
-                ret_val['has_been_refunded'] = is_commercetools_line_item_already_refunded(
-                    ct_order, return_line_item_ids) or has_full_refund_transaction(ct_payment)
+                ret_val['has_been_refunded'] = has_full_refund_transaction(ct_payment)
                 ret_val['payment_data'] = ct_payment
             else:
                 ret_val['amount_in_cents'] = decimal.Decimal(0.00)
