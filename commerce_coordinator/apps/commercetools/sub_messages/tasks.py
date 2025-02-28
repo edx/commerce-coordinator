@@ -33,6 +33,7 @@ from commerce_coordinator.apps.commercetools.filters import OrderRefundRequested
 from commerce_coordinator.apps.commercetools.serializers import OrderFulfillViewInputSerializer
 from commerce_coordinator.apps.commercetools.signals import fulfill_order_placed_signal
 from commerce_coordinator.apps.commercetools.utils import (
+    calculate_discount,
     extract_ct_order_information_for_braze_canvas,
     extract_ct_product_information_for_braze_canvas,
     send_order_confirmation_email
@@ -242,8 +243,7 @@ def fulfill_order_returned_signal_task(
             'tax': _cents_to_dollars(in_order.taxed_price.total_tax),
             'coupon': in_order.discount_codes[-1].discount_code.obj.code if in_order.discount_codes else None,
             'coupon_name': [discount.discount_code.obj.code for discount in in_order.discount_codes[:-1]],
-            'discount': _cents_to_dollars(
-                in_order.discount_on_total_price.discounted_amount) if in_order.discount_on_total_price else 0,
+            'discount': _cents_to_dollars(calculate_discount(in_order)),
             'title': get_edx_items(in_order)[0].name['en-US'] if get_edx_items(in_order) else None,
             'products': []
         }
