@@ -7,7 +7,7 @@ import unittest
 from unittest.mock import MagicMock
 
 from braze.client import BrazeClient
-from commercetools.platform.models import MoneyType, TransactionState, TransactionType, TypedMoney
+from commercetools.platform.models import CentPrecisionMoney, MoneyType, TransactionState, TransactionType, TypedMoney
 from django.conf import settings
 from django.test import override_settings
 from django.urls import reverse
@@ -20,6 +20,7 @@ from commerce_coordinator.apps.commercetools.tests.conftest import (
 )
 from commerce_coordinator.apps.commercetools.tests.constants import EXAMPLE_FULFILLMENT_SIGNAL_PAYLOAD
 from commerce_coordinator.apps.commercetools.utils import (
+    calculate_total_discount_on_order,
     create_retired_fields,
     extract_ct_order_information_for_braze_canvas,
     extract_ct_product_information_for_braze_canvas,
@@ -245,6 +246,46 @@ class TestBrazeHelpers(unittest.TestCase):
             "total": "$149.00",
         }
         assert result == expected
+
+
+class TestCalculateDiscount(unittest.TestCase):
+    """Test for calculate_total_discount_on_order function"""
+    def test_calculate_total_discount_on_order(self):
+        # Mock the order object
+        order = gen_order(EXAMPLE_FULFILLMENT_SIGNAL_PAYLOAD['order_number'], with_discount=False)
+
+        # Mock the discount on total price
+        discount_on_total_price = CentPrecisionMoney(
+            cent_amount=500,
+            currency_code='USD',
+            fraction_digits=2
+        )
+        order.discount_on_total_price = MagicMock()
+        order.discount_on_total_price.discounted_amount = discount_on_total_price
+
+        # Mock the line items discounts
+        discount_on_line_item = CentPrecisionMoney(
+            cent_amount=300,
+            currency_code='USD',
+            fraction_digits=2
+        )
+        line_item = MagicMock()
+        line_item.discounted_price_per_quantity = [
+            MagicMock(discounted_price=MagicMock(
+                included_discounts=[MagicMock(discounted_amount=discount_on_line_item)]
+            ))
+        ]
+        order.line_items = [line_item]
+        total_discount = calculate_total_discount_on_order(order)
+
+        expected_total_discount = CentPrecisionMoney(
+            cent_amount=800,
+            currency_code='USD',
+            fraction_digits=2
+        )
+        self.assertEqual(total_discount.cent_amount, expected_total_discount.cent_amount)
+        self.assertEqual(total_discount.currency_code, expected_total_discount.currency_code)
+        self.assertEqual(total_discount.fraction_digits, expected_total_discount.fraction_digits)
 
 
 class TestHasRefundTransaction(unittest.TestCase):
