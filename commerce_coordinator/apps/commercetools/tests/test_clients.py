@@ -675,25 +675,29 @@ class ClientTests(TestCase):
             )
 
             with patch('commerce_coordinator.apps.commercetools.clients.logging.Logger.error') as log_mock:
-                self.client_set.client.update_line_item_on_fulfillment(
-                    '',
-                    "mock_order_id",
-                    1,
-                    "mock_order_line_item_id",
-                    1,
-                    "mock_order_line_item_state.id",
-                    TwoUKeys.SUCCESS_FULFILMENT_STATE
-                )
+                with self.assertRaises(CommercetoolsError):
+                    self.client_set.client.update_line_item_on_fulfillment(
+                        '',
+                        "mock_order_id",
+                        1,
+                        "mock_order_line_item_id",
+                        1,
+                        "mock_order_line_item_state.id",
+                        TwoUKeys.SUCCESS_FULFILMENT_STATE
+                    )
 
-                expected_message = (
-                    f"[CommercetoolsError] [CommercetoolsAPIClient.update_line_item_on_fulfillment] "
-                    f"Unable to update LineItem "
-                    f"of order mock_order_id "
-                    f"- Correlation ID: {mock_error_response['correlation_id']}, "
-                    f"Details: {mock_error_response['errors']}"
-                )
+                    expected_message = (
+                        f"[CommercetoolsError] [CommercetoolsAPIClient.update_line_item_on_fulfillment] "
+                        f"Unable to update LineItem "
+                        f"of order mock_order_id "
+                        f"From State: '2u-fulfillment-pending-state'"
+                        f"To State: '2u-fulfillment-successful-state'"
+                        f"And entitlement "
+                        f"- Correlation ID: {mock_error_response['correlation_id']}, "
+                        f"Details: {mock_error_response['errors']}"
+                    )
 
-                log_mock.assert_called_with(expected_message)
+                    log_mock.assert_called_with(expected_message)
 
     @patch('commerce_coordinator.apps.commercetools.clients.CommercetoolsAPIClient.get_state_by_id')
     def test_successful_order_all_line_items_state_update(self, mock_state_by_id):
@@ -758,23 +762,27 @@ class ClientTests(TestCase):
             )
 
             with patch('commerce_coordinator.apps.commercetools.clients.logging.Logger.info') as log_mock:
-                self.client_set.client.update_line_items_transition_state(
-                    mock_order.id,
-                    mock_order.version,
-                    mock_order.line_items,
-                    TwoUKeys.PENDING_FULFILMENT_STATE,
-                    TwoUKeys.SUCCESS_FULFILMENT_STATE
-                )
+                with self.assertRaises(CommercetoolsError):
+                    self.client_set.client.update_line_items_transition_state(
+                        mock_order.id,
+                        mock_order.version,
+                        mock_order.line_items,
+                        TwoUKeys.PENDING_FULFILMENT_STATE,
+                        TwoUKeys.SUCCESS_FULFILMENT_STATE
+                    )
 
-                expected_message = (
-                    f"[CommercetoolsError] [CommercetoolsAPIClient.update_line_items_transition_state] "
-                    f"Failed to update LineItemStates "
-                    f"for order ID 'mock_order_id'. Line Item IDs: {mock_order.line_items[0].id} "
-                    f"- Correlation ID: {mock_error_response['correlation_id']}, "
-                    f"Details: {mock_error_response['errors']}"
-                )
+                    expected_message = (
+                        f"[CommercetoolsError] [CommercetoolsAPIClient.update_line_items_transition_state] "
+                        f"Failed to update LineItemStates "
+                        f"for order ID 'mock_order_id'"
+                        f"From State: '2u-fulfillment-pending-state'"
+                        f"To State: '2u-fulfillment-successful-state'"
+                        f"Line Item IDs: {mock_order.line_items[0].id} "
+                        f"- Correlation ID: {mock_error_response['correlation_id']}, "
+                        f"Details: {mock_error_response['errors']}"
+                    )
 
-                log_mock.assert_called_with(expected_message)
+                    log_mock.assert_called_with(expected_message)
 
     @patch('commerce_coordinator.apps.commercetools.clients.CommercetoolsAPIClient.get_state_by_id')
     @patch('commerce_coordinator.apps.commercetools.clients.CommercetoolsAPIClient.get_order_by_id')

@@ -22,8 +22,9 @@ logger = logging.getLogger(__name__)
 stripe.api_key = settings.PAYMENT_PROCESSOR_CONFIG['edx']['stripe']['secret_key']
 
 
-@shared_task(autoretry_for=(CommercetoolsError,), retry_kwargs={'max_retries': 5, 'countdown': 3})
+@shared_task(bind=True, autoretry_for=(CommercetoolsError,), retry_kwargs={'max_retries': 5, 'countdown': 3})
 def fulfillment_completed_update_ct_line_item_task(
+    self,
     entitlement_uuid,
     order_id,
     order_version,
@@ -41,7 +42,7 @@ def fulfillment_completed_update_ct_line_item_task(
     entitlement_info = f'and entitlement {entitlement_uuid}.' if entitlement_uuid else '.'
 
     def _log_error_and_release_lock(log_message):
-        logger.error(log_message)
+        logger.exception(log_message)
         release_task_lock(task_key)
 
     def _log_info_and_release_lock(log_message):
@@ -68,13 +69,21 @@ def fulfillment_completed_update_ct_line_item_task(
         return False
 
     try:
+        client = CommercetoolsAPIClient()
+        current_order_version = order_version
+
         cache_entry = cache.get(cache_key, None)
+
+        # TODO: Remove logging after testing on stage
         if cache_entry:
             logger.info(f'[CT-{tag}] Found cache entry for order version {cache_entry} for cache key {cache_key}')
+            current_order_version = cache_entry
+        else:
+            logger.info(f'[CT-{tag}] Cache entry not found for order version for cache key {cache_key}')
 
-        current_order_version = cache_entry if cache_entry else order_version
+        if self.request.retries > 0:
+            current_order_version = client.get_order_by_id(order_id).version
 
-        client = CommercetoolsAPIClient()
         updated_order = client.update_line_item_on_fulfillment(
             entitlement_uuid,
             order_id,
@@ -89,11 +98,12 @@ def fulfillment_completed_update_ct_line_item_task(
     except CommercetoolsError as err:
         release_task_lock(task_key)
         raise err
-    except:  # pylint: disable=bare-except # noqa: E722
+    except Exception as exc:  # pylint: disable=broad-exception-caught
         _log_error_and_release_lock(
             f'[CT-{tag}] Unexpected error occurred while updating line item {line_item_id} for order {order_id}'
             + entitlement_info
             + 'Releasing lock.'
+            + f'Exception: {exc}'
         )
         return None
 
