@@ -13,7 +13,6 @@ from django.conf import settings
 from django.urls import reverse
 
 from commerce_coordinator.apps.commercetools.catalog_info.utils import typed_money_to_string
-from commerce_coordinator.apps.commercetools.constants import CT_ORDER_PRODUCT_TYPE_FOR_BRAZE
 
 logger = logging.getLogger(__name__)
 
@@ -67,7 +66,7 @@ def send_order_confirmation_email(
         logger.exception(f"Encountered exception sending Order confirmation email. Exception: {exc}")
 
 
-def send_unsupported_mode_fulfillment_error_email(
+def send_fulfillment_error_email(
     lms_user_id, lms_user_email, canvas_entry_properties
 ):
     """ Sends fulfillment error email via Braze. """
@@ -85,7 +84,7 @@ def send_unsupported_mode_fulfillment_error_email(
                 canvas_entry_properties=canvas_entry_properties,
             )
     except Exception as exc:  # pylint: disable=broad-exception-caught
-        logger.exception(f"Encountered exception sending Fulfillment unsupported mode error email. Exception: {exc}")
+        logger.exception(f"Encountered exception sending Fulfillment error email. Exception: {exc}")
 
 
 def format_amount_for_braze_canvas(centAmount):
@@ -118,7 +117,6 @@ def extract_ct_product_information_for_braze_canvas(item: LineItem):
     duration_unit = attributes_dict.get('duration-unit', {}).get('label', 'weeks')
 
     result = {
-        "type": CT_ORDER_PRODUCT_TYPE_FOR_BRAZE.get(item.product_type.obj.key, 'course'),
         "title": title,
         "image_url": image_url,
         "partner_name": partner_name,

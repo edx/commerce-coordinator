@@ -28,7 +28,10 @@ from commerce_coordinator.apps.commercetools.clients import CommercetoolsAPIClie
 from commerce_coordinator.apps.commercetools.constants import EMAIL_NOTIFICATION_CACHE_TTL_SECS
 from commerce_coordinator.apps.commercetools.filters import OrderRefundRequested
 from commerce_coordinator.apps.commercetools.serializers import OrderFulfillViewInputSerializer
-from commerce_coordinator.apps.commercetools.signals import fulfill_order_placed_signal
+from commerce_coordinator.apps.commercetools.signals import (
+    fulfill_order_placed_send_enroll_in_course_signal,
+    fulfill_order_placed_send_entitlement_signal
+)
 from commerce_coordinator.apps.commercetools.utils import (
     extract_ct_order_information_for_braze_canvas,
     extract_ct_product_information_for_braze_canvas,
@@ -68,14 +71,14 @@ def fulfill_order_placed_message_signal_task(
     except CommercetoolsError as err:  # pragma no cover
         logger.error(f'[CT-{tag}] Order not found: {order_id} with CT error {err}, {err.errors},'
                      f'message id: {message_id}')
-        return False
+        raise err
 
     try:
         customer = client.get_customer_by_id(order.customer_id)
     except CommercetoolsError as err:  # pragma no cover
         logger.error(f'[CT-{tag}]  Customer not found: {order.customer_id} for order {order_id} with '
                      f'CT error {err}, {err.errors}, message id: {message_id}')
-        return False
+        raise err
 
     if not (customer and order and is_edx_lms_order(order)):
         logger.info(f'[CT-{tag}] order {order_id} is not an edX order, message id: {message_id}')
@@ -108,8 +111,6 @@ def fulfill_order_placed_message_signal_task(
         from_state_id=line_item_state_id,
         new_state_key=TwoUKeys.PROCESSING_FULFILMENT_STATE
     )
-    if not updated_order:
-        return True
 
     for item in get_edx_items(order):
         logger.debug(f'[CT-{tag}] processing edX order {order_id}, line item {item.variant.sku}, '
@@ -121,9 +122,22 @@ def fulfill_order_placed_message_signal_task(
         updated_order_version = updated_order.version
         default_params['order_version'] = updated_order_version
 
+        bundle_id = (
+            item.custom.fields.get(TwoUKeys.LINE_ITEM_BUNDLE_ID)
+            if item.custom
+            else None
+        )
+        canvas_entry_properties.update({'product_type': 'program' if bundle_id else 'course'})
+
+        ct_program_product = client.get_product_by_program_id(bundle_id) if bundle_id else None
+
+        product_title = ct_program_product.name.get('en-US', '') if ct_program_product else item.name.get('en-US', '')
         serializer = OrderFulfillViewInputSerializer(data={
             **default_params,
-            'course_id': get_edx_product_course_run_key(item),  # likely not correct
+            # Due to CT Variant SKU storing different values for course and entitlement models
+            # For bundle purchases, the course_id is the course_uuid
+            # For non-bundles purchase, the course_id is the course_run_key
+            'course_id': get_edx_product_course_run_key(item),
             'line_item_id': item.id,
             'course_mode': get_course_mode_from_ct_order(item),
             'item_quantity': item.quantity,
@@ -131,7 +145,7 @@ def fulfill_order_placed_message_signal_task(
             'message_id': message_id,
             'user_first_name': customer.first_name,
             'user_email': customer.email,
-            'course_title': item.name.get('en-US', ''),
+            'product_title': product_title,
             'product_type': item.product_type.obj.key
         })
 
@@ -139,10 +153,18 @@ def fulfill_order_placed_message_signal_task(
         serializer.is_valid(raise_exception=True)  # pragma no cover
 
         payload = serializer.validated_data
-        fulfill_order_placed_signal.send_robust(
-            sender=fulfill_order_placed_message_signal_task,
-            **payload
-        )
+
+        if bundle_id:
+            fulfill_order_placed_send_entitlement_signal.send_robust(
+                sender=fulfill_order_placed_message_signal_task,
+                **payload
+            )
+        else:
+            fulfill_order_placed_send_enroll_in_course_signal.send_robust(
+                sender=fulfill_order_placed_message_signal_task,
+                **payload
+            )
+
         product_information = extract_ct_product_information_for_braze_canvas(item)
         canvas_entry_properties["products"].append(product_information)
 

@@ -84,7 +84,7 @@ class CommercetoolsAPIClientMock(MagicMock):
         self.get_customer_by_id = self.customer_mock
         self.get_state_by_key = self.state_by_key_mock
         self.get_payment_by_key = self.payment_mock
-        self.update_line_item_transition_state_on_fulfillment = self.updated_line_item_mock
+        self.update_line_item_on_fulfillment = self.updated_line_item_mock
         self.update_line_items_transition_state = self.updated_line_item_mock
         self.create_return_for_order = self.create_return_item_mock
         self.create_return_payment_transaction = self.payment_mock
@@ -94,8 +94,11 @@ class CommercetoolsAPIClientMock(MagicMock):
         self.expected_customer = self.customer_mock.return_value
 
 
-@patch('commerce_coordinator.apps.commercetools.sub_messages.tasks.fulfill_order_placed_signal.send_robust',
-       new_callable=SendRobustSignalMock)
+@patch(
+    'commerce_coordinator.apps.commercetools.sub_messages.tasks.'
+    'fulfill_order_placed_send_enroll_in_course_signal.send_robust',
+    new_callable=SendRobustSignalMock
+)
 @patch('commerce_coordinator.apps.commercetools.sub_messages.tasks.CommercetoolsAPIClient',
        new_callable=CommercetoolsAPIClientMock)
 class FulfillOrderPlacedMessageSignalTaskTests(TestCase):
