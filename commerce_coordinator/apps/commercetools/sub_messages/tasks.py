@@ -71,14 +71,14 @@ def fulfill_order_placed_message_signal_task(
     except CommercetoolsError as err:  # pragma no cover
         logger.error(f'[CT-{tag}] Order not found: {order_id} with CT error {err}, {err.errors},'
                      f'message id: {message_id}')
-        return False
+        raise err
 
     try:
         customer = client.get_customer_by_id(order.customer_id)
     except CommercetoolsError as err:  # pragma no cover
         logger.error(f'[CT-{tag}]  Customer not found: {order.customer_id} for order {order_id} with '
                      f'CT error {err}, {err.errors}, message id: {message_id}')
-        return False
+        raise err
 
     if not (customer and order and is_edx_lms_order(order)):
         logger.info(f'[CT-{tag}] order {order_id} is not an edX order, message id: {message_id}')
@@ -111,8 +111,6 @@ def fulfill_order_placed_message_signal_task(
         from_state_id=line_item_state_id,
         new_state_key=TwoUKeys.PROCESSING_FULFILMENT_STATE
     )
-    if not updated_order:
-        return True
 
     for item in get_edx_items(order):
         logger.debug(f'[CT-{tag}] processing edX order {order_id}, line item {item.variant.sku}, '

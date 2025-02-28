@@ -649,7 +649,7 @@ class CommercetoolsAPIClient:
             handle_commercetools_error(
                 context_prefix, err, f"Unable to update LineItem of order {order_id}"
             )
-            return None
+            raise err
 
     def update_line_items_transition_state(
             self,
@@ -715,7 +715,7 @@ class CommercetoolsAPIClient:
                 f"Line Item IDs: {', '.join(item.id for item in line_items)}",
                 True
             )
-            return None
+            raise err
 
     def retire_customer_anonymize_fields(
         self,
