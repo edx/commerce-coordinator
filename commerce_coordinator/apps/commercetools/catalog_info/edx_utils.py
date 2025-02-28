@@ -113,7 +113,7 @@ def check_is_bundle(line_items):
     return any(bool(get_line_item_bundle_id(line_item)) for line_item in line_items)
 
 
-def get_line_item_discounted_price(order: CTOrder, return_line_item_ids: List[str]):
+def get_line_item_price_to_refund(order: CTOrder, return_line_item_ids: List[str]):
     """
     Calculate the discounted price of a line item in an order.
 
@@ -131,9 +131,8 @@ def get_line_item_discounted_price(order: CTOrder, return_line_item_ids: List[st
                 bundle_amount += cents_to_dollars(line_item.total_price)
 
         return bundle_amount
-    elif len(order.line_items) == 1:
-        return cents_to_dollars(order.total_price)
-    return decimal.Decimal(0.00)
+
+    return cents_to_dollars(order.total_price)
 
 
 def get_edx_refund_info(payment: CTPayment, order: CTOrder, return_line_item_ids: List[str]) -> (decimal.Decimal, str):
@@ -156,7 +155,7 @@ def get_edx_refund_info(payment: CTPayment, order: CTOrder, return_line_item_ids
         if transaction.type == TransactionType.CHARGE:  # pragma no cover
             interaction_id = transaction.interaction_id
 
-    refund_amount = get_line_item_discounted_price(order, return_line_item_ids)
+    refund_amount = get_line_item_price_to_refund(order, return_line_item_ids)
 
     return refund_amount, interaction_id
 

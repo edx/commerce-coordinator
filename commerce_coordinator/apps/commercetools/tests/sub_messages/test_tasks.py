@@ -3,6 +3,7 @@ import logging
 from unittest import TestCase
 from unittest.mock import MagicMock, call, patch
 
+from commercetools import CommercetoolsError
 from commercetools.platform.models import Order as CTOrder
 from commercetools.platform.models import ReturnInfo as CTReturnInfo
 from commercetools.platform.models import ReturnPaymentState as CTReturnPaymentState
@@ -46,7 +47,11 @@ def gen_example_fulfill_payload():
         'line_item_state_id': uuid4_str(),
         'order_line_id': uuid4_str(),
         'source_system': SOURCE_SYSTEM,
-        'message_id': uuid4_str()
+        'message_id': uuid4_str(),
+        'return_items': [{
+            'id': uuid4_str(),
+            'lineItemId': uuid4_str()
+        }],
     }
 
 
@@ -266,10 +271,7 @@ class OrderReturnedMessageSignalTaskTests(TestCase):
         """ Unpack the dictionary in the order required for the UUT """
         return (
             values['order_id'],
-            [{
-                'id': uuid4_str(),
-                'lineItemId': uuid4_str()
-            }],
+            values['return_items'],
             values['message_id']
         )
 
@@ -339,3 +341,99 @@ class OrderReturnedMessageSignalTaskTests(TestCase):
         _mock_psp_payment_id.return_value = 'mock_payment_intent_id'
 
         self.get_uut()(*self.unpack_for_uut(self.mock.example_payload))
+
+
+@patch('commerce_coordinator.apps.commercetools.sub_messages.tasks.OrderRefundRequested.run_filter')
+@patch('commerce_coordinator.apps.commercetools.sub_messages.tasks.CommercetoolsAPIClient',
+       new_callable=CommercetoolsAPIClientMock)
+class FulfillOrderReturnedSignalTaskTests(TestCase):
+    """Tests for the fulfill_order_returned_signal_task"""
+
+    @staticmethod
+    def unpack_for_uut(values):
+        """ Unpack the dictionary in the order required for the UUT """
+        return (
+            values['order_id'],
+            values['return_items'],
+            values['message_id']
+        )
+
+    @staticmethod
+    def get_uut():
+        return fulfill_order_returned_uut
+
+    def test_correct_arguments_passed(self, _ct_client_init: CommercetoolsAPIClientMock, _run_filter_mock):
+        """
+        Check calling uut with mock_parameters yields call to client with
+        expected_data.
+        """
+        mock_values = _ct_client_init.return_value
+        _run_filter_mock.return_value = {'refund_response': 'charge_already_refunded'}
+        ret_val = self.get_uut()(*self.unpack_for_uut(mock_values.example_payload))
+
+        self.assertTrue(ret_val)
+        mock_values.order_mock.assert_called_once_with(mock_values.order_id)
+        mock_values.customer_mock.assert_called_once_with(mock_values.customer_id)
+
+    def test_order_not_found(self, _ct_client_init: CommercetoolsAPIClientMock, _run_filter_mock):
+        """
+        Check calling uut when order is not found.
+        """
+        mock_values = _ct_client_init.return_value
+        mock_values.get_order_by_id.side_effect = CommercetoolsError(
+            message="Order not found", response={}, errors="Order not found")
+        with self.assertRaises(CommercetoolsError):
+            self.get_uut()(*self.unpack_for_uut(mock_values.example_payload))
+
+        self.assertRaises(CommercetoolsError)
+        mock_values.order_mock.assert_called_once_with(mock_values.order_id)
+
+    def test_customer_not_found(self, _ct_client_init: CommercetoolsAPIClientMock, _run_filter_mock):
+        """
+        Check calling uut when customer is not found.
+        """
+        mock_values = _ct_client_init.return_value
+        mock_values.get_customer_by_id.side_effect = CommercetoolsError(
+            message="Customer not found", response={}, errors="Customer not found")
+        with self.assertRaises(CommercetoolsError):
+            self.get_uut()(*self.unpack_for_uut(mock_values.example_payload))
+
+        mock_values.order_mock.assert_called_once_with(mock_values.order_id)
+        mock_values.customer_mock.assert_called_once_with(mock_values.customer_id)
+
+    def test_not_edx_order(self, _ct_client_init: CommercetoolsAPIClientMock, _run_filter_mock):
+        """
+        Check calling uut when order is not an edX order.
+        """
+        mock_values = _ct_client_init.return_value
+        _run_filter_mock.return_value = {'refund_response': 'charge_already_refunded'}
+        with patch('commerce_coordinator.apps.commercetools.sub_messages.tasks.is_edx_lms_order', return_value=False):
+            ret_val = self.get_uut()(*self.unpack_for_uut(mock_values.example_payload))
+
+        self.assertTrue(ret_val)
+        mock_values.order_mock.assert_called_once_with(mock_values.order_id)
+        mock_values.customer_mock.assert_called_once_with(mock_values.customer_id)
+
+    def test_refund_successful(self, _ct_client_init: CommercetoolsAPIClientMock, _run_filter_mock):
+        """
+        Check calling uut when refund is successful.
+        """
+        mock_values = _ct_client_init.return_value
+        _run_filter_mock.return_value = {'refund_response': 'succeeded'}
+        ret_val = self.get_uut()(*self.unpack_for_uut(mock_values.example_payload))
+
+        self.assertTrue(ret_val)
+        mock_values.order_mock.assert_called_once_with(mock_values.order_id)
+        mock_values.customer_mock.assert_called_once_with(mock_values.customer_id)
+
+    def test_refund_unsuccessful(self, _ct_client_init: CommercetoolsAPIClientMock, _run_filter_mock):
+        """
+        Check calling uut when refund is unsuccessful.
+        """
+        mock_values = _ct_client_init.return_value
+        _run_filter_mock.side_effect = Exception("Refund failed")
+        with self.assertRaises(Exception):
+            self.get_uut()(*self.unpack_for_uut(mock_values.example_payload))
+
+        mock_values.order_mock.assert_called_once_with(mock_values.order_id)
+        mock_values.customer_mock.assert_called_once_with(mock_values.customer_id)
