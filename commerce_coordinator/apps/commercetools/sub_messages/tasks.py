@@ -129,10 +129,9 @@ def fulfill_order_placed_message_signal_task(
             if item.custom
             else None
         )
-        is_bundle = bool(bundle_id)
         canvas_entry_properties.update({'product_type': 'program' if bundle_id else 'course'})
 
-        ct_program_product = client.get_product_by_program_id(bundle_id) if is_bundle else None
+        ct_program_product = client.get_product_by_program_id(bundle_id) if bundle_id else None
 
         product_title = ct_program_product.name.get('en-US', '') if ct_program_product else item.name.get('en-US', '')
         serializer = OrderFulfillViewInputSerializer(data={
@@ -142,7 +141,7 @@ def fulfill_order_placed_message_signal_task(
             # For non-bundles purchase, the course_id is the course_run_key
             'course_id': get_edx_product_course_run_key(item),
             'line_item_id': item.id,
-            'course_mode': get_course_mode_from_ct_order(item, is_bundle),
+            'course_mode': get_course_mode_from_ct_order(item),
             'item_quantity': item.quantity,
             'line_item_state_id': line_item_state_id,
             'message_id': message_id,
@@ -157,7 +156,7 @@ def fulfill_order_placed_message_signal_task(
 
         payload = serializer.validated_data
 
-        if is_bundle:
+        if bundle_id:
             fulfill_order_placed_send_entitlement_signal.send_robust(
                 sender=fulfill_order_placed_message_signal_task,
                 **payload
