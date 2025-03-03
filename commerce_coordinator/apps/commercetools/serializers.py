@@ -87,7 +87,7 @@ class OrderFulfillViewInputSerializer(CoordinatorSerializer):
     line_item_state_id = serializers.CharField(allow_null=False)
     edx_lms_user_id = serializers.IntegerField(allow_null=False)
     message_id = serializers.CharField(allow_null=False)
-    course_title = serializers.CharField(allow_null=False)
+    product_title = serializers.CharField(allow_null=False)
     user_first_name = serializers.CharField(allow_null=False)
     user_email = serializers.EmailField(allow_null=False)
     product_type = serializers.CharField(allow_null=False)
@@ -147,14 +147,7 @@ class OrderReturnedViewMessageInputSerializer(CoordinatorSerializer):
         """Get the return info from the message detail"""
         validated_data = self.validated_data
         detail = validated_data.get('detail', {})
-        return_info = detail.get('returnInfo', {})
-        items = return_info.get('items', [])
+        return detail.get('returnInfo', {})
 
-        if len(items) > 0:
-            first_item = items[0] if items else {}
-            return first_item
-        else:  # pragma no cover
-            return {}
-
-    def get_return_line_item_return_id(self):
-        return self.get_return_info().get('id', None)
+    def get_return_line_items(self):
+        return self.get_return_info().get('items', [])

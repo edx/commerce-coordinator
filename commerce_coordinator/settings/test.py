@@ -20,6 +20,7 @@ PAYMENT_PROCESSOR_CONFIG = {
             'paypal_webhook_id': PAYPAL_WEBHOOK_ID,
             'client_id': '',
             'client_secret': '',
+            'env': 'test',
         },
     },
 }
@@ -63,11 +64,11 @@ CC_SIGNALS = {
         'commerce_coordinator.apps.demo_lms.signals.demo_enroll_learner_in_course',
     ],
     # Actual Production Signals
-    'commerce_coordinator.apps.commercetools.signals.fulfill_order_placed_signal': [
+    'commerce_coordinator.apps.commercetools.signals.fulfill_order_placed_send_enroll_in_course_signal': [
         'commerce_coordinator.apps.lms.signal_handlers.fulfill_order_placed_send_enroll_in_course',
     ],
-    'commerce_coordinator.apps.lms.signals.fulfillment_completed_signal': [
-        'commerce_coordinator.apps.commercetools.signals.fulfill_order_completed_send_line_item_state',
+    'commerce_coordinator.apps.lms.signals.fulfillment_completed_update_ct_line_item_signal': [
+        'commerce_coordinator.apps.commercetools.signals.fulfillment_completed_update_ct_line_item',
     ],
     'commerce_coordinator.apps.commercetools.sub_messages.signals_dispatch.fulfill_order_placed_message_signal': [
         'commerce_coordinator.apps.commercetools.sub_messages.signals_delayed.fulfill_order_placed_message_signal',
