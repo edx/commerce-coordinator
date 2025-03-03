@@ -40,7 +40,6 @@ class UpdateLineItemStateOnFulfillmentCompletionTaskTest(TestCase):
     def unpack_for_uut(values):
         """ Unpack the dictionary in the order required for the UUT """
         return (
-            None,
             values['entitlement_uuid'],
             values['order_id'],
             values['order_version'],
@@ -58,6 +57,7 @@ class UpdateLineItemStateOnFulfillmentCompletionTaskTest(TestCase):
         Check calling uut with mock_parameters yields call to client with
         expected_data.
         '''
+        # pylint: disable=no-value-for-parameter
         _ = fulfillment_uut(*self.unpack_for_uut(EXAMPLE_UPDATE_LINE_ITEM_SIGNAL_PAYLOAD))
         logger.info('mock_client().mock_calls: %s', mock_client().mock_calls)
         mock_client().update_line_item_on_fulfillment.assert_called_once_with(

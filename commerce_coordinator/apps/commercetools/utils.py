@@ -186,6 +186,17 @@ def has_full_refund_transaction(payment: Payment):
     return False
 
 
+def is_transaction_already_refunded(payment: Payment, psp_refund_transaction_id: str):
+    """
+    Utility to determine if a transaction has already been refunded
+    """
+    for transaction in payment.transactions:
+        if transaction.type == TransactionType.REFUND and transaction.interaction_id == psp_refund_transaction_id:
+            return True
+
+    return False
+
+
 def find_refund_transaction(payment: Payment, amount: decimal):
     """
     Utility to find the refund transaction in a payment

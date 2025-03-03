@@ -86,8 +86,8 @@ class TestGetActiveOrderManagementSystem(TestCase):
         with self.assertLogs('commerce_coordinator.apps.rollout.pipeline', level='WARNING') as log:
             result = step.run_filter(request)
             self.assertEqual(result[ACTIVE_ORDER_MANAGEMENT_SYSTEM_KEY], FRONTEND_APP_PAYMENT_CHECKOUT)
-            self.assertIn('[get_product_by_program_id] Program bundle_id not found in Commercetools. '
-                          'Please ensure it is properly synced.', log.output[0])
+            self.assertIn('[get_product_by_program_id] Program not found in Commercetools. '
+                          'Program product id: bundle_id. Please ensure it is properly synced.', log.output[0])
 
     @patch('commerce_coordinator.apps.rollout.pipeline.is_user_enterprise_learner')
     @patch('commerce_coordinator.apps.rollout.pipeline.is_program_redirection_to_ct_enabled')
