@@ -508,7 +508,7 @@ class CommercetoolsAPIClient:
                 transaction_id=transaction_id,
                 type=CTTypeResourceIdentifier(key="transactionCustomType"),
                 # TODO: ask shafqat what ID should be used here
-                fields=CTFieldContainer({"returnItemId": return_line_item_return_ids[0]}),
+                fields=CTFieldContainer({"returnItemId": ','.join(return_line_item_return_ids)}),
             )
             logger.info(f"Update return payment state after successful refund - payment_intent_id: {payment_intent_id}")
 

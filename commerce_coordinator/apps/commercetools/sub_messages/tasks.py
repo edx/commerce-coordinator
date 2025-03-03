@@ -12,6 +12,7 @@ from requests import RequestException
 from commerce_coordinator.apps.commercetools.catalog_info.constants import TwoUKeys
 from commerce_coordinator.apps.commercetools.catalog_info.edx_utils import (
     cents_to_dollars,
+    check_is_bundle,
     get_edx_is_sanctioned,
     get_edx_items,
     get_edx_lms_user_id,
@@ -245,6 +246,21 @@ def fulfill_order_returned_signal_task(order_id, return_items, message_id):
     """Celery task for an order return (and refunded) message."""
     # pylint: disable=too-many-statements
 
+    def _get_product_data(line_item, is_bundle):
+        return {
+            'product_id': get_line_item_attribute(line_item, 'course-key') if is_bundle else line_item.product_key,
+            'sku': line_item.variant.sku if hasattr(line_item.variant, 'sku') else None,
+            'name': line_item.name['en-US'],
+            'price': cents_to_dollars(line_item.price.value),
+            'quantity': line_item.quantity,
+            'category': get_line_item_attribute(line_item, 'primary-subject-area'),
+            'image_url': line_item.variant.images[0].url if line_item.variant.images else None,
+            'brand': get_line_item_attribute(line_item, 'brand-text'),
+            'url': get_line_item_attribute(line_item, 'url-course'),
+            'lob': get_line_item_attribute(line_item, 'lob') or 'edx',
+            'product_type': line_item.product_type.obj.name
+        }
+
     def _prepare_segment_event_properties(in_order, return_line_item_return_id):
         return {
             'track_plan_id': 19,
@@ -337,8 +353,11 @@ def fulfill_order_returned_signal_task(order_id, return_items, message_id):
                 logger.info(f'[CT-{tag}] payment {psp_payment_id} refunded for message id: {message_id}')
 
                 # TODO: DISCUSS WITH SHAFQAT
-                segment_event_properties = _prepare_segment_event_properties(order, return_line_item_return_ids[0])
-                for line_item in get_edx_items(order):
+                segment_event_properties = _prepare_segment_event_properties(
+                    order, ','.join(return_line_item_return_ids))
+                line_items = get_edx_items(order)
+                is_bundle = check_is_bundle(line_items)
+                for line_item in line_items:
                     if line_item.id in return_line_item_ids:
                         course_run = get_edx_product_course_run_key(line_item)
                         # TODO: Remove LMS Enrollment. To be done in SONIC-96
@@ -346,20 +365,7 @@ def fulfill_order_returned_signal_task(order_id, return_items, message_id):
                             f'[CT-{tag}] calling lms to unenroll user {lms_user_name} in {course_run}'
                             f', message id: {message_id}'
                         )
-
-                        product = {
-                            'product_id': line_item.product_key,
-                            'sku': line_item.variant.sku if hasattr(line_item.variant, 'sku') else None,
-                            'name': line_item.name['en-US'],
-                            'price': cents_to_dollars(line_item.price.value),
-                            'quantity': line_item.quantity,
-                            'category': get_line_item_attribute(line_item, 'primary-subject-area'),
-                            'image_url': line_item.variant.images[0].url if line_item.variant.images else None,
-                            'brand': get_line_item_attribute(line_item, 'brand-text'),
-                            'url': get_line_item_attribute(line_item, 'url-course'),
-                            'lob': get_line_item_attribute(line_item, 'lob') or 'edx',
-                            'product_type': line_item.product_type.obj.name
-                        }
+                        product = _get_product_data(line_item, is_bundle)
                         segment_event_properties['products'].append(product)
 
                 if segment_event_properties['products']:  # pragma no cover
