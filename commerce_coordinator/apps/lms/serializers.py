@@ -88,13 +88,13 @@ class EntitlementRefundInputSerializer(CoordinatorSerializer):
     .. code-block:: json
 
         {
-            "entitlement_id": "course-v1:edX+DemoX+DemoC",
+            "entitlement_uuid": "6344334f-cd83-404a-b892-a92e9105874f",
             "username": "johndoe",
             "order_number": "2u-20XXXXXXXX"
         }
 
     """
-    entitlement_id = serializers.CharField(required=True, allow_null=False, allow_blank=False)
+    entitlement_uuid = serializers.CharField(required=True, allow_null=False, allow_blank=False)
     username = serializers.CharField(required=True, allow_null=False, allow_blank=False)
     order_number = serializers.CharField(required=True, allow_null=False, allow_blank=False)
 

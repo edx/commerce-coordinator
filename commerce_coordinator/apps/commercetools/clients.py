@@ -373,7 +373,7 @@ class CommercetoolsAPIClient:
 
     def get_product_by_program_id(self, program_id: str) -> Optional[CTProductVariant]:
         """
-        Fetches a program from Commercetools.
+        Fetches a program product from Commercetools.
         Args:
             program_id: The ID of the program (bundle) to fetch.
         Returns:
@@ -507,8 +507,7 @@ class CommercetoolsAPIClient:
             return_transaction_return_item_action = PaymentSetTransactionCustomTypeAction(
                 transaction_id=transaction_id,
                 type=CTTypeResourceIdentifier(key="transactionCustomType"),
-                # TODO: ask shafqat what ID should be used here
-                fields=CTFieldContainer({"returnItemId": ','.join(return_line_item_return_ids)}),
+                fields=CTFieldContainer({"returnItemId": ', '.join(return_line_item_return_ids)}),
             )
             logger.info(f"Update return payment state after successful refund - payment_intent_id: {payment_intent_id}")
 

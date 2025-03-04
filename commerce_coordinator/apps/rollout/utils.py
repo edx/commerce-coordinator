@@ -31,6 +31,27 @@ def get_order_return_info_return_items(order: CTOrder) -> List[CTReturnItem]:
     return return_info_items
 
 
+def is_commercetools_line_item_already_created(
+    order: CTOrder,
+    order_line_item_id: str
+) -> bool:
+    """
+    Checks if a given commercetools line item has already been created.
+    Args:
+        order (CTOrder): The commercetools order object. If not provided, it will be fetched using the order object.
+        order_line_item_id (str): The ID of the order line item to check.
+        return_info_return_items (list): A list of return items containing information about returned line items.
+    Returns:
+        bool: True if the line item has already been refunded, False otherwise.
+    """
+    return_info_return_items = get_order_return_info_return_items(order)
+    return next(
+        (
+            item.line_item_id for item in return_info_return_items if item.line_item_id == order_line_item_id
+        ), None
+    )
+
+
 def is_commercetools_line_item_already_refunded(
     order: CTOrder,
     order_line_item_id: str,

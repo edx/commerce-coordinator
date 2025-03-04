@@ -26,7 +26,7 @@ from commerce_coordinator.apps.commercetools.data import order_from_commercetool
 from commerce_coordinator.apps.commercetools.utils import create_retired_fields, has_full_refund_transaction
 from commerce_coordinator.apps.core.constants import PipelineCommand
 from commerce_coordinator.apps.core.exceptions import InvalidFilterType
-from commerce_coordinator.apps.rollout.utils import is_commercetools_line_item_already_refunded
+from commerce_coordinator.apps.rollout.utils import is_commercetools_line_item_already_created
 from commerce_coordinator.apps.rollout.waffle import is_redirect_to_commercetools_enabled_for_user
 
 log = getLogger(__name__)
@@ -225,7 +225,7 @@ class CreateReturnForCommercetoolsOrder(PipelineStep):
             ct_api_client = CommercetoolsAPIClient()
             order = ct_api_client.get_order_by_id(order_id=order_id)
 
-            if not is_commercetools_line_item_already_refunded(order, order_line_item_id):
+            if not is_commercetools_line_item_already_created(order, order_line_item_id):
                 returned_order = ct_api_client.create_return_for_order(
                     order_id=order.id,
                     order_version=order.version,

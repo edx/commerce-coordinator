@@ -352,9 +352,8 @@ def fulfill_order_returned_signal_task(order_id, return_items, message_id):
             else:
                 logger.info(f'[CT-{tag}] payment {psp_payment_id} refunded for message id: {message_id}')
 
-                # TODO: DISCUSS WITH SHAFQAT
                 segment_event_properties = _prepare_segment_event_properties(
-                    order, ','.join(return_line_item_return_ids))
+                    order, ', '.join(return_line_item_return_ids))
                 line_items = get_edx_items(order)
                 is_bundle = check_is_bundle(line_items)
                 for line_item in line_items:
