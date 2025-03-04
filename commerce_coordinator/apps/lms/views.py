@@ -31,7 +31,7 @@ from commerce_coordinator.apps.lms.serializers import (
     UserRetiredInputSerializer,
     enrollment_attribute_key
 )
-from commerce_coordinator.apps.commercetools.utils import get_order_line_item_info_from_entitlement_uuid
+from commerce_coordinator.apps.lms.utils import get_order_line_item_info_from_entitlement_uuid
 from commerce_coordinator.apps.rollout.utils import is_legacy_order
 
 logger = logging.getLogger(__name__)
@@ -231,7 +231,8 @@ class RefundView(APIView):
                         f"order_number: {order_number}, Entitlement UUID: {entitlement_uuid}.")
 
             try:
-                order_id, order_line_item_id = get_order_line_item_info_from_entitlement_uuid(order_number, entitlement_uuid)
+                order_id, order_line_item_id = get_order_line_item_info_from_entitlement_uuid(
+                    order_number, entitlement_uuid)
             except CommercetoolsError as err:  # pragma no cover
                 logger.exception(f"[RefundView] Commercetools Error: {err}, {err.errors}")
                 return Response('Error while fetching order', status=HTTP_500_INTERNAL_SERVER_ERROR)
@@ -258,8 +259,8 @@ class RefundView(APIView):
 
         if not order_id:
             logger.error(f"[RefundView] Failed processing refund for username: {username}, "
-                        f"course_id: {course_id} the enrollment_attributes array requires an orders: order_id "
-                        f"attribute.")
+                         f"course_id: {course_id} the enrollment_attributes array requires an orders: order_id "
+                         f"attribute.")
             return Response('the enrollment_attributes array requires an orders: order_id '
                             'attribute.', status=HTTP_400_BAD_REQUEST)
 

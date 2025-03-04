@@ -4,7 +4,7 @@ Tests for lms utils
 import unittest
 from unittest.mock import Mock, patch
 
-from commerce_coordinator.apps.commercetools.utils import get_order_line_item_info_from_entitlement_uuid
+from commerce_coordinator.apps.lms.utils import get_order_line_item_info_from_entitlement_uuid
 
 
 class TestGetLineItemFromEntitlement(unittest.TestCase):
