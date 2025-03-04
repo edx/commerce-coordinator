@@ -32,11 +32,19 @@ EXAMPLE_FULFILLMENT_SIGNAL_PAYLOAD: Dict[str, Union[str, bool, int, None]] = {
     'message_id': '1063f19c-08f3-41a4-a952-a8577374373c',
     'user_first_name': 'test',
     'user_email': 'test@example.com',
-    'course_title': 'Demonstration Course',
+    'product_title': 'Demonstration Course',
     'product_type': 'edx_course'
 }
 
-EXAMPLE_FULFILLMENT_REQUEST_PAYLOAD = {
+EXAMPLE_ENTITLEMENT_FULFILLMENT_REQUEST_PAYLOAD = {
+    'user': 'test-user',
+    'mode': 'verified',
+    'course_uuid': 'course-v1:edX+DemoX+Demo_Course',
+    'order_number': '61ec1afa-1b0e-4234-ae28-f997728054fa',
+    'email_opt_in': False,
+}
+
+EXAMPLE_ENROLLMENT_FULFILLMENT_REQUEST_PAYLOAD = {
     'user': 'test-user',
     'mode': 'verified',
     'is_active': True,

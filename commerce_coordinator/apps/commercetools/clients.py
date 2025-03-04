@@ -21,6 +21,7 @@ from commercetools.platform.models import Money as CTMoney
 from commercetools.platform.models import Order as CTOrder
 from commercetools.platform.models import (
     OrderAddReturnInfoAction,
+    OrderSetLineItemCustomFieldAction,
     OrderSetReturnItemCustomTypeAction,
     OrderSetReturnPaymentStateAction,
     OrderTransitionLineItemStateAction
@@ -47,7 +48,8 @@ from commerce_coordinator.apps.commercetools.catalog_info.constants import (
     DEFAULT_ORDER_EXPANSION,
     EDX_PAYPAL_PAYMENT_INTERFACE_NAME,
     EDX_STRIPE_PAYMENT_INTERFACE_NAME,
-    EdXFieldNames
+    EdXFieldNames,
+    TwoUKeys
 )
 from commerce_coordinator.apps.commercetools.catalog_info.foundational_types import TwoUCustomTypes
 from commerce_coordinator.apps.commercetools.utils import (
@@ -369,6 +371,18 @@ class CommercetoolsAPIClient:
         logger.info(f"[CommercetoolsAPIClient] - Attempting to find payment with interaction ID {interaction_id}")
         return self.base_client.payments.query(where=f'transactions(interactionId="{interaction_id}")').results[0]
 
+    def get_product_by_program_id(self, program_id: str) -> Optional[CTProductVariant]:
+        """
+        Fetches a program from Commercetools.
+        Args:
+            program_id: The ID of the program (bundle) to fetch.
+        Returns:
+            CTProductVariant if found, None otherwise.
+        """
+        results = self.base_client.product_projections.search(False, filter=f'key:"{program_id}"').results
+
+        return results[0] if results else None
+
     def get_product_variant_by_course_run(self, cr_id: str) -> Optional[CTProductVariant]:
         """
         Args:
@@ -441,7 +455,8 @@ class CommercetoolsAPIClient:
         self,
         order_id: str,
         order_version: int,
-        return_line_item_return_id: str,
+        return_line_item_return_ids: List[str],
+        return_line_entitlement_ids: dict,
         payment_intent_id: str,
         amount_in_cents: decimal,
     ) -> Union[CTOrder, None]:
@@ -460,11 +475,7 @@ class CommercetoolsAPIClient:
         try:
             logger.info(
                 f"[CommercetoolsAPIClient] - Updating payment state for return "
-                f"with id {return_line_item_return_id} to '{ReturnPaymentState.REFUNDED}'."
-            )
-            return_payment_state_action = OrderSetReturnPaymentStateAction(
-                return_item_id=return_line_item_return_id,
-                payment_state=ReturnPaymentState.REFUNDED,
+                f"with ids {return_line_item_return_ids} to '{ReturnPaymentState.REFUNDED}'."
             )
             if not payment_intent_id:
                 payment_intent_id = ""
@@ -472,24 +483,39 @@ class CommercetoolsAPIClient:
             payment = self.get_payment_by_key(payment_intent_id)
             logger.info(f"Payment found: {payment}")
             transaction_id = find_refund_transaction(payment, amount_in_cents)
-            update_transaction_id_action = OrderSetReturnItemCustomTypeAction(
-                return_item_id=return_line_item_return_id,
-                type=CTTypeResourceIdentifier(
-                    key="returnItemCustomType",
-                ),
-                fields=CTFieldContainer({"transactionId": transaction_id}),
-            )
+            return_payment_state_actions = []
+            update_transaction_id_actions = []
+            for return_line_item_return_id in return_line_item_return_ids:
+                return_payment_state_actions.append(OrderSetReturnPaymentStateAction(
+                    return_item_id=return_line_item_return_id,
+                    payment_state=ReturnPaymentState.REFUNDED,
+                ))
+                custom_fields = {
+                    "transactionId": transaction_id,
+                }
+                entitlement_id = return_line_entitlement_ids.get(return_line_item_return_id)
+                if entitlement_id:
+                    custom_fields[TwoUKeys.LINE_ITEM_LMS_ENTITLEMENT_ID] = entitlement_id
+                update_transaction_id_actions.append(OrderSetReturnItemCustomTypeAction(
+                    return_item_id=return_line_item_return_id,
+                    type=CTTypeResourceIdentifier(
+                        key="returnItemCustomType",
+                    ),
+                    fields=CTFieldContainer(custom_fields),
+                ))
+
             return_transaction_return_item_action = PaymentSetTransactionCustomTypeAction(
                 transaction_id=transaction_id,
                 type=CTTypeResourceIdentifier(key="transactionCustomType"),
-                fields=CTFieldContainer({"returnItemId": return_line_item_return_id}),
+                # TODO: ask shafqat what ID should be used here
+                fields=CTFieldContainer({"returnItemId": ','.join(return_line_item_return_ids)}),
             )
             logger.info(f"Update return payment state after successful refund - payment_intent_id: {payment_intent_id}")
 
             updated_order = self.base_client.orders.update_by_id(
                 id=order_id,
                 version=order_version,
-                actions=[return_payment_state_action, update_transaction_id_action],
+                actions=return_payment_state_actions + update_transaction_id_actions,
             )
             self.base_client.payments.update_by_id(
                 id=payment.id,
@@ -565,8 +591,9 @@ class CommercetoolsAPIClient:
             handle_commercetools_error("[CommercetoolsAPIClient.create_return_payment_transaction]", err, context)
             raise err
 
-    def update_line_item_transition_state_on_fulfillment(
+    def update_line_item_on_fulfillment(
         self,
+        entitlement_uuid: str,
         order_id: str,
         order_version: int,
         line_item_id: str,
@@ -575,8 +602,9 @@ class CommercetoolsAPIClient:
         new_state_key: str,
     ) -> CTOrder:
         """
-        Update Commercetools order line item state
+        Update Commercetools order line item on fulfillment.
         Args:
+            entitlement_uuid (str): Entitlement UUID
             order_id (str): Order ID (UUID)
             order_version (int): Current version of order
             line_item_id (str): ID of order line item
@@ -587,7 +615,6 @@ class CommercetoolsAPIClient:
         Returns (CTOrder): Current un-updated order
         Raises Exception: Error if update was unsuccessful.
         """
-
         from_state_key = self.get_state_by_id(from_state_id).key
 
         logger.info(
@@ -596,21 +623,30 @@ class CommercetoolsAPIClient:
         )
 
         try:
+            actions = []
+            if entitlement_uuid:
+                logger.info(
+                    f"[CommercetoolsAPIClient] - Adding entitlement_uuid for order with ID {order_id} "
+                )
+                actions.append(OrderSetLineItemCustomFieldAction(
+                    line_item_id=line_item_id,
+                    name=TwoUKeys.LINE_ITEM_LMS_ENTITLEMENT_ID,
+                    value=entitlement_uuid,
+                ))
             if new_state_key != from_state_key:
-                transition_line_item_state_action = OrderTransitionLineItemStateAction(
+                actions.append(OrderTransitionLineItemStateAction(
                     line_item_id=line_item_id,
                     quantity=item_quantity,
                     from_state=StateResourceIdentifier(key=from_state_key),
                     to_state=StateResourceIdentifier(key=new_state_key),
-                )
+                ))
 
-                updated_fulfillment_line_item_order = self.base_client.orders.update_by_id(
+            if actions:
+                return self.base_client.orders.update_by_id(
                     id=order_id,
                     version=order_version,
-                    actions=[transition_line_item_state_action],
+                    actions=actions,
                 )
-
-                return updated_fulfillment_line_item_order
             else:
                 logger.info(
                     f"[CommercetoolsAPIClient] - The line item {line_item_id} "
@@ -618,11 +654,19 @@ class CommercetoolsAPIClient:
                     f"Not attempting to transition LineItemState for order id {order_id}"
                 )
                 return self.get_order_by_id(order_id)
+
         except CommercetoolsError as err:
-            context_prefix = "[CommercetoolsAPIClient.update_line_item_state_on_fulfillment_completion]"
+            context_prefix = "[CommercetoolsAPIClient.update_line_item_on_fulfillment]"
             # Logs & ignores version conflict errors due to duplicate Commercetools messages
-            handle_commercetools_error(context_prefix, err, f"Unable to update LineItemState of order {order_id}")
-            return None
+            handle_commercetools_error(
+                context_prefix, err,
+                f"Failed to update LineItem of order {order_id}"
+                f"From State: '{from_state_key}' "
+                f"To State: '{new_state_key}' "
+                f"And entitlement {entitlement_uuid} "
+                f"Line Item ID: {line_item_id}"
+            )
+            raise err
 
     def update_line_items_transition_state(
             self,
@@ -683,10 +727,12 @@ class CommercetoolsAPIClient:
                 "[CommercetoolsAPIClient.update_line_items_transition_state]",
                 err,
                 f"Failed to update LineItemStates for order ID '{order_id}'. "
+                f"From State: '{from_state_key}' "
+                f"To State: '{new_state_key}' "
                 f"Line Item IDs: {', '.join(item.id for item in line_items)}",
                 True
             )
-            return None
+            raise err
 
     def retire_customer_anonymize_fields(
         self,

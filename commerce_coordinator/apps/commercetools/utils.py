@@ -8,12 +8,20 @@ import logging
 
 from braze.client import BrazeClient
 from commercetools import CommercetoolsError
-from commercetools.platform.models import Customer, LineItem, Order, Payment, TransactionState, TransactionType
+from commercetools.platform.models import (
+    CentPrecisionMoney,
+    Customer,
+    LineItem,
+    Order,
+    Payment,
+    TransactionState,
+    TransactionType,
+    TypedMoney
+)
 from django.conf import settings
 from django.urls import reverse
 
 from commerce_coordinator.apps.commercetools.catalog_info.utils import typed_money_to_string
-from commerce_coordinator.apps.commercetools.constants import CT_ORDER_PRODUCT_TYPE_FOR_BRAZE
 
 logger = logging.getLogger(__name__)
 
@@ -67,7 +75,7 @@ def send_order_confirmation_email(
         logger.exception(f"Encountered exception sending Order confirmation email. Exception: {exc}")
 
 
-def send_unsupported_mode_fulfillment_error_email(
+def send_fulfillment_error_email(
     lms_user_id, lms_user_email, canvas_entry_properties
 ):
     """ Sends fulfillment error email via Braze. """
@@ -85,7 +93,7 @@ def send_unsupported_mode_fulfillment_error_email(
                 canvas_entry_properties=canvas_entry_properties,
             )
     except Exception as exc:  # pylint: disable=broad-exception-caught
-        logger.exception(f"Encountered exception sending Fulfillment unsupported mode error email. Exception: {exc}")
+        logger.exception(f"Encountered exception sending Fulfillment error email. Exception: {exc}")
 
 
 def format_amount_for_braze_canvas(centAmount):
@@ -118,7 +126,6 @@ def extract_ct_product_information_for_braze_canvas(item: LineItem):
     duration_unit = attributes_dict.get('duration-unit', {}).get('label', 'weeks')
 
     result = {
-        "type": CT_ORDER_PRODUCT_TYPE_FOR_BRAZE.get(item.product_type.obj.key, 'course'),
         "title": title,
         "image_url": image_url,
         "partner_name": partner_name,
@@ -130,6 +137,29 @@ def extract_ct_product_information_for_braze_canvas(item: LineItem):
     return result
 
 
+def calculate_total_discount_on_order(order: Order) -> TypedMoney:
+    """Calculate discount for cart level and line item level."""
+    discount_on_total_price = 0
+    if hasattr(order, 'discount_on_total_price') and order.discount_on_total_price:
+        discount_on_total_price = order.discount_on_total_price.discounted_amount.cent_amount
+
+    discount_on_line_items = sum(
+        discount.discounted_amount.cent_amount
+        for item in order.line_items
+        for discounted_price in item.discounted_price_per_quantity
+        for discount in discounted_price.discounted_price.included_discounts
+    )
+
+    total_discount_cent_amount = discount_on_total_price + discount_on_line_items
+
+    total_discount = CentPrecisionMoney(
+        cent_amount=total_discount_cent_amount,
+        currency_code=order.total_price.currency_code,
+        fraction_digits=order.total_price.fraction_digits
+    )
+    return total_discount
+
+
 def extract_ct_order_information_for_braze_canvas(customer: Customer, order: Order):
     """
     Utility to extract generic order information for braze canvas properties
@@ -137,11 +167,9 @@ def extract_ct_order_information_for_braze_canvas(customer: Customer, order: Ord
     order_placed_on = order.last_modified_at
     formatted_order_placement_date = order_placed_on.strftime('%b %d, %Y')
     formatted_order_placement_time = order_placed_on.strftime("%I:%M %p (%Z)")
+    total_discount = calculate_total_discount_on_order(order)
     # calculate subtotal by adding discount back if any discount is applied.
-    # TODO: Post R0.1 add support for all discount types here. To be done in SONIC-897.
-    subtotal = (((order.total_price.cent_amount +
-                  order.discount_on_total_price.discounted_amount.cent_amount))
-                if order.discount_on_total_price else order.total_price.cent_amount)
+    subtotal = order.total_price.cent_amount + total_discount.cent_amount
     canvas_entry_properties = {
         "first_name": customer.first_name,
         "last_name": customer.last_name,
@@ -153,12 +181,11 @@ def extract_ct_order_information_for_braze_canvas(customer: Customer, order: Ord
         "subtotal":  format_amount_for_braze_canvas(subtotal),
         "total": format_amount_for_braze_canvas(order.total_price.cent_amount),
     }
-    # TODO: Post R0.1 add support for all discount types here. To be done in SONIC-897.
-    if order.discount_codes and order.discount_on_total_price:
+
+    if total_discount and total_discount.cent_amount != 0:
         canvas_entry_properties.update({
-            "discount_code": order.discount_codes[0].discount_code.obj.code,
-            "discount_value": format_amount_for_braze_canvas(
-                order.discount_on_total_price.discounted_amount.cent_amount),
+            "discount_code": order.discount_codes[0].discount_code.obj.code if order.discount_codes else None,
+            "discount_value": format_amount_for_braze_canvas(total_discount.cent_amount),
         })
     return canvas_entry_properties
 
@@ -185,6 +212,17 @@ def has_full_refund_transaction(payment: Payment):
             charge_amount = transaction.amount
         if transaction.type == TransactionType.REFUND and transaction.amount == charge_amount:  # pragma no cover
             return True
+    return False
+
+
+def is_transaction_already_refunded(payment: Payment, psp_refund_transaction_id: str):
+    """
+    Utility to determine if a transaction has already been refunded
+    """
+    for transaction in payment.transactions:
+        if transaction.type == TransactionType.REFUND and transaction.interaction_id == psp_refund_transaction_id:
+            return True
+
     return False
 
 
