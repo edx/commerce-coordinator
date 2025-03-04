@@ -67,7 +67,7 @@
             <a id="nextFileLink" class="nav" href="z_192a92b79f943e50_constants_py.html">&#xbb; next</a>
             &nbsp; &nbsp; &nbsp;
             <a class="nav" href="https://coverage.readthedocs.io/en/7.6.4">coverage.py v7.6.4</a>,
-            created at 2025-03-04 06:29 +0000
+            created at 2025-03-04 07:12 +0000
         </p>
         <aside class="hidden">
             <button type="button" class="button_next_chunk" data-shortcut="j"></button>
@@ -216,23 +216,24 @@
     <p class="run"><span class="n"><a id="t132" href="#t132">132</a></span><span class="t">        <span class="nam">message_details</span> <span class="op">=</span> <span class="nam">OrderReturnedViewMessageInputSerializer</span><span class="op">(</span><span class="nam">data</span><span class="op">=</span><span class="nam">input_data</span><span class="op">)</span>&nbsp;</span><span class="r"></span></p>
     <p class="run"><span class="n"><a id="t133" href="#t133">133</a></span><span class="t">        <span class="nam">message_details</span><span class="op">.</span><span class="nam">is_valid</span><span class="op">(</span><span class="nam">raise_exception</span><span class="op">=</span><span class="key">True</span><span class="op">)</span>&nbsp;</span><span class="r"></span></p>
     <p class="run"><span class="n"><a id="t134" href="#t134">134</a></span><span class="t">        <span class="nam">order_id</span> <span class="op">=</span> <span class="nam">message_details</span><span class="op">.</span><span class="nam">data</span><span class="op">[</span><span class="str">'order_id'</span><span class="op">]</span>&nbsp;</span><span class="r"></span></p>
-    <p class="run"><span class="n"><a id="t135" href="#t135">135</a></span><span class="t">        <span class="nam">return_line_item_return_id</span> <span class="op">=</span> <span class="nam">message_details</span><span class="op">.</span><span class="nam">get_return_line_item_return_id</span><span class="op">(</span><span class="op">)</span>&nbsp;</span><span class="r"></span></p>
-    <p class="run"><span class="n"><a id="t136" href="#t136">136</a></span><span class="t">        <span class="nam">message_id</span> <span class="op">=</span> <span class="nam">message_details</span><span class="op">.</span><span class="nam">data</span><span class="op">[</span><span class="str">'message_id'</span><span class="op">]</span>&nbsp;</span><span class="r"></span></p>
-    <p class="pln"><span class="n"><a id="t137" href="#t137">137</a></span><span class="t">&nbsp;</span><span class="r"></span></p>
-    <p class="exc show_exc"><span class="n"><a id="t138" href="#t138">138</a></span><span class="t">        <span class="key">if</span> <span class="nam">self</span><span class="op">.</span><span class="nam">_is_running</span><span class="op">(</span><span class="nam">tag</span><span class="op">,</span> <span class="nam">order_id</span><span class="op">)</span><span class="op">:</span>  <span class="com"># pragma no cover</span>&nbsp;</span><span class="r"></span></p>
-    <p class="exc show_exc"><span class="n"><a id="t139" href="#t139">139</a></span><span class="t">            <span class="nam">self</span><span class="op">.</span><span class="nam">meta_should_mark_not_running</span> <span class="op">=</span> <span class="key">False</span>&nbsp;</span><span class="r"></span></p>
-    <p class="exc show_exc"><span class="n"><a id="t140" href="#t140">140</a></span><span class="t">            <span class="key">return</span> <span class="nam">Response</span><span class="op">(</span><span class="nam">status</span><span class="op">=</span><span class="nam">status</span><span class="op">.</span><span class="nam">HTTP_200_OK</span><span class="op">)</span>&nbsp;</span><span class="r"></span></p>
-    <p class="pln"><span class="n"><a id="t141" href="#t141">141</a></span><span class="t">        <span class="key">else</span><span class="op">:</span>&nbsp;</span><span class="r"></span></p>
-    <p class="run"><span class="n"><a id="t142" href="#t142">142</a></span><span class="t">            <span class="nam">self</span><span class="op">.</span><span class="nam">mark_running</span><span class="op">(</span><span class="nam">tag</span><span class="op">,</span> <span class="nam">order_id</span><span class="op">)</span>&nbsp;</span><span class="r"></span></p>
-    <p class="pln"><span class="n"><a id="t143" href="#t143">143</a></span><span class="t">&nbsp;</span><span class="r"></span></p>
-    <p class="run"><span class="n"><a id="t144" href="#t144">144</a></span><span class="t">        <span class="nam">fulfill_order_returned_signal</span><span class="op">.</span><span class="nam">send_robust</span><span class="op">(</span>&nbsp;</span><span class="r"></span></p>
-    <p class="pln"><span class="n"><a id="t145" href="#t145">145</a></span><span class="t">            <span class="nam">sender</span><span class="op">=</span><span class="nam">self</span><span class="op">,</span>&nbsp;</span><span class="r"></span></p>
-    <p class="pln"><span class="n"><a id="t146" href="#t146">146</a></span><span class="t">            <span class="nam">order_id</span><span class="op">=</span><span class="nam">order_id</span><span class="op">,</span>&nbsp;</span><span class="r"></span></p>
-    <p class="pln"><span class="n"><a id="t147" href="#t147">147</a></span><span class="t">            <span class="nam">return_line_item_return_id</span><span class="op">=</span><span class="nam">return_line_item_return_id</span><span class="op">,</span>&nbsp;</span><span class="r"></span></p>
-    <p class="pln"><span class="n"><a id="t148" href="#t148">148</a></span><span class="t">            <span class="nam">message_id</span><span class="op">=</span><span class="nam">message_id</span>&nbsp;</span><span class="r"></span></p>
-    <p class="pln"><span class="n"><a id="t149" href="#t149">149</a></span><span class="t">        <span class="op">)</span>&nbsp;</span><span class="r"></span></p>
-    <p class="pln"><span class="n"><a id="t150" href="#t150">150</a></span><span class="t">&nbsp;</span><span class="r"></span></p>
-    <p class="run"><span class="n"><a id="t151" href="#t151">151</a></span><span class="t">        <span class="key">return</span> <span class="nam">Response</span><span class="op">(</span><span class="nam">status</span><span class="op">=</span><span class="nam">status</span><span class="op">.</span><span class="nam">HTTP_200_OK</span><span class="op">)</span>&nbsp;</span><span class="r"></span></p>
+    <p class="pln"><span class="n"><a id="t135" href="#t135">135</a></span><span class="t">&nbsp;</span><span class="r"></span></p>
+    <p class="exc show_exc"><span class="n"><a id="t136" href="#t136">136</a></span><span class="t">        <span class="key">if</span> <span class="nam">self</span><span class="op">.</span><span class="nam">_is_running</span><span class="op">(</span><span class="nam">tag</span><span class="op">,</span> <span class="nam">order_id</span><span class="op">)</span><span class="op">:</span>  <span class="com"># pragma no cover</span>&nbsp;</span><span class="r"></span></p>
+    <p class="exc show_exc"><span class="n"><a id="t137" href="#t137">137</a></span><span class="t">            <span class="nam">self</span><span class="op">.</span><span class="nam">meta_should_mark_not_running</span> <span class="op">=</span> <span class="key">False</span>&nbsp;</span><span class="r"></span></p>
+    <p class="exc show_exc"><span class="n"><a id="t138" href="#t138">138</a></span><span class="t">            <span class="key">return</span> <span class="nam">Response</span><span class="op">(</span><span class="nam">status</span><span class="op">=</span><span class="nam">status</span><span class="op">.</span><span class="nam">HTTP_200_OK</span><span class="op">)</span>&nbsp;</span><span class="r"></span></p>
+    <p class="pln"><span class="n"><a id="t139" href="#t139">139</a></span><span class="t">        <span class="key">else</span><span class="op">:</span>&nbsp;</span><span class="r"></span></p>
+    <p class="run"><span class="n"><a id="t140" href="#t140">140</a></span><span class="t">            <span class="nam">self</span><span class="op">.</span><span class="nam">mark_running</span><span class="op">(</span><span class="nam">tag</span><span class="op">,</span> <span class="nam">order_id</span><span class="op">)</span>&nbsp;</span><span class="r"></span></p>
+    <p class="pln"><span class="n"><a id="t141" href="#t141">141</a></span><span class="t">&nbsp;</span><span class="r"></span></p>
+    <p class="run"><span class="n"><a id="t142" href="#t142">142</a></span><span class="t">        <span class="nam">return_items</span> <span class="op">=</span> <span class="nam">message_details</span><span class="op">.</span><span class="nam">get_return_line_items</span><span class="op">(</span><span class="op">)</span>&nbsp;</span><span class="r"></span></p>
+    <p class="run"><span class="n"><a id="t143" href="#t143">143</a></span><span class="t">        <span class="nam">message_id</span> <span class="op">=</span> <span class="nam">message_details</span><span class="op">.</span><span class="nam">data</span><span class="op">[</span><span class="str">'message_id'</span><span class="op">]</span>&nbsp;</span><span class="r"></span></p>
+    <p class="pln"><span class="n"><a id="t144" href="#t144">144</a></span><span class="t">&nbsp;</span><span class="r"></span></p>
+    <p class="run"><span class="n"><a id="t145" href="#t145">145</a></span><span class="t">        <span class="nam">fulfill_order_returned_signal</span><span class="op">.</span><span class="nam">send_robust</span><span class="op">(</span>&nbsp;</span><span class="r"></span></p>
+    <p class="pln"><span class="n"><a id="t146" href="#t146">146</a></span><span class="t">            <span class="nam">sender</span><span class="op">=</span><span class="nam">self</span><span class="op">,</span>&nbsp;</span><span class="r"></span></p>
+    <p class="pln"><span class="n"><a id="t147" href="#t147">147</a></span><span class="t">            <span class="nam">order_id</span><span class="op">=</span><span class="nam">order_id</span><span class="op">,</span>&nbsp;</span><span class="r"></span></p>
+    <p class="pln"><span class="n"><a id="t148" href="#t148">148</a></span><span class="t">            <span class="nam">return_items</span><span class="op">=</span><span class="nam">return_items</span><span class="op">,</span>&nbsp;</span><span class="r"></span></p>
+    <p class="pln"><span class="n"><a id="t149" href="#t149">149</a></span><span class="t">            <span class="nam">message_id</span><span class="op">=</span><span class="nam">message_id</span>&nbsp;</span><span class="r"></span></p>
+    <p class="pln"><span class="n"><a id="t150" href="#t150">150</a></span><span class="t">        <span class="op">)</span>&nbsp;</span><span class="r"></span></p>
+    <p class="pln"><span class="n"><a id="t151" href="#t151">151</a></span><span class="t">&nbsp;</span><span class="r"></span></p>
+    <p class="run"><span class="n"><a id="t152" href="#t152">152</a></span><span class="t">        <span class="key">return</span> <span class="nam">Response</span><span class="op">(</span><span class="nam">status</span><span class="op">=</span><span class="nam">status</span><span class="op">.</span><span class="nam">HTTP_200_OK</span><span class="op">)</span>&nbsp;</span><span class="r"></span></p>
 </main>
 <footer>
     <div class="content">
@@ -242,7 +243,7 @@
             <a class="nav" href="z_192a92b79f943e50_constants_py.html">&#xbb; next</a>
             &nbsp; &nbsp; &nbsp;
             <a class="nav" href="https://coverage.readthedocs.io/en/7.6.4">coverage.py v7.6.4</a>,
-            created at 2025-03-04 06:29 +0000
+            created at 2025-03-04 07:12 +0000
         </p>
     </div>
 </footer>
