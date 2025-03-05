@@ -3,7 +3,6 @@ API clients for commercetools app.
 """
 
 import datetime
-import decimal
 import logging
 from types import SimpleNamespace
 from typing import Generic, List, Optional, Tuple, TypedDict, TypeVar, Union
@@ -457,8 +456,9 @@ class CommercetoolsAPIClient:
         order_version: int,
         return_line_item_return_ids: List[str],
         return_line_entitlement_ids: dict,
+        refunded_line_item_refunds: dict,
         payment_intent_id: str,
-        amount_in_cents: decimal,
+        interaction_id: str
     ) -> Union[CTOrder, None]:
         """
         Update paymentState on the LineItemReturnItem attached to the order.
@@ -482,7 +482,7 @@ class CommercetoolsAPIClient:
             logger.info(f"Creating return for order - payment_intent_id: {payment_intent_id}")
             payment = self.get_payment_by_key(payment_intent_id)
             logger.info(f"Payment found: {payment}")
-            transaction_id = find_refund_transaction(payment, amount_in_cents)
+            transaction_id = find_refund_transaction(payment, interaction_id)
             return_payment_state_actions = []
             update_transaction_id_actions = []
             for return_line_item_return_id in return_line_item_return_ids:
@@ -491,7 +491,7 @@ class CommercetoolsAPIClient:
                     payment_state=ReturnPaymentState.REFUNDED,
                 ))
                 custom_fields = {
-                    "transactionId": transaction_id,
+                    "transactionId": refunded_line_item_refunds.get(return_line_item_return_id, transaction_id),
                 }
                 entitlement_id = return_line_entitlement_ids.get(return_line_item_return_id)
                 if entitlement_id:
@@ -504,11 +504,7 @@ class CommercetoolsAPIClient:
                     fields=CTFieldContainer(custom_fields),
                 ))
 
-            return_transaction_return_item_action = PaymentSetTransactionCustomTypeAction(
-                transaction_id=transaction_id,
-                type=CTTypeResourceIdentifier(key="transactionCustomType"),
-                fields=CTFieldContainer({"returnItemId": ', '.join(return_line_item_return_ids)}),
-            )
+            
             logger.info(f"Update return payment state after successful refund - payment_intent_id: {payment_intent_id}")
 
             updated_order = self.base_client.orders.update_by_id(
@@ -516,11 +512,17 @@ class CommercetoolsAPIClient:
                 version=order_version,
                 actions=return_payment_state_actions + update_transaction_id_actions,
             )
-            self.base_client.payments.update_by_id(
-                id=payment.id,
-                version=payment.version,
-                actions=[return_transaction_return_item_action],
-            )
+            if transaction_id:
+                return_transaction_return_item_action = PaymentSetTransactionCustomTypeAction(
+                    transaction_id=transaction_id,
+                    type=CTTypeResourceIdentifier(key="transactionCustomType"),
+                    fields=CTFieldContainer({"returnItemId": ', '.join(return_line_item_return_ids)}),
+                )
+                self.base_client.payments.update_by_id(
+                    id=payment.id,
+                    version=payment.version,
+                    actions=[return_transaction_return_item_action],
+                )
             logger.info("Updated transaction with return item id")
             return updated_order
         except CommercetoolsError as err:

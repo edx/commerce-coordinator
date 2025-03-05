@@ -45,10 +45,6 @@ from commerce_coordinator.apps.core.constants import ISO_8601_FORMAT
 from commerce_coordinator.apps.core.memcache import safe_key
 from commerce_coordinator.apps.core.segment import track
 from commerce_coordinator.apps.lms.clients import LMSAPIClient
-from commerce_coordinator.apps.rollout.utils import (
-    get_order_return_info_return_items,
-    is_commercetools_line_item_already_refunded
-)
 
 # Use the special Celery logger for our tasks
 logger = get_task_logger(__name__)
@@ -281,6 +277,20 @@ def fulfill_order_returned_signal_task(order_id, return_items, message_id):
 
     tag = "fulfill_order_returned_signal_task"
 
+    # List of return line Item Ids
+    return_line_item_ids = []
+    # A dict containing key as line item id and value as return id
+    return_line_items = {}
+    # List of return line item return ids
+    return_line_item_return_ids = []
+    for item in return_items:
+        line_item_id = item["lineItemId"]
+        return_id = item["id"]
+
+        return_line_item_ids.append(line_item_id)
+        return_line_item_return_ids.append(return_id)
+        return_line_items[line_item_id] = return_id
+
     logger.info(f'[CT-{tag}] Processing return for order: {order_id}, message id: {message_id}')
 
     client = CommercetoolsAPIClient()
@@ -311,36 +321,15 @@ def fulfill_order_returned_signal_task(order_id, return_items, message_id):
 
     logger.info(f'[CT-{tag}] calling PSP to refund payment "{psp_payment_id}", message id: {message_id}')
 
-    return_info_return_items = get_order_return_info_return_items(order)
-    # List of return line Item Ids
-    return_line_item_ids = []
-    # A dict containing key as line item id and value as return id
-    return_line_item_return_dict = {}
-    # List of return line item return ids
-    return_line_item_return_ids = []
-    for item in return_items:
-        line_item_id = item["lineItemId"]
-        return_id = item["id"]
-
-        if not is_commercetools_line_item_already_refunded(order, line_item_id, return_info_return_items):
-            return_line_item_ids.append(line_item_id)
-            return_line_item_return_dict[line_item_id] = return_id
-            return_line_item_return_ids.append(return_id)
-
     # A dict containing key as return line item id and value as lms entitlement id
-    return_line_entitlement_ids = {return_line_item_return_dict.get(line_item.id):
+    return_line_entitlement_ids = {return_line_items.get(line_item.id):
                                    get_line_item_lms_entitlement_id(line_item) for line_item in get_edx_items(order)}
-
-    if not return_line_item_ids:
-        logger.info(f'[CT-{tag}] No return line items found for order: {order_id}, message id: {message_id}')
-        return True
 
     # Return payment if payment id is set
     if psp_payment_id is not None:
         result = OrderRefundRequested.run_filter(
             order_id=order_id,
-            return_line_item_ids=return_line_item_ids,
-            return_line_item_return_ids=return_line_item_return_ids,
+            return_line_items=return_line_items,
             return_line_entitlement_ids=return_line_entitlement_ids,
             message_id=message_id,
         )
@@ -356,8 +345,9 @@ def fulfill_order_returned_signal_task(order_id, return_items, message_id):
                     order, ', '.join(return_line_item_return_ids))
                 line_items = get_edx_items(order)
                 is_bundle = check_is_bundle(line_items)
+                refunded_line_item_ids = result.get('filtered_line_item_ids', return_line_item_ids)
                 for line_item in line_items:
-                    if line_item.id in return_line_item_ids:
+                    if line_item.id in refunded_line_item_ids:
                         course_run = get_edx_product_course_run_key(line_item)
                         # TODO: Remove LMS Enrollment. To be done in SONIC-96
                         logger.info(

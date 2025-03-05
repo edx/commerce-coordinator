@@ -21,6 +21,7 @@ from commercetools.platform.models import (
 from django.conf import settings
 from django.urls import reverse
 
+from commerce_coordinator.apps.commercetools.catalog_info.edx_utils import cents_to_dollars
 from commerce_coordinator.apps.commercetools.catalog_info.utils import typed_money_to_string
 
 logger = logging.getLogger(__name__)
@@ -207,12 +208,14 @@ def has_full_refund_transaction(payment: Payment):
     """
     # get charge transaction and get amount then check against refund.
     charge_amount = 0
+    refunded_amount = 0
     for transaction in payment.transactions:
         if transaction.type == TransactionType.CHARGE:
-            charge_amount = transaction.amount
-        if transaction.type == TransactionType.REFUND and transaction.amount == charge_amount:  # pragma no cover
-            return True
-    return False
+            charge_amount += cents_to_dollars(transaction.amount)
+        if transaction.type == TransactionType.REFUND:  # pragma no cover
+            refunded_amount += cents_to_dollars(transaction.amount)
+
+    return refunded_amount == charge_amount
 
 
 def is_transaction_already_refunded(payment: Payment, psp_refund_transaction_id: str):
@@ -226,15 +229,14 @@ def is_transaction_already_refunded(payment: Payment, psp_refund_transaction_id:
     return False
 
 
-def find_refund_transaction(payment: Payment, amount: decimal):
+def find_refund_transaction(payment: Payment, psp_refund_transaction_id: str):
     """
     Utility to find the refund transaction in a payment
     """
     for transaction in payment.transactions:
-        if transaction.type == TransactionType.REFUND:
-            if decimal.Decimal(typed_money_to_string(transaction.amount, money_as_decimal_string=True)) == amount:
+        if transaction.type == TransactionType.REFUND and transaction.interaction_id == psp_refund_transaction_id:
                 return transaction.id
-    return {}
+    return ''
 
 
 def translate_refund_status_to_transaction_status(refund_status: str):

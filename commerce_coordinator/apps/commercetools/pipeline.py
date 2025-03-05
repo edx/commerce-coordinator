@@ -14,7 +14,8 @@ from requests import HTTPError
 
 from commerce_coordinator.apps.commercetools.catalog_info.constants import (
     EDX_PAYPAL_PAYMENT_INTERFACE_NAME,
-    EDX_STRIPE_PAYMENT_INTERFACE_NAME
+    EDX_STRIPE_PAYMENT_INTERFACE_NAME,
+    TwoUKeys
 )
 from commerce_coordinator.apps.commercetools.catalog_info.edx_utils import (
     get_edx_refund_info,
@@ -26,7 +27,11 @@ from commerce_coordinator.apps.commercetools.data import order_from_commercetool
 from commerce_coordinator.apps.commercetools.utils import create_retired_fields, has_full_refund_transaction
 from commerce_coordinator.apps.core.constants import PipelineCommand
 from commerce_coordinator.apps.core.exceptions import InvalidFilterType
-from commerce_coordinator.apps.rollout.utils import is_commercetools_line_item_already_created
+from commerce_coordinator.apps.rollout.utils import (
+    get_order_return_info_return_items,
+    is_commercetools_line_item_already_created,
+    is_commercetools_line_item_already_refunded
+)
 from commerce_coordinator.apps.rollout.waffle import is_redirect_to_commercetools_enabled_for_user
 
 log = getLogger(__name__)
@@ -133,7 +138,7 @@ class FetchOrderDetailsByOrderID(PipelineStep):
         self,
         active_order_management_system,
         order_id,
-        return_line_item_ids,
+        return_line_items,
         **kwargs
     ):  # pylint: disable=arguments-differ
         """
@@ -154,10 +159,24 @@ class FetchOrderDetailsByOrderID(PipelineStep):
         if active_order_management_system != COMMERCETOOLS_ORDER_MANAGEMENT_SYSTEM:
             return PipelineCommand.CONTINUE.value
 
+        return_line_item_ids = list(return_line_items.keys())
         try:
             ct_api_client = CommercetoolsAPIClient()
             start_time = datetime.now()
             ct_order = ct_api_client.get_order_by_id(order_id=order_id)
+            return_info_return_items = get_order_return_info_return_items(ct_order)
+
+            filtered_line_item_ids = []
+            refunded_items = {}
+            for line_item_id in return_line_item_ids:
+                line_item_refund = is_commercetools_line_item_already_refunded(
+                    ct_order, line_item_id, return_info_return_items)
+                if not line_item_refund:
+                    filtered_line_item_ids.append(line_item_id)
+                else:
+                    refunded_items[return_line_items[line_item_id]] = line_item_refund.custom.fields[
+                        TwoUKeys.TRANSACTION_ID]
+
             duration = (datetime.now() - start_time).total_seconds()
             log.info(f"[Performance Check] get_order_by_id call took {duration} seconds")
 
@@ -167,13 +186,15 @@ class FetchOrderDetailsByOrderID(PipelineStep):
                 "order_data": ct_order,
                 "order_id": ct_order.id,
                 "psp": psp,
-                "payment_intent_id": payment.interface_id
+                "payment_intent_id": payment.interface_id,
+                "filtered_line_item_ids": filtered_line_item_ids,
+                "refunded_line_item_refunds": refunded_items
             }
 
             if payment:
                 ct_payment = ct_api_client.get_payment_by_key(payment.interface_id)
                 refund_amount, ct_transaction_interaction_id = get_edx_refund_info(
-                    ct_payment, ct_order, return_line_item_ids)
+                    ct_payment, ct_order, filtered_line_item_ids)
                 ret_val['amount_in_cents'] = refund_amount
                 ret_val['ct_transaction_interaction_id'] = ct_transaction_interaction_id
                 ret_val['has_been_refunded'] = has_full_refund_transaction(ct_payment)
@@ -272,15 +293,14 @@ class UpdateCommercetoolsOrderReturnPaymentStatus(PipelineStep):
         Returns:
             returned_order: the modified CT order
         """
-        tag = type(self).__name__
-
-        if kwargs.get('charge_already_refunded') or kwargs.get('has_been_refunded'):
-            log.info(f"[{tag}] refund has already been processed, skipping update payment status")
-            return PipelineCommand.CONTINUE.value
-
         order = kwargs['order_data']
-        return_line_item_return_ids = kwargs['return_line_item_return_ids']
+        return_line_items = kwargs['return_line_items']
+        return_line_item_return_ids = list(return_line_items.values())
         return_line_entitlement_ids = kwargs['return_line_entitlement_ids']
+        refunded_line_item_refunds = kwargs['refunded_line_item_refunds']
+        refund_response = kwargs.get('refund_response', {})
+
+        interaction_id = refund_response.get('id') if isinstance(refund_response, dict) else None
 
         ct_api_client = CommercetoolsAPIClient()
         updated_order = ct_api_client.update_return_payment_state_after_successful_refund(
@@ -288,8 +308,9 @@ class UpdateCommercetoolsOrderReturnPaymentStatus(PipelineStep):
             order_version=order.version,
             return_line_item_return_ids=return_line_item_return_ids,
             return_line_entitlement_ids=return_line_entitlement_ids,
+            refunded_line_item_refunds=refunded_line_item_refunds,
             payment_intent_id=kwargs['payment_intent_id'],
-            amount_in_cents=kwargs['amount_in_cents']
+            interaction_id=interaction_id
         )
 
         return {
