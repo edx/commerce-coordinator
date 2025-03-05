@@ -235,7 +235,8 @@ class OrderReturnPipelineTests(TestCase):
         ret = pipe.run_filter(
             order_data=self.update_order_data, returned_order=self.update_order_data,
             payment_intent_id="mock_payment_intent_id", amount_in_cents=10000,
-            return_line_item_return_ids=["mock_return_item_id"],
+            return_line_items={"mock_line_item_id": 'mock_return_item_id'},
+            refunded_line_item_refunds=["refunded_line_item_refunds"],
             return_line_entitlement_ids={'mock_return_item_id': 'mock_entitlement_id'}
         )
         result_data = ret['returned_order']

@@ -241,7 +241,6 @@ def fulfill_order_sanctioned_message_signal_task(
 @shared_task(autoretry_for=(RequestException, CommercetoolsError), retry_kwargs={'max_retries': 5, 'countdown': 3})
 def fulfill_order_returned_signal_task(order_id, return_items, message_id):
     """Celery task for an order return (and refunded) message."""
-    # pylint: disable=too-many-statements
 
     def _get_product_data(line_item, is_bundle):
         return {

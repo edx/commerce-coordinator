@@ -504,7 +504,6 @@ class CommercetoolsAPIClient:
                     fields=CTFieldContainer(custom_fields),
                 ))
 
-            
             logger.info(f"Update return payment state after successful refund - payment_intent_id: {payment_intent_id}")
 
             updated_order = self.base_client.orders.update_by_id(

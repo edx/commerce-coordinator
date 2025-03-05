@@ -1,7 +1,6 @@
 """
 Tests for Commerce tools utils
 """
-import decimal
 import hashlib
 import unittest
 from unittest.mock import MagicMock
@@ -328,7 +327,7 @@ class TestFindRefundTransaction(unittest.TestCase):
 
     def test_has_no_refund_transaction(self):
         payment = gen_payment_with_multiple_transactions(TransactionType.CHARGE, 4900)
-        self.assertEqual(find_refund_transaction(payment, 4900), {})
+        self.assertEqual(find_refund_transaction(payment, 4900), '')
 
     def test_has_matching_refund_transaction(self):
         payment = gen_payment_with_multiple_transactions(TransactionType.CHARGE, 4900, TransactionType.REFUND,
@@ -336,7 +335,7 @@ class TestFindRefundTransaction(unittest.TestCase):
                                                                     currency_code='USD',
                                                                     type=MoneyType.CENT_PRECISION,
                                                                     fraction_digits=2))
-        self.assertEqual(find_refund_transaction(payment, decimal.Decimal(49.0)), payment.transactions[1].id)
+        self.assertEqual(find_refund_transaction(payment, 'ch_3P9RWsH4caH7G0X11toRGUJf'), payment.transactions[1].id)
 
     def test_has_no_matching_refund_transaction(self):
         payment = gen_payment_with_multiple_transactions(TransactionType.CHARGE, 4900, TransactionType.REFUND,
@@ -344,7 +343,7 @@ class TestFindRefundTransaction(unittest.TestCase):
                                                                     currency_code='USD',
                                                                     type=MoneyType.CENT_PRECISION,
                                                                     fraction_digits=2))
-        self.assertEqual(find_refund_transaction(payment, 4000), {})
+        self.assertEqual(find_refund_transaction(payment, 4000), '')
 
 
 class TestTranslateStripeRefundStatus(unittest.TestCase):

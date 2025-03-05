@@ -2,7 +2,6 @@
 Helpers for the commercetools app.
 """
 
-import decimal
 import hashlib
 import logging
 
@@ -22,7 +21,6 @@ from django.conf import settings
 from django.urls import reverse
 
 from commerce_coordinator.apps.commercetools.catalog_info.edx_utils import cents_to_dollars
-from commerce_coordinator.apps.commercetools.catalog_info.utils import typed_money_to_string
 
 logger = logging.getLogger(__name__)
 
@@ -235,7 +233,7 @@ def find_refund_transaction(payment: Payment, psp_refund_transaction_id: str):
     """
     for transaction in payment.transactions:
         if transaction.type == TransactionType.REFUND and transaction.interaction_id == psp_refund_transaction_id:
-                return transaction.id
+            return transaction.id
     return ''
 
 
