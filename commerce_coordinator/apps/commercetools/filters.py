@@ -13,8 +13,7 @@ class OrderRefundRequested(OpenEdxPublicFilter):
     def run_filter(
         cls,
         order_id,
-        return_line_item_ids,
-        return_line_item_return_ids,
+        return_line_items,
         return_line_entitlement_ids,
         message_id
     ):
@@ -28,8 +27,7 @@ class OrderRefundRequested(OpenEdxPublicFilter):
         """
         return super().run_pipeline(
             order_id=order_id,
-            return_line_item_ids=return_line_item_ids,
-            return_line_item_return_ids=return_line_item_return_ids,
+            return_line_items=return_line_items,
             return_line_entitlement_ids=return_line_entitlement_ids,
             message_id=message_id
         )

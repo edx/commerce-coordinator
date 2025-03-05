@@ -183,12 +183,7 @@ def gen_payment():
         amount_planned=4900,
         payment_method_info={},
         payment_status=PaymentState.PAID,
-        transactions=[gen_transaction(TransactionType.REFUND, CTTypedMoney(
-            currency_code='USD',
-            cent_amount=1000,
-            type=CTMoneyType.CENT_PRECISION,
-            fraction_digits=2,
-        ))],
+        transactions=[gen_transaction(TransactionType.REFUND, 1000)],
         interface_interactions=[]
     )
 
@@ -219,7 +214,12 @@ def gen_transaction(transaction_type=None, amount=None) -> CTTransaction:
     return CTTransaction(
         id=uuid4_str(),
         type=transaction_type,
-        amount=amount,
+        amount=CTTypedMoney(
+            currency_code='USD',
+            cent_amount=amount,
+            type=CTMoneyType.CENT_PRECISION,
+            fraction_digits=2,
+        ),
         timestamp=datetime.now(),
         state=TransactionState.SUCCESS,
         interaction_id='ch_3P9RWsH4caH7G0X11toRGUJf'

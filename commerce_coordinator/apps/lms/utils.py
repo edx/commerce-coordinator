@@ -1,15 +1,16 @@
 """LMS Utility Functions"""
 
+from commerce_coordinator.apps.commercetools.catalog_info.constants import TwoUKeys
 from commerce_coordinator.apps.commercetools.clients import CommercetoolsAPIClient
 
 
-def get_line_item_from_entitlement(order_number: str, entitlement_id: str) -> tuple[str, str]:
+def get_order_line_item_info_from_entitlement_uuid(order_number: str, entitlement_uuid: str) -> tuple[str, str]:
     """
     Retrieve the order ID and line item ID associated with the given entitlement ID.
 
     Args:
         order_number (str): The order number in Commercetools.
-        entitlement_id (str): The entitlement ID to search for.
+        entitlement_uuid (str): The entitlement ID to search for.
 
     Returns:
         tuple[str, str]: A tuple containing the order ID and the matching line item ID (if found,
@@ -21,7 +22,7 @@ def get_line_item_from_entitlement(order_number: str, entitlement_id: str) -> tu
     order_id = ct_order.id
     order_line_item_id = ''
     for line_item in ct_order.line_items:
-        if line_item.custom.fields.get('edxLMSEntitlementId', '') == entitlement_id:
+        if line_item.custom.fields.get(TwoUKeys.LINE_ITEM_LMS_ENTITLEMENT_ID, '') == entitlement_uuid:
             order_line_item_id = line_item.id
             break
 
