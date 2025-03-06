@@ -4,7 +4,7 @@ Tests for lms utils
 import unittest
 from unittest.mock import Mock, patch
 
-from commerce_coordinator.apps.lms.utils import get_line_item_from_entitlement
+from commerce_coordinator.apps.lms.utils import get_order_line_item_info_from_entitlement_uuid
 
 
 class TestGetLineItemFromEntitlement(unittest.TestCase):
@@ -38,7 +38,7 @@ class TestGetLineItemFromEntitlement(unittest.TestCase):
         mock_order = self.get_mock_order_data([mock_line_item])
         mock_ct_api_client.get_order_by_number.return_value = mock_order
 
-        order_id, line_item_id = get_line_item_from_entitlement('order123', 'entitlement123')
+        order_id, line_item_id = get_order_line_item_info_from_entitlement_uuid('order123', 'entitlement123')
 
         self.assertEqual(order_id, 'order123')
         self.assertEqual(line_item_id, 'line_item123')
@@ -50,7 +50,7 @@ class TestGetLineItemFromEntitlement(unittest.TestCase):
         mock_order = self.get_mock_order_data([mock_line_item])
         mock_ct_api_client.get_order_by_number.return_value = mock_order
 
-        order_id, line_item_id = get_line_item_from_entitlement('order123', 'entitlement123')
+        order_id, line_item_id = get_order_line_item_info_from_entitlement_uuid('order123', 'entitlement123')
 
         self.assertEqual(order_id, 'order123')
         self.assertEqual(line_item_id, '')
@@ -61,7 +61,7 @@ class TestGetLineItemFromEntitlement(unittest.TestCase):
         mock_order = self.get_mock_order_data([])
         mock_ct_api_client.get_order_by_number.return_value = mock_order
 
-        order_id, line_item_id = get_line_item_from_entitlement('order123', 'entitlement123')
+        order_id, line_item_id = get_order_line_item_info_from_entitlement_uuid('order123', 'entitlement123')
 
         self.assertEqual(order_id, 'order123')
         self.assertEqual(line_item_id, '')
