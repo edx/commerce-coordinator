@@ -136,17 +136,20 @@ def extract_ct_product_information_for_braze_canvas(item: LineItem):
     return result
 
 
-def calculate_total_discount_on_order(order: Order) -> TypedMoney:
+def calculate_total_discount_on_order(order: Order, line_item_ids=None) -> TypedMoney:
     """Calculate discount for cart level and line item level."""
     # discount amount on cart from a cart discount with target total price
     discount_on_total_price = 0
     if hasattr(order, 'discount_on_total_price') and order.discount_on_total_price:
         discount_on_total_price = order.discount_on_total_price.discounted_amount.cent_amount
 
-    # discount amount on item from a cart discount with target line items
+    filtered_line_items = order.line_items
+    if line_item_ids:
+        filtered_line_items = [line_item for line_item in order.line_items if line_item.id in line_item_ids]
+
     cart_discount_on_line_items = sum(
         discount.discounted_amount.cent_amount
-        for item in order.line_items
+        for item in filtered_line_items
         for discounted_price in item.discounted_price_per_quantity
         for discount in discounted_price.discounted_price.included_discounts
     )
@@ -154,7 +157,7 @@ def calculate_total_discount_on_order(order: Order) -> TypedMoney:
     # discount amount on item from a product discount on a line item
     product_discount_on_line_items = sum(
         (item.price.value.cent_amount - item.price.discounted.value.cent_amount)
-        for item in order.line_items
+        for item in filtered_line_items
         if getattr(item.price, "discounted", False)
     )
 

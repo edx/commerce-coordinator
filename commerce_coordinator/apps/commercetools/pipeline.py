@@ -174,8 +174,10 @@ class FetchOrderDetailsByOrderID(PipelineStep):
                 if not line_item_refund:
                     filtered_line_item_ids.append(line_item_id)
                 else:
-                    refunded_items[return_line_items[line_item_id]] = line_item_refund.custom.fields[
-                        TwoUKeys.TRANSACTION_ID]
+                    if hasattr(line_item_refund.custom, 'fields') and line_item_refund.custom.fields:
+                        transaction_id = line_item_refund.custom.fields.get(TwoUKeys.TRANSACTION_ID)
+                        if transaction_id:
+                            refunded_items[return_line_items[line_item_id]] = transaction_id
 
             duration = (datetime.now() - start_time).total_seconds()
             log.info(f"[Performance Check] get_order_by_id call took {duration} seconds")
@@ -197,7 +199,7 @@ class FetchOrderDetailsByOrderID(PipelineStep):
                     ct_payment, ct_order, filtered_line_item_ids)
                 ret_val['amount_in_cents'] = refund_amount
                 ret_val['ct_transaction_interaction_id'] = ct_transaction_interaction_id
-                ret_val['has_been_refunded'] = has_full_refund_transaction(ct_payment)
+                ret_val['has_been_refunded'] = has_full_refund_transaction(ct_payment) or refund_amount == 0
                 ret_val['payment_data'] = ct_payment
             else:
                 ret_val['amount_in_cents'] = decimal.Decimal(0.00)

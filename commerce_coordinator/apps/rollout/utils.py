@@ -45,11 +45,8 @@ def is_commercetools_line_item_already_created(
         bool: True if the line item has already been refunded, False otherwise.
     """
     return_info_return_items = get_order_return_info_return_items(order)
-    return next(
-        (
-            item.line_item_id for item in return_info_return_items if item.line_item_id == order_line_item_id
-        ), None
-    )
+
+    return len(list(filter(lambda item: item.line_item_id == order_line_item_id, return_info_return_items))) >= 1
 
 
 def is_commercetools_line_item_already_refunded(
