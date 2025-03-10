@@ -189,4 +189,10 @@ class RefundPaymentIntent(PipelineStep):
             logger.info(f'[CT-{tag}] Unsuccessful Stripe refund with details:'
                         f'[order_id: {order_id}, payment_intent_id: {payment_intent_id}'
                         f'message_id: {kwargs["message_id"]}')
+
+            if 'greater than unrefunded amount on charge' in ex.user_message:
+                return {
+                    'failed_psp': ex.user_message
+                }
+
             raise StripeIntentRefundAPIError from ex

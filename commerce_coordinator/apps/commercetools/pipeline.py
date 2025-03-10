@@ -358,6 +358,10 @@ class CreateReturnPaymentTransaction(PipelineStep):
             log.info(f"[{tag}] refund has already been processed, skipping refund payment transaction creation")
             return PipelineCommand.CONTINUE.value
 
+        if kwargs.get('failed_psp'):
+            log.info(f"[{tag}] PSP Failed, skipping refund payment transaction creation")
+            return PipelineCommand.CONTINUE.value
+
         ct_api_client = CommercetoolsAPIClient()
         try:
             payment_on_order = None
