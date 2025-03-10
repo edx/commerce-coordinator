@@ -129,7 +129,10 @@ class FulfillOrderPlacedMessageSignalTaskTests(TestCase):
         expected_data.
         """
         mock_values = _ct_client_init.return_value
-        _ = self.get_uut()(*self.unpack_for_uut(mock_values.example_payload))
+        # pylint: disable = no-value-for-parameter
+        _ = self.get_uut()(
+            *self.unpack_for_uut(mock_values.example_payload)
+        )
 
         mock_values.order_mock.assert_called_once_with(mock_values.expected_order.id)
         mock_values.customer_mock.assert_called_once_with(mock_values.expected_customer.id)
@@ -144,7 +147,10 @@ class FulfillOrderPlacedMessageSignalTaskTests(TestCase):
         """
         mock_values = _ct_client_init.return_value
 
-        ret_val = self.get_uut()(*self.unpack_for_uut(mock_values.example_payload))
+        # pylint: disable=no-value-for-parameter
+        ret_val = fulfill_order_placed_uut(
+            *self.unpack_for_uut(mock_values.example_payload)
+        )
 
         self.assertTrue(ret_val)
         mock_values.order_mock.assert_called_once_with(mock_values.order_id)
