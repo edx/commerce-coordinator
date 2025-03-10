@@ -54,7 +54,8 @@ from commerce_coordinator.apps.commercetools.catalog_info.foundational_types imp
 from commerce_coordinator.apps.commercetools.utils import (
     find_refund_transaction,
     handle_commercetools_error,
-    translate_refund_status_to_transaction_status
+    translate_refund_status_to_transaction_status,
+    find_latest_refund
 )
 from commerce_coordinator.apps.core.constants import ORDER_HISTORY_PER_SYSTEM_REQ_LIMIT
 
@@ -479,10 +480,15 @@ class CommercetoolsAPIClient:
             )
             if not payment_intent_id:
                 payment_intent_id = ""
-            logger.info(f"Creating return for order - payment_intent_id: {payment_intent_id}")
+            logger.info(f"Updating return for order: {order_id} - payment_intent_id: {payment_intent_id}")
             payment = self.get_payment_by_key(payment_intent_id)
             logger.info(f"Payment found: {payment}")
             transaction_id = find_refund_transaction(payment, interaction_id)
+            
+            # Handles the case when refund is created from PSP and interaction ID is not set
+            if not transaction_id:
+                transaction_id = find_latest_refund(payment)
+
             return_payment_state_actions = []
             update_transaction_id_actions = []
             for return_line_item_return_id in return_line_item_return_ids:
