@@ -6,7 +6,6 @@ from unittest.mock import patch
 from commercetools.platform.models import ReturnInfo, ReturnPaymentState, ReturnShipmentState, TransactionType
 from django.contrib.auth import get_user_model
 from django.test import RequestFactory
-from requests import RequestException
 from rest_framework.test import APITestCase
 
 from commerce_coordinator.apps.commercetools.catalog_info.constants import (
@@ -213,9 +212,9 @@ class CommercetoolsOrLegacyEcommerceRefundPipelineTests(APITestCase):
             has_been_refunded=False,
             payment_intent_id="pi_4MtwBwLkdIwGlenn28a3tqPa",
             psp=EDX_STRIPE_PAYMENT_INTERFACE_NAME,
-            failed_psp='refund amount greater than unrefunded amount on charged amount'
+            psp_refund_error='refund amount greater than unrefunded amount on charged amount'
         )
-        mock_logger.assert_called_once_with('[CreateReturnPaymentTransaction] PSP Failed, '
+        mock_logger.assert_called_once_with('[CreateReturnPaymentTransaction] PSP Refund error, '
                                             'skipping refund payment transaction creation')
 
 
@@ -254,6 +253,18 @@ class OrderReturnPipelineTests(TestCase):
         result_data = ret['returned_order']
         self.assertEqual(result_data, self.update_order_response)
         self.assertEqual(result_data.return_info[1].items[0].payment_state, ReturnPaymentState.REFUNDED)
+
+    @patch('commerce_coordinator.apps.commercetools.pipeline.log.info')
+    def test_pipeline_with_psp_error(self, mock_logger):
+        """Ensure pipeline is functioning as expected"""
+
+        pipe = UpdateCommercetoolsOrderReturnPaymentStatus("test_pipe", None)
+
+        pipe.run_filter(
+            psp_refund_error='refund amount greater than unrefunded amount on charged amount'
+        )
+        mock_logger.assert_called_once_with('[UpdateCommercetoolsOrderReturnPaymentStatus] PSP Refund error, '
+                                            'skipping order refund payment transaction updation')
 
 
 class AnonymizeRetiredUserPipelineTests(TestCase):
@@ -379,12 +390,12 @@ class RefundPayPalPaymentTests(TestCase):
         """Test refund with exception raised"""
         mock_refund_order.side_effect = Exception("mock exception")
 
-        with self.assertRaises(RequestException):
-            self.refund_pipe.run_filter(
-                order_id=self.order_id,
-                amount_in_cents=self.amount_in_cents,
-                has_been_refunded=False,
-                ct_transaction_interaction_id=self.ct_transaction_interaction_id,
-                psp=self.psp,
-                message_id="mock_message_id"
-            )
+        ret = self.refund_pipe.run_filter(
+            order_id=self.order_id,
+            amount_in_cents=self.amount_in_cents,
+            has_been_refunded=False,
+            ct_transaction_interaction_id=self.ct_transaction_interaction_id,
+            psp=self.psp,
+            message_id="mock_message_id"
+        )
+        self.assertEqual(ret['psp_refund_error'], "mock exception")

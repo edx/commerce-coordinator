@@ -485,7 +485,8 @@ class CommercetoolsAPIClient:
             logger.info(f"Payment found: {payment}")
             transaction_id = find_refund_transaction(payment, interaction_id)
 
-            # Handles the case when refund is created from PSP and interaction ID is not set
+            # Handles the case when refund is created from PSP and interaction ID is not set. In that case
+            # transaction ID will also be.
             if not transaction_id:
                 transaction_id = find_latest_refund(payment)
 

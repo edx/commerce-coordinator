@@ -251,7 +251,7 @@ def find_refund_transaction(payment: Payment, psp_refund_transaction_id: str):
 
 def find_latest_refund(payment: Payment):
     """
-    Utility to find the lstest refund transaction in a payment, given payment transacations are sorted.
+    Utility to find the latest refund transaction in a payment, given payment transacations are sorted.
     """
     sorted_transactions = sorted(
         payment.transactions, key=lambda transaction: transaction.timestamp, reverse=True
