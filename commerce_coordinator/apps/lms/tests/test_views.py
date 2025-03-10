@@ -21,6 +21,7 @@ from commerce_coordinator.apps.commercetools.tests.conftest import (
     gen_program_search_result,
     gen_variant_search_result
 )
+from commerce_coordinator.apps.core.exceptions import InvalidFilterType
 from commerce_coordinator.apps.core.tests.utils import name_test
 
 User = get_user_model()
@@ -309,6 +310,14 @@ class RefundViewTests(APITestCase):
         response = self.client.post(self.url, self.valid_payload, format='json')
 
         self.assertEqual(response.status_code, status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+    @patch('commerce_coordinator.apps.lms.views.OrderRefundRequested.run_filter')
+    def test_post_with_filter_exception_already_exist(self, mock_filter):
+        self.authenticate_user()
+        mock_filter.side_effect = InvalidFilterType('Refund already created')
+        response = self.client.post(self.url, self.valid_payload, format='json')
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
 
     @patch('commerce_coordinator.apps.lms.views.OrderRefundRequested.run_filter')
     def test_post_with_unexpected_exception_fails(self, mock_filter):

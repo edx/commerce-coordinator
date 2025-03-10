@@ -7,7 +7,6 @@ from urllib.parse import urlencode
 
 from django.conf import settings
 from openedx_filters import PipelineStep
-from requests import RequestException
 
 from commerce_coordinator.apps.commercetools.catalog_info.constants import EDX_PAYPAL_PAYMENT_INTERFACE_NAME
 from commerce_coordinator.apps.core.constants import PipelineCommand
@@ -78,10 +77,12 @@ class RefundPayPalPayment(PipelineStep):
             return {
                 'refund_response': paypal_refund_response,
             }
-        except Exception as ex:
+        except Exception as ex:     # pylint: disable=broad-exception-caught
             logger.error(f'[CT-{tag}] Unsuccessful PayPal refund with details: '
                          f'[order_id: {order_id} '
                          f'message_id: {kwargs["message_id"]} '
                          f'exception: {ex}')
 
-            raise RequestException(str(ex)) from ex
+            return {
+                'psp_refund_error': str(ex)
+            }

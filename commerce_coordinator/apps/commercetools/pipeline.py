@@ -295,6 +295,13 @@ class UpdateCommercetoolsOrderReturnPaymentStatus(PipelineStep):
         Returns:
             returned_order: the modified CT order
         """
+        tag = type(self).__name__
+
+        # TODO: handle refund state update to NotRefunded. To be done in SONIC-938
+        if kwargs.get('psp_refund_error'):
+            log.info(f"[{tag}] PSP Refund error, skipping order refund payment transaction updation")
+            return PipelineCommand.CONTINUE.value
+
         order = kwargs['order_data']
         return_line_items = kwargs['return_line_items']
         return_line_item_return_ids = list(return_line_items.values())
@@ -356,6 +363,10 @@ class CreateReturnPaymentTransaction(PipelineStep):
 
         if refund_response == "charge_already_refunded" or has_been_refunded:
             log.info(f"[{tag}] refund has already been processed, skipping refund payment transaction creation")
+            return PipelineCommand.CONTINUE.value
+
+        if kwargs.get('psp_refund_error'):
+            log.info(f"[{tag}] PSP Refund error, skipping refund payment transaction creation")
             return PipelineCommand.CONTINUE.value
 
         ct_api_client = CommercetoolsAPIClient()
