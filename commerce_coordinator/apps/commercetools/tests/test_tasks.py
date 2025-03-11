@@ -11,8 +11,8 @@ from commercetools.platform.models import TransactionType
 from django.test import TestCase
 
 from commerce_coordinator.apps.commercetools.tasks import (
-    fulfillment_completed_update_ct_line_item_task,
-    refund_from_stripe_task
+    refund_from_stripe_task,
+    update_line_item_state_on_fulfillment_completion
 )
 from commerce_coordinator.apps.commercetools.tests.conftest import gen_payment, gen_payment_with_multiple_transactions
 from commerce_coordinator.apps.commercetools.tests.constants import (
@@ -28,7 +28,7 @@ logger = logging.getLogger(__name__)
 # Define unit under test.
 # Note: if the UUT is part of the class as an ivar, it trims off arg0 as 'self' and
 #       claims too many args supplied
-fulfillment_uut = fulfillment_completed_update_ct_line_item_task
+fulfillment_uut = update_line_item_state_on_fulfillment_completion
 returned_uut = refund_from_stripe_task
 
 
@@ -40,8 +40,6 @@ class UpdateLineItemStateOnFulfillmentCompletionTaskTest(TestCase):
     def unpack_for_uut(values):
         """ Unpack the dictionary in the order required for the UUT """
         return (
-            None,
-            values['entitlement_uuid'],
             values['order_id'],
             values['order_version'],
             values['line_item_id'],
@@ -60,7 +58,7 @@ class UpdateLineItemStateOnFulfillmentCompletionTaskTest(TestCase):
         '''
         _ = fulfillment_uut(*self.unpack_for_uut(EXAMPLE_UPDATE_LINE_ITEM_SIGNAL_PAYLOAD))
         logger.info('mock_client().mock_calls: %s', mock_client().mock_calls)
-        mock_client().update_line_item_on_fulfillment.assert_called_once_with(
+        mock_client().update_line_item_transition_state_on_fulfillment.assert_called_once_with(
             *list(EXAMPLE_UPDATE_LINE_ITEM_SIGNAL_PAYLOAD.values())
         )
 

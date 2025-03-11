@@ -8,11 +8,8 @@ import stripe
 from celery import shared_task
 from commercetools import CommercetoolsError
 from django.conf import settings
-from django.core.cache import cache
 
 from commerce_coordinator.apps.commercetools.catalog_info.constants import EDX_PAYPAL_PAYMENT_INTERFACE_NAME
-from commerce_coordinator.apps.core.memcache import safe_key
-from commerce_coordinator.apps.core.tasks import TASK_LOCK_EXPIRE, TASK_LOCK_RETRY, acquire_task_lock, release_task_lock
 
 from .clients import CommercetoolsAPIClient
 from .utils import has_full_refund_transaction
@@ -22,9 +19,7 @@ logger = logging.getLogger(__name__)
 stripe.api_key = settings.PAYMENT_PROCESSOR_CONFIG['edx']['stripe']['secret_key']
 
 
-@shared_task(bind=True, autoretry_for=(CommercetoolsError,), retry_kwargs={'max_retries': 5, 'countdown': 3})
-def fulfillment_completed_update_ct_line_item_task(
-    self,
+def update_line_item_on_entitlement_fulfillment_completion(
     entitlement_uuid,
     order_id,
     order_version,
@@ -34,83 +29,43 @@ def fulfillment_completed_update_ct_line_item_task(
     to_state_key
 ):
     """
-    Task for updating order line item on fulfillment completion via Commercetools API.
+    Task for updating order line item on entitlement fulfillment completion via Commercetools API.
     """
-    tag = "fulfillment_completed_update_ct_line_item_task"
-    task_key = safe_key(key=order_id, key_prefix=tag, version='1')
-    cache_key = safe_key(key=order_id, key_prefix='order_version_for'+tag, version='1')
-    entitlement_info = f'and entitlement {entitlement_uuid}.' if entitlement_uuid else '.'
+    client = CommercetoolsAPIClient()
 
-    def _log_error_and_release_lock(log_message):
-        logger.exception(log_message)
-        release_task_lock(task_key)
-
-    def _log_info_and_release_lock(log_message):
-        logger.info(log_message)
-        release_task_lock(task_key)
-
-    if not acquire_task_lock(task_key):
-        logger.info(
-            f"Task {task_key} is locked. "
-            f"Exiting current task and retrying in {TASK_LOCK_RETRY} seconds..."
-        )
-        fulfillment_completed_update_ct_line_item_task.apply_async(
-            kwargs={
-                'entitlement_uuid': entitlement_uuid,
-                'order_id': order_id,
-                'order_version': order_version,
-                'line_item_id': line_item_id,
-                'item_quantity': item_quantity,
-                'from_state_id': from_state_id,
-                'to_state_key': to_state_key
-            },
-            countdown=TASK_LOCK_RETRY
-        )
-        return False
-
-    try:
-        client = CommercetoolsAPIClient()
-        current_order_version = order_version
-
-        cache_entry = cache.get(cache_key, None)
-
-        # TODO: Remove logging after testing on stage
-        if cache_entry:
-            logger.info(f'[CT-{tag}] Found cache entry for order version {cache_entry} for cache key {cache_key}')
-            current_order_version = cache_entry
-        else:
-            logger.info(f'[CT-{tag}] Cache entry not found for order version for cache key {cache_key}')
-
-        if self.request.retries > 0:
-            current_order_version = client.get_order_by_id(order_id).version
-
-        updated_order = client.update_line_item_on_fulfillment(
-            entitlement_uuid,
-            order_id,
-            current_order_version,
-            line_item_id,
-            item_quantity,
-            from_state_id,
-            to_state_key
-        )
-
-        cache.set(key=cache_key, value=updated_order.version, timeout=TASK_LOCK_EXPIRE)
-    except CommercetoolsError as err:
-        release_task_lock(task_key)
-        raise err
-    except Exception as exc:  # pylint: disable=broad-exception-caught
-        _log_error_and_release_lock(
-            f'[CT-{tag}] Unexpected error occurred while updating line item {line_item_id} for order {order_id}'
-            + entitlement_info
-            + 'Releasing lock.'
-            + f'Exception: {exc}'
-        )
-        return None
-
-    _log_info_and_release_lock(
-        f'[CT-{tag}] Line item {line_item_id} updated for order {order_id}' + entitlement_info
+    updated_order = client.update_line_item_on_entitlement_fulfillment(
+        entitlement_uuid,
+        order_id,
+        order_version,
+        line_item_id,
+        item_quantity,
+        from_state_id,
+        to_state_key
     )
+    return updated_order
 
+
+def update_line_item_state_on_fulfillment_completion(
+    order_id,
+    order_version,
+    line_item_id,
+    item_quantity,
+    from_state_id,
+    to_state_key
+):
+    """
+    Task for fulfillment completed and order line item state update via Commercetools API.
+    """
+    client = CommercetoolsAPIClient()
+
+    updated_order = client.update_line_item_transition_state_on_fulfillment(
+        order_id,
+        order_version,
+        line_item_id,
+        item_quantity,
+        from_state_id,
+        to_state_key
+    )
     return updated_order
 
 

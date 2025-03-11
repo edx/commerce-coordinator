@@ -156,7 +156,7 @@ def fulfill_order_placed_send_enroll_in_course_task(
     product_type        # pylint: disable=unused-argument
 ):
     """
-    Celery task for enrollment fulfillment via LMS Enrollment API.
+    Celery task for order placed fulfillment and enrollment via LMS Enrollment API.
     """
     tag = "fulfill_order_placed_send_enroll_in_course_task"
     logger.info(f"{tag} Starting task with details: {locals()}.")
@@ -263,7 +263,7 @@ def fulfill_order_placed_send_entitlement_task(
     product_type        # pylint: disable=unused-argument
 ):
     """
-    Celery task for entitlement fulfillment via LMS Entitlement API.
+    Celery task for order placed fulfillment and entitlement via LMS Entitlement API.
     """
     tag = "fulfill_order_placed_send_entitlement_task"
     logger.info(f"{tag} Starting task with details: {locals()}.")

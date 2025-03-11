@@ -22,9 +22,9 @@ logger = logging.getLogger(__name__)
 TEST_LMS_URL_ROOT = 'https://testserver.com'
 
 
-class FulfillmentCompletedUpdateCTLineItemSignalMock(MagicMock):
+class FulfillmentCompletedSignalMock(MagicMock):
     """
-    A mock fulfillment_completed_update_ct_line_item_signal
+    A mock fulfillment_completed_signal
     """
 
     def mock_receiver(self):
@@ -48,8 +48,8 @@ class LMSAPIClientTests(CoordinatorOAuthClientTestCase):
     def setUp(self):
         self.client = LMSAPIClient()
 
-    @patch('commerce_coordinator.apps.lms.clients.fulfillment_completed_update_ct_line_item_signal.send_robust',
-           new_callable=FulfillmentCompletedUpdateCTLineItemSignalMock)
+    @patch('commerce_coordinator.apps.lms.clients.fulfillment_completed_signal.send_robust',
+           new_callable=FulfillmentCompletedSignalMock)
     def test_order_create_success(self, mock_signal):
         """Check EXAMPLE_FULFILLMENT_*_PAYLOAD generates correct request and response."""
         self.assertJSONClientResponse(
@@ -66,8 +66,8 @@ class LMSAPIClientTests(CoordinatorOAuthClientTestCase):
         )
         mock_signal.assert_called_once()
 
-    @patch('commerce_coordinator.apps.lms.clients.fulfillment_completed_update_ct_line_item_signal.send_robust',
-           new_callable=FulfillmentCompletedUpdateCTLineItemSignalMock)
+    @patch('commerce_coordinator.apps.lms.clients.fulfillment_completed_signal.send_robust',
+           new_callable=FulfillmentCompletedSignalMock)
     def test_order_create_failure(self, mock_signal):
         """Check empty request and mock 400 generates exception."""
         with self.assertRaises(HTTPError):
