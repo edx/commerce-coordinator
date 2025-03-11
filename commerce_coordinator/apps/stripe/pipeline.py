@@ -11,7 +11,11 @@ from commerce_coordinator.apps.commercetools.catalog_info.constants import EDX_S
 from commerce_coordinator.apps.core.constants import PaymentMethod, PipelineCommand
 from commerce_coordinator.apps.stripe.clients import StripeAPIClient
 from commerce_coordinator.apps.stripe.constants import Currency
-from commerce_coordinator.apps.stripe.exceptions import StripeIntentCreateAPIError, StripeIntentUpdateAPIError
+from commerce_coordinator.apps.stripe.exceptions import (
+    StripeIntentCreateAPIError,
+    StripeIntentRefundAPIError,
+    StripeIntentUpdateAPIError
+)
 from commerce_coordinator.apps.stripe.filters import PaymentDraftCreated
 from commerce_coordinator.apps.stripe.utils import convert_dollars_in_cents
 
@@ -185,7 +189,4 @@ class RefundPaymentIntent(PipelineStep):
             logger.info(f'[CT-{tag}] Unsuccessful Stripe refund with details:'
                         f'[order_id: {order_id}, payment_intent_id: {payment_intent_id}'
                         f'message_id: {kwargs["message_id"]}')
-
-            return {
-                'psp_refund_error': str(ex)
-            }
+            raise StripeIntentRefundAPIError from ex
