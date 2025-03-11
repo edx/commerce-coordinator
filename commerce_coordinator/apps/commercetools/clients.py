@@ -371,18 +371,6 @@ class CommercetoolsAPIClient:
         logger.info(f"[CommercetoolsAPIClient] - Attempting to find payment with interaction ID {interaction_id}")
         return self.base_client.payments.query(where=f'transactions(interactionId="{interaction_id}")').results[0]
 
-    def get_product_by_program_id(self, program_id: str) -> Optional[CTProductVariant]:
-        """
-        Fetches a program from Commercetools.
-        Args:
-            program_id: The ID of the program (bundle) to fetch.
-        Returns:
-            CTProductVariant if found, None otherwise.
-        """
-        results = self.base_client.product_projections.search(False, filter=f'key:"{program_id}"').results
-
-        return results[0] if results else None
-
     def get_product_variant_by_course_run(self, cr_id: str) -> Optional[CTProductVariant]:
         """
         Args:

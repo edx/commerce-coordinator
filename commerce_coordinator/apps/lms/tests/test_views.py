@@ -16,11 +16,7 @@ from openedx_filters.exceptions import OpenEdxFilterException
 from rest_framework import status
 from rest_framework.test import APITestCase
 
-from commerce_coordinator.apps.commercetools.tests.conftest import (
-    APITestingSet,
-    gen_program_search_result,
-    gen_variant_search_result
-)
+from commerce_coordinator.apps.commercetools.tests.conftest import APITestingSet, gen_variant_search_result
 from commerce_coordinator.apps.core.tests.utils import name_test
 
 User = get_user_model()
@@ -75,7 +71,7 @@ class PaymentPageRedirectViewTests(APITestCase):
 
     @patch('commerce_coordinator.apps.rollout.pipeline.is_user_enterprise_learner')
     @patch('commerce_coordinator.apps.rollout.pipeline.is_redirect_to_commercetools_enabled_for_user')
-    def test_run_rollout_pipeline_redirect_to_commercetools_course(self, is_redirect_mock, is_enterprise_mock):
+    def test_run_rollout_pipeline_redirect_to_commercetools(self, is_redirect_mock, is_enterprise_mock):
         base_url = self.client_set.get_base_url_from_client()
         self.client.login(username=self.test_user_username, password=self.test_user_password)
         # Because the base mocker can't do param binding, we have to intercept.
@@ -130,51 +126,25 @@ class PaymentPageRedirectViewTests(APITestCase):
             )
             self.assertEqual(response.status_code, status.HTTP_303_SEE_OTHER)
 
-    @patch('commerce_coordinator.apps.rollout.pipeline.is_user_enterprise_learner')
-    @patch('commerce_coordinator.apps.rollout.pipeline.is_program_redirection_to_ct_enabled')
-    def test_run_rollout_pipeline_redirect_to_commercetools_program(self, is_redirect_mock, is_enterprise_mock):
-        base_url = self.client_set.get_base_url_from_client()
+    @patch("commerce_coordinator.apps.lms.filters.PaymentPageRedirectRequested.run_filter")
+    def test_program_purchases_are_redirected_to_legacy(self, mock_payment_page_redirect):
+        """
+        Program purchases are identified using the query param `bundle`.
+        For programs, the user should be redirected to the legacy ecommerce page without running pipeline steps.
+        """
         self.client.login(username=self.test_user_username, password=self.test_user_password)
-        # Because the base mocker can't do param binding, we have to intercept.
-        with requests_mock.Mocker(real_http=True, case_sensitive=False) as mocker:
-            mocker.get(
-                f"{base_url}product-projections/search?filter=key%3A%22818aff6f-1a39-4515-8779-dfebc0742d8e%22",
-                json=gen_program_search_result().serialize()
-            )
-
-            ret_program = self.client_set.client.get_product_by_program_id(
-                '818aff6f-1a39-4515-8779-dfebc0742d8e'
-            )
-            is_redirect_mock.return_value = True
-            is_enterprise_mock.return_value = False
-            self.client.force_authenticate(user=self.user)
-            response = self.client.get(
-                self.url,
-                {'sku': ['sku1', 'sku2'], 'bundle': '818aff6f-1a39-4515-8779-dfebc0742d8e'}
-            )
-            self.assertTrue(response.url.startswith(settings.COMMERCETOOLS_FRONTEND_URL))
-            self.assertIn(ret_program.key, unquote(unquote(response.url)))
-
-    @ddt.unpack
-    @patch('commerce_coordinator.apps.rollout.pipeline.is_redirect_to_commercetools_enabled_for_user')
-    def test_payment_page_redirect_program(self, is_redirect_mock):
-        base_url = self.client_set.get_base_url_from_client()
-        self.client.login(username=self.test_user_username, password=self.test_user_password)
-        # Because the base mocker can't do param binding, we have to intercept.
-        with requests_mock.Mocker(real_http=True, case_sensitive=False) as mocker:
-            mocker.get(
-                f"{base_url}product-projections/search?filter=key%3A%22818aff6f-1a39-4515-8779-dfebc0742d8e%22",
-                json=gen_program_search_result().serialize()
-            )
-
-            is_redirect_mock.return_value = True
-            self.client.login(username=self.test_user_username, password=self.test_user_password)
-            self.client.force_authenticate(user=self.user)
-            response = self.client.get(
-                self.url,
-                {'sku': ['sku1', 'sku2'], 'bundle': '818aff6f-1a39-4515-8779-dfebc0742d8e'}
-            )
-            self.assertEqual(response.status_code, status.HTTP_303_SEE_OTHER)
+        self.client.force_authenticate(user=self.user)
+        response = self.client.get(
+            self.url,
+            {
+                "sku": ["sku1"],
+                "course_run_key": "course-v1:MichiganX+InjuryPreventionX+1T2021",
+                "bundle": ["123"],
+            },
+        )
+        self.assertTrue(response.url.startswith(settings.ECOMMERCE_URL))
+        mock_payment_page_redirect.assert_not_called()
+        self.assertIn("bundle", response.url)
 
 
 @override_settings(COMMERCETOOLS_MERCHANT_CENTER_ORDERS_PAGE_URL='https://merchant-centre/orders')
