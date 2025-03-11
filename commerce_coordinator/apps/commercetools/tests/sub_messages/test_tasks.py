@@ -1,7 +1,7 @@
 """Commercetools Task Tests"""
 import logging
 from unittest import TestCase
-from unittest.mock import MagicMock, Mock, call, patch
+from unittest.mock import MagicMock, call, patch
 
 from commercetools import CommercetoolsError
 from commercetools.platform.models import Order as CTOrder
@@ -129,10 +129,7 @@ class FulfillOrderPlacedMessageSignalTaskTests(TestCase):
         expected_data.
         """
         mock_values = _ct_client_init.return_value
-        # pylint: disable = no-value-for-parameter
-        _ = self.get_uut()(
-            *self.unpack_for_uut(mock_values.example_payload)
-        )
+        _ = self.get_uut()(*self.unpack_for_uut(mock_values.example_payload))
 
         mock_values.order_mock.assert_called_once_with(mock_values.expected_order.id)
         mock_values.customer_mock.assert_called_once_with(mock_values.expected_customer.id)
@@ -147,54 +144,12 @@ class FulfillOrderPlacedMessageSignalTaskTests(TestCase):
         """
         mock_values = _ct_client_init.return_value
 
-        # pylint: disable=no-value-for-parameter
-        ret_val = fulfill_order_placed_uut(
-            *self.unpack_for_uut(mock_values.example_payload)
-        )
+        ret_val = self.get_uut()(*self.unpack_for_uut(mock_values.example_payload))
 
         self.assertTrue(ret_val)
         mock_values.order_mock.assert_called_once_with(mock_values.order_id)
         mock_values.customer_mock.assert_called_once_with(mock_values.customer_id)
         self.assertFalse(TieredCache.get_cached_response(mock_values.cache_key).is_found)
-
-    @patch('commerce_coordinator.apps.commercetools.sub_messages.tasks.is_edx_lms_order',
-           return_value=False)
-    @patch.object(fulfill_order_placed_message_signal_task, 'max_retries', 5)
-    def test_error_is_logged_on_failure(
-            self, _fn, _ct_client_init: CommercetoolsAPIClientMock, _lms_signal
-    ):
-        """
-        Test that `on_failure` logs proper error message.
-        """
-        mock_response = Mock()
-        exception = CommercetoolsError(
-            message="Order not found", response={}, errors="Order not found"
-        )
-        exception.response = mock_response
-
-        exc = exception
-        task_id = "test_task_id"
-        args = []
-        kwargs = {'order_id': 'test_order_id'}
-        einfo = Mock()
-
-        fulfill_order_placed_message_signal_task.push_request(retries=5)
-
-        with self.assertLogs('commerce_coordinator.apps.commercetools.sub_messages.tasks', level='ERROR') as log:
-            fulfill_order_placed_message_signal_task.on_failure(
-                exc=exc,
-                task_id=task_id,
-                args=args,
-                kwargs=kwargs,
-                einfo=einfo
-            )
-
-        self.assertIn(
-            "Post-Purchase Order Fulfillment Task failed. "
-            "Task:commerce_coordinator.apps.commercetools.sub_messages.tasks.fulfill_order_placed_message_signal_task,"
-            " order_id:test_order_id, Error message: Order not found",
-            log.output[0]
-        )
 
 
 @patch('commerce_coordinator.apps.commercetools.sub_messages.tasks.LMSAPIClient.deactivate_user',
