@@ -133,7 +133,6 @@ def fulfill_order_placed_message_signal_task(
             else None
         )
         is_bundle = bool(bundle_id)
-        canvas_entry_properties.update({'product_type': 'program' if bundle_id else 'course'})
 
         serializer = OrderFulfillViewInputSerializer(data={
             **default_params,
