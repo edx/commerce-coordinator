@@ -15,7 +15,7 @@ from commerce_coordinator.apps.core.memcache import safe_key
 from commerce_coordinator.apps.core.tasks import TASK_LOCK_EXPIRE, TASK_LOCK_RETRY, acquire_task_lock, release_task_lock
 
 from .clients import CommercetoolsAPIClient
-from .utils import has_full_refund_transaction, is_transaction_already_refunded
+from .utils import has_full_refund_transaction
 
 logger = logging.getLogger(__name__)
 
@@ -129,7 +129,7 @@ def refund_from_stripe_task(
             f"[refund_from_stripe_task] Initiating creation of CT payment's refund transaction object "
             f"for payment Intent ID {payment_intent_id}.")
         payment = client.get_payment_by_key(payment_intent_id)
-        if has_full_refund_transaction(payment) or is_transaction_already_refunded(payment, stripe_refund['id']):
+        if has_full_refund_transaction(payment):
             logger.info(f"[refund_from_stripe_task] Event 'charge.refunded' received, but Payment with ID {payment.id} "
                         f"already has a full refund. Skipping task to add refund transaction")
             return None
@@ -158,7 +158,7 @@ def refund_from_paypal_task(
     client = CommercetoolsAPIClient()
     try:
         payment = client.get_payment_by_transaction_interaction_id(paypal_capture_id)
-        if has_full_refund_transaction(payment) or is_transaction_already_refunded(payment, refund['id']):
+        if has_full_refund_transaction(payment):
             logger.info(f"PayPal PAYMENT.CAPTURE.REFUNDED event received, but Payment with ID {payment.id} "
                         f"already has a refund with ID: {refund.get('id')}. Skipping task to add refund transaction.")
             return None

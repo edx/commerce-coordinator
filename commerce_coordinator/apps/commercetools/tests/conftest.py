@@ -162,17 +162,6 @@ def gen_order(uuid_id, with_discount=True) -> CTOrder:
         return CTOrder.deserialize(obj)
 
 
-def gen_program_order(uuid_id) -> CTOrder:
-    """
-    Generate a CTOrder object from a json file
-    """
-    order_json_file = 'raw_ct_program_order.json'
-    with open(os.path.join(pathlib.Path(__file__).parent.resolve(), order_json_file)) as f:
-        obj = json.load(f)
-        obj['id'] = uuid_id
-        return CTOrder.deserialize(obj)
-
-
 def gen_payment():
     return CTPayment(
         id=uuid4_str(),

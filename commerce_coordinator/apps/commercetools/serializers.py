@@ -147,7 +147,14 @@ class OrderReturnedViewMessageInputSerializer(CoordinatorSerializer):
         """Get the return info from the message detail"""
         validated_data = self.validated_data
         detail = validated_data.get('detail', {})
-        return detail.get('returnInfo', {})
+        return_info = detail.get('returnInfo', {})
+        items = return_info.get('items', [])
 
-    def get_return_line_items(self):
-        return self.get_return_info().get('items', [])
+        if len(items) > 0:
+            first_item = items[0] if items else {}
+            return first_item
+        else:  # pragma no cover
+            return {}
+
+    def get_return_line_item_return_id(self):
+        return self.get_return_info().get('id', None)

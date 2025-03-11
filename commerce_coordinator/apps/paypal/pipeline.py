@@ -72,8 +72,7 @@ class RefundPayPalPayment(PipelineStep):
 
         try:
             paypal_client = PayPalClient()
-            paypal_refund_response = paypal_client.refund_order(
-                capture_id=ct_transaction_interaction_id, amount=amount_in_cents)
+            paypal_refund_response = paypal_client.refund_order(capture_id=ct_transaction_interaction_id)
 
             return {
                 'refund_response': paypal_refund_response,
