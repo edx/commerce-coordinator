@@ -162,6 +162,17 @@ def gen_order(uuid_id, with_discount=True) -> CTOrder:
         return CTOrder.deserialize(obj)
 
 
+def gen_program_order(uuid_id) -> CTOrder:
+    """
+    Generate a CTOrder object from a json file
+    """
+    order_json_file = 'raw_ct_program_order.json'
+    with open(os.path.join(pathlib.Path(__file__).parent.resolve(), order_json_file)) as f:
+        obj = json.load(f)
+        obj['id'] = uuid_id
+        return CTOrder.deserialize(obj)
+
+
 def gen_payment():
     return CTPayment(
         id=uuid4_str(),
@@ -172,12 +183,7 @@ def gen_payment():
         amount_planned=4900,
         payment_method_info={},
         payment_status=PaymentState.PAID,
-        transactions=[gen_transaction(TransactionType.REFUND, CTTypedMoney(
-            currency_code='USD',
-            cent_amount=1000,
-            type=CTMoneyType.CENT_PRECISION,
-            fraction_digits=2,
-        ))],
+        transactions=[gen_transaction(TransactionType.REFUND, 1000)],
         interface_interactions=[]
     )
 
@@ -208,7 +214,12 @@ def gen_transaction(transaction_type=None, amount=None) -> CTTransaction:
     return CTTransaction(
         id=uuid4_str(),
         type=transaction_type,
-        amount=amount,
+        amount=CTTypedMoney(
+            currency_code='USD',
+            cent_amount=amount,
+            type=CTMoneyType.CENT_PRECISION,
+            fraction_digits=2,
+        ),
         timestamp=datetime.now(),
         state=TransactionState.SUCCESS,
         interaction_id='ch_3P9RWsH4caH7G0X11toRGUJf'
@@ -223,6 +234,15 @@ def gen_product() -> CTProduct:
 
 def gen_variant_search_result() -> CTProductProjectionPagedSearchResponse:
     with open(os.path.join(pathlib.Path(__file__).parent.resolve(), 'raw_variant_search.json')) as f:
+        obj = json.load(f)
+        return CTProductProjectionPagedSearchResponse.deserialize(obj)
+
+
+def gen_program_search_result() -> CTProductProjectionPagedSearchResponse:
+    """
+    Generate a CTProductProjectionPagedSearchResponse object from a json file
+    """
+    with open(os.path.join(pathlib.Path(__file__).parent.resolve(), 'raw_ct_program.json')) as f:
         obj = json.load(f)
         return CTProductProjectionPagedSearchResponse.deserialize(obj)
 

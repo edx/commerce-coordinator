@@ -34,7 +34,7 @@ class PayPalWebhookView(SingleInvocationAPIView):
     http_method_names = ["post"]
     authentication_classes = []
     permission_classes = [AllowAny]
-    # TODO: Limit the view to our paypal webhook servers only and remove throttling
+    # TODO: Limit the view to our paypal webhook servers only and remove throttling. To be done in SONIC-898.
     throttle_classes = [UserRateThrottle]
 
     def _get_certificate(self, url):

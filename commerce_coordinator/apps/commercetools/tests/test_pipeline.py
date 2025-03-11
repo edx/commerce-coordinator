@@ -8,7 +8,10 @@ from django.contrib.auth import get_user_model
 from django.test import RequestFactory
 from rest_framework.test import APITestCase
 
-from commerce_coordinator.apps.commercetools.catalog_info.constants import EDX_STRIPE_PAYMENT_INTERFACE_NAME
+from commerce_coordinator.apps.commercetools.catalog_info.constants import (
+    EDX_PAYPAL_PAYMENT_INTERFACE_NAME,
+    EDX_STRIPE_PAYMENT_INTERFACE_NAME
+)
 from commerce_coordinator.apps.commercetools.constants import COMMERCETOOLS_ORDER_MANAGEMENT_SYSTEM
 from commerce_coordinator.apps.commercetools.pipeline import (
     AnonymizeRetiredUser,
@@ -26,8 +29,9 @@ from commerce_coordinator.apps.commercetools.tests.conftest import (
     gen_retired_customer,
     gen_return_item
 )
-from commerce_coordinator.apps.core.constants import ORDER_HISTORY_PER_SYSTEM_REQ_LIMIT
+from commerce_coordinator.apps.core.constants import ORDER_HISTORY_PER_SYSTEM_REQ_LIMIT, PipelineCommand
 from commerce_coordinator.apps.core.exceptions import InvalidFilterType
+from commerce_coordinator.apps.paypal.pipeline import RefundPayPalPayment
 
 User = get_user_model()
 
@@ -118,7 +122,12 @@ class CommercetoolsOrLegacyEcommerceRefundPipelineTests(APITestCase):
     @patch('commerce_coordinator.apps.rollout.utils.is_commercetools_line_item_already_refunded')
     @patch('commerce_coordinator.apps.commercetools.clients.CommercetoolsAPIClient.get_order_by_id')
     def test_commercetools_order_item_already_refunded(self, mock_order, mock_ct_refund):
-        mock_order.return_value = self.mock_response_order
+        mock_response_order = gen_order("mock_id")
+        mock_response_return_item = gen_return_item("order_line_id", ReturnPaymentState.REFUNDED)
+        mock_response_return_info = ReturnInfo(items=[mock_response_return_item])
+        mock_response_order.return_info.append(mock_response_return_info)
+
+        mock_order.return_value = mock_response_order
         mock_ct_refund.return_value = True
 
         refund_pipe = CreateReturnForCommercetoolsOrder("test_pipe", None)
@@ -179,11 +188,8 @@ class CommercetoolsOrLegacyEcommerceRefundPipelineTests(APITestCase):
         self.assertEqual(mock_payment_result, self.returned_payment)
         self.assertEqual(mock_payment_result.transactions[0].type, TransactionType.REFUND)
 
-    @patch('commerce_coordinator.apps.commercetools.utils.has_refund_transaction')
     @patch('commerce_coordinator.apps.commercetools.pipeline.log.info')
-    def test_commercetools_transaction_create_has_refund(self, mock_logger, mock_has_refund):
-        mock_has_refund.return_value = True
-
+    def test_commercetools_transaction_create_has_refund(self, mock_logger):
         refund_pipe = CreateReturnPaymentTransaction("test_pipe", None)
         refund_pipe.run_filter(
             payment_data=self.mock_response_payment,
@@ -194,6 +200,21 @@ class CommercetoolsOrLegacyEcommerceRefundPipelineTests(APITestCase):
             psp=EDX_STRIPE_PAYMENT_INTERFACE_NAME
         )
         mock_logger.assert_called_once_with('[CreateReturnPaymentTransaction] refund has already been processed, '
+                                            'skipping refund payment transaction creation')
+
+    @patch('commerce_coordinator.apps.commercetools.pipeline.log.info')
+    def test_commercetools_transaction_create_psp_error(self, mock_logger):
+        refund_pipe = CreateReturnPaymentTransaction("test_pipe", None)
+        refund_pipe.run_filter(
+            payment_data=self.mock_response_payment,
+            refund_response={"payment_intent": "mock_payment_intent"},
+            active_order_management_system=COMMERCETOOLS_ORDER_MANAGEMENT_SYSTEM,
+            has_been_refunded=False,
+            payment_intent_id="pi_4MtwBwLkdIwGlenn28a3tqPa",
+            psp=EDX_STRIPE_PAYMENT_INTERFACE_NAME,
+            psp_refund_error='refund amount greater than unrefunded amount on charged amount'
+        )
+        mock_logger.assert_called_once_with('[CreateReturnPaymentTransaction] PSP Refund error, '
                                             'skipping refund payment transaction creation')
 
 
@@ -222,11 +243,28 @@ class OrderReturnPipelineTests(TestCase):
 
         pipe = UpdateCommercetoolsOrderReturnPaymentStatus("test_pipe", None)
         mock_order_return_update.return_value = self.update_order_response
-        ret = pipe.run_filter(order_data=self.update_order_data, returned_order=self.update_order_data,
-                              payment_intent_id="mock_payment_intent_id", amount_in_cents=10000)
+        ret = pipe.run_filter(
+            order_data=self.update_order_data, returned_order=self.update_order_data,
+            payment_intent_id="mock_payment_intent_id", amount_in_cents=10000,
+            return_line_items={"mock_line_item_id": 'mock_return_item_id'},
+            refunded_line_item_refunds=["refunded_line_item_refunds"],
+            return_line_entitlement_ids={'mock_return_item_id': 'mock_entitlement_id'}
+        )
         result_data = ret['returned_order']
         self.assertEqual(result_data, self.update_order_response)
         self.assertEqual(result_data.return_info[1].items[0].payment_state, ReturnPaymentState.REFUNDED)
+
+    @patch('commerce_coordinator.apps.commercetools.pipeline.log.info')
+    def test_pipeline_with_psp_error(self, mock_logger):
+        """Ensure pipeline is functioning as expected"""
+
+        pipe = UpdateCommercetoolsOrderReturnPaymentStatus("test_pipe", None)
+
+        pipe.run_filter(
+            psp_refund_error='refund amount greater than unrefunded amount on charged amount'
+        )
+        mock_logger.assert_called_once_with('[UpdateCommercetoolsOrderReturnPaymentStatus] PSP Refund error, '
+                                            'skipping order refund payment transaction updation')
 
 
 class AnonymizeRetiredUserPipelineTests(TestCase):
@@ -271,3 +309,93 @@ class AnonymizeRetiredUserPipelineTests(TestCase):
         ret = pipe.run_filter(lms_user_id=self.mock_lms_user_id)
         result_data = ret['returned_customer']
         self.assertEqual(result_data, self.update_customer_response)
+
+
+class RefundPayPalPaymentTests(TestCase):
+    """Tests for RefundPayPalPayment pipeline step"""
+
+    def setUp(self):
+        self.refund_pipe = RefundPayPalPayment("test_pipe", None)
+        self.order_id = "mock_order_id"
+        self.amount_in_cents = 1000
+        self.ct_transaction_interaction_id = "mock_capture_id"
+        self.psp = EDX_PAYPAL_PAYMENT_INTERFACE_NAME
+
+    @patch('commerce_coordinator.apps.paypal.clients.PayPalClient.refund_order')
+    def test_refund_successful(self, mock_refund_order):
+        """Test successful PayPal refund"""
+        mock_refund_order.return_value = {"status": "COMPLETED"}
+
+        ret = self.refund_pipe.run_filter(
+            order_id=self.order_id,
+            amount_in_cents=self.amount_in_cents,
+            has_been_refunded=False,
+            ct_transaction_interaction_id=self.ct_transaction_interaction_id,
+            psp=self.psp,
+            message_id="mock_message_id"
+        )
+
+        self.assertEqual(ret['refund_response'], {"status": "COMPLETED"})
+        mock_refund_order.assert_called_once_with(capture_id=self.ct_transaction_interaction_id,
+                                                  amount=self.amount_in_cents)
+
+    def test_refund_already_refunded(self):
+        """Test refund when payment has already been refunded"""
+        ret = self.refund_pipe.run_filter(
+            order_id=self.order_id,
+            amount_in_cents=self.amount_in_cents,
+            has_been_refunded=True,
+            ct_transaction_interaction_id=self.ct_transaction_interaction_id,
+            psp=self.psp
+        )
+
+        self.assertEqual(ret['refund_response'], "charge_already_refunded")
+
+    def test_refund_invalid_psp(self):
+        """Test refund with invalid PSP"""
+        ret = self.refund_pipe.run_filter(
+            order_id=self.order_id,
+            amount_in_cents=self.amount_in_cents,
+            has_been_refunded=False,
+            ct_transaction_interaction_id=self.ct_transaction_interaction_id,
+            psp="invalid_psp"
+        )
+
+        self.assertEqual(ret, PipelineCommand.CONTINUE.value)
+
+    def test_refund_missing_amount_or_capture_id(self):
+        """Test refund with missing amount or capture ID"""
+        ret = self.refund_pipe.run_filter(
+            order_id=self.order_id,
+            amount_in_cents=None,
+            has_been_refunded=False,
+            ct_transaction_interaction_id=self.ct_transaction_interaction_id,
+            psp=self.psp
+        )
+
+        self.assertEqual(ret, PipelineCommand.CONTINUE.value)
+
+        ret = self.refund_pipe.run_filter(
+            order_id=self.order_id,
+            amount_in_cents=self.amount_in_cents,
+            has_been_refunded=False,
+            ct_transaction_interaction_id=None,
+            psp=self.psp
+        )
+
+        self.assertEqual(ret, PipelineCommand.CONTINUE.value)
+
+    @patch('commerce_coordinator.apps.paypal.clients.PayPalClient.refund_order')
+    def test_refund_exception(self, mock_refund_order):
+        """Test refund with exception raised"""
+        mock_refund_order.side_effect = Exception("mock exception")
+
+        ret = self.refund_pipe.run_filter(
+            order_id=self.order_id,
+            amount_in_cents=self.amount_in_cents,
+            has_been_refunded=False,
+            ct_transaction_interaction_id=self.ct_transaction_interaction_id,
+            psp=self.psp,
+            message_id="mock_message_id"
+        )
+        self.assertEqual(ret['psp_refund_error'], "mock exception")

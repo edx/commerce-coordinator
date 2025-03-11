@@ -19,6 +19,7 @@ from rest_framework.views import APIView
 
 from commerce_coordinator.apps.commercetools.clients import CommercetoolsAPIClient
 from commerce_coordinator.apps.core.constants import HttpHeadersNames, MediaTypes
+from commerce_coordinator.apps.core.exceptions import InvalidFilterType
 from commerce_coordinator.apps.lms.filters import (
     OrderRefundRequested,
     PaymentPageRedirectRequested,
@@ -26,10 +27,12 @@ from commerce_coordinator.apps.lms.filters import (
 )
 from commerce_coordinator.apps.lms.serializers import (
     CourseRefundInputSerializer,
+    EntitlementRefundInputSerializer,
     FirstTimeDiscountInputSerializer,
     UserRetiredInputSerializer,
     enrollment_attribute_key
 )
+from commerce_coordinator.apps.lms.utils import get_order_line_item_info_from_entitlement_uuid
 from commerce_coordinator.apps.rollout.utils import is_legacy_order
 
 logger = logging.getLogger(__name__)
@@ -84,17 +87,10 @@ class PaymentPageRedirectView(APIView):
         """
 
         get_items = list(self.request.GET.lists())
-        redirect_url = None
-        if "bundle" in dict(get_items):
-            ecom_url = urljoin(
-                settings.ECOMMERCE_URL, settings.ECOMMERCE_ADD_TO_BASKET_API_PATH
-            )
-            redirect_url = self._add_query_params_to_redirect_url(ecom_url, get_items)
-        else:
-            redirect_url_obj = PaymentPageRedirectRequested.run_filter(request)
-            redirect_url = self._add_query_params_to_redirect_url(
-                redirect_url_obj["redirect_url"], get_items
-            )
+        redirect_url_obj = PaymentPageRedirectRequested.run_filter(request)
+        redirect_url = self._add_query_params_to_redirect_url(
+            redirect_url_obj["redirect_url"], get_items
+        )
         redirect = HttpResponseRedirect(redirect_url, status=HTTP_303_SEE_OTHER)
         redirect.headers[HttpHeadersNames.CONTENT_TYPE.value] = MediaTypes.JSON.value
         logger.debug(
@@ -215,29 +211,54 @@ class RefundView(APIView):
          If an exception occurs during refund processing, a 500 Internal Server Error
          is returned.
          """
+        # pylint: disable=too-many-statements
 
         input_data = {**request.data}
 
         logger.info(f"{self.post.__qualname__} request object: {input_data}.")
+        entitlement_refund = bool(input_data.get('entitlement_uuid'))
+        if entitlement_refund:
+            input_details = EntitlementRefundInputSerializer(data=input_data)
 
-        input_details = CourseRefundInputSerializer(data=input_data)
-        try:
-            input_details.is_valid(raise_exception=True)
-        except ValidationError as e:
-            logger.exception(f"[RefundView] Exception raised validating input {self.post.__name__} with error "
-                             f"{repr(e)}, input: {input_data}.")
-            return Response('Invalid input provided', status=HTTP_400_BAD_REQUEST)
+            try:
+                input_details.is_valid(raise_exception=True)
+            except ValidationError as e:
+                logger.exception(f"[RefundView] Exception raised validating entitlement refund input "
+                                 f"{self.post.__name__} with error {repr(e)}, input: {input_data}.")
+                return Response('Invalid input provided', status=HTTP_400_BAD_REQUEST)
 
-        course_id = input_details.data['course_id']
-        username = input_details.data['username']
+            username = input_details.data['username']
+            order_number = input_details.data.get('order_number')
+            entitlement_uuid = input_details.data.get('entitlement_uuid')
+            logger.info(f"[RefundView] Starting LMS Refund of Entitlement for username: {username}, "
+                        f"order_number: {order_number}, Entitlement UUID: {entitlement_uuid}.")
 
-        enrollment_attributes = input_details.enrollment_attributes_dict()
+            try:
+                order_id, order_line_item_id = get_order_line_item_info_from_entitlement_uuid(
+                    order_number, entitlement_uuid)
+            except CommercetoolsError as err:  # pragma no cover
+                logger.exception(f"[RefundView] Commercetools Error: {err}, {err.errors}")
+                return Response('Error while fetching order', status=HTTP_500_INTERNAL_SERVER_ERROR)
 
-        logger.info(f"[RefundView] Starting LMS Refund for username: {username}, course_id: {course_id}, "
-                    f"Enrollment attributes: {enrollment_attributes}.")
+        else:
+            input_details = CourseRefundInputSerializer(data=input_data)
+            try:
+                input_details.is_valid(raise_exception=True)
+            except ValidationError as e:
+                logger.exception(f"[RefundView] Exception raised validating course refund  input "
+                                 f"{self.post.__name__} with error {repr(e)}, input: {input_data}.")
+                return Response('Invalid input provided', status=HTTP_400_BAD_REQUEST)
 
-        order_line_item_id = enrollment_attributes.get(enrollment_attribute_key('order', 'line_item_id'), None)
-        order_id = enrollment_attributes.get(enrollment_attribute_key('order', 'order_id'), None)
+            course_id = input_details.data['course_id']
+            username = input_details.data['username']
+
+            enrollment_attributes = input_details.enrollment_attributes_dict()
+
+            logger.info(f"[RefundView] Starting LMS Refund for username: {username}, course_id: {course_id}, "
+                        f"Enrollment attributes: {enrollment_attributes}.")
+
+            order_line_item_id = enrollment_attributes.get(enrollment_attribute_key('order', 'line_item_id'), None)
+            order_id = enrollment_attributes.get(enrollment_attribute_key('order', 'order_id'), None)
 
         if not order_id:
             logger.error(f"[RefundView] Failed processing refund for username: {username}, "
@@ -247,24 +268,37 @@ class RefundView(APIView):
                             'attribute.', status=HTTP_400_BAD_REQUEST)
 
         if not order_line_item_id:
-            logger.error(f"[RefundView] Failed processing refund for order {order_id} for username: {username}, "
-                         f"course_id: {course_id} the enrollment_attributes array requires an orders: line_item_id "
-                         f"attribute.")
-            return Response('the enrollment_attributes array requires an orders: line_item_id '
-                            'attribute.', status=HTTP_400_BAD_REQUEST)
+            log_msg = (
+                f"[RefundView] Failed processing refund for order {order_id} for username: {username}, "
+                f"entitlement_uuid: {entitlement_uuid}. Line item does not exist in commercetools Order."
+            ) if entitlement_refund else (
+                f"[RefundView] Failed processing refund for order {order_id} for username: {username}, "
+                f"course_id: {course_id} the enrollment_attributes array requires an orders: line_item_id "
+                f"attribute."
+            )
+            logger.error(log_msg)
+
+            response_msg = 'Line item does not exist.' if entitlement_refund else \
+                'the enrollment_attributes array requires an orders: line_item_id attribute.'
+            return Response(response_msg, status=HTTP_400_BAD_REQUEST)
 
         try:
             result = OrderRefundRequested.run_filter(order_id, order_line_item_id)
 
+            log_type = f"{entitlement_uuid=}" if entitlement_refund else f"{course_id=}"
             if result.get('returned_order', None):
                 logger.info(f"[RefundView] Successfully returned order {order_id} for username: {username}, "
-                            f"course_id: {course_id} with result: {result}.")
+                            f"{log_type} with result: {result}.")
                 return Response(status=HTTP_200_OK)
             else:
                 logger.error(f"[RefundView] Failed returning order {order_id} for username: {username}, "
-                             f"course_id: {course_id} with invalid filter/pipeline result: {result}.")
+                             f"{log_type} with invalid filter/pipeline result: {result}.")
                 return Response('Exception occurred while returning order', status=HTTP_400_BAD_REQUEST)
 
+        # Handle the case when refund already exist
+        except InvalidFilterType as e:
+            logger.info(f"{e.message}")
+            return Response(e.message, status=HTTP_200_OK)
         except OpenEdxFilterException as e:
             logger.exception(f"[RefundView] Exception raised in {self.post.__name__} with error {repr(e)}")
             return Response('Exception occurred while returning order', status=HTTP_500_INTERNAL_SERVER_ERROR)

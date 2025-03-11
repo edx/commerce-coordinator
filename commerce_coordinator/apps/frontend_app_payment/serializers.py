@@ -49,13 +49,6 @@ class DraftPaymentCreateViewOutputSerializer(CoordinatorSerializer):
     capture_context = CaptureContextInnerSerializer()
 
 
-class GetActiveOrderInputSerializer(CoordinatorSerializer):
-    """
-    Serializer for GetActiveOrderView input validation
-    """
-    edx_lms_user_id = serializers.IntegerField(allow_null=False)
-
-
 class PaymentProcessInputSerializer(CoordinatorSerializer):
 
     """

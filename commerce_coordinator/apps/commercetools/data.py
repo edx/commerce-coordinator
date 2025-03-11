@@ -14,11 +14,13 @@ from django.conf import settings
 from commerce_coordinator.apps.commercetools.catalog_info.constants import SEND_MONEY_AS_DECIMAL_STRING, EdXFieldNames
 from commerce_coordinator.apps.commercetools.catalog_info.utils import (
     attribute_dict,
+    get_line_item_attribute,
     price_to_string,
     typed_money_add,
     typed_money_to_string,
     un_ls
 )
+from commerce_coordinator.apps.commercetools.utils import calculate_total_discount_on_order
 from commerce_coordinator.apps.ecommerce.data import BillingAddress, Line
 from commerce_coordinator.apps.ecommerce.data import Order as LegacyOrder
 from commerce_coordinator.apps.ecommerce.data import User
@@ -44,16 +46,13 @@ def convert_address(address: Optional[CTAddress]) -> Optional[BillingAddress]:
     )
 
 
-def convert_line_item(li: CTLineItem) -> Line:
+def convert_line_item(li: CTLineItem, payment_state: str) -> Line:
     return Line(
         title=un_ls(li.name),
         quantity=li.quantity,
-        # TODO: course_organization=
-        # TODO: description=
-        # TODO: status=
-        course_organization="",
+        course_organization=get_line_item_attribute(li, 'brand-text'),
         description=un_ls(li.name),
-        status="PAID",
+        status=payment_state,
         line_price_excl_tax=price_to_string(li.price, money_as_decimal_string=SEND_MONEY_AS_DECIMAL_STRING),
         unit_price_excl_tax=price_to_string(li.price, money_as_decimal_string=SEND_MONEY_AS_DECIMAL_STRING)
     )
@@ -76,7 +75,6 @@ def convert_line_item_prod_id(li: CTLineItem) -> str:
     return li.product_id
 
 
-# TODO: Coupons
 def convert_discount_code_info(dcis: Optional[List[CTDiscountCodeInfo]]) -> Optional[str]:
     if not dcis or len(dcis) < 1:
         return None
@@ -104,9 +102,12 @@ def convert_payment_info(payment_info: CTPaymentInfo) -> str:
 
 
 def order_from_commercetools(order: CTOrder, customer: CTCustomer) -> LegacyOrder:
+    payment_state = order.payment_state.value
+    discounted_amount = calculate_total_discount_on_order(order)
+
     return LegacyOrder(
         user=convert_customer(customer),
-        lines=[convert_line_item(x) for x in order.line_items],
+        lines=[convert_line_item(x, payment_state) for x in order.line_items],
         billing_address=convert_address(order.billing_address),
         date_placed=order.last_modified_at,
         total_excl_tax=typed_money_to_string(order.total_price, money_as_decimal_string=SEND_MONEY_AS_DECIMAL_STRING),
@@ -118,7 +119,7 @@ def order_from_commercetools(order: CTOrder, customer: CTCustomer) -> LegacyOrde
         order_product_ids=", ".join([convert_line_item_prod_id(x) for x in order.line_items]),
         basket_discounts=convert_direct_discount(order.direct_discounts),
         contains_credit_seat="True",
-        discount=typed_money_to_string(order.discount_on_total_price.discounted_amount,
+        discount=typed_money_to_string(discounted_amount,
                                        money_as_decimal_string=SEND_MONEY_AS_DECIMAL_STRING)
         if order.discount_on_total_price else None,  # NYI
         enable_hoist_order_history="False",  # ?
@@ -128,7 +129,7 @@ def order_from_commercetools(order: CTOrder, customer: CTCustomer) -> LegacyOrde
             typed_money_add(
                 typed_money_add(
                     order.total_price,
-                    order.discount_on_total_price.discounted_amount if order.discount_on_total_price else None
+                    discounted_amount if discounted_amount.cent_amount else None
                 ),
                 order.taxed_price.total_tax
             ),

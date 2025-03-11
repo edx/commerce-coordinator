@@ -8,7 +8,6 @@ from commercetools.platform.models import (
     Customer,
     CustomerDraft,
     CustomerPagedQueryResponse,
-    MoneyType,
     Order,
     OrderPagedQueryResponse,
     ReturnInfo,
@@ -17,7 +16,6 @@ from commercetools.platform.models import (
     TransactionState,
     TransactionType,
     Type,
-    TypedMoney,
     TypeDraft
 )
 from django.test import TestCase
@@ -490,10 +488,7 @@ class ClientTests(TestCase):
         # Mocked expected order recieved after CT SDK call to update the order
         mock_response_order = gen_order("mock_order_id")
         mock_payment = gen_payment_with_multiple_transactions(TransactionType.CHARGE, 4900, TransactionType.REFUND,
-                                                              TypedMoney(cent_amount=4900,
-                                                                         currency_code='USD',
-                                                                         type=MoneyType.CENT_PRECISION,
-                                                                         fraction_digits=2))
+                                                              4900)
         mock_response_order.version = "3"
         mock_response_return_item = gen_return_item("mock_return_item_id", ReturnPaymentState.REFUNDED)
         mock_response_return_info = ReturnInfo(items=[mock_response_return_item])
@@ -523,9 +518,11 @@ class ClientTests(TestCase):
             result = self.client_set.client.update_return_payment_state_after_successful_refund(
                 mock_order.id,
                 mock_order.version,
-                mock_response_return_item.line_item_id,
+                [mock_response_return_item.line_item_id],
+                {mock_response_return_item.line_item_id: uuid4_str()},
+                {},
                 mock_payment.id,
-                10000
+                uuid4_str()
             )
             self.assertEqual(result.return_info[1].items[0].payment_state, ReturnPaymentState.REFUNDED)
 
@@ -638,7 +635,8 @@ class ClientTests(TestCase):
                 status_code=200
             )
 
-            result = self.client_set.client.update_line_item_transition_state_on_fulfillment(
+            result = self.client_set.client.update_line_item_on_fulfillment(
+                '',
                 mock_order.id,
                 mock_order.version,
                 mock_order.line_items[0].id,
@@ -674,24 +672,29 @@ class ClientTests(TestCase):
             )
 
             with patch('commerce_coordinator.apps.commercetools.clients.logging.Logger.error') as log_mock:
-                self.client_set.client.update_line_item_transition_state_on_fulfillment(
-                    "mock_order_id",
-                    1,
-                    "mock_order_line_item_id",
-                    1,
-                    "mock_order_line_item_state.id",
-                    TwoUKeys.SUCCESS_FULFILMENT_STATE
-                )
+                with self.assertRaises(CommercetoolsError):
+                    self.client_set.client.update_line_item_on_fulfillment(
+                        '',
+                        "mock_order_id",
+                        1,
+                        "mock_order_line_item_id",
+                        1,
+                        "mock_order_line_item_state.id",
+                        TwoUKeys.SUCCESS_FULFILMENT_STATE
+                    )
 
-                expected_message = (
-                    f"[CommercetoolsError] [CommercetoolsAPIClient.update_line_item_state_on_fulfillment_completion] "
-                    f"Unable to update LineItemState "
-                    f"of order mock_order_id "
-                    f"- Correlation ID: {mock_error_response['correlation_id']}, "
-                    f"Details: {mock_error_response['errors']}"
-                )
+                    expected_message = (
+                        f"[CommercetoolsError] [CommercetoolsAPIClient.update_line_item_on_fulfillment] "
+                        f"Unable to update LineItem "
+                        f"of order mock_order_id "
+                        f"From State: '2u-fulfillment-pending-state'"
+                        f"To State: '2u-fulfillment-successful-state'"
+                        f"And entitlement "
+                        f"- Correlation ID: {mock_error_response['correlation_id']}, "
+                        f"Details: {mock_error_response['errors']}"
+                    )
 
-                log_mock.assert_called_with(expected_message)
+                    log_mock.assert_called_with(expected_message)
 
     @patch('commerce_coordinator.apps.commercetools.clients.CommercetoolsAPIClient.get_state_by_id')
     def test_successful_order_all_line_items_state_update(self, mock_state_by_id):
@@ -756,23 +759,27 @@ class ClientTests(TestCase):
             )
 
             with patch('commerce_coordinator.apps.commercetools.clients.logging.Logger.info') as log_mock:
-                self.client_set.client.update_line_items_transition_state(
-                    mock_order.id,
-                    mock_order.version,
-                    mock_order.line_items,
-                    TwoUKeys.PENDING_FULFILMENT_STATE,
-                    TwoUKeys.SUCCESS_FULFILMENT_STATE
-                )
+                with self.assertRaises(CommercetoolsError):
+                    self.client_set.client.update_line_items_transition_state(
+                        mock_order.id,
+                        mock_order.version,
+                        mock_order.line_items,
+                        TwoUKeys.PENDING_FULFILMENT_STATE,
+                        TwoUKeys.SUCCESS_FULFILMENT_STATE
+                    )
 
-                expected_message = (
-                    f"[CommercetoolsError] [CommercetoolsAPIClient.update_line_items_transition_state] "
-                    f"Failed to update LineItemStates "
-                    f"for order ID 'mock_order_id'. Line Item IDs: {mock_order.line_items[0].id} "
-                    f"- Correlation ID: {mock_error_response['correlation_id']}, "
-                    f"Details: {mock_error_response['errors']}"
-                )
+                    expected_message = (
+                        f"[CommercetoolsError] [CommercetoolsAPIClient.update_line_items_transition_state] "
+                        f"Failed to update LineItemStates "
+                        f"for order ID 'mock_order_id'"
+                        f"From State: '2u-fulfillment-pending-state'"
+                        f"To State: '2u-fulfillment-successful-state'"
+                        f"Line Item IDs: {mock_order.line_items[0].id} "
+                        f"- Correlation ID: {mock_error_response['correlation_id']}, "
+                        f"Details: {mock_error_response['errors']}"
+                    )
 
-                log_mock.assert_called_with(expected_message)
+                    log_mock.assert_called_with(expected_message)
 
     @patch('commerce_coordinator.apps.commercetools.clients.CommercetoolsAPIClient.get_state_by_id')
     @patch('commerce_coordinator.apps.commercetools.clients.CommercetoolsAPIClient.get_order_by_id')
@@ -788,7 +795,8 @@ class ClientTests(TestCase):
         mock_order_by_id.return_value = mock_order
 
         with patch('commerce_coordinator.apps.commercetools.clients.logging.Logger.info') as log_mock:
-            result = self.client_set.client.update_line_item_transition_state_on_fulfillment(
+            result = self.client_set.client.update_line_item_on_fulfillment(
+                '',
                 mock_order.id,
                 mock_order.version,
                 line_item_id,
@@ -1034,9 +1042,11 @@ class ClientUpdateReturnTests(TestCase):
             self.client_set.client.update_return_payment_state_after_successful_refund(
                 order_id="mock_order_id",
                 order_version="2",
-                return_line_item_return_id="mock_return_item_id",
+                return_line_item_return_ids=["mock_return_item_id"],
+                return_line_entitlement_ids={'mock_return_item_id': 'mock_entitlement_id'},
+                refunded_line_item_refunds={},
                 payment_intent_id="1",
-                amount_in_cents=10000
+                interaction_id=uuid4_str()
             )
 
     def test_update_return_payment_state_no_payment(self):
@@ -1059,7 +1069,42 @@ class ClientUpdateReturnTests(TestCase):
             self.client_set.client.update_return_payment_state_after_successful_refund(
                 order_id="mock_order_id",
                 order_version="2",
-                return_line_item_return_id="mock_return_item_id",
-                payment_intent_id=None,
-                amount_in_cents=10000
+                return_line_item_return_ids=["mock_return_item_id"],
+                return_line_entitlement_ids={'mock_return_item_id': 'mock_entitlement_id'},
+                refunded_line_item_refunds={},
+                payment_intent_id="1",
+                interaction_id=uuid4_str()
             )
+
+    def test_get_product_by_program_id(self):
+        base_url = self.client_set.get_base_url_from_client()
+        program_id = "mock_program_id"
+        expected_product = {
+            "id": "mock_product_id",
+            "key": program_id,
+            "name": {"en": "Mock Product"}
+        }
+
+        with requests_mock.Mocker(real_http=True, case_sensitive=False) as mocker:
+            mocker.get(
+                f"{base_url}product-projections/search?filter=key%3A%22{program_id}%22",
+                json={"results": [expected_product], "total": 1}
+            )
+
+            result = self.client_set.client.get_product_by_program_id(program_id)
+            self.assertIsNotNone(result)
+            self.assertEqual(result.id, expected_product["id"])
+            self.assertEqual(result.key, expected_product["key"])
+
+    def test_get_product_by_program_id_not_found(self):
+        base_url = self.client_set.get_base_url_from_client()
+        program_id = "non_existent_program_id"
+
+        with requests_mock.Mocker(real_http=True, case_sensitive=False) as mocker:
+            mocker.get(
+                f"{base_url}product-projections/search?filter=key%3A%22{program_id}%22",
+                json={"results": [], "total": 0}
+            )
+
+            result = self.client_set.client.get_product_by_program_id(program_id)
+            self.assertIsNone(result)

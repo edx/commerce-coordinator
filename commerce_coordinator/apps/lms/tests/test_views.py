@@ -6,6 +6,7 @@ from urllib.parse import unquote
 
 import ddt
 import requests_mock
+from commercetools.exceptions import CommercetoolsError
 from django.conf import settings
 from django.contrib.auth import get_user_model
 from django.test import override_settings
@@ -15,7 +16,12 @@ from openedx_filters.exceptions import OpenEdxFilterException
 from rest_framework import status
 from rest_framework.test import APITestCase
 
-from commerce_coordinator.apps.commercetools.tests.conftest import APITestingSet, gen_variant_search_result
+from commerce_coordinator.apps.commercetools.tests.conftest import (
+    APITestingSet,
+    gen_program_search_result,
+    gen_variant_search_result
+)
+from commerce_coordinator.apps.core.exceptions import InvalidFilterType
 from commerce_coordinator.apps.core.tests.utils import name_test
 
 User = get_user_model()
@@ -42,8 +48,6 @@ class PaymentPageRedirectViewTests(APITestCase):
             self.test_user_username,
             self.test_user_email,
             self.test_user_password,
-            # TODO: Remove is_staff=True
-            is_staff=True,
         )
 
     def tearDown(self):
@@ -72,7 +76,7 @@ class PaymentPageRedirectViewTests(APITestCase):
 
     @patch('commerce_coordinator.apps.rollout.pipeline.is_user_enterprise_learner')
     @patch('commerce_coordinator.apps.rollout.pipeline.is_redirect_to_commercetools_enabled_for_user')
-    def test_run_rollout_pipeline_redirect_to_commercetools(self, is_redirect_mock, is_enterprise_mock):
+    def test_run_rollout_pipeline_redirect_to_commercetools_course(self, is_redirect_mock, is_enterprise_mock):
         base_url = self.client_set.get_base_url_from_client()
         self.client.login(username=self.test_user_username, password=self.test_user_password)
         # Because the base mocker can't do param binding, we have to intercept.
@@ -127,25 +131,51 @@ class PaymentPageRedirectViewTests(APITestCase):
             )
             self.assertEqual(response.status_code, status.HTTP_303_SEE_OTHER)
 
-    @patch("commerce_coordinator.apps.lms.filters.PaymentPageRedirectRequested.run_filter")
-    def test_program_purchases_are_redirected_to_legacy(self, mock_payment_page_redirect):
-        """
-        Program purchases are identified using the query param `bundle`.
-        For programs, the user should be redirected to the legacy ecommerce page without running pipeline steps.
-        """
+    @patch('commerce_coordinator.apps.rollout.pipeline.is_user_enterprise_learner')
+    @patch('commerce_coordinator.apps.rollout.pipeline.is_program_redirection_to_ct_enabled')
+    def test_run_rollout_pipeline_redirect_to_commercetools_program(self, is_redirect_mock, is_enterprise_mock):
+        base_url = self.client_set.get_base_url_from_client()
         self.client.login(username=self.test_user_username, password=self.test_user_password)
-        self.client.force_authenticate(user=self.user)
-        response = self.client.get(
-            self.url,
-            {
-                "sku": ["sku1"],
-                "course_run_key": "course-v1:MichiganX+InjuryPreventionX+1T2021",
-                "bundle": ["123"],
-            },
-        )
-        self.assertTrue(response.url.startswith(settings.ECOMMERCE_URL))
-        mock_payment_page_redirect.assert_not_called()
-        self.assertIn("bundle", response.url)
+        # Because the base mocker can't do param binding, we have to intercept.
+        with requests_mock.Mocker(real_http=True, case_sensitive=False) as mocker:
+            mocker.get(
+                f"{base_url}product-projections/search?filter=key%3A%22818aff6f-1a39-4515-8779-dfebc0742d8e%22",
+                json=gen_program_search_result().serialize()
+            )
+
+            ret_program = self.client_set.client.get_product_by_program_id(
+                '818aff6f-1a39-4515-8779-dfebc0742d8e'
+            )
+            is_redirect_mock.return_value = True
+            is_enterprise_mock.return_value = False
+            self.client.force_authenticate(user=self.user)
+            response = self.client.get(
+                self.url,
+                {'sku': ['sku1', 'sku2'], 'bundle': '818aff6f-1a39-4515-8779-dfebc0742d8e'}
+            )
+            self.assertTrue(response.url.startswith(settings.COMMERCETOOLS_FRONTEND_URL))
+            self.assertIn(ret_program.key, unquote(unquote(response.url)))
+
+    @ddt.unpack
+    @patch('commerce_coordinator.apps.rollout.pipeline.is_redirect_to_commercetools_enabled_for_user')
+    def test_payment_page_redirect_program(self, is_redirect_mock):
+        base_url = self.client_set.get_base_url_from_client()
+        self.client.login(username=self.test_user_username, password=self.test_user_password)
+        # Because the base mocker can't do param binding, we have to intercept.
+        with requests_mock.Mocker(real_http=True, case_sensitive=False) as mocker:
+            mocker.get(
+                f"{base_url}product-projections/search?filter=key%3A%22818aff6f-1a39-4515-8779-dfebc0742d8e%22",
+                json=gen_program_search_result().serialize()
+            )
+
+            is_redirect_mock.return_value = True
+            self.client.login(username=self.test_user_username, password=self.test_user_password)
+            self.client.force_authenticate(user=self.user)
+            response = self.client.get(
+                self.url,
+                {'sku': ['sku1', 'sku2'], 'bundle': '818aff6f-1a39-4515-8779-dfebc0742d8e'}
+            )
+            self.assertEqual(response.status_code, status.HTTP_303_SEE_OTHER)
 
 
 @override_settings(COMMERCETOOLS_MERCHANT_CENTER_ORDERS_PAGE_URL='https://merchant-centre/orders')
@@ -221,6 +251,12 @@ class RefundViewTests(APITestCase):
         }]
     }
 
+    entitlement_valid_payload = {
+        'username': 'testuser',
+        'order_number': 'ORDER123',
+        'entitlement_uuid': 'ENTITLEMENT123'
+    }
+
     invalid_payload = {
         'course_id': '',
         'username': ''
@@ -276,6 +312,14 @@ class RefundViewTests(APITestCase):
         self.assertEqual(response.status_code, status.HTTP_500_INTERNAL_SERVER_ERROR)
 
     @patch('commerce_coordinator.apps.lms.views.OrderRefundRequested.run_filter')
+    def test_post_with_filter_exception_already_exist(self, mock_filter):
+        self.authenticate_user()
+        mock_filter.side_effect = InvalidFilterType('Refund already created')
+        response = self.client.post(self.url, self.valid_payload, format='json')
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+
+    @patch('commerce_coordinator.apps.lms.views.OrderRefundRequested.run_filter')
     def test_post_with_unexpected_exception_fails(self, mock_filter):
         self.authenticate_user()
         mock_filter.side_effect = Exception('Unexpected error')
@@ -304,6 +348,45 @@ class RefundViewTests(APITestCase):
         response = self.client.post(self.url, local_invalid_payload, format='json')
 
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+
+    @patch('commerce_coordinator.apps.lms.views.get_order_line_item_info_from_entitlement_uuid')
+    @patch('commerce_coordinator.apps.lms.views.OrderRefundRequested.run_filter')
+    def test_refund_entitlement_success(self, mock_run_filter, mock_get_line_item):
+        mock_run_filter.return_value = {'returned_order': True}
+        mock_get_line_item.return_value = ('order_id', 'line_item_id')
+        self.authenticate_user()
+        response = self.client.post(self.url, self.entitlement_valid_payload, format='json')
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+
+    @patch('commerce_coordinator.apps.lms.views.get_order_line_item_info_from_entitlement_uuid')
+    @patch('commerce_coordinator.apps.lms.views.OrderRefundRequested.run_filter')
+    def test_refund_entitlement_failure(self, mock_run_filter, mock_get_line_item):
+        mock_run_filter.return_value = {'returned_order': None}
+        mock_get_line_item.return_value = ('order_id', 'line_item_id')
+        self.authenticate_user()
+        response = self.client.post(self.url, self.entitlement_valid_payload, format='json')
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+
+    @patch('commerce_coordinator.apps.lms.views.get_order_line_item_info_from_entitlement_uuid')
+    def test_refund_entitlement_commercetools_error(self, mock_get_line_item):
+        mock_get_line_item.side_effect = CommercetoolsError(
+            message="Could not create return transaction",
+            errors="Some error message",
+            response={}
+        )
+        self.authenticate_user()
+        response = self.client.post(self.url, self.entitlement_valid_payload, format='json')
+        self.assertEqual(response.status_code, status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+    @patch('commerce_coordinator.apps.lms.views.OrderRefundRequested.run_filter')
+    def test_post_with_invalid_entitlement_data_fails(self, mock_filter):
+        self.authenticate_user()
+        invalid_payload = copy.deepcopy(self.entitlement_valid_payload)
+        invalid_payload['entitlement_uuid'] = ''
+        response = self.client.post(self.url, invalid_payload, format='json')
+
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        mock_filter.assert_not_called()
 
 
 @ddt.ddt

@@ -10,7 +10,13 @@ class OrderRefundRequested(OpenEdxPublicFilter):
     filter_type = "org.edx.coordinator.commercetools.order.refund.requested.v1"
 
     @classmethod
-    def run_filter(cls, order_id, return_line_item_return_id, message_id):
+    def run_filter(
+        cls,
+        order_id,
+        return_line_items,
+        return_line_entitlement_ids,
+        message_id
+    ):
         """
         Call the PipelineStep(s) defined for this filter.
         Arguments:
@@ -19,6 +25,9 @@ class OrderRefundRequested(OpenEdxPublicFilter):
         Returns:
             order_refund: Updated order with return item attached
         """
-        return super().run_pipeline(order_id=order_id,
-                                    return_line_item_return_id=return_line_item_return_id,
-                                    message_id=message_id)
+        return super().run_pipeline(
+            order_id=order_id,
+            return_line_items=return_line_items,
+            return_line_entitlement_ids=return_line_entitlement_ids,
+            message_id=message_id
+        )

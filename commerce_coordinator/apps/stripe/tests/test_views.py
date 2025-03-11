@@ -1,7 +1,6 @@
 """
 Tests for the stripe views.
 """
-import json
 import logging
 
 import ddt
@@ -14,9 +13,8 @@ from rest_framework.test import APITestCase
 from stripe.stripe_object import StripeObject
 from testfixtures import LogCapture
 
-from commerce_coordinator.apps.core.constants import PaymentState
 from commerce_coordinator.apps.core.tests.utils import name_test
-from commerce_coordinator.apps.stripe.constants import Currency, StripeEventType
+from commerce_coordinator.apps.stripe.constants import StripeEventType
 from commerce_coordinator.apps.stripe.views import WebhookView
 
 User = get_user_model()
@@ -80,80 +78,6 @@ class WebhooksViewTests(APITestCase):
                     'signature for payload'
                 )
             )
-
-    @ddt.data(
-        name_test(
-            "test payment success event",
-            (StripeEventType.PAYMENT_SUCCESS.value, None, PaymentState.COMPLETED.value, status.HTTP_200_OK)
-        ),
-        name_test(
-            "test payment success event with unknown source",
-            (StripeEventType.PAYMENT_SUCCESS.value, 'unknown-source', None, status.HTTP_200_OK)
-        ),
-        name_test(
-            "test payment failure",
-            (StripeEventType.PAYMENT_FAILED.value, None, PaymentState.FAILED.value, status.HTTP_200_OK)
-        ),
-        name_test(
-            "test event not handled by the webhook",
-            ('account_updated', None, None, status.HTTP_422_UNPROCESSABLE_ENTITY),
-        )
-    )
-    @ddt.unpack
-    @mock.patch('commerce_coordinator.apps.titan.signals.payment_processed_save_task.delay')
-    @mock.patch('stripe.Webhook.construct_event')
-    def test_handled_webhook_event(
-        self,
-        event_type,
-        source_system,
-        expected_payment_state,
-        expected_status,
-        mock_construct_event,
-        mock_payment_processed_save_task
-    ):
-        """
-        Verify the expected task triggered for the known handled event types.
-        """
-        amount = 10000
-        payment_intent_id = 'pi_789dummy'
-        payment_number = 123456
-        order_uuid = 123456
-        edx_lms_user_id = 123456
-        default_source_system = settings.PAYMENT_PROCESSOR_CONFIG['edx']['stripe']['source_system_identifier']
-        source_system = source_system or default_source_system
-        self.mock_stripe_event.type = event_type
-        self.mock_stripe_event.data.object.id = payment_intent_id
-        self.mock_stripe_event.data.object.amount = amount
-        self.mock_stripe_event.data.object.currency = Currency.USD.value
-        metadata = {
-            'payment_number': payment_number,
-            'order_number': order_uuid,
-            'edx_lms_user_id': edx_lms_user_id,
-            'source_system': source_system
-        }
-        body = {'data': {'object': {'metadata': metadata}}}
-        self.mock_stripe_event.data.object.metadata = StripeObject()
-        self.mock_stripe_event.data.object.metadata.update(metadata)
-        mock_construct_event.return_value = self.mock_stripe_event
-        with LogCapture(log_name) as log_capture:
-            response = self.client.post(self.url, data=body, format='json', **self.mock_header)
-            self.assertEqual(response.status_code, expected_status)
-            if expected_status == status.HTTP_200_OK:
-                log_capture.check_present(
-                    (
-                        log_name,
-                        'INFO',
-                        f'[Stripe webhooks] event {event_type} with amount {amount} and '
-                        f'payment intent ID [{payment_intent_id}], source: [{source_system}].',
-                    )
-                )
-                if expected_payment_state:
-                    mock_payment_processed_save_task.assert_called_with(
-                        edx_lms_user_id, order_uuid, payment_number, expected_payment_state, payment_intent_id,
-                        amount, Currency.USD.value, json.dumps(body).replace(' ', '').encode('utf-8')
-                    )
-            else:
-                mock_payment_processed_save_task.assert_not_called()
 
     @ddt.data(
         name_test(
