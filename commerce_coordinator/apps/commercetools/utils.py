@@ -2,6 +2,7 @@
 Helpers for the commercetools app.
 """
 
+import decimal
 import hashlib
 import logging
 
@@ -20,7 +21,7 @@ from commercetools.platform.models import (
 from django.conf import settings
 from django.urls import reverse
 
-from commerce_coordinator.apps.commercetools.catalog_info.edx_utils import cents_to_dollars
+from commerce_coordinator.apps.commercetools.catalog_info.utils import typed_money_to_string
 
 logger = logging.getLogger(__name__)
 
@@ -136,20 +137,17 @@ def extract_ct_product_information_for_braze_canvas(item: LineItem):
     return result
 
 
-def calculate_total_discount_on_order(order: Order, line_item_ids=None) -> TypedMoney:
+def calculate_total_discount_on_order(order: Order) -> TypedMoney:
     """Calculate discount for cart level and line item level."""
     # discount amount on cart from a cart discount with target total price
     discount_on_total_price = 0
     if hasattr(order, 'discount_on_total_price') and order.discount_on_total_price:
         discount_on_total_price = order.discount_on_total_price.discounted_amount.cent_amount
 
-    filtered_line_items = order.line_items
-    if line_item_ids:
-        filtered_line_items = [line_item for line_item in order.line_items if line_item.id in line_item_ids]
-
+    # discount amount on item from a cart discount with target line items
     cart_discount_on_line_items = sum(
         discount.discounted_amount.cent_amount
-        for item in filtered_line_items
+        for item in order.line_items
         for discounted_price in item.discounted_price_per_quantity
         for discount in discounted_price.discounted_price.included_discounts
     )
@@ -157,7 +155,7 @@ def calculate_total_discount_on_order(order: Order, line_item_ids=None) -> Typed
     # discount amount on item from a product discount on a line item
     product_discount_on_line_items = sum(
         (item.price.value.cent_amount - item.price.discounted.value.cent_amount)
-        for item in filtered_line_items
+        for item in order.line_items
         if getattr(item.price, "discounted", False)
     )
 
@@ -218,14 +216,12 @@ def has_full_refund_transaction(payment: Payment):
     """
     # get charge transaction and get amount then check against refund.
     charge_amount = 0
-    refunded_amount = 0
     for transaction in payment.transactions:
         if transaction.type == TransactionType.CHARGE:
-            charge_amount += cents_to_dollars(transaction.amount)
-        if transaction.type == TransactionType.REFUND:  # pragma no cover
-            refunded_amount += cents_to_dollars(transaction.amount)
-
-    return refunded_amount == charge_amount
+            charge_amount = transaction.amount
+        if transaction.type == TransactionType.REFUND and transaction.amount == charge_amount:  # pragma no cover
+            return True
+    return False
 
 
 def is_transaction_already_refunded(payment: Payment, psp_refund_transaction_id: str):
@@ -239,14 +235,15 @@ def is_transaction_already_refunded(payment: Payment, psp_refund_transaction_id:
     return False
 
 
-def find_refund_transaction(payment: Payment, psp_refund_transaction_id: str):
+def find_refund_transaction(payment: Payment, amount: decimal):
     """
     Utility to find the refund transaction in a payment
     """
     for transaction in payment.transactions:
-        if transaction.type == TransactionType.REFUND and transaction.interaction_id == psp_refund_transaction_id:
-            return transaction.id
-    return ''
+        if transaction.type == TransactionType.REFUND:
+            if decimal.Decimal(typed_money_to_string(transaction.amount, money_as_decimal_string=True)) == amount:
+                return transaction.id
+    return {}
 
 
 def translate_refund_status_to_transaction_status(refund_status: str):

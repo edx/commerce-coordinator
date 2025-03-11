@@ -253,7 +253,7 @@ class RefundViewTests(APITestCase):
     entitlement_valid_payload = {
         'username': 'testuser',
         'order_number': 'ORDER123',
-        'entitlement_uuid': 'ENTITLEMENT123'
+        'entitlement_id': 'ENTITLEMENT123'
     }
 
     invalid_payload = {
@@ -340,7 +340,7 @@ class RefundViewTests(APITestCase):
 
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
 
-    @patch('commerce_coordinator.apps.lms.views.get_order_line_item_info_from_entitlement_uuid')
+    @patch('commerce_coordinator.apps.lms.views.get_line_item_from_entitlement')
     @patch('commerce_coordinator.apps.lms.views.OrderRefundRequested.run_filter')
     def test_refund_entitlement_success(self, mock_run_filter, mock_get_line_item):
         mock_run_filter.return_value = {'returned_order': True}
@@ -349,7 +349,7 @@ class RefundViewTests(APITestCase):
         response = self.client.post(self.url, self.entitlement_valid_payload, format='json')
         self.assertEqual(response.status_code, status.HTTP_200_OK)
 
-    @patch('commerce_coordinator.apps.lms.views.get_order_line_item_info_from_entitlement_uuid')
+    @patch('commerce_coordinator.apps.lms.views.get_line_item_from_entitlement')
     @patch('commerce_coordinator.apps.lms.views.OrderRefundRequested.run_filter')
     def test_refund_entitlement_failure(self, mock_run_filter, mock_get_line_item):
         mock_run_filter.return_value = {'returned_order': None}
@@ -358,7 +358,7 @@ class RefundViewTests(APITestCase):
         response = self.client.post(self.url, self.entitlement_valid_payload, format='json')
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
 
-    @patch('commerce_coordinator.apps.lms.views.get_order_line_item_info_from_entitlement_uuid')
+    @patch('commerce_coordinator.apps.lms.views.get_line_item_from_entitlement')
     def test_refund_entitlement_commercetools_error(self, mock_get_line_item):
         mock_get_line_item.side_effect = CommercetoolsError(
             message="Could not create return transaction",
@@ -367,13 +367,13 @@ class RefundViewTests(APITestCase):
         )
         self.authenticate_user()
         response = self.client.post(self.url, self.entitlement_valid_payload, format='json')
-        self.assertEqual(response.status_code, status.HTTP_500_INTERNAL_SERVER_ERROR)
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
 
     @patch('commerce_coordinator.apps.lms.views.OrderRefundRequested.run_filter')
     def test_post_with_invalid_entitlement_data_fails(self, mock_filter):
         self.authenticate_user()
         invalid_payload = copy.deepcopy(self.entitlement_valid_payload)
-        invalid_payload['entitlement_uuid'] = ''
+        invalid_payload['entitlement_id'] = ''
         response = self.client.post(self.url, invalid_payload, format='json')
 
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)

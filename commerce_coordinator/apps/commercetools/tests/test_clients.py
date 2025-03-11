@@ -8,6 +8,7 @@ from commercetools.platform.models import (
     Customer,
     CustomerDraft,
     CustomerPagedQueryResponse,
+    MoneyType,
     Order,
     OrderPagedQueryResponse,
     ReturnInfo,
@@ -16,6 +17,7 @@ from commercetools.platform.models import (
     TransactionState,
     TransactionType,
     Type,
+    TypedMoney,
     TypeDraft
 )
 from django.test import TestCase
@@ -488,7 +490,10 @@ class ClientTests(TestCase):
         # Mocked expected order recieved after CT SDK call to update the order
         mock_response_order = gen_order("mock_order_id")
         mock_payment = gen_payment_with_multiple_transactions(TransactionType.CHARGE, 4900, TransactionType.REFUND,
-                                                              4900)
+                                                              TypedMoney(cent_amount=4900,
+                                                                         currency_code='USD',
+                                                                         type=MoneyType.CENT_PRECISION,
+                                                                         fraction_digits=2))
         mock_response_order.version = "3"
         mock_response_return_item = gen_return_item("mock_return_item_id", ReturnPaymentState.REFUNDED)
         mock_response_return_info = ReturnInfo(items=[mock_response_return_item])
@@ -520,9 +525,8 @@ class ClientTests(TestCase):
                 mock_order.version,
                 [mock_response_return_item.line_item_id],
                 {mock_response_return_item.line_item_id: uuid4_str()},
-                {},
                 mock_payment.id,
-                uuid4_str()
+                10000
             )
             self.assertEqual(result.return_info[1].items[0].payment_state, ReturnPaymentState.REFUNDED)
 
@@ -1044,9 +1048,8 @@ class ClientUpdateReturnTests(TestCase):
                 order_version="2",
                 return_line_item_return_ids=["mock_return_item_id"],
                 return_line_entitlement_ids={'mock_return_item_id': 'mock_entitlement_id'},
-                refunded_line_item_refunds={},
                 payment_intent_id="1",
-                interaction_id=uuid4_str()
+                amount_in_cents=10000
             )
 
     def test_update_return_payment_state_no_payment(self):
@@ -1071,9 +1074,8 @@ class ClientUpdateReturnTests(TestCase):
                 order_version="2",
                 return_line_item_return_ids=["mock_return_item_id"],
                 return_line_entitlement_ids={'mock_return_item_id': 'mock_entitlement_id'},
-                refunded_line_item_refunds={},
-                payment_intent_id="1",
-                interaction_id=uuid4_str()
+                payment_intent_id=None,
+                amount_in_cents=10000
             )
 
     def test_get_product_by_program_id(self):
