@@ -132,9 +132,6 @@ def fulfill_order_placed_message_signal_task(
         is_bundle = bool(bundle_id)
         canvas_entry_properties.update({'product_type': 'program' if bundle_id else 'course'})
 
-        ct_program_product = client.get_product_by_program_id(bundle_id) if is_bundle else None
-
-        product_title = ct_program_product.name.get('en-US', '') if ct_program_product else item.name.get('en-US', '')
         serializer = OrderFulfillViewInputSerializer(data={
             **default_params,
             # Due to CT Variant SKU storing different values for course and entitlement models
@@ -148,7 +145,7 @@ def fulfill_order_placed_message_signal_task(
             'message_id': message_id,
             'user_first_name': customer.first_name,
             'user_email': customer.email,
-            'product_title': product_title,
+            'course_title': item.name.get('en-US', ''),
             'product_type': item.product_type.obj.key
         })
 

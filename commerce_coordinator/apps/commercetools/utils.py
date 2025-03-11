@@ -66,7 +66,7 @@ def send_order_confirmation_email(
         logger.exception(f"Encountered exception sending Order confirmation email. Exception: {exc}")
 
 
-def send_fulfillment_error_email(
+def send_unsupported_mode_fulfillment_error_email(
     lms_user_id, lms_user_email, canvas_entry_properties
 ):
     """ Sends fulfillment error email via Braze. """
@@ -84,7 +84,7 @@ def send_fulfillment_error_email(
                 canvas_entry_properties=canvas_entry_properties,
             )
     except Exception as exc:  # pylint: disable=broad-exception-caught
-        logger.exception(f"Encountered exception sending Fulfillment error email. Exception: {exc}")
+        logger.exception(f"Encountered exception sending Fulfillment unsupported mode error email. Exception: {exc}")
 
 
 def format_amount_for_braze_canvas(centAmount):
