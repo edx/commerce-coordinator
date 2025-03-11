@@ -36,7 +36,6 @@ from commerce_coordinator.apps.commercetools.signals import (
     fulfill_order_placed_send_entitlement_signal
 )
 from commerce_coordinator.apps.commercetools.utils import (
-    calculate_total_discount_on_order,
     extract_ct_order_information_for_braze_canvas,
     extract_ct_product_information_for_braze_canvas,
     send_order_confirmation_email
@@ -274,7 +273,8 @@ def fulfill_order_returned_signal_task(order_id, return_items, message_id):
             'tax': cents_to_dollars(in_order.taxed_price.total_tax),
             'coupon': in_order.discount_codes[-1].discount_code.obj.code if in_order.discount_codes else None,
             'coupon_name': [discount.discount_code.obj.code for discount in in_order.discount_codes[:-1]],
-            'discount': cents_to_dollars(calculate_total_discount_on_order(in_order)),
+            'discount': cents_to_dollars(
+                in_order.discount_on_total_price.discounted_amount) if in_order.discount_on_total_price else 0,
             'title': get_edx_items(in_order)[0].name['en-US'] if get_edx_items(in_order) else None,
             'products': []
         }
