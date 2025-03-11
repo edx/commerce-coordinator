@@ -3,7 +3,7 @@ Commercetools Subscription Message tasks (Celery)
 """
 from datetime import datetime
 
-from celery import Task, shared_task
+from celery import shared_task
 from celery.utils.log import get_task_logger
 from commercetools import CommercetoolsError
 from edx_django_utils.cache import TieredCache
@@ -50,28 +50,9 @@ from commerce_coordinator.apps.lms.clients import LMSAPIClient
 logger = get_task_logger(__name__)
 
 
-class FulfillOrderPlacedTaskAfterReturn(Task):    # pylint: disable=abstract-method
-    """
-    Base class for fulfill_order_placed_message_signal_task
-    """
-    def on_failure(self, exc, task_id, args, kwargs, einfo):
-        order_id = kwargs.get('order_id')
-
-        logger.error(
-            f"Post-Purchase Order Fulfillment Task failed. "
-            f"Task:{self.name}, order_id:{order_id}, Error message: {str(exc)}"
-        )
-
-
 # noinspection DuplicatedCode
-@shared_task(
-    bind=True,
-    autoretry_for=(RequestException, CommercetoolsError),
-    retry_kwargs={'max_retries': 5, 'countdown': 3},
-    base=FulfillOrderPlacedTaskAfterReturn,
-)
+@shared_task(autoretry_for=(RequestException, CommercetoolsError), retry_kwargs={'max_retries': 5, 'countdown': 3})
 def fulfill_order_placed_message_signal_task(
-    self,                   # pylint: disable=unused-argument
     order_id,
     line_item_state_id,
     source_system,
