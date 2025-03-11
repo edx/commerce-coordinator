@@ -227,15 +227,6 @@ def gen_variant_search_result() -> CTProductProjectionPagedSearchResponse:
         return CTProductProjectionPagedSearchResponse.deserialize(obj)
 
 
-def gen_program_search_result() -> CTProductProjectionPagedSearchResponse:
-    """
-    Generate a CTProductProjectionPagedSearchResponse object from a json file
-    """
-    with open(os.path.join(pathlib.Path(__file__).parent.resolve(), 'raw_ct_program.json')) as f:
-        obj = json.load(f)
-        return CTProductProjectionPagedSearchResponse.deserialize(obj)
-
-
 def gen_order_history(num=1) -> typing.List[CTOrder]:
     return [gen_order(uuid4_str()) for _ in range(num)]
 
