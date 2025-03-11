@@ -94,11 +94,6 @@ class UserOrdersView(APIView):
         if not request.user.lms_user_id:  # pragma: no cover
             raise PermissionDenied(detail="Could not detect LMS user id.")
 
-        logger.info(
-            "[UserOrdersView] Received request for retrieving order history for user: %s",
-            request.user.lms_user_id,
-        )
-
         try:
             order_data = OrderHistoryRequested.run_filter(request, params)
 
@@ -117,9 +112,5 @@ class UserOrdersView(APIView):
 
             return Response(output)
         except Exception as exc:  # pylint: disable=broad-except
-            logger.error(
-                "[UserOrdersView] An error occured while fetching Order History for user: %s with error message: %s",
-                request.user.lms_user_id,
-                exc,
-            )
+            logger.error(f'[UserOrdersView] An error occured while fetching Order History.\n Data: [{exc}]')
             return Response(status=HTTP_400_BAD_REQUEST, data='Something went wrong!')
