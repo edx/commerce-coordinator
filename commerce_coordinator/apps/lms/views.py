@@ -31,7 +31,7 @@ from commerce_coordinator.apps.lms.serializers import (
     UserRetiredInputSerializer,
     enrollment_attribute_key
 )
-from commerce_coordinator.apps.lms.utils import get_order_line_item_info_from_entitlement_uuid
+from commerce_coordinator.apps.lms.utils import get_line_item_from_entitlement
 from commerce_coordinator.apps.rollout.utils import is_legacy_order
 
 logger = logging.getLogger(__name__)
@@ -210,10 +210,11 @@ class RefundView(APIView):
          If an exception occurs during refund processing, a 500 Internal Server Error
          is returned.
          """
+
         input_data = {**request.data}
 
         logger.info(f"{self.post.__qualname__} request object: {input_data}.")
-        entitlement_refund = bool(input_data.get('entitlement_uuid'))
+        entitlement_refund = bool(input_data.get('entitlement_id'))
         if entitlement_refund:
             input_details = EntitlementRefundInputSerializer(data=input_data)
 
@@ -226,16 +227,16 @@ class RefundView(APIView):
 
             username = input_details.data['username']
             order_number = input_details.data.get('order_number')
-            entitlement_uuid = input_details.data.get('entitlement_uuid')
+            entitlement_id = input_details.data.get('entitlement_id')
             logger.info(f"[RefundView] Starting LMS Refund of Entitlement for username: {username}, "
-                        f"order_number: {order_number}, Entitlement UUID: {entitlement_uuid}.")
+                        f"order_number: {order_number}, Entitlement ID: {entitlement_id}.")
 
             try:
-                order_id, order_line_item_id = get_order_line_item_info_from_entitlement_uuid(
-                    order_number, entitlement_uuid)
+                order_id, order_line_item_id = get_line_item_from_entitlement(order_number, entitlement_id)
+
             except CommercetoolsError as err:  # pragma no cover
                 logger.exception(f"[RefundView] Commercetools Error: {err}, {err.errors}")
-                return Response('Error while fetching order', status=HTTP_500_INTERNAL_SERVER_ERROR)
+                return Response('Error while fetching order', status=HTTP_400_BAD_REQUEST)
 
         else:
             input_details = CourseRefundInputSerializer(data=input_data)
@@ -257,17 +258,17 @@ class RefundView(APIView):
             order_line_item_id = enrollment_attributes.get(enrollment_attribute_key('order', 'line_item_id'), None)
             order_id = enrollment_attributes.get(enrollment_attribute_key('order', 'order_id'), None)
 
-        if not order_id:
-            logger.error(f"[RefundView] Failed processing refund for username: {username}, "
-                         f"course_id: {course_id} the enrollment_attributes array requires an orders: order_id "
-                         f"attribute.")
-            return Response('the enrollment_attributes array requires an orders: order_id '
-                            'attribute.', status=HTTP_400_BAD_REQUEST)
+            if not order_id:
+                logger.error(f"[RefundView] Failed processing refund for username: {username}, "
+                             f"course_id: {course_id} the enrollment_attributes array requires an orders: order_id "
+                             f"attribute.")
+                return Response('the enrollment_attributes array requires an orders: order_id '
+                                'attribute.', status=HTTP_400_BAD_REQUEST)
 
         if not order_line_item_id:
             log_msg = (
                 f"[RefundView] Failed processing refund for order {order_id} for username: {username}, "
-                f"entitlement_uuid: {entitlement_uuid}. Line item does not exist in commercetools Order."
+                f"entitlement_id: {entitlement_id}. Line item does not exist in commercetools Order."
             ) if entitlement_refund else (
                 f"[RefundView] Failed processing refund for order {order_id} for username: {username}, "
                 f"course_id: {course_id} the enrollment_attributes array requires an orders: line_item_id "
@@ -282,7 +283,7 @@ class RefundView(APIView):
         try:
             result = OrderRefundRequested.run_filter(order_id, order_line_item_id)
 
-            log_type = f"{entitlement_uuid=}" if entitlement_refund else f"{course_id=}"
+            log_type = f"{entitlement_id=}" if entitlement_refund else f"{course_id=}"
             if result.get('returned_order', None):
                 logger.info(f"[RefundView] Successfully returned order {order_id} for username: {username}, "
                             f"{log_type} with result: {result}.")
