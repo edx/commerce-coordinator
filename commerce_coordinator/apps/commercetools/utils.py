@@ -249,6 +249,19 @@ def find_refund_transaction(payment: Payment, psp_refund_transaction_id: str):
     return ''
 
 
+def find_latest_refund(payment: Payment):
+    """
+    Utility to find the latest refund transaction in a payment, given payment transacations are sorted.
+    """
+    sorted_transactions = sorted(
+        payment.transactions, key=lambda transaction: transaction.timestamp, reverse=True
+    )
+    for transaction in sorted_transactions:
+        if transaction.type == TransactionType.REFUND:
+            return transaction.id
+    return ''
+
+
 def translate_refund_status_to_transaction_status(refund_status: str):
     """
     Utility to translate refund object's status attribute to a valid CT transaction state

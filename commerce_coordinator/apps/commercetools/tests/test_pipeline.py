@@ -6,7 +6,6 @@ from unittest.mock import patch
 from commercetools.platform.models import ReturnInfo, ReturnPaymentState, ReturnShipmentState, TransactionType
 from django.contrib.auth import get_user_model
 from django.test import RequestFactory
-from requests import RequestException
 from rest_framework.test import APITestCase
 
 from commerce_coordinator.apps.commercetools.catalog_info.constants import (
@@ -189,11 +188,8 @@ class CommercetoolsOrLegacyEcommerceRefundPipelineTests(APITestCase):
         self.assertEqual(mock_payment_result, self.returned_payment)
         self.assertEqual(mock_payment_result.transactions[0].type, TransactionType.REFUND)
 
-    @patch('commerce_coordinator.apps.commercetools.utils.has_refund_transaction')
     @patch('commerce_coordinator.apps.commercetools.pipeline.log.info')
-    def test_commercetools_transaction_create_has_refund(self, mock_logger, mock_has_refund):
-        mock_has_refund.return_value = True
-
+    def test_commercetools_transaction_create_has_refund(self, mock_logger):
         refund_pipe = CreateReturnPaymentTransaction("test_pipe", None)
         refund_pipe.run_filter(
             payment_data=self.mock_response_payment,
@@ -204,6 +200,21 @@ class CommercetoolsOrLegacyEcommerceRefundPipelineTests(APITestCase):
             psp=EDX_STRIPE_PAYMENT_INTERFACE_NAME
         )
         mock_logger.assert_called_once_with('[CreateReturnPaymentTransaction] refund has already been processed, '
+                                            'skipping refund payment transaction creation')
+
+    @patch('commerce_coordinator.apps.commercetools.pipeline.log.info')
+    def test_commercetools_transaction_create_psp_error(self, mock_logger):
+        refund_pipe = CreateReturnPaymentTransaction("test_pipe", None)
+        refund_pipe.run_filter(
+            payment_data=self.mock_response_payment,
+            refund_response={"payment_intent": "mock_payment_intent"},
+            active_order_management_system=COMMERCETOOLS_ORDER_MANAGEMENT_SYSTEM,
+            has_been_refunded=False,
+            payment_intent_id="pi_4MtwBwLkdIwGlenn28a3tqPa",
+            psp=EDX_STRIPE_PAYMENT_INTERFACE_NAME,
+            psp_refund_error='refund amount greater than unrefunded amount on charged amount'
+        )
+        mock_logger.assert_called_once_with('[CreateReturnPaymentTransaction] PSP Refund error, '
                                             'skipping refund payment transaction creation')
 
 
@@ -242,6 +253,18 @@ class OrderReturnPipelineTests(TestCase):
         result_data = ret['returned_order']
         self.assertEqual(result_data, self.update_order_response)
         self.assertEqual(result_data.return_info[1].items[0].payment_state, ReturnPaymentState.REFUNDED)
+
+    @patch('commerce_coordinator.apps.commercetools.pipeline.log.info')
+    def test_pipeline_with_psp_error(self, mock_logger):
+        """Ensure pipeline is functioning as expected"""
+
+        pipe = UpdateCommercetoolsOrderReturnPaymentStatus("test_pipe", None)
+
+        pipe.run_filter(
+            psp_refund_error='refund amount greater than unrefunded amount on charged amount'
+        )
+        mock_logger.assert_called_once_with('[UpdateCommercetoolsOrderReturnPaymentStatus] PSP Refund error, '
+                                            'skipping order refund payment transaction updation')
 
 
 class AnonymizeRetiredUserPipelineTests(TestCase):
@@ -367,12 +390,12 @@ class RefundPayPalPaymentTests(TestCase):
         """Test refund with exception raised"""
         mock_refund_order.side_effect = Exception("mock exception")
 
-        with self.assertRaises(RequestException):
-            self.refund_pipe.run_filter(
-                order_id=self.order_id,
-                amount_in_cents=self.amount_in_cents,
-                has_been_refunded=False,
-                ct_transaction_interaction_id=self.ct_transaction_interaction_id,
-                psp=self.psp,
-                message_id="mock_message_id"
-            )
+        ret = self.refund_pipe.run_filter(
+            order_id=self.order_id,
+            amount_in_cents=self.amount_in_cents,
+            has_been_refunded=False,
+            ct_transaction_interaction_id=self.ct_transaction_interaction_id,
+            psp=self.psp,
+            message_id="mock_message_id"
+        )
+        self.assertEqual(ret['psp_refund_error'], "mock exception")

@@ -471,6 +471,22 @@ class FulfillOrderReturnedSignalTaskTests(TestCase):
         mock_values.order_mock.assert_called_once_with(mock_values.order_id)
         mock_values.customer_mock.assert_called_once_with(mock_values.customer_id)
 
+    def test_refund_successful_with_segment(self, _ct_client_init: CommercetoolsAPIClientMock, _run_filter_mock):
+        """
+        Check calling uut when refund is successful.
+        """
+        mock_values = _ct_client_init.return_value
+        _run_filter_mock.return_value = {
+            'refund_response': 'succeeded',
+            'amount_in_cents': 5400,
+            'filtered_line_item_ids': ['822d77c4-00a6-4fb9-909b-094ef0b8c4b9'],
+        }
+        ret_val = self.get_uut()(*self.unpack_for_uut(mock_values.example_payload))
+
+        self.assertTrue(ret_val)
+        mock_values.order_mock.assert_called_once_with(mock_values.order_id)
+        mock_values.customer_mock.assert_called_once_with(mock_values.customer_id)
+
     def test_refund_unsuccessful(self, _ct_client_init: CommercetoolsAPIClientMock, _run_filter_mock):
         """
         Check calling uut when refund is unsuccessful.

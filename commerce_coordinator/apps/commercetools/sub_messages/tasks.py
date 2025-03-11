@@ -290,7 +290,6 @@ def fulfill_order_returned_signal_task(order_id, return_items, message_id):
             'coupon': in_order.discount_codes[-1].discount_code.obj.code if in_order.discount_codes else None,
             'coupon_name': [discount.discount_code.obj.code for discount in in_order.discount_codes[:-1]],
             'discount': cents_to_dollars(calculate_total_discount_on_order(in_order, line_item_ids)),
-            'title': get_edx_items(in_order)[0].name['en-US'] if get_edx_items(in_order) else None,
             'products': []
         }
 
@@ -346,6 +345,7 @@ def fulfill_order_returned_signal_task(order_id, return_items, message_id):
                                    get_line_item_lms_entitlement_id(line_item) for line_item in get_edx_items(order)}
 
     # Return payment if payment id is set
+    # pylint: disable=too-many-nested-blocks
     if psp_payment_id is not None:
         result = OrderRefundRequested.run_filter(
             order_id=order_id,
@@ -363,14 +363,20 @@ def fulfill_order_returned_signal_task(order_id, return_items, message_id):
 
                 total_amount = result.get('amount_in_cents')
                 refunded_line_item_ids = result.get('filtered_line_item_ids', return_line_item_ids)
+                returned_item_ids = [return_id for item_id, return_id in return_line_items.items()
+                                     if item_id in refunded_line_item_ids]
                 segment_event_properties = _prepare_segment_event_properties(
-                    order, total_amount, ', '.join(return_line_item_return_ids), refunded_line_item_ids
+                    order, total_amount, ', '.join(returned_item_ids), refunded_line_item_ids
                 )
                 line_items = get_edx_items(order)
                 is_bundle = check_is_bundle(line_items)
+                event_title = ''
 
                 for line_item in line_items:
                     if line_item.id in refunded_line_item_ids:
+                        if not event_title:
+                            event_title = line_item.name['en-US']
+
                         course_run = get_edx_product_course_run_key(line_item)
                         # TODO: Remove LMS Enrollment. To be done in SONIC-96
                         logger.info(
@@ -381,6 +387,7 @@ def fulfill_order_returned_signal_task(order_id, return_items, message_id):
                         segment_event_properties['products'].append(product)
 
                 if segment_event_properties['products']:  # pragma no cover
+                    segment_event_properties['title'] = event_title
                     # Emitting the 'Order Refunded' Segment event upon successfully processing a refund.
                     track(
                         lms_user_id=lms_user_id,

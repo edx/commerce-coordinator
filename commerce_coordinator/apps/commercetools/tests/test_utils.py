@@ -23,6 +23,7 @@ from commerce_coordinator.apps.commercetools.utils import (
     create_retired_fields,
     extract_ct_order_information_for_braze_canvas,
     extract_ct_product_information_for_braze_canvas,
+    find_latest_refund,
     find_refund_transaction,
     get_braze_client,
     has_full_refund_transaction,
@@ -379,6 +380,24 @@ class TestFindRefundTransaction(unittest.TestCase):
                                                                     type=MoneyType.CENT_PRECISION,
                                                                     fraction_digits=2))
         self.assertEqual(find_refund_transaction(payment, 4000), '')
+
+
+class TestFindLatestRefund(unittest.TestCase):
+    """
+    Tests for find_latest_refund function
+    """
+
+    def test_has_no_refund_transaction(self):
+        payment = gen_payment_with_multiple_transactions(TransactionType.CHARGE, 4900)
+        self.assertEqual(find_latest_refund(payment), '')
+
+    def test_has_matching_refund_transaction(self):
+        payment = gen_payment_with_multiple_transactions(TransactionType.CHARGE, 4900, TransactionType.REFUND,
+                                                         TypedMoney(cent_amount=4900,
+                                                                    currency_code='USD',
+                                                                    type=MoneyType.CENT_PRECISION,
+                                                                    fraction_digits=2))
+        self.assertEqual(find_latest_refund(payment), payment.transactions[1].id)
 
 
 class TestTranslateStripeRefundStatus(unittest.TestCase):

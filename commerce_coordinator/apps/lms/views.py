@@ -19,6 +19,7 @@ from rest_framework.views import APIView
 
 from commerce_coordinator.apps.commercetools.clients import CommercetoolsAPIClient
 from commerce_coordinator.apps.core.constants import HttpHeadersNames, MediaTypes
+from commerce_coordinator.apps.core.exceptions import InvalidFilterType
 from commerce_coordinator.apps.lms.filters import (
     OrderRefundRequested,
     PaymentPageRedirectRequested,
@@ -210,6 +211,8 @@ class RefundView(APIView):
          If an exception occurs during refund processing, a 500 Internal Server Error
          is returned.
          """
+        # pylint: disable=too-many-statements
+
         input_data = {**request.data}
 
         logger.info(f"{self.post.__qualname__} request object: {input_data}.")
@@ -292,6 +295,10 @@ class RefundView(APIView):
                              f"{log_type} with invalid filter/pipeline result: {result}.")
                 return Response('Exception occurred while returning order', status=HTTP_400_BAD_REQUEST)
 
+        # Handle the case when refund already exist
+        except InvalidFilterType as e:
+            logger.info(f"{e.message}")
+            return Response(e.message, status=HTTP_200_OK)
         except OpenEdxFilterException as e:
             logger.exception(f"[RefundView] Exception raised in {self.post.__name__} with error {repr(e)}")
             return Response('Exception occurred while returning order', status=HTTP_500_INTERNAL_SERVER_ERROR)
