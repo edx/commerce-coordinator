@@ -14,10 +14,3 @@ def is_redirect_to_commercetools_enabled_for_user(request):
     Check if REDIRECT_TO_COMMERCETOOLS_CHECKOUT flag is enabled.
     """
     return waffle.flag_is_active(request, REDIRECT_TO_COMMERCETOOLS_CHECKOUT)
-
-
-def is_program_redirection_to_ct_enabled(request):
-    """
-    Check if PROGRAM_CT_REDIRECTION flag is enabled.
-    """
-    return waffle.flag_is_active(request, "PROGRAM_CT_REDIRECTION")
