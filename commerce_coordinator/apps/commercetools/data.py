@@ -20,7 +20,6 @@ from commerce_coordinator.apps.commercetools.catalog_info.utils import (
     typed_money_to_string,
     un_ls
 )
-from commerce_coordinator.apps.commercetools.utils import calculate_total_discount_on_order
 from commerce_coordinator.apps.ecommerce.data import BillingAddress, Line
 from commerce_coordinator.apps.ecommerce.data import Order as LegacyOrder
 from commerce_coordinator.apps.ecommerce.data import User
@@ -103,7 +102,6 @@ def convert_payment_info(payment_info: CTPaymentInfo) -> str:
 
 def order_from_commercetools(order: CTOrder, customer: CTCustomer) -> LegacyOrder:
     payment_state = order.payment_state.value
-    discounted_amount = calculate_total_discount_on_order(order)
 
     return LegacyOrder(
         user=convert_customer(customer),
@@ -119,7 +117,7 @@ def order_from_commercetools(order: CTOrder, customer: CTCustomer) -> LegacyOrde
         order_product_ids=", ".join([convert_line_item_prod_id(x) for x in order.line_items]),
         basket_discounts=convert_direct_discount(order.direct_discounts),
         contains_credit_seat="True",
-        discount=typed_money_to_string(discounted_amount,
+        discount=typed_money_to_string(order.discount_on_total_price.discounted_amount,
                                        money_as_decimal_string=SEND_MONEY_AS_DECIMAL_STRING)
         if order.discount_on_total_price else None,  # NYI
         enable_hoist_order_history="False",  # ?
@@ -129,7 +127,7 @@ def order_from_commercetools(order: CTOrder, customer: CTCustomer) -> LegacyOrde
             typed_money_add(
                 typed_money_add(
                     order.total_price,
-                    discounted_amount if discounted_amount.cent_amount else None
+                    order.discount_on_total_price.discounted_amount if order.discount_on_total_price else None
                 ),
                 order.taxed_price.total_tax
             ),
