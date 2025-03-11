@@ -71,14 +71,14 @@ def fulfill_order_placed_message_signal_task(
     except CommercetoolsError as err:  # pragma no cover
         logger.error(f'[CT-{tag}] Order not found: {order_id} with CT error {err}, {err.errors},'
                      f'message id: {message_id}')
-        raise err
+        return False
 
     try:
         customer = client.get_customer_by_id(order.customer_id)
     except CommercetoolsError as err:  # pragma no cover
         logger.error(f'[CT-{tag}]  Customer not found: {order.customer_id} for order {order_id} with '
                      f'CT error {err}, {err.errors}, message id: {message_id}')
-        raise err
+        return False
 
     if not (customer and order and is_edx_lms_order(order)):
         logger.info(f'[CT-{tag}] order {order_id} is not an edX order, message id: {message_id}')
@@ -111,6 +111,8 @@ def fulfill_order_placed_message_signal_task(
         from_state_id=line_item_state_id,
         new_state_key=TwoUKeys.PROCESSING_FULFILMENT_STATE
     )
+    if not updated_order:
+        return True
 
     for item in get_edx_items(order):
         logger.debug(f'[CT-{tag}] processing edX order {order_id}, line item {item.variant.sku}, '
@@ -127,9 +129,10 @@ def fulfill_order_placed_message_signal_task(
             if item.custom
             else None
         )
+        is_bundle = bool(bundle_id)
         canvas_entry_properties.update({'product_type': 'program' if bundle_id else 'course'})
 
-        ct_program_product = client.get_product_by_program_id(bundle_id) if bundle_id else None
+        ct_program_product = client.get_product_by_program_id(bundle_id) if is_bundle else None
 
         product_title = ct_program_product.name.get('en-US', '') if ct_program_product else item.name.get('en-US', '')
         serializer = OrderFulfillViewInputSerializer(data={
@@ -139,7 +142,7 @@ def fulfill_order_placed_message_signal_task(
             # For non-bundles purchase, the course_id is the course_run_key
             'course_id': get_edx_product_course_run_key(item),
             'line_item_id': item.id,
-            'course_mode': get_course_mode_from_ct_order(item),
+            'course_mode': get_course_mode_from_ct_order(item, is_bundle),
             'item_quantity': item.quantity,
             'line_item_state_id': line_item_state_id,
             'message_id': message_id,
@@ -154,7 +157,7 @@ def fulfill_order_placed_message_signal_task(
 
         payload = serializer.validated_data
 
-        if bundle_id:
+        if is_bundle:
             fulfill_order_placed_send_entitlement_signal.send_robust(
                 sender=fulfill_order_placed_message_signal_task,
                 **payload

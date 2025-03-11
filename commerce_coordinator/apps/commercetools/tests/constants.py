@@ -73,7 +73,6 @@ EXAMPLE_FULFILLMENT_SIGNAL_PAYLOAD = {
 }
 
 EXAMPLE_UPDATE_LINE_ITEM_SIGNAL_PAYLOAD = {
-    'entitlement_uuid': '',
     'order_id': '61ec1afa-1b0e-4234-ae28-f997728054fa',
     'order_version': 2,
     'line_item_id': '822d77c4-00a6-4fb9-909b-094ef0b8c4b9',

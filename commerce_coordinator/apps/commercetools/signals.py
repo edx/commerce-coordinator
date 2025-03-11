@@ -6,9 +6,10 @@ import logging
 
 from commerce_coordinator.apps.commercetools.catalog_info.constants import TwoUKeys
 from commerce_coordinator.apps.commercetools.tasks import (
-    fulfillment_completed_update_ct_line_item_task,
     refund_from_paypal_task,
-    refund_from_stripe_task
+    refund_from_stripe_task,
+    update_line_item_on_entitlement_fulfillment_completion,
+    update_line_item_state_on_fulfillment_completion
 )
 from commerce_coordinator.apps.core.signal_helpers import CoordinatorSignal, log_receiver
 
@@ -19,7 +20,7 @@ fulfill_order_placed_send_entitlement_signal = CoordinatorSignal()
 
 
 @log_receiver(logger)
-def fulfillment_completed_update_ct_line_item(**kwargs):
+def entitlement_fulfillment_completed(**kwargs):
     """
    Update the line item of the order placed in Commercetools based on LMS entitlement
     """
@@ -30,7 +31,7 @@ def fulfillment_completed_update_ct_line_item(**kwargs):
     else:
         to_state_key = TwoUKeys.FAILURE_FULFILMENT_STATE
 
-    async_result = fulfillment_completed_update_ct_line_item_task.delay(
+    result = update_line_item_on_entitlement_fulfillment_completion(
         entitlement_uuid=kwargs.get("entitlement_uuid", ""),
         order_id=kwargs["order_id"],
         order_version=kwargs["order_version"],
@@ -40,7 +41,32 @@ def fulfillment_completed_update_ct_line_item(**kwargs):
         to_state_key=to_state_key,
     )
 
-    return async_result.id
+    return result
+
+
+@log_receiver(logger)
+def fulfill_order_completed_send_line_item_state(**kwargs):
+    """
+    Update the line item state of the order placed in Commercetools based on LMS enrollment
+    """
+
+    is_fulfilled = kwargs["is_fulfilled"]
+
+    if is_fulfilled:
+        to_state_key = TwoUKeys.SUCCESS_FULFILMENT_STATE
+    else:
+        to_state_key = TwoUKeys.FAILURE_FULFILMENT_STATE
+
+    result = update_line_item_state_on_fulfillment_completion(
+        order_id=kwargs["order_id"],
+        order_version=kwargs["order_version"],
+        line_item_id=kwargs["line_item_id"],
+        item_quantity=kwargs["item_quantity"],
+        from_state_id=kwargs["line_item_state_id"],
+        to_state_key=to_state_key,
+    )
+
+    return result
 
 
 @log_receiver(logger)
