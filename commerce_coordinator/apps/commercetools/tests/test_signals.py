@@ -16,44 +16,6 @@ logger = logging.getLogger(__name__)
 @override_settings(
     CC_SIGNALS={
         'commerce_coordinator.apps.core.tests.utils.example_signal': [
-            'commerce_coordinator.apps.commercetools.signals.entitlement_fulfillment_completed',
-        ],
-    }
-)
-@patch('commerce_coordinator.apps.commercetools.signals.update_line_item_on_entitlement_fulfillment_completion')
-class EntitlementFulfillmentCompletedSignalTest(CoordinatorSignalReceiverTestCase):
-    """ LMS Entitlement Fulfillment Completed Signal Tester"""
-    mock_parameters = {
-        'entitlement_uuid': '1',
-        'order_id': 1,
-        'order_version': 2,
-        'line_item_id': 3,
-        'item_quantity': 1,
-        'line_item_state_id': 4,
-    }
-
-    def test_correct_arguments_passed_fulfillment_true(self, mock_task):
-        self.mock_parameters['is_fulfilled'] = True
-        _, logs = self.fire_signal()
-        self.mock_parameters.pop('is_fulfilled')
-        task_mock_parameters = copy(self.mock_parameters)
-        task_mock_parameters['from_state_id'] = task_mock_parameters.pop('line_item_state_id')
-        logger.info('logs.output: %s', logs.output)
-        mock_task.assert_called_with(**task_mock_parameters, to_state_key='2u-fulfillment-success-state')
-
-    def test_correct_arguments_passed_fulfillment_false(self, mock_task):
-        self.mock_parameters['is_fulfilled'] = False
-        _, logs = self.fire_signal()
-        self.mock_parameters.pop('is_fulfilled')
-        task_mock_parameters = copy(self.mock_parameters)
-        task_mock_parameters['from_state_id'] = task_mock_parameters.pop('line_item_state_id')
-        logger.info('logs.output: %s', logs.output)
-        mock_task.assert_called_with(**task_mock_parameters, to_state_key='2u-fulfillment-failure-state')
-
-
-@override_settings(
-    CC_SIGNALS={
-        'commerce_coordinator.apps.core.tests.utils.example_signal': [
             'commerce_coordinator.apps.commercetools.signals.fulfill_order_completed_send_line_item_state',
         ],
     }
