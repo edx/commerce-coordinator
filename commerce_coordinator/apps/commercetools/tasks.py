@@ -19,32 +19,6 @@ logger = logging.getLogger(__name__)
 stripe.api_key = settings.PAYMENT_PROCESSOR_CONFIG['edx']['stripe']['secret_key']
 
 
-def update_line_item_on_entitlement_fulfillment_completion(
-    entitlement_uuid,
-    order_id,
-    order_version,
-    line_item_id,
-    item_quantity,
-    from_state_id,
-    to_state_key
-):
-    """
-    Task for updating order line item on entitlement fulfillment completion via Commercetools API.
-    """
-    client = CommercetoolsAPIClient()
-
-    updated_order = client.update_line_item_on_entitlement_fulfillment(
-        entitlement_uuid,
-        order_id,
-        order_version,
-        line_item_id,
-        item_quantity,
-        from_state_id,
-        to_state_key
-    )
-    return updated_order
-
-
 def update_line_item_state_on_fulfillment_completion(
     order_id,
     order_version,
