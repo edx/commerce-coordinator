@@ -54,6 +54,7 @@ PROJECT_APPS = (
     'commerce_coordinator.apps.lms.apps.LmsConfig',
     'commerce_coordinator.apps.stripe.apps.StripeConfig',
     'commerce_coordinator.apps.paypal.apps.PayPalConfig',
+    'commerce_coordinator.apps.titan.apps.TitanConfig',
     'commerce_coordinator.apps.commercetools',
 )
 
@@ -266,6 +267,15 @@ LOGIN_REDIRECT_URL = '/admin/'
 # Set legacy credentials to access edX services.
 EDX_API_KEY = 'replace-me'
 
+# Set token credentials for non-edX services.
+TITAN_API_KEY = 'replace-me'
+
+# Set OAuth2 credentials for non-edX services.
+TITAN_OAUTH2_PROVIDER_URL = 'replace-me'
+TITAN_OAUTH2_KEY = 'replace-me'
+TITAN_OAUTH2_SECRET = 'replace-me'
+# END AUTHENTICATION CONFIGURATION
+
 # DRF CONFIGURATION
 REST_FRAMEWORK = {
     'EXCEPTION_HANDLER': 'commerce_coordinator.apps.core.middleware.log_drf_exceptions',
@@ -339,6 +349,7 @@ COMMERCE_COORDINATOR_URL = 'http://localhost:8140'
 ECOMMERCE_URL = 'http://localhost:18130'
 ECOMMERCE_ADD_TO_BASKET_API_PATH = '/basket/add/'
 ECOMMERCE_ORDER_DETAILS_DASHBOARD_PATH = '/dashboard/orders/'
+TITAN_URL = 'replace-me'
 
 # Timeout for enterprise client
 ENTERPRISE_CLIENT_TIMEOUT = os.environ.get('ENTERPRISE_CLIENT_TIMEOUT', 15)

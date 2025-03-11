@@ -48,6 +48,8 @@ from commerce_coordinator.apps.commercetools.management.commands._timed_command 
 #       - gs: GetSmarter
 #       - mm: MicroMasters
 
+# TODO: Limit to 100 variants, (not even sure if this is an issue)
+
 # ##  ssh grmartin@theseus.sandbox.edx.org -L 9200:127.0.0.1:9200
 
 DISCO_DEBUG_ES = True  # Should we print query the query/results/pagination to the console?, This is diagnostic

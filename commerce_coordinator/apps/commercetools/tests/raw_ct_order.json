@@ -19,11 +19,7 @@
       },
       "productType": {
         "typeId": "product-type",
-        "id": "b2aa56d2-7b98-4d51-9d70-81d675a45686",
-        "obj": {
-          "name": "edX Course",
-          "key": "edx_course"
-        }
+        "id": "b2aa56d2-7b98-4d51-9d70-81d675a45686"
       },
       "variant": {
         "id": 1,

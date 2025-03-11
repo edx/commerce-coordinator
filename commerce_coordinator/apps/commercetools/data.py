@@ -14,7 +14,6 @@ from django.conf import settings
 from commerce_coordinator.apps.commercetools.catalog_info.constants import SEND_MONEY_AS_DECIMAL_STRING, EdXFieldNames
 from commerce_coordinator.apps.commercetools.catalog_info.utils import (
     attribute_dict,
-    get_line_item_attribute,
     price_to_string,
     typed_money_add,
     typed_money_to_string,
@@ -45,13 +44,16 @@ def convert_address(address: Optional[CTAddress]) -> Optional[BillingAddress]:
     )
 
 
-def convert_line_item(li: CTLineItem, payment_state: str) -> Line:
+def convert_line_item(li: CTLineItem) -> Line:
     return Line(
         title=un_ls(li.name),
         quantity=li.quantity,
-        course_organization=get_line_item_attribute(li, 'brand-text'),
+        # TODO: course_organization=
+        # TODO: description=
+        # TODO: status=
+        course_organization="",
         description=un_ls(li.name),
-        status=payment_state,
+        status="PAID",
         line_price_excl_tax=price_to_string(li.price, money_as_decimal_string=SEND_MONEY_AS_DECIMAL_STRING),
         unit_price_excl_tax=price_to_string(li.price, money_as_decimal_string=SEND_MONEY_AS_DECIMAL_STRING)
     )
@@ -74,6 +76,7 @@ def convert_line_item_prod_id(li: CTLineItem) -> str:
     return li.product_id
 
 
+# TODO: Coupons
 def convert_discount_code_info(dcis: Optional[List[CTDiscountCodeInfo]]) -> Optional[str]:
     if not dcis or len(dcis) < 1:
         return None
@@ -101,11 +104,9 @@ def convert_payment_info(payment_info: CTPaymentInfo) -> str:
 
 
 def order_from_commercetools(order: CTOrder, customer: CTCustomer) -> LegacyOrder:
-    payment_state = order.payment_state.value
-
     return LegacyOrder(
         user=convert_customer(customer),
-        lines=[convert_line_item(x, payment_state) for x in order.line_items],
+        lines=[convert_line_item(x) for x in order.line_items],
         billing_address=convert_address(order.billing_address),
         date_placed=order.last_modified_at,
         total_excl_tax=typed_money_to_string(order.total_price, money_as_decimal_string=SEND_MONEY_AS_DECIMAL_STRING),

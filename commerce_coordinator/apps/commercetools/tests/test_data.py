@@ -117,16 +117,16 @@ class TestCTOrderConversionToLegacyOrders(TestCase):
     def test_convert_line_item(self):
         order = gen_order(uuid4_str())
         li = order.line_items[0]
-        ret = convert_line_item(li, order.payment_state.value)
+        ret = convert_line_item(li)
 
         self.assertEqual(
             ret,
             Line(
                 title=un_ls(li.name),
                 quantity=li.quantity,
-                course_organization="MichiganX",
+                course_organization="",
                 description=un_ls(li.name),
-                status="Paid",
+                status="PAID",
                 line_price_excl_tax=price_to_string(li.price, SEND_MONEY_AS_DECIMAL_STRING),
                 unit_price_excl_tax=price_to_string(li.price, SEND_MONEY_AS_DECIMAL_STRING)
             )

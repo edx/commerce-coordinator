@@ -125,6 +125,10 @@ ECOMMERCE_URL = "http://localhost:18130"
 
 LMS_DASHBOARD_URL = "http://localhost:18000"  # fix me
 
+TITAN_URL = "http://example.com"
+
+TITAN_OAUTH2_PROVIDER_URL = "http://example.com"
+
 FULFILLMENT_TIMEOUT = 15  # Devstack is slow!
 
 PAYMENT_PROCESSOR_CONFIG = {

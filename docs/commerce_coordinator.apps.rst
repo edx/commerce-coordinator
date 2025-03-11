@@ -18,6 +18,7 @@ Subpackages
    commerce_coordinator.apps.rollout
    commerce_coordinator.apps.stripe
    commerce_coordinator.apps.paypal
+   commerce_coordinator.apps.titan
 
 Module contents
 ---------------
