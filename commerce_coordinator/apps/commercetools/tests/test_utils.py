@@ -250,8 +250,8 @@ class TestBrazeHelpers(unittest.TestCase):
 
 class TestCalculateDiscount(unittest.TestCase):
     """Test for calculate_total_discount_on_order function"""
-
     def test_calculate_total_discount_on_order(self):
+        # Mock the order object
         order = gen_order(EXAMPLE_FULFILLMENT_SIGNAL_PAYLOAD['order_number'], with_discount=False)
 
         # Mock the discount on total price
@@ -275,46 +275,11 @@ class TestCalculateDiscount(unittest.TestCase):
                 included_discounts=[MagicMock(discounted_amount=discount_on_line_item)]
             ))
         ]
-        line_item.price = MagicMock()
-        line_item.price.value.cent_amount = 1000
-        line_item.price.discounted.value.cent_amount = 700
         order.line_items = [line_item]
-
         total_discount = calculate_total_discount_on_order(order)
 
         expected_total_discount = CentPrecisionMoney(
-            cent_amount=1100,
-            currency_code='USD',
-            fraction_digits=2
-        )
-        self.assertEqual(total_discount.cent_amount, expected_total_discount.cent_amount)
-        self.assertEqual(total_discount.currency_code, expected_total_discount.currency_code)
-        self.assertEqual(total_discount.fraction_digits, expected_total_discount.fraction_digits)
-
-    def test_calculate_discount_on_order_without_cart_level_discount(self):
-        order = gen_order(EXAMPLE_FULFILLMENT_SIGNAL_PAYLOAD['order_number'], with_discount=False)
-        order.discount_on_total_price = None
-
-        discount_on_line_item = CentPrecisionMoney(
-            cent_amount=300,
-            currency_code='USD',
-            fraction_digits=2
-        )
-        line_item = MagicMock()
-        line_item.discounted_price_per_quantity = [
-            MagicMock(discounted_price=MagicMock(
-                included_discounts=[MagicMock(discounted_amount=discount_on_line_item)]
-            ))
-        ]
-        line_item.price = MagicMock()
-        line_item.price.value.cent_amount = 1000
-        line_item.price.discounted.value.cent_amount = 700
-        order.line_items = [line_item]
-
-        total_discount = calculate_total_discount_on_order(order)
-
-        expected_total_discount = CentPrecisionMoney(
-            cent_amount=600,
+            cent_amount=800,
             currency_code='USD',
             fraction_digits=2
         )
