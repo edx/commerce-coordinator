@@ -1,6 +1,5 @@
-import sys
 import json
-
+import sys
 from typing import Literal, Union
 
 from commercetools import CommercetoolsError
@@ -43,7 +42,7 @@ def handle_custom_item_creation(ct_api_client, custom_type):
             if field.name not in existing_fields:
                 update_actions.append(TypeAddFieldDefinitionAction(field_definition=field))
                 print(f"Creating field: {field.name} for custom type: {type_key}")
-        
+
         if update_actions:
             ret = ct_api_client.base_client.types.update_by_id(
                 data.get('id'), data.get('version'), actions=update_actions

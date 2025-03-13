@@ -71,7 +71,7 @@ class TwoUKeys:
 
     # Human readable order number field to store in cart/order model
     ORDER_ORDER_NUMBER = 'orderNumber'
-    
+
     # Email domain custom field to store in cart/order model
     ORDER_EMAIL_DOMAINS_CLIENT = 'emailDomains'
 
