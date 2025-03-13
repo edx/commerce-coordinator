@@ -262,6 +262,60 @@ class TwoUCustomTypes:
         ]
     )
 
+    CART_DISCOUNT_TYPE_DRAFT = TypeDraft(
+        key=TwoUKeys.CART_DISCOUNT_CUSTOM_TYPE,
+        name=ls({'en': "Cart Discount Custom Type"}),
+        resource_type_ids=[ResourceTypeId.CART_DISCOUNT],
+
+        field_definitions=[
+            FieldDefinition(
+                type=CustomFieldStringType(),
+                name=TwoUKeys.CART_DISCOUNT_CLIENT,
+                required=False,
+                label=ls({'en': 'Client'}),
+                input_hint=TypeTextInputHint.SINGLE_LINE
+            ),
+            FieldDefinition(
+                type=CustomFieldStringType(),
+                name=TwoUKeys.CART_DISCOUNT_CATEGORY,
+                required=False,
+                label=ls({'en': 'Category'}),
+                input_hint=TypeTextInputHint.SINGLE_LINE
+            ),
+            FieldDefinition(
+                type=CustomFieldStringType(),
+                name=TwoUKeys.CART_DISCOUNT_DISCOUNT_TYPE,
+                required=False,
+                label=ls({'en': 'Discount Type'}),
+                input_hint=TypeTextInputHint.SINGLE_LINE
+            )
+        ]
+    )
+
+    # It would be same for cart and order
+    ORDER_TYPE_DRAFT = TypeDraft(
+        key=TwoUKeys.ORDER_CUSTOM_TYPE,
+        name=ls({'en': "Order Custom Type"}),
+        resource_type_ids=[ResourceTypeId.ORDER],
+
+        field_definitions=[
+            FieldDefinition(
+                type=CustomFieldStringType(),
+                name=TwoUKeys.ORDER_ORDER_NUMBER,
+                required=False,
+                label=ls({'en': 'Human Readable Order Number'}),
+                input_hint=TypeTextInputHint.SINGLE_LINE
+            ),
+            FieldDefinition(
+                type=CustomFieldStringType(),
+                name=TwoUKeys.ORDER_EMAIL_DOMAINS_CLIENT,
+                required=False,
+                label=ls({'en': 'Email Domains'}),
+                input_hint=TypeTextInputHint.SINGLE_LINE
+            )
+        ]
+    )
+
 
 class TwoUCustomObjects:
     PAYPAL_CUSTOM_OBJECT_DRAFT = CustomObjectDraft(

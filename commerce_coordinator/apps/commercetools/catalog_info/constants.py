@@ -54,6 +54,27 @@ class TwoUKeys:
     # Entitlement ID custom field to store with line item
     LINE_ITEM_LMS_ENTITLEMENT_ID = 'edxLMSEntitlementId'
 
+    # Cart discount Custom Types
+    CART_DISCOUNT_CUSTOM_TYPE = 'cartDiscountCustomType'
+
+    # Client custom field to store in cart discount
+    CART_DISCOUNT_CLIENT = 'client'
+
+    # Client custom field to store in cart discount
+    CART_DISCOUNT_CATEGORY = 'category'
+
+    # Client custom field to store in cart discount
+    CART_DISCOUNT_DISCOUNT_TYPE = 'discountType'
+
+    # Cart/Order Custom Types - this is already used type, we are just updating it
+    ORDER_CUSTOM_TYPE = 'cart-orderNumber'
+
+    # Human readable order number field to store in cart/order model
+    ORDER_ORDER_NUMBER = 'orderNumber'
+    
+    # Email domain custom field to store in cart/order model
+    ORDER_EMAIL_DOMAINS_CLIENT = 'emailDomains'
+
 
 class EdXFieldNames:
     """edX Specific field names for use in Commercetools"""
