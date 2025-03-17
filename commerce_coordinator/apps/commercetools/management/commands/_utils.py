@@ -25,7 +25,7 @@ def yn(question: str, default: Union[Literal['y', 'n']] = "n"):
             sys.stdout.write("Please choose y or n.\n")
 
 
-def handle_custom_item_creation(ct_api_client, custom_type):
+def handle_custom_field_creation(ct_api_client, custom_type):
     try:
         type_key = custom_type.key
         ret = ct_api_client.base_client.types.get_by_key(type_key)
