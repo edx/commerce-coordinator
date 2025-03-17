@@ -37,6 +37,7 @@ def handle_custom_field_creation(ct_api_client, custom_type):
         update_actions = []
         if data.get('name')['en'] != custom_type.name['en']:
             update_actions.append(TypeChangeNameAction(name=custom_type.name))
+            print(f"Updatig custom type name from '{data.get('name')['en']}' to '{custom_type.name['en']}'")
 
         for field in custom_type.field_definitions:
             if field.name not in existing_fields:
@@ -47,7 +48,7 @@ def handle_custom_field_creation(ct_api_client, custom_type):
             ret = ct_api_client.base_client.types.update_by_id(
                 data.get('id'), data.get('version'), actions=update_actions
             )
-            print(f"Updated fields for custom type: {type_key} {json.dumps(ret.serialize())}")
+            print(f"Updated custom type: {type_key} {json.dumps(ret.serialize())}")
         else:
             print(f"No update required for custom type: {type_key}")
 

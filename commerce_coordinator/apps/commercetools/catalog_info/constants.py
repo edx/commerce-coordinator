@@ -60,10 +60,10 @@ class TwoUKeys:
     # Client custom field to store in cart discount
     CART_DISCOUNT_CLIENT = 'client'
 
-    # Client custom field to store in cart discount
+    # Category custom field to store in cart discount
     CART_DISCOUNT_CATEGORY = 'category'
 
-    # Client custom field to store in cart discount
+    # Discount Type custom field to store in cart discount
     CART_DISCOUNT_DISCOUNT_TYPE = 'discountType'
 
     # Cart/Order Custom Types - this is already used type, we are just updating it
@@ -73,7 +73,7 @@ class TwoUKeys:
     ORDER_ORDER_NUMBER = 'orderNumber'
 
     # Email domain custom field to store in cart/order model
-    ORDER_EMAIL_DOMAINS_CLIENT = 'emailDomains'
+    ORDER_EMAIL_DOMAIN = 'emailDomain'
 
 
 class EdXFieldNames:

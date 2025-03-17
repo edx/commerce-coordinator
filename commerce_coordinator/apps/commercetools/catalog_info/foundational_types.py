@@ -308,9 +308,9 @@ class TwoUCustomTypes:
             ),
             FieldDefinition(
                 type=CustomFieldStringType(),
-                name=TwoUKeys.ORDER_EMAIL_DOMAINS_CLIENT,
+                name=TwoUKeys.ORDER_EMAIL_DOMAIN,
                 required=False,
-                label=ls({'en': 'Email Domains'}),
+                label=ls({'en': 'Email Domain'}),
                 input_hint=TypeTextInputHint.SINGLE_LINE
             )
         ]
