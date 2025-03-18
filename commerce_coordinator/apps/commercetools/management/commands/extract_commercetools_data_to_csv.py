@@ -45,7 +45,7 @@ class Command(CommercetoolsAPIClientCommand):
         offset = 0
         products = []
 
-        product_type_id = STAGE_PRODUCT_TYPE_ID_MAPPING.get(product_type.value)
+        product_type_id = PROD_PRODUCT_TYPE_ID_MAPPING.get(product_type.value)
 
         while True:
             products_result = self.ct_api_client.base_client.products.query(
