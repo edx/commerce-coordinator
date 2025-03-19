@@ -11,11 +11,7 @@ from commercetools.platform.models import (
     TypeTextInputHint
 )
 
-from commerce_coordinator.apps.commercetools.catalog_info.constants import (
-    CART_DISCOUNT_TYPES,
-    EdXFieldNames,
-    TwoUKeys
-)
+from commerce_coordinator.apps.commercetools.catalog_info.constants import CART_DISCOUNT_TYPES, EdXFieldNames, TwoUKeys
 from commerce_coordinator.apps.commercetools.catalog_info.utils import ls
 
 
