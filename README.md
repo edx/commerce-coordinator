@@ -17,7 +17,7 @@
 | commerce\_coordinator/apps/api/v1/views.py                                             |        0 |        0 |        0 |        0 |    100% |           |
 | commerce\_coordinator/apps/commercetools/\_\_init\_\_.py                               |        0 |        0 |        0 |        0 |    100% |           |
 | commerce\_coordinator/apps/commercetools/authentication.py                             |        6 |        0 |        0 |        0 |    100% |           |
-| commerce\_coordinator/apps/commercetools/catalog\_info/constants.py                    |       52 |        0 |        0 |        0 |    100% |           |
+| commerce\_coordinator/apps/commercetools/catalog\_info/constants.py                    |       51 |        0 |        0 |        0 |    100% |           |
 | commerce\_coordinator/apps/commercetools/catalog\_info/edx\_utils.py                   |       64 |        1 |       16 |        1 |     98% |        68 |
 | commerce\_coordinator/apps/commercetools/catalog\_info/foundational\_types.py          |       20 |        0 |        0 |        0 |    100% |           |
 | commerce\_coordinator/apps/commercetools/catalog\_info/utils.py                        |       69 |        0 |       30 |        0 |    100% |           |
@@ -181,7 +181,7 @@
 | commerce\_coordinator/apps/stripe/views.py                                             |       63 |       11 |       10 |        3 |     78% |65, 67, 111-144 |
 | commerce\_coordinator/docker\_gunicorn\_configuration.py                               |       27 |       27 |       10 |        0 |      0% |      4-57 |
 | commerce\_coordinator/urls.py                                                          |       22 |        0 |        0 |        0 |    100% |           |
-|                                                                              **TOTAL** | **6497** |  **286** |  **440** |   **42** | **95%** |           |
+|                                                                              **TOTAL** | **6496** |  **286** |  **440** |   **42** | **95%** |           |
 
 
 ## Setup coverage badge
