@@ -114,37 +114,6 @@ EDX_STRIPE_PAYMENT_INTERFACE_NAME = "stripe_edx"
 
 EDX_PAYPAL_PAYMENT_INTERFACE_NAME = "paypal_edx"
 
-# This mapping is based on prod categories
-CART_DISCOUNT_CATEGORIES = [
-    {"key": "affiliate-promotion", "label": "Affiliate Promotion"},
-    {"key": "bulk-enrollment", "label": "Bulk Enrollment"},
-    {"key": "connected", "label": "ConnectEd"},
-    {"key": "course-promotion", "label": "Course Promotion"},
-    {"key": "customer-service", "label": "Customer Service"},
-    {"key": "financial-assistance", "label": "Financial Assistance"},
-    {"key": "geography-promotion", "label": "Geography Promotion"},
-    {"key": "marketing-partner-promotion", "label": "Marketing Partner Promotion"},
-    {"key": "marketing-other", "label": "Marketing-Other"},
-    {"key": "paid-cohort", "label": "Paid Cohort"},
-    {"key": "other", "label": "Other"},
-    {"key": "retention-promotion", "label": "Retention Promotion"},
-    {"key": "services-other", "label": "Services-Other"},
-    {"key": "support-other", "label": "Support-Other"},
-    {"key": "upsell-promotion", "label": "Upsell Promotion"},
-    {"key": "bulk-enrollment-prepay", "label": "Bulk Enrollment - Prepay"},
-    {"key": "bulk-enrollment-upon-redemption", "label": "Bulk Enrollment - Upon Redemption"},
-    {"key": "bulk-enrollment-integration", "label": "Bulk Enrollment - Integration"},
-    {"key": "on-campus-learners", "label": "On-Campus Learners"},
-    {"key": "partner-no-rev-prepay", "label": "Partner No Rev - Prepay"},
-    {"key": "partner-no-rev-upon-redemption", "label": "Partner No Rev - Upon Redemption"},
-    {"key": "security-disclosure-reward", "label": "Security Disclosure Reward"},
-    {"key": "edx-employee-request", "label": "edX Employee Request"},
-    {"key": "partner-no-rev-rap", "label": "Partner No Rev - RAP"},
-    {"key": "partner-no-rev-orap", "label": "Partner No Rev - ORAP"},
-    {"key": "b2b-affiliate-promotion", "label": "B2B Affiliate Promotion"},
-    {"key": "scholarship", "label": "Scholarship"}
-]
-
 CART_DISCOUNT_TYPES = [
     {"key": "course-discount", "label": "Course Discount"},
     {"key": "enrollment-code", "label": "Enrollment Code"},
