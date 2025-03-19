@@ -148,3 +148,10 @@ CART_DISCOUNT_CATEGORIES = [
     {"key": "b2b-affiliate-promotion", "label": "B2B Affiliate Promotion"},
     {"key": "scholarship", "label": "Scholarship"}
 ]
+
+CART_DISCOUNT_TYPES = [
+    {"key": "course-discount", "label": "Course Discount"},
+    {"key": "enrollment-code", "label": "Enrollment Code"},
+    {"key": "program-discount", "label": "Program Discount"},
+    {"key": "program-offer", "label": "Program Offer"}
+]
