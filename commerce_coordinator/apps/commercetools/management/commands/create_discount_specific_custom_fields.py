@@ -6,8 +6,8 @@ from commerce_coordinator.apps.commercetools.management.commands._utils import h
 
 
 class Command(CommercetoolsAPIClientCommand):
-    help = 'Create custom fields for Bundle purchase'
+    help = 'Create custom fields for Discounts'
 
     def handle(self, *args, **options):
-        handle_custom_field_creation(TwoUCustomTypes.LINE_ITEMS_BUNDLE_TYPE_DRAFT)
-        handle_custom_field_creation(TwoUCustomTypes.RETURN_ITEM_TYPE_DRAFT)
+        handle_custom_field_creation(self.ct_api_client, TwoUCustomTypes.CART_DISCOUNT_TYPE_DRAFT)
+        handle_custom_field_creation(self.ct_api_client, TwoUCustomTypes.ORDER_TYPE_DRAFT)

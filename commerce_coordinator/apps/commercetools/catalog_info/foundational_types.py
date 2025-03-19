@@ -1,4 +1,5 @@
 from commercetools.platform.models import (
+    CustomFieldEnumType,
     CustomFieldStringType,
     CustomObjectDraft,
     FieldDefinition,
@@ -10,7 +11,12 @@ from commercetools.platform.models import (
     TypeTextInputHint
 )
 
-from commerce_coordinator.apps.commercetools.catalog_info.constants import EdXFieldNames, TwoUKeys
+from commerce_coordinator.apps.commercetools.catalog_info.constants import (
+    CART_DISCOUNT_CATEGORIES,
+    CART_DISCOUNT_TYPES,
+    EdXFieldNames,
+    TwoUKeys
+)
 from commerce_coordinator.apps.commercetools.catalog_info.utils import ls
 
 
@@ -257,6 +263,60 @@ class TwoUCustomTypes:
                 name=TwoUKeys.LINE_ITEM_LMS_ENTITLEMENT_ID,
                 required=False,
                 label=ls({'en': 'edX LMS Entitlement ID'}),
+                input_hint=TypeTextInputHint.SINGLE_LINE
+            )
+        ]
+    )
+
+    CART_DISCOUNT_TYPE_DRAFT = TypeDraft(
+        key=TwoUKeys.CART_DISCOUNT_CUSTOM_TYPE,
+        name=ls({'en': "Cart Discount Custom Type"}),
+        resource_type_ids=[ResourceTypeId.CART_DISCOUNT],
+
+        field_definitions=[
+            FieldDefinition(
+                type=CustomFieldStringType(),
+                name=TwoUKeys.CART_DISCOUNT_CLIENT,
+                required=False,
+                label=ls({'en': 'Client'}),
+                input_hint=TypeTextInputHint.SINGLE_LINE
+            ),
+            FieldDefinition(
+                type=CustomFieldEnumType(values=CART_DISCOUNT_CATEGORIES),
+                name=TwoUKeys.CART_DISCOUNT_CATEGORY,
+                required=False,
+                label=ls({'en': 'Category'}),
+                input_hint=TypeTextInputHint.SINGLE_LINE,
+            ),
+            FieldDefinition(
+                type=CustomFieldEnumType(values=CART_DISCOUNT_TYPES),
+                name=TwoUKeys.CART_DISCOUNT_DISCOUNT_TYPE,
+                required=False,
+                label=ls({'en': 'Discount Type'}),
+                input_hint=TypeTextInputHint.SINGLE_LINE
+            )
+        ]
+    )
+
+    # It would be same for cart and order
+    ORDER_TYPE_DRAFT = TypeDraft(
+        key=TwoUKeys.ORDER_CUSTOM_TYPE,
+        name=ls({'en': "Order Custom Type"}),
+        resource_type_ids=[ResourceTypeId.ORDER],
+
+        field_definitions=[
+            FieldDefinition(
+                type=CustomFieldStringType(),
+                name=TwoUKeys.ORDER_ORDER_NUMBER,
+                required=False,
+                label=ls({'en': 'Human Readable Order Number'}),
+                input_hint=TypeTextInputHint.SINGLE_LINE
+            ),
+            FieldDefinition(
+                type=CustomFieldStringType(),
+                name=TwoUKeys.ORDER_EMAIL_DOMAIN,
+                required=False,
+                label=ls({'en': 'Email Domain'}),
                 input_hint=TypeTextInputHint.SINGLE_LINE
             )
         ]
