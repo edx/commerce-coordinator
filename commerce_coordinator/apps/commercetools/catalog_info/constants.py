@@ -114,21 +114,17 @@ EDX_STRIPE_PAYMENT_INTERFACE_NAME = "stripe_edx"
 
 EDX_PAYPAL_PAYMENT_INTERFACE_NAME = "paypal_edx"
 
-# This mapping is based on stage categories
+# This mapping is based on prod categories
 CART_DISCOUNT_CATEGORIES = [
     {"key": "affiliate-promotion", "label": "Affiliate Promotion"},
     {"key": "bulk-enrollment", "label": "Bulk Enrollment"},
     {"key": "connected", "label": "ConnectEd"},
     {"key": "course-promotion", "label": "Course Promotion"},
     {"key": "customer-service", "label": "Customer Service"},
-    {"key": "dk_category_dec8", "label": "DK_Category_Dec_8"},
-    {"key": "dk_rollback_both_category", "label": "DK_Rollback_Both_Category"},
-    {"key": "dk_test_category", "label": "DK_Test_Category"},
-    {"key": "dk_test_category_dec", "label": "DK_Test_Category_Dec"},
     {"key": "financial-assistance", "label": "Financial Assistance"},
     {"key": "geography-promotion", "label": "Geography Promotion"},
     {"key": "marketing-partner-promotion", "label": "Marketing Partner Promotion"},
-    {"key": "marketing-other", "label": "Marketing Other"},
+    {"key": "marketing-other", "label": "Marketing-Other"},
     {"key": "paid-cohort", "label": "Paid Cohort"},
     {"key": "other", "label": "Other"},
     {"key": "retention-promotion", "label": "Retention Promotion"},
@@ -138,7 +134,7 @@ CART_DISCOUNT_CATEGORIES = [
     {"key": "bulk-enrollment-prepay", "label": "Bulk Enrollment - Prepay"},
     {"key": "bulk-enrollment-upon-redemption", "label": "Bulk Enrollment - Upon Redemption"},
     {"key": "bulk-enrollment-integration", "label": "Bulk Enrollment - Integration"},
-    {"key": "on-campus-learners", "label": "On Campus Learners"},
+    {"key": "on-campus-learners", "label": "On-Campus Learners"},
     {"key": "partner-no-rev-prepay", "label": "Partner No Rev - Prepay"},
     {"key": "partner-no-rev-upon-redemption", "label": "Partner No Rev - Upon Redemption"},
     {"key": "security-disclosure-reward", "label": "Security Disclosure Reward"},
