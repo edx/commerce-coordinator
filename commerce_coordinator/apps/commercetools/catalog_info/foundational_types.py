@@ -12,7 +12,6 @@ from commercetools.platform.models import (
 )
 
 from commerce_coordinator.apps.commercetools.catalog_info.constants import (
-    CART_DISCOUNT_CATEGORIES,
     CART_DISCOUNT_TYPES,
     EdXFieldNames,
     TwoUKeys
@@ -282,7 +281,7 @@ class TwoUCustomTypes:
                 input_hint=TypeTextInputHint.SINGLE_LINE
             ),
             FieldDefinition(
-                type=CustomFieldEnumType(values=CART_DISCOUNT_CATEGORIES),
+                type=CustomFieldStringType(),
                 name=TwoUKeys.CART_DISCOUNT_CATEGORY,
                 required=False,
                 label=ls({'en': 'Category'}),
