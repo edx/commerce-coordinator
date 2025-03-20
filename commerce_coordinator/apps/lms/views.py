@@ -2,24 +2,36 @@
 Views for the ecommerce app
 """
 import logging
+import re
+from typing import List
 from urllib.parse import urlencode, urljoin
 
 from commercetools import CommercetoolsError
 from django.conf import settings
 from django.http import HttpResponseBadRequest, HttpResponseRedirect
+from edx_rest_framework_extensions.auth.jwt.authentication import JwtAuthentication
 from edx_rest_framework_extensions.permissions import LoginRedirectIfUnauthenticated
 from openedx_filters.exceptions import OpenEdxFilterException
 from requests import HTTPError
 from rest_framework.exceptions import ValidationError
-from rest_framework.permissions import IsAdminUser
+from rest_framework.permissions import AllowAny, IsAdminUser
 from rest_framework.response import Response
-from rest_framework.status import HTTP_200_OK, HTTP_303_SEE_OTHER, HTTP_400_BAD_REQUEST, HTTP_500_INTERNAL_SERVER_ERROR
+from rest_framework.status import (
+    HTTP_200_OK,
+    HTTP_303_SEE_OTHER,
+    HTTP_400_BAD_REQUEST,
+    HTTP_404_NOT_FOUND,
+    HTTP_500_INTERNAL_SERVER_ERROR
+)
 from rest_framework.throttling import UserRateThrottle
 from rest_framework.views import APIView
 
+from commerce_coordinator.apps.commercetools.api_client import CTCustomAPIClient
 from commerce_coordinator.apps.commercetools.clients import CommercetoolsAPIClient
 from commerce_coordinator.apps.core.constants import HttpHeadersNames, MediaTypes
 from commerce_coordinator.apps.core.exceptions import InvalidFilterType
+from commerce_coordinator.apps.lms.clients import LMSAPIClient
+from commerce_coordinator.apps.lms.constants import CT_ABSOLUTE_DISCOUNT_TYPE, EXCLUDED_ENROLLMENT_COURSE_MODES
 from commerce_coordinator.apps.lms.filters import (
     OrderRefundRequested,
     PaymentPageRedirectRequested,
@@ -32,7 +44,7 @@ from commerce_coordinator.apps.lms.serializers import (
     UserRetiredInputSerializer,
     enrollment_attribute_key
 )
-from commerce_coordinator.apps.lms.utils import get_order_line_item_info_from_entitlement_uuid
+from commerce_coordinator.apps.lms.utils import get_order_line_item_info_from_entitlement_uuid, get_program_offer
 from commerce_coordinator.apps.rollout.utils import is_legacy_order
 
 logger = logging.getLogger(__name__)
@@ -401,3 +413,130 @@ class FirstTimeDiscountEligibleView(APIView):
             logger.exception(f"[FirstTimeDiscountEligibleView] HTTP Error: {err}")
 
         return Response({'is_eligible': True})
+
+
+class ProgramPriceView(APIView):
+    """View to get the price of a program."""
+    authentication_classes = (JwtAuthentication,)
+    permission_classes = (AllowAny,)
+    throttle_classes = []
+
+    def _calculate_discounted_price(self, program_offer: dict, program_price: float) -> float:
+        """Calculate the discounted price of the program."""
+        if not program_offer:
+            return program_price
+
+        if program_price < 1:
+            return program_price
+
+        discounted_price = program_price
+        if program_offer.get("discount_type") == CT_ABSOLUTE_DISCOUNT_TYPE:
+            discounted_price -= program_offer.get("discount_value_in_cents")
+        else:
+            discounted_price -= discounted_price * program_offer.get("discount_value_in_cents") / 10000
+
+        return discounted_price
+
+    def _extract_course_id(self, course_key: str) -> str:
+        """
+        Extract course_id for comparision
+        """
+        match = re.search(r"course-v1:(.+)", course_key)
+        return match.group(1) if match else None
+
+    def _filter_enrollable_program_entitlements(
+            self,
+            program_variants: List[dict],
+            enrollments: List[str],
+            entitlements: List[str],
+    ) -> List[str]:
+        """Filter out bundle entitlements in which user can enroll."""
+
+        active_user_paid_enrollments = []
+        for usr_enr in enrollments:
+            if usr_enr.get("is_active") and usr_enr.get("mode") not in EXCLUDED_ENROLLMENT_COURSE_MODES:
+                course_key = usr_enr.get("course_details", {}).get("course_id")
+                active_user_paid_enrollments.append(self._extract_course_id(course_key))
+
+        active_user_entitlements = []
+        for usr_ent in entitlements:
+            if not usr_ent.get("expired_at"):
+                active_user_entitlements.append(usr_ent.get("course_uuid"))
+
+        filtered_entitlement_skus = []
+        for variant in program_variants:
+            course_key = variant.get("course_key")
+            variant_key = variant.get("key")
+            price_sku = variant.get("standalone_price_sku")
+
+            # Filter out user active paid enrollments
+            if course_key not in active_user_paid_enrollments:
+                filtered_entitlement_skus.append(price_sku)
+
+            # Filter out user active entitlements
+            if variant_key not in active_user_entitlements:
+                filtered_entitlement_skus.append(price_sku)
+
+        return filtered_entitlement_skus
+
+    def _cents_to_dollar(self, cent_amount: float) -> float:
+        """Convert cent amount to dollar."""
+        return cent_amount / 100
+
+    def get(self, request, bundle_key=None):
+        """Return the price of the bundle for the specified course."""
+        username = request.query_params.get("username", "")
+        try:
+            ct_api_client = CTCustomAPIClient()
+            lms_api_client = LMSAPIClient()
+
+            # Fetch bundle variants with entitlements
+            program_variants = ct_api_client.get_program_variants(bundle_key)
+            if not program_variants:
+                return Response('Program variants not found', status=HTTP_404_NOT_FOUND)
+
+            ct_discount_offers = ct_api_client.get_ct_bundle_offers_without_code()
+
+            # Get applied program offer
+            program_offer = get_program_offer(ct_discount_offers, bundle_key)
+
+            user_enrollments = []
+            user_entitlements = []
+
+            if request.user.is_authenticated:
+                user_enrollments = lms_api_client.get_user_enrollments(username)
+                user_entitlements = lms_api_client.get_user_entitlements(username)
+
+            purchasable_entitlements_skus = self._filter_enrollable_program_entitlements(
+                program_variants,
+                user_enrollments,
+                user_entitlements,
+            )
+            if not purchasable_entitlements_skus:
+                return Response('User have already enrolled in all the bundle courses', status=HTTP_404_NOT_FOUND)
+
+            # Get price of each entitlement in the bundle
+            entitlements_standalone_prices = ct_api_client.get_program_entitlements_standalone_prices(
+                purchasable_entitlements_skus
+            )
+
+            # Calculate total price of the bundle
+            total_cent_amount = sum(item.get("value", {}).get("centAmount") for item in entitlements_standalone_prices)
+
+            discounted_cent_amount = self._calculate_discounted_price(program_offer, total_cent_amount)
+            currencyCode = entitlements_standalone_prices[0].get("value").get("currencyCode") \
+                if entitlements_standalone_prices else ""
+
+            output = {
+                "total_incl_tax_excl_discounts": self._cents_to_dollar(total_cent_amount),
+                "total_incl_tax": self._cents_to_dollar(discounted_cent_amount),
+                "currency": currencyCode,
+            }
+            return Response(output, status=HTTP_200_OK)
+
+        except HTTPError as err:
+            logger.exception(f"[ProgramPriceView] HTTP Error: {err}")
+            return Response('Error occurred while fetching data', status=HTTP_500_INTERNAL_SERVER_ERROR)
+        except Exception as err:  # pylint: disable=broad-except
+            logger.exception(f"[ProgramPriceView] Unexpected Error: {err}")
+            return Response('Unexpected error occurred', status=HTTP_500_INTERNAL_SERVER_ERROR)

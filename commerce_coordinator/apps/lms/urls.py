@@ -8,6 +8,7 @@ from commerce_coordinator.apps.lms.views import (
     FirstTimeDiscountEligibleView,
     OrderDetailsRedirectView,
     PaymentPageRedirectView,
+    ProgramPriceView,
     RefundView,
     RetirementView
 )
@@ -19,4 +20,5 @@ urlpatterns = [
     path('refund/', RefundView.as_view(), name='refund'),
     path('user_retirement/', RetirementView.as_view(), name='user_retirement'),
     path('first-time-discount-eligible/', FirstTimeDiscountEligibleView.as_view(), name='first_time_discount_eligible'),
+    path('program-price-info/<str:bundle_key>/', ProgramPriceView.as_view(), name='program_price_info'),
 ]

@@ -2,8 +2,10 @@
 Tests for the LMS (edx-platform) views.
 """
 import copy
+from unittest import mock
 from urllib.parse import unquote
 
+from commerce_coordinator.apps.lms.constants import CT_ABSOLUTE_DISCOUNT_TYPE
 import ddt
 import requests_mock
 from commercetools.exceptions import CommercetoolsError
@@ -550,3 +552,62 @@ class FirstTimeDiscountEligibleViewTests(APITestCase):
         response = self.client.post(self.url, self.invalid_payload, format='json')
 
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+
+
+class ProgramPriceViewTests(APITestCase):
+    """Tests for ProgramPriceView."""
+
+    def setUp(self):
+        super().setUp()
+        self.user = User.objects.create_user(username="testuser", password="testpassword")
+        self.base_url = reverse("lms:program_price_info", kwargs={"bundle_key": "test-bundle-key"})
+        self.url = f"{self.base_url}/?username={self.user.username}"
+        self.mock_ct_api_client = mock.patch('commerce_coordinator.apps.lms.views.CTCustomAPIClient').start()
+        self.mock_lms_api_client = mock.patch('commerce_coordinator.apps.lms.views.LMSAPIClient').start()
+        self.addCleanup(mock.patch.stopall)
+
+    def test_program_variants_not_found(self):
+        """Verify 404 is returned when program variants are not found."""
+        self.mock_ct_api_client.return_value.get_program_variants.return_value = None
+
+        response = self.client.get(self.url)
+
+        self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
+        self.assertEqual(response.data, 'Program variants not found')
+
+    def test_user_already_enrolled_in_all_courses(self):
+        """Verify 404 is returned when the user is already enrolled in all bundle courses."""
+        self.mock_ct_api_client.return_value.get_program_variants.return_value = [{'course_key': 'course-v1:edX+DemoX'}]
+        self.mock_ct_api_client.return_value.get_ct_bundle_offers_without_code.return_value = []
+        self.mock_lms_api_client.return_value.get_user_enrollments.return_value = [
+            {'is_active': True, 'mode': 'verified', 'course_details': {'course_id': 'course-v1:edX+DemoX'}}
+        ]
+        self.mock_lms_api_client.return_value.get_user_entitlements.return_value = []
+
+        response = self.client.get(self.url, {'username': 'test_user'})
+
+        self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
+        self.assertEqual(response.data, 'User have already enrolled in all the bundle courses')
+
+    def test_program_price_calculation_with_offer(self):
+        """Verify the program price is calculated correctly."""
+        self.mock_ct_api_client.return_value.get_program_variants.return_value = [
+            {'course_key': 'course-v1:edX+DemoX', 'standalone_price_sku': 'sku-1'}
+        ]
+        self.mock_ct_api_client.return_value.get_ct_bundle_offers_without_code.return_value = [
+            {'bundle_key': 'test-bundle-key', 'discount_type': CT_ABSOLUTE_DISCOUNT_TYPE, 'discount_value_in_cents': 500}
+        ]
+        self.mock_ct_api_client.return_value.get_program_entitlements_standalone_prices.return_value = [
+            {'value': {'centAmount': 2000, 'currencyCode': 'USD'}}
+        ]
+        self.mock_lms_api_client.return_value.get_user_enrollments.return_value = []
+        self.mock_lms_api_client.return_value.get_user_entitlements.return_value = []
+
+        response = self.client.get(self.url, {'username': 'test_user'})
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.data, {
+            "total_incl_tax_excl_discounts": 20.0,
+            "total_incl_tax": 15.0,
+            "currency": "USD"
+        })
