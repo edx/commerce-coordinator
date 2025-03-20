@@ -32,7 +32,7 @@ class Command(CommercetoolsAPIClientCommand):
 
     def handle(self, *args, **options):
         # Specify product type to fetch
-        product_type = ProductType.EDX_COURSE_ENTITLEMENT
+        product_type = ProductType.EDX_PROGRAM
 
         # Fetch products based on type
         products = self.fetch_products(product_type)
