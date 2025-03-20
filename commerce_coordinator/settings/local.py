@@ -113,7 +113,8 @@ JWT_AUTH.update({
 
 ENABLE_AUTO_AUTH = True
 
-LOGGING = get_logger_config(debug=DEBUG)
+LOGGING_FORMAT_STRING = os.environ.get("LOGGING_FORMAT_STRING", "")
+LOGGING = get_logger_config(debug=DEBUG, format_string=LOGGING_FORMAT_STRING)
 
 CELERY_BROKER_URL = "redis://:password@localhost:6379/0"
 
