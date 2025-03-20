@@ -14,3 +14,6 @@ CT_ORDER_PRODUCT_TYPE_FOR_BRAZE = {
     'edx_program': 'program',
     'edx_course_entitlement': 'program'
 }
+
+CT_ABSOLUTE_DISCOUNT_TYPE = 'absolute'
+BUNDLE_CART_DISCOUNT_KEY_FORMAT = "{type}-{value}"

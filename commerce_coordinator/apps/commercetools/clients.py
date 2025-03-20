@@ -382,6 +382,22 @@ class CommercetoolsAPIClient:
         results = self.base_client.product_projections.search(False, filter=f'key:"{program_id}"').results
 
         return results[0] if results else None
+    
+    def get_product_varients_program_id(self, program_key: str):
+        """
+        Fetches a program product from Commercetools.
+        Args:
+            program_id: The ID of the program (bundle) to fetch.
+        Returns:
+            CTProductVariant if found, None otherwise.
+        """
+        # results = self.base_client.product_projections.search(False, filter=f'key:"{program_id}"').results
+        results = self.base_client.products.get_by_key(
+            key=program_key,
+            expand="masterData.current.variants[*].attributes[*].value"
+        )
+        print("results========", results)
+        return results if results else None
 
     def get_product_variant_by_course_run(self, cr_id: str) -> Optional[CTProductVariant]:
         """
@@ -832,3 +848,16 @@ class CommercetoolsAPIClient:
                                        err, f"Unable to check if user {email} is eligible for a "
                                             f"first time discount", True)
             return True
+
+    def get_ct_cart_discounts(self) -> dict:
+        """
+        Get product offers from commercetools
+        Returns:
+            dict: Dictionary representation of JSON returned from API.
+        """
+        results = self.base_client.cart_discounts.query(
+            where='requiresDiscountCode=false and target(type="lineItems")'
+        )
+        
+        return results.results
+
