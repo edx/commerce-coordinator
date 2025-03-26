@@ -113,7 +113,11 @@ JWT_AUTH.update({
 
 ENABLE_AUTO_AUTH = True
 
-LOGGING_FORMAT_STRING = os.environ.get("LOGGING_FORMAT_STRING", "")
+# Default logging format string
+LOGGING_FORMAT_STRING = (
+    "%(asctime)s %(levelname)s %(process)d [%(name)s] [user %(userid)s] "
+    "[ip %(remoteip)s] %(filename)s:%(lineno)d - %(message)s"
+)
 LOGGING = get_logger_config(debug=DEBUG, format_string=LOGGING_FORMAT_STRING)
 
 CELERY_BROKER_URL = "redis://:password@localhost:6379/0"
