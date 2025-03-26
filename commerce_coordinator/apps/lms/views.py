@@ -4,7 +4,7 @@ Views for the ecommerce app
 import logging
 import re
 from typing import List
-from urllib.parse import urlencode, urljoin
+from urllib.parse import parse_qs, quote, urlencode, urljoin
 
 from commercetools import CommercetoolsError
 from django.conf import settings
@@ -443,14 +443,35 @@ class ProgramPriceView(APIView):
         """
         match = re.search(r"course-v1:(.+)", course_key)
         return match.group(1) if match else None
+    
+    def _extract_entitlement_uuid_and_course_key(self, variant_key: str) -> tuple:
+        """
+        Extract entitlement_uuid and course key for comparision
+        """
+        match = re.match(r"([a-f0-9-]+|[a-zA-Z]+)\+(.+)", variant_key)
+        course_key = match.group(2) if match else ""
+        entitlement_uuid = match.group(1) if match else ""
+
+        return entitlement_uuid, course_key
 
     def _filter_enrollable_program_entitlements(
             self,
             program_variants: List[dict],
+            user_enrollable_course_keys: List[str],
             enrollments: List[str],
             entitlements: List[str],
     ) -> List[str]:
         """Filter out bundle entitlements in which user can enroll."""
+
+        filtered_entitlement_skus = []
+        if user_enrollable_course_keys:
+            for variant in program_variants:
+                _ , course_key = self._extract_entitlement_uuid_and_course_key(variant.get("variant_key"))
+                if course_key in user_enrollable_course_keys:
+                    price_sku = variant.get("standalone_price_sku")
+                    filtered_entitlement_skus.append(price_sku)
+
+            return filtered_entitlement_skus
 
         active_user_paid_enrollments = []
         for usr_enr in enrollments:
@@ -463,18 +484,17 @@ class ProgramPriceView(APIView):
             if not usr_ent.get("expired_at"):
                 active_user_entitlements.append(usr_ent.get("course_uuid"))
 
-        filtered_entitlement_skus = []
         for variant in program_variants:
-            course_key = variant.get("course_key")
-            variant_key = variant.get("key")
             price_sku = variant.get("standalone_price_sku")
+            variant_key = variant.get("variant_key", "")
+            entitlement_uuid, course_key = self._extract_entitlement_uuid_and_course_key(variant_key)
 
             # Filter out user active paid enrollments
             if course_key not in active_user_paid_enrollments:
                 filtered_entitlement_skus.append(price_sku)
 
             # Filter out user active entitlements
-            if variant_key not in active_user_entitlements:
+            if entitlement_uuid not in active_user_entitlements:
                 filtered_entitlement_skus.append(price_sku)
 
         return filtered_entitlement_skus
@@ -486,6 +506,8 @@ class ProgramPriceView(APIView):
     def get(self, request, bundle_key=None):
         """Return the price of the bundle for the specified course."""
         username = request.query_params.get("username", "")
+        user_enrollable_course_keys = [key.replace(" ", "+") for key in request.GET.getlist("course_key")]
+
         try:
             ct_api_client = CTCustomAPIClient()
             lms_api_client = LMSAPIClient()
@@ -502,18 +524,21 @@ class ProgramPriceView(APIView):
 
             user_enrollments = []
             user_entitlements = []
-
-            if request.user.is_authenticated:
+            # Calculate program price based on course keys passed from LMS, that user has not already purchased
+            # Fallback to check if user is authenticated, fetch user enrollments and entitlements,
+            # filter out these from program courses and calculate the price based on that
+            if request.user.is_authenticated and not user_enrollable_course_keys:
                 user_enrollments = lms_api_client.get_user_enrollments(username)
                 user_entitlements = lms_api_client.get_user_entitlements(username)
 
             purchasable_entitlements_skus = self._filter_enrollable_program_entitlements(
                 program_variants,
+                user_enrollable_course_keys,
                 user_enrollments,
                 user_entitlements,
             )
             if not purchasable_entitlements_skus:
-                return Response('User have already enrolled in all the bundle courses', status=HTTP_404_NOT_FOUND)
+                return Response('No courses available for the user to enroll in', status=HTTP_404_NOT_FOUND)
 
             # Get price of each entitlement in the bundle
             entitlements_standalone_prices = ct_api_client.get_program_entitlements_standalone_prices(

@@ -53,7 +53,7 @@ def get_program_offer(cart_discounts: list, bundle_key: str) -> dict:
     default_program_offer = None
     for cart_discount in cart_discounts:
         cart_discount_key = cart_discount.get("key")
-        predicate = extract_uuids_from_predicate(cart_discount.get("target").get("predicate"))
+        predicate = extract_uuids_from_predicate(cart_discount.get("target", {}).get("predicate"))
 
         if cart_discount_key == DEFAULT_BUNDLE_DISCOUNT_KEY:
             default_program_offer = cart_discount

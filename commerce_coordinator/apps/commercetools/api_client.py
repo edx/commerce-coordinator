@@ -141,11 +141,10 @@ class CTCustomAPIClient:
                     expanded_entitlement_obj = attribute.get("value", {}).get("obj", {})
                     master_data = expanded_entitlement_obj.get("masterData", {})
                     master_variant = master_data.get("current", {}).get("masterVariant", {})
-                    course_key = variant.get("sku").split("+", 1)[1]
 
                     entitlement_products.append({
                         "standalone_price_sku": master_variant.get("sku"),
-                        "course_key": course_key,
+                        "variant_key": variant.get("key"),
                     })
 
         return entitlement_products
