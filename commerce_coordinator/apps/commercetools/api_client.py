@@ -35,7 +35,7 @@ class CTCustomAPIClient:
             "scope": self.config['scopes'],
         }
 
-        response = requests.post(auth_url, auth=auth, data=data, timeout=settings.REQUEST_CONNECT_TIMEOUT_SECONDS,)
+        response = requests.post(auth_url, auth=auth, data=data, timeout=settings.REQUEST_CONNECT_TIMEOUT_SECONDS)
 
         response.raise_for_status()
         return response.json()["access_token"]
@@ -103,7 +103,7 @@ class CTCustomAPIClient:
             params={"where": query_params, "sort": "sortOrder desc"},
         )
         if not bundle_offer_without_codes:
-            return None
+            return []
 
         return bundle_offer_without_codes.get("results", [])
 

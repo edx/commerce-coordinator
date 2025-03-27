@@ -4,7 +4,7 @@ Views for the ecommerce app
 import logging
 import re
 from typing import List
-from urllib.parse import parse_qs, quote, urlencode, urljoin
+from urllib.parse import urlencode, urljoin
 
 from commercetools import CommercetoolsError
 from django.conf import settings
@@ -435,6 +435,9 @@ class ProgramPriceView(APIView):
         else:
             discounted_price -= discounted_price * program_offer.get("discount_value_in_cents") / 10000
 
+        if discounted_price < 1:
+            return program_price
+
         return discounted_price
 
     def _extract_course_id(self, course_key: str) -> str:
@@ -443,7 +446,7 @@ class ProgramPriceView(APIView):
         """
         match = re.search(r"course-v1:(.+)", course_key)
         return match.group(1) if match else None
-    
+
     def _extract_entitlement_uuid_and_course_key(self, variant_key: str) -> tuple:
         """
         Extract entitlement_uuid and course key for comparision
@@ -499,7 +502,7 @@ class ProgramPriceView(APIView):
 
         return filtered_entitlement_skus
 
-    def _cents_to_dollar(self, cent_amount: float) -> float:
+    def _cents_to_dollars(self, cent_amount: float) -> float:
         """Convert cent amount to dollar."""
         return cent_amount / 100
 
@@ -553,8 +556,8 @@ class ProgramPriceView(APIView):
                 if entitlements_standalone_prices else ""
 
             output = {
-                "total_incl_tax_excl_discounts": self._cents_to_dollar(total_cent_amount),
-                "total_incl_tax": self._cents_to_dollar(discounted_cent_amount),
+                "total_incl_tax_excl_discounts": self._cents_to_dollars(total_cent_amount),
+                "total_incl_tax": self._cents_to_dollars(discounted_cent_amount),
                 "currency": currencyCode,
             }
             return Response(output, status=HTTP_200_OK)
