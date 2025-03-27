@@ -426,81 +426,86 @@ class ProgramPriceView(APIView):
         if not program_offer:
             return program_price
 
-        if program_price < 1:
-            return program_price
-
         discounted_price = program_price
         if program_offer.get("discount_type") == CT_ABSOLUTE_DISCOUNT_TYPE:
             discounted_price -= program_offer.get("discount_value_in_cents")
         else:
             discounted_price -= discounted_price * program_offer.get("discount_value_in_cents") / 10000
 
-        if discounted_price < 1:
+        if discounted_price < 0:
             return program_price
 
         return discounted_price
 
-    def _extract_course_id(self, course_key: str) -> str:
+    def _extract_parent_course_key(self, course_key: str) -> str:
         """
         Extract course_id for comparision
         """
-        match = re.search(r"course-v1:(.+)", course_key)
-        return match.group(1) if match else None
+        match = re.search(r'course-v1:([^+]+)\+([^+]+)', course_key)
+        if match:
+            return f"{match.group(1)}+{match.group(2)}"
+        else:
+            return None
 
-    def _extract_entitlement_uuid_and_course_key(self, variant_key: str) -> tuple:
+    def _extract_course_key_from_variant_key(self, variant_key: str) -> tuple:
         """
-        Extract entitlement_uuid and course key for comparision
+        Extract course key for comparision
         """
         match = re.match(r"([a-f0-9-]+|[a-zA-Z]+)\+(.+)", variant_key)
         course_key = match.group(2) if match else ""
-        entitlement_uuid = match.group(1) if match else ""
 
-        return entitlement_uuid, course_key
+        return course_key
 
     def _filter_enrollable_program_entitlements(
-            self,
-            program_variants: List[dict],
-            user_enrollable_course_keys: List[str],
-            enrollments: List[str],
-            entitlements: List[str],
+        self,
+        program_variants: List[str],
+        user_enrollable_course_keys: List[str],
+        enrollments: List[str],
+        entitlements: List[str],
     ) -> List[str]:
-        """Filter out bundle entitlements in which user can enroll."""
+        """Filter out bundle entitlements based on enrollable conditions."""
 
-        filtered_entitlement_skus = []
+        # If user have no enrolled courses and enrollments return all entitlements
+        if not user_enrollable_course_keys and not enrollments and not entitlements:
+            return [variant.get("entitlement_sku") for variant in program_variants]
+
+        # If user has enrolled courses belong to a program, filter out these courses from program
         if user_enrollable_course_keys:
-            for variant in program_variants:
-                _ , course_key = self._extract_entitlement_uuid_and_course_key(variant.get("variant_key"))
-                if course_key in user_enrollable_course_keys:
-                    price_sku = variant.get("standalone_price_sku")
-                    filtered_entitlement_skus.append(price_sku)
+            return [
+                variant.get("entitlement_sku")
+                for variant in program_variants
+                if self._extract_course_key_from_variant_key(variant.get("variant_key", ""))
+                in user_enrollable_course_keys
+            ]
 
-            return filtered_entitlement_skus
+        # If user has active enrollments, filter out these courses from program that user has already purchased
+        if enrollments:
+            purchased_courses = {
+                usr_enr.get("course_details", {}).get("course_id")
+                for usr_enr in enrollments
+                if usr_enr.get("is_active") and usr_enr.get("mode") not in EXCLUDED_ENROLLMENT_COURSE_MODES
+            }
 
-        active_user_paid_enrollments = []
-        for usr_enr in enrollments:
-            if usr_enr.get("is_active") and usr_enr.get("mode") not in EXCLUDED_ENROLLMENT_COURSE_MODES:
-                course_key = usr_enr.get("course_details", {}).get("course_id")
-                active_user_paid_enrollments.append(self._extract_course_id(course_key))
+            program_variants = [
+                variant for variant in program_variants
+                if not any(
+                    self._extract_course_key_from_variant_key(variant.get("variant_key", "")) in course_run
+                    for course_run in purchased_courses
+                )
+            ]
 
-        active_user_entitlements = []
-        for usr_ent in entitlements:
-            if not usr_ent.get("expired_at"):
-                active_user_entitlements.append(usr_ent.get("course_uuid"))
+        # If user has active entitlements, filter out these entitlements that user has already purchased
+        if entitlements:
+            purchased_entitlements = {
+                usr_ent.get("course_uuid") for usr_ent in entitlements if not usr_ent.get("expired_at")
+            }
 
-        for variant in program_variants:
-            price_sku = variant.get("standalone_price_sku")
-            variant_key = variant.get("variant_key", "")
-            entitlement_uuid, course_key = self._extract_entitlement_uuid_and_course_key(variant_key)
+            program_variants = [
+                variant for variant in program_variants
+                if variant.get("entitlement_sku") not in purchased_entitlements
+            ]
 
-            # Filter out user active paid enrollments
-            if course_key not in active_user_paid_enrollments:
-                filtered_entitlement_skus.append(price_sku)
-
-            # Filter out user active entitlements
-            if entitlement_uuid not in active_user_entitlements:
-                filtered_entitlement_skus.append(price_sku)
-
-        return filtered_entitlement_skus
+        return [variant.get("entitlement_sku") for variant in program_variants]
 
     def _cents_to_dollars(self, cent_amount: float) -> float:
         """Convert cent amount to dollar."""
@@ -518,6 +523,7 @@ class ProgramPriceView(APIView):
             # Fetch bundle variants with entitlements
             program_variants = ct_api_client.get_program_variants(bundle_key)
             if not program_variants:
+                logger.info(f"[ProgramPriceView] No program variants found for the program: {bundle_key} for user: {username}.")
                 return Response('Program variants not found', status=HTTP_404_NOT_FOUND)
 
             ct_discount_offers = ct_api_client.get_ct_bundle_offers_without_code()
@@ -541,6 +547,7 @@ class ProgramPriceView(APIView):
                 user_entitlements,
             )
             if not purchasable_entitlements_skus:
+                logger.info(f"[ProgramPriceView] No courses available for the user: {username} to enroll in the program: {bundle_key}.")
                 return Response('No courses available for the user to enroll in', status=HTTP_404_NOT_FOUND)
 
             # Get price of each entitlement in the bundle

@@ -574,7 +574,6 @@ class ProgramPriceViewTests(APITestCase):
         self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
         self.assertEqual(response.data, 'Program variants not found')
 
-    @unittest.skip("Skipping this test")
     def test_user_already_enrolled_in_all_courses(self):
         """Verify 404 is returned when the user is already enrolled in all bundle courses."""
         self.mock_ct_api_client.return_value.get_program_variants.return_value = [
@@ -595,7 +594,7 @@ class ProgramPriceViewTests(APITestCase):
     def test_program_price_calculation_with_offer(self):
         """Verify the program price is calculated correctly with program offer."""
         self.mock_ct_api_client.return_value.get_program_variants.return_value = [
-            {'course_key': 'course-v1:edX+DemoX', 'standalone_price_sku': 'sku-1'}
+            {'course_key': 'course-v1:edX+DemoX', 'entitlement_sku': 'sku-1'}
         ]
         self.mock_ct_api_client.return_value.get_ct_bundle_offers_without_code.return_value = [
             {
@@ -624,7 +623,7 @@ class ProgramPriceViewTests(APITestCase):
     def test_program_price_calculation_with_out_offer(self):
         """Verify the program price is calculated correctly without program offer."""
         self.mock_ct_api_client.return_value.get_program_variants.return_value = [
-            {'course_key': 'course-v1:edX+DemoX', 'standalone_price_sku': 'sku-1'}
+            {'course_key': 'course-v1:edX+DemoX', 'entitlement_sku': 'sku-1'}
         ]
         self.mock_ct_api_client.return_value.get_ct_bundle_offers_without_code.return_value = []
         self.mock_ct_api_client.return_value.get_program_entitlements_standalone_prices.return_value = [

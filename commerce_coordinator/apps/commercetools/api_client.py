@@ -143,7 +143,7 @@ class CTCustomAPIClient:
                     master_variant = master_data.get("current", {}).get("masterVariant", {})
 
                     entitlement_products.append({
-                        "standalone_price_sku": master_variant.get("sku"),
+                        "entitlement_sku": master_variant.get("sku"),
                         "variant_key": variant.get("key"),
                     })
 
