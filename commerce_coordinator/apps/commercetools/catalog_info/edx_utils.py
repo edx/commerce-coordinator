@@ -47,6 +47,8 @@ def get_edx_lms_user_name(customer: CTCustomer):
 
 
 def get_edx_successful_payment_info(order: CTOrder):
+    if not order.payment_info:
+        return None, None
     for pr in order.payment_info.payments:
         pmt = pr.obj
         if pmt.payment_status.interface_code == PAYMENT_STATUS_INTERFACE_CODE_SUCCEEDED and pmt.interface_id:
