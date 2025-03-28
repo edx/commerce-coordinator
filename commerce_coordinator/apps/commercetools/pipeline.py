@@ -188,7 +188,7 @@ class FetchOrderDetailsByOrderID(PipelineStep):
                 "order_data": ct_order,
                 "order_id": ct_order.id,
                 "psp": psp,
-                "payment_intent_id": payment.interface_id,
+                "payment_intent_id": payment.interface_id if payment else None,
                 "filtered_line_item_ids": filtered_line_item_ids,
                 "refunded_line_item_refunds": refunded_items
             }
@@ -302,6 +302,10 @@ class UpdateCommercetoolsOrderReturnPaymentStatus(PipelineStep):
             log.info(f"[{tag}] PSP Refund error, skipping order refund payment transaction updation")
             return PipelineCommand.CONTINUE.value
 
+        if kwargs.get('payment_intent_id') is None and kwargs.get('psp') is None:
+            log.info(f"[{tag}] Payment data not found, skipping order refund payment transaction updation")
+            return PipelineCommand.CONTINUE.value
+
         order = kwargs['order_data']
         return_line_items = kwargs['return_line_items']
         return_line_item_return_ids = list(return_line_items.values())
@@ -367,6 +371,10 @@ class CreateReturnPaymentTransaction(PipelineStep):
 
         if kwargs.get('psp_refund_error'):
             log.info(f"[{tag}] PSP Refund error, skipping refund payment transaction creation")
+            return PipelineCommand.CONTINUE.value
+
+        if payment_data is None and psp is None:
+            log.info(f"[{tag}] Payment data not found, skipping refund payment transaction creation")
             return PipelineCommand.CONTINUE.value
 
         ct_api_client = CommercetoolsAPIClient()
