@@ -2,7 +2,6 @@
 Tests for the LMS (edx-platform) views.
 """
 import copy
-import unittest
 from unittest import mock
 from urllib.parse import unquote
 
@@ -15,6 +14,7 @@ from django.test import override_settings
 from django.urls import reverse
 from mock import patch
 from openedx_filters.exceptions import OpenEdxFilterException
+from requests import HTTPError
 from rest_framework import status
 from rest_framework.test import APITestCase
 
@@ -558,43 +558,45 @@ class FirstTimeDiscountEligibleViewTests(APITestCase):
 class ProgramPriceViewTests(APITestCase):
     """Tests for ProgramPriceView."""
 
+    test_user_username = 'test'
+    test_user_email = 'test@example.com'
+    test_user_password = 'secret'
+
     def setUp(self):
         super().setUp()
+        self.user = User.objects.create_user(
+            self.test_user_username,
+            self.test_user_email,
+            self.test_user_password,
+        )
         self.url = reverse("lms:program_price_info", kwargs={"bundle_key": "test-bundle-key"})
         self.mock_ct_api_client = mock.patch('commerce_coordinator.apps.lms.views.CTCustomAPIClient').start()
-        self.mock_lms_api_client = mock.patch('commerce_coordinator.apps.lms.views.LMSAPIClient').start()
         self.addCleanup(mock.patch.stopall)
+
+    def tearDown(self):
+        super().tearDown()
+        self.client.logout()
+
+    def authenticate_user(self):
+        self.client.login(username=self.test_user_username, password=self.test_user_password)
+        self.client.force_authenticate(user=self.user)
 
     def test_program_variants_not_found(self):
         """Verify 404 is returned when program variants are not found."""
+        self.authenticate_user()
         self.mock_ct_api_client.return_value.get_program_variants.return_value = None
 
         response = self.client.get(self.url)
 
         self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
-        self.assertEqual(response.data, 'Program variants not found')
-
-    def test_user_already_enrolled_in_all_courses(self):
-        """Verify 404 is returned when the user is already enrolled in all bundle courses."""
-        self.mock_ct_api_client.return_value.get_program_variants.return_value = [
-            {'variant_sku': 'ai+edX+DemoX'}
-        ]
-        self.mock_ct_api_client.return_value.get_ct_bundle_offers_without_code.return_value = []
-
-        self.mock_lms_api_client.return_value.get_user_enrollments.return_value = [
-            {'is_active': True, 'mode': 'verified', 'course_details': {'course_id': 'course-v1:edX+DemoX'}}
-        ]
-        self.mock_lms_api_client.return_value.get_user_entitlements.return_value = []
-
-        response = self.client.get(self.url, {"username": "test_user"})
-
-        self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
-        self.assertEqual(response.data, "No courses available for the user to enroll in")
+        self.assertEqual(response.data, 'Program variants not found.')
 
     def test_program_price_calculation_with_offer(self):
         """Verify the program price is calculated correctly with program offer."""
+        self.authenticate_user()
         self.mock_ct_api_client.return_value.get_program_variants.return_value = [
-            {'course_key': 'course-v1:edX+DemoX', 'entitlement_sku': 'sku-1'}
+            {'variant_key': 'ai+edX+DemoX', 'entitlement_sku': 'uuid16'},
+            {'variant_key': 'ai+edX+M12', 'entitlement_sku': 'uuid16'}
         ]
         self.mock_ct_api_client.return_value.get_ct_bundle_offers_without_code.return_value = [
             {
@@ -606,37 +608,47 @@ class ProgramPriceViewTests(APITestCase):
             }
         ]
         self.mock_ct_api_client.return_value.get_program_entitlements_standalone_prices.return_value = [
-            {'value': {'centAmount': 2000, 'currencyCode': 'USD'}}
+            {'value': {'centAmount': 2000, 'currencyCode': 'USD'}},
+            {'value': {'centAmount': 1000, 'currencyCode': 'USD'}}
         ]
-        self.mock_lms_api_client.return_value.get_user_enrollments.return_value = []
-        self.mock_lms_api_client.return_value.get_user_entitlements.return_value = []
 
-        response = self.client.get(self.url, {'username': 'test_user'})
+        response = self.client.get(self.url, {'username': 'test_user', 'course_key': ['edX+DemoX', 'edX+M12']})
 
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(response.data, {
-            "total_incl_tax_excl_discounts": 20.0,
-            "total_incl_tax": 18.0,
+            "total_incl_tax_excl_discounts": 30.0,
+            "total_incl_tax": 27.0,
             "currency": "USD"
         })
 
-    def test_program_price_calculation_with_out_offer(self):
+    def test_program_price_calculation_without_offer(self):
         """Verify the program price is calculated correctly without program offer."""
+        self.authenticate_user()
         self.mock_ct_api_client.return_value.get_program_variants.return_value = [
-            {'course_key': 'course-v1:edX+DemoX', 'entitlement_sku': 'sku-1'}
+            {'variant_key': 'ai+edX+DemoX', 'entitlement_sku': 'uuid16'},
+            {'variant_key': 'ai+edX+M12', 'entitlement_sku': 'uuid16'}
         ]
         self.mock_ct_api_client.return_value.get_ct_bundle_offers_without_code.return_value = []
         self.mock_ct_api_client.return_value.get_program_entitlements_standalone_prices.return_value = [
-            {'value': {'centAmount': 2000, 'currencyCode': 'USD'}}
+            {'value': {'centAmount': 2000, 'currencyCode': 'USD'}},
+            {'value': {'centAmount': 1000, 'currencyCode': 'USD'}}
         ]
-        self.mock_lms_api_client.return_value.get_user_enrollments.return_value = []
-        self.mock_lms_api_client.return_value.get_user_entitlements.return_value = []
 
-        response = self.client.get(self.url, {'username': 'test_user'})
+        response = self.client.get(self.url, {'username': 'test_user', 'course_key': ['edX+DemoX', 'edX+M12']})
 
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(response.data, {
-            "total_incl_tax_excl_discounts": 20.0,
-            "total_incl_tax": 20.0,
+            "total_incl_tax_excl_discounts": 30.0,
+            "total_incl_tax": 30.0,
             "currency": "USD"
         })
+
+    def test_CT_http_error_handling(self):
+        """Verify HTTP 500 is returned when an HTTPError occurs."""
+        self.authenticate_user()
+        self.mock_ct_api_client.return_value.get_program_variants.side_effect = HTTPError("HTTP Error")
+
+        response = self.client.get(self.url)
+
+        self.assertEqual(response.status_code, status.HTTP_500_INTERNAL_SERVER_ERROR)
+        self.assertEqual(response.data, 'Error occurred while fetching data')

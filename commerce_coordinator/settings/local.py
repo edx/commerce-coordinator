@@ -128,10 +128,6 @@ LMS_DASHBOARD_URL = "http://localhost:18000"  # fix me
 
 FULFILLMENT_TIMEOUT = 15  # Devstack is slow!
 
-ENROLLMENT_TIMEOUT = 10
-
-DEFAULT_LMS_TIMEOUT = 5
-
 PAYMENT_PROCESSOR_CONFIG = {
     'edx': {
         'stripe': {

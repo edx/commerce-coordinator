@@ -14,7 +14,7 @@ from edx_rest_framework_extensions.permissions import LoginRedirectIfUnauthentic
 from openedx_filters.exceptions import OpenEdxFilterException
 from requests import HTTPError
 from rest_framework.exceptions import ValidationError
-from rest_framework.permissions import AllowAny, IsAdminUser
+from rest_framework.permissions import IsAdminUser, IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.status import (
     HTTP_200_OK,
@@ -26,12 +26,11 @@ from rest_framework.status import (
 from rest_framework.throttling import UserRateThrottle
 from rest_framework.views import APIView
 
-from commerce_coordinator.apps.commercetools.api_client import CTCustomAPIClient
 from commerce_coordinator.apps.commercetools.clients import CommercetoolsAPIClient
+from commerce_coordinator.apps.commercetools.http_api_client import CTCustomAPIClient
 from commerce_coordinator.apps.core.constants import HttpHeadersNames, MediaTypes
 from commerce_coordinator.apps.core.exceptions import InvalidFilterType
-from commerce_coordinator.apps.lms.clients import LMSAPIClient
-from commerce_coordinator.apps.lms.constants import CT_ABSOLUTE_DISCOUNT_TYPE, EXCLUDED_ENROLLMENT_COURSE_MODES
+from commerce_coordinator.apps.lms.constants import CT_ABSOLUTE_DISCOUNT_TYPE
 from commerce_coordinator.apps.lms.filters import (
     OrderRefundRequested,
     PaymentPageRedirectRequested,
@@ -418,7 +417,7 @@ class FirstTimeDiscountEligibleView(APIView):
 class ProgramPriceView(APIView):
     """View to get the price of a program."""
     authentication_classes = (JwtAuthentication,)
-    permission_classes = (AllowAny,)
+    permission_classes = (IsAuthenticated,)
     throttle_classes = []
 
     def _calculate_discounted_price(self, program_offer: dict, program_price: float) -> float:
@@ -456,56 +455,22 @@ class ProgramPriceView(APIView):
 
         return course_key
 
-    def _filter_enrollable_program_entitlements(
-        self,
-        program_variants: List[str],
-        user_enrollable_course_keys: List[str],
-        enrollments: List[str],
-        entitlements: List[str],
+    def _get_program_entitlements_to_be_purchased(
+            self,
+            program_variants: List[object],
+            user_enrollable_course_keys: List[object],
     ) -> List[str]:
         """Filter out bundle entitlements based on enrollable conditions."""
 
-        # If user have no enrolled courses and enrollments return all entitlements
-        if not user_enrollable_course_keys and not enrollments and not entitlements:
+        if not user_enrollable_course_keys:
             return [variant.get("entitlement_sku") for variant in program_variants]
 
-        # If user has enrolled courses belong to a program, filter out these courses from program
-        if user_enrollable_course_keys:
-            return [
-                variant.get("entitlement_sku")
-                for variant in program_variants
-                if self._extract_course_key_from_variant_key(variant.get("variant_key", ""))
-                in user_enrollable_course_keys
-            ]
-
-        # If user has active enrollments, filter out these courses from program that user has already purchased
-        if enrollments:
-            purchased_courses = {
-                usr_enr.get("course_details", {}).get("course_id")
-                for usr_enr in enrollments
-                if usr_enr.get("is_active") and usr_enr.get("mode") not in EXCLUDED_ENROLLMENT_COURSE_MODES
-            }
-
-            program_variants = [
-                variant for variant in program_variants
-                if not any(
-                    self._extract_course_key_from_variant_key(variant.get("variant_key", "")) in course_run
-                    for course_run in purchased_courses
-                )
-            ]
-
-        # If user has active entitlements, filter out these entitlements that user has already purchased
-        if entitlements:
-            purchased_entitlements = {
-                usr_ent.get("course_uuid") for usr_ent in entitlements if not usr_ent.get("expired_at")
-            }
-
-            program_variants = [
-                variant for variant in program_variants
-                if variant.get("entitlement_sku") not in purchased_entitlements
-            ]
-
-        return [variant.get("entitlement_sku") for variant in program_variants]
+        return [
+            variant.get("entitlement_sku")
+            for variant in program_variants
+            if self._extract_course_key_from_variant_key(variant.get("variant_key", ""))
+            in user_enrollable_course_keys
+        ]
 
     def _cents_to_dollars(self, cent_amount: float) -> float:
         """Convert cent amount to dollar."""
@@ -513,42 +478,29 @@ class ProgramPriceView(APIView):
 
     def get(self, request, bundle_key=None):
         """Return the price of the bundle for the specified course."""
-        username = request.query_params.get("username", "")
-        user_enrollable_course_keys = [key.replace(" ", "+") for key in request.GET.getlist("course_key")]
+        username = request.GET.get("username", "")
+        user_purchasable_course_keys = request.GET.getlist("course_key")
 
         try:
             ct_api_client = CTCustomAPIClient()
-            lms_api_client = LMSAPIClient()
 
             # Fetch bundle variants with entitlements
-            program_variants = ct_api_client.get_program_variants(bundle_key)
-            if not program_variants:
-                logger.info(f"[ProgramPriceView] No program variants found for the program: {bundle_key} for user: {username}.")
-                return Response('Program variants not found', status=HTTP_404_NOT_FOUND)
+            ct_program_variants = ct_api_client.get_program_variants(bundle_key)
+            if not ct_program_variants:
+                logger.error(f"[ProgramPriceView] No program variants found for the program: "
+                             f"{bundle_key} for user: {username}.")
+                return Response('Program variants not found.', status=HTTP_404_NOT_FOUND)
 
             ct_discount_offers = ct_api_client.get_ct_bundle_offers_without_code()
 
             # Get applied program offer
             program_offer = get_program_offer(ct_discount_offers, bundle_key)
 
-            user_enrollments = []
-            user_entitlements = []
-            # Calculate program price based on course keys passed from LMS, that user has not already purchased
-            # Fallback to check if user is authenticated, fetch user enrollments and entitlements,
-            # filter out these from program courses and calculate the price based on that
-            if request.user.is_authenticated and not user_enrollable_course_keys:
-                user_enrollments = lms_api_client.get_user_enrollments(username)
-                user_entitlements = lms_api_client.get_user_entitlements(username)
-
-            purchasable_entitlements_skus = self._filter_enrollable_program_entitlements(
-                program_variants,
-                user_enrollable_course_keys,
-                user_enrollments,
-                user_entitlements,
+            # Calculate program price based on already filtered course keys passed from LMS
+            purchasable_entitlements_skus = self._get_program_entitlements_to_be_purchased(
+                ct_program_variants,
+                user_purchasable_course_keys,
             )
-            if not purchasable_entitlements_skus:
-                logger.info(f"[ProgramPriceView] No courses available for the user: {username} to enroll in the program: {bundle_key}.")
-                return Response('No courses available for the user to enroll in', status=HTTP_404_NOT_FOUND)
 
             # Get price of each entitlement in the bundle
             entitlements_standalone_prices = ct_api_client.get_program_entitlements_standalone_prices(
@@ -559,8 +511,11 @@ class ProgramPriceView(APIView):
             total_cent_amount = sum(item.get("value", {}).get("centAmount") for item in entitlements_standalone_prices)
 
             discounted_cent_amount = self._calculate_discounted_price(program_offer, total_cent_amount)
-            currencyCode = entitlements_standalone_prices[0].get("value").get("currencyCode") \
-                if entitlements_standalone_prices else ""
+            currencyCode = (
+                entitlements_standalone_prices[0].get("value").get("currencyCode")
+                if entitlements_standalone_prices
+                else ""
+            )
 
             output = {
                 "total_incl_tax_excl_discounts": self._cents_to_dollars(total_cent_amount),

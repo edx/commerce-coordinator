@@ -72,7 +72,3 @@ EDX_API_KEY = 'PUT_YOUR_API_KEY_HERE'  # This is the actual API key in devstack.
 
 # Special timeout for fulfillment.
 FULFILLMENT_TIMEOUT = 15  # Devstack is slow!
-
-ENROLLMENT_TIMEOUT = 10
-
-DEFAULT_LMS_TIMEOUT = 5
