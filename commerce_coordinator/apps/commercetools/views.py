@@ -20,6 +20,8 @@ from commerce_coordinator.apps.commercetools.sub_messages.signals_dispatch impor
     fulfill_order_returned_signal,
     fulfill_order_sanctioned_message_signal
 )
+from commerce_coordinator.apps.core.memcache import safe_key
+from commerce_coordinator.apps.core.tasks import acquire_task_lock
 from commerce_coordinator.apps.core.views import SingleInvocationAPIView
 
 logger = logging.getLogger(__name__)
@@ -50,11 +52,13 @@ class OrderFulfillView(SingleInvocationAPIView):
         line_item_state_id = message_details.data['to_state']['id']
         message_id = message_details.data['message_id']
 
-        if self._is_running(tag, order_id):  # pragma no cover
-            self.meta_should_mark_not_running = False
+        task_key = safe_key(key=order_id, key_prefix=tag, version='1')
+
+        if not acquire_task_lock(task_key):
+            logger.info(
+                f"Task {task_key} is already running. Exiting current task."
+            )
             return Response(status=status.HTTP_200_OK)
-        else:
-            self.mark_running(tag, order_id)
 
         fulfill_order_placed_message_signal.send_robust(
             sender=self,
