@@ -171,7 +171,26 @@ class OrderFulfillViewTests(APITestCase):
         # Check 403 Forbidden
         self.assertEqual(response.status_code, 403)
 
-    def test_view_skips_if_task_lock_already_held(self, _mock_signal):
+    def test_task_lock_works_fine(self, mock_signal):
+        """
+        Check that if task lock is already held, signal is not sent and response is 200.
+        and if the task lock is not held, the lock is set and signal is sent.
+        """
+
+        self.client.login(username=self.test_staff_username, password=self.test_password)
+
+        with patch('commerce_coordinator.apps.commercetools.views.acquire_task_lock', side_effect=[True, False]):
+            # First post: lock is acquired, signal should be called
+            response = self.client.post(self.url, data=EXAMPLE_COMMERCETOOLS_ORDER_FULFILL_MESSAGE, format='json')
+            self.assertEqual(response.status_code, 200)
+            mock_signal.assert_called_once()
+
+            # Second post: lock is not acquired, signal should not be called again
+            response = self.client.post(self.url, data=EXAMPLE_COMMERCETOOLS_ORDER_FULFILL_MESSAGE, format='json')
+            self.assertEqual(response.status_code, 200)
+            self.assertEqual(mock_signal.call_count, 1)
+
+    def test_view_skips_task_if_task_lock_already_held(self, _mock_signal):
         """Check that if task lock is already held, signal is not sent and response is 200."""
 
         self.client.login(username=self.test_staff_username, password=self.test_password)

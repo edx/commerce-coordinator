@@ -56,7 +56,7 @@ class OrderFulfillView(SingleInvocationAPIView):
 
         if not acquire_task_lock(task_key):
             logger.info(
-                f"Task {task_key} is already running. Exiting current task."
+                f"Task {task_key} is already running. Exiting current task. Order ID: {order_id}."
             )
             return Response(status=status.HTTP_200_OK)
 
