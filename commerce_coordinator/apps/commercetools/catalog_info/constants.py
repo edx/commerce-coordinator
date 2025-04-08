@@ -63,6 +63,9 @@ class TwoUKeys:
     # Category custom field to store in cart discount
     CART_DISCOUNT_CATEGORY = 'category'
 
+    # Channel custom field to store in cart discount
+    CART_DISCOUNT_CHANNEL = 'channel'
+
     # Discount Type custom field to store in cart discount
     CART_DISCOUNT_DISCOUNT_TYPE = 'discountType'
 
@@ -133,4 +136,13 @@ CART_DISCOUNT_CATEGORIES = [
     {"key": "on-campus-learners", "label": "On-Campus Learners"},
     {"key": "partner-no-rev-prepay", "label": "Partner No Rev - Prepay"},
     {"key": "other", "label": "Other"}
+]
+
+CART_DISCOUNT_CHANNELS = [
+    {"key": "affiliate", "label": "Affiliate"},
+    {"key": "display-pmax", "label": "Display/PMAX"},
+    {"key": "email", "label": "Email"},
+    {"key": "enterprise-b2b", "label": "Enterprise/B2B"},
+    {"key": "organic-edx", "label": "Organic/EdX"},
+    {"key": "other", "label": "Other"},
 ]

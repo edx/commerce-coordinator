@@ -3,11 +3,7 @@ import sys
 from typing import Literal, Union
 
 from commercetools import CommercetoolsError
-from commercetools.platform.models import (
-    TypeAddFieldDefinitionAction,
-    TypeChangeNameAction,
-    TypeAddEnumValueAction
-)
+from commercetools.platform.models import TypeAddEnumValueAction, TypeAddFieldDefinitionAction, TypeChangeNameAction
 
 
 def yn(question: str, default: Union[Literal['y', 'n']] = "n"):
@@ -69,17 +65,20 @@ def handle_custom_field_enums_update(ct_api_client, custom_type):
         data = ret.serialize()
 
         CUSTOM_FIELD_ENUM_NAME = 'Enum'
-        existing_enum_fields = {field.get('name'): field.get('type').get('values', []) for field in data.get('fieldDefinitions', []) 
+        existing_enum_fields = {field.get('name'): field.get('type').get('values', [])
+                                for field in data.get('fieldDefinitions', [])
                                 if field.get('type').get('name') == CUSTOM_FIELD_ENUM_NAME}
         update_actions = []
 
         for field in custom_type.field_definitions:
             if field.type.name == CUSTOM_FIELD_ENUM_NAME:
-                existing_enum_keys = [existing_enum.get('key') for existing_enum in existing_enum_fields.get(field.name, [])]
+                existing_enum_keys = [existing_enum.get('key') for existing_enum
+                                      in existing_enum_fields.get(field.name, [])]
                 for field_enum in field.type.values:
                     if field_enum.get('key') not in existing_enum_keys:
                         update_actions.append(TypeAddEnumValueAction(field_name=field.name, value=field_enum))
-                        print(f"Creating enum value: {field_enum.get('key')} for field: {field.name} in custom type: {type_key}")
+                        print(f"Creating enum value: {field_enum.get('key')} for field: {
+                            field.name} in custom type: {type_key}")
 
                     else:
                         print(f'Enum values {field_enum.get('label')} already exist custom type: {field.name}')
