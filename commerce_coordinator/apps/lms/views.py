@@ -2,24 +2,35 @@
 Views for the ecommerce app
 """
 import logging
+import re
+from typing import List
 from urllib.parse import urlencode, urljoin
 
 from commercetools import CommercetoolsError
 from django.conf import settings
 from django.http import HttpResponseBadRequest, HttpResponseRedirect
+from edx_rest_framework_extensions.auth.jwt.authentication import JwtAuthentication
 from edx_rest_framework_extensions.permissions import LoginRedirectIfUnauthenticated
 from openedx_filters.exceptions import OpenEdxFilterException
 from requests import HTTPError
 from rest_framework.exceptions import ValidationError
-from rest_framework.permissions import IsAdminUser
+from rest_framework.permissions import IsAdminUser, IsAuthenticated
 from rest_framework.response import Response
-from rest_framework.status import HTTP_200_OK, HTTP_303_SEE_OTHER, HTTP_400_BAD_REQUEST, HTTP_500_INTERNAL_SERVER_ERROR
+from rest_framework.status import (
+    HTTP_200_OK,
+    HTTP_303_SEE_OTHER,
+    HTTP_400_BAD_REQUEST,
+    HTTP_404_NOT_FOUND,
+    HTTP_500_INTERNAL_SERVER_ERROR
+)
 from rest_framework.throttling import UserRateThrottle
 from rest_framework.views import APIView
 
 from commerce_coordinator.apps.commercetools.clients import CommercetoolsAPIClient
+from commerce_coordinator.apps.commercetools.http_api_client import CTCustomAPIClient
 from commerce_coordinator.apps.core.constants import HttpHeadersNames, MediaTypes
 from commerce_coordinator.apps.core.exceptions import InvalidFilterType
+from commerce_coordinator.apps.lms.constants import CT_ABSOLUTE_DISCOUNT_TYPE
 from commerce_coordinator.apps.lms.filters import (
     OrderRefundRequested,
     PaymentPageRedirectRequested,
@@ -32,7 +43,7 @@ from commerce_coordinator.apps.lms.serializers import (
     UserRetiredInputSerializer,
     enrollment_attribute_key
 )
-from commerce_coordinator.apps.lms.utils import get_order_line_item_info_from_entitlement_uuid
+from commerce_coordinator.apps.lms.utils import get_order_line_item_info_from_entitlement_uuid, get_program_offer
 from commerce_coordinator.apps.rollout.utils import is_legacy_order
 
 logger = logging.getLogger(__name__)
@@ -401,3 +412,121 @@ class FirstTimeDiscountEligibleView(APIView):
             logger.exception(f"[FirstTimeDiscountEligibleView] HTTP Error: {err}")
 
         return Response({'is_eligible': True})
+
+
+class ProgramPriceView(APIView):
+    """View to get the price of a program."""
+    authentication_classes = (JwtAuthentication,)
+    permission_classes = (IsAuthenticated,)
+    throttle_classes = []
+
+    def _calculate_discounted_price(self, program_offer: dict, program_price: float) -> float:
+        """Calculate the discounted price of the program."""
+        if not program_offer:
+            return program_price
+
+        discounted_price = program_price
+        if program_offer.get("discount_type") == CT_ABSOLUTE_DISCOUNT_TYPE:
+            discounted_price -= program_offer.get("discount_value_in_cents")
+        else:
+            discounted_price -= discounted_price * program_offer.get("discount_value_in_cents") / 10000
+
+        if discounted_price < 0:
+            return program_price
+
+        return discounted_price
+
+    def _extract_parent_course_key(self, course_key: str) -> str:
+        """
+        Extract course_id for comparision
+        """
+        match = re.search(r'course-v1:([^+]+)\+([^+]+)', course_key)
+        if match:
+            return f"{match.group(1)}+{match.group(2)}"
+        else:
+            return None
+
+    def _extract_course_key_from_variant_key(self, variant_key: str) -> tuple:
+        """
+        Extract course key for comparision
+        """
+        match = re.match(r"([a-f0-9-]+|[a-zA-Z]+)\+(.+)", variant_key)
+        course_key = match.group(2) if match else ""
+
+        return course_key
+
+    def _get_program_entitlements_to_be_purchased(
+            self,
+            program_variants: List[object],
+            user_enrollable_course_keys: List[object],
+    ) -> List[str]:
+        """Filter out bundle entitlements based on enrollable conditions."""
+
+        if not user_enrollable_course_keys:
+            return [variant.get("entitlement_sku") for variant in program_variants]
+
+        return [
+            variant.get("entitlement_sku")
+            for variant in program_variants
+            if self._extract_course_key_from_variant_key(variant.get("variant_key", ""))
+            in user_enrollable_course_keys
+        ]
+
+    def _cents_to_dollars(self, cent_amount: float) -> float:
+        """Convert cent amount to dollar."""
+        return cent_amount / 100
+
+    def get(self, request, bundle_key=None):
+        """Return the price of the bundle for the specified course."""
+        username = request.GET.get("username", "")
+        user_purchasable_course_keys = request.GET.getlist("course_key")
+
+        try:
+            ct_api_client = CTCustomAPIClient()
+
+            # Fetch bundle variants with entitlements
+            ct_program_variants = ct_api_client.get_program_variants(bundle_key)
+            if not ct_program_variants:
+                logger.error(f"[ProgramPriceView] No program variants found for the program: "
+                             f"{bundle_key} for user: {username}.")
+                return Response('Program variants not found.', status=HTTP_404_NOT_FOUND)
+
+            ct_discount_offers = ct_api_client.get_ct_bundle_offers_without_code()
+
+            # Get applied program offer
+            program_offer = get_program_offer(ct_discount_offers, bundle_key)
+
+            # Calculate program price based on already filtered course keys passed from LMS
+            purchasable_entitlements_skus = self._get_program_entitlements_to_be_purchased(
+                ct_program_variants,
+                user_purchasable_course_keys,
+            )
+
+            # Get price of each entitlement in the bundle
+            entitlements_standalone_prices = ct_api_client.get_program_entitlements_standalone_prices(
+                purchasable_entitlements_skus
+            )
+
+            # Calculate total price of the bundle
+            total_cent_amount = sum(item.get("value", {}).get("centAmount") for item in entitlements_standalone_prices)
+
+            discounted_cent_amount = self._calculate_discounted_price(program_offer, total_cent_amount)
+            currencyCode = (
+                entitlements_standalone_prices[0].get("value").get("currencyCode")
+                if entitlements_standalone_prices
+                else ""
+            )
+
+            output = {
+                "total_incl_tax_excl_discounts": self._cents_to_dollars(total_cent_amount),
+                "total_incl_tax": self._cents_to_dollars(discounted_cent_amount),
+                "currency": currencyCode,
+            }
+            return Response(output, status=HTTP_200_OK)
+
+        except HTTPError as err:
+            logger.exception(f"[ProgramPriceView] HTTP Error: {err}")
+            return Response('Error occurred while fetching data', status=HTTP_500_INTERNAL_SERVER_ERROR)
+        except Exception as err:  # pylint: disable=broad-except
+            logger.exception(f"[ProgramPriceView] Unexpected Error: {err}")
+            return Response('Unexpected error occurred', status=HTTP_500_INTERNAL_SERVER_ERROR)

@@ -54,6 +54,30 @@ class TwoUKeys:
     # Entitlement ID custom field to store with line item
     LINE_ITEM_LMS_ENTITLEMENT_ID = 'edxLMSEntitlementId'
 
+    # Cart discount Custom Types
+    CART_DISCOUNT_CUSTOM_TYPE = 'cartDiscountCustomType'
+
+    # Client custom field to store in cart discount
+    CART_DISCOUNT_CLIENT = 'client'
+
+    # Category custom field to store in cart discount
+    CART_DISCOUNT_CATEGORY = 'category'
+
+    # Channel custom field to store in cart discount
+    CART_DISCOUNT_CHANNEL = 'channel'
+
+    # Discount Type custom field to store in cart discount
+    CART_DISCOUNT_DISCOUNT_TYPE = 'discountType'
+
+    # Cart/Order Custom Types - this is already used type, we are just updating it
+    ORDER_CUSTOM_TYPE = 'cart-orderNumber'
+
+    # Human readable order number field to store in cart/order model
+    ORDER_ORDER_NUMBER = 'orderNumber'
+
+    # Email domain custom field to store in cart/order model
+    ORDER_EMAIL_DOMAIN = 'emailDomain'
+
 
 class EdXFieldNames:
     """edX Specific field names for use in Commercetools"""
@@ -92,3 +116,33 @@ PAYMENT_STATUS_INTERFACE_CODE_SUCCEEDED = "succeeded"
 EDX_STRIPE_PAYMENT_INTERFACE_NAME = "stripe_edx"
 
 EDX_PAYPAL_PAYMENT_INTERFACE_NAME = "paypal_edx"
+
+CART_DISCOUNT_TYPES = [
+    {"key": "course-discount", "label": "Course Discount"},
+    {"key": "enrollment-code", "label": "Enrollment Code"},
+    {"key": "program-discount", "label": "Program Discount"},
+    {"key": "program-offer", "label": "Program Offer"}
+]
+
+# This mapping is based on prod categories
+CART_DISCOUNT_CATEGORIES = [
+    {"key": "affiliate-promotion", "label": "Affiliate Promotion"},
+    {"key": "b2b-affiliate-promotion", "label": "B2B Affiliate Promotion"},
+    {"key": "bulk-enrollment-prepay", "label": "Bulk Enrollment - Prepay"},
+    {"key": "bulk-enrollment-upon-redemption", "label": "Bulk Enrollment - Upon Redemption"},
+    {"key": "customer-service", "label": "Customer Service"},
+    {"key": "financial-assistance", "label": "Financial Assistance"},
+    {"key": "marketing-other", "label": "Marketing-Other"},
+    {"key": "on-campus-learners", "label": "On-Campus Learners"},
+    {"key": "partner-no-rev-prepay", "label": "Partner No Rev - Prepay"},
+    {"key": "other", "label": "Other"}
+]
+
+CART_DISCOUNT_CHANNELS = [
+    {"key": "affiliate", "label": "Affiliate"},
+    {"key": "display-pmax", "label": "Display/PMAX"},
+    {"key": "email", "label": "Email"},
+    {"key": "enterprise-b2b", "label": "Enterprise/B2B"},
+    {"key": "organic-edx", "label": "Organic/EdX"},
+    {"key": "other", "label": "Other"},
+]

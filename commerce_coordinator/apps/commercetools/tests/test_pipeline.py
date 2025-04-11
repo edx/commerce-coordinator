@@ -188,6 +188,29 @@ class CommercetoolsOrLegacyEcommerceRefundPipelineTests(APITestCase):
         self.assertEqual(mock_payment_result, self.returned_payment)
         self.assertEqual(mock_payment_result.transactions[0].type, TransactionType.REFUND)
 
+    @patch('commerce_coordinator.apps.commercetools.utils.has_refund_transaction')
+    @patch('commerce_coordinator.apps.commercetools.clients.CommercetoolsAPIClient.get_payment_by_key')
+    @patch('commerce_coordinator.apps.commercetools.clients.CommercetoolsAPIClient.create_return_payment_transaction')
+    @patch('commerce_coordinator.apps.commercetools.pipeline.log.info')
+    def test_commercetools_create_transaction_with_free_order(self, mock_logger, mock_returned_payment,
+                                                              mock_payment, mock_has_refund):
+        mock_has_refund.return_value = False
+        mock_payment.return_value = None
+        mock_returned_payment.return_value = None
+
+        refund_pipe = CreateReturnPaymentTransaction("test_pipe", None)
+        refund_pipe.run_filter(
+            payment_data=None,
+            refund_response={},
+            active_order_management_system=COMMERCETOOLS_ORDER_MANAGEMENT_SYSTEM,
+            has_been_refunded=False,
+            payment_intent_id=None,
+            psp=None
+        )
+
+        mock_logger.assert_called_once_with('[CreateReturnPaymentTransaction] Payment data not found,'
+                                            ' skipping refund payment transaction creation')
+
     @patch('commerce_coordinator.apps.commercetools.pipeline.log.info')
     def test_commercetools_transaction_create_has_refund(self, mock_logger):
         refund_pipe = CreateReturnPaymentTransaction("test_pipe", None)
@@ -266,9 +289,23 @@ class OrderReturnPipelineTests(TestCase):
         mock_logger.assert_called_once_with('[UpdateCommercetoolsOrderReturnPaymentStatus] PSP Refund error, '
                                             'skipping order refund payment transaction updation')
 
+    @patch('commerce_coordinator.apps.commercetools.pipeline.log.info')
+    def test_pipeline_with_free_order(self, mock_logger):
+        """Ensure pipeline is functioning as expected"""
+
+        pipe = UpdateCommercetoolsOrderReturnPaymentStatus("test_pipe", None)
+
+        pipe.run_filter(
+            psp=None,
+            payment_intent_id=None,
+        )
+        mock_logger.assert_called_once_with('[UpdateCommercetoolsOrderReturnPaymentStatus] Payment data not found,'
+                                            ' skipping order refund payment transaction updation')
+
 
 class AnonymizeRetiredUserPipelineTests(TestCase):
     """Commercetools pipeline testcase for CT customer retirement after account deletion in LMS"""
+
     def setUp(self) -> None:
         self.customer_data = gen_customer("mock_email", "mock_username")
 
