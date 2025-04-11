@@ -88,13 +88,14 @@ class CTCustomAPIClient:
                     try:
                         response_message = response.json().get('message', 'No message provided.')
                     except ValueError:
-                        response_message = response.text or 'No message provided.'
+                        response_message = getattr(response, 'text', None) or 'No message provided.'
                 else:
-                    response_message = str(err) or 'No response available.'
+                    response_message = str(err)
 
                 if attempt_number >= total_retries:
                     logger.error(
-                        "API request for endpoint: %s failed after attempt #%s with error: %s and message: %s",
+                        "CTCustomAPIClient: API request failed for endpoint: %s after attempt #%s"
+                        " with error: %s and message: %s",
                         endpoint, attempt_number, err, response_message
                     )
                     return None
@@ -102,7 +103,7 @@ class CTCustomAPIClient:
                 next_attempt = attempt_number + 1
                 next_backoff = base_backoff * next_attempt
                 logger.warning(
-                    "API request for endpoint: %s failed with error: %s and message: %s. "
+                    "API request failed for endpoint: %s with error: %s and message: %s. "
                     "Retrying attempt #%s in %s seconds...",
                     endpoint, err, response_message, next_attempt, next_backoff
                 )
