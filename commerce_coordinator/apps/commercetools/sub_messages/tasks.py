@@ -167,6 +167,7 @@ def fulfill_order_placed_message_signal_task(
             'line_item_state_id': line_item_state_id,
             'message_id': message_id,
             'user_first_name': customer.first_name,
+            'user_last_name': customer.last_name,
             'user_email': customer.email,
             'product_title': product_title,
             'product_type': item.product_type.obj.key
