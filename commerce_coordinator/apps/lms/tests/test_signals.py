@@ -37,8 +37,7 @@ class FulfillOrderPlacedSendEnrollInCourseTest(CoordinatorSignalReceiverTestCase
         'line_item_state_id': 12,
         'message_id': 13,
         'user_first_name': 14,
-        'user_last_name': 15,
-        'user_email': 16,
+        'user_email': 15,
         'product_title': 17,
         'product_type': 'edx_course',
     }
@@ -79,10 +78,9 @@ class FulfillOrderPlacedSendEntitlementTest(CoordinatorSignalReceiverTestCase):
         'line_item_state_id': 12,
         'message_id': 13,
         'user_first_name': 14,
-        'user_last_name': 15,
-        'user_email': 16,
-        'product_title': 17,
-        'product_type': 18,
+        'user_email': 15,
+        'product_title': 16,
+        'product_type': 17,
     }
 
     def test_correct_arguments_passed(self, mock_task):

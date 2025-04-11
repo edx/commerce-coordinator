@@ -33,7 +33,6 @@ def fulfill_order_placed_send_enroll_in_course(**kwargs):
         line_item_state_id=kwargs['line_item_state_id'],
         message_id=kwargs['message_id'],
         user_first_name=kwargs['user_first_name'],
-        user_last_name=kwargs['user_last_name'],
         user_email=kwargs['user_email'],
         product_title=kwargs['product_title'],
         product_type=kwargs['product_type']
@@ -59,7 +58,6 @@ def fulfill_order_placed_send_entitlement(**kwargs):
         line_item_state_id=kwargs['line_item_state_id'],
         message_id=kwargs['message_id'],
         user_first_name=kwargs['user_first_name'],
-        user_last_name=kwargs['user_last_name'],
         user_email=kwargs['user_email'],
         product_title=kwargs['product_title'],
         product_type=kwargs['product_type']

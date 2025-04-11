@@ -37,7 +37,6 @@ class CourseEnrollTaskAfterReturn(Task):    # pylint: disable=abstract-method
         user_email = kwargs.get('user_email')
         order_number = kwargs.get('order_number')
         user_first_name = kwargs.get('user_first_name')
-        user_last_name = kwargs.get('user_last_name')
         product_title = kwargs.get('product_title')
         product_type = kwargs.get('product_type')
 
@@ -72,7 +71,7 @@ class CourseEnrollTaskAfterReturn(Task):    # pylint: disable=abstract-method
                 'order_number': order_number,
                 'product_type': CT_ORDER_PRODUCT_TYPE_FOR_BRAZE.get(product_type, 'course'),
                 'product_name': product_title,
-                'first_name': user_first_name or user_last_name or user_email,
+                'first_name': user_first_name,
             }
             # Send failure notification email
             send_fulfillment_error_email(edx_lms_user_id, user_email, canvas_entry_properties)
@@ -89,7 +88,6 @@ class CourseEntitlementTaskAfterReturn(Task):  # pylint: disable=abstract-method
         order_id = kwargs.get('order_id')
         order_number = kwargs.get('order_number')
         user_first_name = kwargs.get('user_first_name')
-        user_last_name = kwargs.get('user_last_name')
         product_title = kwargs.get('product_title')
         product_type = kwargs.get('product_type')
 
@@ -124,7 +122,7 @@ class CourseEntitlementTaskAfterReturn(Task):  # pylint: disable=abstract-method
                 'order_number': order_number,
                 'product_type': CT_ORDER_PRODUCT_TYPE_FOR_BRAZE.get(product_type, 'program'),
                 'product_name': product_title,
-                'first_name': user_first_name or user_last_name or user_email,
+                'first_name': user_first_name,
             }
             # Send failure notification email
             send_fulfillment_error_email(edx_lms_user_id, user_email, canvas_entry_properties)
@@ -153,7 +151,6 @@ def fulfill_order_placed_send_enroll_in_course_task(
     line_item_state_id,
     message_id,
     user_first_name,    # pylint: disable=unused-argument
-    user_last_name,    # pylint: disable=unused-argument
     user_email,         # pylint: disable=unused-argument
     product_title,       # pylint: disable=unused-argument
     product_type        # pylint: disable=unused-argument
@@ -261,7 +258,6 @@ def fulfill_order_placed_send_entitlement_task(
     line_item_state_id,
     message_id,
     user_first_name,    # pylint: disable=unused-argument
-    user_last_name,    # pylint: disable=unused-argument
     user_email,         # pylint: disable=unused-argument
     product_title,      # pylint: disable=unused-argument
     product_type        # pylint: disable=unused-argument

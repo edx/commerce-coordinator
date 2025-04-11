@@ -57,7 +57,6 @@ class FulfillOrderPlacedSendEnrollInCourseTaskTest(TestCase):
             values['line_item_state_id'],
             values['message_id'],
             values['user_first_name'],
-            values['user_last_name'],
             values['user_email'],
             values['product_title'],
             values['product_type']
@@ -206,7 +205,6 @@ class FulfillOrderPlacedSendEntitlementTaskTest(TestCase):
             values['line_item_state_id'],
             values['message_id'],
             values['user_first_name'],
-            values['user_last_name'],
             values['user_email'],
             values['product_title'],
             values['product_type']
