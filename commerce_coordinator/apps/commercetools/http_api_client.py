@@ -2,11 +2,11 @@
 API clients for commerceetool app.
 """
 import logging
+import time
 from typing import Dict, List, Optional, Union
 
 import requests
 from django.conf import settings
-from requests.exceptions import HTTPError
 
 logger = logging.getLogger(__name__)
 
@@ -41,51 +41,75 @@ class CTCustomAPIClient:
         return response.json()["access_token"]
 
     def _make_request(
-        self,
-        method: str,
-        endpoint: str,
-        params: Optional[Dict] = None,
-        json: Optional[Dict] = None,
-    ) -> Union[Dict, List]:
+            self,
+            method: str,
+            endpoint: str,
+            params: Optional[Dict] = None,
+            json: Optional[Dict] = None,
+            total_retries: int = 2,
+            base_backoff: int = 1,
+    ) -> Union[Dict, None]:
         """
-        Make an HTTP request to the Commercetools API.
+        Make an HTTP request to the Commercetools API with retry logic.
 
         Args:
             method (str): HTTP method (e.g., "GET", "POST").
             endpoint (str): API endpoint (e.g., "/cart-discounts").
             params (Optional[Dict]): Query parameters.
             json (Optional[Dict]): JSON payload for POST/PUT requests.
+            total_retries (int): Number of retries after the first attempt.
+            base_backoff (int): Base backoff time in seconds.
 
         Returns:
-            Union[Dict, List]: JSON response from the API or None if the request fails.
+            Union[Dict, None]: JSON response from the API or None if all retries fail.
         """
         url = f"{self.config['apiUrl']}/{self.config['projectKey']}/{endpoint}"
         headers = {
             "Authorization": f"Bearer {self.access_token}",
             "Content-Type": "application/json",
         }
-        try:
-            response = requests.request(
-                method,
-                url,
-                headers=headers,
-                params=params,
-                json=json,
-                timeout=settings.REQUEST_READ_TIMEOUT_SECONDS,
-            )
-            response.raise_for_status()
-            return response.json()
-        except HTTPError as err:
-            if response is not None:
-                response_message = response.json().get('message', 'No message provided.')
-                logger.error(
-                    "API request for endpoint: %s failed with error: %s and message: %s",
-                    endpoint, err, response_message
-                )
-            else:
-                logger.error("API request for endpoint: %s failed with error: %s", endpoint, err)
 
-            return None
+        def attempt(attempt_number: int) -> Union[Dict, List, None]:
+            try:
+                response = requests.request(
+                    method,
+                    url,
+                    headers=headers,
+                    params=params,
+                    json=json,
+                    timeout=settings.REQUEST_READ_TIMEOUT_SECONDS,
+                )
+
+                response.raise_for_status()
+                return response.json()
+            except requests.RequestException as err:
+                response = getattr(err, 'response', None)
+                if response is not None:
+                    try:
+                        response_message = response.json().get('message', 'No message provided.')
+                    except ValueError:
+                        response_message = response.text or 'No message provided.'
+                else:
+                    response_message = str(err) or 'No response available.'
+
+                if attempt_number >= total_retries:
+                    logger.error(
+                        "API request for endpoint: %s failed after attempt #%s with error: %s and message: %s",
+                        endpoint, attempt_number, err, response_message
+                    )
+                    return None
+
+                next_attempt = attempt_number + 1
+                next_backoff = base_backoff * next_attempt
+                logger.warning(
+                    "API request for endpoint: %s failed with error: %s and message: %s. "
+                    "Retrying attempt #%s in %s seconds...",
+                    endpoint, err, response_message, next_attempt, next_backoff
+                )
+                time.sleep(next_backoff)
+                return attempt(next_attempt)
+
+        return attempt(0)
 
     def get_ct_bundle_offers_without_code(self) -> Dict:
         """
@@ -129,6 +153,9 @@ class CTCustomAPIClient:
             "products",
             params=params,
         )
+        if program is None:
+            return []
+
         entitlement_products = []
         results = program.get("results")
         if not results:
