@@ -8,7 +8,7 @@ amqp==5.3.1
     # via
     #   -r requirements/base.txt
     #   kombu
-apimatic-core==0.2.18
+apimatic-core==0.2.19
     # via
     #   -r requirements/base.txt
     #   paypal-server-sdk
@@ -27,7 +27,7 @@ asgiref==3.7.2
     #   -r requirements/base.txt
     #   django
     #   django-cors-headers
-attrs==25.1.0
+attrs==25.3.0
     # via -r requirements/base.txt
 backoff==2.2.1
     # via
@@ -41,7 +41,7 @@ cachecontrol==0.12.14
     # via
     #   -r requirements/base.txt
     #   apimatic-requests-client-adapter
-celery[redis]==5.4.0
+celery[redis]==5.5.1
     # via -r requirements/base.txt
 certifi==2025.1.31
     # via
@@ -87,7 +87,7 @@ coreschema==0.0.4
     # via
     #   -r requirements/base.txt
     #   coreapi
-cryptography==44.0.1
+cryptography==44.0.2
     # via
     #   -r requirements/base.txt
     #   pyjwt
@@ -99,7 +99,7 @@ defusedxml==0.7.1
     #   -r requirements/base.txt
     #   python3-openid
     #   social-auth-core
-django==4.2.19
+django==4.2.20
     # via
     #   -r requirements/base.txt
     #   django-cors-headers
@@ -109,6 +109,7 @@ django==4.2.19
     #   djangorestframework
     #   drf-jwt
     #   edx-auth-backends
+    #   edx-braze-client
     #   edx-django-release-util
     #   edx-django-utils
     #   edx-drf-extensions
@@ -120,7 +121,7 @@ django-crum==0.7.9
     # via
     #   -r requirements/base.txt
     #   edx-django-utils
-django-extensions==3.2.3
+django-extensions==4.1
     # via -r requirements/base.txt
 django-rest-swagger==2.2.0
     # via -r requirements/base.txt
@@ -129,7 +130,7 @@ django-waffle==4.2.0
     #   -r requirements/base.txt
     #   edx-django-utils
     #   edx-drf-extensions
-djangorestframework==3.15.2
+djangorestframework==3.16.0
     # via
     #   -r requirements/base.txt
     #   django-rest-swagger
@@ -143,25 +144,26 @@ drf-jwt==1.19.2
     # via
     #   -r requirements/base.txt
     #   edx-drf-extensions
-edx-auth-backends==4.4.0
+edx-auth-backends==4.5.0
     # via -r requirements/base.txt
-edx-braze-client==0.2.5
+edx-braze-client==1.0.2
     # via -r requirements/base.txt
 edx-django-release-util==1.4.0
     # via -r requirements/base.txt
-edx-django-utils==7.1.0
+edx-django-utils==7.4.0
     # via
     #   -r requirements/base.txt
+    #   edx-braze-client
     #   edx-drf-extensions
     #   edx-rest-api-client
-edx-drf-extensions==10.5.0
+edx-drf-extensions==10.6.0
     # via -r requirements/base.txt
-edx-opaque-keys[django]==2.11.0
+edx-opaque-keys[django]==2.12.0
     # via
     #   -r requirements/base.txt
     #   edx-drf-extensions
     #   openedx-filters
-edx-rest-api-client==6.1.0
+edx-rest-api-client==6.2.0
     # via -r requirements/base.txt
 gevent==24.11.1
     # via -r requirements/production.in
@@ -177,7 +179,7 @@ itypes==1.2.0
     # via
     #   -r requirements/base.txt
     #   coreapi
-jinja2==3.1.5
+jinja2==3.1.6
     # via
     #   -r requirements/base.txt
     #   coreschema
@@ -189,7 +191,7 @@ jsonpointer==2.4
     # via
     #   -r requirements/base.txt
     #   apimatic-core
-kombu==5.4.2
+kombu==5.5.2
     # via
     #   -r requirements/base.txt
     #   celery
@@ -215,7 +217,7 @@ mysqlclient==2.2.7
     # via
     #   -r requirements/base.txt
     #   -r requirements/production.in
-newrelic==10.6.0
+newrelic==10.9.0
     # via
     #   -r requirements/base.txt
     #   edx-django-utils
@@ -228,7 +230,7 @@ openapi-codec==1.3.2
     # via
     #   -r requirements/base.txt
     #   django-rest-swagger
-openedx-filters==1.13.0
+openedx-filters==2.0.1
     # via -r requirements/base.txt
 packaging==24.2
     # via
@@ -241,7 +243,7 @@ pbr==6.1.1
     # via
     #   -r requirements/base.txt
     #   stevedore
-pillow==11.1.0
+pillow==11.2.1
     # via -r requirements/base.txt
 prompt-toolkit==3.0.50
     # via
@@ -266,7 +268,7 @@ pyjwt[crypto]==2.10.1
     #   social-auth-core
 pymemcache==4.0.0
     # via -r requirements/production.in
-pymongo==4.11.1
+pymongo==4.12.0
     # via
     #   -r requirements/base.txt
     #   edx-opaque-keys
@@ -284,7 +286,7 @@ python3-openid==3.2.0
     # via
     #   -r requirements/base.txt
     #   social-auth-core
-pytz==2025.1
+pytz==2025.2
     # via
     #   -r requirements/base.txt
     #   commercetools
@@ -305,6 +307,7 @@ requests==2.32.3
     #   cachecontrol
     #   commercetools
     #   coreapi
+    #   edx-braze-client
     #   edx-drf-extensions
     #   edx-rest-api-client
     #   requests-mock
@@ -321,13 +324,13 @@ requests-oauthlib==2.0.0
     #   -r requirements/base.txt
     #   commercetools
     #   social-auth-core
-segment-analytics-python==2.3.3
+segment-analytics-python==2.3.4
     # via -r requirements/base.txt
 semantic-version==2.10.0
     # via
     #   -r requirements/base.txt
     #   edx-drf-extensions
-simplejson==3.19.3
+simplejson==3.20.1
     # via
     #   -r requirements/base.txt
     #   django-rest-swagger
@@ -350,22 +353,21 @@ sqlparse==0.5.3
     # via
     #   -r requirements/base.txt
     #   django
-stevedore==5.4.0
+stevedore==5.4.1
     # via
     #   -r requirements/base.txt
     #   edx-django-utils
     #   edx-opaque-keys
-stripe==11.5.0
+stripe==12.0.0
     # via -r requirements/base.txt
-typing-extensions==4.12.2
+typing-extensions==4.13.2
     # via
     #   -r requirements/base.txt
     #   edx-opaque-keys
     #   stripe
-tzdata==2025.1
+tzdata==2025.2
     # via
     #   -r requirements/base.txt
-    #   celery
     #   kombu
 uritemplate==4.1.1
     # via
