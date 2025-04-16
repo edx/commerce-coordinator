@@ -492,7 +492,7 @@ class CommercetoolsAPIClient:
             return updated_order
         except CommercetoolsError as err:
             handle_commercetools_error(
-                "[CommercetoolsAPIClient." 
+                "[CommercetoolsAPIClient."
                 "update_return_payment_state_for_enrollment_code_purchase]",
                 err, f"Unable to update ReturnPaymentState of order {order_id}"
             )
