@@ -485,19 +485,18 @@ class CommercetoolsAPIClient:
             updated_order = self.base_client.orders.update_by_id(
                 id=order_id,
                 version=order_version,
-                actions=return_payment_state_actions
+                actions=return_payment_state_actions,
             )
             logger.info(f"Successfully updated return payment state to not refunded "
                         f"for enrollment code purchase - order_id: {order_id}")
             return updated_order
         except CommercetoolsError as err:
             handle_commercetools_error(
-                "[CommercetoolsAPIClient.update_return_"
-                "payment_state_for_enrollment_code_purchase]",
-                err,
-                f"Unable to update ReturnPaymentState of order {order_id}"
+                "[CommercetoolsAPIClient." 
+                "update_return_payment_state_for_enrollment_code_purchase]",
+                err, f"Unable to update ReturnPaymentState of order {order_id}"
             )
-            raise OpenEdxFilterException(str(err)) from err
+            raise err
 
     def update_return_payment_state_after_successful_refund(
         self,
