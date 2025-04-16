@@ -46,7 +46,6 @@ from commerce_coordinator.apps.core.memcache import safe_key
 from commerce_coordinator.apps.core.segment import track
 from commerce_coordinator.apps.lms.clients import LMSAPIClient
 
-import json
 # Use the special Celery logger for our tasks
 logger = get_task_logger(__name__)
 

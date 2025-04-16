@@ -33,7 +33,7 @@ from commerce_coordinator.apps.rollout.utils import (
     is_commercetools_line_item_already_refunded
 )
 from commerce_coordinator.apps.rollout.waffle import is_redirect_to_commercetools_enabled_for_user
-import json
+
 log = getLogger(__name__)
 
 
@@ -313,8 +313,6 @@ class UpdateCommercetoolsOrderReturnPaymentStatus(PipelineStep):
         return_line_entitlement_ids = kwargs['return_line_entitlement_ids']
         refunded_line_item_refunds = kwargs['refunded_line_item_refunds']
         refund_response = kwargs.get('refund_response', {})
-
-        log.info(f'ORDER DATAAAA {order}')
 
         interaction_id = refund_response.get('id') if isinstance(refund_response, dict) else None
 

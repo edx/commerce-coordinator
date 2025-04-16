@@ -23,8 +23,7 @@ from commercetools.platform.models import (
     OrderSetLineItemCustomFieldAction,
     OrderSetReturnItemCustomTypeAction,
     OrderSetReturnPaymentStateAction,
-    OrderTransitionLineItemStateAction,
-    OrderSetReturnInfoAction
+    OrderTransitionLineItemStateAction
 )
 from commercetools.platform.models import Payment as CTPayment
 from commercetools.platform.models import PaymentAddTransactionAction, PaymentSetTransactionCustomTypeAction
@@ -43,8 +42,6 @@ from commercetools.platform.models import TypeResourceIdentifier as CTTypeResour
 from commercetools.platform.models.state import State as CTLineItemState
 from django.conf import settings
 from openedx_filters.exceptions import OpenEdxFilterException
-
-from pytz import UTC
 
 from commerce_coordinator.apps.commercetools.catalog_info.constants import (
     DEFAULT_ORDER_EXPANSION,
