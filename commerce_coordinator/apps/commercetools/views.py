@@ -23,6 +23,7 @@ from commerce_coordinator.apps.commercetools.sub_messages.signals_dispatch impor
 from commerce_coordinator.apps.core.memcache import safe_key
 from commerce_coordinator.apps.core.tasks import acquire_task_lock
 from commerce_coordinator.apps.core.views import SingleInvocationAPIView
+
 logger = logging.getLogger(__name__)
 
 

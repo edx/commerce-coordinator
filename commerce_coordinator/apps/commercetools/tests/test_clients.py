@@ -487,7 +487,6 @@ class ClientTests(TestCase):
 
         # Mocked expected order recieved after CT SDK call to update the order
         mock_response_order = gen_order("mock_order_id")
-       
         mock_response_order.version = "3"
         mock_response_return_item = gen_return_item("mock_return_item_id", ReturnPaymentState.NOT_REFUNDED)
         mock_response_return_info = ReturnInfo(items=[mock_response_return_item])
@@ -512,7 +511,6 @@ class ClientTests(TestCase):
                 [mock_response_return_item.line_item_id],
             )
             self.assertEqual(result.return_info[1].items[0].payment_state, ReturnPaymentState.NOT_REFUNDED)
-
 
     def test_successful_order_return_payment_state_update(self):
         base_url = self.client_set.get_base_url_from_client()
