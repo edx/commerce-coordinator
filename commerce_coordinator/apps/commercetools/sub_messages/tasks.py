@@ -353,7 +353,6 @@ def fulfill_order_returned_signal_task(order_id, return_items, message_id):
             return_line_entitlement_ids=return_line_entitlement_ids,
             message_id=message_id,
         )
-        
         if 'refund_response' in result and result['refund_response']:
             if result['refund_response'] == 'charge_already_refunded':
                 logger.info(f'[CT-{tag}] payment {psp_payment_id} already has refunded transaction, '
@@ -364,7 +363,7 @@ def fulfill_order_returned_signal_task(order_id, return_items, message_id):
                 total_amount = result.get('amount_in_cents')
                 refunded_line_item_ids = result.get('filtered_line_item_ids', return_line_item_ids)
                 returned_item_ids = [return_id for item_id, return_id in return_line_items.items()
-                                        if item_id in refunded_line_item_ids]
+                                    if item_id in refunded_line_item_ids]
                 segment_event_properties = _prepare_segment_event_properties(
                     order, total_amount, ', '.join(returned_item_ids), refunded_line_item_ids
                 )

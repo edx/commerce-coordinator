@@ -247,7 +247,6 @@ class CreateReturnForCommercetoolsOrder(PipelineStep):
         try:
             ct_api_client = CommercetoolsAPIClient()
             order = ct_api_client.get_order_by_id(order_id=order_id)
-        
 
             if not is_commercetools_line_item_already_created(order, order_line_item_id):
                 returned_order = ct_api_client.create_return_for_order(
