@@ -7,6 +7,7 @@ from rest_framework import status
 from rest_framework.authentication import SessionAuthentication
 from rest_framework.permissions import IsAdminUser
 from rest_framework.response import Response
+import json
 
 from commerce_coordinator.apps.commercetools.authentication import JwtBearerAuthentication
 from commerce_coordinator.apps.commercetools.constants import SOURCE_SYSTEM
@@ -23,6 +24,9 @@ from commerce_coordinator.apps.commercetools.sub_messages.signals_dispatch impor
 from commerce_coordinator.apps.core.memcache import safe_key
 from commerce_coordinator.apps.core.tasks import acquire_task_lock
 from commerce_coordinator.apps.core.views import SingleInvocationAPIView
+from commerce_coordinator.apps.commercetools.clients import CommercetoolsAPIClient
+from commerce_coordinator.apps.commercetools.catalog_info.edx_utils import get_edx_psp_payment_id
+
 
 logger = logging.getLogger(__name__)
 
@@ -130,8 +134,12 @@ class OrderReturnedView(SingleInvocationAPIView):
         input_data = {
             **request.data
         }
+        # client = CommercetoolsAPIClient()
+        # ctOrder = client.get_order_by_id(order_id)
+        
+        # psp = get_edx_psp_payment_id(ctOrder)
 
-        logger.info(f'[CT-{tag}] Message received from commercetools with details: {input_data}')
+        logger.info(f'[CT-{tag}] Message received from commercetools with details: {json.dumps(input_data)}')
 
         message_details = OrderReturnedViewMessageInputSerializer(data=input_data)
         message_details.is_valid(raise_exception=True)
