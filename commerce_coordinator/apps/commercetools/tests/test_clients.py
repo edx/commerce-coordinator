@@ -475,6 +475,43 @@ class ClientTests(TestCase):
 
                 log_mock.assert_called_once_with(expected_message)
 
+    def test_order_return_payment_state_not_refunded(self):
+        base_url = self.client_set.get_base_url_from_client()
+
+        # Mocked order to be passed in to update method
+        mock_order = gen_order("mock_order_id")
+        mock_order.version = "2"
+        mock_return_item = gen_return_item("mock_return_item_id", ReturnPaymentState.INITIAL)
+        mock_return_info = ReturnInfo(items=[mock_return_item])
+        mock_order.return_info.append(mock_return_info)
+
+        # Mocked expected order recieved after CT SDK call to update the order
+        mock_response_order = gen_order("mock_order_id")
+        mock_response_order.version = "3"
+        mock_response_return_item = gen_return_item("mock_return_item_id", ReturnPaymentState.NOT_REFUNDED)
+        mock_response_return_info = ReturnInfo(items=[mock_response_return_item])
+        mock_response_order.return_info.append(mock_response_return_info)
+
+        with requests_mock.Mocker(real_http=True, case_sensitive=False) as mocker:
+            mocker.post(
+                f"{base_url}orders/mock_order_id",
+                json=mock_response_order.serialize(),
+                status_code=200
+            )
+
+            mocker.get(
+                f"{base_url}orders/mock_order_id",
+                json=mock_response_order.serialize(),
+                status_code=200
+            )
+
+            result = self.client_set.client.update_return_payment_state_for_enrollment_code_purchase(
+                mock_order.id,
+                mock_order.version,
+                [mock_response_return_item.line_item_id],
+            )
+            self.assertEqual(result.return_info[1].items[0].payment_state, ReturnPaymentState.NOT_REFUNDED)
+
     def test_successful_order_return_payment_state_update(self):
         base_url = self.client_set.get_base_url_from_client()
 
