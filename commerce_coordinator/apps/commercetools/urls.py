@@ -7,6 +7,8 @@ from django.urls import include, path
 from commerce_coordinator.apps.commercetools.views import (
     TriggerOrderFulfillmentAWS,
     OrderFulfillmentResponseAWS,
+    TriggerOrderFulfillmentCustom,
+    OrderFulfillmentResponseCustom,
     OrderFulfillView,
     OrderReturnedView,
     OrderSanctionedView,
@@ -18,6 +20,8 @@ urlpatterns = [
     # EventBridge / CloudWatch Endpoints
     path('fulfill-aws', TriggerOrderFulfillmentAWS.as_view(), name='fulfill-aws'),
     path('fulfill-response-aws', OrderFulfillmentResponseAWS.as_view(), name='fulfill-response-aws'),
+    path('fulfill-custom', TriggerOrderFulfillmentCustom.as_view(), name='fulfill-aws'),
+    path('fulfill-response-custom', OrderFulfillmentResponseCustom.as_view(), name='fulfill-response-aws'),
     path('fulfill', OrderFulfillView.as_view(), name='fulfill'),
     path('sanctioned', OrderSanctionedView.as_view(), name='sanctioned'),
     path('returned', OrderReturnedView.as_view(), name='returned')
