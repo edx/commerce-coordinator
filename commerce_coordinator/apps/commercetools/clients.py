@@ -472,7 +472,9 @@ class CommercetoolsAPIClient:
 
         try:
             logger.info(
-                f"[CommercetoolsAPIClient] - Updating payment state for return "
+                f"[CommercetoolsAPIClient."
+                "update_return_payment_state_for_enrollment_code_purchase] - "
+                "Updating payment state for return "
                 f"with ids {return_line_item_return_ids} to '{ReturnPaymentState.NOT_REFUNDED}'."
             )
             return_payment_state_actions = []

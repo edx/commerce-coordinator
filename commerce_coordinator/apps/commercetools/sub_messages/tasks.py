@@ -316,6 +316,7 @@ def fulfill_order_returned_signal_task(order_id, return_items, message_id):
 
     try:
         order = client.get_order_by_id(order_id)
+
     except CommercetoolsError as err:  # pragma no cover
         logger.error(f'[CT-{tag}] Order not found: {order_id} with CT error {err}, {err.errors}'
                      f', message id: {message_id}')
@@ -353,6 +354,7 @@ def fulfill_order_returned_signal_task(order_id, return_items, message_id):
             return_line_entitlement_ids=return_line_entitlement_ids,
             message_id=message_id,
         )
+
         if 'refund_response' in result and result['refund_response']:
             if result['refund_response'] == 'charge_already_refunded':
                 logger.info(f'[CT-{tag}] payment {psp_payment_id} already has refunded transaction, '
@@ -397,7 +399,7 @@ def fulfill_order_returned_signal_task(order_id, return_items, message_id):
             logger.info(f'[CT-{tag}] payment {psp_payment_id} not refunded, '
                         f'sending Slack notification, message id: {message_id}')
 
-    else:
+    elif psp_payment_id is None and order.total_price.cent_amount == 0:
         client.update_return_payment_state_for_enrollment_code_purchase(
             order_id=order.id,
             order_version=order.version,
