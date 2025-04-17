@@ -121,7 +121,8 @@ CART_DISCOUNT_TYPES = [
     {"key": "course-discount", "label": "Course Discount"},
     {"key": "enrollment-code", "label": "Enrollment Code"},
     {"key": "program-discount", "label": "Program Discount"},
-    {"key": "program-offer", "label": "Program Offer"}
+    {"key": "program-offer", "label": "Program Offer"},
+    {"key": "program-enrollment-code", "label": "Program Enrollment Code"}
 ]
 
 # This mapping is based on prod categories

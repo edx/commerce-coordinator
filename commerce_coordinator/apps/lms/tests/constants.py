@@ -31,6 +31,7 @@ EXAMPLE_FULFILLMENT_SIGNAL_PAYLOAD: Dict[str, Union[str, bool, int, None]] = {
     'line_item_state_id': '8f2e888e-9777-4557-9a7f-c649153770c2',
     'message_id': '1063f19c-08f3-41a4-a952-a8577374373c',
     'user_first_name': 'test',
+    'user_last_name': 'test',
     'user_email': 'test@example.com',
     'product_title': 'Demonstration Course',
     'product_type': 'edx_course'

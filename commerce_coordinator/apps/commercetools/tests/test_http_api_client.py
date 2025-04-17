@@ -4,6 +4,7 @@ from unittest.mock import patch
 
 import requests_mock
 from django.test import TestCase
+from requests import Response
 from requests.exceptions import HTTPError
 
 from commerce_coordinator.apps.commercetools.http_api_client import CTCustomAPIClient
@@ -59,6 +60,71 @@ class TestCTCustomAPIClient(TestCase):
                 # pylint: disable=protected-access
                 response = self.client._make_request("GET", "products")
                 self.assertIsNone(response)
+
+    def test_make_request_retries_and_fails(self):
+        """Test that the function retries the correct number of times and fails."""
+        with requests_mock.Mocker() as mocker, patch("time.sleep", return_value=None) as mock_sleep:
+            mocker.get(
+                f"{self.client.config['apiUrl']}/{self.client.config['projectKey']}/products",
+                status_code=502,
+                json={"message": "Bad Gateway"}
+            )
+
+            with patch("requests.Response.raise_for_status", side_effect=HTTPError("502 Bad Gateway")):
+                # pylint: disable=protected-access
+                response = self.client._make_request("GET", "products")
+                self.assertIsNone(response)
+
+            self.assertEqual(mock_sleep.call_count, 2)  # 2 retries
+
+    def test_make_request_retries_and_succeeds(self):
+        """Test that the function retries and eventually succeeds."""
+        with requests_mock.Mocker() as mocker, patch("time.sleep", return_value=None) as mock_sleep:
+            # Simulate failure on the first attempt and success on the second
+            mocker.get(
+                f"{self.client.config['apiUrl']}/{self.client.config['projectKey']}/products",
+                [
+                    {"status_code": 500, "json": {"message": "Internal Server Error"}},
+                    {"status_code": 200, "json": {"results": [{"id": "mock_id"}]}},
+                ]
+            )
+
+            response = self.client._make_request("GET", "products")  # pylint: disable=protected-access
+            self.assertIsNotNone(response)
+            self.assertEqual(response, {"results": [{"id": "mock_id"}]})
+
+            self.assertEqual(mock_sleep.call_count, 1)  # 1 retry
+
+    @patch("commerce_coordinator.apps.commercetools.http_api_client.logger.error")
+    def test_make_request_response_json_throws_value_error(self, mock_logger):
+        """Test that the function handles ValueError when response.json() raises an exception."""
+        with requests_mock.Mocker() as mocker, patch("time.sleep", return_value=None):
+            url = f"{self.client.config['apiUrl']}/{self.client.config['projectKey']}/products"
+
+            mocker.get(
+                url,
+                status_code=502,
+                text="Bad Gateway",
+            )
+
+            bad_response = Response()
+            bad_response.status_code = 502
+            error_with_response = HTTPError("502 Bad Gateway")
+            error_with_response.response = bad_response
+
+            with patch("requests.Response.raise_for_status", side_effect=error_with_response):
+                # pylint: disable=protected-access
+                self.client._make_request("GET", "products")
+
+                mock_logger.assert_called_with(
+                    "CTCustomAPIClient: API request failed for endpoint: %s after attempt #%s with "
+                    "error: %s and message: %s", "products", 2, error_with_response, 'No message provided.'
+                )
+
+                # expects that ValueError is handled properly and
+                # Verify that 'No message provided.' was part of the log
+                log_message = mock_logger.call_args[0][4]
+                self.assertIn("No message provided.", str(log_message))
 
     def test_get_ct_bundle_offers_without_code(self):
         with requests_mock.Mocker() as mocker:
