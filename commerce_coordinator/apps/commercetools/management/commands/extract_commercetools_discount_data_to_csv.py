@@ -1,9 +1,10 @@
-from datetime import datetime
 import csv
+from datetime import datetime
 from typing import Dict, List
 
-from commerce_coordinator.apps.commercetools.clients import CTCustomAPIClient
+from commerce_coordinator.apps.commercetools.http_api_client import CTCustomAPIClient
 from commerce_coordinator.apps.commercetools.management.commands._timed_command import TimedCommand
+
 
 class Command(TimedCommand):
     help = "Fetch and verify discount attributes from CommerceTools"
@@ -30,25 +31,25 @@ class Command(TimedCommand):
         while should_continue:
             if lastId is None:
                 response = ct_api_client._make_request(
-                method="GET",
-                endpoint="discount-codes",
-                params={
-                    "limit": page_size,
-                    "sort": "id asc",
-                    "expand": "cartDiscounts[*]",
-                }
-            )
+                    method="GET",
+                    endpoint="discount-codes",
+                    params={
+                        "limit": page_size,
+                        "sort": "id asc",
+                        "expand": "cartDiscounts[*]",
+                    }
+                )
             else:
-                response =  ct_api_client._make_request(
-                method="GET",
-                endpoint="discount-codes",
-                params={
-                    "limit": page_size,
-                    "sort": "id asc",
-                    "expand": "cartDiscounts[*]",
-                    "where": f'id > "{lastId}"'
-                }
-            )
+                response = ct_api_client._make_request(
+                    method="GET",
+                    endpoint="discount-codes",
+                    params={
+                        "limit": page_size,
+                        "sort": "id asc",
+                        "expand": "cartDiscounts[*]",
+                        "where": f'id > "{lastId}"'
+                    }
+                )
             if not response:
                 print("Failed to get discount codes with code from Commercetools.")
                 return None
@@ -85,7 +86,6 @@ class Command(TimedCommand):
                 "channel": cart_discount["custom"]["fields"].get('channel'),
             }
             discounts_new.append(discount)
-
 
         # Define CSV filename with discount type and date
         filename = f"discount_{datetime.now().strftime('%Y%m%d')}.csv"

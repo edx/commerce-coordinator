@@ -1,20 +1,22 @@
 import json
+
 from commercetools.platform.models import (
     ProductDraft,
-    ProductVariantDraft,
+    ProductPriceModeEnum,
     ProductTypeResourceIdentifier,
-    ProductPriceModeEnum
+    ProductVariantDraft
 )
+
 from commerce_coordinator.apps.commercetools.management.commands._ct_api_client_command import (
-    CommercetoolsAPIClientCommand,
+    CommercetoolsAPIClientCommand
 )
 
-
-product_json=''' 
+product_json = '''
 
 
 
 '''
+
 
 class Command(CommercetoolsAPIClientCommand):
     help = "Create a commercetools product from a JSON string or file"
@@ -62,4 +64,3 @@ class Command(CommercetoolsAPIClientCommand):
             print(f"\n\n\n\nSuccessfully created product with ID: {created_product.id}")
         except Exception as e:
             print(f"\n\n\n\nError creating product: {e}")
-

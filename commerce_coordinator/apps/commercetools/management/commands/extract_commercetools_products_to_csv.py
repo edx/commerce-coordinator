@@ -1,7 +1,6 @@
-from datetime import datetime
 import csv
+from datetime import datetime
 from enum import Enum
-from itertools import product
 
 from commerce_coordinator.apps.commercetools.management.commands._ct_api_client_command import (
     CommercetoolsAPIClientCommand
@@ -15,6 +14,7 @@ class ProductType(Enum):
     OC_SELF_PACED = "oc_self_paced"
     EDX_COURSE = "oc_self_paced"
 
+
 STAGE_PRODUCT_TYPE_ID_MAPPING = {
     ProductType.EDX_COURSE_ENTITLEMENT.value: "12e5510c-a4d6-4301-9caf-17053e57ff71",
     ProductType.EDX_PROGRAM.value: "79fb6abe-8373-4dec-a8d1-51242b1798b8",
@@ -26,6 +26,7 @@ PROD_PRODUCT_TYPE_ID_MAPPING = {
     ProductType.EDX_PROGRAM.value: "c6a2d629-a50e-4d88-bd01-ab05a0617eae",
     ProductType.EDX_COURSE.value: "b241ac79-fee2-461d-b714-8f3c4a1c4c0e"
 }
+
 
 class Command(CommercetoolsAPIClientCommand):
     help = "Fetch and verify course attributes from CommerceTools"

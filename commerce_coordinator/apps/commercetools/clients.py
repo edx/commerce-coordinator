@@ -5,7 +5,7 @@ API clients for commercetools app.
 import datetime
 import logging
 from types import SimpleNamespace
-from typing import Dict, Generic, List, Optional, Tuple, TypedDict, TypeVar, Union
+from typing import Generic, List, Optional, Tuple, TypedDict, TypeVar, Union
 
 import requests
 from commercetools import Client as CTClient
@@ -42,7 +42,6 @@ from commercetools.platform.models import TypeResourceIdentifier as CTTypeResour
 from commercetools.platform.models.state import State as CTLineItemState
 from django.conf import settings
 from openedx_filters.exceptions import OpenEdxFilterException
-from requests.exceptions import HTTPError
 
 from commerce_coordinator.apps.commercetools.catalog_info.constants import (
     DEFAULT_ORDER_EXPANSION,
@@ -882,76 +881,3 @@ class CommercetoolsAPIClient:
                                        err, f"Unable to check if user {email} is eligible for a "
                                             f"first time discount", True)
             return True
-
-
-class CTCustomAPIClient:
-    """Custom Commercetools API Client using requests."""
-
-    def __init__(self):
-        """
-        Initialize the Commercetools client with configuration from Django settings.
-        """
-        self.config = settings.COMMERCETOOLS_CONFIG
-        self.access_token = self._get_access_token()
-
-    def _get_access_token(self) -> str:
-        """
-        Retrieve an access token using client credentials flow for Commercetools.
-
-        Returns:
-            str: Access token for API requests.
-        """
-        auth_url = self.config["authUrl"]+'/oauth/token'
-        auth = (self.config["clientId"], self.config["clientSecret"])
-        data = {
-            "grant_type": "client_credentials",
-            "scope": self.config['scopes'],
-        }
-
-        response = requests.post(auth_url, auth=auth, data=data)
-
-        response.raise_for_status()
-        return response.json()["access_token"]
-
-    def _make_request(
-            self,
-            method: str,
-            endpoint: str,
-            params: Optional[Dict] = None,
-            json: Optional[Dict] = None,
-    ) -> Union[Dict, List]:
-        """
-        Make an HTTP request to the Commercetools API.
-
-        Args:
-            method (str): HTTP method (e.g., "GET", "POST").
-            endpoint (str): API endpoint (e.g., "/cart-discounts").
-            params (Optional[Dict]): Query parameters.
-            json (Optional[Dict]): JSON payload for POST/PUT requests.
-
-        Returns:
-            Union[Dict, List]: JSON response from the API or None if the request fails.
-        """
-        url = f"{self.config['apiUrl']}/{self.config['projectKey']}/{endpoint}"
-        headers = {
-            "Authorization": f"Bearer {self.access_token}",
-            "Content-Type": "application/json",
-        }
-        try:
-            response = requests.request(method, url, headers=headers, params=params, json=json)
-            response.raise_for_status()
-            return response.json()
-        except HTTPError as err:
-            if response is not None:
-                try:
-                    response_message = response.json().get('message', 'No message provided.')
-                except ValueError as e:
-                    response_message = getattr(response, 'text', e) or 'No message provided.'
-                logger.error(
-                    "API request for endpoint: %s failed with error: %s and message: %s",
-                    endpoint, err, response_message
-                )
-            else:
-                logger.error("API request for endpoint: %s failed with error: %s", endpoint, err)
-
-            return None
