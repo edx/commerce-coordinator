@@ -10,7 +10,7 @@ from commerce_coordinator.apps.lms.constants import CT_ABSOLUTE_DISCOUNT_TYPE, D
 
 def get_order_line_item_info_from_entitlement_uuid(order_number: str, entitlement_uuid: str) -> tuple[str, str]:
     """
-    Retrieve the order ID and line item ID associated with the given entitlement ID.
+    Retrieve the order and line item ID's associated with the given entitlement ID.
 
     Args:
         order_number (str): The order number in Commercetools.
