@@ -1,6 +1,7 @@
 """
 Views for the ecommerce app
 """
+import datetime
 import logging
 import re
 from typing import List
@@ -482,16 +483,30 @@ class ProgramPriceView(APIView):
         user_purchasable_course_keys = request.GET.getlist("course_key")
 
         try:
+            view_start_time = datetime.datetime.now()
             ct_api_client = CTCustomAPIClient()
 
             # Fetch bundle variants with entitlements
+            start_time = datetime.datetime.now()
             ct_program_variants = ct_api_client.get_program_variants(bundle_key)
+            duration = (datetime.datetime.now() - start_time).total_seconds()
+            logger.info(
+                f"[Performance Check - ProgramPriceView] - ct_program_variants took {duration} seconds. "
+                f"Bundle key: {bundle_key}"
+            )
+
             if not ct_program_variants:
                 logger.error(f"[ProgramPriceView] No program variants found for the program: "
                              f"{bundle_key} for user: {username}.")
                 return Response('Program variants not found.', status=HTTP_404_NOT_FOUND)
 
+            start_time = datetime.datetime.now()
             ct_discount_offers = ct_api_client.get_ct_bundle_offers_without_code()
+            duration = (datetime.datetime.now() - start_time).total_seconds()
+            logger.info(
+                f"[Performance Check - ProgramPriceView] - get_ct_bundle_offers_without_code took {duration} seconds. "
+                f"Bundle key: {bundle_key}"
+            )
 
             # Get applied program offer
             program_offer = get_program_offer(ct_discount_offers, bundle_key)
@@ -503,8 +518,14 @@ class ProgramPriceView(APIView):
             )
 
             # Get price of each entitlement in the bundle
+            start_time = datetime.datetime.now()
             entitlements_standalone_prices = ct_api_client.get_program_entitlements_standalone_prices(
                 purchasable_entitlements_skus
+            )
+            duration = (datetime.datetime.now() - start_time).total_seconds()
+            logger.info(
+                f"[Performance Check - ProgramPriceView] - entitlements_standalone_prices took {duration} seconds. "
+                f"Bundle key: {bundle_key}, purchasable_entitlements_skus: {purchasable_entitlements_skus}"
             )
 
             # Calculate total price of the bundle
@@ -522,6 +543,11 @@ class ProgramPriceView(APIView):
                 "total_incl_tax": self._cents_to_dollars(discounted_cent_amount),
                 "currency": currencyCode,
             }
+            view_duration = (datetime.datetime.now() - view_start_time).total_seconds()
+            logger.info(
+                f"[Performance Check - ProgramPriceView] - view execution took {view_duration} seconds. "
+                f"Bundle key: {bundle_key}, output: {output}"
+            )
             return Response(output, status=HTTP_200_OK)
 
         except HTTPError as err:

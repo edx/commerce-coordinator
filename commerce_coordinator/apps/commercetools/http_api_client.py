@@ -46,8 +46,9 @@ class CTCustomAPIClient:
             endpoint: str,
             params: Optional[Dict] = None,
             json: Optional[Dict] = None,
-            total_retries: int = 2,
+            total_retries: int = 3,
             base_backoff: int = 1,
+            log_info: str = "",
     ) -> Union[Dict, None]:
         """
         Make an HTTP request to the Commercetools API with retry logic.
@@ -59,6 +60,7 @@ class CTCustomAPIClient:
             json (Optional[Dict]): JSON payload for POST/PUT requests.
             total_retries (int): Number of retries after the first attempt.
             base_backoff (int): Base backoff time in seconds.
+            log_info (str): Additional log info to be appended in error/warn logs.
 
         Returns:
             Union[Dict, None]: JSON response from the API or None if all retries fail.
@@ -95,17 +97,17 @@ class CTCustomAPIClient:
                 if attempt_number >= total_retries:
                     logger.error(
                         "CTCustomAPIClient: API request failed for endpoint: %s after attempt #%s"
-                        " with error: %s and message: %s",
-                        endpoint, attempt_number, err, response_message
+                        " with error: %s and message: %s, %s.",
+                        endpoint, attempt_number, err, response_message, log_info
                     )
                     return None
 
                 next_attempt = attempt_number + 1
                 next_backoff = base_backoff * next_attempt
                 logger.warning(
-                    "API request failed for endpoint: %s with error: %s and message: %s. "
+                    "CTCustomAPIClient: API request failed for endpoint: %s with error: %s and message: %s, %s. "
                     "Retrying attempt #%s in %s seconds...",
-                    endpoint, err, response_message, next_attempt, next_backoff
+                    endpoint, err, response_message, log_info, next_attempt, next_backoff
                 )
                 time.sleep(next_backoff)
                 return attempt(next_attempt)
@@ -132,44 +134,42 @@ class CTCustomAPIClient:
 
         return bundle_offer_without_codes.get("results", [])
 
-    def get_program_variants(
-        self,
-        product_key: str,
-    ) -> List[dict]:
+    def get_program_variants(self, product_key: str) -> List[dict]:
         """
-        Fetch program variants with entitlement for the given program key.
+        Fetch program variants with entitlement for the given program key using product projections.
 
         Args:
-            produck_key (str): The program key to fetch variants for.
+            product_key (str): The program key to fetch variants for.
 
         Returns:
             List: List of program variants with entitlements.
         """
+        if not product_key:
+            raise ValueError("[get_program_variants] Missing required product_key")
+
         params = {
             "where": f'key="{product_key}"',
-            "expand": "masterData.current.variants[*].attributes[*].value",
+            "expand": 'variants[*].attributes[*].value',
         }
+
         program = self._make_request(
             "GET",
-            "products",
+            "product-projections",
             params=params,
+            log_info=f"bundle_key={product_key}",
         )
-        if program is None:
+
+        if not program or not program.get("results"):
             return []
 
+        variants = program["results"][0].get("variants", [])
         entitlement_products = []
-        results = program.get("results")
-        if not results:
-            return []
 
-        for variant in results[0].get("masterData", {}).get("current", {}).get("variants", []):
+        for variant in variants:
             for attribute in variant.get("attributes", []):
-                # Fetch the SKU for the course entitlement to get price.
                 if attribute.get("name") == "ref-edx-course-entitlement":
-                    expanded_entitlement_obj = attribute.get("value", {}).get("obj", {})
-                    master_data = expanded_entitlement_obj.get("masterData", {})
-                    master_variant = master_data.get("current", {}).get("masterVariant", {})
-
+                    entitlement_obj = attribute.get("value", {}).get("obj", {})
+                    master_variant = entitlement_obj.get("masterData", {}).get("current", {}).get("masterVariant", {})
                     entitlement_products.append({
                         "entitlement_sku": master_variant.get("sku"),
                         "variant_key": variant.get("key"),
