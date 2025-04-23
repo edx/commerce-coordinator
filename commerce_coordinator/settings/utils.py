@@ -39,8 +39,8 @@ def get_logger_config(logging_env="no_env",
         'disable_existing_loggers': False,
         'formatters': {
             'standard': {
-                'format': "%(asctime)s %(levelname)s %(process)d [%(name)s] [user %(userid)s] "
-    "[ip %(remoteip)s] %(filename)s:%(lineno)d - %(message)s",
+                'format':  "%(asctime)s %(levelname)s %(process)d [%(name)s] [user %(userid)s] "
+                            "[ip %(remoteip)s] %(filename)s:%(lineno)d - %(message)s",
             },
             'syslog_format': {'format': syslog_format},
             'raw': {'format': '%(message)s'},
