@@ -1,8 +1,13 @@
 """
 Views for the commercetools app
 """
+import json
 import logging
 
+import boto3
+from botocore.exceptions import ClientError
+from django.conf import settings
+from django.http import JsonResponse
 from rest_framework import status
 from rest_framework.authentication import SessionAuthentication
 from rest_framework.permissions import IsAdminUser
@@ -22,10 +27,11 @@ from commerce_coordinator.apps.commercetools.sub_messages.signals_dispatch impor
 )
 from commerce_coordinator.apps.core.memcache import safe_key
 from commerce_coordinator.apps.core.tasks import acquire_task_lock
-from commerce_coordinator.apps.core.views import SingleInvocationAPIView
+
+from .views_webhook_poc_aws import *
+from .views_webhook_poc_custom import *
 
 logger = logging.getLogger(__name__)
-
 
 # noinspection DuplicatedCode
 class OrderFulfillView(SingleInvocationAPIView):
