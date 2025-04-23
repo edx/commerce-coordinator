@@ -65,7 +65,8 @@ class OrderFulfillView(SingleInvocationAPIView):
             order_id=order_id,
             line_item_state_id=line_item_state_id,
             source_system=SOURCE_SYSTEM,
-            message_id=message_id
+            message_id=message_id,
+            request=request
         )
 
         return Response(status=status.HTTP_200_OK)

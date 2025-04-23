@@ -39,12 +39,24 @@ from commerce_coordinator.apps.commercetools.utils import (
     calculate_total_discount_on_order,
     extract_ct_order_information_for_braze_canvas,
     extract_ct_product_information_for_braze_canvas,
-    send_order_confirmation_email
+    send_order_confirmation_email,
+    get_lob_from_variant_attr
 )
 from commerce_coordinator.apps.core.constants import ISO_8601_FORMAT
 from commerce_coordinator.apps.core.memcache import safe_key
 from commerce_coordinator.apps.core.segment import track
 from commerce_coordinator.apps.lms.clients import LMSAPIClient
+
+from commerce_coordinator.apps.rollout.waffle import (
+   is_order_fulfillment_service_redirection_enabled
+)
+
+from commerce_coordinator.apps.order_fulfillment.clients import OrderFulfillmentAPIClient
+
+
+from django.contrib.auth import get_user_model
+User = get_user_model()
+
 
 # Use the special Celery logger for our tasks
 logger = get_task_logger(__name__)
@@ -75,7 +87,8 @@ def fulfill_order_placed_message_signal_task(
     order_id,
     line_item_state_id,
     source_system,
-    message_id
+    message_id,
+    order_fulfillment_request
 ):
     """Celery task for fulfilling an order placed message."""
 
@@ -83,6 +96,8 @@ def fulfill_order_placed_message_signal_task(
 
     logger.info(f'[CT-{tag}] Processing order {order_id}, '
                 f'line item {line_item_state_id}, source system {source_system}, message id: {message_id}')
+
+    isOrderFulfillmentRedirectionEnabled = is_order_fulfillment_service_redirection_enabled(order_fulfillment_request)
 
     client = CommercetoolsAPIClient()
 
@@ -93,14 +108,14 @@ def fulfill_order_placed_message_signal_task(
         logger.info(f"[Performance Check] get_order_by_id call took {duration} seconds")
     except CommercetoolsError as err:  # pragma no cover
         logger.error(f'[CT-{tag}] Order not found: {order_id} with CT error {err}, {err.errors},'
-                     f'message id: {message_id}')
+                    f'message id: {message_id}')
         raise err
 
     try:
         customer = client.get_customer_by_id(order.customer_id)
     except CommercetoolsError as err:  # pragma no cover
         logger.error(f'[CT-{tag}]  Customer not found: {order.customer_id} for order {order_id} with '
-                     f'CT error {err}, {err.errors}, message id: {message_id}')
+                    f'CT error {err}, {err.errors}, message id: {message_id}')
         raise err
 
     if not (customer and order and is_edx_lms_order(order)):
@@ -125,7 +140,6 @@ def fulfill_order_placed_message_signal_task(
     canvas_entry_properties.update(extract_ct_order_information_for_braze_canvas(customer, order))
 
     logger.info(
-        f"[CT-{tag}] Transitioning all line items for order {order.id} to {TwoUKeys.PROCESSING_FULFILMENT_STATE}"
     )
     updated_order = client.update_line_items_transition_state(
         order_id=order.id,
@@ -137,7 +151,7 @@ def fulfill_order_placed_message_signal_task(
 
     for item in get_edx_items(order):
         logger.debug(f'[CT-{tag}] processing edX order {order_id}, line item {item.variant.sku}, '
-                     f'message id: {message_id}')
+                    f'message id: {message_id}')
 
         # from here we will always be transitioning from a 'Fulfillment Processing' state
         line_item_state_id = client.get_state_by_key(TwoUKeys.PROCESSING_FULFILMENT_STATE).id
@@ -155,39 +169,69 @@ def fulfill_order_placed_message_signal_task(
         ct_program_product = client.get_product_by_program_id(bundle_id) if bundle_id else None
 
         product_title = ct_program_product.name.get('en-US', '') if ct_program_product else item.name.get('en-US', '')
-        serializer = OrderFulfillViewInputSerializer(data={
-            **default_params,
-            # Due to CT Variant SKU storing different values for course and entitlement models
-            # For bundle purchases, the course_id is the course_uuid
-            # For non-bundles purchase, the course_id is the course_run_key
-            'course_id': get_edx_product_course_run_key(item),
-            'line_item_id': item.id,
-            'course_mode': get_course_mode_from_ct_order(item),
-            'item_quantity': item.quantity,
-            'line_item_state_id': line_item_state_id,
-            'message_id': message_id,
-            'user_first_name': customer.first_name,
-            'user_last_name': customer.last_name,
-            'user_email': customer.email,
-            'product_title': product_title,
-            'product_type': item.product_type.obj.key
-        })
 
-        # the following throws and thus doesn't need to be a conditional
-        serializer.is_valid(raise_exception=True)  # pragma no cover
+        serializer_data = {
+                **default_params,
+                # Due to CT Variant SKU storing different values for course and entitlement models
+                # For bundle purchases, the course_id is the course_uuid
+                # For non-bundles purchase, the course_id is the course_run_key
+                'course_id': get_edx_product_course_run_key(item),
+                'line_item_id': item.id,
+                'course_mode': get_course_mode_from_ct_order(item),
+                'item_quantity': item.quantity,
+                'line_item_state_id': line_item_state_id,
+                'message_id': message_id,
+                'user_first_name': customer.first_name,
+                'user_last_name': customer.last_name,
+                'user_email': customer.email,
+                'product_title': product_title,
+                'product_type': item.product_type.obj.key
+            }
+        
+        if isOrderFulfillmentRedirectionEnabled:
+            logger.info(f'[CT-{tag}] Order Fulfillment Redirection Flag [ENABLED].')
 
-        payload = serializer.validated_data
+            # Adding lob for order fulfillment service redirection as payload requirement.
+            serializer_data['lob'] = get_lob_from_variant_attr(item.variant) or 'edx'
+            serializer = OrderFulfillViewInputSerializer(data=serializer_data)
 
-        if bundle_id:
-            fulfill_order_placed_send_entitlement_signal.send_robust(
-                sender=fulfill_order_placed_message_signal_task,
-                **payload
-            )
+            serializer.is_valid(raise_exception=True)
+            payload = serializer.validated_data
+
+            user = User.objects.get(lms_user_id=payload['edx_lms_user_id'])
+
+            fulfillment_logging_obj = {
+                'user': user.username,
+                'lms_user_id': user.lms_user_id,
+                'order_id': order_id,
+                'course_id': payload['course_id'],
+                'message_id': message_id,
+                'celery_task_id': self.request.id
+            }
+
+            OrderFulfillmentAPIClient().fulfill_order(payload, fulfillment_logging_obj)
+           
+
         else:
-            fulfill_order_placed_send_enroll_in_course_signal.send_robust(
-                sender=fulfill_order_placed_message_signal_task,
-                **payload
-            )
+            logger.info(f'[CT-{tag}] Order Fulfillment Redirection Flag [NOT ENABLED].')
+            
+            serializer = OrderFulfillViewInputSerializer(data=serializer_data)
+            
+            # the following throws and thus doesn't need to be a conditional
+            serializer.is_valid(raise_exception=True)  # pragma no cover
+
+            payload = serializer.validated_data
+
+            if bundle_id:
+                fulfill_order_placed_send_entitlement_signal.send_robust(
+                    sender=fulfill_order_placed_message_signal_task,
+                    **payload
+                )
+            else:
+                fulfill_order_placed_send_enroll_in_course_signal.send_robust(
+                    sender=fulfill_order_placed_message_signal_task,
+                    **payload
+                )
 
         product_information = extract_ct_product_information_for_braze_canvas(item)
         canvas_entry_properties["products"].append(product_information)

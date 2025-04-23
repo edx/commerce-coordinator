@@ -92,6 +92,7 @@ class OrderFulfillViewInputSerializer(CoordinatorSerializer):
     user_last_name = serializers.CharField(allow_null=True, allow_blank=True)
     user_email = serializers.EmailField(allow_null=False)
     product_type = serializers.CharField(allow_null=False)
+    lob = serializers.CharField(allow_null=False, required=False)
 
 
 class OrderReturnedViewMessageLineItemReturnItemSerializer(CoordinatorSerializer):
