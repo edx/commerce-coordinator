@@ -4,6 +4,11 @@ from os import environ
 
 from django.core.exceptions import ImproperlyConfigured
 
+DEFAULT_LOGGING_FORMAT_STRING = (
+    "%(asctime)s %(levelname)s %(process)d [%(name)s] [user %(userid)s] "
+    "[ip %(remoteip)s] %(filename)s:%(lineno)d - %(message)s"
+)
+
 
 def get_env_setting(setting):
     """ Get the environment setting or raise exception """
@@ -16,7 +21,8 @@ def get_env_setting(setting):
 
 def get_logger_config(logging_env="no_env",
                       debug=False,
-                      service_variant='commerce-coordinator'):
+                      service_variant='commerce-coordinator',
+                      format_string=DEFAULT_LOGGING_FORMAT_STRING):
     """
     Return the appropriate logging config dictionary. You should assign the
     result of this to the LOGGING var in your settings.
@@ -39,8 +45,7 @@ def get_logger_config(logging_env="no_env",
         'disable_existing_loggers': False,
         'formatters': {
             'standard': {
-                'format': '%(asctime)s %(levelname)s [%(name)s] [%(filename)s:%(lineno)d] '
-                          '[dd.trace_id=%(dd.trace_id)s dd.span_id=%(dd.span_id)s] - %(message)s',
+                'format': format_string,
             },
             'syslog_format': {'format': syslog_format},
             'raw': {'format': '%(message)s'},
