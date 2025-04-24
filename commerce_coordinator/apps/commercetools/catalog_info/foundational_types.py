@@ -11,7 +11,13 @@ from commercetools.platform.models import (
     TypeTextInputHint
 )
 
-from commerce_coordinator.apps.commercetools.catalog_info.constants import CART_DISCOUNT_TYPES, EdXFieldNames, TwoUKeys
+from commerce_coordinator.apps.commercetools.catalog_info.constants import (
+    CART_DISCOUNT_CATEGORIES,
+    CART_DISCOUNT_CHANNELS,
+    CART_DISCOUNT_TYPES,
+    EdXFieldNames,
+    TwoUKeys
+)
 from commerce_coordinator.apps.commercetools.catalog_info.utils import ls
 
 
@@ -277,7 +283,7 @@ class TwoUCustomTypes:
                 input_hint=TypeTextInputHint.SINGLE_LINE
             ),
             FieldDefinition(
-                type=CustomFieldStringType(),
+                type=CustomFieldEnumType(values=CART_DISCOUNT_CATEGORIES),
                 name=TwoUKeys.CART_DISCOUNT_CATEGORY,
                 required=False,
                 label=ls({'en': 'Category'}),
@@ -289,7 +295,14 @@ class TwoUCustomTypes:
                 required=False,
                 label=ls({'en': 'Discount Type'}),
                 input_hint=TypeTextInputHint.SINGLE_LINE
-            )
+            ),
+            FieldDefinition(
+                type=CustomFieldEnumType(values=CART_DISCOUNT_CHANNELS),
+                name=TwoUKeys.CART_DISCOUNT_CHANNEL,
+                required=False,
+                label=ls({'en': 'Channel'}),
+                input_hint=TypeTextInputHint.SINGLE_LINE,
+            ),
         ]
     )
 

@@ -63,6 +63,9 @@ class TwoUKeys:
     # Category custom field to store in cart discount
     CART_DISCOUNT_CATEGORY = 'category'
 
+    # Channel custom field to store in cart discount
+    CART_DISCOUNT_CHANNEL = 'channel'
+
     # Discount Type custom field to store in cart discount
     CART_DISCOUNT_DISCOUNT_TYPE = 'discountType'
 
@@ -118,5 +121,29 @@ CART_DISCOUNT_TYPES = [
     {"key": "course-discount", "label": "Course Discount"},
     {"key": "enrollment-code", "label": "Enrollment Code"},
     {"key": "program-discount", "label": "Program Discount"},
-    {"key": "program-offer", "label": "Program Offer"}
+    {"key": "program-offer", "label": "Program Offer"},
+    {"key": "program-enrollment-code", "label": "Program Enrollment Code"}
+]
+
+# This mapping is based on prod categories
+CART_DISCOUNT_CATEGORIES = [
+    {"key": "affiliate-promotion", "label": "Affiliate Promotion"},
+    {"key": "b2b-affiliate-promotion", "label": "B2B Affiliate Promotion"},
+    {"key": "bulk-enrollment-prepay", "label": "Bulk Enrollment - Prepay"},
+    {"key": "bulk-enrollment-upon-redemption", "label": "Bulk Enrollment - Upon Redemption"},
+    {"key": "customer-service", "label": "Customer Service"},
+    {"key": "financial-assistance", "label": "Financial Assistance"},
+    {"key": "marketing-other", "label": "Marketing-Other"},
+    {"key": "on-campus-learners", "label": "On-Campus Learners"},
+    {"key": "partner-no-rev-prepay", "label": "Partner No Rev - Prepay"},
+    {"key": "other", "label": "Other"}
+]
+
+CART_DISCOUNT_CHANNELS = [
+    {"key": "affiliate", "label": "Affiliate"},
+    {"key": "display-pmax", "label": "Display/PMAX"},
+    {"key": "email", "label": "Email"},
+    {"key": "enterprise-b2b", "label": "Enterprise/B2B"},
+    {"key": "organic-edx", "label": "Organic/EdX"},
+    {"key": "other", "label": "Other"},
 ]

@@ -167,6 +167,7 @@ def fulfill_order_placed_message_signal_task(
             'line_item_state_id': line_item_state_id,
             'message_id': message_id,
             'user_first_name': customer.first_name,
+            'user_last_name': customer.last_name,
             'user_email': customer.email,
             'product_title': product_title,
             'product_type': item.product_type.obj.key
@@ -316,6 +317,7 @@ def fulfill_order_returned_signal_task(order_id, return_items, message_id):
 
     try:
         order = client.get_order_by_id(order_id)
+
     except CommercetoolsError as err:  # pragma no cover
         logger.error(f'[CT-{tag}] Order not found: {order_id} with CT error {err}, {err.errors}'
                      f', message id: {message_id}')
@@ -397,6 +399,13 @@ def fulfill_order_returned_signal_task(order_id, return_items, message_id):
         else:  # pragma no cover
             logger.info(f'[CT-{tag}] payment {psp_payment_id} not refunded, '
                         f'sending Slack notification, message id: {message_id}')
+
+    elif psp_payment_id is None and order.total_price.cent_amount == 0:
+        client.update_return_payment_state_for_enrollment_code_purchase(
+            order_id=order.id,
+            order_version=order.version,
+            return_line_item_return_ids=return_line_item_return_ids,
+        )
 
     logger.info(f'[CT-{tag}] Finished return for order: {order_id}, line item: {return_line_item_ids}, '
                 f'message id: {message_id}')

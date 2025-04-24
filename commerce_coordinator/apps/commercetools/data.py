@@ -96,9 +96,9 @@ def convert_customer(customer: CTCustomer) -> User:
 
 
 def convert_payment_info(payment_info: CTPaymentInfo) -> str:
-    if len(payment_info.payments) > 0:
+    if payment_info and len(payment_info.payments) > 0:
         return un_ls(payment_info.payments[-1].obj.payment_method_info.name)
-    return "Unknown"
+    return "Unknown"  # This string should not be changed, we have conditional logic that depends on it on frontend.
 
 
 def order_from_commercetools(order: CTOrder, customer: CTCustomer) -> LegacyOrder:
