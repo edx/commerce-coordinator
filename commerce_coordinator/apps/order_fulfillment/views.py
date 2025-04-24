@@ -5,9 +5,7 @@ from django.shortcuts import render
 Views for the order fulfillment app
 """
 import logging
-import json
 
-from django.conf import settings
 from django.views.decorators.csrf import csrf_exempt
 from rest_framework import status
 from rest_framework.permissions import AllowAny
