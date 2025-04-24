@@ -1,6 +1,3 @@
-from django.shortcuts import render
-
-# Create your views here.
 """
 Views for the order fulfillment app
 """
