@@ -479,7 +479,6 @@ class ProgramPriceView(APIView):
 
     def get(self, request, bundle_key=None):
         """Return the price of the bundle for the specified course."""
-        username = request.GET.get("username", "")
         user_purchasable_course_keys = request.GET.getlist("course_key")
 
         try:
@@ -496,8 +495,7 @@ class ProgramPriceView(APIView):
             )
 
             if not ct_program_variants:
-                logger.error(f"[ProgramPriceView] No program variants found for the program: "
-                             f"{bundle_key} for user: {username}.")
+                logger.error(f"[ProgramPriceView] No program variants found for the program: {bundle_key}.")
                 return Response('Program variants not found.', status=HTTP_404_NOT_FOUND)
 
             start_time = datetime.datetime.now()
