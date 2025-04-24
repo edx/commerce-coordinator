@@ -24,6 +24,10 @@ from commerce_coordinator.apps.core.memcache import safe_key
 from commerce_coordinator.apps.core.tasks import acquire_task_lock
 from commerce_coordinator.apps.core.views import SingleInvocationAPIView
 
+from commerce_coordinator.apps.rollout.waffle import (
+   is_order_fulfillment_service_redirection_enabled
+)
+
 logger = logging.getLogger(__name__)
 
 
@@ -42,6 +46,10 @@ class OrderFulfillView(SingleInvocationAPIView):
         input_data = {
             **request.data
         }
+
+        isOrderFulfillmentRedirectionEnabled = is_order_fulfillment_service_redirection_enabled(request)
+
+        logger.info(f"WAFFLE FLAGG {isOrderFulfillmentRedirectionEnabled}")
 
         logger.info(f'[CT-{tag}] Message received from commercetools with details: {input_data}')
 
@@ -66,7 +74,7 @@ class OrderFulfillView(SingleInvocationAPIView):
             line_item_state_id=line_item_state_id,
             source_system=SOURCE_SYSTEM,
             message_id=message_id,
-            request=request
+            is_order_fulfillment_redirection_enabled=isOrderFulfillmentRedirectionEnabled
         )
 
         return Response(status=status.HTTP_200_OK)

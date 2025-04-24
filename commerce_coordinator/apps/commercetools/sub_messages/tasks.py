@@ -88,17 +88,19 @@ def fulfill_order_placed_message_signal_task(
     line_item_state_id,
     source_system,
     message_id,
-    order_fulfillment_request
+    is_order_fulfillment_redirection_enabled
 ):
     """Celery task for fulfilling an order placed message."""
 
     tag = "fulfill_order_placed_message_signal_task"
 
     logger.info(f'[CT-{tag}] Processing order {order_id}, '
-                f'line item {line_item_state_id}, source system {source_system}, message id: {message_id}')
+                f'line item {line_item_state_id}, source system {source_system}, message id: {message_id}, '
+                f'waffle flag: {is_order_fulfillment_redirection_enabled}')
 
-    isOrderFulfillmentRedirectionEnabled = is_order_fulfillment_service_redirection_enabled(order_fulfillment_request)
+    # isOrderFulfillmentRedirectionEnabled = is_order_fulfillment_service_redirection_enabled(order_fulfillment_request)
 
+    # logger.info(f"WAFFLE FLAGGGGGGG {isOrderFulfillmentRedirectionEnabled}")
     client = CommercetoolsAPIClient()
 
     try:
@@ -139,8 +141,6 @@ def fulfill_order_placed_message_signal_task(
     canvas_entry_properties = {"products": []}
     canvas_entry_properties.update(extract_ct_order_information_for_braze_canvas(customer, order))
 
-    logger.info(
-    )
     updated_order = client.update_line_items_transition_state(
         order_id=order.id,
         order_version=order.version,
@@ -188,11 +188,13 @@ def fulfill_order_placed_message_signal_task(
                 'product_type': item.product_type.obj.key
             }
         
-        if isOrderFulfillmentRedirectionEnabled:
+        if is_order_fulfillment_redirection_enabled:
             logger.info(f'[CT-{tag}] Order Fulfillment Redirection Flag [ENABLED].')
 
             # Adding lob for order fulfillment service redirection as payload requirement.
             serializer_data['lob'] = get_lob_from_variant_attr(item.variant) or 'edx'
+
+            logger.info(f"SERIAZLIERR DATA {serializer_data}")
             serializer = OrderFulfillViewInputSerializer(data=serializer_data)
 
             serializer.is_valid(raise_exception=True)
@@ -210,7 +212,6 @@ def fulfill_order_placed_message_signal_task(
             }
 
             OrderFulfillmentAPIClient().fulfill_order(payload, fulfillment_logging_obj)
-           
 
         else:
             logger.info(f'[CT-{tag}] Order Fulfillment Redirection Flag [NOT ENABLED].')

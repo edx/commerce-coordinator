@@ -32,6 +32,8 @@ class OrderFulfillmentAPIClient(BaseEdxOAuthClient):
         fulfillment of enrollment or entitlement
 
         """
+
+        logger.info(f"WIHTIN FULFIL ORDER {payload}, {fulfillment_logging_obj}")
         return self.post(
             payload=payload,
             logging_obj=fulfillment_logging_obj,

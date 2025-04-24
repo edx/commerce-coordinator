@@ -318,7 +318,7 @@ def get_lob_from_variant_attr(variant):
     variant (dict): order line item variant
 
     """
-    for attr in variant.get('attributes', []):
-        if attr.get('name') == 'lob':
-            return attr.get('value')
+    for attr in variant.attributes:
+        if attr.name == 'lob':
+            return attr.value
     return None
