@@ -13,7 +13,6 @@ from commerce_coordinator.apps.lms.clients import FulfillmentType
 from commerce_coordinator.apps.lms.signals import fulfillment_completed_update_ct_line_item_signal
 from commerce_coordinator.apps.order_fulfillment.serializers import FulfillOrderWebhookSerializer
 
-
 logger = logging.getLogger(__name__)
 
 
@@ -42,7 +41,6 @@ class FulfillOrderWebhookView(SingleInvocationAPIView):
                 'is_fulfilled': True
             }
 
-
             if fulfillment_type == FulfillmentType.ENTITLEMENT.value:
                 payload['entitlement_uuid'] = entitlement_uuid
 
@@ -55,13 +53,12 @@ class FulfillOrderWebhookView(SingleInvocationAPIView):
                 {'message': 'Fulfillment event processed successfully'},
                 status=status.HTTP_200_OK
             )
-        except Exception as exc:
-            context_prefix = (
+        except Exception as exc:  # pylint: disable=broad-exception-caught
+            log_message = (
                 f"[FulfillOrderWebhookView] Error processing fulfill order webhook: {exc} "
                 f"with body: {request.data}"
             )
-
-            self.log_request_exception(context_prefix, logger, exc)
+            logger.exception(log_message)
 
             payload = {
                 **validated_data,

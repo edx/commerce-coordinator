@@ -1,3 +1,6 @@
+"""
+App configuration for the Order Fulfillment app.
+"""
 from django.apps import AppConfig
 
 

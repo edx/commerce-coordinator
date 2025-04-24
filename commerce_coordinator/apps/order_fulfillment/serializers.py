@@ -1,6 +1,4 @@
 """Serializers for LMS (edx-platform) service"""
-from typing import Dict
-
 from rest_framework import serializers
 
 from commerce_coordinator.apps.core.serializers import CoordinatorSerializer
