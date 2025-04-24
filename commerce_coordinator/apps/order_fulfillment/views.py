@@ -29,18 +29,13 @@ class FulfillOrderWebhookView(SingleInvocationAPIView):
     @csrf_exempt
     def post(self, request):
         """Webhook entry point for order fulfillment events."""
-        tag = type(self).__name__
         try:
             validator = FulfillOrderWebhookSerializer(data=request.data)
             validator.is_valid(raise_exception=True)
             validated_data = validator.validated_data
 
             entitlement_uuid = validated_data.get('entitlement_uuid')
-            order_id = validated_data.get('order_id')
-            line_item_id = validated_data.get('line_item_id')
             fulfillment_type = validated_data.get('fulfillment_type')
-
-
 
             payload = {
                 **validated_data,
