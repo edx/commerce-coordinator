@@ -42,54 +42,55 @@ class TestCTCustomAPIClient(TestCase):
         with requests_mock.Mocker() as mocker:
             mock_response = {"results": [{"id": "mock_id"}]}
             mocker.get(
-                f"{self.client.config['apiUrl']}/{self.client.config['projectKey']}/products", json=mock_response
+                f"{self.client.config['apiUrl']}/{self.client.config['projectKey']}/product-projections",
+                json=mock_response
             )
 
-            response = self.client._make_request("GET", "products")  # pylint: disable=protected-access
+            response = self.client._make_request("GET", "product-projections")  # pylint: disable=protected-access
             self.assertEqual(response, mock_response)
 
     def test_make_request_failure(self):
         with requests_mock.Mocker() as mocker:
             mocker.get(
-                f"{self.client.config['apiUrl']}/{self.client.config['projectKey']}/products",
+                f"{self.client.config['apiUrl']}/{self.client.config['projectKey']}/product-projections",
                 status_code=404,
                 json={"message": "Not Found"}
             )
 
             with patch("requests.Response.raise_for_status", side_effect=HTTPError("404 Client Error")):
                 # pylint: disable=protected-access
-                response = self.client._make_request("GET", "products")
+                response = self.client._make_request("GET", "product-projections")
                 self.assertIsNone(response)
 
     def test_make_request_retries_and_fails(self):
         """Test that the function retries the correct number of times and fails."""
         with requests_mock.Mocker() as mocker, patch("time.sleep", return_value=None) as mock_sleep:
             mocker.get(
-                f"{self.client.config['apiUrl']}/{self.client.config['projectKey']}/products",
+                f"{self.client.config['apiUrl']}/{self.client.config['projectKey']}/product-projections",
                 status_code=502,
                 json={"message": "Bad Gateway"}
             )
 
             with patch("requests.Response.raise_for_status", side_effect=HTTPError("502 Bad Gateway")):
                 # pylint: disable=protected-access
-                response = self.client._make_request("GET", "products")
+                response = self.client._make_request("GET", "product-projections")
                 self.assertIsNone(response)
 
-            self.assertEqual(mock_sleep.call_count, 2)  # 2 retries
+            self.assertEqual(mock_sleep.call_count, 3)  # 3 retries
 
     def test_make_request_retries_and_succeeds(self):
         """Test that the function retries and eventually succeeds."""
         with requests_mock.Mocker() as mocker, patch("time.sleep", return_value=None) as mock_sleep:
             # Simulate failure on the first attempt and success on the second
             mocker.get(
-                f"{self.client.config['apiUrl']}/{self.client.config['projectKey']}/products",
+                f"{self.client.config['apiUrl']}/{self.client.config['projectKey']}/product-projections",
                 [
                     {"status_code": 500, "json": {"message": "Internal Server Error"}},
                     {"status_code": 200, "json": {"results": [{"id": "mock_id"}]}},
                 ]
             )
 
-            response = self.client._make_request("GET", "products")  # pylint: disable=protected-access
+            response = self.client._make_request("GET", "product-projections")  # pylint: disable=protected-access
             self.assertIsNotNone(response)
             self.assertEqual(response, {"results": [{"id": "mock_id"}]})
 
@@ -99,7 +100,7 @@ class TestCTCustomAPIClient(TestCase):
     def test_make_request_response_json_throws_value_error(self, mock_logger):
         """Test that the function handles ValueError when response.json() raises an exception."""
         with requests_mock.Mocker() as mocker, patch("time.sleep", return_value=None):
-            url = f"{self.client.config['apiUrl']}/{self.client.config['projectKey']}/products"
+            url = f"{self.client.config['apiUrl']}/{self.client.config['projectKey']}/product-projections"
 
             mocker.get(
                 url,
@@ -114,11 +115,16 @@ class TestCTCustomAPIClient(TestCase):
 
             with patch("requests.Response.raise_for_status", side_effect=error_with_response):
                 # pylint: disable=protected-access
-                self.client._make_request("GET", "products")
+                self.client._make_request("GET", "product-projections")
 
                 mock_logger.assert_called_with(
                     "CTCustomAPIClient: API request failed for endpoint: %s after attempt #%s with "
-                    "error: %s and message: %s", "products", 2, error_with_response, 'No message provided.'
+                    "error: %s and message: %s, %s.",
+                    "product-projections",
+                    3,
+                    error_with_response,
+                    'No message provided.',
+                    ''
                 )
 
                 # expects that ValueError is handled properly and
@@ -140,31 +146,28 @@ class TestCTCustomAPIClient(TestCase):
         with requests_mock.Mocker() as mocker:
             mock_response = {
                 "results": [{
-                    "masterData": {
-                        "current": {
-                            "variants": [{
-                                "key": "variant_key",
-                                "attributes": [{
-                                    "name": "ref-edx-course-entitlement",
-                                    "value": {
-                                        "obj": {
-                                            "masterData": {
-                                                "current": {
-                                                    "masterVariant": {
-                                                        "sku": "entitlement_sku"
-                                                    }
-                                                }
+                    "variants": [{
+                        "key": "variant_key",
+                        "attributes": [{
+                            "name": "ref-edx-course-entitlement",
+                            "value": {
+                                "obj": {
+                                    "masterData": {
+                                        "current": {
+                                            "masterVariant": {
+                                                "sku": "entitlement_sku"
                                             }
                                         }
                                     }
-                                }]
-                            }]
-                        }
-                    }
+                                }
+                            }
+                        }]
+                    }]
                 }]
             }
             mocker.get(
-                f"{self.client.config['apiUrl']}/{self.client.config['projectKey']}/products", json=mock_response
+                f"{self.client.config['apiUrl']}/{self.client.config['projectKey']}/product-projections",
+                json=mock_response
             )
 
             response = self.client.get_program_variants("product_key")
