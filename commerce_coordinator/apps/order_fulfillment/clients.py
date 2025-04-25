@@ -1,11 +1,16 @@
-from commerce_coordinator.apps.core.clients import BaseEdxOAuthClient, urljoin_directory
-from django.conf import settings
+"""
+API Client for order fulfillment app
+"""
+
 from celery.utils.log import get_task_logger
+from django.conf import settings
 from requests.exceptions import RequestException
 
+from commerce_coordinator.apps.core.clients import BaseEdxOAuthClient, urljoin_directory
 
 # Use special Celery logger for tasks client calls.
 logger = get_task_logger(__name__)
+
 
 class OrderFulfillmentAPIClient(BaseEdxOAuthClient):
     """
@@ -18,9 +23,8 @@ class OrderFulfillmentAPIClient(BaseEdxOAuthClient):
         Base URL for Order fulfillment POST API service.
         """
         return urljoin_directory(
-            settings.ORDER_FULFILLMENT_URL_ROOT, '/api/enrollment/v1/enrollment'
+            settings.ORDER_FULFILLMENT_URL_ROOT, '/core/fulfill_order'
         )
-    
 
     def fulfill_order(
         self,
@@ -28,7 +32,7 @@ class OrderFulfillmentAPIClient(BaseEdxOAuthClient):
         fulfillment_logging_obj
     ):
         """
-        Sends a POST request to order fulfillment service for 
+        Sends a POST request to order fulfillment service for
         fulfillment of enrollment or entitlement
 
         """
@@ -56,7 +60,7 @@ class OrderFulfillmentAPIClient(BaseEdxOAuthClient):
             )
 
             response.raise_for_status()
-            
+
             logger.info(
                 f"[OrderFulfillmentAPIClient.post] Order fulfillment successful for user '{logging_obj['user']}'. "
                 f"Details: lms_user_id: {logging_obj['lms_user_id']}, CT order ID: {logging_obj['order_id']}, "

@@ -6,6 +6,7 @@ from datetime import datetime
 from celery import Task, shared_task
 from celery.utils.log import get_task_logger
 from commercetools import CommercetoolsError
+from django.contrib.auth import get_user_model
 from edx_django_utils.cache import TieredCache
 from requests import RequestException
 
@@ -39,22 +40,15 @@ from commerce_coordinator.apps.commercetools.utils import (
     calculate_total_discount_on_order,
     extract_ct_order_information_for_braze_canvas,
     extract_ct_product_information_for_braze_canvas,
-    send_order_confirmation_email,
-    get_lob_from_variant_attr
+    get_lob_from_variant_attr,
+    send_order_confirmation_email
 )
 from commerce_coordinator.apps.core.constants import ISO_8601_FORMAT
 from commerce_coordinator.apps.core.memcache import safe_key
 from commerce_coordinator.apps.core.segment import track
 from commerce_coordinator.apps.lms.clients import LMSAPIClient
-
-from commerce_coordinator.apps.rollout.waffle import (
-   is_order_fulfillment_service_redirection_enabled
-)
-
 from commerce_coordinator.apps.order_fulfillment.clients import OrderFulfillmentAPIClient
 
-
-from django.contrib.auth import get_user_model
 User = get_user_model()
 
 
@@ -83,13 +77,14 @@ class FulfillOrderPlacedTaskAfterReturn(Task):    # pylint: disable=abstract-met
     base=FulfillOrderPlacedTaskAfterReturn,
 )
 def fulfill_order_placed_message_signal_task(
-    self,                   # pylint: disable=unused-argument
+    self,
     order_id,
     line_item_state_id,
     source_system,
     message_id,
     is_order_fulfillment_redirection_enabled
 ):
+    # pylint: disable=too-many-statements
     """Celery task for fulfilling an order placed message."""
 
     tag = "fulfill_order_placed_message_signal_task"
@@ -98,9 +93,6 @@ def fulfill_order_placed_message_signal_task(
                 f'line item {line_item_state_id}, source system {source_system}, message id: {message_id}, '
                 f'waffle flag: {is_order_fulfillment_redirection_enabled}')
 
-    # isOrderFulfillmentRedirectionEnabled = is_order_fulfillment_service_redirection_enabled(order_fulfillment_request)
-
-    # logger.info(f"WAFFLE FLAGGGGGGG {isOrderFulfillmentRedirectionEnabled}")
     client = CommercetoolsAPIClient()
 
     try:
@@ -110,14 +102,14 @@ def fulfill_order_placed_message_signal_task(
         logger.info(f"[Performance Check] get_order_by_id call took {duration} seconds")
     except CommercetoolsError as err:  # pragma no cover
         logger.error(f'[CT-{tag}] Order not found: {order_id} with CT error {err}, {err.errors},'
-                    f'message id: {message_id}')
+                     f'message id: {message_id}')
         raise err
 
     try:
         customer = client.get_customer_by_id(order.customer_id)
     except CommercetoolsError as err:  # pragma no cover
         logger.error(f'[CT-{tag}]  Customer not found: {order.customer_id} for order {order_id} with '
-                    f'CT error {err}, {err.errors}, message id: {message_id}')
+                     f'CT error {err}, {err.errors}, message id: {message_id}')
         raise err
 
     if not (customer and order and is_edx_lms_order(order)):
@@ -151,7 +143,7 @@ def fulfill_order_placed_message_signal_task(
 
     for item in get_edx_items(order):
         logger.debug(f'[CT-{tag}] processing edX order {order_id}, line item {item.variant.sku}, '
-                    f'message id: {message_id}')
+                     f'message id: {message_id}')
 
         # from here we will always be transitioning from a 'Fulfillment Processing' state
         line_item_state_id = client.get_state_by_key(TwoUKeys.PROCESSING_FULFILMENT_STATE).id
@@ -187,16 +179,13 @@ def fulfill_order_placed_message_signal_task(
                 'product_title': product_title,
                 'product_type': item.product_type.obj.key
             }
-        
+
         if is_order_fulfillment_redirection_enabled:
             logger.info(f'[CT-{tag}] Order Fulfillment Redirection Flag [ENABLED].')
 
             # Adding lob for order fulfillment service redirection as payload requirement.
             serializer_data['lob'] = get_lob_from_variant_attr(item.variant) or 'edx'
-
-            logger.info(f"SERIAZLIERR DATA {serializer_data}")
             serializer = OrderFulfillViewInputSerializer(data=serializer_data)
-
             serializer.is_valid(raise_exception=True)
             payload = serializer.validated_data
 
@@ -215,12 +204,10 @@ def fulfill_order_placed_message_signal_task(
 
         else:
             logger.info(f'[CT-{tag}] Order Fulfillment Redirection Flag [NOT ENABLED].')
-            
+
             serializer = OrderFulfillViewInputSerializer(data=serializer_data)
-            
             # the following throws and thus doesn't need to be a conditional
             serializer.is_valid(raise_exception=True)  # pragma no cover
-
             payload = serializer.validated_data
 
             if bundle_id:

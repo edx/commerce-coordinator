@@ -1,3 +1,5 @@
-from django.contrib import admin
+"""
+Admin conf for order fulfillment app
+"""
 
 # Register your models here.

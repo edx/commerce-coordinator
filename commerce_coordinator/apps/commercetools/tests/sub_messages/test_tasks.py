@@ -52,6 +52,7 @@ def gen_example_fulfill_payload():
             'id': uuid4_str(),
             'lineItemId': uuid4_str()
         }],
+        'is_order_fulfillment_redirection_enabled': False
     }
 
 
@@ -67,6 +68,9 @@ class CommercetoolsAPIClientMock(MagicMock):
         self.order_id = self.example_payload['order_id']
         self.order_number = self.example_payload['order_number']
         self.line_item_state_id = self.example_payload['line_item_state_id']
+        self.is_order_fulfillment_redirection_enabled = (
+            self.example_payload['is_order_fulfillment_redirection_enabled']
+        )
         self.customer_id = uuid4_str()
         self.processing_line_item_id = uuid4_str()
         self.cache_key = safe_key(key=self.order_id, key_prefix='send_order_confirmation_email', version='1')
@@ -116,7 +120,8 @@ class FulfillOrderPlacedMessageSignalTaskTests(TestCase):
             values['order_id'],
             values['line_item_state_id'],
             values['source_system'],
-            values['message_id']
+            values['message_id'],
+            values['is_order_fulfillment_redirection_enabled']
         )
 
     @staticmethod

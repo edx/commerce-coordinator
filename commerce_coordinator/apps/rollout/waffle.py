@@ -33,4 +33,3 @@ def is_order_fulfillment_service_redirection_enabled(request):
 
     """
     return waffle.flag_is_active(request, ORDER_FULFILLMENT_SERVICE_REDIRECTION_ENABLED)
-    
