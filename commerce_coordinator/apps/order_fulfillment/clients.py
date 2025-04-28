@@ -36,6 +36,4 @@ class OrderFulfillmentAPIClient(BaseEdxOAuthClient):
 
         """
 
-        logger.info(f'WITHIN FULFILL ORDER WITH PYALOAD {payload}')
-
         HMACWebhookCaller().call(self.api_order_fulfillment_post_base_url, payload)

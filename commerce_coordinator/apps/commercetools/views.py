@@ -46,8 +46,6 @@ class OrderFulfillView(SingleInvocationAPIView):
 
         isOrderFulfillmentRedirectionEnabled = is_order_fulfillment_service_redirection_enabled(request)
 
-        logger.info(f"WAFFLE FLAGG {isOrderFulfillmentRedirectionEnabled}")
-
         logger.info(f'[CT-{tag}] Message received from commercetools with details: {input_data}')
 
         message_details = OrderLineItemMessageInputSerializer(data=input_data)
