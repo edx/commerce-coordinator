@@ -13,7 +13,9 @@ from commerce_coordinator.apps.core.views import SingleInvocationAPIView
 from commerce_coordinator.apps.lms.clients import FulfillmentType
 from commerce_coordinator.apps.lms.signals import fulfillment_completed_update_ct_line_item_signal
 from commerce_coordinator.apps.order_fulfillment.serializers import FulfillOrderWebhookSerializer
-from commerce_coordinator.apps.order_fulfillment.webhook_utils.webhook_caller import HMACWebhookCaller
+from commerce_coordinator.apps.order_fulfillment.webhook_utils.webhook_authentication import (
+    HMACSignatureWebhookAuthentication
+)
 
 logger = logging.getLogger(__name__)
 
@@ -24,7 +26,7 @@ class FulfillmentResponseWebhookView(SingleInvocationAPIView):
     response from fulfillment providers and updates CT order object with response data.
     """
     http_method_names = ['post']
-    authentication_classes = [HMACWebhookCaller]
+    authentication_classes = [HMACSignatureWebhookAuthentication]
     permission_classes = [AllowAny]
 
     @csrf_exempt
