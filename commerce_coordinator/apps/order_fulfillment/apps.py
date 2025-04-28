@@ -1,6 +1,9 @@
+"""
+App configuration for the Order Fulfillment app.
+"""
 from django.apps import AppConfig
 
 
 class OrderFulfillmentConfig(AppConfig):
     default_auto_field = 'django.db.models.BigAutoField'
-    name = 'order_fulfillment'
+    name = 'commerce_coordinator.apps.order_fulfillment'
