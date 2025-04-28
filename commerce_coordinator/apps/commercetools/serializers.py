@@ -93,6 +93,7 @@ class OrderFulfillViewInputSerializer(CoordinatorSerializer):
     user_email = serializers.EmailField(allow_null=False)
     product_type = serializers.CharField(allow_null=False)
     lob = serializers.CharField(allow_null=False, required=False)
+    edx_lms_username = serializers.CharField(allow_null=False, required=False)
 
 
 class OrderReturnedViewMessageLineItemReturnItemSerializer(CoordinatorSerializer):

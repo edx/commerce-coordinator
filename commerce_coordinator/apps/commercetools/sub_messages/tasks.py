@@ -77,7 +77,7 @@ class FulfillOrderPlacedTaskAfterReturn(Task):    # pylint: disable=abstract-met
     base=FulfillOrderPlacedTaskAfterReturn,
 )
 def fulfill_order_placed_message_signal_task(
-    self,
+    self,                   # pylint: disable=unused-argument
     order_id,
     line_item_state_id,
     source_system,
@@ -183,24 +183,16 @@ def fulfill_order_placed_message_signal_task(
         if is_order_fulfillment_redirection_enabled:
             logger.info(f'[CT-{tag}] Order Fulfillment Redirection Flag [ENABLED].')
 
+            user = User.objects.get(lms_user_id=lms_user_id)
+
             # Adding lob for order fulfillment service redirection as payload requirement.
             serializer_data['lob'] = get_lob_from_variant_attr(item.variant) or 'edx'
+            serializer_data['edx_lms_username'] = user.username
             serializer = OrderFulfillViewInputSerializer(data=serializer_data)
             serializer.is_valid(raise_exception=True)
             payload = serializer.validated_data
 
-            user = User.objects.get(lms_user_id=payload['edx_lms_user_id'])
-
-            fulfillment_logging_obj = {
-                'user': user.username,
-                'lms_user_id': user.lms_user_id,
-                'order_id': order_id,
-                'course_id': payload['course_id'],
-                'message_id': message_id,
-                'celery_task_id': self.request.id
-            }
-
-            OrderFulfillmentAPIClient().fulfill_order(payload, fulfillment_logging_obj)
+            OrderFulfillmentAPIClient().fulfill_order(payload)
 
         else:
             logger.info(f'[CT-{tag}] Order Fulfillment Redirection Flag [NOT ENABLED].')

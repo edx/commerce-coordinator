@@ -29,29 +29,21 @@ class OrderFulfillmentAPIClientTests(CoordinatorOAuthClientTestCase):
         self.payload = {**EXAMPLE_LINE_ITEM_STATE_PAYLOAD, **EXAMPLE_FULFILLMENT_SERVICE_REDIRECTION_PAYLOAD}
         self.logging_obj = EXAMPLE_FULFILLMENT_LOGGING_OBJ
 
-    @patch("commerce_coordinator.apps.order_fulfillment.clients.OrderFulfillmentAPIClient.post")
-    def test_fulfill_order_success(self, mock_post):
-        mock_post.return_value = {"status": "success"}
+    @patch("commerce_coordinator.apps.commercetools.fulfillment_webhook_utils.webhook_caller.HMACWebhookCaller.call")
+    def test_fulfill_order_success(self, mock_call):
 
-        response = self.client.fulfill_order(self.payload, self.logging_obj)
+        self.client.fulfill_order(self.payload)
 
-        self.assertEqual(response, {"status": "success"})
-        mock_post.assert_called_once_with(
-            payload=self.payload,
-            logging_obj=self.logging_obj,
-            url=self.url
-        )
+        mock_call.assert_called_once_with(self.url, self.payload)
 
-    @patch("commerce_coordinator.apps.order_fulfillment.clients.OrderFulfillmentAPIClient.post")
-    def test_fulfill_order_failure(self, mock_post):
-        mock_post.side_effect = Exception("API error")
+    @patch("commerce_coordinator.apps.commercetools.fulfillment_webhook_utils.webhook_caller.HMACWebhookCaller.call")
+    def test_fulfill_order_failure(self, mock_call):
+
+        mock_call.side_effect = Exception("Webhook error")
 
         with self.assertRaises(Exception) as context:
-            self.client.fulfill_order(self.payload, self.logging_obj)
+            self.client.fulfill_order(self.payload)
 
-        self.assertIn("API error", str(context.exception))
-        mock_post.assert_called_once_with(
-            payload=self.payload,
-            logging_obj=self.logging_obj,
-            url=self.url
-        )
+        self.assertIn("Webhook error", str(context.exception))
+
+        mock_call.assert_called_once_with(self.url, self.payload)
