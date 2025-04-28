@@ -44,14 +44,7 @@ class FulfillmentResponseWebhookView(SingleInvocationAPIView):
         validator.is_valid(raise_exception=True)
         validated_data = validator.validated_data
 
-        is_fulfilled = validated_data.get('is_fulfilled')
         fulfillment_type = validated_data.get('fulfillment_type')
-
-        payload = {
-            **validated_data,
-            'is_fulfilled': is_fulfilled
-        }
-
         if fulfillment_type == FulfillmentType.ENTITLEMENT.value:
             entitlement_uuid = validated_data.get('entitlement_uuid', None)
             if not entitlement_uuid:
@@ -59,7 +52,7 @@ class FulfillmentResponseWebhookView(SingleInvocationAPIView):
 
         fulfillment_completed_update_ct_line_item_signal.send_robust(
             sender=self.__class__,
-            **payload
+            **validated_data
         )
 
         return Response(
