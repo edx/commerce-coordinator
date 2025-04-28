@@ -9,6 +9,7 @@ class FulfillOrderWebhookSerializer(CoordinatorSerializer):
     Serializer for Fulfill Order Webhook input validation.
     """
     fulfillment_type = serializers.CharField(required=True)
+    is_fulfilled = serializers.BooleanField(required=True)
     entitlement_uuid = serializers.CharField(required=False)
     order_id = serializers.CharField(required=True)
     order_version = serializers.CharField(required=True)
