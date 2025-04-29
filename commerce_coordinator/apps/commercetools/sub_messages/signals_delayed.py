@@ -17,11 +17,13 @@ logger = logging.getLogger(__name__)
 @log_receiver(logger)
 def fulfill_order_placed_message_signal(**kwargs):
     """ CoordinatorSignal receiver to invoke Celery Task fulfill_order_placed_message_signal_task"""
+
     async_result = fulfill_order_placed_message_signal_task.delay(
         order_id=kwargs['order_id'],
         line_item_state_id=kwargs['line_item_state_id'],
         source_system=kwargs['source_system'],
-        message_id=kwargs['message_id']
+        message_id=kwargs['message_id'],
+        is_order_fulfillment_forwarding_enabled=kwargs['is_order_fulfillment_forwarding_enabled']
     )
     return async_result.id
 
