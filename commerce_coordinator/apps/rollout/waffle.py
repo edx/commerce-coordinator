@@ -10,6 +10,8 @@ REDIRECT_TO_COMMERCETOOLS_CHECKOUT = f'{WAFFLE_FLAG_NAMESPACE}.redirect_to_comme
 
 PROGRAM_REDIRECT_TO_COMMERCETOOLS_CHECKOUT = f'{WAFFLE_FLAG_NAMESPACE}.program_redirect_to_commercetools_checkout'
 
+ORDER_FULFILLMENT_SERVICE_FORWARDING_ENABLED = f'{WAFFLE_FLAG_NAMESPACE}.order_fulfillment_service_forwarding_enabled'
+
 
 def is_redirect_to_commercetools_enabled_for_user(request):
     """
@@ -23,3 +25,11 @@ def is_program_redirection_to_ct_enabled(request):
     Check if the PROGRAM_REDIRECT_TO_COMMERCETOOLS_CHECKOUT flag is enabled.
     """
     return waffle.flag_is_active(request, PROGRAM_REDIRECT_TO_COMMERCETOOLS_CHECKOUT)
+
+
+def is_order_fulfillment_service_forwarding_enabled(request):
+    """
+    Check if fulfill_order_placed_message_signal_task redirects to order fulfiment service
+
+    """
+    return waffle.flag_is_active(request, ORDER_FULFILLMENT_SERVICE_FORWARDING_ENABLED)
