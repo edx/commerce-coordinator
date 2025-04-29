@@ -44,7 +44,7 @@ class OrderFulfillView(SingleInvocationAPIView):
             **request.data
         }
 
-        isOrderFulfillmentForwardingEnabled = is_order_fulfillment_service_forwarding_enabled(request)
+        is_order_fulfillment_forwarding_enabled = is_order_fulfillment_service_forwarding_enabled(request)
 
         logger.info(f'[CT-{tag}] Message received from commercetools with details: {input_data}')
 
@@ -69,7 +69,7 @@ class OrderFulfillView(SingleInvocationAPIView):
             line_item_state_id=line_item_state_id,
             source_system=SOURCE_SYSTEM,
             message_id=message_id,
-            is_order_fulfillment_forwarding_enabled=isOrderFulfillmentForwardingEnabled
+            is_order_fulfillment_forwarding_enabled=is_order_fulfillment_forwarding_enabled
         )
 
         return Response(status=status.HTTP_200_OK)

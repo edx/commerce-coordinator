@@ -22,14 +22,14 @@ def get_ct_order_and_customer(tag, order_id, message_id):
     except Exception as err:  # pragma no cover
         logger.error(f'[CT-{tag}] Order not found: {order_id} with CT error {err}, '
                      f'message id: {message_id}')
-        raise
+        raise err
 
     try:
         customer = client.get_customer_by_id(order.customer_id)
     except Exception as err:  # pragma no cover
         logger.error(f'[CT-{tag}] Customer not found: {order.customer_id} for order {order_id} with '
                      f'CT error {err}, message id: {message_id}')
-        raise
+        raise err
 
     return order, customer
 
