@@ -23,7 +23,7 @@ class OrderFulfillmentAPIClient(BaseEdxOAuthClient):
         Base URL for Order fulfillment POST API service.
         """
         return urljoin_directory(
-            settings.ORDER_FULFILLMENT_URL_ROOT, '/core/fulfill_order'
+            settings.ORDER_FULFILLMENT_URL_ROOT, '/api/fulfill-order'
         )
 
     def fulfill_order(

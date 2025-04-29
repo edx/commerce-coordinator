@@ -23,7 +23,7 @@ def fulfill_order_placed_message_signal(**kwargs):
         line_item_state_id=kwargs['line_item_state_id'],
         source_system=kwargs['source_system'],
         message_id=kwargs['message_id'],
-        is_order_fulfillment_redirection_enabled=kwargs['is_order_fulfillment_redirection_enabled']
+        is_order_fulfillment_forwarding_enabled=kwargs['is_order_fulfillment_forwarding_enabled']
     )
     return async_result.id
 

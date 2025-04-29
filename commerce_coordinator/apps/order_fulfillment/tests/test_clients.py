@@ -22,7 +22,7 @@ TEST_LMS_URL_ROOT = 'https://testserver.com'
 class OrderFulfillmentAPIClientTests(CoordinatorOAuthClientTestCase):
     """OrderFulfillmentApiClient tests"""
 
-    url = urljoin_directory(TEST_LMS_URL_ROOT, '/core/fulfill_order')
+    url = urljoin_directory(TEST_LMS_URL_ROOT, '/api/fulfill-order')
 
     def setUp(self):
         self.client = OrderFulfillmentAPIClient()

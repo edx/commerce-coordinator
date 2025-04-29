@@ -1,7 +1,6 @@
 """
 Commercetools Subscription Message tasks (Celery)
 """
-from datetime import datetime
 
 from celery import Task, shared_task
 from celery.utils.log import get_task_logger
@@ -31,6 +30,10 @@ from commerce_coordinator.apps.commercetools.catalog_info.utils import (
 from commerce_coordinator.apps.commercetools.clients import CommercetoolsAPIClient
 from commerce_coordinator.apps.commercetools.constants import EMAIL_NOTIFICATION_CACHE_TTL_SECS
 from commerce_coordinator.apps.commercetools.filters import OrderRefundRequested
+from commerce_coordinator.apps.commercetools.order_fulfillment_utils.utils import (
+    get_ct_order_and_customer,
+    prepare_default_params
+)
 from commerce_coordinator.apps.commercetools.serializers import OrderFulfillViewInputSerializer
 from commerce_coordinator.apps.commercetools.signals import (
     fulfill_order_placed_send_enroll_in_course_signal,
@@ -43,7 +46,6 @@ from commerce_coordinator.apps.commercetools.utils import (
     get_lob_from_variant_attr,
     send_order_confirmation_email
 )
-from commerce_coordinator.apps.core.constants import ISO_8601_FORMAT
 from commerce_coordinator.apps.core.memcache import safe_key
 from commerce_coordinator.apps.core.segment import track
 from commerce_coordinator.apps.lms.clients import LMSAPIClient
@@ -82,35 +84,19 @@ def fulfill_order_placed_message_signal_task(
     line_item_state_id,
     source_system,
     message_id,
-    is_order_fulfillment_redirection_enabled
+    is_order_fulfillment_forwarding_enabled
 ):
-    # pylint: disable=too-many-statements
     """Celery task for fulfilling an order placed message."""
 
     tag = "fulfill_order_placed_message_signal_task"
 
     logger.info(f'[CT-{tag}] Processing order {order_id}, '
                 f'line item {line_item_state_id}, source system {source_system}, message id: {message_id}, '
-                f'waffle flag: {is_order_fulfillment_redirection_enabled}')
+                f'is_order_fulfillment_forwarding_enabled: {is_order_fulfillment_forwarding_enabled}')
 
     client = CommercetoolsAPIClient()
 
-    try:
-        start_time = datetime.now()
-        order = client.get_order_by_id(order_id)
-        duration = (datetime.now() - start_time).total_seconds()
-        logger.info(f"[Performance Check] get_order_by_id call took {duration} seconds")
-    except CommercetoolsError as err:  # pragma no cover
-        logger.error(f'[CT-{tag}] Order not found: {order_id} with CT error {err}, {err.errors},'
-                     f'message id: {message_id}')
-        raise err
-
-    try:
-        customer = client.get_customer_by_id(order.customer_id)
-    except CommercetoolsError as err:  # pragma no cover
-        logger.error(f'[CT-{tag}]  Customer not found: {order.customer_id} for order {order_id} with '
-                     f'CT error {err}, {err.errors}, message id: {message_id}')
-        raise err
+    order, customer = get_ct_order_and_customer(tag, order_id, message_id)
 
     if not (customer and order and is_edx_lms_order(order)):
         logger.info(f'[CT-{tag}] order {order_id} is not an edX order, message id: {message_id}')
@@ -121,17 +107,14 @@ def fulfill_order_placed_message_signal_task(
 
     lms_user_id = get_edx_lms_user_id(customer)
 
-    default_params = {
-        'email_opt_in': True,  # ?? Where?
-        'order_number': order.order_number,
-        'order_id': order.id,
-        'provider_id': None,
-        'edx_lms_user_id': lms_user_id,
-        'date_placed': order.last_modified_at.strftime(ISO_8601_FORMAT),
-        'source_system': source_system,
-    }
+    default_params = prepare_default_params(order, lms_user_id, source_system)
+
     canvas_entry_properties = {"products": []}
     canvas_entry_properties.update(extract_ct_order_information_for_braze_canvas(customer, order))
+
+    logger.info(
+        f"[CT-{tag}] Transitioning all line items for order {order.id} to {TwoUKeys.PROCESSING_FULFILMENT_STATE}"
+    )
 
     updated_order = client.update_line_items_transition_state(
         order_id=order.id,
@@ -180,14 +163,17 @@ def fulfill_order_placed_message_signal_task(
                 'product_type': item.product_type.obj.key
             }
 
-        if is_order_fulfillment_redirection_enabled:
-            logger.info(f'[CT-{tag}] Order Fulfillment Redirection Flag [ENABLED].')
+        if is_order_fulfillment_forwarding_enabled:
+            logger.info(f"[CT-{tag}] Order Fulfillment Redirection Flag [ENABLED]."
+                        f"Order Id: {order_id}, User Id: {lms_user_id}, User Email: {customer.email}, "
+                        f"Course Id: {serializer_data['course_id']}")
 
             user = User.objects.get(lms_user_id=lms_user_id)
 
             # Adding lob for order fulfillment service redirection as payload requirement.
             serializer_data['lob'] = get_lob_from_variant_attr(item.variant) or 'edx'
             serializer_data['edx_lms_username'] = user.username
+            serializer_data['bundle_id'] = bundle_id or None
             serializer = OrderFulfillViewInputSerializer(data=serializer_data)
             serializer.is_valid(raise_exception=True)
             payload = serializer.validated_data
@@ -195,7 +181,9 @@ def fulfill_order_placed_message_signal_task(
             OrderFulfillmentAPIClient().fulfill_order(payload)
 
         else:
-            logger.info(f'[CT-{tag}] Order Fulfillment Redirection Flag [NOT ENABLED].')
+            logger.info(f"[CT-{tag}] Order Fulfillment Redirection Flag [NOT ENABLED]."
+                        f"Order Id: {order_id}, User Id: {lms_user_id}, User Email: {customer.email}, "
+                        f"Course Id: {serializer_data['course_id']}")
 
             serializer = OrderFulfillViewInputSerializer(data=serializer_data)
             # the following throws and thus doesn't need to be a conditional
