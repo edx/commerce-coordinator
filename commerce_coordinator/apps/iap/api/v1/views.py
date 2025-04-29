@@ -10,9 +10,11 @@ import logging
 from rest_framework import status
 from rest_framework.views import APIView
 from rest_framework.response import Response
+from rest_framework.request import Request
 from rest_framework.permissions import IsAuthenticated
 from django.http import JsonResponse
 
+from commercetools.platform.models import Customer
 from commercetools.platform.models.order import (
     OrderFromCartDraft,
     OrderUpdate,
@@ -30,6 +32,9 @@ from commercetools.platform.models.common import Reference, ReferenceTypeId
 from commercetools.platform.models.state import StateResourceIdentifier
 from commercetools.exceptions import CommercetoolsError
 
+from commerce_coordinator.apps.commercetools.catalog_info.constants import (
+    EdXFieldNames,
+)
 from commerce_coordinator.apps.commercetools.clients import CommercetoolsAPIClient
 from commerce_coordinator.apps.iap.api.v1.utils import is_cart_active, set_shipping_address
 from commerce_coordinator.apps.iap.api.v1.serializer import CreateOrderSerializer, OrderResponseSerializer
@@ -37,6 +42,159 @@ from commerce_coordinator.apps.iap.api.v1.serializer import CreateOrderSerialize
 logger = logging.getLogger(__name__)
 
 PAYPAL_PAYMENT_SERVICE_PROVIDER = "PayPal"
+
+
+class PrepareCartView(APIView):
+    """
+    API view for preparing a cart in CT for mobile In-App purchase
+    """
+
+    permission_classes = (IsAuthenticated,)
+
+    def post(self, request: Request) -> JsonResponse:
+        """
+        Handles POST request to prepare a cart for mobile In-App purchase.
+        """
+        try:
+            client = CommercetoolsAPIClient()
+
+            course_run_keys = self._get_course_run_keys(request)
+            customer = self._get_ct_customer(client, request.user)
+            cart = client.get_customer_cart(customer.id)
+
+            if cart:
+                client.delete_cart(cart)
+
+            order_number = client.get_new_order_number()
+            cart = client.create_cart(
+                customer=customer,
+                order_number=order_number,
+                # TODO: get from payload
+                locale={"language": "en-US", "country": "US", "currency": "USD"},
+            )
+            cart = client.add_to_cart(cart=cart, skus=course_run_keys)
+            cart = client.set_customer_email_domain_on_cart(
+                cart=cart,
+                email=customer.email,
+            )
+
+            return JsonResponse(
+                {
+                    "success": "Course(s) added to cart successfully",
+                    "cart_id": cart.id,
+                },
+                status=status.HTTP_200_OK,
+            )
+
+        except Exception as exception:  # pylint: disable=broad-exception-caught
+            message = (
+                f"[PrepareCartView] Error preparing cart for LMS user: "
+                f"{request.user.lms_user_id} with error message: {str(exception)}"
+            )
+            logger.exception(message, exc_info=exception)
+
+            return JsonResponse(
+                {"error": message},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+    def _get_ct_customer(self, client: CommercetoolsAPIClient, user) -> Customer:
+        """
+        Get an existing customer for the authenticated user or create a new one.
+
+        Args:
+            client: CommercetoolsAPIClient instance
+            user: The authenticated user from the request
+
+        Returns:
+            The customer object
+        """
+        customer = client.get_customer_by_lms_user_id(user.lms_user_id)
+        first_name, last_name = user.first_name, user.last_name
+
+        if not (first_name and last_name) and user.full_name:
+            splitted_name = user.full_name.split(" ", 1)
+            first_name = splitted_name[0]
+            last_name = splitted_name[1] if len(splitted_name) > 1 else ""
+
+        if customer:
+            updates = self._get_attributes_to_update(
+                user, customer, first_name, last_name
+            )
+            if updates:
+                customer = client.update_customer(
+                    customer=customer,
+                    updates=updates,
+                )
+        else:
+            customer = client.create_customer(
+                email=user.email,
+                first_name=first_name,
+                last_name=last_name,
+                lms_user_id=user.lms_user_id,
+                lms_username=user.username,
+            )
+
+        return customer
+
+    def _get_attributes_to_update(
+        self,
+        user,
+        customer: Customer,
+        first_name: str,
+        last_name: str,
+    ) -> dict[str, str | None]:
+        """
+        Get the attributes that need to be updated for the customer.
+
+        Args:
+            customer: The existing customer object
+            user: The authenticated user from the request
+
+        Returns:
+            A dictionary of attributes to update with their new values
+        """
+        updates = {}
+
+        ct_lms_username = None
+        if customer.custom and customer.custom.fields:
+            ct_lms_username = customer.custom.fields.get(EdXFieldNames.LMS_USER_NAME)
+
+        if ct_lms_username != user.username:
+            updates["lms_username"] = user.username
+
+        if customer.email != user.email:
+            updates["email"] = user.email
+
+        if customer.first_name != first_name:
+            updates["first_name"] = first_name
+
+        if customer.last_name != last_name:
+            updates["last_name"] = last_name
+
+        return updates
+
+    def _get_course_run_keys(self, request: Request) -> list[str]:
+        """
+        Extracts course run keys from the request data.
+
+        Args:
+            request: The HTTP request object
+
+        Returns:
+            A list of course run keys
+        """
+        course_run_keys = request.data.get("course_run_key")
+
+        if not course_run_keys:
+            raise Exception("No course_run_key provided.")
+
+        return (
+            course_run_keys
+            if isinstance(course_run_keys, list)
+            else [course_run_keys]
+        )
+
 
 class CreateOrderView(APIView):
     """
@@ -74,7 +232,7 @@ class CreateOrderView(APIView):
             if not cart.customer_id or str(cart.customer_id) != str(request.user.customer_id):
                 logger.warning(
                     f"[CreateOrderView] Unauthorized cart access attempt by user "
-                    f"[{request.user.id}] on cart [{cart.id}]."
+                    f"[{request.user.lms_user_id}] on cart [{cart.id}]."
                 )
                 return JsonResponse({'error': 'Unauthorized access to cart.'}, status=status.HTTP_403_FORBIDDEN)
 
