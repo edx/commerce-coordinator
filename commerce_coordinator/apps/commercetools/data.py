@@ -76,9 +76,24 @@ def convert_line_item_prod_id(li: CTLineItem) -> str:
 
 
 def convert_discount_code_info(dcis: Optional[List[CTDiscountCodeInfo]]) -> Optional[str]:
-    if not dcis or len(dcis) < 1:
+    """
+    Converts a list of discount code information objects into a comma-separated string of discount codes.
+
+    Args:
+        dcis (Optional[List[CTDiscountCodeInfo]]): A list of discount code info objects.
+
+    Returns:
+        Optional[str]: A comma-separated string of discount codes, or None if no valid codes exist.
+    """
+    if not dcis:
         return None
-    return ", ".join([x.discount_code.obj.code for x in dcis])
+
+    codes = []
+    for x in dcis:
+        if hasattr(x.discount_code.obj, 'code') and x.discount_code.obj.code:
+            codes.append(x.discount_code.obj.code)
+
+    return ", ".join(codes) if codes else None
 
 
 def convert_direct_discount(dds: Optional[List[CTDirectDiscount]]) -> Optional[str]:
@@ -117,7 +132,11 @@ def order_from_commercetools(order: CTOrder, customer: CTCustomer) -> LegacyOrde
         status=order.order_state.CONFIRMED.value,
         dashboard_url=settings.LMS_DASHBOARD_URL,
         order_product_ids=", ".join([convert_line_item_prod_id(x) for x in order.line_items]),
-        basket_discounts=convert_direct_discount(order.direct_discounts),
+        basket_discounts=(
+            convert_direct_discount(order.direct_discounts)
+            if hasattr(order, 'direct_discounts')
+            else None
+        ),
         contains_credit_seat="True",
         discount=typed_money_to_string(discounted_amount,
                                        money_as_decimal_string=SEND_MONEY_AS_DECIMAL_STRING)
@@ -136,8 +155,8 @@ def order_from_commercetools(order: CTOrder, customer: CTCustomer) -> LegacyOrde
             money_as_decimal_string=SEND_MONEY_AS_DECIMAL_STRING
         ),
         vouchers=this_or(
-            convert_discount_code_info(order.discount_codes),
-            convert_direct_discount(order.direct_discounts)
+            convert_discount_code_info(order.discount_codes) if hasattr(order, 'discount_codes') else None,
+            convert_direct_discount(order.direct_discounts) if hasattr(order, 'direct_discounts') else None
         ),
         payment_method=convert_payment_info(order.payment_info)
     )
