@@ -12,10 +12,13 @@ import requests_mock
 from commercetools.platform.models import (
     AuthenticationMode,
     Cart,
+    CartOrigin,
     CartState,
+    CentPrecisionMoney,
     Customer,
     CustomFields,
     FieldContainer,
+    InventoryMode,
     LineItemReturnItem,
     MoneyType,
     Order,
@@ -25,8 +28,12 @@ from commercetools.platform.models import (
     ProductProjectionPagedSearchResponse,
     ReturnPaymentState,
     ReturnShipmentState,
+    RoundingMode,
+    ShippingMode,
     State as LineItemState,
     StateTypeEnum,
+    TaxCalculationMode,
+    TaxMode,
     Transaction,
     TransactionState,
     TransactionType,
@@ -393,6 +400,7 @@ def gen_cart(
     customer_id=None,
     customer_email=None,
 ) -> Cart:
+    """Generate a Cart object with the given parameters."""
     if not cart_id:
         cart_id = uuid4_str()
     if not customer_id:
@@ -403,7 +411,25 @@ def gen_cart(
         version=cart_version,
         customer_id=customer_id,
         customer_email=customer_email,
-        cart_state=CartState.AIVE,
         created_at=datetime.now(),
         last_modified_at=datetime.now(),
+        total_price=CentPrecisionMoney(
+            currency_code='USD',
+            cent_amount=0,
+            fraction_digits=2,
+        ),
+        cart_state=CartState.ACTIVE,
+        origin=CartOrigin.CUSTOMER,
+        inventory_mode=InventoryMode.NONE,
+        shipping_mode=ShippingMode.SINGLE,
+        tax_calculation_mode=TaxCalculationMode.LINE_ITEM_LEVEL,
+        tax_mode=TaxMode.DISABLED,
+        tax_rounding_mode=RoundingMode.HALF_EVEN,
+        line_items=[],
+        custom_line_items=[],
+        direct_discounts=[],
+        discount_codes=[],
+        item_shipping_addresses=[],
+        refused_gifts=[],
+        shipping=[],
     )

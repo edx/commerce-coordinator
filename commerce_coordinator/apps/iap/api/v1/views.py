@@ -7,36 +7,33 @@ associates a payment and returns the final order details.
 
 import logging
 
-from rest_framework import status
-from rest_framework.views import APIView
-from rest_framework.response import Response
-from rest_framework.request import Request
-from rest_framework.permissions import IsAuthenticated
 from django.http import JsonResponse
+from rest_framework import status
+from rest_framework.permissions import IsAuthenticated
+from rest_framework.request import Request
+from rest_framework.response import Response
+from rest_framework.views import APIView
 
-from commercetools.platform.models import Customer
-from commercetools.platform.models.order import (
+from commercetools.exceptions import CommercetoolsError
+from commercetools.platform.models import (
+    CartAddPaymentAction,
+    Customer,
     OrderFromCartDraft,
-    OrderUpdate,
     OrderTransitionLineItemStateAction,
-)
-from commercetools.platform.models.payment import (
+    OrderUpdate,
     PaymentDraft,
     PaymentMethodInfo,
     PaymentStatusDraft,
+    Reference,
+    ReferenceTypeId,
+    StateResourceIdentifier,
 )
-from commercetools.platform.models.cart import (
-    CartAddPaymentAction,
-)
-from commercetools.platform.models.common import Reference, ReferenceTypeId
-from commercetools.platform.models.state import StateResourceIdentifier
-from commercetools.exceptions import CommercetoolsError
 
 from commerce_coordinator.apps.commercetools.catalog_info.constants import (
     EdXFieldNames,
 )
 from commerce_coordinator.apps.commercetools.clients import CommercetoolsAPIClient
-from commerce_coordinator.apps.iap.api.v1.utils import is_cart_active, set_shipping_address
+from commerce_coordinator.apps.iap.api.v1.utils import set_shipping_address
 from commerce_coordinator.apps.iap.api.v1.serializer import CreateOrderSerializer, OrderResponseSerializer
 
 logger = logging.getLogger(__name__)
