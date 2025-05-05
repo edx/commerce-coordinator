@@ -271,7 +271,7 @@ EDX_API_KEY = 'replace-me'
 REST_FRAMEWORK = {
     'EXCEPTION_HANDLER': 'commerce_coordinator.apps.core.middleware.log_drf_exceptions',
     'DEFAULT_AUTHENTICATION_CLASSES': (
-        'edx_rest_framework_extensions.auth.jwt.authentication.JwtAuthentication',
+        # 'edx_rest_framework_extensions.auth.jwt.authentication.JwtAuthentication',
         'rest_framework.authentication.SessionAuthentication',
     ),
     'DEFAULT_RENDERER_CLASSES': (

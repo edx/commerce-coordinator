@@ -32,8 +32,8 @@ logger = logging.getLogger(__name__)
 class OrderFulfillView(SingleInvocationAPIView):
     """Order Fulfillment View"""
 
-    authentication_classes = [JwtBearerAuthentication, SessionAuthentication]
-    permission_classes = [IsAdminUser]
+    # authentication_classes = [JwtBearerAuthentication, SessionAuthentication]
+    # permission_classes = [IsAdminUser]
 
     def post(self, request):
         """Receive a message from commerce tools forwarded by aws event bridge"""

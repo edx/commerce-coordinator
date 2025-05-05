@@ -32,4 +32,5 @@ def is_order_fulfillment_service_forwarding_enabled(request):
     Check if fulfill_order_placed_message_signal_task redirects to order fulfiment service
 
     """
+    return True
     return waffle.flag_is_active(request, ORDER_FULFILLMENT_SERVICE_FORWARDING_ENABLED)

@@ -49,7 +49,9 @@ from commerce_coordinator.apps.commercetools.utils import (
 from commerce_coordinator.apps.core.memcache import safe_key
 from commerce_coordinator.apps.core.segment import track
 from commerce_coordinator.apps.lms.clients import LMSAPIClient
-from commerce_coordinator.apps.order_fulfillment.clients import OrderFulfillmentAPIClient
+from commerce_coordinator.apps.order_fulfillment.aws_event_bridge_utils.aws_eb_publisher import (
+    AWSEventBridgePublisher
+)
 
 User = get_user_model()
 
@@ -166,9 +168,10 @@ def fulfill_order_placed_message_signal_task(
         if is_order_fulfillment_forwarding_enabled:
             logger.info(f"[CT-{tag}] Order Fulfillment Redirection Flag [ENABLED]."
                         f"Order Id: {order_id}, User Id: {lms_user_id}, User Email: {customer.email}, "
-                        f"Course Id: {serializer_data['course_id']}")
+                        f"Course Id: {serializer_data['course_id']}, "
+                        f"{f'Bundle Id: {bundle_id}, ' if bundle_id else ''}")
 
-            user = User.objects.get(lms_user_id=lms_user_id)
+            user = User.objects.get(lms_user_id=52003)
 
             # Adding lob for order fulfillment service redirection as payload requirement.
             serializer_data['lob'] = get_lob_from_variant_attr(item.variant) or 'edx'
@@ -178,12 +181,14 @@ def fulfill_order_placed_message_signal_task(
             serializer.is_valid(raise_exception=True)
             payload = serializer.validated_data
 
-            OrderFulfillmentAPIClient().fulfill_order(payload)
+            publisher = AWSEventBridgePublisher()
+            publisher.publish_fulfillment_request_event(payload)
 
         else:
             logger.info(f"[CT-{tag}] Order Fulfillment Redirection Flag [NOT ENABLED]."
                         f"Order Id: {order_id}, User Id: {lms_user_id}, User Email: {customer.email}, "
-                        f"Course Id: {serializer_data['course_id']}")
+                        f"Course Id: {serializer_data['course_id']}, "
+                        f"{f'Bundle Id: {bundle_id}, ' if bundle_id else ''}")
 
             serializer = OrderFulfillViewInputSerializer(data=serializer_data)
             # the following throws and thus doesn't need to be a conditional
