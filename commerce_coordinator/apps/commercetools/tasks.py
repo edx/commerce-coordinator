@@ -41,32 +41,33 @@ def fulfillment_completed_update_ct_line_item_task(
     cache_key = safe_key(key=order_id, key_prefix='order_version_for'+tag, version='1')
     entitlement_info = f'and entitlement {entitlement_uuid}.' if entitlement_uuid else '.'
 
-    def _log_error_and_release_lock(log_message):
-        logger.exception(log_message)
-        release_task_lock(task_key)
+    # def _log_error_and_release_lock(log_message):
+    #     logger.exception(log_message)
 
-    def _log_info_and_release_lock(log_message):
-        logger.info(log_message)
-        release_task_lock(task_key)
+    release_task_lock(task_key)
 
-    if not acquire_task_lock(task_key):
-        logger.info(
-            f"Task {task_key} is locked. "
-            f"Exiting current task and retrying in {TASK_LOCK_RETRY} seconds..."
-        )
-        fulfillment_completed_update_ct_line_item_task.apply_async(
-            kwargs={
-                'entitlement_uuid': entitlement_uuid,
-                'order_id': order_id,
-                'order_version': order_version,
-                'line_item_id': line_item_id,
-                'item_quantity': item_quantity,
-                'from_state_id': from_state_id,
-                'to_state_key': to_state_key
-            },
-            countdown=TASK_LOCK_RETRY
-        )
-        return False
+    # def _log_info_and_release_lock(log_message):
+    #     logger.info(log_message)
+    #     release_task_lock(task_key)
+
+    # if not acquire_task_lock(task_key):
+    #     logger.info(
+    #         f"Task {task_key} is locked. "
+    #         f"Exiting current task and retrying in {TASK_LOCK_RETRY} seconds..."
+    #     )
+    #     fulfillment_completed_update_ct_line_item_task.apply_async(
+    #         kwargs={
+    #             'entitlement_uuid': entitlement_uuid,
+    #             'order_id': order_id,
+    #             'order_version': order_version,
+    #             'line_item_id': line_item_id,
+    #             'item_quantity': item_quantity,
+    #             'from_state_id': from_state_id,
+    #             'to_state_key': to_state_key
+    #         },
+    #         countdown=TASK_LOCK_RETRY
+    #     )
+    #     return False
 
     try:
         client = CommercetoolsAPIClient()
@@ -99,17 +100,17 @@ def fulfillment_completed_update_ct_line_item_task(
         release_task_lock(task_key)
         raise err
     except Exception as exc:  # pylint: disable=broad-exception-caught
-        _log_error_and_release_lock(
-            f'[CT-{tag}] Unexpected error occurred while updating line item {line_item_id} for order {order_id}'
-            + entitlement_info
-            + 'Releasing lock.'
-            + f'Exception: {exc}'
-        )
+        # _log_error_and_release_lock(
+        #     f'[CT-{tag}] Unexpected error occurred while updating line item {line_item_id} for order {order_id}'
+        #     + entitlement_info
+        #     + 'Releasing lock.'
+        #     + f'Exception: {exc}'
+        # )
         return None
 
-    _log_info_and_release_lock(
-        f'[CT-{tag}] Line item {line_item_id} updated for order {order_id}' + entitlement_info
-    )
+    # _log_info_and_release_lock(
+    #     f'[CT-{tag}] Line item {line_item_id} updated for order {order_id}' + entitlement_info
+    # )
 
     return updated_order
 
