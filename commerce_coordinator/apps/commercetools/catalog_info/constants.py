@@ -67,6 +67,7 @@ class TwoUKeys:
     # Mobile order custom field to store in cart/order model
     ORDER_MOBILE_ORDER = 'mobileOrder'
 
+
 class EdXFieldNames:
     """edX Specific field names for use in Commercetools"""
 
