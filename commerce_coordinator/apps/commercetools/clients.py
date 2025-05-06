@@ -788,9 +788,7 @@ class CommercetoolsAPIClient:
                 f"Line Item IDs: {', '.join(item.id for item in line_items)}",
                 True
             )
-            # raise err
-            return self.get_order_by_id(order_id)
-
+            raise err
 
     def retire_customer_anonymize_fields(
         self,

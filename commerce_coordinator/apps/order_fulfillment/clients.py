@@ -2,8 +2,6 @@
 API client for communication with the Order Fulfillment service.
 """
 
-import time
-import requests
 from celery.utils.log import get_task_logger
 from django.conf import settings
 from requests.exceptions import RequestException
@@ -19,8 +17,6 @@ class OrderFulfillmentAPIClient(BaseEdxOAuthClient):
     """
 
     ORDER_FULFILLMENT_SERVICE_TIMEOUT = 5  # seconds
-    MAX_RETRIES = 3
-    BASE_BACKOFF = 1  # seconds
 
     @property
     def api_order_fulfillment_post_base_url(self):
@@ -52,7 +48,7 @@ class OrderFulfillmentAPIClient(BaseEdxOAuthClient):
 
     def post(self, url, payload, log_context, timeout=None):
         """
-        Sends a POST request to the fulfillment service with retry logic.
+        Sends a POST request to the fulfillment service.
 
         Args:
             url (str): The target URL.
@@ -64,7 +60,7 @@ class OrderFulfillmentAPIClient(BaseEdxOAuthClient):
             dict: JSON response from the service.
 
         Raises:
-            RequestException: If all retry attempts fail.
+            RequestException: If fail.
         """
         if not timeout:
             timeout = self.normal_timeout
