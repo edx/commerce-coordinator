@@ -14,8 +14,11 @@ from commercetools.platform.models import (
     AuthenticationMode,
     Cart,
     CartAddLineItemAction,
+    CartAddPaymentAction,
     CartDraft,
+    CartSetBillingAddressAction,
     CartSetCustomFieldAction,
+    CartSetShippingAddressAction,
     Customer,
     CustomerChangeEmailAction,
     CustomerDraft,
@@ -31,17 +34,22 @@ from commercetools.platform.models import (
     Money,
     Order,
     OrderAddReturnInfoAction,
+    OrderFromCartDraft,
     OrderSetLineItemCustomFieldAction,
     OrderSetReturnItemCustomTypeAction,
     OrderSetReturnPaymentStateAction,
+    OrderState,
     OrderTransitionLineItemStateAction,
     Payment,
     PaymentAddTransactionAction,
+    PaymentResourceIdentifier,
     PaymentSetTransactionCustomTypeAction,
+    PaymentState,
     ProductVariant,
     ReturnItemDraft,
     ReturnPaymentState,
     ReturnShipmentState,
+    ShipmentState,
     State as LineItemState,
     StateResourceIdentifier,
     TaxMode,
@@ -741,27 +749,35 @@ class CommercetoolsAPIClient:
             raise err
 
     def update_line_items_transition_state(
-            self,
-            order_id: str,
-            order_version: int,
-            line_items: List[LineItem],
-            from_state_id: str,
-            new_state_key: str,
+        self,
+        order_id: str,
+        order_version: int,
+        line_items: List[LineItem],
+        from_state_id: str,
+        new_state_key: str,
+        use_state_id: bool = False,
     ) -> Order:
         """
         Update Commercetools order line item state for all items in one call.
+
         Args:
             order_id (str): Order ID (UUID)
             order_version (int): Current version of order
             line_items (List[object]): List of line item objects
             from_state_id (str): ID of LineItemState to transition from
             new_state_key (str): Key of LineItemState to transition to
-        Returns (Order): Updated order object or
-        Returns (Order): Current un-updated order
-        Raises Exception: Error if update was unsuccessful.
+            use_state_id (bool): Whether to use state ID or key for transition
+
+        Returns:
+            Updated order object or current un-updated order
         """
 
-        from_state_key = self.get_state_by_id(from_state_id).key
+        if use_state_id:
+            from_state_key = from_state_id  # only set for logging purposes
+            from_state = StateResourceIdentifier(id=from_state_id)
+        else:
+            from_state_key = self.get_state_by_id(from_state_id).key
+            from_state = StateResourceIdentifier(key=from_state_key)
 
         logger.info(
             f"[CommercetoolsAPIClient] - Transitioning line item states for order ID '{order_id}'. "
@@ -771,12 +787,12 @@ class CommercetoolsAPIClient:
         )
 
         try:
-            if new_state_key != from_state_key:
+            if use_state_id or new_state_key != from_state_key:
                 actions = [
                     OrderTransitionLineItemStateAction(
                         line_item_id=item.id,
                         quantity=item.quantity,
-                        from_state=StateResourceIdentifier(key=from_state_key),
+                        from_state=from_state,
                         to_state=StateResourceIdentifier(key=new_state_key),
                     )
                     for item in line_items
@@ -1151,13 +1167,19 @@ class CommercetoolsAPIClient:
         *,
         customer: Customer,
         order_number: str,
-        locale: dict[str, str],
+        currency: str,
+        country: str,
+        language: str,
     ) -> Cart:
         """
         Create a new cart for a customer
 
         Args:
-            customer (Customer): The customer to create the cart for
+            customer (Customer): The customer for whom to create the cart
+            order_number (str): The order number for the cart
+            currency (str): Currency code for the cart
+            country (str): Country code for the cart
+            language (str): Language code for the cart
 
         Returns:
             Cart: The created cart object
@@ -1167,15 +1189,14 @@ class CommercetoolsAPIClient:
                 type=TypeResourceIdentifier(key=TwoUKeys.ORDER_CUSTOM_TYPE),
                 fields=FieldContainer({TwoUKeys.ORDER_ORDER_NUMBER: order_number}),
             )
-
             cart_draft = CartDraft(
-                currency=locale["currency"],
-                country=locale["country"],
-                locale=locale["language"],
                 customer_id=customer.id,
                 customer_email=customer.email,
-                tax_mode=TaxMode.DISABLED,
                 custom=custom_fields_draft,
+                tax_mode=TaxMode.DISABLED,
+                country=country,
+                currency=currency,
+                locale=language,
             )
 
             expand = ["lineItems[*].productType.obj", "custom"]
@@ -1184,9 +1205,7 @@ class CommercetoolsAPIClient:
             logger.info(
                 f"[CommercetoolsAPIClient] - Successfully created new cart: {cart.id} for customer: {customer.id}"
             )
-
             return cart
-
         except CommercetoolsError as err:
             handle_commercetools_error(
                 "[CommercetoolsAPIClient.create_cart]",
@@ -1195,35 +1214,40 @@ class CommercetoolsAPIClient:
             )
             raise err
 
-    def add_to_cart(self, *, cart: Cart, skus: list[str]) -> Cart:
-        """
-        Add course run(s) to cart
-
-        Args:
-            cart (Cart): The cart to add items to
-            skus (list): List of course run keys to add
-
-        Returns:
-            Cart: Updated cart with added items
-        """
+    def update_cart(
+        self,
+        *,
+        cart: Cart,
+        sku: str,
+        email_domain: str,
+        payment_id: str,
+        address=None,
+    ) -> Cart:
         try:
-            actions = [CartAddLineItemAction(sku=sku) for sku in skus]
-
-            if not actions:
-                return cart
-
+            actions = [
+                CartAddLineItemAction(sku=sku),
+                CartSetCustomFieldAction(
+                    name=TwoUKeys.ORDER_EMAIL_DOMAIN, value=email_domain
+                ),
+                CartSetCustomFieldAction(
+                    name=TwoUKeys.ORDER_MOBILE_ORDER, value="true"
+                ),
+                CartSetBillingAddressAction(address=address),
+                CartSetShippingAddressAction(address=address),
+                CartAddPaymentAction(
+                    payment=PaymentResourceIdentifier(id=payment_id)
+                ),
+            ]
             expand = ["lineItems[*].productType.obj", "custom"]
 
             updated_cart = self.base_client.carts.update_by_id(
                 id=cart.id, version=cart.version, actions=actions, expand=expand
             )
-
             logger.info(
                 "[CommercetoolsAPIClient] - Successfully added items to "
                 f"cart: {cart.id} for customer: {cart.customer_id}"
             )
             return updated_cart
-
         except CommercetoolsError as err:
             handle_commercetools_error(
                 "[CommercetoolsAPIClient.add_to_cart]",
@@ -1233,43 +1257,105 @@ class CommercetoolsAPIClient:
             )
             raise err
 
-    def set_customer_email_domain_on_cart(self, *, cart: Cart, email: str) -> Cart:
+    def _map_payment_status_to_transaction_state(
+        self, payment_status: str
+    ) -> TransactionState:
         """
-        Set customer email domain on cart
+        Maps the status from the payment processor to the transaction state in commercetools
 
         Args:
-            cart (Cart): Cart to update
-            email (str): Customer email to extract domain from
+            payment_status (str): Status from the payment processor
 
         Returns:
-            Cart: Updated cart with email domain set
+            Transaction state in commercetools
         """
+        # TODO: implement
+        return TransactionState.SUCCESS
+
+    def create_payment(
+        self,
+        *,
+        cart: Cart,
+        payment_method: str,
+        payment_processor: str,
+        payment_status: str,
+        psp_payment_id: str,
+        psp_transaction_id: str,
+    ) -> Payment:
+        amount_planned = cart.total_price
+        payment_method_info = PaymentMethodInfo(
+            payment_interface=payment_processor,
+            method=payment_method,
+            name=LocalizedString(name=payment_method),
+        )
+        # translate this based on mobile status codes
+        payment_status_draft = PaymentStatusDraft(
+            interface_code=payment_status,
+            interface_text=payment_status,
+        )
+        transaction_draft = TransactionDraft(
+            type=TransactionType.CHARGE,
+            amount=amount_planned,
+            state=self._map_payment_status_to_transaction_state(payment_status),
+            interaction_id=psp_transaction_id,
+        )
+        payment_draft = PaymentDraft(
+            key=psp_payment_id,
+            amount_planned=amount_planned,
+            customer=CustomerResourceIdentifier(id=cart.customer_id),
+            interface_id=psp_payment_id,
+            payment_method_info=payment_method_info,
+            payment_status=payment_status_draft,
+            transactions=[transaction_draft],
+        )
+
         try:
-            email_domain = (email or "").lower().strip().partition("@")[-1]
-
-            actions = [
-                CartSetCustomFieldAction(
-                    name=TwoUKeys.ORDER_EMAIL_DOMAIN, value=email_domain
-                )
-            ]
-
-            expand = ["lineItems[*].productType.obj", "custom"]
-
-            updated_cart = self.base_client.carts.update_by_id(
-                id=cart.id, version=cart.version, actions=actions, expand=expand
-            )
-
+            payment = self.base_client.payments.create(payment_draft)
             logger.info(
-                "[CommercetoolsAPIClient] - Successfully set email domain on "
-                f"cart: {cart.id} for customer: {cart.customer_id}"
+                f"[CommercetoolsAPIClient] - Created payment: {payment.id}"
+                f"for customer: {cart.customer_id}"
             )
-            return updated_cart
-
+            return payment
         except CommercetoolsError as err:
             handle_commercetools_error(
-                "[CommercetoolsAPIClient.set_customer_email_domain_on_cart]",
+                "[CommercetoolsAPIClient.create_payment]",
                 err,
-                f"Failed to set email domain on cart: {cart.id} "
+                f"Unable to create payment for customer:{cart.customer_id}",
+            )
+            raise err
+
+    def create_order_from_cart(self, cart: Cart) -> Order:
+        """
+        Create a new order from a cart
+
+        Args:
+            cart (Cart): The cart to create the order from
+
+        Returns:
+            The created order object
+        """
+        try:
+            order_number = cart.custom.fields.get(TwoUKeys.ORDER_ORDER_NUMBER)
+            order_from_cart_draft = OrderFromCartDraft(
+                id=cart.id,
+                version=cart.version,
+                order_number=order_number,
+                order_state=OrderState.COMPLETE,
+                payment_state=PaymentState.PAID,
+                shipment_state=ShipmentState.SHIPPED,
+            )
+
+            order = self.base_client.orders.create(order_from_cart_draft)
+            logger.info(
+                f"[CommercetoolsAPIClient] - Successfully created new order: {order.id} "
+                f"from cart: {cart.id} for customer: {cart.customer_id}"
+            )
+            return order
+        except CommercetoolsError as err:
+            handle_commercetools_error(
+                "[CommercetoolsAPIClient.create_order_from_cart]",
+                err,
+                f"Failed to create order from cart: {cart.id}"
                 f"for customer: {cart.customer_id}",
             )
             raise err

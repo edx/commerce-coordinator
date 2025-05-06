@@ -1,59 +1,99 @@
-"""
-Utility functions for handling cart operations such as checking cart status and setting shipping addresses.
-"""
+from commercetools.platform.models import Customer
 
-import logging
-from commercetools.platform.models.cart import CartSetShippingAddressAction
-from commercetools.platform.models.common import Address
-from commercetools.exceptions import CommercetoolsError
-
-logger = logging.getLogger(__name__)
+from commerce_coordinator.apps.commercetools.catalog_info.constants import (
+    EdXFieldNames,
+)
+from commerce_coordinator.apps.commercetools.clients import CommercetoolsAPIClient
 
 
-def is_cart_active(cart) -> bool:
+def _get_attributes_to_update(
+    *,
+    user,
+    customer: Customer,
+    first_name: str,
+    last_name: str,
+) -> dict[str, str | None]:
     """
-    Check if the cart is in an active state.
+    Get the attributes that need to be updated for the customer.
 
     Args:
-        cart: The cart object.
+        customer: The existing customer object
+        user: The authenticated user from the request
 
     Returns:
-        bool: True if the cart is active, False otherwise.
+        A dictionary of attributes to update with their new values
     """
-    cart_state = cart.cart_state.value if hasattr(cart.cart_state, "value") else str(cart.cart_state)
-    return cart_state.lower() == "active"
+    updates = {}
 
-def set_shipping_address(cart, shipping_address_data, ct_client):
-    """
-    Set the shipping address on the cart if not already set.
+    ct_lms_username = None
+    if customer.custom and customer.custom.fields:
+        ct_lms_username = customer.custom.fields.get(EdXFieldNames.LMS_USER_NAME)
+
+    if ct_lms_username != user.username:
+        updates["lms_username"] = user.username
+
+    if customer.email != user.email:
+        updates["email"] = user.email
+
+    if customer.first_name != first_name:
+        updates["first_name"] = first_name
+
+    if customer.last_name != last_name:
+        updates["last_name"] = last_name
+
+    return updates
+
+
+def get_email_domain(email: str | None) -> str:
+    """Extract the domain from an email address.
 
     Args:
-        cart: The cart object.
-        shipping_address_data (dict): Shipping address data from request.
-        ct_client: Instance of Commercetools API client.
+        email (str): Email address.
 
     Returns:
-        Updated cart object.
-
-    Raises:
-        ValueError: If shipping address data is missing.
-        CommercetoolsError: If there is an error updating the cart in Commercetools.
+        Domain part of the email address.
     """
+    return (email or "").lower().strip().partition("@")[-1]
 
-    if not cart.shipping_address:
-        if not shipping_address_data:
-            raise ValueError("Shipping address is not set in cart or request.")
 
-        address = Address(**shipping_address_data)
-        actions = [CartSetShippingAddressAction(address=address)]
+def get_ct_customer(client: CommercetoolsAPIClient, user) -> Customer:
+    """
+    Get an existing customer for the authenticated user or create a new one.
 
-        try:
-            cart = ct_client.base_client.carts.update_by_id(cart.id, cart.version, actions)
-        except CommercetoolsError as err:
-            logger.error(
-                "[set_shipping_address] Failed to set shipping address for cart %s: error=%s, correlation_id=%s",
-                cart.id, err.errors, getattr(err, "correlation_id", None)
+    Args:
+        client: CommercetoolsAPIClient instance
+        user: The authenticated user from the request
+
+    Returns:
+        The customer object
+    """
+    customer = client.get_customer_by_lms_user_id(user.lms_user_id)
+    first_name, last_name = user.first_name, user.last_name
+
+    if not (first_name and last_name) and user.full_name:
+        splitted_name = user.full_name.split(" ", 1)
+        first_name = splitted_name[0]
+        last_name = splitted_name[1] if len(splitted_name) > 1 else ""
+
+    if customer:
+        updates = _get_attributes_to_update(
+            user=user,
+            customer=customer,
+            first_name=first_name,
+            last_name=last_name,
+        )
+        if updates:
+            customer = client.update_customer(
+                customer=customer,
+                updates=updates,
             )
+    else:
+        customer = client.create_customer(
+            email=user.email,
+            first_name=first_name,
+            last_name=last_name,
+            lms_user_id=user.lms_user_id,
+            lms_username=user.username,
+        )
 
-        return cart
-    return cart
+    return customer

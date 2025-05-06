@@ -1248,19 +1248,28 @@ class ClientTests(TestCase):
                 order_number,
             )
 
-    def test_add_to_cart(self):
-        """Test adding items to a cart"""
+    def test_update_cart(self):
+        """Test updating a cart"""
         base_url = self.client_set.get_base_url_from_client()
         cart_id = uuid4_str()
         cart_version = 1
         customer_id = uuid4_str()
+        email = "user@example.com"
+        expected_domain = "example.com"
+        sku = "course-v1:edX+DemoX+Demo_Course"
+
         cart = gen_cart(
-            cart_id=cart_id, cart_version=cart_version, customer_id=customer_id
+            cart_id=cart_id,
+            cart_version=cart_version,
+            customer_id=customer_id,
+            customer_email=email
         )
-        skus = ["course-v1:edX+DemoX+Demo_Course", "course-v1:edX+CS101+2023"]
 
         updated_cart = gen_cart(
-            cart_id=cart_id, cart_version=cart_version + 1, customer_id=customer_id
+            cart_id=cart_id,
+            cart_version=cart_version + 1,
+            customer_id=customer_id,
+            customer_email=email
         )
 
         with requests_mock.Mocker(real_http=True, case_sensitive=False) as mocker:
@@ -1270,7 +1279,12 @@ class ClientTests(TestCase):
                 status_code=200,
             )
 
-            result = self.client_set.client.add_to_cart(cart=cart, skus=skus)
+            result = self.client_set.client.update_cart(
+                cart=cart,
+                sku=sku,
+                email_domain=expected_domain,
+                payment_id=''
+            )
 
             # Verify cart was updated correctly
             self.assertEqual(result.id, cart_id)
@@ -1279,58 +1293,16 @@ class ClientTests(TestCase):
             # Verify request had correct actions
             request_body = mocker.last_request.json()
             actions = request_body["actions"]
+            self.assertEqual(len(actions), 6)
 
-            # Should have one action for each SKU
-            self.assertEqual(len(actions), 2)
+            lineItemAction = actions[0]
+            self.assertEqual(lineItemAction["action"], "addLineItem")
+            self.assertEqual(lineItemAction["sku"], sku)
 
-            # Verify each action is for adding a line item with the correct SKU
-            for i, action in enumerate(actions):
-                self.assertEqual(action["action"], "addLineItem")
-                self.assertEqual(action["sku"], skus[i])
-
-    def test_set_customer_email_domain_on_cart(self):
-        """Test setting customer email domain on a cart"""
-        base_url = self.client_set.get_base_url_from_client()
-        cart_id = uuid4_str()
-        cart_version = 1
-        customer_id = uuid4_str()
-        cart = gen_cart(
-            cart_id=cart_id, cart_version=cart_version, customer_id=customer_id
-        )
-        email = "user@example.com"
-        expected_domain = "example.com"
-
-        updated_cart = gen_cart(
-            cart_id=cart_id, cart_version=cart_version + 1, customer_id=customer_id
-        )
-
-        with requests_mock.Mocker(real_http=True, case_sensitive=False) as mocker:
-            mocker.post(
-                f"{base_url}carts/{cart_id}",
-                json=updated_cart.serialize(),
-                status_code=200,
-            )
-
-            result = self.client_set.client.set_customer_email_domain_on_cart(
-                cart=cart, email=email
-            )
-
-            # Verify cart was updated correctly
-            self.assertEqual(result.id, cart_id)
-            self.assertEqual(result.version, cart_version + 1)
-
-            # Verify request had correct action
-            request_body = mocker.last_request.json()
-            actions = request_body["actions"]
-
-            # Should have one action
-            self.assertEqual(len(actions), 1)
-
-            # Verify action is for setting the email domain
-            action = actions[0]
-            self.assertEqual(action["action"], "setCustomField")
-            self.assertEqual(action["name"], TwoUKeys.ORDER_EMAIL_DOMAIN)
-            self.assertEqual(action["value"], expected_domain)
+            customFieldAction = actions[1]
+            self.assertEqual(customFieldAction["action"], "setCustomField")
+            self.assertEqual(customFieldAction["name"], TwoUKeys.ORDER_EMAIL_DOMAIN)
+            self.assertEqual(customFieldAction["value"], expected_domain)
 
 
 class PaginatedResultsTest(TestCase):
