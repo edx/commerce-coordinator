@@ -5,17 +5,16 @@ import logging
 
 from django.views.decorators.csrf import csrf_exempt
 from rest_framework import status
+from rest_framework.authentication import SessionAuthentication
 from rest_framework.exceptions import ValidationError
-from rest_framework.permissions import AllowAny
+from rest_framework.permissions import AllowAny, IsAdminUser
 from rest_framework.response import Response
 
+from commerce_coordinator.apps.commercetools.authentication import JwtBearerAuthentication
 from commerce_coordinator.apps.core.views import SingleInvocationAPIView
 from commerce_coordinator.apps.lms.clients import FulfillmentType
 from commerce_coordinator.apps.lms.signals import fulfillment_completed_update_ct_line_item_signal
 from commerce_coordinator.apps.order_fulfillment.serializers import FulfillOrderWebhookSerializer
-from commerce_coordinator.apps.order_fulfillment.webhook_utils.webhook_authentication import (
-    HMACSignatureWebhookAuthentication
-)
 
 logger = logging.getLogger(__name__)
 
@@ -26,8 +25,8 @@ class FulfillmentResponseWebhookView(SingleInvocationAPIView):
     response from fulfillment providers and updates CT order object with response data.
     """
     http_method_names = ['post']
-    authentication_classes = [HMACSignatureWebhookAuthentication]
-    permission_classes = [AllowAny]
+    authentication_classes = [JwtBearerAuthentication, SessionAuthentication]
+    permission_classes = [IsAdminUser]
 
     @csrf_exempt
     def post(self, request):
@@ -35,7 +34,7 @@ class FulfillmentResponseWebhookView(SingleInvocationAPIView):
         tag = type(self).__name__
 
         input_data = {
-            **request.data
+            **request.data.get('detail', None)
         }
 
         logger.info(f'[CT-{tag}] Message received from order-fulfillment with details: {input_data}')
