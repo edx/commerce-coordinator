@@ -1,5 +1,7 @@
 from commercetools.platform.models import (
+    CustomFieldBooleanType,
     CustomFieldEnumType,
+    CustomFieldNumberType,
     CustomFieldStringType,
     CustomObjectDraft,
     FieldDefinition,
@@ -126,75 +128,6 @@ class TwoUCustomTypes:
         ]
     )
 
-    # Custom type for PayPal for Payment Objects
-    PAYMENT_TYPE_DRAFT = TypeDraft(
-        key=TwoUKeys.PAYPAL_PAYMENT_TYPE,
-        name=ls({'en': 'Custom type for PayPal'}),
-        resource_type_ids=[ResourceTypeId.PAYMENT],
-        # ^^^ this cannot be updated, the whole type has to be unassigned, removed and replaced.
-        field_definitions=[
-            # Updating Field Definitions only supports:
-            # - basic field definitions changes, like label and input_hint, not type or
-            # - whether it is required or not.
-            # - It can add new ones.
-            # If you need something done that can't be, the whole type has to be unassigned, removed and replaced.
-            FieldDefinition(
-                type=CustomFieldStringType(),
-                name=TwoUKeys.PAYPAL_ORDER_ID_FIELD_KEY,
-                required=False,
-                label=ls({'en': 'Order ID for PayPal'}),
-            ),
-            FieldDefinition(
-                type=CustomFieldStringType(),
-                name=TwoUKeys.PAYPAL_CLIENT_TOKEN_REQUEST_FIELD_KEY,
-                required=False,
-                label=ls({'en': 'Client token for PayPal request'}),
-            ),
-            FieldDefinition(
-                type=CustomFieldStringType(),
-                name=TwoUKeys.PAYPAL_CLIENT_TOKEN_RESPONSE_FIELD_KEY,
-                required=False,
-                label=ls({'en': 'Client token for PayPal response'}),
-            ),
-            FieldDefinition(
-                type=CustomFieldStringType(),
-                name=TwoUKeys.PAYPAL_CREATE_ORDER_REQUEST_FIELD_KEY,
-                required=False,
-                label=ls({'en': 'Create order for PayPal request'}),
-            ),
-            FieldDefinition(
-                type=CustomFieldStringType(),
-                name=TwoUKeys.PAYPAL_CREATE_ORDER_RESPONSE_FIELD_KEY,
-                required=False,
-                label=ls({'en': 'Create order for PayPal response'}),
-            ),
-            FieldDefinition(
-                type=CustomFieldStringType(),
-                name=TwoUKeys.PAYPAL_CAPTURE_ORDER_REQUEST_FIELD_KEY,
-                required=False,
-                label=ls({'en': 'Capture order for PayPal request'}),
-            ),
-            FieldDefinition(
-                type=CustomFieldStringType(),
-                name=TwoUKeys.PAYPAL_CAPTURE_ORDER_RESPONSE_FIELD_KEY,
-                required=False,
-                label=ls({'en': 'Capture order for PayPal response'}),
-            ),
-            FieldDefinition(
-                type=CustomFieldStringType(),
-                name=TwoUKeys.PAYPAL_UPDATE_ORDER_REQUEST_FIELD_KEY,
-                required=False,
-                label=ls({'en': 'Update order for PayPal request'}),
-            ),
-            FieldDefinition(
-                type=CustomFieldStringType(),
-                name=TwoUKeys.PAYPAL_UPDATE_ORDER_RESPONSE_FIELD_KEY,
-                required=False,
-                label=ls({'en': 'Update order for PayPal response'}),
-            )
-        ]
-    )
-
     RETURN_ITEM_TYPE_DRAFT = TypeDraft(
        key=TwoUKeys.RETURN_ITEM_CUSTOM_TYPE,
        name=ls({'en': 'Return Item Custom Type'}),
@@ -241,6 +174,13 @@ class TwoUCustomTypes:
                 name=TwoUKeys.RETURN_ITEM_ID,
                 required=False,
                 label=ls({'en': 'Return Item ID'}),
+                input_hint=TypeTextInputHint.SINGLE_LINE
+            ),
+            FieldDefinition(
+                type=CustomFieldNumberType(),
+                name=TwoUKeys.TRANSACTION_USD_AMOUNT,
+                required=False,
+                label=ls({'en': 'USD Amount (Cent Amount)'}),
                 input_hint=TypeTextInputHint.SINGLE_LINE
             )
         ]
@@ -325,6 +265,13 @@ class TwoUCustomTypes:
                 name=TwoUKeys.ORDER_EMAIL_DOMAIN,
                 required=False,
                 label=ls({'en': 'Email Domain'}),
+                input_hint=TypeTextInputHint.SINGLE_LINE
+            ),
+            FieldDefinition(
+                type=CustomFieldBooleanType(),
+                name=TwoUKeys.ORDER_MOBILE_ORDER,
+                required=False,
+                label=ls({'en': 'Mobile Order'}),
                 input_hint=TypeTextInputHint.SINGLE_LINE
             )
         ]
