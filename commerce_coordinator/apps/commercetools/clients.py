@@ -6,40 +6,52 @@ import datetime
 import logging
 from types import SimpleNamespace
 from typing import Generic, List, Optional, Tuple, TypedDict, TypeVar, Union
+import uuid
 
 import requests
-from commercetools import Client as CTClient
-from commercetools import CommercetoolsError
-from commercetools.platform.models import Customer as CTCustomer
-from commercetools.platform.models import CustomerChangeEmailAction, CustomerSetCustomFieldAction
-from commercetools.platform.models import CustomerSetCustomTypeAction as CTCustomerSetCustomTypeAction
-from commercetools.platform.models import CustomerSetFirstNameAction, CustomerSetLastNameAction
-from commercetools.platform.models import FieldContainer as CTFieldContainer
-from commercetools.platform.models import LineItem as CTLineItem
-from commercetools.platform.models import Money as CTMoney
-from commercetools.platform.models import Order as CTOrder
+from commercetools import Client, CommercetoolsError
 from commercetools.platform.models import (
+    AuthenticationMode,
+    Cart,
+    CartAddLineItemAction,
+    CartDraft,
+    CartSetCustomFieldAction,
+    Customer,
+    CustomerChangeEmailAction,
+    CustomerDraft,
+    CustomerSetCustomFieldAction,
+    CustomerSetCustomTypeAction,
+    CustomerSetFirstNameAction,
+    CustomerSetLastNameAction,
+    CustomFieldsDraft,
+    CustomObject,
+    CustomObjectDraft,
+    FieldContainer,
+    LineItem,
+    Money,
+    Order,
     OrderAddReturnInfoAction,
     OrderSetLineItemCustomFieldAction,
     OrderSetReturnItemCustomTypeAction,
     OrderSetReturnPaymentStateAction,
-    OrderTransitionLineItemStateAction
-)
-from commercetools.platform.models import Payment as CTPayment
-from commercetools.platform.models import PaymentAddTransactionAction, PaymentSetTransactionCustomTypeAction
-from commercetools.platform.models import ProductVariant as CTProductVariant
-from commercetools.platform.models import (
+    OrderTransitionLineItemStateAction,
+    Payment,
+    PaymentAddTransactionAction,
+    PaymentSetTransactionCustomTypeAction,
+    ProductVariant,
     ReturnItemDraft,
     ReturnPaymentState,
     ReturnShipmentState,
+    State as LineItemState,
     StateResourceIdentifier,
+    TaxMode,
     TransactionDraft,
-    TransactionType
+    TransactionType,
+    Type as CustomType,
+    TypeDraft as CustomTypeDraft,
+    TypeResourceIdentifier,
 )
-from commercetools.platform.models import Type as CTType
-from commercetools.platform.models import TypeDraft as CTTypeDraft
-from commercetools.platform.models import TypeResourceIdentifier as CTTypeResourceIdentifier
-from commercetools.platform.models.state import State as CTLineItemState
+
 from django.conf import settings
 from openedx_filters.exceptions import OpenEdxFilterException
 
@@ -48,16 +60,20 @@ from commerce_coordinator.apps.commercetools.catalog_info.constants import (
     EDX_PAYPAL_PAYMENT_INTERFACE_NAME,
     EDX_STRIPE_PAYMENT_INTERFACE_NAME,
     EdXFieldNames,
-    TwoUKeys
+    TwoUKeys,
 )
-from commerce_coordinator.apps.commercetools.catalog_info.foundational_types import TwoUCustomTypes
+from commerce_coordinator.apps.commercetools.catalog_info.foundational_types import (
+    TwoUCustomTypes,
+)
 from commerce_coordinator.apps.commercetools.utils import (
     find_latest_refund,
     find_refund_transaction,
     handle_commercetools_error,
-    translate_refund_status_to_transaction_status
+    translate_refund_status_to_transaction_status,
 )
-from commerce_coordinator.apps.core.constants import ORDER_HISTORY_PER_SYSTEM_REQ_LIMIT
+from commerce_coordinator.apps.core.constants import (
+    ORDER_HISTORY_PER_SYSTEM_REQ_LIMIT,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -114,12 +130,12 @@ class CommercetoolsAPIClient:
         Initialize CommercetoolsAPIClient, for use in an application, or (with an arg) testing.
 
         Args:
-             client(CTClient): A mock client for testing (ONLY).
+             client(Client): A mock client for testing (ONLY).
         """
         super().__init__()
 
         config = settings.COMMERCETOOLS_CONFIG
-        self.base_client = CTClient(
+        self.base_client = Client(
             client_id=config["clientId"],
             client_secret=config["clientSecret"],
             scope=config["scopes"].split(" "),
@@ -128,7 +144,7 @@ class CommercetoolsAPIClient:
             project_key=config["projectKey"],
         )
 
-    def ensure_custom_type_exists(self, type_def: CTTypeDraft) -> Optional[CTType]:
+    def ensure_custom_type_exists(self, type_def: CustomTypeDraft) -> Optional[CustomType]:
         """
         Ensures a custom type exists within CoCo
         Args:
@@ -153,7 +169,7 @@ class CommercetoolsAPIClient:
 
         return type_object
 
-    def tag_customer_with_lms_user_info(self, customer: CTCustomer, lms_user_id: int, lms_user_name: str) -> CTCustomer:
+    def tag_customer_with_lms_user_info(self, customer: Customer, lms_user_id: int, lms_user_name: str) -> Customer:
         """
         Updates a CoCo Customer Object with what we are currently using for LMS Identifiers
         Args:
@@ -184,11 +200,11 @@ class CommercetoolsAPIClient:
             customer.id,
             customer.version,
             actions=[
-                CTCustomerSetCustomTypeAction(
-                    type=CTTypeResourceIdentifier(
+                CustomerSetCustomTypeAction(
+                    type=TypeResourceIdentifier(
                         key=TwoUCustomTypes.CUSTOMER_TYPE_DRAFT.key,
                     ),
-                    fields=CTFieldContainer(
+                    fields=FieldContainer(
                         {
                             EdXFieldNames.LMS_USER_ID: f"{lms_user_id}",
                             EdXFieldNames.LMS_USER_NAME: lms_user_name,
@@ -200,7 +216,7 @@ class CommercetoolsAPIClient:
 
         return ret
 
-    def get_customer_by_lms_user_id(self, lms_user_id: int) -> Optional[CTCustomer]:
+    def get_customer_by_lms_user_id(self, lms_user_id: int) -> Optional[Customer]:
         """
         Get a Commercetools Customer by their LMS User ID
 
@@ -208,7 +224,7 @@ class CommercetoolsAPIClient:
             lms_user_id: edX LMS User ID
 
         Returns:
-            Optional[CTCustomer], A Commercetools Customer Object, or None if not found, may throw if more than one user
+            Optional[Customer], A Commercetools Customer Object, or None if not found, may throw if more than one user
              is returned.
         """
 
@@ -243,7 +259,7 @@ class CommercetoolsAPIClient:
             logger.info(f"[CommercetoolsAPIClient] - Customer found with LMS user id: {lms_user_id}")
             return results.results[0]
 
-    def get_order_by_id(self, order_id: str, expand: ExpandList = DEFAULT_ORDER_EXPANSION) -> CTOrder:
+    def get_order_by_id(self, order_id: str, expand: ExpandList = DEFAULT_ORDER_EXPANSION) -> Order:
         """
         Fetch an order by the Order ID (UUID)
 
@@ -251,12 +267,12 @@ class CommercetoolsAPIClient:
             order_id (str): Order ID (UUID)
             expand: List of Order Parameters to expand
 
-        Returns (CTOrder): Order with Expanded Properties
+        Returns (Order): Order with Expanded Properties
         """
         logger.info(f"[CommercetoolsAPIClient] - Attempting to find order with id: {order_id}")
         return self.base_client.orders.get_by_id(order_id, expand=list(expand))
 
-    def get_order_by_number(self, order_number: str, expand: ExpandList = DEFAULT_ORDER_EXPANSION) -> CTOrder:
+    def get_order_by_number(self, order_number: str, expand: ExpandList = DEFAULT_ORDER_EXPANSION) -> Order:
         """
         Fetch an order by the Order Number (Human readable order number)
 
@@ -264,7 +280,7 @@ class CommercetoolsAPIClient:
             order_number (str): Order Number (Human readable order number)
             expand: List of Order Parameters to expand
 
-        Returns (CTOrder): Order with Expanded Properties
+        Returns (Order): Order with Expanded Properties
         """
         logger.info(f"[CommercetoolsAPIClient] - Attempting to find order with number {order_number}")
         return self.base_client.orders.get_by_order_number(order_number, expand=list(expand))
@@ -276,18 +292,18 @@ class CommercetoolsAPIClient:
         limit=ORDER_HISTORY_PER_SYSTEM_REQ_LIMIT,
         expand: ExpandList = DEFAULT_ORDER_EXPANSION,
         order_state="Complete",
-    ) -> PaginatedResult[CTOrder]:
+    ) -> PaginatedResult[Order]:
         """
         Call commercetools API overview endpoint for data about historical orders.
 
         Args:
-            customer (CTCustomer): Commerce Tools Customer to look up orders for
+            customer (Customer): Commerce Tools Customer to look up orders for
             offset (int): Pagination Offset
             limit (int): Maximum number of results
             expand: List of Order Parameters to expand
 
         Returns:
-            PaginatedResult[CTOrder]: Dictionary representation of JSON returned from API
+            PaginatedResult[Order]: Dictionary representation of JSON returned from API
 
         See sample response in tests.py
 
@@ -319,7 +335,7 @@ class CommercetoolsAPIClient:
         customer_id=None,
         email=None,
         username=None,
-    ) -> (PaginatedResult[CTOrder], CTCustomer):
+    ) -> (PaginatedResult[Order], Customer):
         """
 
         Args:
@@ -348,42 +364,42 @@ class CommercetoolsAPIClient:
 
         return orders, customer
 
-    def get_customer_by_id(self, customer_id: str) -> CTCustomer:
+    def get_customer_by_id(self, customer_id: str) -> Customer:
         logger.info(f"[CommercetoolsAPIClient] - Attempting to find customer with ID {customer_id}")
         return self.base_client.customers.get_by_id(customer_id)
 
-    def get_state_by_id(self, state_id: str) -> CTLineItemState:
+    def get_state_by_id(self, state_id: str) -> LineItemState:
         logger.info(f"[CommercetoolsAPIClient] - Attempting to find state with id {state_id}")
         return self.base_client.states.get_by_id(state_id)
 
-    def get_state_by_key(self, state_key: str) -> CTLineItemState:
+    def get_state_by_key(self, state_key: str) -> LineItemState:
         logger.info(f"[CommercetoolsAPIClient] - Attempting to find state with key {state_key}")
         return self.base_client.states.get_by_key(state_key)
 
-    def get_payment_by_key(self, payment_key: str) -> CTPayment:
+    def get_payment_by_key(self, payment_key: str) -> Payment:
         logger.info(f"[CommercetoolsAPIClient] - Attempting to find payment with key {payment_key}")
         return self.base_client.payments.get_by_key(payment_key)
 
-    def get_payment_by_transaction_interaction_id(self, interaction_id: str) -> CTPayment:
+    def get_payment_by_transaction_interaction_id(self, interaction_id: str) -> Payment:
         """
         Fetch a payment by the transaction interaction ID
         """
         logger.info(f"[CommercetoolsAPIClient] - Attempting to find payment with interaction ID {interaction_id}")
         return self.base_client.payments.query(where=f'transactions(interactionId="{interaction_id}")').results[0]
 
-    def get_product_by_program_id(self, program_id: str) -> Optional[CTProductVariant]:
+    def get_product_by_program_id(self, program_id: str) -> Optional[ProductVariant]:
         """
         Fetches a program product from Commercetools.
         Args:
             program_id: The ID of the program (bundle) to fetch.
         Returns:
-            CTProductVariant if found, None otherwise.
+            ProductVariant if found, None otherwise.
         """
         results = self.base_client.product_projections.search(False, filter=f'key:"{program_id}"').results
 
         return results[0] if results else None
 
-    def get_product_variant_by_course_run(self, cr_id: str) -> Optional[CTProductVariant]:
+    def get_product_variant_by_course_run(self, cr_id: str) -> Optional[ProductVariant]:
         """
         Args:
             cr_id: variant course run key
@@ -415,14 +431,14 @@ class CommercetoolsAPIClient:
 
         return matching_variant_list[0]
 
-    def create_return_for_order(self, order_id: str, order_version: int, order_line_item_id: str) -> CTOrder:
+    def create_return_for_order(self, order_id: str, order_version: int, order_line_item_id: str) -> Order:
         """
         Creates refund/return for Commercetools order
         Args:
             order_id (str): Order ID (UUID)
             order_version (int): Current version of order
             order_line_item_id (str): ID of order line item
-        Returns (CTOrder): Updated order object or
+        Returns (Order): Updated order object or
         Returns Exception: Error if update was unsuccessful.
         """
 
@@ -456,7 +472,7 @@ class CommercetoolsAPIClient:
         order_id: str,
         order_version: int,
         return_line_item_return_ids: List[str],
-    ) -> Union[CTOrder, None]:
+    ) -> Union[Order, None]:
         """
         Update paymentState on the LineItemReturnItem attached to the order for enrollment code purchase.
         Updated by the Order ID (UUID)
@@ -466,7 +482,7 @@ class CommercetoolsAPIClient:
             order_version (int): Current version of order
             return_line_item_return_id (str): LineItemReturnItem ID
 
-        Returns (CTOrder): Updated order object or
+        Returns (Order): Updated order object or
         Raises Exception: Error if update was unsuccessful.
         """
 
@@ -509,7 +525,7 @@ class CommercetoolsAPIClient:
         refunded_line_item_refunds: dict,
         payment_intent_id: str,
         interaction_id: str
-    ) -> Union[CTOrder, None]:
+    ) -> Union[Order, None]:
         """
         Update paymentState on the LineItemReturnItem attached to the order.
         Updated by the Order ID (UUID)
@@ -519,7 +535,7 @@ class CommercetoolsAPIClient:
             order_version (int): Current version of order
             return_line_item_return_id (str): LineItemReturnItem ID
 
-        Returns (CTOrder): Updated order object or
+        Returns (Order): Updated order object or
         Raises Exception: Error if update was unsuccessful.
         """
         try:
@@ -554,10 +570,10 @@ class CommercetoolsAPIClient:
                     custom_fields[TwoUKeys.LINE_ITEM_LMS_ENTITLEMENT_ID] = entitlement_id
                 update_transaction_id_actions.append(OrderSetReturnItemCustomTypeAction(
                     return_item_id=return_line_item_return_id,
-                    type=CTTypeResourceIdentifier(
+                    type=TypeResourceIdentifier(
                         key="returnItemCustomType",
                     ),
-                    fields=CTFieldContainer(custom_fields),
+                    fields=FieldContainer(custom_fields),
                 ))
 
             logger.info(f"Update return payment state after successful refund - payment_intent_id: {payment_intent_id}")
@@ -570,8 +586,8 @@ class CommercetoolsAPIClient:
             if transaction_id:
                 return_transaction_return_item_action = PaymentSetTransactionCustomTypeAction(
                     transaction_id=transaction_id,
-                    type=CTTypeResourceIdentifier(key="transactionCustomType"),
-                    fields=CTFieldContainer({"returnItemId": ', '.join(return_line_item_return_ids)}),
+                    type=TypeResourceIdentifier(key="transactionCustomType"),
+                    fields=FieldContainer({"returnItemId": ', '.join(return_line_item_return_ids)}),
                 )
                 self.base_client.payments.update_by_id(
                     id=payment.id,
@@ -602,14 +618,14 @@ class CommercetoolsAPIClient:
 
     def create_return_payment_transaction(
         self, payment_id: str, payment_version: int, refund: Refund, psp=EDX_STRIPE_PAYMENT_INTERFACE_NAME
-    ) -> CTPayment:
+    ) -> Payment:
         """
         Create Commercetools payment transaction for refund
         Args:
             payment_id (str): Payment ID (UUID)
             payment_version (int): Current version of payment
             refund (Refund): Refund object
-        Returns (CTPayment): Updated payment object or
+        Returns (Payment): Updated payment object or
         Raises Exception: Error if creation was unsuccessful.
         """
         try:
@@ -619,7 +635,7 @@ class CommercetoolsAPIClient:
             )
             refund = self._preprocess_refund_object(refund, psp)
 
-            amount_as_money = CTMoney(
+            amount_as_money = Money(
                 cent_amount=int(refund["amount"]),
                 currency_code=refund["currency"],
             )
@@ -656,7 +672,7 @@ class CommercetoolsAPIClient:
         item_quantity: int,
         from_state_id: str,
         new_state_key: str,
-    ) -> CTOrder:
+    ) -> Order:
         """
         Update Commercetools order line item on fulfillment.
         Args:
@@ -667,8 +683,8 @@ class CommercetoolsAPIClient:
             item_quantity (int): Count of variants in line item
             from_state_id (str): ID of LineItemState to transition from
             new_state_key (str): Key of LineItemState to transition to
-        Returns (CTOrder): Updated order object or
-        Returns (CTOrder): Current un-updated order
+        Returns (Order): Updated order object or
+        Returns (Order): Current un-updated order
         Raises Exception: Error if update was unsuccessful.
         """
         from_state_key = self.get_state_by_id(from_state_id).key
@@ -728,10 +744,10 @@ class CommercetoolsAPIClient:
             self,
             order_id: str,
             order_version: int,
-            line_items: List[CTLineItem],
+            line_items: List[LineItem],
             from_state_id: str,
             new_state_key: str,
-    ) -> CTOrder:
+    ) -> Order:
         """
         Update Commercetools order line item state for all items in one call.
         Args:
@@ -740,8 +756,8 @@ class CommercetoolsAPIClient:
             line_items (List[object]): List of line item objects
             from_state_id (str): ID of LineItemState to transition from
             new_state_key (str): Key of LineItemState to transition to
-        Returns (CTOrder): Updated order object or
-        Returns (CTOrder): Current un-updated order
+        Returns (Order): Updated order object or
+        Returns (Order): Current un-updated order
         Raises Exception: Error if update was unsuccessful.
         """
 
@@ -798,7 +814,7 @@ class CommercetoolsAPIClient:
         retired_last_name: str,
         retired_email: str,
         retired_lms_username: str,
-    ) -> CTCustomer:
+    ) -> Customer:
         """
         Update Commercetools customer with anonymized fields
         Args:
@@ -808,7 +824,7 @@ class CommercetoolsAPIClient:
             retired_last_name (str): anonymized customer last name value
             retired_email (str): anonymized customer email value
             retired_lms_username (str): anonymized customer lms username value
-        Returns (CTCustomer): Updated customer object or
+        Returns (Customer): Updated customer object or
         Raises Exception: Error if update was unsuccessful.
         """
 
@@ -881,3 +897,379 @@ class CommercetoolsAPIClient:
                                        err, f"Unable to check if user {email} is eligible for a "
                                             f"first time discount", True)
             return True
+
+    def create_customer(
+        self,
+        *,
+        email: str,
+        first_name: str,
+        last_name: str,
+        lms_user_id: int,
+        lms_username: str,
+        is_email_verified=True,
+    ) -> Customer:
+        """
+        Create a new customer in Commercetools with LMS user info
+
+        Args:
+            email (str): User's email address
+            is_email_verified (bool): Whether email is verified
+            first_name (str): User's first name
+            last_name (str): User's last name
+            lms_user_id (int): LMS user ID
+            lms_username (str): LMS username
+
+        Returns:
+            The newly created customer
+        """
+        custom_fields_draft = CustomFieldsDraft(
+            type=TypeResourceIdentifier(
+                key=TwoUCustomTypes.CUSTOMER_TYPE_DRAFT.key,
+            ),
+            fields=FieldContainer(
+                {
+                    EdXFieldNames.LMS_USER_ID: str(lms_user_id),
+                    EdXFieldNames.LMS_USER_NAME: lms_username,
+                }
+            ),
+        )
+
+        customer_draft = CustomerDraft(
+            key=str(uuid.uuid4()),
+            email=email,
+            first_name=first_name,
+            last_name=last_name,
+            is_email_verified=is_email_verified,
+            authentication_mode=AuthenticationMode.EXTERNAL_AUTH,
+            custom=custom_fields_draft,
+        )
+
+        try:
+            customer = self.base_client.customers.create(customer_draft).customer
+            logger.info(
+                f"[CommercetoolsAPIClient] - Successfully created customer: {customer.id} for LMS user: {lms_user_id}"
+            )
+            return customer
+        except CommercetoolsError as err:
+            handle_commercetools_error(
+                "[CommercetoolsAPIClient.create_customer]",
+                err,
+                f"Failed to create customer for LMS user: {lms_user_id}",
+            )
+            raise err
+
+    def update_customer(
+        self,
+        *,
+        customer: Customer,
+        updates: dict[str, str | None],
+    ) -> Customer:
+        """
+        Update customer information
+
+        Args:
+            customer (Customer): The customer to update
+            updates (dict): Dictionary of attributes to update
+
+        Returns:
+            The updated customer
+        """
+        try:
+            attr_to_update_action_map = {
+                "first_name": lambda value: CustomerSetFirstNameAction(
+                    first_name=value
+                ),
+                "last_name": lambda value: CustomerSetLastNameAction(
+                    last_name=value
+                ),
+                "email": lambda value: CustomerChangeEmailAction(email=value),
+                "lms_username": lambda value: CustomerSetCustomFieldAction(
+                    name=EdXFieldNames.LMS_USER_NAME, value=value
+                ),
+            }
+
+            updated_customer = self.base_client.customers.update_by_id(
+                id=customer.id,
+                version=customer.version,
+                actions=[
+                    attr_to_update_action_map[field](value)
+                    for field, value in updates.items()
+                ],
+            )
+
+            logger.info(
+                "[CommercetoolsAPIClient] - Successfully updated "
+                f"customer: {customer.id}"
+            )
+
+            return updated_customer
+        except CommercetoolsError as err:
+            handle_commercetools_error(
+                "[CommercetoolsAPIClient.update_customer]",
+                err,
+                f"Failed to update customer: {customer.id}",
+            )
+            raise err
+
+    def get_customer_cart(self, customer_id: str) -> Optional[Cart]:
+        """
+        Get the active cart for a customer if it exists
+
+        Args:
+            customer_id (str): The ID of the customer
+
+        Returns:
+            The active cart, or None if not found
+        """
+        try:
+            cart = self.base_client.carts.get_by_customer_id(customer_id)
+            logger.info(
+                "[CommercetoolsAPIClient] - Active cart already exists "
+                f"for customer: {customer_id}"
+            )
+            return cart
+        except CommercetoolsError as err:
+            if err.code == "ResourceNotFound":
+                logger.info(
+                    "[CommercetoolsAPIClient] - No active cart exists "
+                    f"for customer: {customer_id}"
+                )
+                return None
+
+            handle_commercetools_error(
+                "[CommercetoolsAPIClient.get_customer_cart]",
+                err,
+                f"Error finding cart for customer {customer_id}",
+            )
+            raise err
+
+    def delete_cart(self, cart: Cart) -> None:
+        """
+        Delete a cart of a customer
+
+        Args:
+            cart (Cart): The cart to delete
+        """
+        try:
+            self.base_client.carts.delete_by_id(cart.id, cart.version)
+            logger.info(
+                "[CommercetoolsAPIClient] - Successfully deleted "
+                f"cart: {cart.id} for customer: {cart.customer_id}"
+            )
+
+        except CommercetoolsError as err:
+            handle_commercetools_error(
+                "[CommercetoolsAPIClient.delete_cart]",
+                err,
+                f"Failed to delete cart: {cart.id} "
+                f"for customer: {cart.customer_id}",
+            )
+            raise err
+
+    def _get_order_number_custom_object(self) -> CustomObject:
+        """
+        Get the custom object that stores the order number counter
+
+        Returns:
+            Custom object with order number counter
+        """
+        try:
+            return self.base_client.custom_objects.get_by_container_and_key(
+                container=TwoUKeys.ORDER_NUMBER_CUSTOM_OBJECT_CONTAINER,
+                key=TwoUKeys.ORDER_NUMBER_CUSTOM_OBJECT_KEY,
+            )
+
+        except CommercetoolsError as err:
+            handle_commercetools_error(
+                "[CommercetoolsAPIClient._get_order_number_custom_object]",
+                err,
+                "Failed to get order number custom object",
+            )
+            raise err
+
+    def _update_order_number_custom_object(
+        self,
+        order_number_custom_object: CustomObject,
+    ) -> CustomObject:
+        """
+        Update the order number counter, resetting to 1 if the year has changed
+
+        Args:
+            custom_object: The custom object containing the order number counter
+
+        Returns:
+            Updated custom object with incremented counter
+        """
+
+        current_year = datetime.datetime.now().year
+        previous_order_year = order_number_custom_object.last_modified_at.year
+
+        new_order_number = (
+            1
+            if current_year > previous_order_year
+            else order_number_custom_object.value + 1
+        )
+
+        try:
+            draft = CustomObjectDraft(
+                container=TwoUKeys.ORDER_NUMBER_CUSTOM_OBJECT_CONTAINER,
+                key=TwoUKeys.ORDER_NUMBER_CUSTOM_OBJECT_KEY,
+                value=new_order_number,
+                version=order_number_custom_object.version,
+            )
+            return self.base_client.custom_objects.create_or_update(draft)
+        except CommercetoolsError as err:
+            handle_commercetools_error(
+                "[CommercetoolsAPIClient._update_order_number]",
+                err,
+                "Failed to update order number custom object",
+            )
+            raise err
+
+    def get_new_order_number(self) -> str:
+        """
+        Get a new order number for cart
+
+        Returns:
+            str: A new order number with format "2U-YYYY#######" (year + 6-digit sequence)
+        """
+        order_number = self._get_order_number_custom_object()
+        order_number = self._update_order_number_custom_object(order_number)
+
+        order_prefix = f"2U-{datetime.datetime.now().year}"
+        six_digit_number = str(order_number.value).zfill(6)
+        new_order_number = order_prefix + six_digit_number
+
+        logger.info(
+            f"[CommercetoolsAPIClient] - Generated new order number: {new_order_number}"
+        )
+
+        return new_order_number
+
+    def create_cart(
+        self,
+        *,
+        customer: Customer,
+        order_number: str,
+        locale: dict[str, str],
+    ) -> Cart:
+        """
+        Create a new cart for a customer
+
+        Args:
+            customer (Customer): The customer to create the cart for
+
+        Returns:
+            Cart: The created cart object
+        """
+        try:
+            custom_fields_draft = CustomFieldsDraft(
+                type=TypeResourceIdentifier(key=TwoUKeys.ORDER_CUSTOM_TYPE),
+                fields=FieldContainer({TwoUKeys.ORDER_ORDER_NUMBER: order_number}),
+            )
+
+            cart_draft = CartDraft(
+                currency=locale["currency"],
+                country=locale["country"],
+                locale=locale["language"],
+                customer_id=customer.id,
+                customer_email=customer.email,
+                tax_mode=TaxMode.DISABLED,
+                custom=custom_fields_draft,
+            )
+
+            expand = ["lineItems[*].productType.obj", "custom"]
+
+            cart = self.base_client.carts.create(cart_draft, expand=expand)
+            logger.info(
+                f"[CommercetoolsAPIClient] - Successfully created new cart: {cart.id} for customer: {customer.id}"
+            )
+
+            return cart
+
+        except CommercetoolsError as err:
+            handle_commercetools_error(
+                "[CommercetoolsAPIClient.create_cart]",
+                err,
+                f"Failed to create cart for customer: {customer.id}",
+            )
+            raise err
+
+    def add_to_cart(self, *, cart: Cart, skus: list[str]) -> Cart:
+        """
+        Add course run(s) to cart
+
+        Args:
+            cart (Cart): The cart to add items to
+            skus (list): List of course run keys to add
+
+        Returns:
+            Cart: Updated cart with added items
+        """
+        try:
+            actions = [CartAddLineItemAction(sku=sku) for sku in skus]
+
+            if not actions:
+                return cart
+
+            expand = ["lineItems[*].productType.obj", "custom"]
+
+            updated_cart = self.base_client.carts.update_by_id(
+                id=cart.id, version=cart.version, actions=actions, expand=expand
+            )
+
+            logger.info(
+                "[CommercetoolsAPIClient] - Successfully added items to "
+                f"cart: {cart.id} for customer: {cart.customer_id}"
+            )
+            return updated_cart
+
+        except CommercetoolsError as err:
+            handle_commercetools_error(
+                "[CommercetoolsAPIClient.add_to_cart]",
+                err,
+                f"Failed to add items to cart: {cart.id} "
+                f"for customer: {cart.customer_id}",
+            )
+            raise err
+
+    def set_customer_email_domain_on_cart(self, *, cart: Cart, email: str) -> Cart:
+        """
+        Set customer email domain on cart
+
+        Args:
+            cart (Cart): Cart to update
+            email (str): Customer email to extract domain from
+
+        Returns:
+            Cart: Updated cart with email domain set
+        """
+        try:
+            email_domain = (email or "").lower().strip().partition("@")[-1]
+
+            actions = [
+                CartSetCustomFieldAction(
+                    name=TwoUKeys.ORDER_EMAIL_DOMAIN, value=email_domain
+                )
+            ]
+
+            expand = ["lineItems[*].productType.obj", "custom"]
+
+            updated_cart = self.base_client.carts.update_by_id(
+                id=cart.id, version=cart.version, actions=actions, expand=expand
+            )
+
+            logger.info(
+                "[CommercetoolsAPIClient] - Successfully set email domain on "
+                f"cart: {cart.id} for customer: {cart.customer_id}"
+            )
+            return updated_cart
+
+        except CommercetoolsError as err:
+            handle_commercetools_error(
+                "[CommercetoolsAPIClient.set_customer_email_domain_on_cart]",
+                err,
+                f"Failed to set email domain on cart: {cart.id} "
+                f"for customer: {cart.customer_id}",
+            )
+            raise err

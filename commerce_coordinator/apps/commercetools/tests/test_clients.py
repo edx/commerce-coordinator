@@ -1,5 +1,6 @@
 """ Commercetools API Client(s) Testing """
 
+from datetime import datetime
 import pytest
 import requests_mock
 import stripe
@@ -8,6 +9,7 @@ from commercetools.platform.models import (
     Customer,
     CustomerDraft,
     CustomerPagedQueryResponse,
+    CustomObject,
     Order,
     OrderPagedQueryResponse,
     ReturnInfo,
@@ -15,8 +17,8 @@ from commercetools.platform.models import (
     ReturnShipmentState,
     TransactionState,
     TransactionType,
-    Type,
-    TypeDraft
+    Type as CustomType,
+    TypeDraft as CustomTypeDraft,
 )
 from django.test import TestCase
 from mock import patch
@@ -26,8 +28,11 @@ from commerce_coordinator.apps.commercetools.catalog_info.constants import EdXFi
 from commerce_coordinator.apps.commercetools.catalog_info.foundational_types import TwoUCustomTypes
 from commerce_coordinator.apps.commercetools.clients import CommercetoolsAPIClient, PaginatedResult
 from commerce_coordinator.apps.commercetools.tests.conftest import (
+    DEFAULT_EDX_LMS_USER_ID,
     APITestingSet,
     MonkeyPatch,
+    gen_cart,
+    gen_customer,
     gen_example_customer,
     gen_line_item_state,
     gen_order,
@@ -74,11 +79,11 @@ class ClientTests(TestCase):
     def test_ensure_custom_type_exists(self):
         draft = TwoUCustomTypes.CUSTOMER_TYPE_DRAFT
 
-        self.assertIsInstance(draft, TypeDraft)
+        self.assertIsInstance(draft, CustomTypeDraft)
 
         ret_val = self.client_set.client.ensure_custom_type_exists(draft)
 
-        self.assertIsInstance(ret_val, Type)
+        self.assertIsInstance(ret_val, CustomType)
         self.assertEqual(ret_val.key, draft.key)
 
     def test_tag_customer_with_lms_user_id_should_fail_bad_type(self):
@@ -1013,6 +1018,319 @@ class ClientTests(TestCase):
 
             result = self.client_set.client.is_first_time_discount_eligible(invalid_email, code)
             self.assertTrue(result)
+
+    def test_create_customer(self):
+        """Test creating a customer with lms user info"""
+        base_url = self.client_set.get_base_url_from_client()
+        email = "test@example.com"
+        first_name = "John"
+        lms_username = "test_user"
+
+        mock_customer = gen_customer(email, lms_username)
+        mock_result = {"customer": mock_customer.serialize()}
+
+        with requests_mock.Mocker(real_http=True, case_sensitive=False) as mocker:
+            mocker.post(
+                f"{base_url}customers", json=mock_result, status_code=201
+            )
+
+            result = self.client_set.client.create_customer(
+                email=email,
+                first_name=first_name,
+                last_name="",
+                lms_user_id=DEFAULT_EDX_LMS_USER_ID,
+                lms_username=lms_username,
+            )
+
+            # Verify the customer was created with correct data
+            self.assertEqual(result.email, email)
+            self.assertEqual(result.first_name, first_name)
+
+            # Verify request to CT had correct structure
+            request_body = mocker.last_request.json()
+            self.assertEqual(request_body["email"], email)
+            self.assertEqual(request_body["firstName"], first_name)
+            self.assertEqual(request_body["authenticationMode"], "ExternalAuth")
+
+            # Verify custom fields for LMS user info
+            self.assertEqual(
+                request_body["custom"]["type"]["key"],
+                TwoUCustomTypes.CUSTOMER_TYPE_DRAFT.key,
+            )
+            custom_fields = request_body["custom"]["fields"]
+            self.assertEqual(
+                custom_fields[EdXFieldNames.LMS_USER_ID],
+                str(DEFAULT_EDX_LMS_USER_ID),
+            )
+            self.assertEqual(
+                custom_fields[EdXFieldNames.LMS_USER_NAME], lms_username
+            )
+
+    def test_update_customer(self):
+        """Test updating a customer's attributes"""
+        base_url = self.client_set.get_base_url_from_client()
+        customer = gen_customer("old@example.com", "old_username")
+        customer.id = uuid4_str()
+        customer.version = 1
+
+        updates = {
+            "first_name": "Updated",
+            "last_name": "Name",
+            "email": "updated@example.com",
+            "lms_username": "updated_username",
+        }
+
+        updated_customer = Customer.deserialize(customer.serialize())
+        updated_customer.first_name = updates["first_name"]
+        updated_customer.last_name = updates["last_name"]
+        updated_customer.email = updates["email"]
+        updated_customer.version += 1
+        if updated_customer.custom and updated_customer.custom.fields:
+            updated_customer.custom.fields[EdXFieldNames.LMS_USER_NAME] = updates[
+                "lms_username"
+            ]
+
+        with requests_mock.Mocker(real_http=True, case_sensitive=False) as mocker:
+            mocker.post(
+                f"{base_url}customers/{customer.id}",
+                json=updated_customer.serialize(),
+                status_code=200,
+            )
+
+            result = self.client_set.client.update_customer(
+                customer=customer,
+                updates=updates,
+            )
+
+            # Verify customer was updated correctly
+            self.assertEqual(result.first_name, updates["first_name"])
+            self.assertEqual(result.last_name, updates["last_name"])
+            self.assertEqual(result.email, updates["email"])
+
+            # Verify request contained correct actions
+            request_body = mocker.last_request.json()
+            actions = request_body["actions"]
+
+            # Should have one action for each update
+            self.assertEqual(len(actions), 4)
+
+            # Verify each action type and value
+            action_types = [action["action"] for action in actions]
+            self.assertIn("setFirstName", action_types)
+            self.assertIn("setLastName", action_types)
+            self.assertIn("changeEmail", action_types)
+            self.assertIn("setCustomField", action_types)
+
+    def test_get_customer_cart(self):
+        """Test getting an active cart for a customer"""
+        base_url = self.client_set.get_base_url_from_client()
+        customer_id = uuid4_str()
+
+        mock_cart = gen_cart(customer_id=customer_id)
+        mock_response = mock_cart.serialize()
+
+        with requests_mock.Mocker(real_http=True, case_sensitive=False) as mocker:
+            mocker.get(
+                f"{base_url}carts/customer-id={customer_id}",
+                json=mock_response,
+                status_code=200,
+            )
+
+            result = self.client_set.client.get_customer_cart(customer_id)
+
+            # Verify cart was returned correctly
+            self.assertIsNotNone(result)
+            self.assertEqual(result.id, mock_cart.id)
+            self.assertEqual(result.customer_id, customer_id)
+
+    def test_delete_cart(self):
+        """Test deleting a cart"""
+        base_url = self.client_set.get_base_url_from_client()
+        cart_id = uuid4_str()
+        cart_version = 1
+
+        mock_cart = gen_cart(cart_id=cart_id, cart_version=cart_version)
+        mock_response = mock_cart.serialize()
+
+        with requests_mock.Mocker(real_http=True, case_sensitive=False) as mocker:
+            mocker.delete(
+                f"{base_url}carts/{cart_id}?version={cart_version}",
+                json=mock_response,
+                status_code=200,
+            )
+
+            result = self.client_set.client.delete_cart(mock_cart)
+
+            # Verify delete request was made
+            self.assertTrue(mocker.called)
+            self.assertEqual(result, None)
+
+    def test_get_new_order_number(self):
+        """Test getting a new order number"""
+        base_url = self.client_set.get_base_url_from_client()
+        current_year = datetime.now().year
+
+        custom_object = CustomObject(
+            id=uuid4_str(),
+            version=1,
+            container=TwoUKeys.ORDER_NUMBER_CUSTOM_OBJECT_CONTAINER,
+            key=TwoUKeys.ORDER_NUMBER_CUSTOM_OBJECT_KEY,
+            value=42,
+            created_at=datetime.now(),
+            last_modified_at=datetime(current_year, 1, 1),
+        )
+
+        updated_custom_object = CustomObject(
+            id=custom_object.id,
+            version=2,
+            container=custom_object.container,
+            key=custom_object.key,
+            value=43,
+            created_at=custom_object.created_at,
+            last_modified_at=datetime.now(),
+        )
+
+        with requests_mock.Mocker(real_http=True, case_sensitive=False) as mocker:
+            mocker.get(
+                f"{base_url}custom-objects/"
+                f"{TwoUKeys.ORDER_NUMBER_CUSTOM_OBJECT_CONTAINER}/"
+                f"{TwoUKeys.ORDER_NUMBER_CUSTOM_OBJECT_KEY}",
+                json=custom_object.serialize(),
+                status_code=200,
+            )
+
+            mocker.post(
+                f"{base_url}custom-objects",
+                json=updated_custom_object.serialize(),
+                status_code=201,
+            )
+
+            result = self.client_set.client.get_new_order_number()
+
+            # Verify order number format
+            expected_order_number = f"2U-{current_year}000043"
+            self.assertEqual(result, expected_order_number)
+
+    def test_create_cart(self):
+        """Test creating a cart"""
+        base_url = self.client_set.get_base_url_from_client()
+        customer = gen_customer("test@example.com", "test_user")
+        customer.id = uuid4_str()
+        order_number = f"2U-{datetime.now().year}000001"
+        locale = {"language": "en-US", "country": "US", "currency": "USD"}
+
+        mock_cart = gen_cart(customer_id=customer.id, customer_email=customer.email)
+
+        with requests_mock.Mocker(real_http=True, case_sensitive=False) as mocker:
+            mocker.post(
+                f"{base_url}carts", json=mock_cart.serialize(), status_code=201
+            )
+
+            result = self.client_set.client.create_cart(
+                customer=customer,
+                order_number=order_number,
+                locale=locale,
+            )
+
+            # Verify cart was created correctly
+            self.assertEqual(result.id, mock_cart.id)
+            self.assertEqual(result.customer_id, customer.id)
+
+            # Verify request had correct data
+            request_body = mocker.last_request.json()
+            self.assertEqual(request_body["currency"], "USD")
+            self.assertEqual(request_body["country"], "US")
+            self.assertEqual(request_body["locale"], "en-US")
+            self.assertEqual(request_body["customerId"], customer.id)
+            self.assertEqual(request_body["customerEmail"], customer.email)
+            self.assertEqual(
+                request_body["custom"]["fields"][TwoUKeys.ORDER_ORDER_NUMBER],
+                order_number,
+            )
+
+    def test_add_to_cart(self):
+        """Test adding items to a cart"""
+        base_url = self.client_set.get_base_url_from_client()
+        cart_id = uuid4_str()
+        cart_version = 1
+        customer_id = uuid4_str()
+        cart = gen_cart(
+            cart_id=cart_id, cart_version=cart_version, customer_id=customer_id
+        )
+        skus = ["course-v1:edX+DemoX+Demo_Course", "course-v1:edX+CS101+2023"]
+
+        updated_cart = gen_cart(
+            cart_id=cart_id, cart_version=cart_version + 1, customer_id=customer_id
+        )
+
+        with requests_mock.Mocker(real_http=True, case_sensitive=False) as mocker:
+            mocker.post(
+                f"{base_url}carts/{cart_id}",
+                json=updated_cart.serialize(),
+                status_code=200,
+            )
+
+            result = self.client_set.client.add_to_cart(cart=cart, skus=skus)
+
+            # Verify cart was updated correctly
+            self.assertEqual(result.id, cart_id)
+            self.assertEqual(result.version, cart_version + 1)
+
+            # Verify request had correct actions
+            request_body = mocker.last_request.json()
+            actions = request_body["actions"]
+
+            # Should have one action for each SKU
+            self.assertEqual(len(actions), 2)
+
+            # Verify each action is for adding a line item with the correct SKU
+            for i, action in enumerate(actions):
+                self.assertEqual(action["action"], "addLineItem")
+                self.assertEqual(action["sku"], skus[i])
+
+    def test_set_customer_email_domain_on_cart(self):
+        """Test setting customer email domain on a cart"""
+        base_url = self.client_set.get_base_url_from_client()
+        cart_id = uuid4_str()
+        cart_version = 1
+        customer_id = uuid4_str()
+        cart = gen_cart(
+            cart_id=cart_id, cart_version=cart_version, customer_id=customer_id
+        )
+        email = "user@example.com"
+        expected_domain = "example.com"
+
+        updated_cart = gen_cart(
+            cart_id=cart_id, cart_version=cart_version + 1, customer_id=customer_id
+        )
+
+        with requests_mock.Mocker(real_http=True, case_sensitive=False) as mocker:
+            mocker.post(
+                f"{base_url}carts/{cart_id}",
+                json=updated_cart.serialize(),
+                status_code=200,
+            )
+
+            result = self.client_set.client.set_customer_email_domain_on_cart(
+                cart=cart, email=email
+            )
+
+            # Verify cart was updated correctly
+            self.assertEqual(result.id, cart_id)
+            self.assertEqual(result.version, cart_version + 1)
+
+            # Verify request had correct action
+            request_body = mocker.last_request.json()
+            actions = request_body["actions"]
+
+            # Should have one action
+            self.assertEqual(len(actions), 1)
+
+            # Verify action is for setting the email domain
+            action = actions[0]
+            self.assertEqual(action["action"], "setCustomField")
+            self.assertEqual(action["name"], TwoUKeys.ORDER_EMAIL_DOMAIN)
+            self.assertEqual(action["value"], expected_domain)
 
 
 class PaginatedResultsTest(TestCase):

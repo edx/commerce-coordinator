@@ -78,6 +78,10 @@ class TwoUKeys:
     # Email domain custom field to store in cart/order model
     ORDER_EMAIL_DOMAIN = 'emailDomain'
 
+    # Order Number custom object to store counter
+    ORDER_NUMBER_CUSTOM_OBJECT_CONTAINER = 'orderNumbers'
+    ORDER_NUMBER_CUSTOM_OBJECT_KEY = 'orderNumber'
+
 
 class EdXFieldNames:
     """edX Specific field names for use in Commercetools"""

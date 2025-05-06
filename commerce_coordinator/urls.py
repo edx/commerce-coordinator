@@ -31,6 +31,7 @@ from rest_framework import status
 from rest_framework_swagger.views import get_swagger_view
 
 from commerce_coordinator.apps.api import urls as api_urls
+from commerce_coordinator.apps.iap.api import urls as mobile_urls
 from commerce_coordinator.apps.commercetools import urls as commercetools_urls
 from commerce_coordinator.apps.core import views as core_views
 from commerce_coordinator.apps.demo_lms import urls as demo_lms_urls
@@ -52,6 +53,7 @@ urlpatterns = oauth2_urlpatterns + [
     re_path('api-auth/', include((oauth2_urlpatterns, 'rest_framework'))),
     re_path(r'^api-docs/', get_swagger_view(title='commerce-coordinator API')),
     re_path(r'^api/', include(api_urls)),
+    re_path(r'^iap/', include((mobile_urls, 'iap'), namespace='iap')),
     re_path(r'^auto_auth/', core_views.AutoAuth.as_view(), name='auto_auth'),
     re_path(r'^health/?', core_views.health, name='health'),
 
