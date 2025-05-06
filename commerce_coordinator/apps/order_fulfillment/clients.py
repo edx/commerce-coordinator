@@ -83,7 +83,7 @@ class OrderFulfillmentAPIClient(BaseEdxOAuthClient):
                 "[OrderFulfillmentAPIClient] Fulfillment request succeeded | %s",
                 log_context
             )
-            return response
+            return response.json()
 
         except RequestException as err:
             context_str = (

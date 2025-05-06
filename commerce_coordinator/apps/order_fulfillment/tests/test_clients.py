@@ -1,49 +1,83 @@
 """
-Tests for the order fulfillment app API clients.
+Tests for the Order Fulfillment API client.
 """
 from django.test import override_settings
-from mock import patch
+from requests.exceptions import HTTPError, RequestException
 
 from commerce_coordinator.apps.core.clients import urljoin_directory
 from commerce_coordinator.apps.core.tests.utils import CoordinatorOAuthClientTestCase
-from commerce_coordinator.apps.lms.tests.constants import (
-    EXAMPLE_FULFILLMENT_LOGGING_OBJ,
-    EXAMPLE_FULFILLMENT_SERVICE_REDIRECTION_PAYLOAD,
-    EXAMPLE_LINE_ITEM_STATE_PAYLOAD
-)
 from commerce_coordinator.apps.order_fulfillment.clients import OrderFulfillmentAPIClient
 
-TEST_LMS_URL_ROOT = 'https://testserver.com'
+TEST_ORDER_FULFILLMENT_URL_ROOT = 'https://testserver.com'
 
+EXAMPLE_FULFILLMENT_REQUEST_PAYLOAD = {
+    "order_id": "1234",
+    "course_id": "course-v1:edX+Test+2025",
+    "user_id": "user-abc",
+}
+
+EXAMPLE_FULFILLMENT_LOGGING_OBJ = {
+    "user_id": "user-abc",
+    "edx_lms_username": "testuser",
+    "order_id": "1234",
+    "course_id": "course-v1:edX+Test+2025",
+    "message_id": "msg-5678",
+    "celery_task_id": "task-0001",
+}
+
+EXAMPLE_FULFILLMENT_RESPONSE_PAYLOAD = {
+    "message": "Fulfillment request sent to LMS."
+}
 
 @override_settings(
-    ORDER_FULFILLMENT_URL_ROOT=TEST_LMS_URL_ROOT
+    ORDER_FULFILLMENT_URL_ROOT=TEST_ORDER_FULFILLMENT_URL_ROOT,
+    BACKEND_SERVICE_EDX_OAUTH2_PROVIDER_URL='https://testserver.com/auth'
 )
 class OrderFulfillmentAPIClientTests(CoordinatorOAuthClientTestCase):
-    """OrderFulfillmentApiClient tests"""
+    """OrderFulfillmentAPIClient tests."""
 
-    url = urljoin_directory(TEST_LMS_URL_ROOT, '/api/fulfill-order')
+    url = urljoin_directory(TEST_ORDER_FULFILLMENT_URL_ROOT, '/api/fulfill-order/')
 
     def setUp(self):
         self.client = OrderFulfillmentAPIClient()
-        self.payload = {**EXAMPLE_LINE_ITEM_STATE_PAYLOAD, **EXAMPLE_FULFILLMENT_SERVICE_REDIRECTION_PAYLOAD}
+        self.payload = EXAMPLE_FULFILLMENT_REQUEST_PAYLOAD
         self.logging_obj = EXAMPLE_FULFILLMENT_LOGGING_OBJ
 
-    @patch("commerce_coordinator.apps.commercetools.fulfillment_webhook_utils.webhook_caller.HMACWebhookCaller.call")
-    def test_fulfill_order_success(self, mock_call):
+    def test_fulfill_order_success(self):
+        """Test successful fulfillment request."""
+        self.assertJSONClientResponse(
+            uut=self.client.fulfill_order,
+            input_kwargs={
+                'payload': self.payload,
+                'logging_data': self.logging_obj,
+            },
+            mock_url=self.url,
+            mock_response=EXAMPLE_FULFILLMENT_RESPONSE_PAYLOAD,
+            expected_output=EXAMPLE_FULFILLMENT_RESPONSE_PAYLOAD,
+        )
 
-        self.client.fulfill_order(self.payload)
+    def test_fulfill_order_failure(self):
+        """Test failed fulfillment request with HTTPError."""
+        with self.assertRaises(HTTPError):
+            self.assertJSONClientResponse(
+                uut=self.client.fulfill_order,
+                input_kwargs={
+                    'payload': self.payload,
+                    'logging_data': self.logging_obj,
+                },
+                mock_url=self.url,
+                mock_status=400,
+            )
 
-        mock_call.assert_called_once_with(self.url, self.payload)
-
-    @patch("commerce_coordinator.apps.commercetools.fulfillment_webhook_utils.webhook_caller.HMACWebhookCaller.call")
-    def test_fulfill_order_failure(self, mock_call):
-
-        mock_call.side_effect = Exception("Webhook error")
-
-        with self.assertRaises(Exception) as context:
-            self.client.fulfill_order(self.payload)
-
-        self.assertIn("Webhook error", str(context.exception))
-
-        mock_call.assert_called_once_with(self.url, self.payload)
+    def test_fulfill_order_request_exception(self):
+        """Test request exception during fulfillment."""
+        with self.assertRaises(RequestException):
+            self.assertJSONClientResponse(
+                uut=self.client.fulfill_order,
+                input_kwargs={
+                    'payload': self.payload,
+                    'logging_data': self.logging_obj,
+                },
+                mock_url=self.url,
+                mock_status=400,
+            )
