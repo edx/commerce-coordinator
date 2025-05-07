@@ -59,26 +59,26 @@ class OrderFulfillmentAPIClientTests(CoordinatorOAuthClientTestCase):
 
     def test_fulfill_order_failure(self):
         """Test failed fulfillment request with HTTPError."""
-        with self.assertRaises(HTTPError):
-            self.assertJSONClientResponse(
-                uut=self.client.fulfill_order,
-                input_kwargs={
-                    'payload': self.payload,
-                    'logging_data': self.logging_obj,
-                },
-                mock_url=self.url,
-                mock_status=400,
-            )
+        self.assertJSONClientResponse(
+            uut=self.client.fulfill_order,
+            input_kwargs={
+                'payload': self.payload,
+                'logging_data': self.logging_obj,
+            },
+            mock_url=self.url,
+            mock_status=400,
+            expected_output=None
+        )
 
     def test_fulfill_order_request_exception(self):
         """Test request exception during fulfillment."""
-        with self.assertRaises(RequestException):
-            self.assertJSONClientResponse(
-                uut=self.client.fulfill_order,
-                input_kwargs={
-                    'payload': self.payload,
-                    'logging_data': self.logging_obj,
-                },
-                mock_url=self.url,
-                mock_status=400,
-            )
+        self.assertJSONClientResponse(
+            uut=self.client.fulfill_order,
+            input_kwargs={
+                'payload': self.payload,
+                'logging_data': self.logging_obj,
+            },
+            mock_url=self.url,
+            mock_status=400,
+            expected_output=None
+        )

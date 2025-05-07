@@ -47,7 +47,7 @@ class OrderFulfillmentAPIClient(BaseEdxOAuthClient):
             timeout=self.ORDER_FULFILLMENT_SERVICE_TIMEOUT,
         )
 
-    def post(self, url, payload, log_context, timeout=None, total_retries=3, base_backoff=None):
+    def post(self, url, payload, log_context, timeout=None, total_retries=3, base_backoff=1):
         """
         Sends a POST request to the fulfillment service.
 
@@ -107,4 +107,3 @@ class OrderFulfillmentAPIClient(BaseEdxOAuthClient):
                 return attempt(next_attempt)
 
         return attempt(0)
-

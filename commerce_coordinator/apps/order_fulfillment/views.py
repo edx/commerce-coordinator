@@ -44,7 +44,8 @@ class OrderFulfillmentCompletionStatusWebhookView(SingleInvocationAPIView):
         validated_data = validator.validated_data
 
         fulfillment_type = validated_data.get('fulfillment_type')
-        if fulfillment_type == FulfillmentType.ENTITLEMENT.value:
+        is_fulfilled = validated_data.get('is_fulfilled')
+        if is_fulfilled and fulfillment_type == FulfillmentType.ENTITLEMENT.value:
             entitlement_uuid = validated_data.get('entitlement_uuid', None)
             if not entitlement_uuid:
                 raise ValidationError('Entitlement uuid is required for Entitlement Fulfillment.')
