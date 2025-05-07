@@ -517,7 +517,7 @@ class ProgramPriceView(APIView):
 
             # Get price of each entitlement in the bundle
             start_time = datetime.datetime.now()
-            entitlements_standalone_prices = ct_api_client.get_program_entitlements_standalone_prices(
+            entitlements_standalone_prices = ct_api_client.get_standalone_prices_for_skus(
                 purchasable_entitlements_skus
             )
             duration = (datetime.datetime.now() - start_time).total_seconds()

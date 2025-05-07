@@ -1,9 +1,10 @@
-from commercetools.platform.models import Customer
+from commercetools.platform.models import Customer, Money
 
 from commerce_coordinator.apps.commercetools.catalog_info.constants import (
     EdXFieldNames,
 )
 from commerce_coordinator.apps.commercetools.clients import CommercetoolsAPIClient
+from commerce_coordinator.apps.commercetools.http_api_client import CTCustomAPIClient
 
 
 def _get_attributes_to_update(
@@ -97,3 +98,32 @@ def get_ct_customer(client: CommercetoolsAPIClient, user) -> Customer:
         )
 
     return customer
+
+
+def get_standalone_price_for_sku(sku: str) -> Money:
+    """
+    Get the standalone price for a given SKU.
+
+    Args:
+        client: CommercetoolsAPIClient instance
+        sku: The SKU of the product
+
+    Returns:
+        The standalone price
+    """
+    api_client = CTCustomAPIClient()
+
+    response = api_client.get_standalone_prices_for_skus([sku])
+    if not response or not response[0]:
+        raise ValueError(f"No standalone price found for the SKU: {sku}")
+
+    try:
+        value = response[0]["value"]
+        return Money(
+            cent_amount=value["centAmount"],
+            currency_code=value["currencyCode"],
+        )
+    except KeyError:
+        raise ValueError(
+            f"No standalone price found for the SKU: {sku}, received: {response[0]}"
+        )

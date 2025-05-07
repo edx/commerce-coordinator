@@ -1,4 +1,8 @@
 import logging
+import uuid
+
+from commercetools import CommercetoolsError
+from commercetools.platform.models import Money
 
 from rest_framework import status
 from rest_framework.permissions import IsAuthenticated
@@ -12,8 +16,10 @@ from commerce_coordinator.apps.commercetools.clients import CommercetoolsAPIClie
 from commerce_coordinator.apps.iap.api.v1.utils import (
     get_ct_customer,
     get_email_domain,
+    get_standalone_price_for_sku,
 )
 from commerce_coordinator.apps.iap.api.v1.serializer import (
+    OrderRequestData,
     OrderRequestSerializer,
     OrderResponseSerializer,
 )
@@ -37,10 +43,17 @@ class CreateOrderView(APIView):
         try:
             serializer = OrderRequestSerializer(data=request.data)
             serializer.is_valid(raise_exception=True)
-            request_data = serializer.validated_data
+            request_data: OrderRequestData = serializer.validated_data  # type: ignore
+
+            external_price = Money(
+                cent_amount=int(request_data["price"] * 100),
+                currency_code=request_data["currency"],
+            )
+            standalone_price = get_standalone_price_for_sku(
+                sku=request_data["course_run_key"]
+            )
 
             client = CommercetoolsAPIClient()
-
             customer = get_ct_customer(client, request.user)
             cart = client.get_customer_cart(customer.id)
 
@@ -52,23 +65,25 @@ class CreateOrderView(APIView):
                 customer=customer,
                 order_number=order_number,
                 currency=request_data["currency"],
-                country=request_data["country"],
-                language=request_data["language"],
             )
             payment = client.create_payment(
-                cart=cart,
-                payment_method=request_data["payment_method"],
-                payment_status=request_data["payment_status"],
+                amount_planned=external_price,
+                customer_id=customer.id,
+                # TODO: finalize source of these
+                payment_method="Dummy Card",
+                payment_status="Dummy Success",
                 payment_processor=request_data["payment_processor"],
-                psp_payment_id=request_data["payment_id"],
-                psp_transaction_id=request_data["transaction_id"],
+                # TODO: fetch from purchase token
+                psp_payment_id="Dummy-" + str(uuid.uuid4()),
+                psp_transaction_id="Dummy-" + str(uuid.uuid4()),
+                usd_cent_amount=standalone_price.cent_amount,
             )
             cart = client.update_cart(
                 cart=cart,
+                external_price=external_price,
                 sku=request_data["course_run_key"],
                 email_domain=get_email_domain(cart.customer_email),
                 payment_id=payment.id,
-                address=request_data["address"],
             )
             order = client.create_order_from_cart(cart)
             order = client.update_line_items_transition_state(
@@ -80,8 +95,8 @@ class CreateOrderView(APIView):
                 use_state_id=True,
             )
 
-            response_serializer = OrderResponseSerializer(
-                {
+            serializer = OrderResponseSerializer(
+                data={
                     "order_id": order.id,
                     "order_number": order.order_number,
                 }
@@ -89,18 +104,18 @@ class CreateOrderView(APIView):
             serializer.is_valid(raise_exception=True)
 
             return Response(
-                response_serializer.validated_data,
+                serializer.validated_data,
                 status=status.HTTP_201_CREATED,
             )
-        except Exception as exception:  # pylint: disable=broad-exception-caught
-            lms_user_id = request.user.lms_lms_user_id
+        except CommercetoolsError as err:
+            lms_user_id = request.user.lms_user_id
             message = (
                 f"[CreateOrderView] Error creating order for LMS user: {lms_user_id}"
             )
 
             logger.exception(
-                message + f" with error message: {str(exception)}",
-                exc_info=exception,
+                message + f" with error message: {str(err)}",
+                exc_info=err,
             )
 
             return Response(

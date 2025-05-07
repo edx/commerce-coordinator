@@ -77,8 +77,8 @@ class TwoUKeys:
 
     # Email domain custom field to store in cart/order model
     ORDER_EMAIL_DOMAIN = 'emailDomain'
-    # Order Number custom field to store in cart/order model
     ORDER_MOBILE_ORDER = 'mobileOrder'
+    TRANSACTION_USD_AMOUNT= "usdAmount"
 
     # Order Number custom object to store counter
     ORDER_NUMBER_CUSTOM_OBJECT_CONTAINER = 'orderNumbers'

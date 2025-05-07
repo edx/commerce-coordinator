@@ -3,6 +3,7 @@ API clients for commercetools app.
 """
 
 import datetime
+from decimal import Decimal
 import logging
 from types import SimpleNamespace
 from typing import Generic, List, Optional, Tuple, TypedDict, TypeVar, Union
@@ -12,6 +13,7 @@ import requests
 from commercetools import Client, CommercetoolsError
 from commercetools.platform.models import (
     AuthenticationMode,
+    BaseAddress,
     Cart,
     CartAddLineItemAction,
     CartAddPaymentAction,
@@ -22,6 +24,7 @@ from commercetools.platform.models import (
     Customer,
     CustomerChangeEmailAction,
     CustomerDraft,
+    CustomerResourceIdentifier,
     CustomerSetCustomFieldAction,
     CustomerSetCustomTypeAction,
     CustomerSetFirstNameAction,
@@ -31,6 +34,7 @@ from commercetools.platform.models import (
     CustomObjectDraft,
     FieldContainer,
     LineItem,
+    LocalizedString,
     Money,
     Order,
     OrderAddReturnInfoAction,
@@ -42,9 +46,12 @@ from commercetools.platform.models import (
     OrderTransitionLineItemStateAction,
     Payment,
     PaymentAddTransactionAction,
+    PaymentDraft,
+    PaymentMethodInfo,
     PaymentResourceIdentifier,
     PaymentSetTransactionCustomTypeAction,
     PaymentState,
+    PaymentStatusDraft,
     ProductVariant,
     ReturnItemDraft,
     ReturnPaymentState,
@@ -54,6 +61,7 @@ from commercetools.platform.models import (
     StateResourceIdentifier,
     TaxMode,
     TransactionDraft,
+    TransactionState,
     TransactionType,
     Type as CustomType,
     TypeDraft as CustomTypeDraft,
@@ -1168,8 +1176,6 @@ class CommercetoolsAPIClient:
         customer: Customer,
         order_number: str,
         currency: str,
-        country: str,
-        language: str,
     ) -> Cart:
         """
         Create a new cart for a customer
@@ -1194,9 +1200,7 @@ class CommercetoolsAPIClient:
                 customer_email=customer.email,
                 custom=custom_fields_draft,
                 tax_mode=TaxMode.DISABLED,
-                country=country,
                 currency=currency,
-                locale=language,
             )
 
             expand = ["lineItems[*].productType.obj", "custom"]
@@ -1217,20 +1221,21 @@ class CommercetoolsAPIClient:
     def update_cart(
         self,
         *,
+        external_price: Money,
         cart: Cart,
         sku: str,
         email_domain: str,
         payment_id: str,
-        address=None,
     ) -> Cart:
         try:
+            address = BaseAddress(country="UNDEFINED")
             actions = [
-                CartAddLineItemAction(sku=sku),
+                CartAddLineItemAction(sku=sku, external_price=external_price),
                 CartSetCustomFieldAction(
                     name=TwoUKeys.ORDER_EMAIL_DOMAIN, value=email_domain
                 ),
                 CartSetCustomFieldAction(
-                    name=TwoUKeys.ORDER_MOBILE_ORDER, value="true"
+                    name=TwoUKeys.ORDER_MOBILE_ORDER, value=True
                 ),
                 CartSetBillingAddressAction(address=address),
                 CartSetShippingAddressAction(address=address),
@@ -1275,14 +1280,15 @@ class CommercetoolsAPIClient:
     def create_payment(
         self,
         *,
-        cart: Cart,
+        amount_planned: Money,
+        customer_id: str,
         payment_method: str,
         payment_processor: str,
         payment_status: str,
         psp_payment_id: str,
         psp_transaction_id: str,
+        usd_cent_amount: int,
     ) -> Payment:
-        amount_planned = cart.total_price
         payment_method_info = PaymentMethodInfo(
             payment_interface=payment_processor,
             method=payment_method,
@@ -1298,11 +1304,17 @@ class CommercetoolsAPIClient:
             amount=amount_planned,
             state=self._map_payment_status_to_transaction_state(payment_status),
             interaction_id=psp_transaction_id,
+            custom=CustomFieldsDraft(
+                type=TypeResourceIdentifier(key=TwoUKeys.TRANSACTION_CUSTOM_TYPE),
+                fields=FieldContainer(
+                    {TwoUKeys.TRANSACTION_USD_AMOUNT: usd_cent_amount}
+                ),
+            ),
         )
         payment_draft = PaymentDraft(
             key=psp_payment_id,
             amount_planned=amount_planned,
-            customer=CustomerResourceIdentifier(id=cart.customer_id),
+            customer=CustomerResourceIdentifier(id=customer_id),
             interface_id=psp_payment_id,
             payment_method_info=payment_method_info,
             payment_status=payment_status_draft,
@@ -1313,14 +1325,14 @@ class CommercetoolsAPIClient:
             payment = self.base_client.payments.create(payment_draft)
             logger.info(
                 f"[CommercetoolsAPIClient] - Created payment: {payment.id}"
-                f"for customer: {cart.customer_id}"
+                f"for customer: {customer_id}"
             )
             return payment
         except CommercetoolsError as err:
             handle_commercetools_error(
                 "[CommercetoolsAPIClient.create_payment]",
                 err,
-                f"Unable to create payment for customer:{cart.customer_id}",
+                f"Unable to create payment for customer: {customer_id}",
             )
             raise err
 
