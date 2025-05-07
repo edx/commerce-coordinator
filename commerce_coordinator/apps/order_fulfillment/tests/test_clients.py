@@ -29,6 +29,7 @@ EXAMPLE_FULFILLMENT_RESPONSE_PAYLOAD = {
     "message": "Fulfillment request sent to LMS."
 }
 
+
 @override_settings(
     ORDER_FULFILLMENT_URL_ROOT=TEST_ORDER_FULFILLMENT_URL_ROOT,
     BACKEND_SERVICE_EDX_OAUTH2_PROVIDER_URL='https://testserver.com/auth'
