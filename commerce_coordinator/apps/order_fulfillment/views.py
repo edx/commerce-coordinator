@@ -19,7 +19,7 @@ from commerce_coordinator.apps.order_fulfillment.serializers import FulfillOrder
 logger = logging.getLogger(__name__)
 
 
-class FulfillmentResponseWebhookView(SingleInvocationAPIView):
+class OrderFulfillmentCompletionStatusWebhookView(SingleInvocationAPIView):
     """
     Endpoint for Order Fulfillment webhook Response. This endpoint receives fulfillment
     response from fulfillment providers and updates CT order object with response data.

@@ -1,6 +1,7 @@
 """
 API client for communication with the Order Fulfillment service.
 """
+import time
 
 from celery.utils.log import get_task_logger
 from django.conf import settings
@@ -46,7 +47,7 @@ class OrderFulfillmentAPIClient(BaseEdxOAuthClient):
             timeout=self.ORDER_FULFILLMENT_SERVICE_TIMEOUT,
         )
 
-    def post(self, url, payload, log_context, timeout=None):
+    def post(self, url, payload, log_context, timeout=None, total_retries=3, base_backoff=None):
         """
         Sends a POST request to the fulfillment service.
 
@@ -70,25 +71,40 @@ class OrderFulfillmentAPIClient(BaseEdxOAuthClient):
             'Content-Type': 'application/json',
         }
 
-        try:
-            response = self.client.post(
-                url,
-                headers=headers,
-                json=payload,
-                timeout=timeout,
-            )
-            response.raise_for_status()
+        def attempt(attempt_number):
+            try:
+                response = self.client.post(
+                    url,
+                    headers=headers,
+                    json=payload,
+                    timeout=timeout,
+                )
+                response.raise_for_status()
 
-            logger.info(
-                "[OrderFulfillmentAPIClient] Fulfillment request succeeded | %s",
-                log_context
-            )
-            return response.json()
+                logger.info(
+                    "[OrderFulfillmentAPIClient] Fulfillment request succeeded | %s",
+                    log_context
+                )
+                return response.json()
 
-        except RequestException as err:
-            context_str = (
-                f"[OrderFulfillmentAPIClient] Fulfillment request failed "
-                f"URL: {url} | Error: {err} | {log_context}"
-            )
-            self.log_request_exception(context_str, logger, err)
-            raise
+            except RequestException as err:
+                if attempt_number >= total_retries:
+                    context_str = (
+                        f"[OrderFulfillmentAPIClient] Fulfillment request failed "
+                        f"URL: {url} | Error: {err} | {log_context}"
+                    )
+                    self.log_request_exception(context_str, logger, err)
+                    return None  # since we have already retried, we dont want to retry task by raising exception here
+
+                next_attempt = attempt_number + 1
+                next_backoff = base_backoff * next_attempt
+                logger.warning(
+                    "[OrderFulfillmentAPIClient] Fulfillment request failed for URL: %s with error: %s. %s"
+                    "Retrying attempt #%s in %s seconds...",
+                    url, err, log_context, next_attempt, next_backoff
+                )
+                time.sleep(next_backoff)
+                return attempt(next_attempt)
+
+        return attempt(0)
+
