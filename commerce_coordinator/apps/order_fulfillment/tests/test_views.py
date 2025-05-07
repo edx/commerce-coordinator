@@ -2,6 +2,7 @@ from unittest.mock import patch
 
 import ddt
 from django.urls import reverse
+from edx_django_utils.cache import TieredCache
 from rest_framework import status
 from rest_framework.test import APIClient, APITestCase
 
@@ -23,7 +24,6 @@ EXAMPLE_ORDER_FULFILLMENT_RESPONSE_API_PAYLOAD = {
 }
 
 
-@ddt.ddt
 @patch('commerce_coordinator.apps.order_fulfillment.views.fulfillment_completed_update_ct_line_item_signal.send_robust',
        new_callable=SendRobustSignalMock)
 class FulfillmentResponseWebhookViewTests(APITestCase):
@@ -42,29 +42,61 @@ class FulfillmentResponseWebhookViewTests(APITestCase):
 
     def tearDown(self):
         super().tearDown()
+        TieredCache.dangerous_clear_all_tiers()
         self.client.logout()
+
+    def prepare_fulfillment_data(self, fulfillment_type=FulfillmentType.ENTITLEMENT.value, entitlement_uuid=None):
+        """
+        Prepare the order fulfillment data, adjusting based on fulfillment type and entitlement UUID.
+        """
+        data = EXAMPLE_ORDER_FULFILLMENT_RESPONSE_API_PAYLOAD.copy()
+        data['detail']['fulfillment_type'] = fulfillment_type
+        if entitlement_uuid:
+            data['detail']['entitlement_uuid'] = entitlement_uuid
+        else:
+            data['detail'].pop('entitlement_uuid', None)
+        return data
 
     def test_fulfillment_webhook_success(self, mock_signal):
         """Test successful fulfillment webhook call by staff user."""
         self.client.login(username=self.test_staff_username, password=self.test_password)
-        response = self.client.post(self.url, data=EXAMPLE_ORDER_FULFILLMENT_RESPONSE_API_PAYLOAD, format='json')
+
+        data = self.prepare_fulfillment_data(
+            fulfillment_type=FulfillmentType.ENTITLEMENT.value,
+            entitlement_uuid="some_uuid"
+        )
+        response = self.client.post(self.url, data=data, format='json')
 
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(response.json(), {'message': 'Order Fulfillment Response event processed successfully.'})
         mock_signal.assert_called_once()
 
-    def test_fulfillment_webhook_missing_entitlement_uuid(self, mock_signal):
+    def test_entitlement_fulfillment_webhook_missing_entitlement_uuid(self, mock_signal):
         """Test entitlement fulfillment fails when `entitlement_uuid` is missing."""
         self.client.login(username=self.test_staff_username, password=self.test_password)
-        data = EXAMPLE_ORDER_FULFILLMENT_RESPONSE_API_PAYLOAD.copy()
-        data['detail']['fulfillment_type'] = FulfillmentType.ENTITLEMENT.value
-        data['detail'].pop('entitlement_uuid', None)
+
+        data = self.prepare_fulfillment_data(
+            fulfillment_type=FulfillmentType.ENTITLEMENT.value,
+        )
         response = self.client.post(self.url, data=data, format='json')
 
-        print('response = ', response.json())
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
         self.assertIn('Entitlement uuid is required for Entitlement Fulfillment.', response.json())
         mock_signal.assert_not_called()
+
+    def test_enrollment_fulfillment_webhook_missing_entitlement_uuid(self, mock_signal):
+        """Test entitlement fulfillment fails when `entitlement_uuid` is missing."""
+        self.client.login(username=self.test_staff_username, password=self.test_password)
+
+        data = self.prepare_fulfillment_data(
+            fulfillment_type=FulfillmentType.ENROLLMENT.value,
+        )
+
+        response = self.client.post(self.url, data=data, format='json')
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.json(), {'message': 'Order Fulfillment Response event processed successfully.'})
+        mock_signal.assert_called_once()
 
     def test_fulfillment_webhook_invalid_payload(self, mock_signal):
         """Test invalid payload raises validation error."""
@@ -77,7 +109,12 @@ class FulfillmentResponseWebhookViewTests(APITestCase):
     def test_unauthorized_user_access(self, mock_signal):
         """Test a non-staff user is forbidden from accessing the webhook."""
         self.client.login(username=self.test_user_username, password=self.test_password)
-        response = self.client.post(self.url, data=EXAMPLE_ORDER_FULFILLMENT_RESPONSE_API_PAYLOAD, format='json')
+
+        data = self.prepare_fulfillment_data(
+            fulfillment_type=FulfillmentType.ENTITLEMENT.value,
+            entitlement_uuid="some_uuid"
+        )
+        response = self.client.post(self.url, data=data, format='json')
 
         self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
         mock_signal.assert_not_called()
