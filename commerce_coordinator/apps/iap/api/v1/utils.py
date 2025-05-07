@@ -123,7 +123,7 @@ def get_standalone_price_for_sku(sku: str) -> Money:
             cent_amount=value["centAmount"],
             currency_code=value["currencyCode"],
         )
-    except KeyError:
+    except KeyError as exc:
         raise ValueError(
             f"No standalone price found for the SKU: {sku}, received: {response[0]}"
-        )
+        ) from exc

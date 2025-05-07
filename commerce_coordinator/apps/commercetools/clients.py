@@ -3,7 +3,6 @@ API clients for commercetools app.
 """
 
 import datetime
-from decimal import Decimal
 import logging
 from types import SimpleNamespace
 from typing import Generic, List, Optional, Tuple, TypedDict, TypeVar, Union
@@ -1227,6 +1226,19 @@ class CommercetoolsAPIClient:
         email_domain: str,
         payment_id: str,
     ) -> Cart:
+        """
+        Update the cart with a new line item and payment
+
+        Args:
+            external_price (Money): The price of the line item
+            cart (Cart): The cart to update
+            sku (str): The SKU of the line item
+            email_domain (str): The email domain for the cart
+            payment_id (str): The ID of the payment to add
+
+        Returns:
+            Cart: The updated cart object
+        """
         try:
             address = BaseAddress(country="UNDEFINED")
             actions = [
@@ -1263,7 +1275,7 @@ class CommercetoolsAPIClient:
             raise err
 
     def _map_payment_status_to_transaction_state(
-        self, payment_status: str
+        self, payment_status: str  # pylint: disable=unused-argument
     ) -> TransactionState:
         """
         Maps the status from the payment processor to the transaction state in commercetools
@@ -1289,6 +1301,22 @@ class CommercetoolsAPIClient:
         psp_transaction_id: str,
         usd_cent_amount: int,
     ) -> Payment:
+        """
+        Create a new payment in Commercetools
+
+        Args:
+            amount_planned (Money): Amount planned for the payment
+            customer_id (str): The ID of the customer
+            payment_method (str): The payment method used
+            payment_processor (str): The payment processor used
+            payment_status (str): The status of the payment
+            psp_payment_id (str): The ID of the payment in the PSP
+            psp_transaction_id (str): The ID of the transaction in the PSP
+            usd_cent_amount (int): Amount in cents
+
+        Returns:
+            Payment: The created payment object
+        """
         payment_method_info = PaymentMethodInfo(
             payment_interface=payment_processor,
             method=payment_method,

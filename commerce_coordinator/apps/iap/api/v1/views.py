@@ -114,7 +114,7 @@ class CreateOrderView(APIView):
             )
 
             logger.exception(
-                message + f" with error message: {str(err)}",
+                message + f" with error message: " + str(err),
                 exc_info=err,
             )
 

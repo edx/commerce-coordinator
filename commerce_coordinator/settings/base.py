@@ -55,6 +55,7 @@ PROJECT_APPS = (
     'commerce_coordinator.apps.stripe.apps.StripeConfig',
     'commerce_coordinator.apps.paypal.apps.PayPalConfig',
     'commerce_coordinator.apps.commercetools',
+    'commerce_coordinator.apps.iap',
 )
 
 INSTALLED_APPS += THIRD_PARTY_APPS

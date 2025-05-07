@@ -10,6 +10,7 @@ from commercetools.platform.models import (
     CustomerDraft,
     CustomerPagedQueryResponse,
     CustomObject,
+    Money,
     Order,
     OrderPagedQueryResponse,
     ReturnInfo,
@@ -1159,11 +1160,10 @@ class ClientTests(TestCase):
                 status_code=200,
             )
 
-            result = self.client_set.client.delete_cart(mock_cart)
+            self.client_set.client.delete_cart(mock_cart)
 
             # Verify delete request was made
             self.assertTrue(mocker.called)
-            self.assertEqual(result, None)
 
     def test_get_new_order_number(self):
         """Test getting a new order number"""
@@ -1217,7 +1217,6 @@ class ClientTests(TestCase):
         customer = gen_customer("test@example.com", "test_user")
         customer.id = uuid4_str()
         order_number = f"2U-{datetime.now().year}000001"
-        locale = {"language": "en-US", "country": "US", "currency": "USD"}
 
         mock_cart = gen_cart(customer_id=customer.id, customer_email=customer.email)
 
@@ -1229,7 +1228,7 @@ class ClientTests(TestCase):
             result = self.client_set.client.create_cart(
                 customer=customer,
                 order_number=order_number,
-                locale=locale,
+                currency="USD",
             )
 
             # Verify cart was created correctly
@@ -1239,8 +1238,6 @@ class ClientTests(TestCase):
             # Verify request had correct data
             request_body = mocker.last_request.json()
             self.assertEqual(request_body["currency"], "USD")
-            self.assertEqual(request_body["country"], "US")
-            self.assertEqual(request_body["locale"], "en-US")
             self.assertEqual(request_body["customerId"], customer.id)
             self.assertEqual(request_body["customerEmail"], customer.email)
             self.assertEqual(
@@ -1280,6 +1277,7 @@ class ClientTests(TestCase):
             )
 
             result = self.client_set.client.update_cart(
+                external_price=Money(cent_amount=10, currency_code="USD"),
                 cart=cart,
                 sku=sku,
                 email_domain=expected_domain,

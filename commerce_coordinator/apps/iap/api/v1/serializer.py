@@ -26,6 +26,7 @@ class OrderResponseSerializer(CoordinatorSerializer):
 
 
 class OrderRequestData(TypedDict):
+    """TypedDict for the request data of an order creation request"""
     course_run_key: str
     purchase_token: str
     payment_processor: str
