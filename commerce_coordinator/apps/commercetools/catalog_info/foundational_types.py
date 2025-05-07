@@ -178,9 +178,9 @@ class TwoUCustomTypes:
             ),
             FieldDefinition(
                 type=CustomFieldNumberType(),
-                name=TwoUKeys.TRANSACTION_USD_AMOUNT,
+                name=TwoUKeys.TRANSACTION_USD_CENT_AMOUNT,
                 required=False,
-                label=ls({'en': 'USD Amount (Cent Amount)'}),
+                label=ls({'en': 'USD Cent Amount'}),
                 input_hint=TypeTextInputHint.SINGLE_LINE
             )
         ]

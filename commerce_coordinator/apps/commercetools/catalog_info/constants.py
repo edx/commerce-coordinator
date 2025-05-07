@@ -31,7 +31,7 @@ class TwoUKeys:
     # Transaction Custom Fields
     RETURN_ITEM_ID = 'returnItemId'
     # USD Amount field to store in Transaction model
-    TRANSACTION_USD_AMOUNT = 'usdAmount'
+    TRANSACTION_USD_CENT_AMOUNT = 'usdCentAmount'
 
     # Bundle specifiic Line Item Custom Types
     LINE_ITEM_BUNDLE_CUSTOM_TYPE = 'lineItemsBundleCustomType'
