@@ -10,7 +10,7 @@ class FulfillOrderWebhookSerializer(CoordinatorSerializer):
     """
     fulfillment_type = serializers.CharField()
     is_fulfilled = serializers.BooleanField()
-    entitlement_uuid = serializers.CharField(required=False)
+    entitlement_uuid = serializers.CharField(required=False, allow_null=True)
     order_id = serializers.CharField()
     order_version = serializers.CharField()
     line_item_id = serializers.CharField()
