@@ -32,6 +32,7 @@ from commercetools.platform.models import (
     CustomObject,
     CustomObjectDraft,
     FieldContainer,
+    InventoryMode,
     LineItem,
     LocalizedString,
     Money,
@@ -1198,6 +1199,7 @@ class CommercetoolsAPIClient:
                 customer_id=customer.id,
                 customer_email=customer.email,
                 custom=custom_fields_draft,
+                inventory_mode=InventoryMode.NONE,
                 tax_mode=TaxMode.DISABLED,
                 currency=currency,
             )
@@ -1299,6 +1301,7 @@ class CommercetoolsAPIClient:
         payment_status: str,
         psp_payment_id: str,
         psp_transaction_id: str,
+        psp_transaction_created_at: datetime.datetime,
         usd_cent_amount: int,
     ) -> Payment:
         """
@@ -1330,6 +1333,7 @@ class CommercetoolsAPIClient:
         transaction_draft = TransactionDraft(
             type=TransactionType.CHARGE,
             amount=amount_planned,
+            timestamp=psp_transaction_created_at,
             state=self._map_payment_status_to_transaction_state(payment_status),
             interaction_id=psp_transaction_id,
             custom=CustomFieldsDraft(

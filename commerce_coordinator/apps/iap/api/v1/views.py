@@ -1,3 +1,4 @@
+import datetime
 import logging
 import uuid
 
@@ -21,13 +22,12 @@ from commerce_coordinator.apps.iap.api.v1.utils import (
 from commerce_coordinator.apps.iap.api.v1.serializer import (
     OrderRequestData,
     OrderRequestSerializer,
-    OrderResponseSerializer,
 )
 
 logger = logging.getLogger(__name__)
 
 
-class CreateOrderView(APIView):
+class MobileCreateOrderView(APIView):
     """
     API view for preparing a cart in CT and then converting it to an order
     for mobile In-App purchase
@@ -76,6 +76,7 @@ class CreateOrderView(APIView):
                 # TODO: fetch from purchase token
                 psp_payment_id="Dummy-" + str(uuid.uuid4()),
                 psp_transaction_id="Dummy-" + str(uuid.uuid4()),
+                psp_transaction_created_at=datetime.datetime.now(),
                 usd_cent_amount=standalone_price.cent_amount,
             )
             cart = client.update_cart(
@@ -95,16 +96,11 @@ class CreateOrderView(APIView):
                 use_state_id=True,
             )
 
-            serializer = OrderResponseSerializer(
+            return Response(
                 data={
                     "order_id": order.id,
                     "order_number": order.order_number,
-                }
-            )
-            serializer.is_valid(raise_exception=True)
-
-            return Response(
-                serializer.validated_data,
+                },
                 status=status.HTTP_201_CREATED,
             )
         except CommercetoolsError as err:
@@ -113,10 +109,7 @@ class CreateOrderView(APIView):
                 f"[CreateOrderView] Error creating order for LMS user: {lms_user_id}"
             )
 
-            logger.exception(
-                message + f" with error message: " + str(err),
-                exc_info=err,
-            )
+            logger.exception(message, exc_info=err)
 
             return Response(
                 {"error": message},

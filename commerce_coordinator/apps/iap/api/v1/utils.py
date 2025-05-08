@@ -1,3 +1,5 @@
+import logging
+
 from commercetools.platform.models import Customer, Money
 
 from commerce_coordinator.apps.commercetools.catalog_info.constants import (
@@ -5,6 +7,8 @@ from commerce_coordinator.apps.commercetools.catalog_info.constants import (
 )
 from commerce_coordinator.apps.commercetools.clients import CommercetoolsAPIClient
 from commerce_coordinator.apps.commercetools.http_api_client import CTCustomAPIClient
+
+logger = logging.getLogger(__name__)
 
 
 def _get_attributes_to_update(
@@ -115,7 +119,9 @@ def get_standalone_price_for_sku(sku: str) -> Money:
 
     response = api_client.get_standalone_prices_for_skus([sku])
     if not response or not response[0]:
-        raise ValueError(f"No standalone price found for the SKU: {sku}")
+        message = f"No standalone price found for the SKU: {sku}"
+        logger.error(message)
+        raise ValueError(message)
 
     try:
         value = response[0]["value"]
@@ -124,6 +130,8 @@ def get_standalone_price_for_sku(sku: str) -> Money:
             currency_code=value["currencyCode"],
         )
     except KeyError as exc:
-        raise ValueError(
+        message = (
             f"No standalone price found for the SKU: {sku}, received: {response[0]}"
-        ) from exc
+        )
+        logger.exception(message, exc_info=exc)
+        raise ValueError(message) from exc
