@@ -17,13 +17,13 @@
 | commerce\_coordinator/apps/api/v1/views.py                                             |        0 |        0 |        0 |        0 |    100% |           |
 | commerce\_coordinator/apps/commercetools/\_\_init\_\_.py                               |        0 |        0 |        0 |        0 |    100% |           |
 | commerce\_coordinator/apps/commercetools/authentication.py                             |        6 |        0 |        0 |        0 |    100% |           |
-| commerce\_coordinator/apps/commercetools/catalog\_info/constants.py                    |       54 |        0 |        0 |        0 |    100% |           |
+| commerce\_coordinator/apps/commercetools/catalog\_info/constants.py                    |       46 |        0 |        0 |        0 |    100% |           |
 | commerce\_coordinator/apps/commercetools/catalog\_info/edx\_utils.py                   |       66 |        2 |       18 |        2 |     95% |    51, 70 |
-| commerce\_coordinator/apps/commercetools/catalog\_info/foundational\_types.py          |       20 |        0 |        0 |        0 |    100% |           |
+| commerce\_coordinator/apps/commercetools/catalog\_info/foundational\_types.py          |       19 |        0 |        0 |        0 |    100% |           |
 | commerce\_coordinator/apps/commercetools/catalog\_info/utils.py                        |       69 |        0 |       30 |        0 |    100% |           |
 | commerce\_coordinator/apps/commercetools/clients.py                                    |      269 |       13 |       36 |        7 |     93% |341, 371-372, 495-501, 531, 539->542, 553->555, 570->581, 594-595, 684-687, 775-779 |
 | commerce\_coordinator/apps/commercetools/constants.py                                  |        5 |        0 |        0 |        0 |    100% |           |
-| commerce\_coordinator/apps/commercetools/data.py                                       |       45 |        0 |        8 |        0 |    100% |           |
+| commerce\_coordinator/apps/commercetools/data.py                                       |       49 |        0 |       12 |        1 |     98% |    93->92 |
 | commerce\_coordinator/apps/commercetools/filters.py                                    |        6 |        0 |        0 |        0 |    100% |           |
 | commerce\_coordinator/apps/commercetools/http\_api\_client.py                          |       68 |        9 |       16 |        4 |     85% |31-41, 133, 148, 163, 170->169 |
 | commerce\_coordinator/apps/commercetools/pipeline.py                                   |      157 |       20 |       34 |        4 |     84% |85-87, 129-131, 160, 177-180, 205-208, 214-216, 388-389 |
@@ -46,7 +46,7 @@
 | commerce\_coordinator/apps/commercetools/tests/sub\_messages/test\_signals\_delayed.py |       45 |        0 |        0 |        0 |    100% |           |
 | commerce\_coordinator/apps/commercetools/tests/sub\_messages/test\_tasks.py            |      236 |        0 |        0 |        0 |    100% |           |
 | commerce\_coordinator/apps/commercetools/tests/test\_authentication.py                 |       25 |        0 |        0 |        0 |    100% |           |
-| commerce\_coordinator/apps/commercetools/tests/test\_clients.py                        |      455 |        4 |        8 |        0 |     99% |723-734, 808-819 |
+| commerce\_coordinator/apps/commercetools/tests/test\_clients.py                        |      454 |        4 |        8 |        0 |     99% |717-728, 802-813 |
 | commerce\_coordinator/apps/commercetools/tests/test\_data.py                           |       87 |        0 |        6 |        0 |    100% |           |
 | commerce\_coordinator/apps/commercetools/tests/test\_http\_api\_client.py              |       79 |        0 |        0 |        0 |    100% |           |
 | commerce\_coordinator/apps/commercetools/tests/test\_pipeline.py                       |      197 |        0 |        0 |        0 |    100% |           |
@@ -184,7 +184,7 @@
 | commerce\_coordinator/apps/stripe/views.py                                             |       63 |       11 |       10 |        3 |     78% |65, 67, 111-144 |
 | commerce\_coordinator/docker\_gunicorn\_configuration.py                               |       27 |       27 |       10 |        0 |      0% |      4-57 |
 | commerce\_coordinator/urls.py                                                          |       22 |        0 |        0 |        0 |    100% |           |
-|                                                                              **TOTAL** | **6898** |  **311** |  **494** |   **50** | **94%** |           |
+|                                                                              **TOTAL** | **6892** |  **311** |  **498** |   **51** | **94%** |           |
 
 
 ## Setup coverage badge
