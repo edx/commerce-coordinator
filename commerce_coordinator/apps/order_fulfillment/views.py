@@ -5,29 +5,28 @@ import logging
 
 from django.views.decorators.csrf import csrf_exempt
 from rest_framework import status
+from rest_framework.authentication import SessionAuthentication
 from rest_framework.exceptions import ValidationError
-from rest_framework.permissions import AllowAny
+from rest_framework.permissions import IsAdminUser
 from rest_framework.response import Response
 
+from commerce_coordinator.apps.commercetools.authentication import JwtBearerAuthentication
 from commerce_coordinator.apps.core.views import SingleInvocationAPIView
 from commerce_coordinator.apps.lms.clients import FulfillmentType
 from commerce_coordinator.apps.lms.signals import fulfillment_completed_update_ct_line_item_signal
 from commerce_coordinator.apps.order_fulfillment.serializers import FulfillOrderWebhookSerializer
-from commerce_coordinator.apps.order_fulfillment.webhook_utils.webhook_authentication import (
-    HMACSignatureWebhookAuthentication
-)
 
 logger = logging.getLogger(__name__)
 
 
-class FulfillmentResponseWebhookView(SingleInvocationAPIView):
+class OrderFulfillmentCompletionStatusWebhookView(SingleInvocationAPIView):
     """
     Endpoint for Order Fulfillment webhook Response. This endpoint receives fulfillment
     response from fulfillment providers and updates CT order object with response data.
     """
     http_method_names = ['post']
-    authentication_classes = [HMACSignatureWebhookAuthentication]
-    permission_classes = [AllowAny]
+    authentication_classes = [JwtBearerAuthentication, SessionAuthentication]
+    permission_classes = [IsAdminUser]
 
     @csrf_exempt
     def post(self, request):
@@ -35,7 +34,7 @@ class FulfillmentResponseWebhookView(SingleInvocationAPIView):
         tag = type(self).__name__
 
         input_data = {
-            **request.data
+            **request.data.get('detail', None)
         }
 
         logger.info(f'[CT-{tag}] Message received from order-fulfillment with details: {input_data}')
@@ -45,7 +44,8 @@ class FulfillmentResponseWebhookView(SingleInvocationAPIView):
         validated_data = validator.validated_data
 
         fulfillment_type = validated_data.get('fulfillment_type')
-        if fulfillment_type == FulfillmentType.ENTITLEMENT.value:
+        is_fulfilled = validated_data.get('is_fulfilled')
+        if is_fulfilled and fulfillment_type == FulfillmentType.ENTITLEMENT.value:
             entitlement_uuid = validated_data.get('entitlement_uuid', None)
             if not entitlement_uuid:
                 raise ValidationError('Entitlement uuid is required for Entitlement Fulfillment.')

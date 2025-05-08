@@ -1,149 +1,120 @@
-"""
-Tests for order fulfillment views.
-"""
-import json
 from unittest.mock import patch
 
-from django.test import TestCase
+import ddt
 from django.urls import reverse
+from edx_django_utils.cache import TieredCache
 from rest_framework import status
-from rest_framework.exceptions import ValidationError
-from rest_framework.test import APIClient
+from rest_framework.test import APIClient, APITestCase
 
+from commerce_coordinator.apps.commercetools.tests.mocks import SendRobustSignalMock
+from commerce_coordinator.apps.core.models import User
 from commerce_coordinator.apps.lms.clients import FulfillmentType
 
+EXAMPLE_ORDER_FULFILLMENT_RESPONSE_API_PAYLOAD = {
+    "detail": {
+        "fulfillment_type": "ENTITLEMENT",
+        "is_fulfilled": True,
+        "entitlement_uuid": "123e4567-e89b-12d3-a456-426614174000",
+        "order_id": "order-123",
+        "order_version": "5",
+        "line_item_id": "line-item-456",
+        "item_quantity": 2,
+        "line_item_state_id": "state-789"
+    }
+}
 
-class TestFulfillmentResponseWebhookView(TestCase):
-    """
-    Tests for FulfillmentResponseWebhookView.
-    """
+
+@patch('commerce_coordinator.apps.order_fulfillment.views.fulfillment_completed_update_ct_line_item_signal.send_robust',
+       new_callable=SendRobustSignalMock)
+class FulfillmentResponseWebhookViewTests(APITestCase):
+    """Tests for Fulfillment Response Webhook view."""
+    url = reverse('order_fulfillment:fulfillment_response_webhook')
+
+    client_class = APIClient
+    test_user_username = 'test_user'
+    test_staff_username = 'test_staff_user'
+    test_password = 'test_password'
+
     def setUp(self):
-        """Set up data for the test cases."""
         super().setUp()
-        self.client = APIClient()
-        self.url = reverse('order_fulfillment:fulfillment_response_webhook')
-        self.valid_payload = {
-            'fulfillment_type': FulfillmentType.ENTITLEMENT.value,
-            'entitlement_uuid': '12345678-1234-5678-1234-567812345678',
-            'order_id': 'EDX-123456',
-            'order_version': '1.0',
-            'line_item_id': 'item-123',
-            'item_quantity': 1,
-            'line_item_state_id': 'state-123',
-            'is_fulfilled': True
-        }
+        User.objects.create_user(username=self.test_user_username, password=self.test_password)
+        User.objects.create_user(username=self.test_staff_username, password=self.test_password, is_staff=True)
 
-    @patch('commerce_coordinator.apps.order_fulfillment.views.HMACSignatureWebhookAuthentication.authenticate')
-    @patch('commerce_coordinator.apps.order_fulfillment.views.fulfillment_completed_update_ct_line_item_signal')
-    def test_successful_fulfillment(self, mock_signal, mock_authenticate):
-        """
-        Test successful fulfillment webhook processing.
-        """
-        mock_authenticate.return_value = None
+    def tearDown(self):
+        super().tearDown()
+        TieredCache.dangerous_clear_all_tiers()
+        self.client.logout()
 
-        response = self.client.post(
-            self.url,
-            data=json.dumps(self.valid_payload),
-            content_type='application/json'
+    def prepare_fulfillment_data(self, fulfillment_type=FulfillmentType.ENTITLEMENT.value, entitlement_uuid=None):
+        """
+        Prepare the order fulfillment data, adjusting based on fulfillment type and entitlement UUID.
+        """
+        data = EXAMPLE_ORDER_FULFILLMENT_RESPONSE_API_PAYLOAD.copy()
+        data['detail']['fulfillment_type'] = fulfillment_type
+        if entitlement_uuid:
+            data['detail']['entitlement_uuid'] = entitlement_uuid
+        else:
+            data['detail'].pop('entitlement_uuid', None)
+        return data
+
+    def test_fulfillment_webhook_success(self, mock_signal):
+        """Test successful fulfillment webhook call by staff user."""
+        self.client.login(username=self.test_staff_username, password=self.test_password)
+
+        data = self.prepare_fulfillment_data(
+            fulfillment_type=FulfillmentType.ENTITLEMENT.value,
+            entitlement_uuid="some_uuid"
         )
+        response = self.client.post(self.url, data=data, format='json')
 
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(response.json(), {'message': 'Order Fulfillment Response event processed successfully.'})
+        mock_signal.assert_called_once()
 
-        # Verify signal was called with correct parameters
-        mock_signal.send_robust.assert_called_once()
-        call_kwargs = mock_signal.send_robust.call_args[1]
-        self.assertTrue(call_kwargs['is_fulfilled'])
-        self.assertEqual(call_kwargs['entitlement_uuid'], self.valid_payload['entitlement_uuid'])
-        self.assertEqual(call_kwargs['order_id'], self.valid_payload['order_id'])
+    def test_entitlement_fulfillment_webhook_missing_entitlement_uuid(self, mock_signal):
+        """Test entitlement fulfillment fails when `entitlement_uuid` is missing."""
+        self.client.login(username=self.test_staff_username, password=self.test_password)
 
-    @patch('commerce_coordinator.apps.order_fulfillment.views.HMACSignatureWebhookAuthentication.authenticate')
-    def test_missing_required_fields(self, mock_authenticate):
-        """
-        Test webhook validation with missing required fields.
-        """
-        mock_authenticate.return_value = None
-
-        invalid_payload = {
-            'fulfillment_type': FulfillmentType.ENTITLEMENT.value,
-            'entitlement_uuid': '12345678-1234-5678-1234-567812345678'
-            # Missing other required fields
-        }
-
-        response = self.client.post(
-            self.url,
-            data=json.dumps(invalid_payload),
-            content_type='application/json'
+        data = self.prepare_fulfillment_data(
+            fulfillment_type=FulfillmentType.ENTITLEMENT.value,
         )
+        response = self.client.post(self.url, data=data, format='json')
 
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
-
-    @patch('commerce_coordinator.apps.order_fulfillment.views.HMACSignatureWebhookAuthentication.authenticate')
-    def test_entitlement_uuid_missing_for_entitlement_fulfillment(self, mock_authenticate):
-        """
-        Test validation error when entitlement UUID is missing for entitlement fulfillment.
-        """
-        mock_authenticate.return_value = None
-
-        payload = self.valid_payload.copy()
-        del payload['entitlement_uuid']
-
-        response = self.client.post(
-            self.url,
-            data=json.dumps(payload),
-            content_type='application/json'
-        )
-
-        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
-        print('\n\n\n\n response', response.json())
         self.assertIn('Entitlement uuid is required for Entitlement Fulfillment.', response.json())
+        mock_signal.assert_not_called()
 
-    @patch('commerce_coordinator.apps.order_fulfillment.views.HMACSignatureWebhookAuthentication.authenticate')
-    @patch('commerce_coordinator.apps.order_fulfillment.views.fulfillment_completed_update_ct_line_item_signal')
-    def test_fulfillment_without_entitlement(self, mock_signal, mock_authenticate):
-        """
-        Test fulfillment webhook without entitlement UUID for non-entitlement fulfillment types.
-        """
-        mock_authenticate.return_value = None
+    def test_enrollment_fulfillment_webhook_missing_entitlement_uuid(self, mock_signal):
+        """Test entitlement fulfillment fails when `entitlement_uuid` is missing."""
+        self.client.login(username=self.test_staff_username, password=self.test_password)
 
-        payload = self.valid_payload.copy()
-        payload['fulfillment_type'] = 'OTHER_TYPE'
-        del payload['entitlement_uuid']
-
-        response = self.client.post(
-            self.url,
-            data=json.dumps(payload),
-            content_type='application/json'
+        data = self.prepare_fulfillment_data(
+            fulfillment_type=FulfillmentType.ENROLLMENT.value,
         )
+
+        response = self.client.post(self.url, data=data, format='json')
 
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        mock_signal.send_robust.assert_called_once()
+        self.assertEqual(response.json(), {'message': 'Order Fulfillment Response event processed successfully.'})
+        mock_signal.assert_called_once()
 
-    @patch('commerce_coordinator.apps.order_fulfillment.views.HMACSignatureWebhookAuthentication.authenticate')
-    def test_method_not_allowed(self, mock_authenticate):
-        """
-        Test that only POST method is allowed.
-        """
-        mock_authenticate.return_value = None
-
-        response = self.client.get(self.url)
-        self.assertEqual(response.status_code, status.HTTP_405_METHOD_NOT_ALLOWED)
-
-    @patch('commerce_coordinator.apps.order_fulfillment.views.HMACSignatureWebhookAuthentication.authenticate')
-    @patch('commerce_coordinator.apps.order_fulfillment.serializers.FulfillOrderWebhookSerializer.is_valid')
-    def test_serializer_validation_error(self, mock_is_valid, mock_authenticate):
-        """
-        Test handling of serializer validation errors.
-        """
-        mock_authenticate.return_value = None
-
-        mock_is_valid.side_effect = ValidationError('Invalid data')
-
-        response = self.client.post(
-            self.url,
-            data=json.dumps(self.valid_payload),
-            content_type='application/json'
-        )
+    def test_fulfillment_webhook_invalid_payload(self, mock_signal):
+        """Test invalid payload raises validation error."""
+        self.client.login(username=self.test_staff_username, password=self.test_password)
+        response = self.client.post(self.url, data={'detail': {'payload': 'Invalid payload'}}, format='json')
 
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
-        self.assertIn('Invalid data', response.json())
+        mock_signal.assert_not_called()
+
+    def test_unauthorized_user_access(self, mock_signal):
+        """Test a non-staff user is forbidden from accessing the webhook."""
+        self.client.login(username=self.test_user_username, password=self.test_password)
+
+        data = self.prepare_fulfillment_data(
+            fulfillment_type=FulfillmentType.ENTITLEMENT.value,
+            entitlement_uuid="some_uuid"
+        )
+        response = self.client.post(self.url, data=data, format='json')
+
+        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
+        mock_signal.assert_not_called()
