@@ -79,13 +79,14 @@ class FulfillOrderPlacedTaskAfterReturn(Task):    # pylint: disable=abstract-met
     base=FulfillOrderPlacedTaskAfterReturn,
 )
 def fulfill_order_placed_message_signal_task(
-    self,                   # pylint: disable=unused-argument
+    self,
     order_id,
     line_item_state_id,
     source_system,
     message_id,
     is_order_fulfillment_forwarding_enabled
-):
+):    # pylint: disable=too-many-statements
+
     """Celery task for fulfilling an order placed message."""
 
     tag = "fulfill_order_placed_message_signal_task"
@@ -178,7 +179,15 @@ def fulfill_order_placed_message_signal_task(
             serializer.is_valid(raise_exception=True)
             payload = serializer.validated_data
 
-            OrderFulfillmentAPIClient().fulfill_order(payload)
+            logging_data = {
+                'user_id': lms_user_id,
+                'edx_lms_username': serializer_data['edx_lms_username'],
+                'order_id': order.id,
+                'course_id': serializer_data['course_id'],
+                'message_id': message_id,
+                'celery_task_id': self.request.id,
+            }
+            OrderFulfillmentAPIClient().fulfill_order(payload, logging_data)
 
         else:
             logger.info(f"[CT-{tag}] Order Fulfillment Redirection Flag [NOT ENABLED]."

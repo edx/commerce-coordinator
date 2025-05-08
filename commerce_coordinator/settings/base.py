@@ -444,7 +444,7 @@ LMS_URL_ROOT = "http://localhost:18000"
 LMS_DASHBOARD_URL = "http://localhost:18000"  # fix me
 ORDER_HISTORY_URL = "http://localhost:1996"
 
-ORDER_FULFILLMENT_URL_ROOT = "http://localhost:8240"
+ORDER_FULFILLMENT_URL_ROOT = "http://localhost:8155"
 
 RETIRED_USER_SALTS = ['abc', '123']
 

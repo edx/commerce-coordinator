@@ -20,6 +20,14 @@ commerce\_coordinator.apps.commercetools.tests.catalog\_info.test\_utils module
    :undoc-members:
    :show-inheritance:
 
+commerce\_coordinator.apps.commercetools.tests.order\_fulfillment\_utils module
+-------------------------------------------------------------------------------
+
+.. automodule:: commerce_coordinator.apps.commercetools.tests.order_fulfillment_utils
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
 Module contents
 ---------------
 
