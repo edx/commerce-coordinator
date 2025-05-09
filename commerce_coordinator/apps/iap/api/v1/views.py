@@ -20,8 +20,8 @@ from commerce_coordinator.apps.iap.api.v1.utils import (
     get_standalone_price_for_sku,
 )
 from commerce_coordinator.apps.iap.api.v1.serializer import (
-    OrderRequestData,
-    OrderRequestSerializer,
+    MobileOrderRequestData,
+    MobileOrderRequestSerializer,
 )
 
 logger = logging.getLogger(__name__)
@@ -41,16 +41,16 @@ class MobileCreateOrderView(APIView):
         to an order for mobile In-App purchase
         """
         try:
-            serializer = OrderRequestSerializer(data=request.data)
+            serializer = MobileOrderRequestSerializer(data=request.data)
             serializer.is_valid(raise_exception=True)
-            request_data: OrderRequestData = serializer.validated_data  # type: ignore
+            data = MobileOrderRequestData(**serializer.validated_data)  # type: ignore
 
             external_price = Money(
-                cent_amount=int(request_data["price"] * 100),
-                currency_code=request_data["currency"],
+                cent_amount=int(data.price * 100),
+                currency_code=data.currency_code,
             )
             standalone_price = get_standalone_price_for_sku(
-                sku=request_data["course_run_key"]
+                sku=data.course_run_key,
             )
 
             client = CommercetoolsAPIClient()
@@ -62,9 +62,11 @@ class MobileCreateOrderView(APIView):
 
             order_number = client.get_new_order_number()
             cart = client.create_cart(
+                course_run_key=data.course_run_key,
                 customer=customer,
+                email_domain=get_email_domain(customer.email),
+                external_price=external_price,
                 order_number=order_number,
-                currency=request_data["currency"],
             )
             payment = client.create_payment(
                 amount_planned=external_price,
@@ -72,18 +74,15 @@ class MobileCreateOrderView(APIView):
                 # TODO: finalize source of these
                 payment_method="Dummy Card",
                 payment_status="Dummy Success",
-                payment_processor=request_data["payment_processor"],
+                payment_processor=data.payment_processor,
                 # TODO: fetch from purchase token
                 psp_payment_id="Dummy-" + str(uuid.uuid4()),
                 psp_transaction_id="Dummy-" + str(uuid.uuid4()),
                 psp_transaction_created_at=datetime.datetime.now(),
                 usd_cent_amount=standalone_price.cent_amount,
             )
-            cart = client.update_cart(
+            cart = client.add_payment_to_cart(
                 cart=cart,
-                external_price=external_price,
-                sku=request_data["course_run_key"],
-                email_domain=get_email_domain(cart.customer_email),
                 payment_id=payment.id,
             )
             order = client.create_order_from_cart(cart)

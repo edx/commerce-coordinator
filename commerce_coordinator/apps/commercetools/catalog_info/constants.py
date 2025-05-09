@@ -64,7 +64,6 @@ class TwoUKeys:
     ORDER_ORDER_NUMBER = 'orderNumber'
     # Email domain custom field to store in cart/order model
     ORDER_EMAIL_DOMAIN = 'emailDomain'
-
     # Mobile order custom field to store in cart/order model
     ORDER_MOBILE_ORDER = 'mobileOrder'
 

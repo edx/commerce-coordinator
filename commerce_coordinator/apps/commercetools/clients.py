@@ -14,12 +14,8 @@ from commercetools.platform.models import (
     AuthenticationMode,
     BaseAddress,
     Cart,
-    CartAddLineItemAction,
     CartAddPaymentAction,
     CartDraft,
-    CartSetBillingAddressAction,
-    CartSetCustomFieldAction,
-    CartSetShippingAddressAction,
     Customer,
     CustomerChangeEmailAction,
     CustomerDraft,
@@ -34,6 +30,7 @@ from commercetools.platform.models import (
     FieldContainer,
     InventoryMode,
     LineItem,
+    LineItemDraft,
     LocalizedString,
     Money,
     Order,
@@ -1173,35 +1170,46 @@ class CommercetoolsAPIClient:
     def create_cart(
         self,
         *,
+        course_run_key: str,
         customer: Customer,
+        email_domain: str,
+        external_price: Money,
         order_number: str,
-        currency: str,
     ) -> Cart:
         """
         Create a new cart for a customer
 
         Args:
-            customer (Customer): The customer for whom to create the cart
+            course_run_key (str): The course run key
+            customer (Customer): The customer object
+            email_domain (str): The email domain for the cart
+            external_price (Money): The price of the line item
             order_number (str): The order number for the cart
-            currency (str): Currency code for the cart
-            country (str): Country code for the cart
-            language (str): Language code for the cart
 
         Returns:
             Cart: The created cart object
         """
         try:
+            address = BaseAddress(country="UNDEFINED")
+            line_item_draft = LineItemDraft(sku=course_run_key,external_price=external_price)
             custom_fields_draft = CustomFieldsDraft(
                 type=TypeResourceIdentifier(key=TwoUKeys.ORDER_CUSTOM_TYPE),
-                fields=FieldContainer({TwoUKeys.ORDER_ORDER_NUMBER: order_number}),
+                fields=FieldContainer({
+                  TwoUKeys.ORDER_ORDER_NUMBER: order_number,
+                    TwoUKeys.ORDER_EMAIL_DOMAIN: email_domain,
+                    TwoUKeys.ORDER_MOBILE_ORDER: True,
+                  }),
             )
             cart_draft = CartDraft(
-                customer_id=customer.id,
+                currency=external_price.currency_code,
                 customer_email=customer.email,
+                customer_id=customer.id,
                 custom=custom_fields_draft,
+                line_items=[line_item_draft],
                 inventory_mode=InventoryMode.NONE,
                 tax_mode=TaxMode.DISABLED,
-                currency=currency,
+                billing_address=address,
+                shipping_address=address,
             )
 
             expand = ["lineItems[*].productType.obj", "custom"]
@@ -1219,40 +1227,24 @@ class CommercetoolsAPIClient:
             )
             raise err
 
-    def update_cart(
+    def add_payment_to_cart(
         self,
         *,
-        external_price: Money,
         cart: Cart,
-        sku: str,
-        email_domain: str,
         payment_id: str,
     ) -> Cart:
         """
-        Update the cart with a new line item and payment
+        Add a payment to a cart
 
         Args:
-            external_price (Money): The price of the line item
             cart (Cart): The cart to update
-            sku (str): The SKU of the line item
-            email_domain (str): The email domain for the cart
             payment_id (str): The ID of the payment to add
 
         Returns:
             Cart: The updated cart object
         """
         try:
-            address = BaseAddress(country="UNDEFINED")
             actions = [
-                CartAddLineItemAction(sku=sku, external_price=external_price),
-                CartSetCustomFieldAction(
-                    name=TwoUKeys.ORDER_EMAIL_DOMAIN, value=email_domain
-                ),
-                CartSetCustomFieldAction(
-                    name=TwoUKeys.ORDER_MOBILE_ORDER, value=True
-                ),
-                CartSetBillingAddressAction(address=address),
-                CartSetShippingAddressAction(address=address),
                 CartAddPaymentAction(
                     payment=PaymentResourceIdentifier(id=payment_id)
                 ),
@@ -1263,15 +1255,15 @@ class CommercetoolsAPIClient:
                 id=cart.id, version=cart.version, actions=actions, expand=expand
             )
             logger.info(
-                "[CommercetoolsAPIClient] - Successfully added items to "
+                "[CommercetoolsAPIClient] - Successfully added payment to"
                 f"cart: {cart.id} for customer: {cart.customer_id}"
             )
             return updated_cart
         except CommercetoolsError as err:
             handle_commercetools_error(
-                "[CommercetoolsAPIClient.add_to_cart]",
+                "[CommercetoolsAPIClient.add_payment_to_cart]",
                 err,
-                f"Failed to add items to cart: {cart.id} "
+                f"Failed to add payment to cart: {cart.id} "
                 f"for customer: {cart.customer_id}",
             )
             raise err
@@ -1339,7 +1331,7 @@ class CommercetoolsAPIClient:
             custom=CustomFieldsDraft(
                 type=TypeResourceIdentifier(key=TwoUKeys.TRANSACTION_CUSTOM_TYPE),
                 fields=FieldContainer(
-                    {TwoUKeys.TRANSACTION_USD_AMOUNT: usd_cent_amount}
+                    {TwoUKeys.TRANSACTION_USD_CENT_AMOUNT: usd_cent_amount}
                 ),
             ),
         )
