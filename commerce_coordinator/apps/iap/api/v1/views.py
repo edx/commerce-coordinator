@@ -53,7 +53,7 @@ class MobileCreateOrderView(APIView):
                 sku=data.course_run_key,
             )
 
-            client = CommercetoolsAPIClient()
+            client = CommercetoolsAPIClient(enable_retries=True)
             customer = get_ct_customer(client, request.user)
             cart = client.get_customer_cart(customer.id)
 

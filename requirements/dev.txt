@@ -584,6 +584,8 @@ stevedore==5.4.0
     #   edx-opaque-keys
 stripe==11.5.0
     # via -r requirements/validation.txt
+tenacity==9.1.2
+    # via -r requirements/validation.txt
 testfixtures==8.3.0
     # via -r requirements/validation.txt
 text-unidecode==1.3

@@ -3,6 +3,7 @@ API clients for commercetools app.
 """
 
 import datetime
+from functools import wraps
 import logging
 from types import SimpleNamespace
 from typing import Generic, List, Optional, Tuple, TypedDict, TypeVar, Union
@@ -67,6 +68,12 @@ from commercetools.platform.models import (
 
 from django.conf import settings
 from openedx_filters.exceptions import OpenEdxFilterException
+from tenacity import (
+    retry,
+    stop_after_attempt,
+    retry_if_exception_type,
+    wait_incrementing,
+)
 
 from commerce_coordinator.apps.commercetools.catalog_info.constants import (
     DEFAULT_ORDER_EXPANSION,
@@ -137,13 +144,14 @@ class CommercetoolsAPIClient:
     """Commercetools API Client"""
 
     base_client = None
+    enable_retries = False
 
-    def __init__(self):
+    def __init__(self, enable_retries: bool = False):
         """
         Initialize CommercetoolsAPIClient, for use in an application, or (with an arg) testing.
 
         Args:
-             client(Client): A mock client for testing (ONLY).
+            enable_retries (bool): Whether to enable retry logic for API calls.
         """
         super().__init__()
 
@@ -156,6 +164,24 @@ class CommercetoolsAPIClient:
             token_url=config["authUrl"],
             project_key=config["projectKey"],
         )
+        self.enable_retries = enable_retries
+
+    def conditional_retry(method): # type: ignore
+        """Retry decorator that applies retry logic if retries are enabled."""
+
+        @wraps(method) # type: ignore
+        def _conditional_retry(self, *args, **kwargs):
+            if self.enable_retries:
+                return retry(
+                    stop=stop_after_attempt(3),
+                    wait=wait_incrementing(start=2, increment=2),
+                    retry=retry_if_exception_type(CommercetoolsError),
+                    reraise=True,
+                )(method)(self, *args, **kwargs) # type: ignore
+            else:
+                return method(self, *args, **kwargs) # type: ignore
+
+        return _conditional_retry
 
     def ensure_custom_type_exists(self, type_def: CustomTypeDraft) -> Optional[CustomType]:
         """
@@ -229,6 +255,7 @@ class CommercetoolsAPIClient:
 
         return ret
 
+    @conditional_retry
     def get_customer_by_lms_user_id(self, lms_user_id: int) -> Optional[Customer]:
         """
         Get a Commercetools Customer by their LMS User ID
@@ -753,6 +780,7 @@ class CommercetoolsAPIClient:
             )
             raise err
 
+    @conditional_retry
     def update_line_items_transition_state(
         self,
         order_id: str,
@@ -919,6 +947,7 @@ class CommercetoolsAPIClient:
                                             f"first time discount", True)
             return True
 
+    @conditional_retry
     def create_customer(
         self,
         *,
@@ -979,6 +1008,7 @@ class CommercetoolsAPIClient:
             )
             raise err
 
+    @conditional_retry
     def update_customer(
         self,
         *,
@@ -1032,6 +1062,7 @@ class CommercetoolsAPIClient:
             )
             raise err
 
+    @conditional_retry
     def get_customer_cart(self, customer_id: str) -> Optional[Cart]:
         """
         Get the active cart for a customer if it exists
@@ -1064,6 +1095,7 @@ class CommercetoolsAPIClient:
             )
             raise err
 
+    @conditional_retry
     def delete_cart(self, cart: Cart) -> None:
         """
         Delete a cart of a customer
@@ -1147,6 +1179,7 @@ class CommercetoolsAPIClient:
             )
             raise err
 
+    @conditional_retry
     def get_new_order_number(self) -> str:
         """
         Get a new order number for cart
@@ -1167,6 +1200,7 @@ class CommercetoolsAPIClient:
 
         return new_order_number
 
+    @conditional_retry
     def create_cart(
         self,
         *,
@@ -1227,6 +1261,7 @@ class CommercetoolsAPIClient:
             )
             raise err
 
+    @conditional_retry
     def add_payment_to_cart(
         self,
         *,
@@ -1283,6 +1318,7 @@ class CommercetoolsAPIClient:
         # TODO: implement
         return TransactionState.SUCCESS
 
+    @conditional_retry
     def create_payment(
         self,
         *,
@@ -1360,6 +1396,7 @@ class CommercetoolsAPIClient:
             )
             raise err
 
+    @conditional_retry
     def create_order_from_cart(self, cart: Cart) -> Order:
         """
         Create a new order from a cart

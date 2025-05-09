@@ -357,6 +357,8 @@ stevedore==5.4.0
     #   edx-opaque-keys
 stripe==11.5.0
     # via -r requirements/base.txt
+tenacity==9.1.2
+    # via -r requirements/base.txt
 typing-extensions==4.12.2
     # via
     #   -r requirements/base.txt
