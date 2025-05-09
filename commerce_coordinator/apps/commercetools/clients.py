@@ -1343,7 +1343,7 @@ class CommercetoolsAPIClient:
             Payment: The created payment object
         """
         payment_method_info = PaymentMethodInfo(
-            payment_interface=payment_processor,
+            payment_interface=f"{payment_processor}_edx",
             method=payment_method,
             name=LocalizedString(name=payment_method),
         )
