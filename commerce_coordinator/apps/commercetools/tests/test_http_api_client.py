@@ -177,7 +177,7 @@ class TestCTCustomAPIClient(TestCase):
             }]
             self.assertEqual(response, expected_response)
 
-    def test_get_program_entitlements_standalone_prices(self):
+    def test_get_standalone_prices_for_skus(self):
         with requests_mock.Mocker() as mocker:
             mock_response = {"results": [{"sku": "entitlement_sku", "price": 100}]}
             mocker.get(
@@ -185,5 +185,5 @@ class TestCTCustomAPIClient(TestCase):
                 json=mock_response
             )
 
-            response = self.client.get_program_entitlements_standalone_prices(["entitlement_sku"])
+            response = self.client.get_standalone_prices_for_skus(["entitlement_sku"])
             self.assertEqual(response, mock_response["results"])
