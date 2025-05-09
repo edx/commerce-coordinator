@@ -1450,21 +1450,6 @@ class CommercetoolsAPIClient:
             )
             raise err
 
-    def _map_payment_status_to_transaction_state(
-        self, payment_status: str  # pylint: disable=unused-argument
-    ) -> TransactionState:
-        """
-        Maps the status from the payment processor to the transaction state in commercetools
-
-        Args:
-            payment_status (str): Status from the payment processor
-
-        Returns:
-            Transaction state in commercetools
-        """
-        # TODO: implement
-        return TransactionState.SUCCESS
-
     @conditional_retry
     def create_payment(
         self,
@@ -1496,20 +1481,20 @@ class CommercetoolsAPIClient:
             Payment: The created payment object
         """
         payment_method_info = PaymentMethodInfo(
-            payment_interface=payment_processor,
+            payment_interface=f"{payment_processor}_edx",
             method=payment_method,
             name=LocalizedString(name=payment_method),
         )
         # translate this based on mobile status codes
         payment_status_draft = PaymentStatusDraft(
             interface_code=payment_status,
-            interface_text=payment_status,
+            interface_text=payment_status.capitalize(),
         )
         transaction_draft = TransactionDraft(
             type=TransactionType.CHARGE,
             amount=amount_planned,
             timestamp=psp_transaction_created_at,
-            state=self._map_payment_status_to_transaction_state(payment_status),
+            state=TransactionState.SUCCESS,
             interaction_id=psp_transaction_id,
             custom=CustomFieldsDraft(
                 type=TypeResourceIdentifier(key=TwoUKeys.TRANSACTION_CUSTOM_TYPE),
