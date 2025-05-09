@@ -18,6 +18,7 @@ from commerce_coordinator.apps.iap.api.v1.utils import (
     get_ct_customer,
     get_email_domain,
     get_standalone_price_for_sku,
+    get_payment_processor,
 )
 from commerce_coordinator.apps.iap.api.v1.serializer import (
     OrderRequestData,
@@ -66,6 +67,9 @@ class MobileCreateOrderView(APIView):
                 order_number=order_number,
                 currency=request_data["currency"],
             )
+            payment_processor = request_data["payment_processor"]
+            payment_process_data = get_payment_processor(request, cart, payment_processor)
+
             payment = client.create_payment(
                 amount_planned=external_price,
                 customer_id=customer.id,
