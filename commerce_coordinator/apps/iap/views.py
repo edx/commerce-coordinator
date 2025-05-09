@@ -30,6 +30,7 @@ from commerce_coordinator.apps.iap.utils import (
     get_ct_customer,
     get_email_domain,
     get_standalone_price_for_sku,
+    # get_payment_processor,
 )
 from commerce_coordinator.apps.iap.serializers import (
     MobileOrderRequestData,
@@ -84,6 +85,7 @@ class MobileCreateOrderView(APIView):
                 external_price=external_price,
                 order_number=order_number,
             )
+            # payment_process_data = get_payment_processor(request.data, cart)
 
             emit_checkout_started_event(
                 lms_user_id=lms_user_id,
@@ -108,7 +110,7 @@ class MobileCreateOrderView(APIView):
                 amount_planned=external_price,
                 customer_id=customer.id,
                 # TODO: finalize source of these
-                payment_method="Dummy Card",
+                payment_method=data.payment_processor.replace("-", " ").strip(),
                 payment_status="Dummy Success",
                 payment_processor=data.payment_processor,
                 # TODO: fetch from purchase token

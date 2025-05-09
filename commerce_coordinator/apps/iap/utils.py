@@ -9,6 +9,7 @@ from commercetools.platform.models import CentPrecisionMoney, Customer
 from commerce_coordinator.apps.commercetools.catalog_info.constants import EdXFieldNames
 from commerce_coordinator.apps.commercetools.clients import CommercetoolsAPIClient
 from commerce_coordinator.apps.commercetools.http_api_client import CTCustomAPIClient
+from commerce_coordinator.apps.iap.payment_processor import IAPPaymentProcessor
 
 logger = logging.getLogger(__name__)
 
@@ -138,3 +139,31 @@ def get_standalone_price_for_sku(sku: str) -> CentPrecisionMoney:
         )
         logger.exception(message, exc_info=exc)
         raise ValueError(message) from exc
+
+
+def get_payment_processor(request_data, cart):
+    """
+    Get and validate the payment processor for an in-app purchase (IAP).
+
+    Args:
+        request_data (dict): The request data containing payment processor information.
+
+    Returns:
+        dict: Validation response indicating success or error.
+    """
+    payment_processor = request_data.get('payment_processor', '').lower()
+
+    if payment_processor in ['android-iap', 'ios-iap']:
+        processor = IAPPaymentProcessor()
+
+        purchase_token = request_data.get('purchase_token')
+        if not purchase_token:
+            logger.error("No purchase token provided in request.")
+            return {'error': 'Missing purchase token'}
+
+        # Validate IAP using the platform-specific method
+        validation_response = processor.validate_iap(request_data, cart)
+        return validation_response
+
+    logger.error("Unsupported payment processor: %s", payment_processor)
+    return {'error': 'Unsupported payment processor'}
