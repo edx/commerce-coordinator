@@ -100,13 +100,11 @@ class MobileStandalonePriceChangeViewTests(APITestCase):
 
     def setUp(self):
         """Set up test users"""
-        super().setUp()
         User.objects.create_user(username=self.test_user_username, password=self.test_password)
         User.objects.create_user(username=self.test_staff_username, password=self.test_password, is_staff=True)
 
     def tearDown(self):
         """Clean up after each test"""
-        super().tearDown()
         TieredCache.dangerous_clear_all_tiers()
         self.client.logout()
 
@@ -141,13 +139,11 @@ class MobileCourseVariantAddViewTests(APITestCase):
 
     def setUp(self):
         """Set up test users"""
-        super().setUp()
         User.objects.create_user(username=self.test_user_username, password=self.test_password)
         User.objects.create_user(username=self.test_staff_username, password=self.test_password, is_staff=True)
 
     def tearDown(self):
         """Clean up after each test"""
-        super().tearDown()
         TieredCache.dangerous_clear_all_tiers()
         self.client.logout()
 
@@ -188,13 +184,11 @@ class MobileCourseCreateViewTests(APITestCase):
 
     def setUp(self):
         """Set up test users"""
-        super().setUp()
         User.objects.create_user(username=self.test_user_username, password=self.test_password)
         User.objects.create_user(username=self.test_staff_username, password=self.test_password, is_staff=True)
 
     def tearDown(self):
         """Clean up after each test"""
-        super().tearDown()
         TieredCache.dangerous_clear_all_tiers()
         self.client.logout()
 

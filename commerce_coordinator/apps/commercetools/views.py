@@ -115,7 +115,7 @@ class MobileCourseCreateView(SingleInvocationAPIView):
 
         logger.info(
             f'[CT-{tag}] Message received from commercetools '
-            f'Course Created with details: {input_data}'
+            f'Course Create with details: {input_data}'
         )
 
         return Response(status=status.HTTP_200_OK)
