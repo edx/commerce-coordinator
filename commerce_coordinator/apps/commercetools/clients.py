@@ -3,6 +3,7 @@ API clients for commercetools app.
 """
 
 import datetime
+from functools import wraps
 import logging
 from types import SimpleNamespace
 from typing import Generic, List, Optional, Tuple, TypedDict, TypeVar, Union
@@ -14,12 +15,8 @@ from commercetools.platform.models import (
     AuthenticationMode,
     BaseAddress,
     Cart,
-    CartAddLineItemAction,
     CartAddPaymentAction,
     CartDraft,
-    CartSetBillingAddressAction,
-    CartSetCustomFieldAction,
-    CartSetShippingAddressAction,
     Customer,
     CustomerChangeEmailAction,
     CustomerDraft,
@@ -32,7 +29,9 @@ from commercetools.platform.models import (
     CustomObject,
     CustomObjectDraft,
     FieldContainer,
+    InventoryMode,
     LineItem,
+    LineItemDraft,
     LocalizedString,
     Money,
     Order,
@@ -69,6 +68,12 @@ from commercetools.platform.models import (
 
 from django.conf import settings
 from openedx_filters.exceptions import OpenEdxFilterException
+from tenacity import (
+    retry,
+    stop_after_attempt,
+    retry_if_exception_type,
+    wait_incrementing,
+)
 
 from commerce_coordinator.apps.commercetools.catalog_info.constants import (
     DEFAULT_ORDER_EXPANSION,
@@ -139,13 +144,14 @@ class CommercetoolsAPIClient:
     """Commercetools API Client"""
 
     base_client = None
+    enable_retries = False
 
-    def __init__(self):
+    def __init__(self, enable_retries: bool = False):
         """
         Initialize CommercetoolsAPIClient, for use in an application, or (with an arg) testing.
 
         Args:
-             client(Client): A mock client for testing (ONLY).
+            enable_retries (bool): Whether to enable retry logic for API calls.
         """
         super().__init__()
 
@@ -158,6 +164,24 @@ class CommercetoolsAPIClient:
             token_url=config["authUrl"],
             project_key=config["projectKey"],
         )
+        self.enable_retries = enable_retries
+
+    def conditional_retry(method): # type: ignore
+        """Retry decorator that applies retry logic if retries are enabled."""
+
+        @wraps(method) # type: ignore
+        def _conditional_retry(self, *args, **kwargs):
+            if self.enable_retries:
+                return retry(
+                    stop=stop_after_attempt(3),
+                    wait=wait_incrementing(start=2, increment=2),
+                    retry=retry_if_exception_type(CommercetoolsError),
+                    reraise=True,
+                )(method)(self, *args, **kwargs) # type: ignore
+            else:
+                return method(self, *args, **kwargs) # type: ignore
+
+        return _conditional_retry
 
     def ensure_custom_type_exists(self, type_def: CustomTypeDraft) -> Optional[CustomType]:
         """
@@ -231,6 +255,7 @@ class CommercetoolsAPIClient:
 
         return ret
 
+    @conditional_retry
     def get_customer_by_lms_user_id(self, lms_user_id: int) -> Optional[Customer]:
         """
         Get a Commercetools Customer by their LMS User ID
@@ -755,6 +780,7 @@ class CommercetoolsAPIClient:
             )
             raise err
 
+    @conditional_retry
     def update_line_items_transition_state(
         self,
         order_id: str,
@@ -921,6 +947,7 @@ class CommercetoolsAPIClient:
                                             f"first time discount", True)
             return True
 
+    @conditional_retry
     def create_customer(
         self,
         *,
@@ -981,6 +1008,7 @@ class CommercetoolsAPIClient:
             )
             raise err
 
+    @conditional_retry
     def update_customer(
         self,
         *,
@@ -1034,6 +1062,7 @@ class CommercetoolsAPIClient:
             )
             raise err
 
+    @conditional_retry
     def get_customer_cart(self, customer_id: str) -> Optional[Cart]:
         """
         Get the active cart for a customer if it exists
@@ -1066,6 +1095,7 @@ class CommercetoolsAPIClient:
             )
             raise err
 
+    @conditional_retry
     def delete_cart(self, cart: Cart) -> None:
         """
         Delete a cart of a customer
@@ -1149,6 +1179,7 @@ class CommercetoolsAPIClient:
             )
             raise err
 
+    @conditional_retry
     def get_new_order_number(self) -> str:
         """
         Get a new order number for cart
@@ -1169,37 +1200,50 @@ class CommercetoolsAPIClient:
 
         return new_order_number
 
+    @conditional_retry
     def create_cart(
         self,
         *,
+        course_run_key: str,
         customer: Customer,
+        email_domain: str,
+        external_price: Money,
         order_number: str,
-        currency: str,
     ) -> Cart:
         """
         Create a new cart for a customer
 
         Args:
-            customer (Customer): The customer for whom to create the cart
+            course_run_key (str): The course run key
+            customer (Customer): The customer object
+            email_domain (str): The email domain for the cart
+            external_price (Money): The price of the line item
             order_number (str): The order number for the cart
-            currency (str): Currency code for the cart
-            country (str): Country code for the cart
-            language (str): Language code for the cart
 
         Returns:
             Cart: The created cart object
         """
         try:
+            address = BaseAddress(country="UNDEFINED")
+            line_item_draft = LineItemDraft(sku=course_run_key,external_price=external_price)
             custom_fields_draft = CustomFieldsDraft(
                 type=TypeResourceIdentifier(key=TwoUKeys.ORDER_CUSTOM_TYPE),
-                fields=FieldContainer({TwoUKeys.ORDER_ORDER_NUMBER: order_number}),
+                fields=FieldContainer({
+                  TwoUKeys.ORDER_ORDER_NUMBER: order_number,
+                    TwoUKeys.ORDER_EMAIL_DOMAIN: email_domain,
+                    TwoUKeys.ORDER_MOBILE_ORDER: True,
+                  }),
             )
             cart_draft = CartDraft(
-                customer_id=customer.id,
+                currency=external_price.currency_code,
                 customer_email=customer.email,
+                customer_id=customer.id,
                 custom=custom_fields_draft,
+                line_items=[line_item_draft],
+                inventory_mode=InventoryMode.NONE,
                 tax_mode=TaxMode.DISABLED,
-                currency=currency,
+                billing_address=address,
+                shipping_address=address,
             )
 
             expand = ["lineItems[*].productType.obj", "custom"]
@@ -1217,40 +1261,25 @@ class CommercetoolsAPIClient:
             )
             raise err
 
-    def update_cart(
+    @conditional_retry
+    def add_payment_to_cart(
         self,
         *,
-        external_price: Money,
         cart: Cart,
-        sku: str,
-        email_domain: str,
         payment_id: str,
     ) -> Cart:
         """
-        Update the cart with a new line item and payment
+        Add a payment to a cart
 
         Args:
-            external_price (Money): The price of the line item
             cart (Cart): The cart to update
-            sku (str): The SKU of the line item
-            email_domain (str): The email domain for the cart
             payment_id (str): The ID of the payment to add
 
         Returns:
             Cart: The updated cart object
         """
         try:
-            address = BaseAddress(country="UNDEFINED")
             actions = [
-                CartAddLineItemAction(sku=sku, external_price=external_price),
-                CartSetCustomFieldAction(
-                    name=TwoUKeys.ORDER_EMAIL_DOMAIN, value=email_domain
-                ),
-                CartSetCustomFieldAction(
-                    name=TwoUKeys.ORDER_MOBILE_ORDER, value=True
-                ),
-                CartSetBillingAddressAction(address=address),
-                CartSetShippingAddressAction(address=address),
                 CartAddPaymentAction(
                     payment=PaymentResourceIdentifier(id=payment_id)
                 ),
@@ -1261,15 +1290,15 @@ class CommercetoolsAPIClient:
                 id=cart.id, version=cart.version, actions=actions, expand=expand
             )
             logger.info(
-                "[CommercetoolsAPIClient] - Successfully added items to "
+                "[CommercetoolsAPIClient] - Successfully added payment to"
                 f"cart: {cart.id} for customer: {cart.customer_id}"
             )
             return updated_cart
         except CommercetoolsError as err:
             handle_commercetools_error(
-                "[CommercetoolsAPIClient.add_to_cart]",
+                "[CommercetoolsAPIClient.add_payment_to_cart]",
                 err,
-                f"Failed to add items to cart: {cart.id} "
+                f"Failed to add payment to cart: {cart.id} "
                 f"for customer: {cart.customer_id}",
             )
             raise err
@@ -1289,6 +1318,7 @@ class CommercetoolsAPIClient:
         # TODO: implement
         return TransactionState.SUCCESS
 
+    @conditional_retry
     def create_payment(
         self,
         *,
@@ -1299,6 +1329,7 @@ class CommercetoolsAPIClient:
         payment_status: str,
         psp_payment_id: str,
         psp_transaction_id: str,
+        psp_transaction_created_at: datetime.datetime,
         usd_cent_amount: int,
     ) -> Payment:
         """
@@ -1330,12 +1361,13 @@ class CommercetoolsAPIClient:
         transaction_draft = TransactionDraft(
             type=TransactionType.CHARGE,
             amount=amount_planned,
+            timestamp=psp_transaction_created_at,
             state=self._map_payment_status_to_transaction_state(payment_status),
             interaction_id=psp_transaction_id,
             custom=CustomFieldsDraft(
                 type=TypeResourceIdentifier(key=TwoUKeys.TRANSACTION_CUSTOM_TYPE),
                 fields=FieldContainer(
-                    {TwoUKeys.TRANSACTION_USD_AMOUNT: usd_cent_amount}
+                    {TwoUKeys.TRANSACTION_USD_CENT_AMOUNT: usd_cent_amount}
                 ),
             ),
         )
@@ -1364,6 +1396,7 @@ class CommercetoolsAPIClient:
             )
             raise err
 
+    @conditional_retry
     def create_order_from_cart(self, cart: Cart) -> Order:
         """
         Create a new order from a cart

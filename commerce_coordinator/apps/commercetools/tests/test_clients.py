@@ -505,12 +505,6 @@ class ClientTests(TestCase):
                 status_code=200
             )
 
-            mocker.get(
-                f"{base_url}orders/mock_order_id",
-                json=mock_response_order.serialize(),
-                status_code=200
-            )
-
             result = self.client_set.client.update_return_payment_state_for_enrollment_code_purchase(
                 mock_order.id,
                 mock_order.version,
