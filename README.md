@@ -161,7 +161,7 @@
 | commerce\_coordinator/apps/order\_fulfillment/tests/test\_clients.py                     |       22 |        0 |        0 |        0 |    100% |           |
 | commerce\_coordinator/apps/order\_fulfillment/tests/test\_views.py                       |       64 |        0 |        2 |        0 |    100% |           |
 | commerce\_coordinator/apps/order\_fulfillment/urls.py                                    |        4 |        0 |        0 |        0 |    100% |           |
-| commerce\_coordinator/apps/order\_fulfillment/views.py                                   |       33 |        0 |        4 |        0 |    100% |           |
+| commerce\_coordinator/apps/order\_fulfillment/views.py                                   |       32 |        0 |        4 |        0 |    100% |           |
 | commerce\_coordinator/apps/paypal/\_\_init\_\_.py                                        |        0 |        0 |        0 |        0 |    100% |           |
 | commerce\_coordinator/apps/paypal/clients.py                                             |       19 |        8 |        2 |        0 |     52% |     40-65 |
 | commerce\_coordinator/apps/paypal/pipeline.py                                            |       32 |        0 |        6 |        0 |    100% |           |
@@ -194,7 +194,7 @@
 | commerce\_coordinator/apps/stripe/views.py                                               |       63 |       11 |       10 |        3 |     78% |65, 67, 111-144 |
 | commerce\_coordinator/docker\_gunicorn\_configuration.py                                 |       27 |       27 |       10 |        0 |      0% |      4-57 |
 | commerce\_coordinator/urls.py                                                            |       23 |        0 |        0 |        0 |    100% |           |
-|                                                                                **TOTAL** | **7253** |  **317** |  **514** |   **53** | **95%** |           |
+|                                                                                **TOTAL** | **7252** |  **317** |  **514** |   **53** | **95%** |           |
 
 
 ## Setup coverage badge
