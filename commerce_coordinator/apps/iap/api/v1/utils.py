@@ -1,3 +1,4 @@
+from typing import Optional
 from commercetools.platform.models import Customer, Money
 
 from commerce_coordinator.apps.commercetools.catalog_info.constants import (
@@ -5,6 +6,7 @@ from commerce_coordinator.apps.commercetools.catalog_info.constants import (
 )
 from commerce_coordinator.apps.commercetools.clients import CommercetoolsAPIClient
 from commerce_coordinator.apps.commercetools.http_api_client import CTCustomAPIClient
+from commerce_coordinator.apps.core.segment import track
 
 
 def _get_attributes_to_update(
@@ -127,3 +129,57 @@ def get_standalone_price_for_sku(sku: str) -> Money:
         raise ValueError(
             f"No standalone price found for the SKU: {sku}, received: {response[0]}"
         ) from exc
+
+def sum_money(*args: Optional[dict[str, any]]) -> dict[str, any]:
+    """
+    Sums a list of amount dicts.
+
+    Args: dict (centAmount, currencyCode, fractionDigits)
+
+    Returns a dict with total centAmount and shared fractionDigits and currencyCode.
+    """
+
+    amount_list = [amount for amount in args if amount]
+
+    
+    total_cent_amount = sum(amount.get("centAmount", 0) for amount in amount_list)
+
+def cent_to_dollars(amount: dict) -> float:
+    """
+    Get converted amount in dollars from cents upto fraction digits in points.
+
+    Args:
+       amount: dict (centAmount, fractionDigits)
+
+    Returns:
+        The converted amount in dollars
+    """
+
+    cent_amount = amount.get("centAmount", 0)
+    fraction_digits = amount.get('fractionDigits', 2)
+
+    return cent_amount / (10 ** fraction_digits)
+
+
+def emit_checkout_started_event(lms_user_id, cart_id, currency_code):
+    
+    """
+    Triggering Checkout Started event on segment.
+    """
+    event_props = {
+        "cart_id": cart_id,
+        "checkout_id": cart_id,
+        "currency": currency_code,
+        "revenue": amount_with_tax,
+        "value": gross_amount,
+        "coupon": discount_code,
+        "discount": discount_in_dollars,
+        "products": products,
+        "is_mobile": True
+    }
+
+    track(
+        lms_user_id=lms_user_id,
+        event='Checkout Started',
+        properties=event_props
+    )

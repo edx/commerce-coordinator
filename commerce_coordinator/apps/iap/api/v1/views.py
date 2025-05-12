@@ -33,7 +33,7 @@ class CreateOrderView(APIView):
     for mobile In-App purchase
     """
 
-    permission_classes = (IsAuthenticated,)
+    # permission_classes = (IsAuthenticated,)
 
     def post(self, request: Request) -> Response:
         """
@@ -44,7 +44,6 @@ class CreateOrderView(APIView):
             serializer = OrderRequestSerializer(data=request.data)
             serializer.is_valid(raise_exception=True)
             request_data: OrderRequestData = serializer.validated_data  # type: ignore
-
             external_price = Money(
                 cent_amount=int(request_data["price"] * 100),
                 currency_code=request_data["currency"],
@@ -52,6 +51,10 @@ class CreateOrderView(APIView):
             standalone_price = get_standalone_price_for_sku(
                 sku=request_data["course_run_key"]
             )
+
+            logger.info(f'PRICESSSS {external_price}')
+            logger.info(f'standalone_price {standalone_price}')
+
 
             client = CommercetoolsAPIClient()
             customer = get_ct_customer(client, request.user)
@@ -78,6 +81,9 @@ class CreateOrderView(APIView):
                 psp_transaction_id="Dummy-" + str(uuid.uuid4()),
                 usd_cent_amount=standalone_price.cent_amount,
             )
+
+            logger.info(f'PAYMENTTTTT {payment}')
+
             cart = client.update_cart(
                 cart=cart,
                 external_price=external_price,
@@ -94,6 +100,9 @@ class CreateOrderView(APIView):
                 new_state_key=TwoUKeys.PENDING_FULFILMENT_STATE,
                 use_state_id=True,
             )
+
+            logger.info(f'ORDERRRRR {order}')
+
 
             serializer = OrderResponseSerializer(
                 data={
