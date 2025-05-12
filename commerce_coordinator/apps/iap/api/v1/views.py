@@ -5,6 +5,8 @@ import uuid
 from commercetools import CommercetoolsError
 from commercetools.platform.models import Money
 
+from iso4217 import Currency
+
 from rest_framework import status
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.request import Request
@@ -45,8 +47,9 @@ class MobileCreateOrderView(APIView):
             serializer.is_valid(raise_exception=True)
             data = MobileOrderRequestData(**serializer.validated_data)  # type: ignore
 
+            fraction_digits = Currency(data.currency_code).exponent or 0
             external_price = Money(
-                cent_amount=int(data.price * 100),
+                cent_amount=int(data.price.scaleb(fraction_digits)),
                 currency_code=data.currency_code,
             )
             standalone_price = get_standalone_price_for_sku(

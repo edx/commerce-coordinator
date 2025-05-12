@@ -22,6 +22,7 @@ edx-django-utils
 edx-django-release-util
 edx-drf-extensions
 edx-rest-api-client
+iso4217
 mysqlclient
 openedx-filters
 Pillow

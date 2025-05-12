@@ -207,6 +207,8 @@ idna==3.10
     #   requests
 iniconfig==2.0.0
     # via pytest
+iso4217==1.12.20240625
+    # via -r requirements/base.txt
 isort==6.0.0
     # via pylint
 itypes==1.2.0

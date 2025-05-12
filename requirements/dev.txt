@@ -247,6 +247,8 @@ iniconfig==2.0.0
     # via
     #   -r requirements/validation.txt
     #   pytest
+iso4217==1.12.20240625
+    # via -r requirements/validation.txt
 isort==6.0.0
     # via
     #   -r requirements/validation.txt
