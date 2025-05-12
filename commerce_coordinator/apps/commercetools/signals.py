@@ -8,7 +8,8 @@ from commerce_coordinator.apps.commercetools.catalog_info.constants import TwoUK
 from commerce_coordinator.apps.commercetools.tasks import (
     fulfillment_completed_update_ct_line_item_task,
     refund_from_paypal_task,
-    refund_from_stripe_task
+    refund_from_stripe_task,
+    refund_from_mobile_task
 )
 from commerce_coordinator.apps.core.signal_helpers import CoordinatorSignal, log_receiver
 
@@ -62,5 +63,18 @@ def refund_from_paypal(**kwargs):
     """
     async_result = refund_from_paypal_task.delay(
         paypal_capture_id=kwargs["paypal_capture_id"], refund=kwargs["refund"]
+    )
+    return async_result.id
+
+
+@log_receiver(logger)
+def refund_from_mobile(**kwargs):
+    """
+    Create a refund transaction in Commercetools based on a refund created from mobile platforms (iOS/Android).
+    """
+    async_result = refund_from_mobile_task.delay(
+        transaction_id=kwargs["transaction_id"],
+        payment_interface=kwargs["payment_interface"],
+        refund=kwargs["refund"],
     )
     return async_result.id

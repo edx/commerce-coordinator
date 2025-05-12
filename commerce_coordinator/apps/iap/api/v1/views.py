@@ -25,6 +25,7 @@ from commerce_coordinator.apps.iap.api.v1.serializer import (
     MobileOrderRequestData,
     MobileOrderRequestSerializer,
 )
+from commerce_coordinator.apps.iap.api.v1.signals import payment_refunded_signal
 
 logger = logging.getLogger(__name__)
 
@@ -117,3 +118,25 @@ class MobileCreateOrderView(APIView):
                 {"error": message},
                 status=status.HTTP_400_BAD_REQUEST,
             )
+
+
+class MobileBaseRefundView(APIView):
+    """Base refund class for iOS and Android refunds"""
+
+    authentication_classes = ()
+
+    def trigger_refund(self, transaction_id, refund_id, payment_interface):
+        """Get a transaction id and create a refund against that transaction."""
+        refund = {
+            "id": refund_id,
+            "created": datetime.datetime.now(),
+            "status": "Dummy-COMPLETED",
+            "amount": 10.0,
+            "currency": "USD",
+        }
+        payment_refunded_signal.send_robust(
+            sender=self.__class__,
+            transaction_id=transaction_id,
+            payment_interface=payment_interface,
+            refund=refund,
+        )

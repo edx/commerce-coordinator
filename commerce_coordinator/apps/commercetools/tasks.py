@@ -120,8 +120,8 @@ def refund_from_stripe_task(
     stripe_refund
 ):
     """
-    Celery task for a refund registered in Stripe dashboard and need to create
-    refund payment transaction record via Commercetools API.
+    Celery task for handling a refund registered in the Stripe dashboard.
+    Creates a refund payment transaction record via the Commercetools API.
     """
     client = CommercetoolsAPIClient()
     try:
@@ -152,8 +152,17 @@ def refund_from_paypal_task(
     refund
 ):
     """
-    Celery task for a refund registered in PayPal dashboard and need to create
-    refund payment transaction record via Commercetools API.
+    Celery task for handling a refund registered in the PayPal dashboard.
+    Creates a refund payment transaction record via the Commercetools API.
+
+    Args:
+        paypal_capture_id (str): The PayPal capture identifier
+        refund (dict): Information about the refund, containing:
+            - id: Refund identifier
+            - created: Datetime when the refund was created
+            - status: Status of the refund
+            - amount: Amount that was refunded
+            - currency: Currency code for the refund
     """
     client = CommercetoolsAPIClient()
     try:
@@ -174,4 +183,50 @@ def refund_from_paypal_task(
                      f"transaction object for payment {payment.key} "
                      f"on PayPal refund {refund.get('id')} "
                      f"with error {err.errors} and correlation id {err.correlation_id}")
+        return None
+
+
+@shared_task(autoretry_for=(CommercetoolsError,), retry_kwargs={'max_retries': 5, 'countdown': 3})
+def refund_from_mobile_task(transaction_id: str, payment_interface: str, refund):
+    """
+    Celery task for handling a refund registered in the mobile platforms (iOS/Android).
+    Creates a refund payment transaction record via the Commercetools API.
+
+    Args:
+        transaction_id (str): The transaction identifier from the mobile platform
+        payment_interface (str): The payment interface
+        refund (dict): Information about the refund, containing:
+            - id: Refund identifier
+            - created: Datetime when the refund was created
+            - status: Status of the refund
+            - amount: Amount that was refunded
+            - currency: Currency code for the refund
+    """
+    client = CommercetoolsAPIClient()
+    try:
+        payment = client.get_payment_by_transaction_interaction_id(transaction_id)
+        if has_full_refund_transaction(payment) or is_transaction_already_refunded(
+            payment, refund["id"]
+        ):
+            logger.info(
+                f"Mobile refund event received, but Payment with ID {payment.id} "
+                f"already has a refund with ID: {refund.get('id')}. "
+                "Skipping task to add refund transaction."
+            )
+            return None
+
+        payment = client.create_return_payment_transaction(
+            payment_id=payment.id,
+            payment_version=payment.version,
+            refund=refund,
+            psp=payment_interface,
+        )
+        return payment
+    except CommercetoolsError as err:
+        logger.error(
+            f"[refund_from_mobile_task] Unable to create CT payment's refund "
+            f"transaction object for payment {payment.key} "
+            f"on mobile refund {refund.get('id')} "
+            f"with error {err.errors} and correlation id {err.correlation_id}"
+        )
         return None
