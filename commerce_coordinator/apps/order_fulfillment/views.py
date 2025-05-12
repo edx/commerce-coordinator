@@ -24,7 +24,6 @@ class OrderFulfillmentCompletionStatusWebhookView(SingleInvocationAPIView):
     Endpoint for Order Fulfillment webhook Response. This endpoint receives fulfillment
     response from fulfillment providers and updates CT order object with response data.
     """
-    http_method_names = ['post']
     authentication_classes = [JwtBearerAuthentication, SessionAuthentication]
     permission_classes = [IsAdminUser]
 

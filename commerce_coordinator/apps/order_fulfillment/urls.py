@@ -9,7 +9,7 @@ from commerce_coordinator.apps.order_fulfillment.views import OrderFulfillmentCo
 app_name = 'order_fulfillment'
 urlpatterns = [
     path(
-        'fulfillment-response-webhook/',
+        'fulfillment-response-webhook',
         OrderFulfillmentCompletionStatusWebhookView.as_view(),
         name='fulfillment_response_webhook'
     ),
