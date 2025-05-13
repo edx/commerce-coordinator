@@ -6,9 +6,7 @@ import logging
 
 from commercetools.platform.models import Customer, Money
 
-from commerce_coordinator.apps.commercetools.catalog_info.constants import (
-    EdXFieldNames,
-)
+from commerce_coordinator.apps.commercetools.catalog_info.constants import EdXFieldNames
 from commerce_coordinator.apps.commercetools.clients import CommercetoolsAPIClient
 from commerce_coordinator.apps.commercetools.http_api_client import CTCustomAPIClient
 

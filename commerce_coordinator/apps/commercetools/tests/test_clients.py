@@ -1,6 +1,7 @@
 """ Commercetools API Client(s) Testing """
 
 from datetime import datetime
+
 import pytest
 import requests_mock
 import stripe
@@ -18,8 +19,8 @@ from commercetools.platform.models import (
     ReturnShipmentState,
     TransactionState,
     TransactionType,
-    Type as CustomType,
-    TypeDraft as CustomTypeDraft,
+    Type,
+    TypeDraft
 )
 from django.test import TestCase
 from mock import patch
@@ -80,11 +81,11 @@ class ClientTests(TestCase):
     def test_ensure_custom_type_exists(self):
         draft = TwoUCustomTypes.CUSTOMER_TYPE_DRAFT
 
-        self.assertIsInstance(draft, CustomTypeDraft)
+        self.assertIsInstance(draft, TypeDraft)
 
         ret_val = self.client_set.client.ensure_custom_type_exists(draft)
 
-        self.assertIsInstance(ret_val, CustomType)
+        self.assertIsInstance(ret_val, Type)
         self.assertEqual(ret_val.key, draft.key)
 
     def test_tag_customer_with_lms_user_id_should_fail_bad_type(self):

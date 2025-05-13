@@ -30,7 +30,6 @@ from commercetools.platform.models import (
     ReturnShipmentState,
     RoundingMode,
     ShippingMode,
-    State as LineItemState,
     StateTypeEnum,
     TaxCalculationMode,
     TaxMode,
@@ -38,8 +37,9 @@ from commercetools.platform.models import (
     TransactionState,
     TransactionType,
     TypedMoney,
-    TypeReference,
+    TypeReference
 )
+from commercetools.platform.models.state import State as LineItemState
 from commercetools.testing import BackendRepository
 
 from commerce_coordinator.apps.commercetools.catalog_info.constants import EdXFieldNames
