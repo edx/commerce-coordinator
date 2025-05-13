@@ -164,8 +164,8 @@ def sum_money(*args: Optional[list[CentPrecisionMoney]]) -> CentPrecisionMoney:
 
     return {
         'cent_amount': total_cent_amount,
-        'fraction_digits': amount_list[0].get('fractionDigits', 0),
-        'currency_code': amount_list[0].get('currencyCode', 'USD'),
+        'fraction_digits': amount_list[0].fraction_digits,
+        'currency_code': amount_list[0].currency_code
     }
 
 

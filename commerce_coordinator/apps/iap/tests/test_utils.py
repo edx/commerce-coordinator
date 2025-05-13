@@ -3,15 +3,20 @@ Tests for utility functions in the InAppPurchase app.
 """
 
 from unittest import TestCase, mock
+from unittest.mock import patch, Mock
 
-from commercetools.platform.models import Customer
+from commercetools.platform.models import Customer, CentPrecisionMoney, Attribute
 
 from commerce_coordinator.apps.commercetools.catalog_info.constants import EdXFieldNames
 from commerce_coordinator.apps.iap.utils import (
     _get_attributes_to_update,
     get_ct_customer,
     get_email_domain,
-    get_standalone_price_for_sku
+    get_standalone_price_for_sku,
+    sum_money,
+    cents_to_dollars,
+    get_attribute_value,
+    get_product_from_line_item
 )
 
 
@@ -292,3 +297,138 @@ class GetStandalonePriceForSkuTests(TestCase):
             get_standalone_price_for_sku("test-sku")
 
         self.assertIn("No standalone price found", str(context.exception))
+
+
+class TestSumMoney(TestCase):
+    """Tests for sum_money utility function"""
+
+    def test_sum_money_with_valid_money_objects(self):
+        """Test summing multiple valid CentPrecisionMoney objects"""
+
+        money1 = CentPrecisionMoney(cent_amount=1000, currency_code="USD", fraction_digits=2)
+        money2 = CentPrecisionMoney(cent_amount=2500, currency_code="USD", fraction_digits=2)
+        money3 = CentPrecisionMoney(cent_amount=7500, currency_code="USD", fraction_digits=2)
+
+        result = sum_money(money1, money2, money3)
+
+        assert result['cent_amount'] == 11000
+        assert result['currency_code'] == "USD"
+        assert result['fraction_digits'] == 2
+
+    def test_sum_money_with_none_values(self):
+        """Test summing with None values and edge cases"""
+
+        money1 = CentPrecisionMoney(cent_amount=1000, currency_code="USD", fraction_digits=2)
+        money2 = None
+
+        result = sum_money(money1, money2)
+        assert result['cent_amount'] == 1000
+        assert result['currency_code'] == "USD"
+        assert result['fraction_digits'] == 2
+
+        result = sum_money(None, None)
+        assert result is None
+
+        result = sum_money()
+        assert result is None
+
+
+class TestCentsToDollars(TestCase):
+    """Tests for cents_to_dollars utility function"""
+
+    def test_cents_to_dollars_conversion(self):
+        """Test converting cent amount to dollars with various amounts and fraction digits"""
+
+        money1 = CentPrecisionMoney(cent_amount=1000, currency_code="USD", fraction_digits=2)
+        result1 = cents_to_dollars(money1)
+        assert result1 == 10.00
+
+        money2 = CentPrecisionMoney(cent_amount=12345, currency_code="USD", fraction_digits=3)
+        result2 = cents_to_dollars(money2)
+        assert result2 == 12.345
+
+        money3 = CentPrecisionMoney(cent_amount=999999, currency_code="USD", fraction_digits=2)
+        result3 = cents_to_dollars(money3)
+        assert result3 == 9999.99
+
+        money4 = CentPrecisionMoney(cent_amount=1, currency_code="USD", fraction_digits=2)
+        result4 = cents_to_dollars(money4)
+        assert result4 == 0.01
+
+    def test_cents_to_dollars_edge_cases(self):
+        """Test edge cases for cents_to_dollars function"""
+
+        result1 = cents_to_dollars(None)
+        assert result1 is None
+
+        money2 = CentPrecisionMoney(cent_amount=0, currency_code="USD", fraction_digits=2)
+        result2 = cents_to_dollars(money2)
+        assert result2 == 0.0
+
+        money3 = CentPrecisionMoney(cent_amount=None, currency_code="USD", fraction_digits=2)
+        result3 = cents_to_dollars(money3)
+        assert result3 == 0.0
+
+        money4 = CentPrecisionMoney(cent_amount=1234, currency_code="USD", fraction_digits=None)
+        result4 = cents_to_dollars(money4)
+        assert result4 == 12.34
+
+
+class TestGetAttributeValue(TestCase):
+    """Tests for get_attribute_value utility function"""
+
+    def test_get_attribute_value_found(self):
+        """Test retrieving attribute values that exist in the list"""
+        
+        # Create test attributes
+        attributes = [
+            Attribute(name="color", value="red"),
+            Attribute(name="size", value="medium"),
+            Attribute(name="price", value=19.99),
+            Attribute(name="in_stock", value=True)
+        ]
+        
+        # Test string values
+        result1 = get_attribute_value(attributes, "color")
+        assert result1 == "red"
+        
+        result2 = get_attribute_value(attributes, "size")
+        assert result2 == "medium"
+        
+        # Test numeric value
+        result3 = get_attribute_value(attributes, "price")
+        assert result3 == 19.99
+        
+        # Test boolean value
+        result4 = get_attribute_value(attributes, "in_stock")
+        assert result4 is True
+
+    def test_get_attribute_value_edge_cases(self):
+        """Test edge cases for get_attribute_value function"""
+        
+        # Create test attributes
+        attributes = [
+            Attribute(name="empty", value=""),
+            Attribute(name="zero", value=0),
+            Attribute(name="none_value", value=None)
+        ]
+        
+        # Test with non-existent key
+        result1 = get_attribute_value(attributes, "non_existent")
+        assert result1 is None
+        
+        # Test with empty string value
+        result2 = get_attribute_value(attributes, "empty")
+        assert result2 == ""
+        
+        # Test with zero value
+        result3 = get_attribute_value(attributes, "zero")
+        assert result3 == 0
+        
+        # Test with None value
+        result4 = get_attribute_value(attributes, "none_value")
+        assert result4 is None
+        
+        # Test with empty attributes list
+        result5 = get_attribute_value([], "any_key")
+        assert result5 is None
