@@ -5,6 +5,7 @@ commercetools app URLS
 from django.urls import include, path
 
 from commerce_coordinator.apps.commercetools.views import (
+    MobileCourseCreateView,
     MobileCourseVariantAddView,
     MobileStandalonePriceChangeView,
     OrderFulfillView,
@@ -18,6 +19,7 @@ urlpatterns = [
     # EventBridge / CloudWatch Endpoints
     path('fulfill', OrderFulfillView.as_view(), name='fulfill'),
     path('mobile-course-variant-add', MobileCourseVariantAddView.as_view(), name='mobile-course-variant-add'),
+    path('mobile-course-create', MobileCourseCreateView.as_view(), name='mobile-course-create'),
     path(
         'mobile-standalone-price-change',
         MobileStandalonePriceChangeView.as_view(),
