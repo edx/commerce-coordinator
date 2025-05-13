@@ -37,6 +37,7 @@ from commerce_coordinator.apps.demo_lms import urls as demo_lms_urls
 from commerce_coordinator.apps.ecommerce import urls as ecommerce_urls
 from commerce_coordinator.apps.frontend_app_ecommerce import urls as unified_orders_urls
 from commerce_coordinator.apps.frontend_app_payment import urls as frontend_app_payment_urls
+from commerce_coordinator.apps.iap import urls as iap_urls
 from commerce_coordinator.apps.lms import urls as lms_urls
 from commerce_coordinator.apps.order_fulfillment import urls as order_fulfillment_urls
 from commerce_coordinator.apps.paypal import urls as paypal_urls
@@ -58,6 +59,7 @@ urlpatterns = oauth2_urlpatterns + [
 
     # Local Django Apps
     re_path(r'^ecommerce/', include(ecommerce_urls), name='ecommerce'),
+    re_path(r'^iap/', include(iap_urls), name='iap'),
     re_path(r'^lms/', include(lms_urls), name='lms'),
     re_path(r'^commercetools/', include(commercetools_urls), name='commercetools'),
     re_path(r'^orders/', include(commercetools_urls, namespace="commercetools_orders_fwd")),
