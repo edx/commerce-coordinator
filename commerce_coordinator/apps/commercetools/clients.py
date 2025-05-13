@@ -5,6 +5,8 @@ API clients for commercetools app.
 import datetime
 from functools import wraps
 import logging
+import uuid
+from functools import wraps
 from types import SimpleNamespace
 from typing import Generic, List, Optional, Tuple, TypedDict, TypeVar, Union
 import uuid
@@ -55,25 +57,20 @@ from commercetools.platform.models import (
     ReturnPaymentState,
     ReturnShipmentState,
     ShipmentState,
-    State as LineItemState,
     StateResourceIdentifier,
     TaxMode,
     TransactionDraft,
     TransactionState,
     TransactionType,
-    Type as CustomType,
-    TypeDraft as CustomTypeDraft,
-    TypeResourceIdentifier,
+    TypeDraft,
+    TypeResourceIdentifier
 )
-
+from commercetools.platform.models.state import State as LineItemState
 from django.conf import settings
 from openedx_filters.exceptions import OpenEdxFilterException
-from tenacity import (
-    retry,
-    stop_after_attempt,
-    retry_if_exception_type,
-    wait_incrementing,
-)
+from tenacity import retry, retry_if_exception_type
+from tenacity.stop import stop_after_attempt
+from tenacity.wait import wait_incrementing
 
 from commerce_coordinator.apps.commercetools.catalog_info.constants import (
     DEFAULT_ORDER_EXPANSION,
@@ -183,7 +180,7 @@ class CommercetoolsAPIClient:
 
         return _conditional_retry
 
-    def ensure_custom_type_exists(self, type_def: CustomTypeDraft) -> Optional[CustomType]:
+    def ensure_custom_type_exists(self, type_def: TypeDraft):
         """
         Ensures a custom type exists within CoCo
         Args:
@@ -1109,7 +1106,6 @@ class CommercetoolsAPIClient:
                 "[CommercetoolsAPIClient] - Successfully deleted "
                 f"cart: {cart.id} for customer: {cart.customer_id}"
             )
-
         except CommercetoolsError as err:
             handle_commercetools_error(
                 "[CommercetoolsAPIClient.delete_cart]",
@@ -1225,14 +1221,18 @@ class CommercetoolsAPIClient:
         """
         try:
             address = BaseAddress(country="UNDEFINED")
-            line_item_draft = LineItemDraft(sku=course_run_key, external_price=external_price)
+            line_item_draft = LineItemDraft(
+                sku=course_run_key, external_price=external_price
+            )
             custom_fields_draft = CustomFieldsDraft(
                 type=TypeResourceIdentifier(key=TwoUKeys.ORDER_CUSTOM_TYPE),
-                fields=FieldContainer({
-                    TwoUKeys.ORDER_ORDER_NUMBER: order_number,
-                    TwoUKeys.ORDER_EMAIL_DOMAIN: email_domain,
-                    TwoUKeys.ORDER_MOBILE_ORDER: True,
-                  }),
+                fields=FieldContainer(
+                    {
+                        TwoUKeys.ORDER_ORDER_NUMBER: order_number,
+                        TwoUKeys.ORDER_EMAIL_DOMAIN: email_domain,
+                        TwoUKeys.ORDER_MOBILE_ORDER: True,
+                    }
+                ),
             )
             cart_draft = CartDraft(
                 currency=external_price.currency_code,

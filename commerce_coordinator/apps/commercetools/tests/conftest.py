@@ -30,7 +30,6 @@ from commercetools.platform.models import (
     ReturnShipmentState,
     RoundingMode,
     ShippingMode,
-    State as LineItemState,
     StateTypeEnum,
     TaxCalculationMode,
     TaxMode,
@@ -38,8 +37,9 @@ from commercetools.platform.models import (
     TransactionState,
     TransactionType,
     TypedMoney,
-    TypeReference,
+    TypeReference
 )
+from commercetools.platform.models.state import State as LineItemState
 from commercetools.testing import BackendRepository
 
 from commerce_coordinator.apps.commercetools.catalog_info.constants import EdXFieldNames
@@ -399,6 +399,7 @@ def gen_cart(
     cart_version=1,
     customer_id=None,
     customer_email=None,
+    custom=None,
 ) -> Cart:
     """Generate a Cart object with the given parameters."""
     if not cart_id:
@@ -432,4 +433,5 @@ def gen_cart(
         item_shipping_addresses=[],
         refused_gifts=[],
         shipping=[],
+        custom=custom,
     )

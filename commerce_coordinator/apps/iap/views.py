@@ -10,16 +10,27 @@ from commercetools import CommercetoolsError
 from commercetools.platform.models import Money
 from iso4217 import Currency
 from rest_framework import status
+from rest_framework.permissions import IsAuthenticated
 from rest_framework.request import Request
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
+# isort: off
 from commerce_coordinator.apps.commercetools.catalog_info.constants import TwoUKeys
 from commerce_coordinator.apps.commercetools.catalog_info.edx_utils import get_edx_lms_user_id
 from commerce_coordinator.apps.commercetools.clients import CommercetoolsAPIClient
 from commerce_coordinator.apps.iap.segment_events import SegmentEventTracker
-from commerce_coordinator.apps.iap.serializers import MobileOrderRequestData, MobileOrderRequestSerializer
-from commerce_coordinator.apps.iap.utils import get_ct_customer, get_email_domain, get_standalone_price_for_sku
+from commerce_coordinator.apps.iap.utils import (
+    get_ct_customer,
+    get_email_domain,
+    get_standalone_price_for_sku,
+)
+from commerce_coordinator.apps.iap.serializers import (
+    MobileOrderRequestData,
+    MobileOrderRequestSerializer,
+)
+
+# isort: on
 
 logger = logging.getLogger(__name__)
 
@@ -30,7 +41,7 @@ class MobileCreateOrderView(APIView):
     for mobile In-App purchase
     """
 
-    # permission_classes = (IsAuthenticated,)
+    permission_classes = (IsAuthenticated,)
 
     def post(self, request: Request) -> Response:
         """
