@@ -52,6 +52,7 @@ def gen_example_fulfill_payload():
             'id': uuid4_str(),
             'lineItemId': uuid4_str()
         }],
+        'is_order_fulfillment_forwarding_enabled': False
     }
 
 
@@ -67,6 +68,9 @@ class CommercetoolsAPIClientMock(MagicMock):
         self.order_id = self.example_payload['order_id']
         self.order_number = self.example_payload['order_number']
         self.line_item_state_id = self.example_payload['line_item_state_id']
+        self.is_order_fulfillment_forwarding_enabled = (
+            self.example_payload['is_order_fulfillment_forwarding_enabled']
+        )
         self.customer_id = uuid4_str()
         self.processing_line_item_id = uuid4_str()
         self.cache_key = safe_key(key=self.order_id, key_prefix='send_order_confirmation_email', version='1')
@@ -116,19 +120,32 @@ class FulfillOrderPlacedMessageSignalTaskTests(TestCase):
             values['order_id'],
             values['line_item_state_id'],
             values['source_system'],
-            values['message_id']
+            values['message_id'],
+            values['is_order_fulfillment_forwarding_enabled']
         )
 
     @staticmethod
     def get_uut():
         return fulfill_order_placed_uut
 
-    def test_correct_arguments_passed(self, _ct_client_init: CommercetoolsAPIClientMock, _lms_signal):
+    @patch('commerce_coordinator.apps.commercetools.sub_messages.tasks.CommercetoolsAPIClient')
+    @patch('commerce_coordinator.apps.commercetools.order_fulfillment_utils.utils.CommercetoolsAPIClient')
+    def test_correct_arguments_passed(
+        self,
+        mock_utils_client,
+        mock_tasks_client,
+        _ct_client_init: CommercetoolsAPIClientMock,
+        _lms_signal
+    ):
         """
         Check calling uut with mock_parameters yields call to client with
         expected_data.
         """
+
         mock_values = _ct_client_init.return_value
+        mock_tasks_client.return_value = mock_values
+        mock_utils_client.return_value = mock_values
+
         # pylint: disable = no-value-for-parameter
         _ = self.get_uut()(
             *self.unpack_for_uut(mock_values.example_payload)
@@ -138,14 +155,26 @@ class FulfillOrderPlacedMessageSignalTaskTests(TestCase):
         mock_values.customer_mock.assert_called_once_with(mock_values.expected_customer.id)
         self.assertTrue(TieredCache.get_cached_response(mock_values.cache_key).is_found)
 
+    @patch('commerce_coordinator.apps.commercetools.sub_messages.tasks.CommercetoolsAPIClient')
+    @patch('commerce_coordinator.apps.commercetools.order_fulfillment_utils.utils.CommercetoolsAPIClient')
     @patch('commerce_coordinator.apps.commercetools.sub_messages.tasks.is_edx_lms_order',
            return_value=False)
-    def test_not_lms_order(self, _fn, _ct_client_init: CommercetoolsAPIClientMock, _lms_signal):
+    def test_not_lms_order(
+        self,
+        _fn,
+        mock_tasks_client,
+        mock_utils_client,
+        _ct_client_init: CommercetoolsAPIClientMock,
+        _lms_signal
+    ):
         """
         Check calling uut with mock_parameters yields call to client with
         expected_data.
         """
         mock_values = _ct_client_init.return_value
+
+        mock_tasks_client.return_value = mock_values
+        mock_utils_client.return_value = mock_values
 
         # pylint: disable=no-value-for-parameter
         ret_val = fulfill_order_placed_uut(
@@ -156,6 +185,54 @@ class FulfillOrderPlacedMessageSignalTaskTests(TestCase):
         mock_values.order_mock.assert_called_once_with(mock_values.order_id)
         mock_values.customer_mock.assert_called_once_with(mock_values.customer_id)
         self.assertFalse(TieredCache.get_cached_response(mock_values.cache_key).is_found)
+
+    @patch('commerce_coordinator.apps.commercetools.sub_messages.tasks.User.objects.get')
+    @patch('commerce_coordinator.apps.commercetools.sub_messages.tasks.CommercetoolsAPIClient')
+    @patch('commerce_coordinator.apps.commercetools.order_fulfillment_utils.utils.CommercetoolsAPIClient')
+    def test_order_fulfillment_forwarding_enabled(
+        self,
+        mock_utils_client,
+        mock_tasks_client,
+        mock_user_get,
+        _ct_client_init: CommercetoolsAPIClientMock,
+        _lms_signal
+    ):
+        """
+        Test fulfill_order_placed_message_signal_task calls OrderFulfillmentAPIClient
+        when is_order_fulfillment_forwarding_enabled is True.
+
+        """
+
+        mock_user = Mock()
+        mock_user.username = 'test-username'
+        mock_user_get.return_value = mock_user
+
+        mock_values = _ct_client_init.return_value
+        mock_tasks_client.return_value = mock_values
+        mock_utils_client.return_value = mock_values
+
+        mock_client_instance = MagicMock()
+        mock_client_instance.fulfill_order.return_value = None
+
+        with patch(
+            'commerce_coordinator.apps.commercetools.sub_messages.tasks.OrderFulfillmentAPIClient'
+        ) as mock_client_class:
+            mock_client_class.return_value = mock_client_instance
+
+            payload = mock_values.example_payload.copy()
+            payload['is_order_fulfillment_forwarding_enabled'] = True
+
+            # pylint: disable = no-value-for-parameter
+            fulfill_order_placed_message_signal_task(*self.unpack_for_uut(payload))
+
+            mock_client_instance.fulfill_order.assert_called_once()
+
+            called_args = mock_client_instance.fulfill_order.call_args[0]
+            called_payload = called_args[0]
+
+            self.assertIn('course_id', called_payload)
+            self.assertIn('edx_lms_username', called_payload)
+            self.assertEqual(called_payload['edx_lms_username'], 'test-username')
 
     @patch('commerce_coordinator.apps.commercetools.sub_messages.tasks.is_edx_lms_order',
            return_value=False)

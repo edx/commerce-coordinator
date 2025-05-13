@@ -37,6 +37,10 @@ EXAMPLE_FULFILLMENT_SIGNAL_PAYLOAD: Dict[str, Union[str, bool, int, None]] = {
     'product_type': 'edx_course'
 }
 
+EXAMPLE_FULFILLMENT_SERVICE_REDIRECTION_PAYLOAD: Dict[str, str] = {
+    'lob': 'edx'
+}
+
 EXAMPLE_ENTITLEMENT_FULFILLMENT_REQUEST_PAYLOAD = {
     'user': 'test-user',
     'mode': 'verified',
