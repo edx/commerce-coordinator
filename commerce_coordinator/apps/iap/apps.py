@@ -1,3 +1,7 @@
+"""
+App configuration for the Commerce Coordinator InAppPurchase app.
+"""
+
 from django.apps import AppConfig
 
 

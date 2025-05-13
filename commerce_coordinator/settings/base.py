@@ -57,7 +57,7 @@ PROJECT_APPS = (
     'commerce_coordinator.apps.commercetools',
     'commerce_coordinator.apps.iap',
     'commerce_coordinator.apps.order_fulfillment',
-
+)
 
 INSTALLED_APPS += THIRD_PARTY_APPS
 INSTALLED_APPS += PROJECT_APPS

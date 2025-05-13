@@ -1,3 +1,7 @@
+"""
+Serializers for InAppPurchase service
+"""
+
 from decimal import Decimal
 from typing import NamedTuple
 

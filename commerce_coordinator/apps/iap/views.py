@@ -1,3 +1,7 @@
+"""
+Views for the InAppPurchase app
+"""
+
 import datetime
 import logging
 import uuid
@@ -16,12 +20,12 @@ from rest_framework.views import APIView
 from commerce_coordinator.apps.commercetools.catalog_info.constants import TwoUKeys
 from commerce_coordinator.apps.commercetools.clients import CommercetoolsAPIClient
 
-from commerce_coordinator.apps.iap.api.v1.utils import (
+from commerce_coordinator.apps.iap.utils import (
     get_ct_customer,
     get_email_domain,
     get_standalone_price_for_sku,
 )
-from commerce_coordinator.apps.iap.api.v1.serializer import (
+from commerce_coordinator.apps.iap.serializers import (
     MobileOrderRequestData,
     MobileOrderRequestSerializer,
 )

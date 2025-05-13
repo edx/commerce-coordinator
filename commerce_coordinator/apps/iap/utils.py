@@ -1,3 +1,7 @@
+"""
+Utils for the InAppPurchase app
+"""
+
 import logging
 
 from commercetools.platform.models import Customer, Money
