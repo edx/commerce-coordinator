@@ -399,6 +399,7 @@ def gen_cart(
     cart_version=1,
     customer_id=None,
     customer_email=None,
+    custom=None,
 ) -> Cart:
     """Generate a Cart object with the given parameters."""
     if not cart_id:
@@ -432,4 +433,5 @@ def gen_cart(
         item_shipping_addresses=[],
         refused_gifts=[],
         shipping=[],
+        custom=custom,
     )

@@ -10,7 +10,9 @@ from commercetools.platform.models import (
     Customer,
     CustomerDraft,
     CustomerPagedQueryResponse,
+    CustomFields,
     CustomObject,
+    FieldContainer,
     Money,
     Order,
     OrderPagedQueryResponse,
@@ -20,7 +22,8 @@ from commercetools.platform.models import (
     TransactionState,
     TransactionType,
     Type,
-    TypeDraft
+    TypeDraft,
+    TypeReference
 )
 from django.test import TestCase
 from mock import patch
@@ -1026,9 +1029,7 @@ class ClientTests(TestCase):
         mock_result = {"customer": mock_customer.serialize()}
 
         with requests_mock.Mocker(real_http=True, case_sensitive=False) as mocker:
-            mocker.post(
-                f"{base_url}customers", json=mock_result, status_code=201
-            )
+            mocker.post(f"{base_url}customers", json=mock_result, status_code=201)
 
             result = self.client_set.client.create_customer(
                 email=email,
@@ -1105,17 +1106,12 @@ class ClientTests(TestCase):
 
             # Verify request contained correct actions
             request_body = mocker.last_request.json()
-            actions = request_body["actions"]
-
-            # Should have one action for each update
+            actions = [action["action"] for action in request_body["actions"]]
             self.assertEqual(len(actions), 4)
-
-            # Verify each action type and value
-            action_types = [action["action"] for action in actions]
-            self.assertIn("setFirstName", action_types)
-            self.assertIn("setLastName", action_types)
-            self.assertIn("changeEmail", action_types)
-            self.assertIn("setCustomField", action_types)
+            self.assertIn("setFirstName", actions)
+            self.assertIn("setLastName", actions)
+            self.assertIn("changeEmail", actions)
+            self.assertIn("setCustomField", actions)
 
     def test_get_customer_cart(self):
         """Test getting an active cart for a customer"""
@@ -1223,9 +1219,9 @@ class ClientTests(TestCase):
             result = self.client_set.client.create_cart(
                 customer=customer,
                 order_number=order_number,
-                course_run_key="course-v1:edX+DemoX+Demo_Course",  # Add required parameter
-                email_domain="example.com",  # Add required parameter
-                external_price=Money(cent_amount=10, currency_code="USD"),  # Add required parameter
+                course_run_key="course-v1:edX+DemoX+Demo_Course",
+                email_domain="example.com",
+                external_price=Money(cent_amount=10, currency_code="USD"),
             )
 
             # Verify cart was created correctly
@@ -1242,6 +1238,72 @@ class ClientTests(TestCase):
                 order_number,
             )
 
+    def test_create_payment(self):
+        """Test creating a payment"""
+        base_url = self.client_set.get_base_url_from_client()
+        customer_id = uuid4_str()
+
+        amount_planned = Money(cent_amount=4900, currency_code="USD")
+        payment_method = "Credit Card"
+        payment_processor = "stripe_edx"
+        payment_status = "succeeded"
+        psp_payment_id = "pi_12345"
+        psp_transaction_id = "ch_12345"
+        psp_transaction_created_at = datetime.now()
+        usd_cent_amount = 4900
+
+        mock_payment = gen_payment()
+
+        with requests_mock.Mocker(real_http=True, case_sensitive=False) as mocker:
+            mocker.post(
+                f"{base_url}payments", json=mock_payment.serialize(), status_code=201
+            )
+
+            result = self.client_set.client.create_payment(
+                amount_planned=amount_planned,
+                customer_id=customer_id,
+                payment_method=payment_method,
+                payment_processor=payment_processor,
+                payment_status=payment_status,
+                psp_payment_id=psp_payment_id,
+                psp_transaction_id=psp_transaction_id,
+                psp_transaction_created_at=psp_transaction_created_at,
+                usd_cent_amount=usd_cent_amount,
+            )
+
+            # Verify payment was created
+            self.assertEqual(result.id, mock_payment.id)
+
+            # Verify request had correct data
+            request_body = mocker.last_request.json()
+            self.assertEqual(request_body["key"], psp_payment_id)
+            self.assertEqual(
+                request_body["amountPlanned"]["centAmount"],
+                amount_planned.cent_amount,
+            )
+            self.assertEqual(request_body["interfaceId"], psp_payment_id)
+
+            # Verify payment method info
+            self.assertEqual(
+                request_body["paymentMethodInfo"]["paymentInterface"],
+                payment_processor,
+            )
+            self.assertEqual(
+                request_body["paymentMethodInfo"]["method"], payment_method
+            )
+
+            # Verify transaction
+            self.assertEqual(len(request_body["transactions"]), 1)
+            transaction = request_body["transactions"][0]
+            self.assertEqual(transaction["type"], "Charge")
+            self.assertEqual(
+                transaction["amount"]["centAmount"], amount_planned.cent_amount
+            )
+            self.assertEqual(transaction["interactionId"], psp_transaction_id)
+            self.assertEqual(
+                transaction["custom"]["fields"]["usdCentAmount"], usd_cent_amount
+            )
+
     def test_add_payment_to_cart(self):
         """Test adding a payment to a cart"""
         base_url = self.client_set.get_base_url_from_client()
@@ -1254,14 +1316,14 @@ class ClientTests(TestCase):
             cart_id=cart_id,
             cart_version=cart_version,
             customer_id=customer_id,
-            customer_email=email
+            customer_email=email,
         )
 
         updated_cart = gen_cart(
             cart_id=cart_id,
             cart_version=cart_version + 1,
             customer_id=customer_id,
-            customer_email=email
+            customer_email=email,
         )
 
         with requests_mock.Mocker(real_http=True, case_sensitive=False) as mocker:
@@ -1273,7 +1335,7 @@ class ClientTests(TestCase):
 
             result = self.client_set.client.add_payment_to_cart(
                 cart=cart,
-                payment_id='payment-id',
+                payment_id="payment-id",
             )
 
             # Verify cart was updated correctly
@@ -1287,6 +1349,44 @@ class ClientTests(TestCase):
             self.assertEqual(len(actions), 1)
             self.assertEqual(actions[0]["action"], "addPayment")
             self.assertEqual(actions[0]["payment"]["id"], "payment-id")
+
+    def test_create_order_from_cart(self):
+        """Test creating an order from a cart"""
+        base_url = self.client_set.get_base_url_from_client()
+
+        cart = gen_cart(
+            custom=CustomFields(
+                type=TypeReference(id="mock_type_id"),
+                fields=FieldContainer(
+                    {TwoUKeys.ORDER_ORDER_NUMBER: "2U-2023000001"}
+                ),
+            )
+        )
+        cart.version = 3
+
+        mock_order = gen_order(uuid4_str())
+
+        with requests_mock.Mocker(real_http=True, case_sensitive=False) as mocker:
+            mocker.post(
+                f"{base_url}orders", json=mock_order.serialize(), status_code=201
+            )
+
+            result = self.client_set.client.create_order_from_cart(cart)
+
+            # Verify order was created
+            self.assertEqual(result.id, mock_order.id)
+
+            # Verify request had correct data
+            request_body = mocker.last_request.json()
+            self.assertEqual(request_body["id"], cart.id)
+            self.assertEqual(request_body["version"], cart.version)
+            self.assertEqual(
+                request_body["orderNumber"],
+                cart.custom.fields[TwoUKeys.ORDER_ORDER_NUMBER],
+            )
+            self.assertEqual(request_body["orderState"], "Complete")
+            self.assertEqual(request_body["paymentState"], "Paid")
+            self.assertEqual(request_body["shipmentState"], "Shipped")
 
 
 class PaginatedResultsTest(TestCase):
