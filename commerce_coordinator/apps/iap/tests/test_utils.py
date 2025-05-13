@@ -3,7 +3,6 @@ Tests for utility functions in the InAppPurchase app.
 """
 
 from unittest import TestCase, mock
-from unittest.mock import patch, Mock
 
 from commercetools.platform.models import Customer, CentPrecisionMoney, Attribute
 
@@ -15,8 +14,7 @@ from commerce_coordinator.apps.iap.utils import (
     get_standalone_price_for_sku,
     sum_money,
     cents_to_dollars,
-    get_attribute_value,
-    get_product_from_line_item
+    get_attribute_value
 )
 
 
@@ -379,56 +377,46 @@ class TestGetAttributeValue(TestCase):
 
     def test_get_attribute_value_found(self):
         """Test retrieving attribute values that exist in the list"""
-        
-        # Create test attributes
+
         attributes = [
             Attribute(name="color", value="red"),
             Attribute(name="size", value="medium"),
             Attribute(name="price", value=19.99),
             Attribute(name="in_stock", value=True)
         ]
-        
-        # Test string values
+
         result1 = get_attribute_value(attributes, "color")
         assert result1 == "red"
-        
+
         result2 = get_attribute_value(attributes, "size")
         assert result2 == "medium"
-        
-        # Test numeric value
+
         result3 = get_attribute_value(attributes, "price")
         assert result3 == 19.99
-        
-        # Test boolean value
+
         result4 = get_attribute_value(attributes, "in_stock")
         assert result4 is True
 
     def test_get_attribute_value_edge_cases(self):
         """Test edge cases for get_attribute_value function"""
-        
-        # Create test attributes
+
         attributes = [
             Attribute(name="empty", value=""),
             Attribute(name="zero", value=0),
             Attribute(name="none_value", value=None)
         ]
-        
-        # Test with non-existent key
+
         result1 = get_attribute_value(attributes, "non_existent")
         assert result1 is None
-        
-        # Test with empty string value
+
         result2 = get_attribute_value(attributes, "empty")
         assert result2 == ""
-        
-        # Test with zero value
+
         result3 = get_attribute_value(attributes, "zero")
         assert result3 == 0
-        
-        # Test with None value
+
         result4 = get_attribute_value(attributes, "none_value")
         assert result4 is None
-        
-        # Test with empty attributes list
+
         result5 = get_attribute_value([], "any_key")
         assert result5 is None
