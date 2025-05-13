@@ -1,7 +1,11 @@
+"""
+Helpers for the mobile iap.
+"""
+
 from typing import Optional
 import logging
 
-from commercetools.platform.models import Customer, Money, CentPrecisionMoney
+from commercetools.platform.models import Customer
 
 from commerce_coordinator.apps.commercetools.catalog_info.constants import (
     EdXFieldNames,
@@ -162,7 +166,6 @@ def sum_money(*args: Optional[list[CentPrecisionMoney]]) -> CentPrecisionMoney:
     if not amount_list:
         return None
 
-    
     total_cent_amount = sum(amount.cent_amount for amount in amount_list)
 
     return {
@@ -184,7 +187,7 @@ def cents_to_dollars(amount: CentPrecisionMoney) -> float:
 
     if not amount:
         return None
-    
+
     cent_amount = amount.cent_amount or 0
     fraction_digits = amount.fraction_digits or 2
 
@@ -230,7 +233,7 @@ def get_product_from_line_item(line_item: LineItem, standalone_price: CentPrecis
             - brand (str or None): Brand name from attributes.
             - product_type (str or None): Name of the product type.
     """
-     
+
     product_key = line_item.product_key
     name = line_item.name
     product_type = line_item.product_type

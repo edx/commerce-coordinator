@@ -72,11 +72,7 @@ class MobileCreateOrderView(APIView):
                 external_price=external_price,
                 order_number=order_number,
             )
-            logger.info(f'PRODUT TYPE {cart.line_items[0].product_type.serialize()}')
 
-            logger.info(f'CARTTTT {cart.serialize()}')
-
-            logger.info(f'standalone_price {standalone_price.serialize()}')
             SegmentEventTracker.emit_checkout_started_event(
                 lms_user_id=lms_user_id,
                 cart_id=cart.id,                    
@@ -88,7 +84,6 @@ class MobileCreateOrderView(APIView):
             )
 
             for item in cart.line_items:
-                logger.info(f'EMITTING PRODUCT ADDED EVENT')
                 SegmentEventTracker.emit_product_added_event(
                     lms_user_id=lms_user_id,
                     cart_id=cart.id,                    
@@ -96,9 +91,6 @@ class MobileCreateOrderView(APIView):
                     line_item=item,
                     discount_codes=cart.discount_codes
                 )
-
-            logger.info(f'PRICEEEE {external_price}')
-
            
             payment = client.create_payment(
                 amount_planned=external_price,
@@ -121,8 +113,6 @@ class MobileCreateOrderView(APIView):
                 payment_method=payment.payment_method_info.payment_interface
             )
 
-
-            logger.info(f'PAYMENT INFOO {payment.serialize()}')
             cart = client.add_payment_to_cart(
                 cart=cart,
                 payment_id=payment.id,
@@ -135,6 +125,19 @@ class MobileCreateOrderView(APIView):
                 from_state_id=order.line_items[0].state[0].state.id,
                 new_state_key=TwoUKeys.PENDING_FULFILMENT_STATE,
                 use_state_id=True,
+            )
+
+            SegmentEventTracker.emit_order_completed_event(
+                lms_user_id=lms_user_id,
+                cart_id=order.cart.id,
+                order_id=order.id,
+                standalone_price=standalone_price,
+                line_items=cart.line_items,
+                payment_method=payment.payment_method_info.payment_interface,
+                discount_codes=order.discount_codes,
+                discount_on_line_items=None,
+                discount_on_total_price=cart.discount_on_total_price
+
             )
 
             return Response(

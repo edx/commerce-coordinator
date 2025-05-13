@@ -1,7 +1,13 @@
+"""
+This module provides utility functions for emitting analytics events to Segment.
+
+"""
+
 from typing import Optional
 from commercetools.platform.models import (
     LineItem,
-    CentPrecisionMoney
+    CentPrecisionMoney,
+    DiscountCode
 )
 from commerce_coordinator.apps.core.segment import track
 from commerce_coordinator.apps.iap.api.v1.utils import (
@@ -15,16 +21,15 @@ class SegmentEventTracker:
 
     @staticmethod
     def emit_checkout_started_event(
-        *,
         lms_user_id: int,
         cart_id: str,
         standalone_price: CentPrecisionMoney,
         line_items: list[LineItem],
-        discount_codes: list[dict[str, any]],
-        discount_on_line_items: list[CentPrecisionMoney],
+        discount_codes: list[DiscountCode],
+        discount_on_line_items: Optional[list[CentPrecisionMoney]],
         discount_on_total_price: Optional[CentPrecisionMoney] = None
     ) -> None:
-        
+
         """
         Triggers the "Checkout Started" event on Segment with relevant cart and product details.
 
@@ -47,11 +52,11 @@ class SegmentEventTracker:
                 - mobile flag (defaulted to True as server purchase events are only for mobile)
         """
         discount_code = (
-            discount_codes[-1]["code"] 
-            if discount_codes and "code" in discount_codes[-1] 
+            discount_codes[-1]["code"]
+            if discount_codes and "code" in discount_codes[-1]
             else None
         )
-        
+
         discount_in_dollars = cents_to_dollars(
             sum_money(discount_on_total_price, discount_on_line_items)
         )
@@ -79,16 +84,15 @@ class SegmentEventTracker:
             properties=event_props
         )
 
-
+    @staticmethod
     def emit_product_added_event(
-        *,
         lms_user_id: int,
         cart_id: str,
         standalone_price: CentPrecisionMoney,
         line_item: LineItem,
         discount_codes: list[dict[str, any]],
     ) -> None:
-        
+
         """
         Triggers the "Product Added" event on Segment with product and cart details.
 
@@ -106,10 +110,10 @@ class SegmentEventTracker:
                 - Applied coupon (if any)
                 - Device context (hardcoded as mobile)
         """
-     
+
         discount_code = (
-            discount_codes[-1]["code"] 
-            if discount_codes and "code" in discount_codes[-1] 
+            discount_codes[-1]["code"]
+            if discount_codes and "code" in discount_codes[-1]
             else None
         )
 
@@ -129,15 +133,14 @@ class SegmentEventTracker:
             properties=event_props
         )
 
-
+    @staticmethod
     def emit_payment_info_entered_event(
-        *,
         lms_user_id: int,
         cart_id: str,
         standalone_price: CentPrecisionMoney,
         payment_method: str
     ) -> None:
-        
+
         """
         Triggers the "Payment Info Entered" event on Segment when a user enters payment information.
 
@@ -168,6 +171,76 @@ class SegmentEventTracker:
             properties=event_props
         )
 
+    @staticmethod
+    def emit_order_completed_event(
+        lms_user_id: int,
+        cart_id: str,
+        order_id: str,
+        standalone_price: CentPrecisionMoney,
+        line_items: list[LineItem],
+        payment_method: str,
+        discount_codes: list[DiscountCode],
+        discount_on_line_items: Optional[list[CentPrecisionMoney]],
+        discount_on_total_price: Optional[CentPrecisionMoney] = None
+    ) -> None:
 
+        """
+        Triggers the "Order Completed" event on Segment when a user successfully places an order.
 
+        Args:
+            lms_user_id (int): ID of the user who completed the order.
+            order (Order): The order object containing line items, cart, and custom fields.
+            standalone_price (CentPrecisionMoney): The total price of the order used to extract amount and currency.
+            payment_method (str): The payment method used by the user (e.g., 'stripe', 'xpay').
+            discount_on_line_items (Optional[list[CentPrecisionMoney]]): 
+            List of discounts applied to individual line items.
+            discount_on_total_price (Optional[CentPrecisionMoney], optional): 
+            Discount applied at the order level. Defaults to None.
 
+        Emits:
+            An "Order Completed" event with details such as:
+                - order ID and checkout ID
+                - total amount and currency
+                - tax (set to None)
+                - discount amount (in dollars)
+                - applied coupon code (if any)
+                - payment method and processor name
+                - list of purchased products with relevant attributes
+                - is_mobile flag (set to True for mobile platforms)
+        """
+
+        discount_code = (
+            discount_codes[-1]["code"]
+            if discount_codes and "code" in discount_codes[-1]
+            else None
+        )
+
+        discount_in_dollars = cents_to_dollars(
+            sum_money(discount_on_total_price, discount_on_line_items)
+        )
+
+        products = [
+            get_product_from_line_item(item, standalone_price)
+            for item in line_items
+        ]
+
+        event_props = {
+            "order_id": order_id,
+            "checkout_id": cart_id,
+            "currency": standalone_price.currency_code,
+            "total": cents_to_dollars(standalone_price),
+            "tax": None,
+            "coupon": discount_code,
+            "coupon_name": 'a',
+            "discount": discount_in_dollars,
+            "payment_method": payment_method,
+            "processor_name": payment_method,
+            "products": products,
+            "is_mobile": True
+        }
+
+        track(
+            lms_user_id=lms_user_id,
+            event='Order Completed',
+            properties=event_props
+        )
