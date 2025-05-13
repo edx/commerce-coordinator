@@ -28,3 +28,4 @@ def track(
         analytics.track(lms_user_id, event, properties, context, timestamp, anonymous_id, integrations, message_id)
     else:
         logger.debug(f"{event} for user {lms_user_id} not tracked because SEGMENT_KEY is not set.")
+        logger.info(f"EVENT PROPSSS {event} {properties}")

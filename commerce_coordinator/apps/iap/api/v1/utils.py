@@ -1,14 +1,18 @@
 from typing import Optional
 import logging
 
-from commercetools.platform.models import Customer, Money
+from commercetools.platform.models import Customer, Money, CentPrecisionMoney
 
 from commerce_coordinator.apps.commercetools.catalog_info.constants import (
     EdXFieldNames,
 )
 from commerce_coordinator.apps.commercetools.clients import CommercetoolsAPIClient
 from commerce_coordinator.apps.commercetools.http_api_client import CTCustomAPIClient
-from commerce_coordinator.apps.core.segment import track
+from commercetools.platform.models import (
+    LineItem,
+    CentPrecisionMoney,
+    Attribute
+)
 
 logger = logging.getLogger(__name__)
 
@@ -106,7 +110,7 @@ def get_ct_customer(client: CommercetoolsAPIClient, user) -> Customer:
     return customer
 
 
-def get_standalone_price_for_sku(sku: str) -> Money:
+def get_standalone_price_for_sku(sku: str) -> CentPrecisionMoney:
     """
     Get the standalone price for a given SKU.
 
@@ -127,9 +131,10 @@ def get_standalone_price_for_sku(sku: str) -> Money:
 
     try:
         value = response[0]["value"]
-        return Money(
+        return CentPrecisionMoney(
             cent_amount=value["centAmount"],
             currency_code=value["currencyCode"],
+            fraction_digits=value["fractionDigits"]
         )
     except KeyError as exc:
         message = (
@@ -138,56 +143,121 @@ def get_standalone_price_for_sku(sku: str) -> Money:
         logger.exception(message, exc_info=exc)
         raise ValueError(message) from exc
 
-def sum_money(*args: Optional[dict[str, any]]) -> dict[str, any]:
+def sum_money(*args: Optional[list[CentPrecisionMoney]]) -> CentPrecisionMoney:
+
     """
-    Sums a list of amount dicts.
+    Sums multiple CentPrecisionMoney objects.
 
-    Args: dict (centAmount, currencyCode, fractionDigits)
+    Args:
+        *args: Variable number of CentPrecisionMoney dictionaries or None.
 
-    Returns a dict with total centAmount and shared fractionDigits and currencyCode.
+    Returns:
+        A CentPrecisionMoney object with the total centAmount,
+        using the fractionDigits and currencyCode from the first valid entry.
+        Returns None if no valid money object is provided.
     """
 
     amount_list = [amount for amount in args if amount]
 
-    
-    total_cent_amount = sum(amount.get("centAmount", 0) for amount in amount_list)
+    if not amount_list:
+        return None
 
-def cent_to_dollars(amount: dict) -> float:
+    
+    total_cent_amount = sum(amount.cent_amount for amount in amount_list)
+
+    return {
+        'cent_amount': total_cent_amount,
+        'fraction_digits': amount_list[0].get('fractionDigits', 0),
+        'currency_code': amount_list[0].get('currencyCode', 'USD'),
+    }
+
+def cents_to_dollars(amount: CentPrecisionMoney) -> float:
     """
     Get converted amount in dollars from cents upto fraction digits in points.
 
     Args:
-       amount: dict (centAmount, fractionDigits)
+       amount: dict (centAmount, fractionDigits, currencyCode)
 
     Returns:
         The converted amount in dollars
     """
 
-    cent_amount = amount.get("centAmount", 0)
-    fraction_digits = amount.get('fractionDigits', 2)
+    if not amount:
+        return None
+    
+    cent_amount = amount.cent_amount or 0
+    fraction_digits = amount.fraction_digits or 2
 
     return cent_amount / (10 ** fraction_digits)
 
+def get_attribute_value(attributes: list[Attribute], key: str):
 
-def emit_checkout_started_event(lms_user_id, cart_id, currency_code):
-    
     """
-    Triggering Checkout Started event on segment.
+    Returns the value of an attribute matching the provided key.
+
+    Args:
+        attributes (List[Attribute]): List of product variant attributes.
+        key (str): Name of the attribute to find.
+
+    Returns:
+        The value of the matching attribute, or None if not found.
     """
-    event_props = {
-        "cart_id": cart_id,
-        "checkout_id": cart_id,
-        "currency": currency_code,
-        "revenue": amount_with_tax,
-        "value": gross_amount,
-        "coupon": discount_code,
-        "discount": discount_in_dollars,
-        "products": products,
-        "is_mobile": True
+    for attr in attributes:
+        if attr.name == key:
+            return attr.value
+    return None
+
+def get_product_from_line_item(line_item: LineItem, standalone_price: CentPrecisionMoney) -> dict[str, any]:
+
+    """
+    Extracts and formats product information from a line item.
+
+    Args:
+        line_item (LineItem): The line item containing product and variant details.
+        standalone_price (CentPrecisionMoney): The price of the product in cent precision format.
+
+    Returns:
+        dict[str, any]: A dictionary representing the product with keys such as:
+            - product_id (str or None): The course key or product key depending on product type.
+            - sku (str): SKU of the product variant.
+            - name (LocalizedString): Localized name of the product.
+            - price (float): Price converted to dollars.
+            - quantity (int): Quantity of the item in the line.
+            - category (str or None): Primary subject area if present in attributes.
+            - url (str or None): Course URL if present in attributes.
+            - lob (str): Line of business; defaults to "edx".
+            - image_url (str or None): First image URL from variant if available.
+            - brand (str or None): Brand name from attributes.
+            - product_type (str or None): Name of the product type.
+    """
+     
+    product_key = line_item.product_key
+    name = line_item.name
+    product_type = line_item.product_type
+    count = line_item.quantity
+    variant = line_item.variant
+    attributes = variant.attributes
+    images = variant.images
+    product_id = None
+
+    if product_type and product_type.obj.key == "edx_course_entitlement":
+        for attr in variant["attributes"]:
+            if attr["name"] == "course-key":
+                product_id = attr["value"]
+                break
+    else:
+        product_id = product_key
+
+    return {
+        "product_id": product_id,
+        "sku": variant.sku,
+        "name": name,
+        "price": cents_to_dollars(standalone_price),
+        "quantity": count,
+        "category": get_attribute_value(attributes, "primary-subject-area"),
+        "url": get_attribute_value(attributes, "url-course"),
+        "lob": get_attribute_value(attributes, "lob") or "edx",
+        "image_url": images[0] if images else None,
+        "brand": get_attribute_value(attributes, "brand-text"),
+        "product_type": product_type.obj.name if product_type.obj.name else None,
     }
-
-    track(
-        lms_user_id=lms_user_id,
-        event='Checkout Started',
-        properties=event_props
-    )
