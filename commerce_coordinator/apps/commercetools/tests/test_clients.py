@@ -1222,7 +1222,9 @@ class ClientTests(TestCase):
             result = self.client_set.client.create_cart(
                 customer=customer,
                 order_number=order_number,
-                currency="USD",
+                course_run_key="course-v1:edX+DemoX+Demo_Course",  # Add required parameter
+                email_domain="example.com",  # Add required parameter
+                external_price=Money(cent_amount=10, currency_code="USD"),  # Add required parameter
             )
 
             # Verify cart was created correctly
@@ -1239,15 +1241,13 @@ class ClientTests(TestCase):
                 order_number,
             )
 
-    def test_update_cart(self):
-        """Test updating a cart"""
+    def test_add_payment_to_cart(self):
+        """Test adding a payment to a cart"""
         base_url = self.client_set.get_base_url_from_client()
         cart_id = uuid4_str()
         cart_version = 1
         customer_id = uuid4_str()
         email = "user@example.com"
-        expected_domain = "example.com"
-        sku = "course-v1:edX+DemoX+Demo_Course"
 
         cart = gen_cart(
             cart_id=cart_id,
@@ -1270,12 +1270,9 @@ class ClientTests(TestCase):
                 status_code=200,
             )
 
-            result = self.client_set.client.update_cart(
-                external_price=Money(cent_amount=10, currency_code="USD"),
+            result = self.client_set.client.add_payment_to_cart(
                 cart=cart,
-                sku=sku,
-                email_domain=expected_domain,
-                payment_id=''
+                payment_id='payment-id',
             )
 
             # Verify cart was updated correctly
@@ -1285,16 +1282,10 @@ class ClientTests(TestCase):
             # Verify request had correct actions
             request_body = mocker.last_request.json()
             actions = request_body["actions"]
-            self.assertEqual(len(actions), 6)
 
-            lineItemAction = actions[0]
-            self.assertEqual(lineItemAction["action"], "addLineItem")
-            self.assertEqual(lineItemAction["sku"], sku)
-
-            customFieldAction = actions[1]
-            self.assertEqual(customFieldAction["action"], "setCustomField")
-            self.assertEqual(customFieldAction["name"], TwoUKeys.ORDER_EMAIL_DOMAIN)
-            self.assertEqual(customFieldAction["value"], expected_domain)
+            self.assertEqual(len(actions), 1)
+            self.assertEqual(actions[0]["action"], "addPayment")
+            self.assertEqual(actions[0]["payment"]["id"], "payment-id")
 
 
 class PaginatedResultsTest(TestCase):

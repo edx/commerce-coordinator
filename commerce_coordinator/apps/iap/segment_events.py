@@ -10,7 +10,7 @@ from commercetools.platform.models import (
     DiscountCode
 )
 from commerce_coordinator.apps.core.segment import track
-from commerce_coordinator.apps.iap.api.v1.utils import (
+from commerce_coordinator.apps.iap.utils import (
     cents_to_dollars,
     sum_money,
     get_product_from_line_item

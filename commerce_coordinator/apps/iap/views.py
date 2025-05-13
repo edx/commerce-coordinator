@@ -1,9 +1,15 @@
+"""
+Views for the InAppPurchase app
+"""
+
 import datetime
 import logging
 import uuid
 
 from commercetools import CommercetoolsError
 from commercetools.platform.models import Money
+
+from iso4217 import Currency
 
 from rest_framework import status
 from rest_framework.permissions import IsAuthenticated
@@ -14,12 +20,12 @@ from rest_framework.views import APIView
 from commerce_coordinator.apps.commercetools.catalog_info.constants import TwoUKeys
 from commerce_coordinator.apps.commercetools.clients import CommercetoolsAPIClient
 
-from commerce_coordinator.apps.iap.api.v1.utils import (
+from commerce_coordinator.apps.iap.utils import (
     get_ct_customer,
     get_email_domain,
     get_standalone_price_for_sku
 )
-from commerce_coordinator.apps.iap.api.v1.serializer import (
+from commerce_coordinator.apps.iap.serializers import (
     MobileOrderRequestData,
     MobileOrderRequestSerializer,
 )
@@ -48,13 +54,17 @@ class MobileCreateOrderView(APIView):
             serializer.is_valid(raise_exception=True)
             data = MobileOrderRequestData(**serializer.validated_data)  # type: ignore
 
+<<<<<<< HEAD:commerce_coordinator/apps/iap/api/v1/views.py
             client = CommercetoolsAPIClient(enable_retries=True)
             customer = get_ct_customer(client, request.user)
             lms_user_id = get_edx_lms_user_id(customer)
             cart = client.get_customer_cart(customer.id)    
 
+=======
+            fraction_digits = Currency(data.currency_code).exponent or 0
+>>>>>>> mobile_iap:commerce_coordinator/apps/iap/views.py
             external_price = Money(
-                cent_amount=int(data.price * 100),
+                cent_amount=int(data.price.scaleb(fraction_digits)),
                 currency_code=data.currency_code,
             )
             standalone_price = get_standalone_price_for_sku(

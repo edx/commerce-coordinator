@@ -1,8 +1,7 @@
 """
-Helpers for the mobile iap.
+Utils for the InAppPurchase app
 """
 
-from typing import Optional
 import logging
 
 from commercetools.platform.models import Customer

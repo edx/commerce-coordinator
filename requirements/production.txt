@@ -173,6 +173,8 @@ idna==3.10
     # via
     #   -r requirements/base.txt
     #   requests
+iso4217==1.12.20240625
+    # via -r requirements/base.txt
 itypes==1.2.0
     # via
     #   -r requirements/base.txt

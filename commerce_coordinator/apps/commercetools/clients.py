@@ -166,10 +166,10 @@ class CommercetoolsAPIClient:
         )
         self.enable_retries = enable_retries
 
-    def conditional_retry(method): # type: ignore
+    def conditional_retry(method):  # pylint: disable=no-self-argument
         """Retry decorator that applies retry logic if retries are enabled."""
 
-        @wraps(method) # type: ignore
+        @wraps(method)
         def _conditional_retry(self, *args, **kwargs):
             if self.enable_retries:
                 return retry(
@@ -177,9 +177,9 @@ class CommercetoolsAPIClient:
                     wait=wait_incrementing(start=2, increment=2),
                     retry=retry_if_exception_type(CommercetoolsError),
                     reraise=True,
-                )(method)(self, *args, **kwargs) # type: ignore
+                )(method)(self, *args, **kwargs)
             else:
-                return method(self, *args, **kwargs) # type: ignore
+                return method(self, *args, **kwargs)  # pylint: disable=not-callable
 
         return _conditional_retry
 

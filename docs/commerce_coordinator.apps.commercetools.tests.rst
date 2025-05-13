@@ -8,6 +8,7 @@ Subpackages
    :maxdepth: 4
 
    commerce_coordinator.apps.commercetools.tests.catalog_info
+   commerce_coordinator.apps.commercetools.tests.order_fulfillment_utils
    commerce_coordinator.apps.commercetools.tests.sub_messages
 
 Submodules

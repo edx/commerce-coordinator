@@ -16,9 +16,11 @@ Subpackages
    commerce_coordinator.apps.frontend_app_payment
    commerce_coordinator.apps.iap
    commerce_coordinator.apps.lms
+   commerce_coordinator.apps.order_fulfillment
    commerce_coordinator.apps.paypal
    commerce_coordinator.apps.rollout
    commerce_coordinator.apps.stripe
+
 
 Module contents
 ---------------

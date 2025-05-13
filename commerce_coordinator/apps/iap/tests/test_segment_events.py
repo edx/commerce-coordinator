@@ -12,7 +12,7 @@ from commercetools.platform.models import (
     LineItem,
     PaymentMethodInfo
 )
-from commerce_coordinator.apps.iap.api.v1.segment_events import SegmentEventTracker
+from commerce_coordinator.apps.iap.segment_events import SegmentEventTracker
 
 
 @pytest.fixture

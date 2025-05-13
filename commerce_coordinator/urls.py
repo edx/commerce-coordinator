@@ -31,14 +31,15 @@ from rest_framework import status
 from rest_framework_swagger.views import get_swagger_view
 
 from commerce_coordinator.apps.api import urls as api_urls
-from commerce_coordinator.apps.iap.api import urls as mobile_urls
 from commerce_coordinator.apps.commercetools import urls as commercetools_urls
 from commerce_coordinator.apps.core import views as core_views
 from commerce_coordinator.apps.demo_lms import urls as demo_lms_urls
 from commerce_coordinator.apps.ecommerce import urls as ecommerce_urls
 from commerce_coordinator.apps.frontend_app_ecommerce import urls as unified_orders_urls
 from commerce_coordinator.apps.frontend_app_payment import urls as frontend_app_payment_urls
+from commerce_coordinator.apps.iap import urls as iap_urls
 from commerce_coordinator.apps.lms import urls as lms_urls
+from commerce_coordinator.apps.order_fulfillment import urls as order_fulfillment_urls
 from commerce_coordinator.apps.paypal import urls as paypal_urls
 from commerce_coordinator.apps.stripe import urls as stripe_urls
 from commerce_coordinator.settings.base import FAVICON_URL
@@ -53,12 +54,12 @@ urlpatterns = oauth2_urlpatterns + [
     re_path('api-auth/', include((oauth2_urlpatterns, 'rest_framework'))),
     re_path(r'^api-docs/', get_swagger_view(title='commerce-coordinator API')),
     re_path(r'^api/', include(api_urls)),
-    re_path(r'^iap/', include((mobile_urls, 'iap'), namespace='iap')),
     re_path(r'^auto_auth/', core_views.AutoAuth.as_view(), name='auto_auth'),
     re_path(r'^health/?', core_views.health, name='health'),
 
     # Local Django Apps
     re_path(r'^ecommerce/', include(ecommerce_urls), name='ecommerce'),
+    re_path(r'^iap/', include(iap_urls), name='iap'),
     re_path(r'^lms/', include(lms_urls), name='lms'),
     re_path(r'^commercetools/', include(commercetools_urls), name='commercetools'),
     re_path(r'^orders/', include(commercetools_urls, namespace="commercetools_orders_fwd")),
@@ -66,6 +67,7 @@ urlpatterns = oauth2_urlpatterns + [
     re_path(r'^frontend-app-payment/', include(frontend_app_payment_urls)),
     re_path(r'^stripe/', include(stripe_urls)),
     re_path(r'^paypal/', include(paypal_urls)),
+    re_path(r'^order-fulfillment/', include(order_fulfillment_urls), name='order_fulfillment'),
 
     # Browser automated hits, this will limit 404s in logging
     re_path(r'^$', lambda r: JsonResponse(data=[

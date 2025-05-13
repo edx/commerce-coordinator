@@ -1,3 +1,7 @@
+"""
+Serializers for InAppPurchase service
+"""
+
 from decimal import Decimal
 from typing import NamedTuple
 
@@ -12,7 +16,7 @@ class MobileOrderRequestSerializer(CoordinatorSerializer):
     course_run_key = serializers.CharField(help_text="Course run key")
     currency_code = serializers.CharField(help_text="Currency code")
     price = serializers.DecimalField(
-        max_digits=20, decimal_places=2, help_text="Price of the course"
+        max_digits=20, decimal_places=5, help_text="Price of the course"
     )
     purchase_token = serializers.CharField(help_text="Purchase token")
     payment_processor = serializers.CharField(help_text="Payment processor")
