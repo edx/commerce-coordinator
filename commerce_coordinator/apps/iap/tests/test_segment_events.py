@@ -4,20 +4,18 @@ Test suite for segment events utilities
 
 # pylint: disable=redefined-outer-name
 
-from unittest.mock import patch, MagicMock
-import pytest
+from unittest.mock import MagicMock, patch
 
-from commercetools.platform.models import (
-    CentPrecisionMoney,
-    LineItem,
-    PaymentMethodInfo
-)
+import pytest
+from commercetools.platform.models import CentPrecisionMoney, LineItem, PaymentMethodInfo
+
 from commerce_coordinator.apps.iap.segment_events import SegmentEventTracker
 
 
 @pytest.fixture
 def mock_price():
     return CentPrecisionMoney(cent_amount=10000, currency_code="USD", fraction_digits=2)
+
 
 @pytest.fixture
 def mock_payment_method():
@@ -26,6 +24,7 @@ def mock_payment_method():
         method='credit card',
         name='android_iap'
     ).payment_interface
+
 
 @pytest.fixture
 def mock_line_item():
@@ -66,13 +65,13 @@ def mock_line_item():
     return line_item
 
 
-@patch("commerce_coordinator.apps.iap.api.v1.segment_events.track")
-@patch("commerce_coordinator.apps.iap.api.v1.segment_events.get_product_from_line_item")
+@patch("commerce_coordinator.apps.iap.segment_events.track")
+@patch("commerce_coordinator.apps.iap.segment_events.get_product_from_line_item")
 @patch(
-        "commerce_coordinator.apps.iap.api.v1.segment_events.cents_to_dollars", 
+        "commerce_coordinator.apps.iap.segment_events.cents_to_dollars",
         side_effect=lambda x: x.cent_amount / 100
     )
-@patch("commerce_coordinator.apps.iap.api.v1.segment_events.sum_money")
+@patch("commerce_coordinator.apps.iap.segment_events.sum_money")
 def test_emit_checkout_started_event(
     mock_sum_money,
     mock_cents_to_dollars,
@@ -128,8 +127,8 @@ def test_emit_checkout_started_event(
     assert props["products"][0]["product_id"] == "course-v1:edX+DemoX+Demo_Course"
 
 
-@patch("commerce_coordinator.apps.iap.api.v1.segment_events.track")
-@patch("commerce_coordinator.apps.iap.api.v1.segment_events.get_product_from_line_item")
+@patch("commerce_coordinator.apps.iap.segment_events.track")
+@patch("commerce_coordinator.apps.iap.segment_events.get_product_from_line_item")
 def test_emit_product_added_event(
     mock_get_product_from_line_item,
     mock_track
@@ -170,7 +169,7 @@ def test_emit_product_added_event(
     assert props["is_mobile"] is True
 
 
-@patch("commerce_coordinator.apps.iap.api.v1.segment_events.track")
+@patch("commerce_coordinator.apps.iap.segment_events.track")
 def test_emit_payment_info_entered_event(
     mock_track,
     mock_price,
@@ -196,13 +195,14 @@ def test_emit_payment_info_entered_event(
     assert props["payment"] == "android_iap"
     assert props["is_mobile"] is True
 
-@patch("commerce_coordinator.apps.iap.api.v1.segment_events.track")
-@patch("commerce_coordinator.apps.iap.api.v1.segment_events.get_product_from_line_item")
+
+@patch("commerce_coordinator.apps.iap.segment_events.track")
+@patch("commerce_coordinator.apps.iap.segment_events.get_product_from_line_item")
 @patch(
-        "commerce_coordinator.apps.iap.api.v1.segment_events.cents_to_dollars",
+        "commerce_coordinator.apps.iap.segment_events.cents_to_dollars",
         side_effect=lambda x: x.cent_amount / 100
     )
-@patch("commerce_coordinator.apps.iap.api.v1.segment_events.sum_money")
+@patch("commerce_coordinator.apps.iap.segment_events.sum_money")
 def test_emit_order_completed_event(
     mock_sum_money,
     mock_cents_to_dollars,

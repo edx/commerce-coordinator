@@ -4,17 +4,12 @@ This module provides utility functions for emitting analytics events to Segment.
 """
 
 from typing import Optional
-from commercetools.platform.models import (
-    LineItem,
-    CentPrecisionMoney,
-    DiscountCode
-)
+
+from commercetools.platform.models import CentPrecisionMoney, DiscountCode, LineItem
+
 from commerce_coordinator.apps.core.segment import track
-from commerce_coordinator.apps.iap.utils import (
-    cents_to_dollars,
-    sum_money,
-    get_product_from_line_item
-)
+from commerce_coordinator.apps.iap.utils import cents_to_dollars, get_product_from_line_item, sum_money
+
 
 class SegmentEventTracker:
     """Handles analytics tracking with Segment."""
@@ -40,7 +35,7 @@ class SegmentEventTracker:
             line_items (list[LineItem]): List of line items in the cart.
             discount_codes (list[dict]): List of discount code dictionaries applied to the order.
             discount_on_line_items (list[CentPrecisionMoney]): Discounts applied to individual items.
-            discount_on_total_price (Optional[CentPrecisionMoney or list[CentPrecisionMoney]]): 
+            discount_on_total_price (Optional[CentPrecisionMoney or list[CentPrecisionMoney]]):
                 Discount applied to the entire order, if any.
 
         Emits:
@@ -192,9 +187,9 @@ class SegmentEventTracker:
             order (Order): The order object containing line items, cart, and custom fields.
             standalone_price (CentPrecisionMoney): The total price of the order used to extract amount and currency.
             payment_method (str): The payment method used by the user (e.g., 'stripe', 'xpay').
-            discount_on_line_items (Optional[list[CentPrecisionMoney]]): 
+            discount_on_line_items (Optional[list[CentPrecisionMoney]]):
             List of discounts applied to individual line items.
-            discount_on_total_price (Optional[CentPrecisionMoney], optional): 
+            discount_on_total_price (Optional[CentPrecisionMoney], optional):
             Discount applied at the order level. Defaults to None.
 
         Emits:

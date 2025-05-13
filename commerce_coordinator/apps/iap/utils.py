@@ -3,19 +3,13 @@ Utils for the InAppPurchase app
 """
 
 import logging
+from typing import Optional
 
-from commercetools.platform.models import Customer
+from commercetools.platform.models import Attribute, CentPrecisionMoney, Customer, LineItem
 
-from commerce_coordinator.apps.commercetools.catalog_info.constants import (
-    EdXFieldNames,
-)
+from commerce_coordinator.apps.commercetools.catalog_info.constants import EdXFieldNames
 from commerce_coordinator.apps.commercetools.clients import CommercetoolsAPIClient
 from commerce_coordinator.apps.commercetools.http_api_client import CTCustomAPIClient
-from commercetools.platform.models import (
-    LineItem,
-    CentPrecisionMoney,
-    Attribute
-)
 
 logger = logging.getLogger(__name__)
 
@@ -146,6 +140,7 @@ def get_standalone_price_for_sku(sku: str) -> CentPrecisionMoney:
         logger.exception(message, exc_info=exc)
         raise ValueError(message) from exc
 
+
 def sum_money(*args: Optional[list[CentPrecisionMoney]]) -> CentPrecisionMoney:
 
     """
@@ -173,6 +168,7 @@ def sum_money(*args: Optional[list[CentPrecisionMoney]]) -> CentPrecisionMoney:
         'currency_code': amount_list[0].get('currencyCode', 'USD'),
     }
 
+
 def cents_to_dollars(amount: CentPrecisionMoney) -> float:
     """
     Get converted amount in dollars from cents upto fraction digits in points.
@@ -192,6 +188,7 @@ def cents_to_dollars(amount: CentPrecisionMoney) -> float:
 
     return cent_amount / (10 ** fraction_digits)
 
+
 def get_attribute_value(attributes: list[Attribute], key: str):
 
     """
@@ -208,6 +205,7 @@ def get_attribute_value(attributes: list[Attribute], key: str):
         if attr.name == key:
             return attr.value
     return None
+
 
 def get_product_from_line_item(line_item: LineItem, standalone_price: CentPrecisionMoney) -> dict[str, any]:
 

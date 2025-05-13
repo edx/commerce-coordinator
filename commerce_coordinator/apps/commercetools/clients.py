@@ -1225,11 +1225,11 @@ class CommercetoolsAPIClient:
         """
         try:
             address = BaseAddress(country="UNDEFINED")
-            line_item_draft = LineItemDraft(sku=course_run_key,external_price=external_price)
+            line_item_draft = LineItemDraft(sku=course_run_key, external_price=external_price)
             custom_fields_draft = CustomFieldsDraft(
                 type=TypeResourceIdentifier(key=TwoUKeys.ORDER_CUSTOM_TYPE),
                 fields=FieldContainer({
-                  TwoUKeys.ORDER_ORDER_NUMBER: order_number,
+                    TwoUKeys.ORDER_ORDER_NUMBER: order_number,
                     TwoUKeys.ORDER_EMAIL_DOMAIN: email_domain,
                     TwoUKeys.ORDER_MOBILE_ORDER: True,
                   }),
