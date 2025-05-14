@@ -309,3 +309,17 @@ def create_retired_fields(field_value, salt_list, retired_user_field_fmt=RETIRED
         raise SALT_LIST_EXCEPTION
 
     return retired_user_field_fmt.format(_create_retired_hash_withsalt(field_value.lower(), salt_list[-1]))
+
+
+def get_lob_from_variant_attr(variant):
+    """
+    Returns line of business from item's variant attributes
+
+    Arguments:
+    variant (dict): order line item variant
+
+    """
+    for attr in variant.attributes:
+        if attr.name == 'lob':
+            return attr.value
+    return None

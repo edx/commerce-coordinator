@@ -173,6 +173,8 @@ idna==3.10
     # via
     #   -r requirements/base.txt
     #   requests
+iso4217==1.12.20240625
+    # via -r requirements/base.txt
 itypes==1.2.0
     # via
     #   -r requirements/base.txt
@@ -356,6 +358,8 @@ stevedore==5.4.0
     #   edx-django-utils
     #   edx-opaque-keys
 stripe==11.5.0
+    # via -r requirements/base.txt
+tenacity==9.1.2
     # via -r requirements/base.txt
 typing-extensions==4.12.2
     # via
