@@ -4,17 +4,17 @@ Tests for utility functions in the InAppPurchase app.
 
 from unittest import TestCase, mock
 
-from commercetools.platform.models import Customer, CentPrecisionMoney, Attribute
+from commercetools.platform.models import Attribute, CentPrecisionMoney, Customer
 
 from commerce_coordinator.apps.commercetools.catalog_info.constants import EdXFieldNames
 from commerce_coordinator.apps.iap.utils import (
     _get_attributes_to_update,
+    cents_to_dollars,
+    get_attribute_value,
     get_ct_customer,
     get_email_domain,
     get_standalone_price_for_sku,
-    sum_money,
-    cents_to_dollars,
-    get_attribute_value
+    sum_money
 )
 
 
@@ -264,6 +264,7 @@ class GetStandalonePriceForSkuTests(TestCase):
                 "value": {
                     "centAmount": 4999,
                     "currencyCode": "USD",
+                    "fractionDigits": 2
                 }
             }
         ]

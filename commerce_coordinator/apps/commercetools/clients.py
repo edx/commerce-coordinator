@@ -3,13 +3,11 @@ API clients for commercetools app.
 """
 
 import datetime
-from functools import wraps
 import logging
 import uuid
 from functools import wraps
 from types import SimpleNamespace
 from typing import Generic, List, Optional, Tuple, TypedDict, TypeVar, Union
-import uuid
 
 import requests
 from commercetools import Client, CommercetoolsError
@@ -77,20 +75,16 @@ from commerce_coordinator.apps.commercetools.catalog_info.constants import (
     EDX_PAYPAL_PAYMENT_INTERFACE_NAME,
     EDX_STRIPE_PAYMENT_INTERFACE_NAME,
     EdXFieldNames,
-    TwoUKeys,
+    TwoUKeys
 )
-from commerce_coordinator.apps.commercetools.catalog_info.foundational_types import (
-    TwoUCustomTypes,
-)
+from commerce_coordinator.apps.commercetools.catalog_info.foundational_types import TwoUCustomTypes
 from commerce_coordinator.apps.commercetools.utils import (
     find_latest_refund,
     find_refund_transaction,
     handle_commercetools_error,
-    translate_refund_status_to_transaction_status,
+    translate_refund_status_to_transaction_status
 )
-from commerce_coordinator.apps.core.constants import (
-    ORDER_HISTORY_PER_SYSTEM_REQ_LIMIT,
-)
+from commerce_coordinator.apps.core.constants import ORDER_HISTORY_PER_SYSTEM_REQ_LIMIT
 
 logger = logging.getLogger(__name__)
 

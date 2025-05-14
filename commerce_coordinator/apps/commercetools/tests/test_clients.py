@@ -1,6 +1,7 @@
 """ Commercetools API Client(s) Testing """
 
 from datetime import datetime
+
 import pytest
 import requests_mock
 import stripe
@@ -19,11 +20,11 @@ from commercetools.platform.models import (
     ReturnPaymentState,
     ReturnShipmentState,
     TransactionState,
-    TransactionType,
-    Type,
-    TypeDraft,
-    TypeReference
+    TransactionType
 )
+from commercetools.platform.models import Type as CustomType
+from commercetools.platform.models import TypeDraft as CustomTypeDraft
+from commercetools.platform.models import TypeReference
 from django.test import TestCase
 from mock import patch
 from openedx_filters.exceptions import OpenEdxFilterException
