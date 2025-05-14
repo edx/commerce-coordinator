@@ -9,7 +9,12 @@ from unittest.mock import MagicMock, patch
 import pytest
 from commercetools.platform.models import CentPrecisionMoney, LineItem, PaymentMethodInfo
 
-from commerce_coordinator.apps.iap.segment_events import SegmentEventTracker
+from commerce_coordinator.apps.iap.segment_events import (
+    emit_checkout_started_event,
+    emit_order_completed_event,
+    emit_payment_info_entered_event,
+    emit_product_added_event
+)
 
 
 @pytest.fixture
@@ -101,7 +106,7 @@ def test_emit_checkout_started_event(
         "product_type": "edX Course"
     }
 
-    SegmentEventTracker.emit_checkout_started_event(
+    emit_checkout_started_event(
         lms_user_id=1,
         cart_id="cart123",
         standalone_price=mock_price,
@@ -148,7 +153,7 @@ def test_emit_product_added_event(
         "product_type": "edX Course"
     }
 
-    SegmentEventTracker.emit_product_added_event(
+    emit_product_added_event(
         lms_user_id=1,
         cart_id="cart123",
         standalone_price=mock_price,
@@ -176,7 +181,7 @@ def test_emit_payment_info_entered_event(
     mock_payment_method
 ):
 
-    SegmentEventTracker.emit_payment_info_entered_event(
+    emit_payment_info_entered_event(
         lms_user_id=1,
         cart_id="cart123",
         standalone_price=mock_price,
@@ -229,7 +234,7 @@ def test_emit_order_completed_event(
         "product_type": "edX Course"
     }
 
-    SegmentEventTracker.emit_order_completed_event(
+    emit_order_completed_event(
         lms_user_id=1,
         cart_id="cart123",
         order_id="order123",

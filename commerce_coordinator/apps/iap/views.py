@@ -19,7 +19,13 @@ from rest_framework.views import APIView
 from commerce_coordinator.apps.commercetools.catalog_info.constants import TwoUKeys
 from commerce_coordinator.apps.commercetools.catalog_info.edx_utils import get_edx_lms_user_id
 from commerce_coordinator.apps.commercetools.clients import CommercetoolsAPIClient
-from commerce_coordinator.apps.iap.segment_events import SegmentEventTracker
+from commerce_coordinator.apps.iap.segment_events import (
+    emit_checkout_started_event,
+    emit_product_added_event,
+    emit_order_completed_event,
+    emit_payment_info_entered_event
+)
+
 from commerce_coordinator.apps.iap.utils import (
     get_ct_customer,
     get_email_domain,
@@ -79,7 +85,7 @@ class MobileCreateOrderView(APIView):
                 order_number=order_number,
             )
 
-            SegmentEventTracker.emit_checkout_started_event(
+            emit_checkout_started_event(
                 lms_user_id=lms_user_id,
                 cart_id=cart.id,
                 standalone_price=standalone_price,
@@ -90,7 +96,7 @@ class MobileCreateOrderView(APIView):
             )
 
             for item in cart.line_items:
-                SegmentEventTracker.emit_product_added_event(
+                emit_product_added_event(
                     lms_user_id=lms_user_id,
                     cart_id=cart.id,
                     standalone_price=standalone_price,
@@ -112,7 +118,7 @@ class MobileCreateOrderView(APIView):
                 usd_cent_amount=standalone_price.cent_amount,
             )
 
-            SegmentEventTracker.emit_payment_info_entered_event(
+            emit_payment_info_entered_event(
                 lms_user_id=lms_user_id,
                 cart_id=cart.id,
                 standalone_price=standalone_price,
@@ -133,7 +139,7 @@ class MobileCreateOrderView(APIView):
                 use_state_id=True,
             )
 
-            SegmentEventTracker.emit_order_completed_event(
+            emit_order_completed_event(
                 lms_user_id=lms_user_id,
                 cart_id=order.cart.id,
                 order_id=order.id,
