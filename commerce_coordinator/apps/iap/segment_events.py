@@ -11,7 +11,6 @@ from commerce_coordinator.apps.core.segment import track
 from commerce_coordinator.apps.iap.utils import cents_to_dollars, get_product_from_line_item, sum_money
 
 
-@staticmethod
 def emit_checkout_started_event(
     lms_user_id: int,
     cart_id: str,
@@ -59,6 +58,8 @@ def emit_checkout_started_event(
     ]
 
     event_props = {
+        "track_plan_id": 14,
+        "trigger_source": 'server-side',
         "cart_id": cart_id,
         "checkout_id": cart_id,
         "currency": standalone_price.currency_code,
@@ -77,7 +78,6 @@ def emit_checkout_started_event(
     )
 
 
-@staticmethod
 def emit_product_added_event(
     lms_user_id: int,
     cart_id: str,
@@ -113,6 +113,8 @@ def emit_product_added_event(
     product_info = get_product_from_line_item(line_item, standalone_price)
 
     event_props = {
+        "track_plan_id": 13,
+        "trigger_source": 'server-side',
         "cart_id": cart_id,
         "checkout_id": cart_id,
         "coupon": discount_code,
@@ -127,7 +129,6 @@ def emit_product_added_event(
     )
 
 
-@staticmethod
 def emit_payment_info_entered_event(
     lms_user_id: int,
     cart_id: str,
@@ -152,6 +153,8 @@ def emit_payment_info_entered_event(
     """
 
     event_props = {
+        "track_plan_id": 17,
+        "trigger_source": 'server-side',
         "cart_id": cart_id,
         "checkout_id": cart_id,
         "currency": standalone_price.currency_code,
@@ -166,7 +169,6 @@ def emit_payment_info_entered_event(
     )
 
 
-@staticmethod
 def emit_order_completed_event(
     lms_user_id: int,
     cart_id: str,
@@ -220,6 +222,8 @@ def emit_order_completed_event(
     ]
 
     event_props = {
+        "track_plan_id": 18,
+        "trigger_source": 'server-side',
         "order_id": order_id,
         "checkout_id": cart_id,
         "currency": standalone_price.currency_code,
