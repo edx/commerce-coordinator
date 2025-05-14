@@ -20,11 +20,11 @@ from commercetools.platform.models import (
     ReturnPaymentState,
     ReturnShipmentState,
     TransactionState,
-    TransactionType,
-    Type,
-    TypeDraft,
-    TypeReference
+    TransactionType
 )
+from commercetools.platform.models import Type as CustomType
+from commercetools.platform.models import TypeDraft as CustomTypeDraft
+from commercetools.platform.models import TypeReference
 from django.test import TestCase
 from mock import patch
 from openedx_filters.exceptions import OpenEdxFilterException
@@ -84,11 +84,11 @@ class ClientTests(TestCase):
     def test_ensure_custom_type_exists(self):
         draft = TwoUCustomTypes.CUSTOMER_TYPE_DRAFT
 
-        self.assertIsInstance(draft, TypeDraft)
+        self.assertIsInstance(draft, CustomTypeDraft)
 
         ret_val = self.client_set.client.ensure_custom_type_exists(draft)
 
-        self.assertIsInstance(ret_val, Type)
+        self.assertIsInstance(ret_val, CustomType)
         self.assertEqual(ret_val.key, draft.key)
 
     def test_tag_customer_with_lms_user_id_should_fail_bad_type(self):

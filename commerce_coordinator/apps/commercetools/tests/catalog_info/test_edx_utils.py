@@ -3,11 +3,13 @@ import decimal
 import unittest
 from typing import Union
 
+from commercetools.platform.models import Attribute, CentPrecisionMoney
 from commercetools.platform.models import Customer as CTCustomer
 from commercetools.platform.models import Order as CTOrder
 from commercetools.platform.models import TransactionType
 
 from commerce_coordinator.apps.commercetools.catalog_info.edx_utils import (
+    get_attribute_value,
     get_edx_items,
     get_edx_lms_user_id,
     get_edx_lms_user_name,
@@ -15,7 +17,8 @@ from commerce_coordinator.apps.commercetools.catalog_info.edx_utils import (
     get_edx_product_course_run_key,
     get_edx_refund_info,
     get_line_item_price_to_refund,
-    is_edx_lms_order
+    is_edx_lms_order,
+    sum_money
 )
 from commerce_coordinator.apps.commercetools.tests.conftest import (
     DEFAULT_EDX_LMS_USER_ID,
@@ -108,6 +111,90 @@ class TestEdXFunctions(unittest.TestCase):
         refund_amount = get_line_item_price_to_refund(order, [non_existent_line_item_id])
 
         self.assertEqual(refund_amount, expected_refund_amount)
+
+
+class TestSumMoney(unittest.TestCase):
+    """Tests for sum_money utility function"""
+
+    def test_sum_money_with_valid_money_objects(self):
+        """Test summing multiple valid CentPrecisionMoney objects"""
+
+        money1 = CentPrecisionMoney(cent_amount=1000, currency_code="USD", fraction_digits=2)
+        money2 = CentPrecisionMoney(cent_amount=2500, currency_code="USD", fraction_digits=2)
+        money3 = CentPrecisionMoney(cent_amount=7500, currency_code="USD", fraction_digits=2)
+
+        result = sum_money(money1, money2, money3)
+
+        assert result['cent_amount'] == 11000
+        assert result['currency_code'] == "USD"
+        assert result['fraction_digits'] == 2
+
+    def test_sum_money_with_none_values(self):
+        """Test summing with None values and edge cases"""
+
+        money1 = CentPrecisionMoney(cent_amount=1000, currency_code="USD", fraction_digits=2)
+        money2 = None
+
+        result = sum_money(money1, money2)
+        assert result['cent_amount'] == 1000
+        assert result['currency_code'] == "USD"
+        assert result['fraction_digits'] == 2
+
+        result = sum_money(None, None)
+        assert result is None
+
+        result = sum_money()
+        assert result is None
+
+
+class TestGetAttributeValue(unittest.TestCase):
+    """Tests for get_attribute_value utility function"""
+
+    def test_get_attribute_value_found(self):
+        """Test retrieving attribute values that exist in the list"""
+
+        attributes = [
+            Attribute(name="color", value="red"),
+            Attribute(name="size", value="medium"),
+            Attribute(name="price", value=19.99),
+            Attribute(name="in_stock", value=True)
+        ]
+
+        result1 = get_attribute_value(attributes, "color")
+        assert result1 == "red"
+
+        result2 = get_attribute_value(attributes, "size")
+        assert result2 == "medium"
+
+        result3 = get_attribute_value(attributes, "price")
+        assert result3 == 19.99
+
+        result4 = get_attribute_value(attributes, "in_stock")
+        assert result4 is True
+
+    def test_get_attribute_value_edge_cases(self):
+        """Test edge cases for get_attribute_value function"""
+
+        attributes = [
+            Attribute(name="empty", value=""),
+            Attribute(name="zero", value=0),
+            Attribute(name="none_value", value=None)
+        ]
+
+        result1 = get_attribute_value(attributes, "non_existent")
+        assert result1 is None
+
+        result2 = get_attribute_value(attributes, "empty")
+        assert result2 == ""
+
+        result3 = get_attribute_value(attributes, "zero")
+        assert result3 == 0
+
+        result4 = get_attribute_value(attributes, "none_value")
+        assert result4 is None
+
+        result5 = get_attribute_value([], "any_key")
+        assert result5 is None
 
 
 if __name__ == '__main__':

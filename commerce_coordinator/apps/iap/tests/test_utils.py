@@ -261,6 +261,7 @@ class GetStandalonePriceForSkuTests(TestCase):
                 "value": {
                     "centAmount": 4999,
                     "currencyCode": "USD",
+                    "fractionDigits": 2
                 }
             }
         ]
