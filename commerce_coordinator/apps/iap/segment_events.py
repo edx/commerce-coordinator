@@ -7,8 +7,12 @@ from typing import Optional
 
 from commercetools.platform.models import CentPrecisionMoney, DiscountCode, LineItem
 
+from commerce_coordinator.apps.commercetools.catalog_info.edx_utils import (
+    cents_to_dollars,
+    get_product_from_line_item,
+    sum_money
+)
 from commerce_coordinator.apps.core.segment import track
-from commerce_coordinator.apps.iap.utils import cents_to_dollars, get_product_from_line_item, sum_money
 
 
 def emit_checkout_started_event(

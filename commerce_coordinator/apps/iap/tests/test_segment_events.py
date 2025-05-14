@@ -73,9 +73,11 @@ def mock_line_item():
 @patch("commerce_coordinator.apps.iap.segment_events.track")
 @patch("commerce_coordinator.apps.iap.segment_events.get_product_from_line_item")
 @patch(
-        "commerce_coordinator.apps.iap.segment_events.cents_to_dollars",
-        side_effect=lambda x: x.cent_amount / 100
+    "commerce_coordinator.apps.iap.segment_events.cents_to_dollars",
+    side_effect=lambda x: x.cent_amount / pow(
+        10, x.fraction_digits if hasattr(x, 'fraction_digits') else 2
     )
+)
 @patch("commerce_coordinator.apps.iap.segment_events.sum_money")
 def test_emit_checkout_started_event(
     mock_sum_money,
@@ -90,7 +92,9 @@ def test_emit_checkout_started_event(
     """
 
     mock_sum_money.return_value = None
-    mock_cents_to_dollars.side_effect = lambda x: x.cent_amount / 100 if x else None
+    mock_cents_to_dollars.side_effect = lambda x: x.cent_amount / pow(
+        10, x.fraction_digits if hasattr(x, 'fraction_digits') else 2
+    ) if x else None
 
     mock_get_product_from_line_item.return_value = {
         "product_id": "course-v1:edX+DemoX+Demo_Course",
@@ -204,9 +208,11 @@ def test_emit_payment_info_entered_event(
 @patch("commerce_coordinator.apps.iap.segment_events.track")
 @patch("commerce_coordinator.apps.iap.segment_events.get_product_from_line_item")
 @patch(
-        "commerce_coordinator.apps.iap.segment_events.cents_to_dollars",
-        side_effect=lambda x: x.cent_amount / 100
+    "commerce_coordinator.apps.iap.segment_events.cents_to_dollars",
+    side_effect=lambda x: x.cent_amount / pow(
+        10, x.fraction_digits if hasattr(x, 'fraction_digits') else 2
     )
+)
 @patch("commerce_coordinator.apps.iap.segment_events.sum_money")
 def test_emit_order_completed_event(
     mock_sum_money,
@@ -218,7 +224,9 @@ def test_emit_order_completed_event(
 ):
 
     mock_sum_money.return_value = None
-    mock_cents_to_dollars.side_effect = lambda x: x.cent_amount / 100 if x else None
+    mock_cents_to_dollars.side_effect = lambda x: x.cent_amount / pow(
+        10, x.fraction_digits if hasattr(x, 'fraction_digits') else 2
+    ) if x else None
 
     mock_get_product_from_line_item.return_value = {
         "product_id": "course-v1:edX+DemoX+Demo_Course",
