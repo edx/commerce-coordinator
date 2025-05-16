@@ -30,7 +30,10 @@ from commerce_coordinator.apps.commercetools.catalog_info.utils import (
 from commerce_coordinator.apps.commercetools.clients import CommercetoolsAPIClient
 from commerce_coordinator.apps.commercetools.constants import EMAIL_NOTIFICATION_CACHE_TTL_SECS
 from commerce_coordinator.apps.commercetools.filters import OrderRefundRequested
-from commerce_coordinator.apps.commercetools.serializers import OrderFulfillViewInputSerializer
+from commerce_coordinator.apps.commercetools.serializers import (
+    OrderFulfillViewInputSerializer,
+    OrderFulfillViewFulfillmentSerializer
+)
 from commerce_coordinator.apps.commercetools.signals import (
     fulfill_order_placed_send_enroll_in_course_signal,
     fulfill_order_placed_send_entitlement_signal
@@ -173,7 +176,7 @@ def fulfill_order_placed_message_signal_task(
             serializer_data['lob'] = get_lob_from_variant_attr(item.variant) or 'edx'
             serializer_data['edx_lms_username'] = user.username
             serializer_data['bundle_id'] = bundle_id or None
-            serializer = OrderFulfillViewInputSerializer(data=serializer_data)
+            serializer = OrderFulfillViewFulfillmentSerializer(data=serializer_data)
             serializer.is_valid(raise_exception=True)
             payload = serializer.validated_data
 

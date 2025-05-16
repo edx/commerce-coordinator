@@ -11,6 +11,7 @@ from django.conf import settings
 from django.core.cache import cache
 
 from commerce_coordinator.apps.commercetools.catalog_info.constants import EDX_PAYPAL_PAYMENT_INTERFACE_NAME
+from commerce_coordinator.apps.commercetools.catalog_info.edx_utils import get_line_item_state, get_edx_line_item
 from commerce_coordinator.apps.core.memcache import safe_key
 from commerce_coordinator.apps.core.tasks import TASK_LOCK_EXPIRE, TASK_LOCK_RETRY, acquire_task_lock, release_task_lock
 
@@ -27,10 +28,7 @@ def fulfillment_completed_update_ct_line_item_task(
     self,
     entitlement_uuid,
     order_id,
-    order_version,
     line_item_id,
-    item_quantity,
-    from_state_id,
     to_state_key
 ):
     """
@@ -58,10 +56,7 @@ def fulfillment_completed_update_ct_line_item_task(
             kwargs={
                 'entitlement_uuid': entitlement_uuid,
                 'order_id': order_id,
-                'order_version': order_version,
                 'line_item_id': line_item_id,
-                'item_quantity': item_quantity,
-                'from_state_id': from_state_id,
                 'to_state_key': to_state_key
             },
             countdown=TASK_LOCK_RETRY
@@ -70,7 +65,8 @@ def fulfillment_completed_update_ct_line_item_task(
 
     try:
         client = CommercetoolsAPIClient()
-        current_order_version = order_version
+        order = client.get_order_by_id(order_id)
+        current_order_version = order.version
 
         cache_entry = cache.get(cache_key, None)
 
@@ -84,13 +80,15 @@ def fulfillment_completed_update_ct_line_item_task(
         if self.request.retries > 0:
             current_order_version = client.get_order_by_id(order_id).version
 
+        line_item = get_edx_line_item(order.line_items, line_item_id)
+
         updated_order = client.update_line_item_on_fulfillment(
             entitlement_uuid,
             order_id,
             current_order_version,
             line_item_id,
-            item_quantity,
-            from_state_id,
+            line_item.quantity,
+            get_line_item_state(line_item),
             to_state_key
         )
 
