@@ -528,8 +528,7 @@ class OrderReturnedMessageSignalTaskTests(TestCase):
 
         # Assert that the method was called with expected args
         mobile_order_mock.assert_called_once_with(
-            order_id=mock_order.id,
-            order_version=mock_order.version,
+            order=mock_order,
             return_line_item_return_ids=[
                 item["id"] for item in self.mock.example_payload["return_items"]
             ]
@@ -540,6 +539,10 @@ class OrderReturnedMessageSignalTaskTests(TestCase):
 
         # Other PSP refund logic should not trigger
         _stripe_api_mock.return_value.refund_payment_intent.assert_not_called()
+
+        # clear set fields
+        mock_order.custom = MagicMock()
+        mock_order.custom.fields = {}
 
 
 @patch('commerce_coordinator.apps.commercetools.sub_messages.tasks.OrderRefundRequested.run_filter')
