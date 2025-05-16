@@ -109,7 +109,7 @@ class MobileCreateOrderView(APIView):
                 customer_id=customer.id,
                 # TODO: finalize source of these
                 payment_method="Dummy Card",
-                payment_status="Dummy Success",
+                payment_status="succeeded",
                 payment_processor=data.payment_processor,
                 # TODO: fetch from purchase token
                 psp_payment_id="Dummy-" + str(uuid.uuid4()),
