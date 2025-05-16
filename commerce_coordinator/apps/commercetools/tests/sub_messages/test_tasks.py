@@ -473,7 +473,9 @@ class OrderReturnedMessageSignalTaskTests(TestCase):
     @patch('commerce_coordinator.apps.commercetools.sub_messages.tasks.is_edx_lms_order')
     @patch('commerce_coordinator.apps.stripe.pipeline.StripeAPIClient')
     @patch(
-        'commerce_coordinator.apps.commercetools.clients.CommercetoolsAPIClient.update_return_payment_state_for_enrollment_code_purchase')
+        'commerce_coordinator.apps.commercetools.clients.'
+        'CommercetoolsAPIClient.update_return_payment_state_for_enrollment_code_purchase'
+    )
     @patch('commerce_coordinator.apps.commercetools.sub_messages.tasks.get_edx_psp_payment_id')
     def test_enrollment_code_purchase_triggers_update_return_payment_state(
             self,
@@ -508,7 +510,9 @@ class OrderReturnedMessageSignalTaskTests(TestCase):
     @patch('commerce_coordinator.apps.commercetools.sub_messages.tasks.is_edx_lms_order')
     @patch('commerce_coordinator.apps.stripe.pipeline.StripeAPIClient')
     @patch(
-        'commerce_coordinator.apps.commercetools.clients.CommercetoolsAPIClient.update_return_payment_state_for_mobile_order')
+        'commerce_coordinator.apps.commercetools.clients.'
+        'CommercetoolsAPIClient.update_return_payment_state_for_mobile_order'
+    )
     def test_mobile_order_triggers_update_return_payment_state_for_mobile_order(
             self,
             mobile_order_mock: MagicMock,
