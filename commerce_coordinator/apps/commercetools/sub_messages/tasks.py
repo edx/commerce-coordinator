@@ -374,7 +374,7 @@ def fulfill_order_returned_signal_task(order_id, return_items, message_id):
 
     if hasattr(order.custom, 'fields') and order.custom.fields:
         print('\n\n\n\n\n  order.custom.fields',  order.custom.fields, '\n\n\n\n\n')
-        is_mobile_order = order.custom.fields.get("mobileOrder")
+        is_mobile_order = order.custom.fields.get(TwoUKeys.ORDER_MOBILE_ORDER)
 
     print('\n\n\n\n\n is_mobile_order', is_mobile_order, '\n\n\n\n\n')
     # Return payment if payment id is set

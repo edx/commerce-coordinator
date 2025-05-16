@@ -83,7 +83,7 @@ from commerce_coordinator.apps.commercetools.utils import (
     find_refund_transaction,
     get_refund_transaction_id_from_mobile_order,
     handle_commercetools_error,
-    translate_refund_status_to_transaction_status,
+    translate_refund_status_to_transaction_status
 )
 from commerce_coordinator.apps.core.constants import ORDER_HISTORY_PER_SYSTEM_REQ_LIMIT
 
@@ -899,8 +899,7 @@ class CommercetoolsAPIClient:
                 f"Line Item IDs: {', '.join(item.id for item in line_items)}",
                 True
             )
-            # raise err
-            return self.get_order_by_id(order_id)
+            raise err
 
     def retire_customer_anonymize_fields(
         self,
