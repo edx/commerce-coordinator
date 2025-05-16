@@ -60,15 +60,40 @@ class MobileCreateOrderViewTests(APITestCase):
         self.get_email_domain_patcher = mock.patch(
             "commerce_coordinator.apps.iap.views.get_email_domain"
         )
+        self.get_edx_lms_user_id_patcher = mock.patch(
+            "commerce_coordinator.apps.iap.views.get_edx_lms_user_id"
+        )
+        self.emit_checkout_started_patcher = mock.patch(
+            "commerce_coordinator.apps.iap.views.emit_checkout_started_event"
+        )
+        self.emit_product_added_patcher = mock.patch(
+            "commerce_coordinator.apps.iap.views.emit_product_added_event"
+        )
+        self.emit_payment_info_patcher = mock.patch(
+            "commerce_coordinator.apps.iap.views.emit_payment_info_entered_event"
+        )
+        self.emit_order_completed_patcher = mock.patch(
+            "commerce_coordinator.apps.iap.views.emit_order_completed_event"
+        )
         self.mock_ct_client = self.ct_client_patcher.start()
         self.mock_get_ct_customer = self.get_ct_customer_patcher.start()
         self.mock_get_standalone_price = self.get_standalone_price_patcher.start()
         self.mock_get_email_domain = self.get_email_domain_patcher.start()
+        self.mock_get_edx_lms_user_id = self.get_edx_lms_user_id_patcher.start()
+        self.mock_emit_checkout_started = self.emit_checkout_started_patcher.start()
+        self.mock_emit_product_added = self.emit_product_added_patcher.start()
+        self.mock_emit_payment_info = self.emit_payment_info_patcher.start()
+        self.mock_emit_order_completed = self.emit_order_completed_patcher.start()
 
         self.addCleanup(self.ct_client_patcher.stop)
         self.addCleanup(self.get_ct_customer_patcher.stop)
         self.addCleanup(self.get_standalone_price_patcher.stop)
         self.addCleanup(self.get_email_domain_patcher.stop)
+        self.addCleanup(self.get_edx_lms_user_id_patcher.stop)
+        self.addCleanup(self.emit_checkout_started_patcher.stop)
+        self.addCleanup(self.emit_product_added_patcher.stop)
+        self.addCleanup(self.emit_payment_info_patcher.stop)
+        self.addCleanup(self.emit_order_completed_patcher.stop)
 
         self.mock_ct_client.return_value.get_new_order_number.return_value = (
             "ORDER-123"
@@ -77,6 +102,7 @@ class MobileCreateOrderViewTests(APITestCase):
         self.mock_get_standalone_price.return_value = Money(
             cent_amount=4999, currency_code="USD"
         )
+        self.mock_get_edx_lms_user_id.return_value = 12345
 
     def tearDown(self):
         mock.patch.stopall()

@@ -4,7 +4,7 @@ Utils for the InAppPurchase app
 
 import logging
 
-from commercetools.platform.models import Customer, Money
+from commercetools.platform.models import CentPrecisionMoney, Customer
 
 from commerce_coordinator.apps.commercetools.catalog_info.constants import EdXFieldNames
 from commerce_coordinator.apps.commercetools.clients import CommercetoolsAPIClient
@@ -106,7 +106,7 @@ def get_ct_customer(client: CommercetoolsAPIClient, user) -> Customer:
     return customer
 
 
-def get_standalone_price_for_sku(sku: str) -> Money:
+def get_standalone_price_for_sku(sku: str) -> CentPrecisionMoney:
     """
     Get the standalone price for a given SKU.
 
@@ -127,9 +127,10 @@ def get_standalone_price_for_sku(sku: str) -> Money:
 
     try:
         value = response[0]["value"]
-        return Money(
+        return CentPrecisionMoney(
             cent_amount=value["centAmount"],
             currency_code=value["currencyCode"],
+            fraction_digits=value["fractionDigits"]
         )
     except KeyError as exc:
         message = (
