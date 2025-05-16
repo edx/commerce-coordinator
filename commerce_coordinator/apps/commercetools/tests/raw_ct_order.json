@@ -359,6 +359,13 @@
   },
   "orderState": "Complete",
   "shipmentState": "Shipped",
+  "custom": {
+    "typeId": "type",
+    "id": "d4ae2b24-3be4-4033-b55c-237ca62cc4bf",
+    "fields": {
+     "mobileOrder":true
+    }
+  },
   "paymentState": "Paid",
   "syncInfo": [],
   "returnInfo": [

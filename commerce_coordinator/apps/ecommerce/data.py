@@ -173,6 +173,7 @@ class Order:
     currency: Optional[str] = field(validator=optional([instance_of(str), max_len(12), min_len(1)]))
     dashboard_url: Optional[str] = field(validator=optional(instance_of(str)))
     discount: Optional[str] = field(validator=optional(instance_of(str)))
+    mobile_order: Optional[bool] = field(validator=optional(instance_of(bool)))
     enable_hoist_order_history: Optional[str] = field(validator=optional(instance_of(str)))
     enterprise_learner_portal_url: Optional[str] = field(validator=optional(instance_of(str)))
     order_product_ids: Optional[str] = field(validator=optional(instance_of(str)))
