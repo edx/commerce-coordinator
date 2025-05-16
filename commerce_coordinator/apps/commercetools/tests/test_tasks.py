@@ -42,10 +42,7 @@ class UpdateLineItemStateOnFulfillmentCompletionTaskTest(TestCase):
         return (
             values['entitlement_uuid'],
             values['order_id'],
-            values['order_version'],
             values['line_item_id'],
-            values['item_quantity'],
-            values['from_state_id'],
             values['to_state_key']
         )
 
