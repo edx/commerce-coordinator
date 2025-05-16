@@ -30,10 +30,6 @@ from commerce_coordinator.apps.commercetools.catalog_info.utils import (
 from commerce_coordinator.apps.commercetools.clients import CommercetoolsAPIClient
 from commerce_coordinator.apps.commercetools.constants import EMAIL_NOTIFICATION_CACHE_TTL_SECS
 from commerce_coordinator.apps.commercetools.filters import OrderRefundRequested
-from commerce_coordinator.apps.commercetools.order_fulfillment_utils.utils import (
-    get_ct_order_and_customer,
-    prepare_default_params
-)
 from commerce_coordinator.apps.commercetools.serializers import OrderFulfillViewInputSerializer
 from commerce_coordinator.apps.commercetools.signals import (
     fulfill_order_placed_send_enroll_in_course_signal,
@@ -43,7 +39,9 @@ from commerce_coordinator.apps.commercetools.utils import (
     calculate_total_discount_on_order,
     extract_ct_order_information_for_braze_canvas,
     extract_ct_product_information_for_braze_canvas,
+    get_ct_order_and_customer,
     get_lob_from_variant_attr,
+    prepare_default_params,
     send_order_confirmation_email
 )
 from commerce_coordinator.apps.core.memcache import safe_key
@@ -97,7 +95,7 @@ def fulfill_order_placed_message_signal_task(
 
     client = CommercetoolsAPIClient()
 
-    order, customer = get_ct_order_and_customer(tag, order_id, message_id)
+    order, customer = get_ct_order_and_customer(tag, order_id, message_id, client)
 
     if not (customer and order and is_edx_lms_order(order)):
         logger.info(f'[CT-{tag}] order {order_id} is not an edX order, message id: {message_id}')
