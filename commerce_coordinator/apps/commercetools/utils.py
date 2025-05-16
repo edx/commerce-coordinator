@@ -261,6 +261,26 @@ def find_latest_refund(payment: Payment):
             return transaction.id
     return ''
 
+def get_refund_transaction_id_from_mobile_order(order: Order) -> str:
+    """
+    Utility to find the refund transaction ID in a mobile order.
+
+    Args:
+        order (Order): The Commercetools order object.
+
+    Returns:
+        str: The ID of the refund transaction, or an empty string if no refund transaction exists.
+    """
+    refund_transactions = []
+
+    if order.payment_info and order.payment_info.payments:
+        for paymentReference in order.payment_info.payments:
+            payment = paymentReference.obj
+            for transaction in payment.transactions:
+                if transaction.type == TransactionType.REFUND:
+                    return transaction.id
+
+    return ''
 
 def translate_refund_status_to_transaction_status(refund_status: str):
     """
