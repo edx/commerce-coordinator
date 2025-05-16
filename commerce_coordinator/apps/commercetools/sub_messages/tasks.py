@@ -367,9 +367,13 @@ def fulfill_order_returned_signal_task(order_id, return_items, message_id):
     return_line_entitlement_ids = {return_line_items.get(line_item.id):
                                    get_line_item_lms_entitlement_id(line_item) for line_item in get_edx_items(order)}
 
+    is_mobile_order = False
+    if hasattr(order.custom, 'fields') and order.custom.fields:
+        is_mobile_order = order.custom.fields.get("mobileOrder")
+
     # Return payment if payment id is set
     # pylint: disable=too-many-nested-blocks
-    if psp_payment_id is not None:
+    if psp_payment_id is not None and not is_mobile_order:
         result = OrderRefundRequested.run_filter(
             order_id=order_id,
             return_line_items=return_line_items,
@@ -423,6 +427,12 @@ def fulfill_order_returned_signal_task(order_id, return_items, message_id):
 
     elif psp_payment_id is None and order.total_price.cent_amount == 0:
         client.update_return_payment_state_for_enrollment_code_purchase(
+            order_id=order.id,
+            order_version=order.version,
+            return_line_item_return_ids=return_line_item_return_ids,
+        )
+    elif is_mobile_order:
+        client.update_return_payment_state_for_mobile_order(
             order_id=order.id,
             order_version=order.version,
             return_line_item_return_ids=return_line_item_return_ids,

@@ -61,7 +61,7 @@ from commercetools.platform.models import (
     TransactionState,
     TransactionType,
     TypeDraft,
-    TypeResourceIdentifier
+    TypeResourceIdentifier,
 )
 from commercetools.platform.models.state import State as LineItemState
 from django.conf import settings
@@ -498,6 +498,61 @@ class CommercetoolsAPIClient:
                                        err, f"Unable to create return for order {order_id}")
             raise err
 
+    def _update_return_payment_state(
+        self,
+        order_id: str,
+        order_version: int,
+        return_line_item_return_ids: List[str],
+        payment_state: ReturnPaymentState,
+        log_prefix: str = ""
+    ) -> Union[Order, None]:
+        """
+        Internal helper to update ReturnPaymentState for one or more return items on an order.
+
+        Args:
+            order_id (str): Order ID
+            order_version (int): Order version
+            return_line_item_return_ids (List[str]): Return item IDs
+            payment_state (ReturnPaymentState): New state to set
+            log_prefix (str): Logging context prefix
+
+        Returns (Order): Updated order object or
+        Raises Exception: Error if update was unsuccessful.
+        """
+        try:
+            logger.info(
+                f"{log_prefix} Updating return payment state for return item(s) "
+                f"{return_line_item_return_ids} to '{payment_state}'."
+            )
+
+            return_payment_state_actions = [
+                OrderSetReturnPaymentStateAction(
+                    return_item_id=return_item_id,
+                    payment_state=payment_state
+                ) for return_item_id in return_line_item_return_ids
+            ]
+
+            updated_order = self.base_client.orders.update_by_id(
+                id=order_id,
+                version=order_version,
+                actions=return_payment_state_actions,
+            )
+
+            logger.info(
+                f"{log_prefix} Successfully updated ReturnPaymentState to '{payment_state}' for order ID: {order_id}. "
+                f"Updated return item IDs: {', '.join(return_line_item_return_ids)}."
+            )
+            return updated_order
+
+        except CommercetoolsError as err:
+            handle_commercetools_error(
+                f"{log_prefix} update_return_payment_state",
+                err,
+                f"Unable to update ReturnPaymentState of order {order_id} to '{payment_state}' "
+                f"for return item IDs: {', '.join(return_line_item_return_ids)} at version {order_version}."
+            )
+            raise err
+
     def update_return_payment_state_for_enrollment_code_purchase(
         self,
         order_id: str,
@@ -517,35 +572,42 @@ class CommercetoolsAPIClient:
         Raises Exception: Error if update was unsuccessful.
         """
 
-        try:
-            logger.info(
-                f"[CommercetoolsAPIClient."
-                "update_return_payment_state_for_enrollment_code_purchase] - "
-                "Updating payment state for return "
-                f"with ids {return_line_item_return_ids} to '{ReturnPaymentState.NOT_REFUNDED}'."
-            )
-            return_payment_state_actions = []
-            for return_line_item_return_id in return_line_item_return_ids:
-                return_payment_state_actions.append(OrderSetReturnPaymentStateAction(
-                    return_item_id=return_line_item_return_id,
-                    payment_state=ReturnPaymentState.NOT_REFUNDED,
-                ))
+        return self._update_return_payment_state(
+            order_id,
+            order_version,
+            return_line_item_return_ids,
+            ReturnPaymentState.NOT_REFUNDED,
+            log_prefix="[CommercetoolsAPIClient.update_return_payment_state_for_enrollment_code_purchase] - "
+        )
 
-            updated_order = self.base_client.orders.update_by_id(
-                id=order_id,
-                version=order_version,
-                actions=return_payment_state_actions,
-            )
-            logger.info(f"Successfully updated return payment state to not refunded "
-                        f"for enrollment code purchase - order_id: {order_id}")
-            return updated_order
-        except CommercetoolsError as err:
-            handle_commercetools_error(
-                "[CommercetoolsAPIClient."
-                "update_return_payment_state_for_enrollment_code_purchase]",
-                err, f"Unable to update ReturnPaymentState of order {order_id}"
-            )
-            raise err
+    def update_return_payment_state_for_mobile_order(
+        self,
+        order_id: str,
+        order_version: int,
+        return_line_item_return_ids: List[str],
+    ) -> Union[Order, None]:
+        """
+        Update the ReturnPaymentState to 'Refunded' for each LineItemReturnItem in a mobile order.
+
+        Args:
+            order_id (str): Unique identifier (UUID) of the order.
+            order_version (int): Current version of the order to ensure optimistic concurrency control.
+            return_line_item_return_ids (List[str]): List of LineItemReturnItem IDs to update.
+                Although mobile orders typically have only a single return item,
+                this is structured as a list for consistency with other update functions.
+
+        Returns:
+            Order: Updated order object
+        Raises:
+            Exception: Error if update was unsuccessful.
+        """
+        return self._update_return_payment_state(
+            order_id,
+            order_version,
+            return_line_item_return_ids,
+            ReturnPaymentState.REFUNDED,
+            log_prefix="[CommercetoolsAPIClient.update_return_payment_state_for_mobile_order] - "
+        )
 
     def update_return_payment_state_after_successful_refund(
         self,
