@@ -418,6 +418,21 @@ class CommercetoolsAPIClient:
         logger.info(f"[CommercetoolsAPIClient] - Attempting to find payment with interaction ID {interaction_id}")
         return self.base_client.payments.query(where=f'transactions(interactionId="{interaction_id}")').results[0]
 
+    def get_payment_by_transaction_id(self, transaction_id: str) -> Optional[Payment]:
+        """
+              Fetch a payment by the transaction ID
+        """
+        logger.info(f"[CommercetoolsAPIClient] - Searching for payment with transaction ID {transaction_id}")
+
+        response = self.base_client.payments.query(where=f'transactions(id="{transaction_id}")')
+
+        if response.results:
+            logger.info(f"[CommercetoolsAPIClient] - Found payment with transaction ID {transaction_id}")
+            return response.results[0]
+
+        logger.warning(f"[CommercetoolsAPIClient] - No payment found with transaction ID {transaction_id}")
+        return None
+
     def get_product_by_program_id(self, program_id: str) -> Optional[ProductVariant]:
         """
         Fetches a program product from Commercetools.
@@ -1343,7 +1358,7 @@ class CommercetoolsAPIClient:
             Payment: The created payment object
         """
         payment_method_info = PaymentMethodInfo(
-            payment_interface=payment_processor,
+            payment_interface=f"{payment_processor}_edx",
             method=payment_method,
             name=LocalizedString(name=payment_method),
         )
