@@ -430,6 +430,16 @@ class CommercetoolsAPIClient:
 
         return results[0] if results else None
 
+    def get_product_variants_with_price(self, where=[]):
+        """
+        Args:
+            where: where clause
+        """
+        results = self.base_client.product_projections.query(
+            price_currency="USD", where=where
+        ).results
+        return results
+
     def get_product_variant_by_course_run(self, cr_id: str) -> Optional[ProductVariant]:
         """
         Args:
