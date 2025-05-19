@@ -53,6 +53,22 @@ commerce\_coordinator.apps.commercetools.data module
    :undoc-members:
    :show-inheritance:
 
+commerce\_coordinator.apps.commercetools.filters module
+-------------------------------------------------------
+
+.. automodule:: commerce_coordinator.apps.commercetools.filters
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+commerce\_coordinator.apps.commercetools.http\_api\_client module
+-----------------------------------------------------------------
+
+.. automodule:: commerce_coordinator.apps.commercetools.http_api_client
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
 commerce\_coordinator.apps.commercetools.pipeline module
 --------------------------------------------------------
 
@@ -73,6 +89,14 @@ commerce\_coordinator.apps.commercetools.signals module
 -------------------------------------------------------
 
 .. automodule:: commerce_coordinator.apps.commercetools.signals
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+commerce\_coordinator.apps.commercetools.tasks module
+-----------------------------------------------------
+
+.. automodule:: commerce_coordinator.apps.commercetools.tasks
    :members:
    :undoc-members:
    :show-inheritance:

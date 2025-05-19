@@ -1,5 +1,5 @@
 commerce\_coordinator.apps.order\_fulfillment package
-======================================================
+=====================================================
 
 Subpackages
 -----------
@@ -8,7 +8,6 @@ Subpackages
    :maxdepth: 4
 
    commerce_coordinator.apps.order_fulfillment.migrations
-   commerce_coordinator.apps.order_fulfillment.tests
 
 Submodules
 ----------
