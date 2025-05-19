@@ -92,6 +92,7 @@ class OrderFulfillViewFulfillmentSerializer(CoordinatorSerializer):
     edx_lms_username = serializers.CharField(allow_null=False, required=False)
     bundle_id = serializers.CharField(allow_null=True, required=False)
 
+
 class OrderFulfillViewInputSerializer(OrderFulfillViewFulfillmentSerializer):
     """
     Serializer for OrderFulfillView input validation.

@@ -31,8 +31,8 @@ from commerce_coordinator.apps.commercetools.clients import CommercetoolsAPIClie
 from commerce_coordinator.apps.commercetools.constants import EMAIL_NOTIFICATION_CACHE_TTL_SECS
 from commerce_coordinator.apps.commercetools.filters import OrderRefundRequested
 from commerce_coordinator.apps.commercetools.serializers import (
-    OrderFulfillViewInputSerializer,
-    OrderFulfillViewFulfillmentSerializer
+    OrderFulfillViewFulfillmentSerializer,
+    OrderFulfillViewInputSerializer
 )
 from commerce_coordinator.apps.commercetools.signals import (
     fulfill_order_placed_send_enroll_in_course_signal,
