@@ -183,7 +183,10 @@ EXAMPLE_FULFILLMENT_SIGNAL_PAYLOAD = {
 EXAMPLE_UPDATE_LINE_ITEM_SIGNAL_PAYLOAD = {
     'entitlement_uuid': '',
     'order_id': '61ec1afa-1b0e-4234-ae28-f997728054fa',
+    'order_version': 7,
     'line_item_id': '822d77c4-00a6-4fb9-909b-094ef0b8c4b9',
+    'item_quantity': 1,
+    'from_state_id': 'de47c5ea-36df-4161-a232-7da0b0db49d1',
     'to_state_key': TwoUKeys.SUCCESS_FULFILMENT_STATE
 }
 
