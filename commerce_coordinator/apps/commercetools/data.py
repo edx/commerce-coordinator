@@ -11,7 +11,11 @@ from commercetools.platform.models import Order as CTOrder
 from commercetools.platform.models import PaymentInfo as CTPaymentInfo
 from django.conf import settings
 
-from commerce_coordinator.apps.commercetools.catalog_info.constants import SEND_MONEY_AS_DECIMAL_STRING, EdXFieldNames
+from commerce_coordinator.apps.commercetools.catalog_info.constants import (
+    SEND_MONEY_AS_DECIMAL_STRING,
+    EdXFieldNames,
+    TwoUKeys
+)
 from commerce_coordinator.apps.commercetools.catalog_info.utils import (
     attribute_dict,
     get_line_item_attribute,
@@ -117,8 +121,27 @@ def convert_payment_info(payment_info: CTPaymentInfo) -> str:
 
 
 def order_from_commercetools(order: CTOrder, customer: CTCustomer) -> LegacyOrder:
+    """
+    Convert a Commercetools order and customer object into a LegacyOrder object.
+
+    This includes converting fields such as user info, line items, billing address,
+    payment details, discounts, and custom fields like mobileOrder.
+
+    Args:
+        order (CTOrder): The order object from Commercetools.
+        customer (CTCustomer): The customer associated with the order.
+
+    Returns:
+        LegacyOrder: A converted order object used in the legacy system.
+    """
+
     payment_state = order.payment_state.value
     discounted_amount = calculate_total_discount_on_order(order)
+
+    mobile_order = False
+
+    if hasattr(order, 'custom') and order.custom:
+        mobile_order = order.custom.fields.get(TwoUKeys.ORDER_MOBILE_ORDER, False)
 
     return LegacyOrder(
         user=convert_customer(customer),
@@ -131,6 +154,7 @@ def order_from_commercetools(order: CTOrder, customer: CTCustomer) -> LegacyOrde
         payment_processor="stripe via commercetools",
         status=order.order_state.CONFIRMED.value,
         dashboard_url=settings.LMS_DASHBOARD_URL,
+        mobile_order=mobile_order,
         order_product_ids=", ".join([convert_line_item_prod_id(x) for x in order.line_items]),
         basket_discounts=(
             convert_direct_discount(order.direct_discounts)
