@@ -69,9 +69,9 @@ class OrderLineItemMessageInputSerializer(CoordinatorSerializer):
         return representation
 
 
-class OrderFulfillViewFulfillmentSerializer(CoordinatorSerializer):
+class OrderFulfillmentRequestSerializer(CoordinatorSerializer):
     """
-    Serializer for OrderFulfillView order fulfillment.
+    Serializer for order fulfillment request payload.
     """
     course_id = serializers.CharField(allow_null=False)
     course_mode = serializers.CharField(allow_null=False)
@@ -93,7 +93,7 @@ class OrderFulfillViewFulfillmentSerializer(CoordinatorSerializer):
     bundle_id = serializers.CharField(allow_null=True, required=False)
 
 
-class OrderFulfillViewInputSerializer(OrderFulfillViewFulfillmentSerializer):
+class OrderFulfillViewInputSerializer(OrderFulfillmentRequestSerializer):
     """
     Serializer for OrderFulfillView input validation.
     """

@@ -49,7 +49,7 @@ def get_edx_line_item(line_items: List[CTLineItem], line_item_id: str) -> Option
     return next(filter(lambda line_item: line_item.id == line_item_id, line_items), None)
 
 
-def get_line_item_state(line_item: CTLineItem) -> str:
+def get_edx_line_item_state(line_item: CTLineItem) -> str:
     """
     Retrieve the state ID of the first state associated with a given line item.
 

@@ -11,7 +11,7 @@ from django.conf import settings
 from django.core.cache import cache
 
 from commerce_coordinator.apps.commercetools.catalog_info.constants import EDX_PAYPAL_PAYMENT_INTERFACE_NAME
-from commerce_coordinator.apps.commercetools.catalog_info.edx_utils import get_edx_line_item, get_line_item_state
+from commerce_coordinator.apps.commercetools.catalog_info.edx_utils import get_edx_line_item, get_edx_line_item_state
 from commerce_coordinator.apps.core.memcache import safe_key
 from commerce_coordinator.apps.core.tasks import TASK_LOCK_EXPIRE, TASK_LOCK_RETRY, acquire_task_lock, release_task_lock
 
@@ -88,7 +88,7 @@ def fulfillment_completed_update_ct_line_item_task(
             current_order_version,
             line_item_id,
             line_item.quantity,
-            get_line_item_state(line_item),
+            get_edx_line_item_state(line_item),
             to_state_key
         )
 
