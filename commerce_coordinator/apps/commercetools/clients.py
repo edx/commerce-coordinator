@@ -81,7 +81,7 @@ from commerce_coordinator.apps.commercetools.catalog_info.foundational_types imp
 from commerce_coordinator.apps.commercetools.utils import (
     find_latest_refund,
     find_refund_transaction,
-    get_refund_transaction_id_from_mobile_order,
+    get_refund_transaction_id_from_order,
     handle_commercetools_error,
     translate_refund_status_to_transaction_status
 )
@@ -559,10 +559,11 @@ class CommercetoolsAPIClient:
         try:
             logger.info(
                 f"[CommercetoolsAPIClient.update_return_payment_state_for_mobile_order] - "
-                f"Updating return payment state for return item(s) {return_line_item_return_ids} to 'REFUNDED'."
+                f"Updating return payment state for return item(s) "
+                f"{return_line_item_return_ids} to '{ReturnPaymentState.NOT_REFUNDED}'."
             )
 
-            refund_transaction_id = get_refund_transaction_id_from_mobile_order(order)
+            refund_transaction_id = get_refund_transaction_id_from_order(order)
             update_actions = []
 
             for return_item_id in return_line_item_return_ids:
@@ -588,7 +589,8 @@ class CommercetoolsAPIClient:
 
             logger.info(
                 f"[CommercetoolsAPIClient.update_return_payment_state_for_mobile_order] - "
-                f"Successfully updated ReturnPaymentState to 'REFUNDED' for order ID: {order.id}. "
+                f"Successfully updated ReturnPaymentState to '{ReturnPaymentState.NOT_REFUNDED}' "
+                f"for order ID: {order.id}. Added refund transaction ID: {refund_transaction_id}."
                 f"Updated return item IDs: {', '.join(return_line_item_return_ids)}."
             )
             return updated_order

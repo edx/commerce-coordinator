@@ -26,7 +26,7 @@ from commerce_coordinator.apps.commercetools.utils import (
     find_latest_refund,
     find_refund_transaction,
     get_braze_client,
-    get_refund_transaction_id_from_mobile_order,
+    get_refund_transaction_id_from_order,
     has_full_refund_transaction,
     has_refund_transaction,
     send_fulfillment_error_email,
@@ -462,7 +462,7 @@ class TestGetRefundTransactionIdFromMobileOrder(unittest.TestCase):
         order.payment_info = MagicMock()
         order.payment_info.payments = [payment_reference]
 
-        result = get_refund_transaction_id_from_mobile_order(order)
+        result = get_refund_transaction_id_from_order(order)
         self.assertEqual(result, "refund_transaction_id")
 
     def test_get_refund_transaction_id_without_refund(self):
@@ -480,7 +480,7 @@ class TestGetRefundTransactionIdFromMobileOrder(unittest.TestCase):
         order.payment_info = MagicMock()
         order.payment_info.payments = [payment_reference]
 
-        result = get_refund_transaction_id_from_mobile_order(order)
+        result = get_refund_transaction_id_from_order(order)
         self.assertEqual(result, "")
 
     def test_get_refund_transaction_id_with_no_payments(self):
@@ -489,7 +489,7 @@ class TestGetRefundTransactionIdFromMobileOrder(unittest.TestCase):
         order.payment_info = MagicMock()
         order.payment_info.payments = []
 
-        result = get_refund_transaction_id_from_mobile_order(order)
+        result = get_refund_transaction_id_from_order(order)
         self.assertEqual(result, "")
 
     def test_get_refund_transaction_id_with_no_payment_info(self):
@@ -497,5 +497,5 @@ class TestGetRefundTransactionIdFromMobileOrder(unittest.TestCase):
         order = MagicMock()
         order.payment_info = None
 
-        result = get_refund_transaction_id_from_mobile_order(order)
+        result = get_refund_transaction_id_from_order(order)
         self.assertEqual(result, "")

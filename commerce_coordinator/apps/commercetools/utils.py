@@ -262,7 +262,7 @@ def find_latest_refund(payment: Payment):
     return ''
 
 
-def get_refund_transaction_id_from_mobile_order(order: Order) -> str:
+def get_refund_transaction_id_from_order(order: Order) -> str:
     """
     Utility to find the refund transaction ID in a mobile order.
 
@@ -272,13 +272,10 @@ def get_refund_transaction_id_from_mobile_order(order: Order) -> str:
     Returns:
         str: The ID of the refund transaction, or an empty string if no refund transaction exists.
     """
-    if order.payment_info and order.payment_info.payments:
-        for paymentReference in order.payment_info.payments:
-            payment = paymentReference.obj
-            for transaction in payment.transactions:
-                if transaction.type == TransactionType.REFUND:
-                    return transaction.id
-
+    latest_payment = order.payment_info.payments[-1].obj
+    for transaction in latest_payment.transactions:
+        if transaction.type == TransactionType.REFUND:
+            return transaction.id
     return ''
 
 

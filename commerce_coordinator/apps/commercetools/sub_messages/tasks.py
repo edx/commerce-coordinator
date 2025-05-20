@@ -425,7 +425,7 @@ def fulfill_order_returned_signal_task(order_id, return_items, message_id):
             logger.info(f'[CT-{tag}] payment {psp_payment_id} not refunded, '
                         f'sending Slack notification, message id: {message_id}')
 
-    elif psp_payment_id is None and order.total_price.cent_amount == 0 and not is_mobile_order:
+    elif psp_payment_id is None and order.total_price.cent_amount == 0:
         client.update_return_payment_state_for_enrollment_code_purchase(
             order_id=order.id,
             order_version=order.version,
