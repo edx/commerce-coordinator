@@ -95,6 +95,9 @@ class CommercetoolsAPIClientMock(MagicMock):
         self.get_payment_by_key = self.payment_mock
         self.update_line_item_on_fulfillment = self.updated_line_item_mock
         self.update_line_items_transition_state = self.updated_line_item_mock
+        self.get_order_and_customer_by_order_id = MagicMock(
+           return_value=(self.order_mock.return_value, self.customer_mock.return_value)
+        )
         self.create_return_for_order = self.create_return_item_mock
         self.create_return_payment_transaction = self.payment_mock
         self.update_return_payment_state_after_successful_refund = self.order_mock
@@ -144,12 +147,12 @@ class FulfillOrderPlacedMessageSignalTaskTests(TestCase):
         mock_tasks_client.return_value = mock_values
 
         # pylint: disable = no-value-for-parameter
-        _ = self.get_uut()(
+        ret_val = self.get_uut()(
             *self.unpack_for_uut(mock_values.example_payload)
         )
 
-        mock_values.order_mock.assert_called_once_with(mock_values.expected_order.id)
-        mock_values.customer_mock.assert_called_once_with(mock_values.expected_customer.id)
+        self.assertTrue(ret_val)
+
         self.assertTrue(TieredCache.get_cached_response(mock_values.cache_key).is_found)
 
     @patch('commerce_coordinator.apps.commercetools.sub_messages.tasks.CommercetoolsAPIClient')
@@ -176,8 +179,6 @@ class FulfillOrderPlacedMessageSignalTaskTests(TestCase):
         )
 
         self.assertTrue(ret_val)
-        mock_values.order_mock.assert_called_once_with(mock_values.order_id)
-        mock_values.customer_mock.assert_called_once_with(mock_values.customer_id)
         self.assertFalse(TieredCache.get_cached_response(mock_values.cache_key).is_found)
 
     @patch('commerce_coordinator.apps.commercetools.sub_messages.tasks.User.objects.get')

@@ -26,7 +26,6 @@ from commerce_coordinator.apps.commercetools.utils import (
     find_latest_refund,
     find_refund_transaction,
     get_braze_client,
-    get_ct_order_and_customer,
     has_full_refund_transaction,
     has_refund_transaction,
     prepare_default_params,
@@ -440,61 +439,6 @@ class TestRetirementAnonymizingTestCase(unittest.TestCase):
     def test_create_retired_fields_with_invalid_salt_list(self):
         with self.assertRaises(ValueError):
             create_retired_fields(self.field_value, "invalid_salt_list")
-
-
-class TestGetCtOrderAndCustomer(unittest.TestCase):
-    """Tests for get_ct_order_and_customer function."""
-
-    @patch('commerce_coordinator.apps.commercetools.clients.CommercetoolsAPIClient')
-    def test_successful_retrieval(self, mock_client_class):
-        """Test successful retrieval of order and customer."""
-
-        mock_client = mock_client_class.return_value
-        mock_order = Mock()
-        mock_order.customer_id = "testcustomer"
-        mock_order.id = "testorder"
-        mock_customer = Mock()
-
-        mock_client.get_order_by_id.return_value = mock_order
-        mock_client.get_customer_by_id.return_value = mock_customer
-
-        order, customer = get_ct_order_and_customer("test", "testorder", "message_id", mock_client)
-
-        mock_client.get_order_by_id.assert_called_once_with("testorder")
-        mock_client.get_customer_by_id.assert_called_once_with("testcustomer")
-        self.assertEqual(order, mock_order)
-        self.assertEqual(customer, mock_customer)
-
-    @patch('commerce_coordinator.apps.commercetools.clients.CommercetoolsAPIClient')
-    def test_order_not_found(self, mock_client_class):
-        """Test exception handling when order is not found."""
-
-        mock_client = mock_client_class.return_value
-        mock_client.get_order_by_id.side_effect = Exception("Order not found")
-
-        with self.assertRaises(Exception):
-            get_ct_order_and_customer("test", "invalid_order", "message_id", mock_client)
-
-        mock_client.get_order_by_id.assert_called_once_with("invalid_order")
-        mock_client.get_customer_by_id.assert_not_called()
-
-    @patch('commerce_coordinator.apps.commercetools.clients.CommercetoolsAPIClient')
-    def test_customer_not_found(self, mock_client_class):
-        """Test exception handling when customer is not found."""
-
-        mock_client = mock_client_class.return_value
-        mock_order = Mock()
-        mock_order.customer_id = "testcustomer"
-        mock_order.id = "testorder"
-
-        mock_client.get_order_by_id.return_value = mock_order
-        mock_client.get_customer_by_id.side_effect = Exception("Customer not found")
-
-        with self.assertRaises(Exception):
-            get_ct_order_and_customer("test", "testorder", "message_id", mock_client)
-
-        mock_client.get_order_by_id.assert_called_once_with("testorder")
-        mock_client.get_customer_by_id.assert_called_once_with("testcustomer")
 
 
 class TestPrepareDefaultParams(unittest.TestCase):

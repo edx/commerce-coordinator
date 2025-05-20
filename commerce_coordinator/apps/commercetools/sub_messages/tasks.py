@@ -42,7 +42,6 @@ from commerce_coordinator.apps.commercetools.utils import (
     calculate_total_discount_on_order,
     extract_ct_order_information_for_braze_canvas,
     extract_ct_product_information_for_braze_canvas,
-    get_ct_order_and_customer,
     get_lob_from_variant_attr,
     prepare_default_params,
     send_order_confirmation_email
@@ -98,7 +97,11 @@ def fulfill_order_placed_message_signal_task(
 
     client = CommercetoolsAPIClient()
 
-    order, customer = get_ct_order_and_customer(tag, order_id, message_id, client)
+    logging_context = {
+        'tag': tag,
+        'message_id': message_id
+    }
+    order, customer = client.get_order_and_customer_by_order_id(order_id, logging_context)
 
     if not (customer and order and is_edx_lms_order(order)):
         logger.info(f'[CT-{tag}] order {order_id} is not an edX order, message id: {message_id}')
