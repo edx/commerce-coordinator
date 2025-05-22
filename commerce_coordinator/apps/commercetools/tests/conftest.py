@@ -9,24 +9,37 @@ import typing
 from datetime import datetime
 
 import requests_mock
-from commercetools.platform.models import AuthenticationMode as CTAuthenticationMode
-from commercetools.platform.models import Customer as CTCustomer
-from commercetools.platform.models import CustomFields as CTCustomFields
-from commercetools.platform.models import FieldContainer as CTFieldContainer
-from commercetools.platform.models import LineItemReturnItem as CTLineItemReturnItem
-from commercetools.platform.models import MoneyType as CTMoneyType
-from commercetools.platform.models import Order as CTOrder
-from commercetools.platform.models import Payment as CTPayment
-from commercetools.platform.models import PaymentState
-from commercetools.platform.models import Product as CTProduct
-from commercetools.platform.models import ProductProjectionPagedSearchResponse as CTProductProjectionPagedSearchResponse
-from commercetools.platform.models import ReturnPaymentState, ReturnShipmentState
-from commercetools.platform.models import Transaction as CTTransaction
-from commercetools.platform.models import TransactionState, TransactionType
-from commercetools.platform.models import TypedMoney as CTTypedMoney
-from commercetools.platform.models import TypeReference as CTTypeReference
-from commercetools.platform.models.state import State as CTLineItemState
-from commercetools.platform.models.state import StateTypeEnum as CTStateType
+from commercetools.platform.models import (
+    AuthenticationMode,
+    Cart,
+    CartOrigin,
+    CartState,
+    CentPrecisionMoney,
+    Customer,
+    CustomFields,
+    FieldContainer,
+    InventoryMode,
+    LineItemReturnItem,
+    MoneyType,
+    Order,
+    Payment,
+    PaymentState,
+    Product,
+    ProductProjectionPagedSearchResponse,
+    ReturnPaymentState,
+    ReturnShipmentState,
+    RoundingMode,
+    ShippingMode,
+    StateTypeEnum,
+    TaxCalculationMode,
+    TaxMode,
+    Transaction,
+    TransactionState,
+    TransactionType,
+    TypedMoney,
+    TypeReference
+)
+from commercetools.platform.models.state import State as LineItemState
 from commercetools.testing import BackendRepository
 
 from commerce_coordinator.apps.commercetools.catalog_info.constants import EdXFieldNames
@@ -93,9 +106,7 @@ class APITestingSet:
     client: CommercetoolsAPIClient
     """ Coordinatior API Client for Commerce Tools """
 
-    def __init__(self,
-                 mocker: requests_mock.Mocker,
-                 repo: BackendRepository):
+    def __init__(self, mocker: requests_mock.Mocker, repo: BackendRepository):
         """
         Create a new instance, please use APITestingSet.new_instance() instead.
 
@@ -150,31 +161,31 @@ class APITestingSet:
 
 
 # Data Blobs
-def gen_order(uuid_id, with_discount=True) -> CTOrder:
+def gen_order(uuid_id, with_discount=True) -> Order:
     """
-    Generate a CTOrder object from a json file
+    Generate a Order object from a json file
     """
     order_json_file = ('raw_ct_order.json' if with_discount
                        else 'raw_ct_order_without_discount.json')
     with open(os.path.join(pathlib.Path(__file__).parent.resolve(), order_json_file)) as f:
         obj = json.load(f)
         obj['id'] = uuid_id
-        return CTOrder.deserialize(obj)
+        return Order.deserialize(obj)
 
 
-def gen_program_order(uuid_id) -> CTOrder:
+def gen_program_order(uuid_id) -> Order:
     """
-    Generate a CTOrder object from a json file
+    Generate a Order object from a json file
     """
     order_json_file = 'raw_ct_program_order.json'
     with open(os.path.join(pathlib.Path(__file__).parent.resolve(), order_json_file)) as f:
         obj = json.load(f)
         obj['id'] = uuid_id
-        return CTOrder.deserialize(obj)
+        return Order.deserialize(obj)
 
 
 def gen_payment():
-    return CTPayment(
+    return Payment(
         id=uuid4_str(),
         version=1,
         created_at=datetime.now(),
@@ -190,14 +201,14 @@ def gen_payment():
 
 def gen_payment_with_multiple_transactions(*args):
     """
-    Generate a CTPayment object with multiple transaction records
+    Generate a Payment object with multiple transaction records
     """
     transactions = []
     for i in range(0, len(args), 2):
         transaction = gen_transaction(args[i], args[i+1])
         transactions.append(transaction)
 
-    return CTPayment(
+    return Payment(
         id=uuid4_str(),
         version=1,
         created_at=datetime.now(),
@@ -210,14 +221,14 @@ def gen_payment_with_multiple_transactions(*args):
     )
 
 
-def gen_transaction(transaction_type=None, amount=None) -> CTTransaction:
-    return CTTransaction(
+def gen_transaction(transaction_type=None, amount=None) -> Transaction:
+    return Transaction(
         id=uuid4_str(),
         type=transaction_type,
-        amount=CTTypedMoney(
+        amount=TypedMoney(
             currency_code='USD',
             cent_amount=amount,
-            type=CTMoneyType.CENT_PRECISION,
+            type=MoneyType.CENT_PRECISION,
             fraction_digits=2,
         ),
         timestamp=datetime.now(),
@@ -226,33 +237,33 @@ def gen_transaction(transaction_type=None, amount=None) -> CTTransaction:
     )
 
 
-def gen_product() -> CTProduct:
+def gen_product() -> Product:
     with open(os.path.join(pathlib.Path(__file__).parent.resolve(), 'raw_ct_product.json')) as f:
         obj = json.load(f)
-        return CTProduct.deserialize(obj)
+        return Product.deserialize(obj)
 
 
-def gen_variant_search_result() -> CTProductProjectionPagedSearchResponse:
+def gen_variant_search_result() -> ProductProjectionPagedSearchResponse:
     with open(os.path.join(pathlib.Path(__file__).parent.resolve(), 'raw_variant_search.json')) as f:
         obj = json.load(f)
-        return CTProductProjectionPagedSearchResponse.deserialize(obj)
+        return ProductProjectionPagedSearchResponse.deserialize(obj)
 
 
-def gen_program_search_result() -> CTProductProjectionPagedSearchResponse:
+def gen_program_search_result() -> ProductProjectionPagedSearchResponse:
     """
-    Generate a CTProductProjectionPagedSearchResponse object from a json file
+    Generate a ProductProjectionPagedSearchResponse object from a json file
     """
     with open(os.path.join(pathlib.Path(__file__).parent.resolve(), 'raw_ct_program.json')) as f:
         obj = json.load(f)
-        return CTProductProjectionPagedSearchResponse.deserialize(obj)
+        return ProductProjectionPagedSearchResponse.deserialize(obj)
 
 
-def gen_order_history(num=1) -> typing.List[CTOrder]:
+def gen_order_history(num=1) -> typing.List[Order]:
     return [gen_order(uuid4_str()) for _ in range(num)]
 
 
-def gen_example_customer() -> CTCustomer:
-    return CTCustomer.deserialize(json.loads(
+def gen_example_customer() -> Customer:
+    return Customer.deserialize(json.loads(
         """
         {
           "id": "f7f54eef-3ece-4bd2-a432-ffc3b3398507",
@@ -310,21 +321,21 @@ DEFAULT_EDX_LMS_USER_ID = 127
 
 
 def gen_customer(email: str, un: str):
-    return CTCustomer(
+    return Customer(
         first_name='John',
         email=email,
-        custom=CTCustomFields(
-            type=CTTypeReference(
+        custom=CustomFields(
+            type=TypeReference(
                 id=uuid4_str()
             ),
-            fields=CTFieldContainer({
+            fields=FieldContainer({
                 EdXFieldNames.LMS_USER_NAME: un,
                 EdXFieldNames.LMS_USER_ID: DEFAULT_EDX_LMS_USER_ID
             })
         ),
         version=3,
         addresses=[],
-        authentication_mode=CTAuthenticationMode.PASSWORD,
+        authentication_mode=AuthenticationMode.EXTERNAL_AUTH,
         created_at=datetime.now(),
         id=uuid4_str(),
         is_email_verified=True,
@@ -333,22 +344,22 @@ def gen_customer(email: str, un: str):
 
 
 def gen_retired_customer(first_name: str, last_name: str, email: str, un: str):
-    return CTCustomer(
+    return Customer(
         email=email,
         first_name=first_name,
         last_name=last_name,
-        custom=CTCustomFields(
-            type=CTTypeReference(
+        custom=CustomFields(
+            type=TypeReference(
                 id=uuid4_str()
             ),
-            fields=CTFieldContainer({
+            fields=FieldContainer({
                 EdXFieldNames.LMS_USER_NAME: un,
                 EdXFieldNames.LMS_USER_ID: DEFAULT_EDX_LMS_USER_ID
             })
         ),
         version=3,
         addresses=[],
-        authentication_mode=CTAuthenticationMode.PASSWORD,
+        authentication_mode=AuthenticationMode.PASSWORD,
         created_at=datetime.now(),
         id=uuid4_str(),
         is_email_verified=True,
@@ -356,8 +367,10 @@ def gen_retired_customer(first_name: str, last_name: str, email: str, un: str):
     )
 
 
-def gen_return_item(order_line_id: str, payment_state: ReturnPaymentState) -> CTLineItemReturnItem:
-    return CTLineItemReturnItem(
+def gen_return_item(
+    order_line_id: str, payment_state: ReturnPaymentState
+) -> LineItemReturnItem:
+    return LineItemReturnItem(
         id=uuid4_str(),
         quantity=1,
         shipment_state=ReturnShipmentState.RETURNED,
@@ -368,14 +381,57 @@ def gen_return_item(order_line_id: str, payment_state: ReturnPaymentState) -> CT
     )
 
 
-def gen_line_item_state() -> CTLineItemState:
-    return CTLineItemState(
+def gen_line_item_state() -> LineItemState:
+    return LineItemState(
         id=uuid4_str(),
         version=2,
         created_at=datetime.now(),
         last_modified_at=datetime.now(),
         key='2u-fulfillment-pending-state',
-        type=CTStateType.LINE_ITEM_STATE,
+        type=StateTypeEnum.LINE_ITEM_STATE,
         initial=False,
         built_in=False,
+    )
+
+
+def gen_cart(
+    cart_id=None,
+    cart_version=1,
+    customer_id=None,
+    customer_email=None,
+    custom=None,
+) -> Cart:
+    """Generate a Cart object with the given parameters."""
+    if not cart_id:
+        cart_id = uuid4_str()
+    if not customer_id:
+        customer_id = uuid4_str()
+
+    return Cart(
+        id=cart_id,
+        version=cart_version,
+        customer_id=customer_id,
+        customer_email=customer_email,
+        created_at=datetime.now(),
+        last_modified_at=datetime.now(),
+        total_price=CentPrecisionMoney(
+            currency_code='USD',
+            cent_amount=0,
+            fraction_digits=2,
+        ),
+        cart_state=CartState.ACTIVE,
+        origin=CartOrigin.CUSTOMER,
+        inventory_mode=InventoryMode.NONE,
+        shipping_mode=ShippingMode.SINGLE,
+        tax_calculation_mode=TaxCalculationMode.LINE_ITEM_LEVEL,
+        tax_mode=TaxMode.DISABLED,
+        tax_rounding_mode=RoundingMode.HALF_EVEN,
+        line_items=[],
+        custom_line_items=[],
+        direct_discounts=[],
+        discount_codes=[],
+        item_shipping_addresses=[],
+        refused_gifts=[],
+        shipping=[],
+        custom=custom,
     )

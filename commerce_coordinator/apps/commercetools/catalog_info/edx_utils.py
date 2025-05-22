@@ -1,6 +1,7 @@
 import decimal
 from typing import List, Optional, Union
 
+from commercetools.platform.models import Attribute, CentPrecisionMoney
 from commercetools.platform.models import Customer as CTCustomer
 from commercetools.platform.models import LineItem as CTLineItem
 from commercetools.platform.models import Order as CTOrder
@@ -82,11 +83,15 @@ def get_edx_is_sanctioned(order: CTOrder) -> bool:
 
 
 def cents_to_dollars(in_amount):
-    return in_amount.cent_amount / pow(
-        10, in_amount.fraction_digits
-        if hasattr(in_amount, 'fraction_digits')
-        else 2
-    )
+
+    if not in_amount:
+        return None
+    else:
+        return in_amount.cent_amount / pow(
+            10, in_amount.fraction_digits
+            if hasattr(in_amount, 'fraction_digits')
+            else 2
+        )
 
 
 def get_line_item_bundle_id(line_item):
@@ -175,3 +180,105 @@ def get_line_item_lms_entitlement_id(line_item):
             if line_item.custom
             else None
         )
+
+
+def sum_money(*args: Optional[list[CentPrecisionMoney]]) -> CentPrecisionMoney:
+
+    """
+    Sums multiple CentPrecisionMoney objects.
+
+    Args:
+        *args: Variable number of CentPrecisionMoney dictionaries or None.
+
+    Returns:
+        A CentPrecisionMoney object with the total centAmount,
+        using the fractionDigits and currencyCode from the first valid entry.
+        Returns None if no valid money object is provided.
+    """
+
+    amount_list = [amount for amount in args if amount]
+
+    if not amount_list:
+        return None
+
+    total_cent_amount = sum(amount.cent_amount for amount in amount_list)
+
+    return {
+        'cent_amount': total_cent_amount,
+        'fraction_digits': amount_list[0].fraction_digits,
+        'currency_code': amount_list[0].currency_code
+    }
+
+
+def get_attribute_value(attributes: list[Attribute], key: str):
+
+    """
+    Returns the value of an attribute matching the provided key.
+
+    Args:
+        attributes (List[Attribute]): List of product variant attributes.
+        key (str): Name of the attribute to find.
+
+    Returns:
+        The value of the matching attribute, or None if not found.
+    """
+    for attr in attributes:
+        if attr.name == key:
+            return attr.value
+    return None
+
+
+def get_product_from_line_item(line_item: CTLineItem, standalone_price: CentPrecisionMoney) -> dict[str, any]:
+
+    """
+    Extracts and formats product information from a line item.
+
+    Args:
+        line_item (LineItem): The line item containing product and variant details.
+        standalone_price (CentPrecisionMoney): The price of the product in cent precision format.
+
+    Returns:
+        dict[str, any]: A dictionary representing the product with keys such as:
+            - product_id (str or None): The course key or product key depending on product type.
+            - sku (str): SKU of the product variant.
+            - name (LocalizedString): Localized name of the product.
+            - price (float): Price converted to dollars.
+            - quantity (int): Quantity of the item in the line.
+            - category (str or None): Primary subject area if present in attributes.
+            - url (str or None): Course URL if present in attributes.
+            - lob (str): Line of business; defaults to "edx".
+            - image_url (str or None): First image URL from variant if available.
+            - brand (str or None): Brand name from attributes.
+            - product_type (str or None): Name of the product type.
+    """
+
+    product_key = line_item.product_key
+    name = line_item.name
+    product_type = line_item.product_type
+    count = line_item.quantity
+    variant = line_item.variant
+    attributes = variant.attributes
+    images = variant.images
+    product_id = None
+
+    if product_type and product_type.obj.key == "edx_course_entitlement":
+        for attr in variant["attributes"]:
+            if attr["name"] == "course-key":
+                product_id = attr["value"]
+                break
+    else:
+        product_id = product_key
+
+    return {
+        "product_id": product_id,
+        "sku": variant.sku,
+        "name": name,
+        "price": cents_to_dollars(standalone_price),
+        "quantity": count,
+        "category": get_attribute_value(attributes, "primary-subject-area"),
+        "url": get_attribute_value(attributes, "url-course"),
+        "lob": get_attribute_value(attributes, "lob") or "edx",
+        "image_url": images[0] if images else None,
+        "brand": get_attribute_value(attributes, "brand-text"),
+        "product_type": product_type.obj.name if product_type.obj.name else None,
+    }

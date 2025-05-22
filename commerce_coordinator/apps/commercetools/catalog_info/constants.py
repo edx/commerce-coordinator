@@ -67,6 +67,10 @@ class TwoUKeys:
     # Mobile order custom field to store in cart/order model
     ORDER_MOBILE_ORDER = 'mobileOrder'
 
+    # Order number counter to store as a customer object
+    ORDER_NUMBER_CUSTOM_OBJECT_CONTAINER = 'orderNumbers'
+    ORDER_NUMBER_CUSTOM_OBJECT_KEY = 'orderNumber'
+
 
 class EdXFieldNames:
     """edX Specific field names for use in Commercetools"""

@@ -177,21 +177,21 @@ class CTCustomAPIClient:
 
         return entitlement_products
 
-    def get_program_entitlements_standalone_prices(
+    def get_standalone_prices_for_skus(
         self,
-        entitlement_skus: List[str],
+        skus: List[str],
     ) -> List[dict]:
         """
-        Fetch standalone prices for the given entitlement SKUs.
+        Fetch standalone prices for the given SKUs.
 
         Args:
-            entitlement_skus (list): List of entitlement SKUs to fetch prices for.
+            skus (list): List of SKUs to fetch prices for.
 
         Returns:
-            List: List of standalone prices for the given entitlement SKUs.
+            List: List of standalone prices for the given SKUs.
         """
         params = {
-            "where": " or ".join([f'sku="{sku}"' for sku in entitlement_skus])
+            "where": " or ".join([f'sku="{sku}"' for sku in skus])
         }
         response = self._make_request(
             "GET",

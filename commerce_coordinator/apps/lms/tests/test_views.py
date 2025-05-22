@@ -607,7 +607,7 @@ class ProgramPriceViewTests(APITestCase):
                 }
             }
         ]
-        self.mock_ct_api_client.return_value.get_program_entitlements_standalone_prices.return_value = [
+        self.mock_ct_api_client.return_value.get_standalone_prices_for_skus.return_value = [
             {'value': {'centAmount': 2000, 'currencyCode': 'USD'}},
             {'value': {'centAmount': 1000, 'currencyCode': 'USD'}}
         ]
@@ -629,7 +629,7 @@ class ProgramPriceViewTests(APITestCase):
             {'variant_key': 'ai+edX+M12', 'entitlement_sku': 'uuid16'}
         ]
         self.mock_ct_api_client.return_value.get_ct_bundle_offers_without_code.return_value = []
-        self.mock_ct_api_client.return_value.get_program_entitlements_standalone_prices.return_value = [
+        self.mock_ct_api_client.return_value.get_standalone_prices_for_skus.return_value = [
             {'value': {'centAmount': 2000, 'currencyCode': 'USD'}},
             {'value': {'centAmount': 1000, 'currencyCode': 'USD'}}
         ]

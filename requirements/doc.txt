@@ -249,6 +249,8 @@ iniconfig==2.0.0
     # via
     #   -r requirements/test.txt
     #   pytest
+iso4217==1.12.20240625
+    # via -r requirements/test.txt
 isort==6.0.0
     # via
     #   -r requirements/test.txt
@@ -569,6 +571,8 @@ stevedore==5.4.0
     #   edx-django-utils
     #   edx-opaque-keys
 stripe==11.5.0
+    # via -r requirements/test.txt
+tenacity==9.1.2
     # via -r requirements/test.txt
 testfixtures==8.3.0
     # via -r requirements/test.txt
