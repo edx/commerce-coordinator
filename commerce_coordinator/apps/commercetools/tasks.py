@@ -8,12 +8,11 @@ import stripe
 from celery import shared_task
 from commercetools import CommercetoolsError
 from django.conf import settings
-from django.core.cache import cache
 
-from commerce_coordinator.apps.commercetools.catalog_info.constants import EDX_PAYPAL_PAYMENT_INTERFACE_NAME
-from commerce_coordinator.apps.commercetools.catalog_info.edx_utils import get_edx_line_item, get_edx_line_item_state
+from commerce_coordinator.apps.commercetools.catalog_info.constants import EDX_PAYPAL_PAYMENT_INTERFACE_NAME, TwoUKeys
+from commerce_coordinator.apps.commercetools.catalog_info.edx_utils import get_edx_line_item
 from commerce_coordinator.apps.core.memcache import safe_key
-from commerce_coordinator.apps.core.tasks import TASK_LOCK_EXPIRE, TASK_LOCK_RETRY, acquire_task_lock, release_task_lock
+from commerce_coordinator.apps.core.tasks import TASK_LOCK_RETRY, acquire_task_lock, release_task_lock
 
 from .clients import CommercetoolsAPIClient
 from .utils import has_full_refund_transaction, is_transaction_already_refunded
@@ -25,7 +24,7 @@ stripe.api_key = settings.PAYMENT_PROCESSOR_CONFIG['edx']['stripe']['secret_key'
 
 @shared_task(bind=True, autoretry_for=(CommercetoolsError,), retry_kwargs={'max_retries': 5, 'countdown': 3})
 def fulfillment_completed_update_ct_line_item_task(
-    self,
+    self,       # pylint: disable=unused-argument
     entitlement_uuid,
     order_id,
     line_item_id,
@@ -36,7 +35,6 @@ def fulfillment_completed_update_ct_line_item_task(
     """
     tag = "fulfillment_completed_update_ct_line_item_task"
     task_key = safe_key(key=order_id, key_prefix=tag, version='1')
-    cache_key = safe_key(key=order_id, key_prefix='order_version_for'+tag, version='1')
     entitlement_info = f'and entitlement {entitlement_uuid}.' if entitlement_uuid else '.'
 
     def _log_error_and_release_lock(log_message):
@@ -68,19 +66,9 @@ def fulfillment_completed_update_ct_line_item_task(
         order = client.get_order_by_id(order_id)
         current_order_version = order.version
 
-        cache_entry = cache.get(cache_key, None)
-
-        # TODO: Remove logging after testing on stage
-        if cache_entry:
-            logger.info(f'[CT-{tag}] Found cache entry for order version {cache_entry} for cache key {cache_key}')
-            current_order_version = cache_entry
-        else:
-            logger.info(f'[CT-{tag}] Cache entry not found for order version for cache key {cache_key}')
-
-        if self.request.retries > 0:
-            current_order_version = client.get_order_by_id(order_id).version
-
         line_item = get_edx_line_item(order.line_items, line_item_id)
+        # from here we will always be transitioning from a 'Fulfillment Processing' state
+        line_item_state_id = client.get_state_by_key(TwoUKeys.PROCESSING_FULFILMENT_STATE).id
 
         updated_order = client.update_line_item_on_fulfillment(
             entitlement_uuid,
@@ -88,12 +76,20 @@ def fulfillment_completed_update_ct_line_item_task(
             current_order_version,
             line_item_id,
             line_item.quantity,
-            get_edx_line_item_state(line_item),
+            line_item_state_id,
             to_state_key
         )
-
-        cache.set(key=cache_key, value=updated_order.version, timeout=TASK_LOCK_EXPIRE)
     except CommercetoolsError as err:
+        if (isinstance(err.errors, list) and any(
+            TwoUKeys.PROCESSING_FULFILMENT_STATE in e.get("message", "")
+            for e in err.errors
+        )):
+            _log_info_and_release_lock(
+                f'[CT-{tag}] Order {order_id} line item {line_item_id} already in state {to_state_key}'
+                f'{entitlement_info} Releasing lock.'
+            )
+            return None
+
         release_task_lock(task_key)
         raise err
     except Exception as exc:  # pylint: disable=broad-exception-caught

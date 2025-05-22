@@ -61,6 +61,7 @@ class UpdateLineItemStateOnFulfillmentCompletionTaskTest(TestCase):
         # pylint: disable=no-value-for-parameter
         mock_order = gen_order(EXAMPLE_UPDATE_LINE_ITEM_SIGNAL_PAYLOAD['order_id'])
         mock_client().get_order_by_id.return_value = mock_order
+        mock_client().get_state_by_key.return_value = mock_order.line_items[0].state[0].state
 
         _ = fulfillment_uut(*self.unpack_for_uut(EXAMPLE_UPDATE_LINE_ITEM_SIGNAL_PAYLOAD))
         logger.info('mock_client().mock_calls: %s', mock_client().mock_calls)
