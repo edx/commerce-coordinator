@@ -126,10 +126,27 @@ class MobileCreateOrderViewTests(APITestCase):
         response = self.client.post(self.url, self.invalid_payload, format="json")
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
 
+    @mock.patch("commerce_coordinator.apps.iap.utils.IAPPaymentProcessor")
     @mock.patch("uuid.uuid4")
-    def test_successful_order_creation(self, mock_uuid):
+    def test_successful_order_creation(self, mock_uuid, mock_payment_processor):
         self.authenticate_user()
         mock_uuid.return_value = "test-uuid"
+
+        self.valid_payload = {
+            "payment_processor": "ios-iap",  # Must be valid!
+            "course_run_key": "demo-course-run",
+            "price": "49.99",
+            "currency_code": "USD",
+            "purchase_token": "dummy-token"
+        }
+
+        # Mock the validate_iap return value
+        mock_instance = mock_payment_processor.return_value
+        mock_instance.validate_iap.return_value = {
+            "receipt": {"receipt_creation_date": "2025-05-21T12:00:00Z"},
+            "transaction_id": "txn-123",
+            "in_app": [{"product_id": "demo-course-run", "original_transaction_id": "txn-123"}]
+        }
 
         mock_customer = mock.MagicMock()
         mock_customer.id = "customer-123"
@@ -152,12 +169,8 @@ class MobileCreateOrderViewTests(APITestCase):
         mock_line_item = mock.MagicMock()
         mock_line_item.state = [mock.MagicMock(state=mock.MagicMock(id="state-123"))]
         mock_order.line_items = [mock_line_item]
-        self.mock_ct_client.return_value.create_order_from_cart.return_value = (
-            mock_order
-        )
-        self.mock_ct_client.return_value.update_line_items_transition_state.return_value = (
-            mock_order
-        )
+        self.mock_ct_client.return_value.create_order_from_cart.return_value = mock_order
+        self.mock_ct_client.return_value.update_line_items_transition_state.return_value = mock_order
 
         response = self.client.post(self.url, self.valid_payload, format="json")
 
@@ -165,6 +178,9 @@ class MobileCreateOrderViewTests(APITestCase):
         self.assertEqual(
             response.data, {"order_id": "order-123", "order_number": "ORDER-123"}
         )
+
+        # Optional: assert that validate_iap was called
+        mock_instance.validate_iap.assert_called_once_with(self.valid_payload, "cart-123")
 
     def test_commercetools_error_handling(self):
         """Test handling of CommercetoolsError."""

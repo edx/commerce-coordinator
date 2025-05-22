@@ -2,9 +2,7 @@
 Views for the InAppPurchase app
 """
 
-import datetime
 import logging
-import uuid
 
 from commercetools import CommercetoolsError
 from commercetools.platform.models import Money
@@ -30,6 +28,7 @@ from commerce_coordinator.apps.iap.utils import (
     get_ct_customer,
     get_email_domain,
     get_standalone_price_for_sku,
+    get_payment_info_from_purchase_token,
 )
 from commerce_coordinator.apps.iap.serializers import (
     MobileOrderRequestData,
@@ -84,6 +83,17 @@ class MobileCreateOrderView(APIView):
                 external_price=external_price,
                 order_number=order_number,
             )
+            payment_process_data = get_payment_info_from_purchase_token(request.data, cart.id)
+
+            if payment_process_data['status_code'] != 200:
+                error_msg = payment_process_data['response'].get('error', 'Unknown error')
+                logger.error(error_msg)
+                client.delete_cart(cart)
+
+                return Response(
+                    {"error": error_msg},
+                    status=payment_process_data['status_code'],
+                )
 
             emit_checkout_started_event(
                 lms_user_id=lms_user_id,
@@ -107,17 +117,14 @@ class MobileCreateOrderView(APIView):
             payment = client.create_payment(
                 amount_planned=external_price,
                 customer_id=customer.id,
-                # TODO: finalize source of these
-                payment_method="Dummy Card",
-                payment_status="Dummy Success",
+                payment_method=data.payment_processor.replace("-", " ").strip(),
+                payment_status="succeeded",
                 payment_processor=data.payment_processor,
-                # TODO: fetch from purchase token
-                psp_payment_id="Dummy-" + str(uuid.uuid4()),
-                psp_transaction_id="Dummy-" + str(uuid.uuid4()),
-                psp_transaction_created_at=datetime.datetime.now(),
+                psp_payment_id=payment_process_data.get('transaction_id'),
+                psp_transaction_id=payment_process_data.get('transaction_id'),
+                psp_transaction_created_at=payment_process_data.get('created_at'),
                 usd_cent_amount=standalone_price.cent_amount,
             )
-
             emit_payment_info_entered_event(
                 lms_user_id=lms_user_id,
                 cart_id=cart.id,
