@@ -1,0 +1,13 @@
+sequenceDiagram
+    participant CC as Commerce Coordinator (OF Client)
+    participant OF as Order Fulfillment (OF)
+    participant EB as AWS EventBridge
+
+    CC->>+OF: POST fulfillment request
+    OF-->>-CC: 200 OK (Acknowledgment)
+
+    Note over OF: Fulfillment processing (async)
+
+    OF->>+EB: Publish FulfillmentCompleted event
+    EB-->>+CC: Notify Client about FulfillmentCompleted
+    CC-->>-CC: Process event and update CT order state
