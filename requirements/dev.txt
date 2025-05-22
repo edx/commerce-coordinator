@@ -584,7 +584,7 @@ stevedore==5.4.0
     #   code-annotations
     #   edx-django-utils
     #   edx-opaque-keys
-stripe==11.5.0
+stripe==12.1.0
     # via -r requirements/validation.txt
 tenacity==9.1.2
     # via -r requirements/validation.txt
