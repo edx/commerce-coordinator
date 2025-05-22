@@ -1386,7 +1386,10 @@ class ClientTests(TestCase):
             self.assertEqual(request_body["paymentState"], "Paid")
             self.assertEqual(request_body["shipmentState"], "Shipped")
 
-    def test_update_return_payment_state_exception(self):
+    @patch(
+        'commerce_coordinator.apps.commercetools.clients.CommercetoolsAPIClient.get_payment_by_key'
+    )
+    def test_update_return_payment_state_exception(self, mock_get_payment):
         mock_error_response: CommercetoolsError = CommercetoolsError(
             "Could not update ReturnPaymentState", [
                 {
@@ -1397,22 +1400,23 @@ class ClientTests(TestCase):
             ], {}, "123456"
         )
 
-        with patch(
-            'commerce_coordinator.apps.commercetools.clients.CommercetoolsAPIClient.get_payment_by_key'
-        ) as mock_get_payment:
-            mock_get_payment.side_effect = mock_error_response
-            with self.assertRaises(OpenEdxFilterException):
-                self.client_set.client.update_return_payment_state_after_successful_refund(
-                    order_id="mock_order_id",
-                    order_version="2",
-                    return_line_item_return_ids=["mock_return_item_id"],
-                    return_line_entitlement_ids={'mock_return_item_id': 'mock_entitlement_id'},
-                    refunded_line_item_refunds={},
-                    payment_intent_id="1",
-                    interaction_id=uuid4_str()
-                )
+        mock_get_payment.side_effect = mock_error_response
 
-    def test_update_return_payment_state_no_payment(self):
+        with self.assertRaises(OpenEdxFilterException):
+            self.client_set.client.update_return_payment_state_after_successful_refund(
+                order_id="mock_order_id",
+                order_version="2",
+                return_line_item_return_ids=["mock_return_item_id"],
+                return_line_entitlement_ids={'mock_return_item_id': 'mock_entitlement_id'},
+                refunded_line_item_refunds={},
+                payment_intent_id="1",
+                interaction_id=uuid4_str()
+            )
+
+    @patch(
+        'commerce_coordinator.apps.commercetools.clients.CommercetoolsAPIClient.get_payment_by_key'
+    )
+    def test_update_return_payment_state_no_payment(self, mock_get_payment):
         mock_error_response: CommercetoolsError = CommercetoolsError(
             "Could not update ReturnPaymentState", [
                 {
@@ -1423,20 +1427,18 @@ class ClientTests(TestCase):
             ], {}, "123456"
         )
 
-        with patch(
-            'commerce_coordinator.apps.commercetools.clients.CommercetoolsAPIClient.get_payment_by_key'
-        ) as mock_get_payment:
-            mock_get_payment.side_effect = mock_error_response
-            with self.assertRaises(OpenEdxFilterException):
-                self.client_set.client.update_return_payment_state_after_successful_refund(
-                    order_id="mock_order_id",
-                    order_version="2",
-                    return_line_item_return_ids=["mock_return_item_id"],
-                    return_line_entitlement_ids={'mock_return_item_id': 'mock_entitlement_id'},
-                    refunded_line_item_refunds={},
-                    payment_intent_id="1",
-                    interaction_id=uuid4_str()
-                )
+        mock_get_payment.side_effect = mock_error_response
+
+        with self.assertRaises(OpenEdxFilterException):
+            self.client_set.client.update_return_payment_state_after_successful_refund(
+                order_id="mock_order_id",
+                order_version="2",
+                return_line_item_return_ids=["mock_return_item_id"],
+                return_line_entitlement_ids={'mock_return_item_id': 'mock_entitlement_id'},
+                refunded_line_item_refunds={},
+                payment_intent_id="1",
+                interaction_id=uuid4_str()
+            )
 
     def test_get_product_by_program_id(self):
         base_url = self.client_set.get_base_url_from_client()
