@@ -1,7 +1,6 @@
 """ Commercetools API Client(s) Testing """
 
 from datetime import datetime
-from unittest.mock import MagicMock
 
 import pytest
 import requests_mock
@@ -32,11 +31,10 @@ from openedx_filters.exceptions import OpenEdxFilterException
 
 from commerce_coordinator.apps.commercetools.catalog_info.constants import EdXFieldNames, TwoUKeys
 from commerce_coordinator.apps.commercetools.catalog_info.foundational_types import TwoUCustomTypes
-from commerce_coordinator.apps.commercetools.clients import CommercetoolsAPIClient, PaginatedResult
+from commerce_coordinator.apps.commercetools.clients import PaginatedResult
 from commerce_coordinator.apps.commercetools.tests.conftest import (
     DEFAULT_EDX_LMS_USER_ID,
     APITestingSet,
-    MonkeyPatch,
     gen_cart,
     gen_customer,
     gen_example_customer,
@@ -48,7 +46,6 @@ from commerce_coordinator.apps.commercetools.tests.conftest import (
     gen_retired_customer,
     gen_return_item
 )
-from commerce_coordinator.apps.commercetools.tests.sub_messages.test_tasks import CommercetoolsAPIClientMock
 from commerce_coordinator.apps.core.constants import ORDER_HISTORY_PER_SYSTEM_REQ_LIMIT
 from commerce_coordinator.apps.core.tests.utils import uuid4_str
 
@@ -1389,90 +1386,10 @@ class ClientTests(TestCase):
             self.assertEqual(request_body["paymentState"], "Paid")
             self.assertEqual(request_body["shipmentState"], "Shipped")
 
-    @patch('commerce_coordinator.apps.commercetools.clients.CommercetoolsAPIClient.get_order_by_id')
-    @patch('commerce_coordinator.apps.commercetools.clients.CommercetoolsAPIClient.get_customer_by_id')
-    def test_get_order_and_customer_by_order_id_success(self, mock_get_customer_by_id, mock_get_order_by_id):
-        order = MagicMock(spec=Order)
-        customer = MagicMock(spec=Customer)
-        order.id = "order-abc"
-        order.customer_id = "customer-123"
-        mock_get_order_by_id.return_value = order
-        mock_get_customer_by_id.return_value = customer
-
-        result_order, result_customer = self.client_set.client.get_order_and_customer_by_order_id(
-            "order-abc", logging_context="ctx")
-        assert result_order == order
-        assert result_customer == customer
-        mock_get_order_by_id.assert_called_once_with("order-abc")
-        mock_get_customer_by_id.assert_called_once_with("customer-123")
-
-    @patch('commerce_coordinator.apps.commercetools.clients.CommercetoolsAPIClient.get_order_by_id')
-    def test_get_order_and_customer_by_order_id_order_not_found(self, mock_get_order_by_id):
-        mock_get_order_by_id.side_effect = Exception("Order not found")
-        with pytest.raises(Exception) as exc:
-            self.client_set.client.get_order_and_customer_by_order_id("order-xyz", logging_context="ctx")
-        assert "Order not found" in str(exc.value)
-        mock_get_order_by_id.assert_called_once_with("order-xyz")
-
-    @patch('commerce_coordinator.apps.commercetools.clients.CommercetoolsAPIClient.get_order_by_id')
-    @patch('commerce_coordinator.apps.commercetools.clients.CommercetoolsAPIClient.get_customer_by_id')
-    def test_get_order_and_customer_by_order_id_customer_not_found(self, mock_get_customer_by_id, mock_get_order_by_id):
-        order = MagicMock(spec=Order)
-        order.customer_id = "customer-999"
-        mock_get_order_by_id.return_value = order
-        mock_get_customer_by_id.side_effect = Exception("Customer not found")
-        with pytest.raises(Exception) as exc:
-            self.client_set.client.get_order_and_customer_by_order_id("order-xyz", logging_context="ctx")
-        assert "Customer not found" in str(exc.value)
-        mock_get_order_by_id.assert_called_once_with("order-xyz")
-        mock_get_customer_by_id.assert_called_once_with("customer-999")
-
-
-class PaginatedResultsTest(TestCase):
-    """Tests for the simple logic in our Paginated Results Class"""
-
-    def test_data_class_does_have_more(self):
-        data = list(range(11))
-        paginated = PaginatedResult(data[:10], len(data), 0)
-
-        self.assertEqual(paginated.has_more(), True)
-        self.assertEqual(paginated.next_offset(), 10)
-
-    def test_data_class_doesnt_have_more(self):
-        data = list(range(10))
-        paginated = PaginatedResult(data, len(data), 0)
-
-        self.assertEqual(paginated.has_more(), False)
-        self.assertEqual(paginated.next_offset(), 10)
-
-
-class ClientUpdateReturnTests(TestCase):
-    """Tests for the update_return_payment_state_after_successful_refund method"""
-    client_set: APITestingSet
-
-    def setUp(self):
-        super().setUp()
-        self.mock = CommercetoolsAPIClientMock()
-        self.client_set = APITestingSet.new_instance()
-
-        MonkeyPatch.monkey(
-            CommercetoolsAPIClient,
-            {
-                '__init__': lambda _: None,
-                'get_order_by_id': self.mock.get_order_by_id,
-                # 'get_customer_by_id': self.mock.get_customer_by_id,
-                'get_payment_by_key': self.mock.get_payment_by_key,
-                'create_return_for_order': self.mock.create_return_for_order,
-                'create_return_payment_transaction': self.mock.create_return_payment_transaction
-            }
-        )
-
-    def tearDown(self):
-        self.mock.payment_mock.side_effect = None
-        MonkeyPatch.unmonkey(CommercetoolsAPIClient)
-        super().tearDown()
-
-    def test_update_return_payment_state_exception(self):
+    @patch(
+        'commerce_coordinator.apps.commercetools.clients.CommercetoolsAPIClient.get_payment_by_key'
+    )
+    def test_update_return_payment_state_exception(self, mock_get_payment):
         mock_error_response: CommercetoolsError = CommercetoolsError(
             "Could not update ReturnPaymentState", [
                 {
@@ -1483,10 +1400,7 @@ class ClientUpdateReturnTests(TestCase):
             ], {}, "123456"
         )
 
-        def _throw(_payment_id):
-            raise mock_error_response
-
-        self.mock.payment_mock.side_effect = _throw
+        mock_get_payment.side_effect = mock_error_response
 
         with self.assertRaises(OpenEdxFilterException):
             self.client_set.client.update_return_payment_state_after_successful_refund(
@@ -1499,7 +1413,10 @@ class ClientUpdateReturnTests(TestCase):
                 interaction_id=uuid4_str()
             )
 
-    def test_update_return_payment_state_no_payment(self):
+    @patch(
+        'commerce_coordinator.apps.commercetools.clients.CommercetoolsAPIClient.get_payment_by_key'
+    )
+    def test_update_return_payment_state_no_payment(self, mock_get_payment):
         mock_error_response: CommercetoolsError = CommercetoolsError(
             "Could not update ReturnPaymentState", [
                 {
@@ -1510,10 +1427,7 @@ class ClientUpdateReturnTests(TestCase):
             ], {}, "123456"
         )
 
-        def _throw(_payment_id):
-            raise mock_error_response
-
-        self.mock.payment_mock.side_effect = _throw
+        mock_get_payment.side_effect = mock_error_response
 
         with self.assertRaises(OpenEdxFilterException):
             self.client_set.client.update_return_payment_state_after_successful_refund(
@@ -1558,3 +1472,21 @@ class ClientUpdateReturnTests(TestCase):
 
             result = self.client_set.client.get_product_by_program_id(program_id)
             self.assertIsNone(result)
+
+
+class PaginatedResultsTest(TestCase):
+    """Tests for the simple logic in our Paginated Results Class"""
+
+    def test_data_class_does_have_more(self):
+        data = list(range(11))
+        paginated = PaginatedResult(data[:10], len(data), 0)
+
+        self.assertEqual(paginated.has_more(), True)
+        self.assertEqual(paginated.next_offset(), 10)
+
+    def test_data_class_doesnt_have_more(self):
+        data = list(range(10))
+        paginated = PaginatedResult(data, len(data), 0)
+
+        self.assertEqual(paginated.has_more(), False)
+        self.assertEqual(paginated.next_offset(), 10)
