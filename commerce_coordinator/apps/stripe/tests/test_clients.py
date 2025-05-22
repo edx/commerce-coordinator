@@ -362,7 +362,7 @@ class TestStripeAPIClient(CoordinatorClientTestCase):
     def test_confirm_payment_intent_success(self):
         """
         Check successful call of StripeAPIClient.confirm_payment_intent().
-        """ 
+        """
         self.assertJSONClientResponse(
             uut=self.client.confirm_payment_intent,
             input_kwargs={
