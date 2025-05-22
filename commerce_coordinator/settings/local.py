@@ -131,7 +131,7 @@ FULFILLMENT_TIMEOUT = 15  # Devstack is slow!
 PAYMENT_PROCESSOR_CONFIG = {
     'edx': {
         'stripe': {
-            'api_version': '2025-04-30.basil; server_side_confirmation_beta=v1',
+            'api_version': '2025-04-30.basil',
             'enable_telemetry': None,
             'log_level': 'debug',
             'max_network_retries': 0,
