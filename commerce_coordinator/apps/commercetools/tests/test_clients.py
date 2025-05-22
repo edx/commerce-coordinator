@@ -31,11 +31,10 @@ from openedx_filters.exceptions import OpenEdxFilterException
 
 from commerce_coordinator.apps.commercetools.catalog_info.constants import EdXFieldNames, TwoUKeys
 from commerce_coordinator.apps.commercetools.catalog_info.foundational_types import TwoUCustomTypes
-from commerce_coordinator.apps.commercetools.clients import CommercetoolsAPIClient, PaginatedResult
+from commerce_coordinator.apps.commercetools.clients import PaginatedResult
 from commerce_coordinator.apps.commercetools.tests.conftest import (
     DEFAULT_EDX_LMS_USER_ID,
     APITestingSet,
-    MonkeyPatch,
     gen_cart,
     gen_customer,
     gen_example_customer,
@@ -47,7 +46,6 @@ from commerce_coordinator.apps.commercetools.tests.conftest import (
     gen_retired_customer,
     gen_return_item
 )
-from commerce_coordinator.apps.commercetools.tests.sub_messages.test_tasks import CommercetoolsAPIClientMock
 from commerce_coordinator.apps.core.constants import ORDER_HISTORY_PER_SYSTEM_REQ_LIMIT
 from commerce_coordinator.apps.core.tests.utils import uuid4_str
 
@@ -1399,7 +1397,9 @@ class ClientTests(TestCase):
             ], {}, "123456"
         )
 
-        with patch('commerce_coordinator.apps.commercetools.clients.CommercetoolsAPIClient.get_payment_by_key') as mock_get_payment:
+        with patch(
+            'commerce_coordinator.apps.commercetools.clients.CommercetoolsAPIClient.get_payment_by_key'
+        ) as mock_get_payment:
             mock_get_payment.side_effect = mock_error_response
             with self.assertRaises(OpenEdxFilterException):
                 self.client_set.client.update_return_payment_state_after_successful_refund(
@@ -1423,7 +1423,9 @@ class ClientTests(TestCase):
             ], {}, "123456"
         )
 
-        with patch('commerce_coordinator.apps.commercetools.clients.CommercetoolsAPIClient.get_payment_by_key') as mock_get_payment:
+        with patch(
+            'commerce_coordinator.apps.commercetools.clients.CommercetoolsAPIClient.get_payment_by_key'
+        ) as mock_get_payment:
             mock_get_payment.side_effect = mock_error_response
             with self.assertRaises(OpenEdxFilterException):
                 self.client_set.client.update_return_payment_state_after_successful_refund(
