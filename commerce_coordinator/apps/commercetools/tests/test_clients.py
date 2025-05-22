@@ -1388,51 +1388,6 @@ class ClientTests(TestCase):
             self.assertEqual(request_body["paymentState"], "Paid")
             self.assertEqual(request_body["shipmentState"], "Shipped")
 
-
-class PaginatedResultsTest(TestCase):
-    """Tests for the simple logic in our Paginated Results Class"""
-
-    def test_data_class_does_have_more(self):
-        data = list(range(11))
-        paginated = PaginatedResult(data[:10], len(data), 0)
-
-        self.assertEqual(paginated.has_more(), True)
-        self.assertEqual(paginated.next_offset(), 10)
-
-    def test_data_class_doesnt_have_more(self):
-        data = list(range(10))
-        paginated = PaginatedResult(data, len(data), 0)
-
-        self.assertEqual(paginated.has_more(), False)
-        self.assertEqual(paginated.next_offset(), 10)
-
-
-class ClientUpdateReturnTests(TestCase):
-    """Tests for the update_return_payment_state_after_successful_refund method"""
-    client_set: APITestingSet
-
-    def setUp(self):
-        super().setUp()
-        self.mock = CommercetoolsAPIClientMock()
-        self.client_set = APITestingSet.new_instance()
-
-        MonkeyPatch.monkey(
-            CommercetoolsAPIClient,
-            {
-                '__init__': lambda _: None,
-                'get_order_by_id': self.mock.get_order_by_id,
-                # 'get_customer_by_id': self.mock.get_customer_by_id,
-                'get_payment_by_key': self.mock.get_payment_by_key,
-                'create_return_for_order': self.mock.create_return_for_order,
-                'create_return_payment_transaction': self.mock.create_return_payment_transaction
-            }
-        )
-
-    def tearDown(self):
-        self.mock.payment_mock.side_effect = None
-        MonkeyPatch.unmonkey(CommercetoolsAPIClient)
-        super().tearDown()
-
     def test_update_return_payment_state_exception(self):
         mock_error_response: CommercetoolsError = CommercetoolsError(
             "Could not update ReturnPaymentState", [
@@ -1444,21 +1399,18 @@ class ClientUpdateReturnTests(TestCase):
             ], {}, "123456"
         )
 
-        def _throw(_payment_id):
-            raise mock_error_response
-
-        self.mock.payment_mock.side_effect = _throw
-
-        with self.assertRaises(OpenEdxFilterException):
-            self.client_set.client.update_return_payment_state_after_successful_refund(
-                order_id="mock_order_id",
-                order_version="2",
-                return_line_item_return_ids=["mock_return_item_id"],
-                return_line_entitlement_ids={'mock_return_item_id': 'mock_entitlement_id'},
-                refunded_line_item_refunds={},
-                payment_intent_id="1",
-                interaction_id=uuid4_str()
-            )
+        with patch('commerce_coordinator.apps.commercetools.clients.CommercetoolsAPIClient.get_payment_by_key') as mock_get_payment:
+            mock_get_payment.side_effect = mock_error_response
+            with self.assertRaises(OpenEdxFilterException):
+                self.client_set.client.update_return_payment_state_after_successful_refund(
+                    order_id="mock_order_id",
+                    order_version="2",
+                    return_line_item_return_ids=["mock_return_item_id"],
+                    return_line_entitlement_ids={'mock_return_item_id': 'mock_entitlement_id'},
+                    refunded_line_item_refunds={},
+                    payment_intent_id="1",
+                    interaction_id=uuid4_str()
+                )
 
     def test_update_return_payment_state_no_payment(self):
         mock_error_response: CommercetoolsError = CommercetoolsError(
@@ -1471,21 +1423,18 @@ class ClientUpdateReturnTests(TestCase):
             ], {}, "123456"
         )
 
-        def _throw(_payment_id):
-            raise mock_error_response
-
-        self.mock.payment_mock.side_effect = _throw
-
-        with self.assertRaises(OpenEdxFilterException):
-            self.client_set.client.update_return_payment_state_after_successful_refund(
-                order_id="mock_order_id",
-                order_version="2",
-                return_line_item_return_ids=["mock_return_item_id"],
-                return_line_entitlement_ids={'mock_return_item_id': 'mock_entitlement_id'},
-                refunded_line_item_refunds={},
-                payment_intent_id="1",
-                interaction_id=uuid4_str()
-            )
+        with patch('commerce_coordinator.apps.commercetools.clients.CommercetoolsAPIClient.get_payment_by_key') as mock_get_payment:
+            mock_get_payment.side_effect = mock_error_response
+            with self.assertRaises(OpenEdxFilterException):
+                self.client_set.client.update_return_payment_state_after_successful_refund(
+                    order_id="mock_order_id",
+                    order_version="2",
+                    return_line_item_return_ids=["mock_return_item_id"],
+                    return_line_entitlement_ids={'mock_return_item_id': 'mock_entitlement_id'},
+                    refunded_line_item_refunds={},
+                    payment_intent_id="1",
+                    interaction_id=uuid4_str()
+                )
 
     def test_get_product_by_program_id(self):
         base_url = self.client_set.get_base_url_from_client()
@@ -1519,3 +1468,21 @@ class ClientUpdateReturnTests(TestCase):
 
             result = self.client_set.client.get_product_by_program_id(program_id)
             self.assertIsNone(result)
+
+
+class PaginatedResultsTest(TestCase):
+    """Tests for the simple logic in our Paginated Results Class"""
+
+    def test_data_class_does_have_more(self):
+        data = list(range(11))
+        paginated = PaginatedResult(data[:10], len(data), 0)
+
+        self.assertEqual(paginated.has_more(), True)
+        self.assertEqual(paginated.next_offset(), 10)
+
+    def test_data_class_doesnt_have_more(self):
+        data = list(range(10))
+        paginated = PaginatedResult(data, len(data), 0)
+
+        self.assertEqual(paginated.has_more(), False)
+        self.assertEqual(paginated.next_offset(), 10)
