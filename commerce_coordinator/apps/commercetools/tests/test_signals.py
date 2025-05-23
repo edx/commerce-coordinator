@@ -26,10 +26,7 @@ class FulfillOrderCompletedSendLineItemStateTest(CoordinatorSignalReceiverTestCa
     mock_parameters = {
         'entitlement_uuid': '',
         'order_id': 1,
-        'order_version': 2,
         'line_item_id': 3,
-        'item_quantity': 1,
-        'line_item_state_id': 4,
     }
 
     def test_correct_arguments_passed_fulfillment_true(self, mock_task):
@@ -37,7 +34,6 @@ class FulfillOrderCompletedSendLineItemStateTest(CoordinatorSignalReceiverTestCa
         _, logs = self.fire_signal()
         self.mock_parameters.pop('is_fulfilled')
         task_mock_parameters = copy(self.mock_parameters)
-        task_mock_parameters['from_state_id'] = task_mock_parameters.pop('line_item_state_id')
         logger.info('logs.output: %s', logs.output)
         mock_task.delay.assert_called_once_with(**task_mock_parameters, to_state_key='2u-fulfillment-success-state')
 
@@ -46,7 +42,6 @@ class FulfillOrderCompletedSendLineItemStateTest(CoordinatorSignalReceiverTestCa
         _, logs = self.fire_signal()
         self.mock_parameters.pop('is_fulfilled')
         task_mock_parameters = copy(self.mock_parameters)
-        task_mock_parameters['from_state_id'] = task_mock_parameters.pop('line_item_state_id')
         logger.info('logs.output: %s', logs.output)
         mock_task.delay.assert_called_once_with(**task_mock_parameters, to_state_key='2u-fulfillment-failure-state')
 

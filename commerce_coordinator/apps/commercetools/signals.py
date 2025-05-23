@@ -33,10 +33,7 @@ def fulfillment_completed_update_ct_line_item(**kwargs):
     async_result = fulfillment_completed_update_ct_line_item_task.delay(
         entitlement_uuid=kwargs.get("entitlement_uuid", ""),
         order_id=kwargs["order_id"],
-        order_version=kwargs["order_version"],
         line_item_id=kwargs["line_item_id"],
-        item_quantity=kwargs["item_quantity"],
-        from_state_id=kwargs["line_item_state_id"],
         to_state_key=to_state_key,
     )
 

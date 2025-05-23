@@ -36,6 +36,14 @@ commerce\_coordinator.apps.core.tests.test\_memcache module
    :undoc-members:
    :show-inheritance:
 
+commerce\_coordinator.apps.core.tests.test\_middleware module
+-------------------------------------------------------------
+
+.. automodule:: commerce_coordinator.apps.core.tests.test_middleware
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
 commerce\_coordinator.apps.core.tests.test\_models module
 ---------------------------------------------------------
 

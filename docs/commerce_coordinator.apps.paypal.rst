@@ -21,10 +21,42 @@ commerce\_coordinator.apps.paypal.apps module
    :undoc-members:
    :show-inheritance:
 
+commerce\_coordinator.apps.paypal.clients module
+------------------------------------------------
+
+.. automodule:: commerce_coordinator.apps.paypal.clients
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
 commerce\_coordinator.apps.paypal.pipeline module
 -------------------------------------------------
 
 .. automodule:: commerce_coordinator.apps.paypal.pipeline
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+commerce\_coordinator.apps.paypal.signals module
+------------------------------------------------
+
+.. automodule:: commerce_coordinator.apps.paypal.signals
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+commerce\_coordinator.apps.paypal.urls module
+---------------------------------------------
+
+.. automodule:: commerce_coordinator.apps.paypal.urls
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+commerce\_coordinator.apps.paypal.views module
+----------------------------------------------
+
+.. automodule:: commerce_coordinator.apps.paypal.views
    :members:
    :undoc-members:
    :show-inheritance:
