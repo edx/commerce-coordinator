@@ -5,7 +5,7 @@ from commerce_coordinator.settings.base import *
 PAYMENT_PROCESSOR_CONFIG = {
     'edx': {
         'stripe': {
-            'api_version': '2022-08-01; server_side_confirmation_beta=v1',
+            'api_version': '2025-04-30.basil',
             'enable_telemetry': None,
             'log_level': 'info',
             'max_network_retries': 0,
