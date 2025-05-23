@@ -372,6 +372,11 @@ class OrderReturnedMessageSignalTaskTests(TestCase):
         super().setUp()
         self.mock = CommercetoolsAPIClientMock()
 
+        # Force reset nested mocked return object
+        order_return = self.mock.order_mock.return_value
+        if hasattr(order_return, "custom") and hasattr(order_return.custom, "fields"):
+            order_return.custom.fields.clear()
+
         MonkeyPatch.monkey(
             CommercetoolsAPIClient,
             {

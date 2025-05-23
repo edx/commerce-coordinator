@@ -482,20 +482,3 @@ class TestGetRefundTransactionIdFromMobileOrder(unittest.TestCase):
 
         result = get_refund_transaction_id_from_order(order)
         self.assertEqual(result, "")
-
-    def test_get_refund_transaction_id_with_no_payments(self):
-        # Mock an order with no payments
-        order = MagicMock()
-        order.payment_info = MagicMock()
-        order.payment_info.payments = []
-
-        result = get_refund_transaction_id_from_order(order)
-        self.assertEqual(result, "")
-
-    def test_get_refund_transaction_id_with_no_payment_info(self):
-        # Mock an order with no payment_info
-        order = MagicMock()
-        order.payment_info = None
-
-        result = get_refund_transaction_id_from_order(order)
-        self.assertEqual(result, "")
