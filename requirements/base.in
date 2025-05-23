@@ -29,5 +29,5 @@ Pillow
 paypal-server-sdk
 pytz
 segment-analytics-python
-stripe
+stripe==12.1.0
 tenacity
