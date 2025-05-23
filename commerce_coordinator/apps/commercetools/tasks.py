@@ -9,8 +9,8 @@ from celery import shared_task
 from commercetools import CommercetoolsError
 from django.conf import settings
 
-from commerce_coordinator.apps.commercetools.catalog_info.constants import EDX_PAYPAL_PAYMENT_INTERFACE_NAME, TwoUKeys
-from commerce_coordinator.apps.commercetools.catalog_info.edx_utils import get_edx_line_item
+from commerce_coordinator.apps.commercetools.catalog_info.constants import EDX_PAYPAL_PAYMENT_INTERFACE_NAME
+from commerce_coordinator.apps.commercetools.catalog_info.edx_utils import get_edx_line_item, get_edx_line_item_state
 from commerce_coordinator.apps.core.memcache import safe_key
 from commerce_coordinator.apps.core.tasks import TASK_LOCK_RETRY, acquire_task_lock, release_task_lock
 
@@ -67,8 +67,6 @@ def fulfillment_completed_update_ct_line_item_task(
         current_order_version = order.version
 
         line_item = get_edx_line_item(order.line_items, line_item_id)
-        # from here we will always be transitioning from a 'Fulfillment Processing' state
-        line_item_state_id = client.get_state_by_key(TwoUKeys.PROCESSING_FULFILMENT_STATE).id
 
         updated_order = client.update_line_item_on_fulfillment(
             entitlement_uuid,
@@ -76,20 +74,10 @@ def fulfillment_completed_update_ct_line_item_task(
             current_order_version,
             line_item_id,
             line_item.quantity,
-            line_item_state_id,
+            get_edx_line_item_state(line_item),
             to_state_key
         )
     except CommercetoolsError as err:
-        if (isinstance(err.errors, list) and any(
-            TwoUKeys.PROCESSING_FULFILMENT_STATE in e.get("message", "")
-            for e in err.errors
-        )):
-            _log_info_and_release_lock(
-                f'[CT-{tag}] Order {order_id} line item {line_item_id} already in state {to_state_key}'
-                f'{entitlement_info} Releasing lock.'
-            )
-            return None
-
         release_task_lock(task_key)
         raise err
     except Exception as exc:  # pylint: disable=broad-exception-caught
