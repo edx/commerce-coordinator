@@ -31,7 +31,7 @@ class TestStripeAPIClient(CoordinatorClientTestCase):
 
     expected_headers = {
         'Authorization': 'Bearer ' + TEST_SECRET,
-        'Stripe-Version': '2025-04-30.basil',
+        'Stripe-Version': '2022-08-01; server_side_confirmation_beta=v1',
     }
 
     def setUp(self):
@@ -369,7 +369,7 @@ class TestStripeAPIClient(CoordinatorClientTestCase):
                 'payment_intent_id': TEST_PAYMENT_INTENT_ID,
             },
             expected_request={
-                'error_on_requires_action': ['true'],
+                'error_on_requires_action': ['True'],
                 'expand[0]': ['payment_method'],
             },
             request_type='query_string',
@@ -398,7 +398,7 @@ class TestStripeAPIClient(CoordinatorClientTestCase):
                     'payment_intent_id': TEST_PAYMENT_INTENT_ID,
                 },
                 expected_request={
-                    'error_on_requires_action': ['true'],
+                    'error_on_requires_action': ['True'],
                     'expand[0]': ['payment_method'],
                 },
                 request_type='query_string',
