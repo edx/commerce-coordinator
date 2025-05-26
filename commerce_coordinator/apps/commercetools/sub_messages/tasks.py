@@ -368,8 +368,8 @@ def fulfill_order_returned_signal_task(order_id, return_items, message_id):
                                    get_line_item_lms_entitlement_id(line_item) for line_item in get_edx_items(order)}
 
     is_mobile_order = False
-    if hasattr(order.custom, 'fields') and order.custom.fields:
-        is_mobile_order = order.custom.fields.get(TwoUKeys.ORDER_MOBILE_ORDER)
+    if hasattr(order, 'custom') and hasattr(order.custom, 'fields'):
+        is_mobile_order = order.custom.fields.get(TwoUKeys.ORDER_MOBILE_ORDER, False)
 
     # Return payment if payment id is set
     # pylint: disable=too-many-nested-blocks
