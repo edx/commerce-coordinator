@@ -85,6 +85,7 @@ from commerce_coordinator.apps.commercetools.utils import (
     find_latest_refund,
     find_refund_transaction,
     get_refund_transaction_id_from_order,
+    get_unprocessed_return_item_ids_from_order,
     handle_commercetools_error,
     translate_refund_status_to_transaction_status
 )
@@ -639,7 +640,7 @@ class CommercetoolsAPIClient:
         payment_intent_id: str,
         interaction_id: str,
         payment: Payment | None = None,
-        should_transition_state = True,
+        should_transition_state: bool = True,
     ) -> Union[Order, None]:
         """
         Update paymentState on the LineItemReturnItem attached to the order.
@@ -1583,24 +1584,9 @@ class CommercetoolsAPIClient:
                 )
                 return None
 
-            # pylint: disable=unnecessary-lambda-assignment
-            is_refunded = lambda item: (
-                item.payment_state == ReturnPaymentState.REFUNDED
-            )
-            has_no_txn = lambda item: (
-                item.custom is None
-                or not item.custom.fields.get(TwoUKeys.TRANSACTION_ID)
-            )
-            # pylint: enable=unnecessary-lambda-assignment
             order = response.results[0]
-            return_line_item_return_ids = next(
-                (
-                    [item.id for item in return_info.items]
-                    for return_info in reversed(order.return_info or [])
-                    if is_refunded(return_info.items[0])
-                    and has_no_txn(return_info.items[0])
-                ),
-                [],
+            return_line_item_return_ids = get_unprocessed_return_item_ids_from_order(
+                order
             )
             result = OrderWithReturnInfo(
                 order_id=order.id,
