@@ -67,7 +67,7 @@
             <a id="nextFileLink" class="nav" href="z_aa3fdb3ad8b48b49_test_utils_py.html">&#xbb; next</a>
             &nbsp; &nbsp; &nbsp;
             <a class="nav" href="https://coverage.readthedocs.io/en/7.8.1">coverage.py v7.8.1</a>,
-            created at 2025-05-26 05:23 +0000
+            created at 2025-05-26 13:06 +0000
         </p>
         <aside class="hidden">
             <button type="button" class="button_next_chunk" data-shortcut="j"></button>
@@ -115,7 +115,7 @@
     <p class="pln"><span class="n"><a id="t31" href="#t31">31</a></span><span class="t">&nbsp;</span><span class="r"></span></p>
     <p class="run"><span class="n"><a id="t32" href="#t32">32</a></span><span class="t">    <span class="nam">expected_headers</span> <span class="op">=</span> <span class="op">{</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t33" href="#t33">33</a></span><span class="t">        <span class="str">'Authorization'</span><span class="op">:</span> <span class="str">'Bearer '</span> <span class="op">+</span> <span class="nam">TEST_SECRET</span><span class="op">,</span>&nbsp;</span><span class="r"></span></p>
-    <p class="pln"><span class="n"><a id="t34" href="#t34">34</a></span><span class="t">        <span class="str">'Stripe-Version'</span><span class="op">:</span> <span class="str">'2025-04-30.basil'</span><span class="op">,</span>&nbsp;</span><span class="r"></span></p>
+    <p class="pln"><span class="n"><a id="t34" href="#t34">34</a></span><span class="t">        <span class="str">'Stripe-Version'</span><span class="op">:</span> <span class="str">'2022-08-01; server_side_confirmation_beta=v1'</span><span class="op">,</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t35" href="#t35">35</a></span><span class="t">    <span class="op">}</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t36" href="#t36">36</a></span><span class="t">&nbsp;</span><span class="r"></span></p>
     <p class="run"><span class="n"><a id="t37" href="#t37">37</a></span><span class="t">    <span class="key">def</span> <span class="nam">setUp</span><span class="op">(</span><span class="nam">self</span><span class="op">)</span><span class="op">:</span>&nbsp;</span><span class="r"></span></p>
@@ -453,7 +453,7 @@
     <p class="pln"><span class="n"><a id="t369" href="#t369">369</a></span><span class="t">                <span class="str">'payment_intent_id'</span><span class="op">:</span> <span class="nam">TEST_PAYMENT_INTENT_ID</span><span class="op">,</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t370" href="#t370">370</a></span><span class="t">            <span class="op">}</span><span class="op">,</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t371" href="#t371">371</a></span><span class="t">            <span class="nam">expected_request</span><span class="op">=</span><span class="op">{</span>&nbsp;</span><span class="r"></span></p>
-    <p class="pln"><span class="n"><a id="t372" href="#t372">372</a></span><span class="t">                <span class="str">'error_on_requires_action'</span><span class="op">:</span> <span class="op">[</span><span class="str">'true'</span><span class="op">]</span><span class="op">,</span>&nbsp;</span><span class="r"></span></p>
+    <p class="pln"><span class="n"><a id="t372" href="#t372">372</a></span><span class="t">                <span class="str">'error_on_requires_action'</span><span class="op">:</span> <span class="op">[</span><span class="str">'True'</span><span class="op">]</span><span class="op">,</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t373" href="#t373">373</a></span><span class="t">                <span class="str">'expand[0]'</span><span class="op">:</span> <span class="op">[</span><span class="str">'payment_method'</span><span class="op">]</span><span class="op">,</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t374" href="#t374">374</a></span><span class="t">            <span class="op">}</span><span class="op">,</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t375" href="#t375">375</a></span><span class="t">            <span class="nam">request_type</span><span class="op">=</span><span class="str">'query_string'</span><span class="op">,</span>&nbsp;</span><span class="r"></span></p>
@@ -482,7 +482,7 @@
     <p class="pln"><span class="n"><a id="t398" href="#t398">398</a></span><span class="t">                    <span class="str">'payment_intent_id'</span><span class="op">:</span> <span class="nam">TEST_PAYMENT_INTENT_ID</span><span class="op">,</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t399" href="#t399">399</a></span><span class="t">                <span class="op">}</span><span class="op">,</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t400" href="#t400">400</a></span><span class="t">                <span class="nam">expected_request</span><span class="op">=</span><span class="op">{</span>&nbsp;</span><span class="r"></span></p>
-    <p class="pln"><span class="n"><a id="t401" href="#t401">401</a></span><span class="t">                    <span class="str">'error_on_requires_action'</span><span class="op">:</span> <span class="op">[</span><span class="str">'true'</span><span class="op">]</span><span class="op">,</span>&nbsp;</span><span class="r"></span></p>
+    <p class="pln"><span class="n"><a id="t401" href="#t401">401</a></span><span class="t">                    <span class="str">'error_on_requires_action'</span><span class="op">:</span> <span class="op">[</span><span class="str">'True'</span><span class="op">]</span><span class="op">,</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t402" href="#t402">402</a></span><span class="t">                    <span class="str">'expand[0]'</span><span class="op">:</span> <span class="op">[</span><span class="str">'payment_method'</span><span class="op">]</span><span class="op">,</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t403" href="#t403">403</a></span><span class="t">                <span class="op">}</span><span class="op">,</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t404" href="#t404">404</a></span><span class="t">                <span class="nam">request_type</span><span class="op">=</span><span class="str">'query_string'</span><span class="op">,</span>&nbsp;</span><span class="r"></span></p>
@@ -629,7 +629,7 @@
             <a class="nav" href="z_aa3fdb3ad8b48b49_test_utils_py.html">&#xbb; next</a>
             &nbsp; &nbsp; &nbsp;
             <a class="nav" href="https://coverage.readthedocs.io/en/7.8.1">coverage.py v7.8.1</a>,
-            created at 2025-05-26 05:23 +0000
+            created at 2025-05-26 13:06 +0000
         </p>
     </div>
 </footer>
