@@ -7,14 +7,18 @@ import logging
 import stripe
 from celery import shared_task
 from commercetools import CommercetoolsError
+from commercetools.platform.models import Payment
 from django.conf import settings
 from django.core.cache import cache
 
-from commerce_coordinator.apps.commercetools.catalog_info.constants import EDX_PAYPAL_PAYMENT_INTERFACE_NAME
+from commerce_coordinator.apps.commercetools.catalog_info.constants import (
+    EDX_ANDROID_IAP_PAYMENT_INTERFACE_NAME,
+    EDX_PAYPAL_PAYMENT_INTERFACE_NAME
+)
 from commerce_coordinator.apps.core.memcache import safe_key
 from commerce_coordinator.apps.core.tasks import TASK_LOCK_EXPIRE, TASK_LOCK_RETRY, acquire_task_lock, release_task_lock
 
-from .clients import CommercetoolsAPIClient
+from .clients import CommercetoolsAPIClient, Refund
 from .utils import has_full_refund_transaction, is_transaction_already_refunded
 
 logger = logging.getLogger(__name__)
@@ -114,53 +118,78 @@ def fulfillment_completed_update_ct_line_item_task(
     return updated_order
 
 
-@shared_task(autoretry_for=(CommercetoolsError,), retry_kwargs={'max_retries': 5, 'countdown': 3})
+@shared_task(
+    autoretry_for=(CommercetoolsError,),
+    retry_kwargs={"max_retries": 5, "countdown": 3},
+)
 def refund_from_stripe_task(
-    payment_intent_id,
-    stripe_refund
-):
+    payment_intent_id: str,
+    stripe_refund: Refund,
+) -> Payment | None:
     """
-    Celery task for a refund registered in Stripe dashboard and need to create
-    refund payment transaction record via Commercetools API.
+    Celery task for handling a refund registered in the Stripe dashboard.
+    Creates a refund payment transaction record via the Commercetools API.
+
+    Args:
+        refund (dict): Refund object
+        payment_intent_id (str): The Stripe payment intent identifier
     """
     client = CommercetoolsAPIClient()
     try:
         logger.info(
             f"[refund_from_stripe_task] Initiating creation of CT payment's refund transaction object "
-            f"for payment Intent ID {payment_intent_id}.")
+            f"for payment Intent ID {payment_intent_id}."
+        )
         payment = client.get_payment_by_key(payment_intent_id)
-        if has_full_refund_transaction(payment) or is_transaction_already_refunded(payment, stripe_refund['id']):
-            logger.info(f"[refund_from_stripe_task] Event 'charge.refunded' received, but Payment with ID {payment.id} "
-                        f"already has a full refund. Skipping task to add refund transaction")
+        if has_full_refund_transaction(payment) or is_transaction_already_refunded(
+            payment, stripe_refund["id"]
+        ):
+            logger.info(
+                f"[refund_from_stripe_task] Event 'charge.refunded' received, but Payment with ID {payment.id} "
+                f"already has a full refund. Skipping task to add refund transaction"
+            )
             return None
         updated_payment = client.create_return_payment_transaction(
             payment_id=payment.id,
             payment_version=payment.version,
-            refund=stripe_refund
+            refund=stripe_refund,
         )
         return updated_payment
     except CommercetoolsError as err:
-        logger.error(f"[refund_from_stripe_task] Unable to create CT payment's refund transaction "
-                     f"object for [ {payment.id} ] on Stripe refund {stripe_refund['id']} "
-                     f"with error {err.errors} and correlation id {err.correlation_id}")
+        logger.error(
+            f"[refund_from_stripe_task] Unable to create CT payment's refund transaction "
+            f"object for [ {payment.id} ] on Stripe refund {stripe_refund['id']} "
+            f"with error {err.errors} and correlation id {err.correlation_id}"
+        )
         return None
 
 
-@shared_task(autoretry_for=(CommercetoolsError,), retry_kwargs={'max_retries': 5, 'countdown': 3})
+@shared_task(
+    autoretry_for=(CommercetoolsError,),
+    retry_kwargs={"max_retries": 5, "countdown": 3},
+)
 def refund_from_paypal_task(
-    paypal_capture_id,
-    refund
-):
+    paypal_capture_id: str,
+    refund: Refund,
+) -> Payment | None:
     """
-    Celery task for a refund registered in PayPal dashboard and need to create
-    refund payment transaction record via Commercetools API.
+    Celery task for handling a refund registered in the PayPal dashboard.
+    Creates a refund payment transaction record via the Commercetools API.
+
+    Args:
+        refund (dict): Refund object
+        paypal_capture_id (str): The PayPal capture identifier
     """
     client = CommercetoolsAPIClient()
     try:
         payment = client.get_payment_by_transaction_interaction_id(paypal_capture_id)
-        if has_full_refund_transaction(payment) or is_transaction_already_refunded(payment, refund['id']):
-            logger.info(f"PayPal PAYMENT.CAPTURE.REFUNDED event received, but Payment with ID {payment.id} "
-                        f"already has a refund with ID: {refund.get('id')}. Skipping task to add refund transaction.")
+        if has_full_refund_transaction(payment) or is_transaction_already_refunded(
+            payment, refund["id"]
+        ):
+            logger.info(
+                f"PayPal PAYMENT.CAPTURE.REFUNDED event received, but Payment with ID {payment.id} "
+                f"already has a refund with ID: {refund.get('id')}. Skipping task to add refund transaction."
+            )
             return None
         updated_payment = client.create_return_payment_transaction(
             payment_id=payment.id,
@@ -170,8 +199,76 @@ def refund_from_paypal_task(
         )
         return updated_payment
     except CommercetoolsError as err:
-        logger.error(f"[refund_from_paypal_task] Unable to create CT payment's refund "
-                     f"transaction object for payment {payment.key} "
-                     f"on PayPal refund {refund.get('id')} "
-                     f"with error {err.errors} and correlation id {err.correlation_id}")
+        logger.error(
+            f"[refund_from_paypal_task] Unable to create CT payment's refund "
+            f"transaction object for payment {payment.key} "
+            f"on PayPal refund {refund.get('id')} "
+            f"with error {err.errors} and correlation id {err.correlation_id}"
+        )
+        return None
+
+
+@shared_task(
+    autoretry_for=(CommercetoolsError,),
+    retry_kwargs={"max_retries": 5, "countdown": 3},
+)
+def refund_from_mobile_task(
+    payment_interface: str, refund: Refund
+) -> Payment | None:
+    """
+    Celery task for handling a refund registered in the mobile platforms (iOS/Android).
+    Creates a refund payment transaction record via the Commercetools API.
+
+    Args:
+        refund (dict): Refund object
+        payment_interface (str): The payment interface
+    """
+    client = CommercetoolsAPIClient()
+    try:
+        payment = client.get_payment_by_transaction_interaction_id(refund["id"])
+        if has_full_refund_transaction(payment) or is_transaction_already_refunded(
+            payment, refund["id"]
+        ):
+            logger.info(
+                f"Mobile refund event received, but Payment with ID {payment.id} "
+                f"already has a refund with ID: {refund.get('id')}. "
+                "Skipping addition of refund transaction."
+            )
+        else:
+            if payment_interface == EDX_ANDROID_IAP_PAYMENT_INTERFACE_NAME:
+                refund["amount"] = payment.amount_planned.cent_amount
+                refund["currency"] = payment.amount_planned.currency_code
+
+            payment = client.create_return_payment_transaction(
+                payment_id=payment.id,
+                payment_version=payment.version,
+                refund=refund,
+                psp=payment_interface,
+            )
+
+        result = client.find_order_with_unprocessed_return_for_payment(
+            payment_id=payment.id,
+            customer_id=payment.customer.id if payment.customer else "",
+        )
+        if result:
+            client.update_return_payment_state_after_successful_refund(
+                interaction_id=refund["id"],
+                payment_intent_id=refund["id"],
+                payment=payment,
+                order_id=result.order_id,
+                order_version=result.order_version,
+                return_line_item_return_ids=result.return_line_item_return_ids,
+                refunded_line_item_refunds={},
+                return_line_entitlement_ids={},
+                should_transition_state=False,
+            )
+
+        return payment
+    except CommercetoolsError as err:
+        logger.error(
+            f"[refund_from_mobile_task] Unable to create CT payment's refund "
+            f"transaction object for payment {payment.key} "
+            f"on mobile refund {refund.get('id')} "
+            f"with error {err.errors} and correlation id {err.correlation_id}"
+        )
         return None

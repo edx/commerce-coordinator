@@ -110,6 +110,10 @@ EDX_STRIPE_PAYMENT_INTERFACE_NAME = "stripe_edx"
 
 EDX_PAYPAL_PAYMENT_INTERFACE_NAME = "paypal_edx"
 
+EDX_ANDROID_IAP_PAYMENT_INTERFACE_NAME = "android_iap_edx"
+
+EDX_IOS_IAP_PAYMENT_INTERFACE_NAME = "ios_iap_edx"
+
 CART_DISCOUNT_TYPES = [
     {"key": "course-discount", "label": "Course Discount"},
     {"key": "enrollment-code", "label": "Enrollment Code"},

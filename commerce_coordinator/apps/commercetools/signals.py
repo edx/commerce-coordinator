@@ -7,6 +7,7 @@ import logging
 from commerce_coordinator.apps.commercetools.catalog_info.constants import TwoUKeys
 from commerce_coordinator.apps.commercetools.tasks import (
     fulfillment_completed_update_ct_line_item_task,
+    refund_from_mobile_task,
     refund_from_paypal_task,
     refund_from_stripe_task
 )
@@ -21,7 +22,7 @@ fulfill_order_placed_send_entitlement_signal = CoordinatorSignal()
 @log_receiver(logger)
 def fulfillment_completed_update_ct_line_item(**kwargs):
     """
-   Update the line item of the order placed in Commercetools based on LMS entitlement
+    Update the line item of the order placed in Commercetools based on LMS entitlement
     """
     is_fulfilled = kwargs["is_fulfilled"]
 
@@ -62,5 +63,16 @@ def refund_from_paypal(**kwargs):
     """
     async_result = refund_from_paypal_task.delay(
         paypal_capture_id=kwargs["paypal_capture_id"], refund=kwargs["refund"]
+    )
+    return async_result.id
+
+
+@log_receiver(logger)
+def refund_from_mobile(**kwargs):
+    """
+    Create a refund transaction in Commercetools based on a refund created from mobile platforms (iOS/Android).
+    """
+    async_result = refund_from_mobile_task.delay(
+        payment_interface=kwargs["payment_interface"], refund=kwargs["refund"]
     )
     return async_result.id

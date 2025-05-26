@@ -6,9 +6,13 @@ import datetime
 import logging
 import uuid
 
+import app_store_notifications_v2_validator as ios_validator
+import httplib2
 from commercetools import CommercetoolsError
 from commercetools.platform.models import Money
-from iso4217 import Currency
+from django.conf import settings
+from googleapiclient.discovery import build
+from oauth2client.service_account import ServiceAccountCredentials
 from rest_framework import status
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.request import Request
@@ -16,17 +20,26 @@ from rest_framework.response import Response
 from rest_framework.views import APIView
 
 # isort: off
-from commerce_coordinator.apps.commercetools.catalog_info.constants import TwoUKeys
-from commerce_coordinator.apps.commercetools.catalog_info.edx_utils import get_edx_lms_user_id
-from commerce_coordinator.apps.commercetools.clients import CommercetoolsAPIClient
+from commerce_coordinator.apps.commercetools.catalog_info.constants import (
+    EDX_ANDROID_IAP_PAYMENT_INTERFACE_NAME,
+    EDX_IOS_IAP_PAYMENT_INTERFACE_NAME,
+    TwoUKeys,
+)
+from commerce_coordinator.apps.commercetools.catalog_info.edx_utils import (
+    get_edx_lms_user_id,
+)
+from commerce_coordinator.apps.commercetools.clients import (
+    CommercetoolsAPIClient,
+    Refund,
+)
 from commerce_coordinator.apps.iap.segment_events import (
     emit_checkout_started_event,
     emit_product_added_event,
     emit_order_completed_event,
-    emit_payment_info_entered_event
+    emit_payment_info_entered_event,
 )
-
 from commerce_coordinator.apps.iap.utils import (
+    convert_localized_price_to_ct_cent_amount,
     get_ct_customer,
     get_email_domain,
     get_standalone_price_for_sku,
@@ -35,6 +48,7 @@ from commerce_coordinator.apps.iap.serializers import (
     MobileOrderRequestData,
     MobileOrderRequestSerializer,
 )
+from commerce_coordinator.apps.iap.signals import payment_refunded_signal
 
 # isort: on
 
@@ -64,9 +78,10 @@ class MobileCreateOrderView(APIView):
             lms_user_id = get_edx_lms_user_id(customer)
             cart = client.get_customer_cart(customer.id)
 
-            fraction_digits = Currency(data.currency_code).exponent or 0
             external_price = Money(
-                cent_amount=int(data.price.scaleb(fraction_digits)),
+                cent_amount=convert_localized_price_to_ct_cent_amount(
+                    amount=data.price, currency_code=data.currency_code
+                ),
                 currency_code=data.currency_code,
             )
             standalone_price = get_standalone_price_for_sku(
@@ -92,7 +107,7 @@ class MobileCreateOrderView(APIView):
                 line_items=cart.line_items,
                 discount_codes=cart.discount_codes,
                 discount_on_line_items=None,
-                discount_on_total_price=cart.discount_on_total_price
+                discount_on_total_price=cart.discount_on_total_price,
             )
 
             for item in cart.line_items:
@@ -101,7 +116,7 @@ class MobileCreateOrderView(APIView):
                     cart_id=cart.id,
                     standalone_price=standalone_price,
                     line_item=item,
-                    discount_codes=cart.discount_codes
+                    discount_codes=cart.discount_codes,
                 )
 
             payment = client.create_payment(
@@ -122,7 +137,7 @@ class MobileCreateOrderView(APIView):
                 lms_user_id=lms_user_id,
                 cart_id=cart.id,
                 standalone_price=standalone_price,
-                payment_method=payment.payment_method_info.payment_interface
+                payment_method=payment.payment_method_info.payment_interface,
             )
 
             cart = client.add_payment_to_cart(
@@ -148,8 +163,7 @@ class MobileCreateOrderView(APIView):
                 payment_method=payment.payment_method_info.payment_interface,
                 discount_codes=order.discount_codes,
                 discount_on_line_items=None,
-                discount_on_total_price=cart.discount_on_total_price
-
+                discount_on_total_price=cart.discount_on_total_price,
             )
 
             return Response(
@@ -171,3 +185,114 @@ class MobileCreateOrderView(APIView):
                 {"error": message},
                 status=status.HTTP_400_BAD_REQUEST,
             )
+
+
+class IOSRefundView(APIView):
+    """
+    Create refunds for orders refunded by apple
+    """
+
+    apple_cert_file_path = "commerce_coordinator/apps/iap/AppleRootCA-G3.cer"
+
+    def post(self, request):
+        """
+        IOS refund view to receive refund webhook notifications from apple
+        """
+        notification = ios_validator.parse(
+            request.body, apple_root_cert_path=self.apple_cert_file_path
+        )
+        notification_type = notification["notificationType"]
+        logger.info(
+            "Received notification from apple with notification type: "
+            f"{notification_type}"
+        )
+        if notification_type == "REFUND":
+            transaction = notification["data"]["signedTransactionInfo"]
+            refund: Refund = {
+                "id": transaction["originalTransactionId"],
+                "created": transaction["revocationDate"],
+                "amount": convert_localized_price_to_ct_cent_amount(
+                    amount=transaction["price"],
+                    currency_code=transaction["currency"],
+                    # price received from notification is scaled by 1000
+                    # Ref: https://developer.apple.com/documentation/appstoreserverapi/jwstransactiondecodedpayload
+                    exponent=3,
+                ),
+                "currency": transaction["currency"],
+                "status": "succeeded",
+            }
+            payment_refunded_signal.send_robust(
+                sender=self.__class__,
+                payment_interface=EDX_IOS_IAP_PAYMENT_INTERFACE_NAME,
+                refund=refund,
+            )
+        else:
+            logger.info(
+                "Ignoring notification from apple since we are only expecting "
+                "refund notifications"
+            )
+
+        return Response(status=status.HTTP_200_OK)
+
+
+class AndroidRefundView(APIView):
+    """
+    Create refunds for orders refunded by google
+    """
+
+    processor_name = "android_iap"
+    timeout = 30
+
+    def get(self, request):
+        """
+        Get all refunds in last 3 days from voidedpurchases api
+        and call refund method on every refund.
+        """
+        configuration = settings.PAYMENT_PROCESSOR_CONFIG[self.processor_name]
+
+        refunds_time = datetime.datetime.now() - datetime.timedelta(
+            days=configuration["refunds_age_in_days"]
+        )
+        refunds_time_in_ms = round(refunds_time.timestamp() * 1000)
+        service = self._get_service(configuration)
+
+        voided_purchases_request = (
+            service.purchases()  # pylint: disable=no-member
+            .voidedpurchases()
+            .list(
+                packageName=configuration["google_bundle_id"],
+                startTime=refunds_time_in_ms,
+            )
+        )
+        voided_purchases_response = voided_purchases_request.execute()
+        voided_purchases = voided_purchases_response.get("voidedPurchases", [])
+
+        for voided_purchase in voided_purchases:
+            refund: Refund = {
+                "id": voided_purchase["orderId"],
+                "created": voided_purchase["voidedTimeMillis"],
+                # Google voided purchases api does not provide amount or currency
+                # This is filled later from payment object in Commercetools
+                "amount": "UNSET",
+                "currency": "UNSET",
+                "status": "succeeded",
+            }
+            payment_refunded_signal.send_robust(
+                sender=self.__class__,
+                payment_interface=EDX_ANDROID_IAP_PAYMENT_INTERFACE_NAME,
+                refund=refund,
+            )
+
+        return Response()
+
+    def _get_service(self, configuration):
+        """Create a service to interact with google api."""
+        credentials = ServiceAccountCredentials.from_json_keyfile_dict(
+            configuration.get("google_service_account_key_file"),
+            configuration.get("google_publisher_api_scope"),
+        )
+        http = httplib2.Http(timeout=self.timeout)
+        http = credentials.authorize(http)
+
+        service = build("androidpublisher", "v3", http=http)
+        return service
