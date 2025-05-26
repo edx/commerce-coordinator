@@ -26,6 +26,7 @@ from commerce_coordinator.apps.commercetools.utils import (
     find_latest_refund,
     find_refund_transaction,
     get_braze_client,
+    get_refund_transaction_id_from_order,
     has_full_refund_transaction,
     has_refund_transaction,
     send_fulfillment_error_email,
@@ -438,3 +439,46 @@ class TestRetirementAnonymizingTestCase(unittest.TestCase):
     def test_create_retired_fields_with_invalid_salt_list(self):
         with self.assertRaises(ValueError):
             create_retired_fields(self.field_value, "invalid_salt_list")
+
+
+class TestGetRefundTransactionIdFromMobileOrder(unittest.TestCase):
+    """
+    Tests for get_refund_transaction_id_from_mobile_order function
+    """
+
+    def test_get_refund_transaction_id_with_refund(self):
+        # Mock an order with a refund transaction
+        refund_transaction = MagicMock()
+        refund_transaction.type = TransactionType.REFUND
+        refund_transaction.id = "refund_transaction_id"
+
+        payment = MagicMock()
+        payment.transactions = [refund_transaction]
+
+        payment_reference = MagicMock()
+        payment_reference.obj = payment
+
+        order = MagicMock()
+        order.payment_info = MagicMock()
+        order.payment_info.payments = [payment_reference]
+
+        result = get_refund_transaction_id_from_order(order)
+        self.assertEqual(result, "refund_transaction_id")
+
+    def test_get_refund_transaction_id_without_refund(self):
+        # Mock an order with no refund transactions
+        charge_transaction = MagicMock()
+        charge_transaction.type = TransactionType.CHARGE
+
+        payment = MagicMock()
+        payment.transactions = [charge_transaction]
+
+        payment_reference = MagicMock()
+        payment_reference.obj = payment
+
+        order = MagicMock()
+        order.payment_info = MagicMock()
+        order.payment_info.payments = [payment_reference]
+
+        result = get_refund_transaction_id_from_order(order)
+        self.assertEqual(result, "")
