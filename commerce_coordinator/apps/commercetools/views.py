@@ -98,29 +98,6 @@ class MobileStandalonePriceChangeView(SingleInvocationAPIView):
         return Response(status=status.HTTP_200_OK)
 
 
-class MobileCourseCreateView(SingleInvocationAPIView):
-    """Mobile Course Create View"""
-
-    authentication_classes = [JwtBearerAuthentication, SessionAuthentication]
-    permission_classes = [IsAdminUser]
-
-    def post(self, request):
-        """Receive a message from commerce tools forwarded by AWS event bridge"""
-
-        tag = type(self).__name__
-
-        input_data = {
-            **request.data
-        }
-
-        logger.info(
-            f'[CT-{tag}] Message received from commercetools '
-            f'Course Create with details: {input_data}'
-        )
-
-        return Response(status=status.HTTP_200_OK)
-
-
 class MobileCourseVariantAddView(SingleInvocationAPIView):
     """Mobile Course Variant Add View"""
 
