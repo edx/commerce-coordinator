@@ -11,7 +11,6 @@ from commerce_coordinator.apps.commercetools.constants import COMMERCETOOLS_ORDE
 from commerce_coordinator.apps.commercetools_frontend.constants import COMMERCETOOLS_FRONTEND
 from commerce_coordinator.apps.core.constants import PipelineCommand
 from commerce_coordinator.apps.ecommerce.constants import ECOMMERCE_ORDER_MANAGEMENT_SYSTEM
-from commerce_coordinator.apps.enterprise_learner.utils import is_user_enterprise_learner
 from commerce_coordinator.apps.frontend_app_payment.constants import FRONTEND_APP_PAYMENT_CHECKOUT
 from commerce_coordinator.apps.rollout.utils import is_legacy_order
 from commerce_coordinator.apps.rollout.waffle import (
@@ -45,11 +44,6 @@ class GetActiveOrderManagementSystem(PipelineStep):
         course_run = request.query_params.get('course_run_key', '').strip()
         bundle = request.query_params.get('bundle', '').strip()
         commercetools_available_product = None
-
-        if is_user_enterprise_learner(request):
-            return {
-                ACTIVE_ORDER_MANAGEMENT_SYSTEM_KEY: FRONTEND_APP_PAYMENT_CHECKOUT
-            }
 
         ct_api_client = CommercetoolsAPIClient()
 
