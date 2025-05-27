@@ -4,7 +4,7 @@ from rest_framework import serializers
 from commerce_coordinator.apps.core.serializers import CoordinatorSerializer
 
 
-class FulfillOrderWebhookSerializer(CoordinatorSerializer):
+class FulfilledOrderWebhookSerializer(CoordinatorSerializer):
     """
     Serializer for Fulfill Order Webhook input validation.
     """
