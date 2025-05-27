@@ -35,6 +35,33 @@ def get_edx_items(order: CTOrder) -> List[CTLineItem]:
     return list(filter(lambda x: True, order.line_items))
 
 
+def get_edx_line_item(line_items: List[CTLineItem], line_item_id: str) -> Optional[CTLineItem]:
+    """
+    Retrieve a specific line item from a list of line items by its ID.
+
+    Args:
+        line_items (List[CTLineItem]): A list of line items to search.
+        line_item_id (str): The ID of the line item to retrieve.
+
+    Returns:
+        CTLineItem or None: The line item with the matching ID, or None if not found.
+    """
+    return next(filter(lambda line_item: line_item.id == line_item_id, line_items), None)
+
+
+def get_edx_line_item_state(line_item: CTLineItem) -> str:
+    """
+    Retrieve the state ID of the first state associated with a given line item.
+
+    Args:
+        line_item (CTLineItem): The line item object containing state information.
+
+    Returns:
+        str: The ID of the first state associated with the line item.
+    """
+    return line_item.state[0].state.id
+
+
 def is_edx_lms_order(order: CTOrder) -> bool:
     return len(get_edx_items(order)) >= 1
 

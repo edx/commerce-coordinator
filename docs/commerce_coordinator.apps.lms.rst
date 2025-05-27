@@ -29,6 +29,14 @@ commerce\_coordinator.apps.lms.clients module
    :undoc-members:
    :show-inheritance:
 
+commerce\_coordinator.apps.lms.constants module
+-----------------------------------------------
+
+.. automodule:: commerce_coordinator.apps.lms.constants
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
 commerce\_coordinator.apps.lms.filters module
 ---------------------------------------------
 
@@ -41,6 +49,14 @@ commerce\_coordinator.apps.lms.serializers module
 -------------------------------------------------
 
 .. automodule:: commerce_coordinator.apps.lms.serializers
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+commerce\_coordinator.apps.lms.signal\_handlers module
+------------------------------------------------------
+
+.. automodule:: commerce_coordinator.apps.lms.signal_handlers
    :members:
    :undoc-members:
    :show-inheritance:
@@ -65,6 +81,14 @@ commerce\_coordinator.apps.lms.urls module
 ------------------------------------------
 
 .. automodule:: commerce_coordinator.apps.lms.urls
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+commerce\_coordinator.apps.lms.utils module
+-------------------------------------------
+
+.. automodule:: commerce_coordinator.apps.lms.utils
    :members:
    :undoc-members:
    :show-inheritance:
