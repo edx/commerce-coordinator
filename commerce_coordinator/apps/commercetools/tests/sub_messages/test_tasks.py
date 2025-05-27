@@ -101,6 +101,8 @@ class CommercetoolsAPIClientMock(MagicMock):
         self.create_return_for_order = self.create_return_item_mock
         self.create_return_payment_transaction = self.payment_mock
         self.update_return_payment_state_after_successful_refund = self.order_mock
+        self.update_return_payment_state_for_enrollment_code_purchase = self.order_mock
+        self.update_return_payment_state_for_mobile_order = self.order_mock
 
         self.expected_order = self.order_mock.return_value
         self.expected_customer = self.customer_mock.return_value
@@ -362,6 +364,11 @@ class OrderReturnedMessageSignalTaskTests(TestCase):
         super().setUp()
         self.mock = CommercetoolsAPIClientMock()
 
+        # Force reset nested mocked return object
+        order_return = self.mock.order_mock.return_value
+        if hasattr(order_return, "custom") and hasattr(order_return.custom, "fields"):
+            order_return.custom.fields.clear()
+
         MonkeyPatch.monkey(
             CommercetoolsAPIClient,
             {
@@ -372,7 +379,11 @@ class OrderReturnedMessageSignalTaskTests(TestCase):
                 'create_return_for_order': self.mock.create_return_for_order,
                 'create_return_payment_transaction': self.mock.create_return_payment_transaction,
                 'update_return_payment_state_after_successful_refund':
-                    self.mock.update_return_payment_state_after_successful_refund
+                    self.mock.update_return_payment_state_after_successful_refund,
+                'update_return_payment_state_for_enrollment_code_purchase':
+                    self.mock.update_return_payment_state_for_enrollment_code_purchase,
+                'update_return_payment_state_for_mobile_order':
+                    self.mock.update_return_payment_state_for_mobile_order
             }
         )
 
@@ -455,6 +466,84 @@ class OrderReturnedMessageSignalTaskTests(TestCase):
         _mock_psp_payment_id.return_value = 'mock_payment_intent_id'
 
         self.get_uut()(*self.unpack_for_uut(self.mock.example_payload))
+
+    @patch('commerce_coordinator.apps.commercetools.sub_messages.tasks.is_edx_lms_order')
+    @patch('commerce_coordinator.apps.stripe.pipeline.StripeAPIClient')
+    @patch(
+        'commerce_coordinator.apps.commercetools.clients.'
+        'CommercetoolsAPIClient.update_return_payment_state_for_enrollment_code_purchase'
+    )
+    @patch('commerce_coordinator.apps.commercetools.sub_messages.tasks.get_edx_psp_payment_id')
+    def test_enrollment_code_purchase_triggers_update_return_payment_state(
+            self,
+            mock_get_psp_payment_id: MagicMock,
+            enrollment_code_mock: MagicMock,
+            _stripe_api_mock: MagicMock,
+            _lms_signal
+    ):
+        """Test enrollment code purchase (zero cost order) triggers correct return payment update."""
+        mock_values = self.mock
+        mock_order = mock_values.order_mock.return_value
+        mock_order.total_price.cent_amount = 0
+        mock_get_psp_payment_id.return_value = None
+
+        ret_val = self.get_uut()(*self.unpack_for_uut(self.mock.example_payload))
+
+        # Validate call to enrollment code refund path
+        enrollment_code_mock.assert_called_once_with(
+            order_id=mock_order.id,
+            order_version=mock_order.version,
+            return_line_item_return_ids=[
+                item["id"] for item in self.mock.example_payload["return_items"]
+            ]
+        )
+
+        # Validate return value
+        self.assertTrue(ret_val)
+
+        # Ensure refund via PSP was not attempted
+        _stripe_api_mock.return_value.refund_payment_intent.assert_not_called()
+
+    @patch('commerce_coordinator.apps.commercetools.sub_messages.tasks.is_edx_lms_order')
+    @patch('commerce_coordinator.apps.stripe.pipeline.StripeAPIClient')
+    @patch(
+        'commerce_coordinator.apps.commercetools.clients.'
+        'CommercetoolsAPIClient.update_return_payment_state_for_mobile_order'
+    )
+    def test_mobile_order_triggers_update_return_payment_state_for_mobile_order(
+            self,
+            mobile_order_mock: MagicMock,
+            _stripe_api_mock: MagicMock,
+            _lms_signal
+    ):
+        """Test mobile order triggers update_return_payment_state_for_mobile_order"""
+        mock_values = self.mock
+        mock_order = mock_values.order_mock.return_value
+
+        # Set up mobile order
+        mock_order.total_price.cent_amount = 100
+        mock_order.custom = MagicMock()
+        mock_order.custom.fields = {'mobileOrder': True}
+
+        ret_val = self.get_uut()(*self.unpack_for_uut(self.mock.example_payload))
+
+        # Assert that the method was called with expected args
+        mobile_order_mock.assert_called_once_with(
+            order=mock_order,
+            return_line_item_return_ids=[
+                item["id"] for item in self.mock.example_payload["return_items"]
+            ]
+        )
+
+        # Make sure the return value is still True
+        self.assertTrue(ret_val)
+
+        # Other PSP refund logic should not trigger
+        _stripe_api_mock.return_value.refund_payment_intent.assert_not_called()
+
+        # clear set fields
+        mock_order.custom = MagicMock()
+        mock_order.custom.fields = {}
 
 
 @patch('commerce_coordinator.apps.commercetools.sub_messages.tasks.OrderRefundRequested.run_filter')

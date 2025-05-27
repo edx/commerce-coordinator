@@ -81,6 +81,7 @@ from commerce_coordinator.apps.commercetools.catalog_info.foundational_types imp
 from commerce_coordinator.apps.commercetools.utils import (
     find_latest_refund,
     find_refund_transaction,
+    get_refund_transaction_id_from_order,
     handle_commercetools_error,
     translate_refund_status_to_transaction_status
 )
@@ -571,6 +572,62 @@ class CommercetoolsAPIClient:
                 "[CommercetoolsAPIClient."
                 "update_return_payment_state_for_enrollment_code_purchase]",
                 err, f"Unable to update ReturnPaymentState of order {order_id}"
+            )
+            raise err
+
+    def update_return_payment_state_for_mobile_order(
+        self,
+        order: Order,
+        return_line_item_return_ids: List[str],
+    ) -> Union[Order, None]:
+        """
+        Update the ReturnPaymentState to 'Refunded' for each LineItemReturnItem in a mobile order.
+        """
+        try:
+            logger.info(
+                f"[CommercetoolsAPIClient.update_return_payment_state_for_mobile_order] - "
+                f"Updating return payment state for return item(s) "
+                f"{return_line_item_return_ids} to '{ReturnPaymentState.NOT_REFUNDED}'."
+            )
+
+            refund_transaction_id = get_refund_transaction_id_from_order(order)
+            update_actions = []
+
+            for return_item_id in return_line_item_return_ids:
+                update_actions.append(OrderSetReturnPaymentStateAction(
+                    return_item_id=return_item_id,
+                    payment_state=ReturnPaymentState.REFUNDED,
+                ))
+
+                if refund_transaction_id:
+                    update_actions.append(OrderSetReturnItemCustomTypeAction(
+                        return_item_id=return_item_id,
+                        type=TypeResourceIdentifier(key="returnItemCustomType"),
+                        fields=FieldContainer({
+                            "transactionId": refund_transaction_id,
+                        }),
+                    ))
+
+            updated_order = self.base_client.orders.update_by_id(
+                id=order.id,
+                version=order.version,
+                actions=update_actions,
+            )
+
+            logger.info(
+                f"[CommercetoolsAPIClient.update_return_payment_state_for_mobile_order] - "
+                f"Successfully updated ReturnPaymentState to '{ReturnPaymentState.NOT_REFUNDED}' "
+                f"for order ID: {order.id}. Added refund transaction ID: {refund_transaction_id}."
+                f"Updated return item IDs: {', '.join(return_line_item_return_ids)}."
+            )
+            return updated_order
+
+        except CommercetoolsError as err:
+            handle_commercetools_error(
+                "[CommercetoolsAPIClient.update_return_payment_state_for_mobile_order]",
+                err,
+                f"Unable to update ReturnPaymentState of order {order.id} to 'REFUNDED' "
+                f"for return item IDs: {', '.join(return_line_item_return_ids)} at version {order.version}."
             )
             raise err
 
