@@ -67,7 +67,7 @@
             <a id="nextFileLink" class="nav" href="z_77d8ec4496a6ed85_clients_py.html">&#xbb; next</a>
             &nbsp; &nbsp; &nbsp;
             <a class="nav" href="https://coverage.readthedocs.io/en/7.8.1">coverage.py v7.8.1</a>,
-            created at 2025-05-26 13:06 +0000
+            created at 2025-05-27 08:46 +0000
         </p>
         <aside class="hidden">
             <button type="button" class="button_next_chunk" data-shortcut="j"></button>
@@ -98,7 +98,7 @@
     <p class="run"><span class="n"><a id="t14" href="#t14">14</a></span><span class="t"><span class="key">from</span> <span class="nam">commerce_coordinator</span><span class="op">.</span><span class="nam">apps</span><span class="op">.</span><span class="nam">core</span><span class="op">.</span><span class="nam">views</span> <span class="key">import</span> <span class="nam">SingleInvocationAPIView</span>&nbsp;</span><span class="r"></span></p>
     <p class="run"><span class="n"><a id="t15" href="#t15">15</a></span><span class="t"><span class="key">from</span> <span class="nam">commerce_coordinator</span><span class="op">.</span><span class="nam">apps</span><span class="op">.</span><span class="nam">lms</span><span class="op">.</span><span class="nam">clients</span> <span class="key">import</span> <span class="nam">FulfillmentType</span>&nbsp;</span><span class="r"></span></p>
     <p class="run"><span class="n"><a id="t16" href="#t16">16</a></span><span class="t"><span class="key">from</span> <span class="nam">commerce_coordinator</span><span class="op">.</span><span class="nam">apps</span><span class="op">.</span><span class="nam">lms</span><span class="op">.</span><span class="nam">signals</span> <span class="key">import</span> <span class="nam">fulfillment_completed_update_ct_line_item_signal</span>&nbsp;</span><span class="r"></span></p>
-    <p class="run"><span class="n"><a id="t17" href="#t17">17</a></span><span class="t"><span class="key">from</span> <span class="nam">commerce_coordinator</span><span class="op">.</span><span class="nam">apps</span><span class="op">.</span><span class="nam">order_fulfillment</span><span class="op">.</span><span class="nam">serializers</span> <span class="key">import</span> <span class="nam">FulfillOrderWebhookSerializer</span>&nbsp;</span><span class="r"></span></p>
+    <p class="run"><span class="n"><a id="t17" href="#t17">17</a></span><span class="t"><span class="key">from</span> <span class="nam">commerce_coordinator</span><span class="op">.</span><span class="nam">apps</span><span class="op">.</span><span class="nam">order_fulfillment</span><span class="op">.</span><span class="nam">serializers</span> <span class="key">import</span> <span class="nam">FulfilledOrderWebhookSerializer</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t18" href="#t18">18</a></span><span class="t">&nbsp;</span><span class="r"></span></p>
     <p class="run"><span class="n"><a id="t19" href="#t19">19</a></span><span class="t"><span class="nam">logger</span> <span class="op">=</span> <span class="nam">logging</span><span class="op">.</span><span class="nam">getLogger</span><span class="op">(</span><span class="nam">__name__</span><span class="op">)</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t20" href="#t20">20</a></span><span class="t">&nbsp;</span><span class="r"></span></p>
@@ -122,7 +122,7 @@
     <p class="pln"><span class="n"><a id="t38" href="#t38">38</a></span><span class="t">&nbsp;</span><span class="r"></span></p>
     <p class="run"><span class="n"><a id="t39" href="#t39">39</a></span><span class="t">        <span class="nam">logger</span><span class="op">.</span><span class="nam">info</span><span class="op">(</span><span class="fst">f'</span><span class="fst">[CT-</span><span class="op">{</span><span class="nam">tag</span><span class="op">}</span><span class="fst">] Message received from order-fulfillment with details: </span><span class="op">{</span><span class="nam">input_data</span><span class="op">}</span><span class="fst">'</span><span class="op">)</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t40" href="#t40">40</a></span><span class="t">&nbsp;</span><span class="r"></span></p>
-    <p class="run"><span class="n"><a id="t41" href="#t41">41</a></span><span class="t">        <span class="nam">validator</span> <span class="op">=</span> <span class="nam">FulfillOrderWebhookSerializer</span><span class="op">(</span><span class="nam">data</span><span class="op">=</span><span class="nam">input_data</span><span class="op">)</span>&nbsp;</span><span class="r"></span></p>
+    <p class="run"><span class="n"><a id="t41" href="#t41">41</a></span><span class="t">        <span class="nam">validator</span> <span class="op">=</span> <span class="nam">FulfilledOrderWebhookSerializer</span><span class="op">(</span><span class="nam">data</span><span class="op">=</span><span class="nam">input_data</span><span class="op">)</span>&nbsp;</span><span class="r"></span></p>
     <p class="run"><span class="n"><a id="t42" href="#t42">42</a></span><span class="t">        <span class="nam">validator</span><span class="op">.</span><span class="nam">is_valid</span><span class="op">(</span><span class="nam">raise_exception</span><span class="op">=</span><span class="key">True</span><span class="op">)</span>&nbsp;</span><span class="r"></span></p>
     <p class="run"><span class="n"><a id="t43" href="#t43">43</a></span><span class="t">        <span class="nam">validated_data</span> <span class="op">=</span> <span class="nam">validator</span><span class="op">.</span><span class="nam">validated_data</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t44" href="#t44">44</a></span><span class="t">&nbsp;</span><span class="r"></span></p>
@@ -151,7 +151,7 @@
             <a class="nav" href="z_77d8ec4496a6ed85_clients_py.html">&#xbb; next</a>
             &nbsp; &nbsp; &nbsp;
             <a class="nav" href="https://coverage.readthedocs.io/en/7.8.1">coverage.py v7.8.1</a>,
-            created at 2025-05-26 13:06 +0000
+            created at 2025-05-27 08:46 +0000
         </p>
     </div>
 </footer>
