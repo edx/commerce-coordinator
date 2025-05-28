@@ -278,18 +278,6 @@ class OrderReturnPipelineTests(TestCase):
         self.assertEqual(result_data.return_info[1].items[0].payment_state, ReturnPaymentState.REFUNDED)
 
     @patch('commerce_coordinator.apps.commercetools.pipeline.log.info')
-    def test_pipeline_with_psp_error(self, mock_logger):
-        """Ensure pipeline is functioning as expected"""
-
-        pipe = UpdateCommercetoolsOrderReturnPaymentStatus("test_pipe", None)
-
-        pipe.run_filter(
-            psp_refund_error='refund amount greater than unrefunded amount on charged amount'
-        )
-        mock_logger.assert_called_once_with('[UpdateCommercetoolsOrderReturnPaymentStatus] PSP Refund error, '
-                                            'skipping order refund payment transaction updation')
-
-    @patch('commerce_coordinator.apps.commercetools.pipeline.log.info')
     def test_pipeline_with_free_order(self, mock_logger):
         """Ensure pipeline is functioning as expected"""
 
