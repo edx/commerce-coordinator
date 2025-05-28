@@ -639,7 +639,8 @@ class CommercetoolsAPIClient:
         return_line_entitlement_ids: dict,
         refunded_line_item_refunds: dict,
         payment_intent_id: str,
-        interaction_id: str
+        interaction_id: str,
+        payment_state: ReturnPaymentState = ReturnPaymentState.REFUNDED,
     ) -> Union[Order, None]:
         """
         Update paymentState on the LineItemReturnItem attached to the order.
@@ -675,7 +676,7 @@ class CommercetoolsAPIClient:
             for return_line_item_return_id in return_line_item_return_ids:
                 return_payment_state_actions.append(OrderSetReturnPaymentStateAction(
                     return_item_id=return_line_item_return_id,
-                    payment_state=ReturnPaymentState.REFUNDED,
+                    payment_state=payment_state,
                 ))
                 custom_fields = {
                     "transactionId": refunded_line_item_refunds.get(return_line_item_return_id, transaction_id),
