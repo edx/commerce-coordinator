@@ -4,6 +4,7 @@
 # Our own rebuilt Commercetools SDK (see SONIC-30)
 commercetools @ git+https://github.com/edx/commercetools-python-sdk.git@main
 
+app-store-notifications-v2-validator
 asgiref==3.7.2       # Until we switch to Py 3.10, this has some serius issues with debuggers.
 attrs
 celery
@@ -22,8 +23,11 @@ edx-django-utils
 edx-django-release-util
 edx-drf-extensions
 edx-rest-api-client
+google-api-python-client
+httplib2
 iso4217
 mysqlclient
+oauth2client
 openedx-filters
 Pillow
 paypal-server-sdk

@@ -69,24 +69,20 @@ class OrderLineItemMessageInputSerializer(CoordinatorSerializer):
         return representation
 
 
-class OrderFulfillViewInputSerializer(CoordinatorSerializer):
+class OrderFulfillmentRequestSerializer(CoordinatorSerializer):
     """
-    Serializer for OrderFulfillView input validation.
+    Serializer for order fulfillment request payload.
     """
     course_id = serializers.CharField(allow_null=False)
     course_mode = serializers.CharField(allow_null=False)
     date_placed = serializers.CharField(allow_null=False)
     email_opt_in = serializers.BooleanField(allow_null=False)
     line_item_id = serializers.CharField(allow_null=False)
-    item_quantity = serializers.IntegerField(allow_null=False)
     order_number = serializers.CharField(allow_null=False)
     order_id = serializers.CharField(allow_null=False)
-    order_version = serializers.IntegerField(allow_null=False)
     provider_id = serializers.CharField(allow_null=True)
     source_system = serializers.CharField(allow_null=False)
-    line_item_state_id = serializers.CharField(allow_null=False)
     edx_lms_user_id = serializers.IntegerField(allow_null=False)
-    message_id = serializers.CharField(allow_null=False)
     product_title = serializers.CharField(allow_null=False)
     user_first_name = serializers.CharField(allow_null=True, allow_blank=True)
     user_last_name = serializers.CharField(allow_null=True, allow_blank=True)
@@ -95,6 +91,16 @@ class OrderFulfillViewInputSerializer(CoordinatorSerializer):
     lob = serializers.CharField(allow_null=False, required=False)
     edx_lms_username = serializers.CharField(allow_null=False, required=False)
     bundle_id = serializers.CharField(allow_null=True, required=False)
+
+
+class OrderFulfillViewInputSerializer(OrderFulfillmentRequestSerializer):
+    """
+    Serializer for OrderFulfillView input validation.
+    """
+    item_quantity = serializers.IntegerField(allow_null=False)
+    order_version = serializers.IntegerField(allow_null=False)
+    line_item_state_id = serializers.CharField(allow_null=False)
+    message_id = serializers.CharField(allow_null=False)
 
 
 class OrderReturnedViewMessageLineItemReturnItemSerializer(CoordinatorSerializer):

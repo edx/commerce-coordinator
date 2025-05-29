@@ -3,8 +3,10 @@ Utils for the InAppPurchase app
 """
 
 import logging
+from decimal import Decimal
 
 from commercetools.platform.models import CentPrecisionMoney, Customer
+from iso4217 import Currency
 
 from commerce_coordinator.apps.commercetools.catalog_info.constants import EdXFieldNames
 from commerce_coordinator.apps.commercetools.clients import CommercetoolsAPIClient
@@ -130,7 +132,7 @@ def get_standalone_price_for_sku(sku: str) -> CentPrecisionMoney:
         return CentPrecisionMoney(
             cent_amount=value["centAmount"],
             currency_code=value["currencyCode"],
-            fraction_digits=value["fractionDigits"]
+            fraction_digits=value["fractionDigits"],
         )
     except KeyError as exc:
         message = (
@@ -138,3 +140,25 @@ def get_standalone_price_for_sku(sku: str) -> CentPrecisionMoney:
         )
         logger.exception(message, exc_info=exc)
         raise ValueError(message) from exc
+
+
+def convert_localized_price_to_ct_cent_amount(
+    *,
+    amount: int | Decimal,
+    currency_code: str,
+    exponent=0,
+) -> int:
+    """Convert a localized price to Commercetools cent amount.
+
+    Args:
+        amount: The amount to convert.
+        currency: The currency code (ISO 4217).
+        exponent: The exponent indicating how many decimal places the passed
+        amount is scaled by (e.g., 2 for centAmount). Defaults to 0.
+
+    Returns:
+        int: The amount in Commercetools cent format.
+    """
+    fraction_digits = Currency(currency_code).exponent or 0
+
+    return int(Decimal(amount).scaleb(fraction_digits - exponent))

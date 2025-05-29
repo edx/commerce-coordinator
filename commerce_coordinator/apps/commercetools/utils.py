@@ -13,6 +13,7 @@ from commercetools.platform.models import (
     LineItem,
     Order,
     Payment,
+    ReturnPaymentState,
     TransactionState,
     TransactionType,
     TypedMoney
@@ -20,7 +21,9 @@ from commercetools.platform.models import (
 from django.conf import settings
 from django.urls import reverse
 
+from commerce_coordinator.apps.commercetools.catalog_info.constants import TwoUKeys
 from commerce_coordinator.apps.commercetools.catalog_info.edx_utils import cents_to_dollars
+from commerce_coordinator.apps.core.constants import ISO_8601_FORMAT
 
 logger = logging.getLogger(__name__)
 
@@ -340,3 +343,41 @@ def get_lob_from_variant_attr(variant):
         if attr.name == 'lob':
             return attr.value
     return None
+
+
+def prepare_default_params(order, lms_user_id, source_system):
+    """
+    Prepare default parameters for order fulfillment task
+    """
+    return {
+        'email_opt_in': True,
+        'order_number': order.order_number,
+        'order_id': order.id,
+        'provider_id': None,
+        'edx_lms_user_id': lms_user_id,
+        'date_placed': order.last_modified_at.strftime(ISO_8601_FORMAT),
+        'source_system': source_system,
+    }
+
+
+def get_unprocessed_return_item_ids_from_order(order: Order) -> list[str]:
+    """
+    Extract return item IDs from an order's return info that are in REFUNDED state
+    and don't have a transaction ID set.
+
+    Args:
+        order (Order): The Commercetools order object.
+
+    Returns:
+        list[str]: List of return item IDs that need processing.
+    """
+    for return_info in reversed(order.return_info or []):
+        item = return_info.items[0]
+
+        if item.payment_state == ReturnPaymentState.REFUNDED and (
+            item.custom is None
+            or not item.custom.fields.get(TwoUKeys.TRANSACTION_ID)
+        ):
+            return [item.id for item in return_info.items]
+
+    return []

@@ -369,7 +369,7 @@ class TestStripeAPIClient(CoordinatorClientTestCase):
                 'payment_intent_id': TEST_PAYMENT_INTENT_ID,
             },
             expected_request={
-                'error_on_requires_action': ['true'],
+                'error_on_requires_action': ['True'],
                 'expand[0]': ['payment_method'],
             },
             request_type='query_string',
@@ -398,7 +398,7 @@ class TestStripeAPIClient(CoordinatorClientTestCase):
                     'payment_intent_id': TEST_PAYMENT_INTENT_ID,
                 },
                 expected_request={
-                    'error_on_requires_action': ['true'],
+                    'error_on_requires_action': ['True'],
                     'expand[0]': ['payment_method'],
                 },
                 request_type='query_string',

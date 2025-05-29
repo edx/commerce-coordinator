@@ -77,9 +77,8 @@ class PaymentPageRedirectViewTests(APITestCase):
         # Error HTTP_302_FOUND
         self.assertEqual(response.status_code, status.HTTP_302_FOUND)
 
-    @patch('commerce_coordinator.apps.rollout.pipeline.is_user_enterprise_learner')
     @patch('commerce_coordinator.apps.rollout.pipeline.is_redirect_to_commercetools_enabled_for_user')
-    def test_run_rollout_pipeline_redirect_to_commercetools_course(self, is_redirect_mock, is_enterprise_mock):
+    def test_run_rollout_pipeline_redirect_to_commercetools_course(self, is_redirect_mock):
         base_url = self.client_set.get_base_url_from_client()
         self.client.login(username=self.test_user_username, password=self.test_user_password)
         # Because the base mocker can't do param binding, we have to intercept.
@@ -95,7 +94,6 @@ class PaymentPageRedirectViewTests(APITestCase):
                 'course-v1:MichiganX+InjuryPreventionX+1T2021'
             )
             is_redirect_mock.return_value = True
-            is_enterprise_mock.return_value = False
             self.client.force_authenticate(user=self.user)
             response = self.client.get(
                 self.url,
@@ -134,9 +132,8 @@ class PaymentPageRedirectViewTests(APITestCase):
             )
             self.assertEqual(response.status_code, status.HTTP_303_SEE_OTHER)
 
-    @patch('commerce_coordinator.apps.rollout.pipeline.is_user_enterprise_learner')
     @patch('commerce_coordinator.apps.rollout.pipeline.is_program_redirection_to_ct_enabled')
-    def test_run_rollout_pipeline_redirect_to_commercetools_program(self, is_redirect_mock, is_enterprise_mock):
+    def test_run_rollout_pipeline_redirect_to_commercetools_program(self, is_redirect_mock):
         base_url = self.client_set.get_base_url_from_client()
         self.client.login(username=self.test_user_username, password=self.test_user_password)
         # Because the base mocker can't do param binding, we have to intercept.
@@ -150,7 +147,6 @@ class PaymentPageRedirectViewTests(APITestCase):
                 '818aff6f-1a39-4515-8779-dfebc0742d8e'
             )
             is_redirect_mock.return_value = True
-            is_enterprise_mock.return_value = False
             self.client.force_authenticate(user=self.user)
             response = self.client.get(
                 self.url,

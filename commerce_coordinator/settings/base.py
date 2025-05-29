@@ -329,6 +329,9 @@ CC_SIGNALS = {
     "commerce_coordinator.apps.paypal.signals.payment_refunded_signal": [
         "commerce_coordinator.apps.commercetools.signals.refund_from_paypal",
     ],
+    "commerce_coordinator.apps.iap.signals.payment_refunded_signal": [
+        "commerce_coordinator.apps.commercetools.signals.refund_from_mobile",
+    ],
 }
 
 # Default timeouts for requests
@@ -436,6 +439,12 @@ PAYMENT_PROCESSOR_CONFIG = {
             'client_id': '',
             'client_secret': '',
             'env': 'sandbox',
+        },
+        'android_iap': {
+            'google_bundle_id': 'SET-ME-PLEASE',
+            'google_service_account_key_file': 'SET-ME-PLEASE',
+            'google_publisher_api_scope': 'https://www.googleapis.com/auth/androidpublisher',
+            'refunds_age_in_days': 3,
         },
     },
 }

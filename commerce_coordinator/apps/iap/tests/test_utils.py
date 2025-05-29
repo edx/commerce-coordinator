@@ -2,6 +2,7 @@
 Tests for utility functions in the InAppPurchase app.
 """
 
+from decimal import Decimal
 from unittest import TestCase, mock
 
 from commercetools.platform.models import Customer
@@ -9,6 +10,7 @@ from commercetools.platform.models import Customer
 from commerce_coordinator.apps.commercetools.catalog_info.constants import EdXFieldNames
 from commerce_coordinator.apps.iap.utils import (
     _get_attributes_to_update,
+    convert_localized_price_to_ct_cent_amount,
     get_ct_customer,
     get_email_domain,
     get_standalone_price_for_sku
@@ -293,3 +295,28 @@ class GetStandalonePriceForSkuTests(TestCase):
             get_standalone_price_for_sku("test-sku")
 
         self.assertIn("No standalone price found", str(context.exception))
+
+
+class ConvertLocalizedPriceToCTCentAmountTests(TestCase):
+    """Tests for convert_localized_price_to_ct_cent_amount function."""
+
+    def test_convert_localized_price_with_default_exponent(self):
+        """Test converting decimal price with default exponent."""
+        result = convert_localized_price_to_ct_cent_amount(
+            amount=Decimal("1.01"), currency_code="PKR"
+        )
+        self.assertEqual(result, 101)
+
+    def test_convert_ios_price(self):
+        """Test converting an iOS price to cents."""
+        result = convert_localized_price_to_ct_cent_amount(
+            amount=1010, currency_code="USD", exponent=3
+        )
+        self.assertEqual(result, 101)
+
+    def test_convert_with_non_standard_currency(self):
+        """Test converting with a currency that has 0 fraction digits"""
+        result = convert_localized_price_to_ct_cent_amount(
+            amount=Decimal("100.01"), currency_code="JPY"
+        )
+        self.assertEqual(result, 100)
