@@ -61,7 +61,7 @@ cachecontrol==0.12.14
     #   -r requirements/quality.txt
     #   -r requirements/test.txt
     #   apimatic-requests-client-adapter
-cachetools==6.0.0
+cachetools==5.5.2
     # via
     #   -r requirements/quality.txt
     #   -r requirements/test.txt
@@ -512,7 +512,7 @@ proto-plus==1.26.1
     #   -r requirements/quality.txt
     #   -r requirements/test.txt
     #   google-api-core
-protobuf==6.31.0
+protobuf==6.31.1
     # via
     #   -r requirements/quality.txt
     #   -r requirements/test.txt

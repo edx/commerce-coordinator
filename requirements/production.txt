@@ -254,10 +254,6 @@ mysqlclient==2.2.7
     # via
     #   -r requirements/base.txt
     #   -r requirements/production.in
-newrelic==10.6.0
-    # via
-    #   -r requirements/base.txt
-    #   edx-django-utils
 oauth2client==4.1.3
     # via -r requirements/base.txt
 oauthlib==3.2.2
@@ -292,7 +288,7 @@ proto-plus==1.26.1
     # via
     #   -r requirements/base.txt
     #   google-api-core
-protobuf==6.31.0
+protobuf==6.31.1
     # via
     #   -r requirements/base.txt
     #   google-api-core

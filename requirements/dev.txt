@@ -52,7 +52,7 @@ cachecontrol==0.12.14
     # via
     #   -r requirements/validation.txt
     #   apimatic-requests-client-adapter
-cachetools==6.0.0
+cachetools==5.5.2
     # via
     #   -r requirements/validation.txt
     #   google-auth
@@ -431,7 +431,7 @@ proto-plus==1.26.1
     # via
     #   -r requirements/validation.txt
     #   google-api-core
-protobuf==6.31.0
+protobuf==6.31.1
     # via
     #   -r requirements/validation.txt
     #   google-api-core

@@ -47,7 +47,7 @@ cachecontrol==0.12.14
     # via
     #   -r requirements/base.txt
     #   apimatic-requests-client-adapter
-cachetools==6.0.0
+cachetools==5.5.2
     # via
     #   -r requirements/base.txt
     #   google-auth
@@ -295,10 +295,6 @@ msgpack==1.1.0
     #   cachecontrol
 mysqlclient==2.2.7
     # via -r requirements/base.txt
-newrelic==10.6.0
-    # via
-    #   -r requirements/base.txt
-    #   edx-django-utils
 oauth2client==4.1.3
     # via -r requirements/base.txt
 oauthlib==3.2.2
@@ -346,7 +342,7 @@ proto-plus==1.26.1
     # via
     #   -r requirements/base.txt
     #   google-api-core
-protobuf==6.31.0
+protobuf==6.31.1
     # via
     #   -r requirements/base.txt
     #   google-api-core
