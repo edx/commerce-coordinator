@@ -234,7 +234,26 @@ class AndroidRefundViewTests(APITestCase):
     Tests for Android refund view.
     """
 
+    test_admin_username = "admin"
+    test_admin_email = "admin@example.com"
+    test_admin_password = "password"
     url = reverse("iap:android_refund")
+
+    def setUp(self):
+        super().setUp()
+        self.admin_user = User.objects.create_user(
+            self.test_admin_username,
+            self.test_admin_email,
+            self.test_admin_password,
+            is_staff=True,
+        )
+
+    def authenticate_admin(self):
+        """Helper to authenticate admin user."""
+        self.client.login(
+            username=self.test_admin_username, password=self.test_admin_password
+        )
+        self.client.force_authenticate(user=self.admin_user)
 
     @mock.patch("commerce_coordinator.apps.iap.views.ServiceAccountCredentials")
     @mock.patch("commerce_coordinator.apps.iap.views.payment_refunded_signal")
@@ -250,6 +269,8 @@ class AndroidRefundViewTests(APITestCase):
         _,
     ):
         """Test processing of voided purchases."""
+        self.authenticate_admin()
+
         mock_settings.PAYMENT_PROCESSOR_CONFIG = {
             "android_iap": {
                 "refunds_age_in_days": 3,

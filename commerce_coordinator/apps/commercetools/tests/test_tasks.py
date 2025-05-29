@@ -144,7 +144,7 @@ class ReturnedOrderfromStripeTaskTest(TestCase):
     def test_exception_handling(self, mock_logger, mock_client):
         '''
         Check if an error in the client results in a logged error
-        and None returned.
+        and the exception being raised.
         '''
         mock_payment = gen_payment()
         mock_payment.id = 'f988e0c5-ea44-4111-a7f2-39ecf6af9840'
@@ -156,7 +156,8 @@ class ReturnedOrderfromStripeTaskTest(TestCase):
             correlation_id="123456"
         )
 
-        returned_uut(*self.unpack_for_uut(EXAMPLE_RETURNED_ORDER_STRIPE_SIGNAL_PAYLOAD))
+        with self.assertRaises(CommercetoolsError):
+            returned_uut(*self.unpack_for_uut(EXAMPLE_RETURNED_ORDER_STRIPE_SIGNAL_PAYLOAD))
 
         mock_logger.error.assert_called_once_with(
             f"[refund_from_stripe_task] Unable to create CT payment's refund transaction "
@@ -242,7 +243,7 @@ class ReturnedOrderfromPaypalTaskTest(TestCase):
     def test_exception_handling(self, mock_logger, mock_client):
         """
         Check if an error in the client results in a logged error
-        and None returned.
+        and the exception being raised.
         """
         mock_payment = gen_payment()
         mock_payment.id = "f988e0c5-ea44-4111-a7f2-39ecf6af9840"
@@ -259,8 +260,8 @@ class ReturnedOrderfromPaypalTaskTest(TestCase):
             )
         )
 
-        result = paypal_uut(*self.unpack_for_uut(self.mock_parameters))
-        self.assertIsNone(result)
+        with self.assertRaises(CommercetoolsError):
+            paypal_uut(*self.unpack_for_uut(self.mock_parameters))
 
         refund_id = self.mock_parameters["refund"].get("id")
         mock_logger.error.assert_called_once_with(
@@ -424,7 +425,7 @@ class ReturnedOrderfromMobileTaskTest(TestCase):
     def test_exception_handling(self, mock_logger, mock_client):
         """
         Check if an error in the client results in a logged error
-        and None returned.
+        and the exception being raised.
         """
         mock_payment = gen_payment()
         mock_payment.id = "f988e0c5-ea44-4111-a7f2-39ecf6af9840"
@@ -441,8 +442,8 @@ class ReturnedOrderfromMobileTaskTest(TestCase):
             )
         )
 
-        result = mobile_uut(*self.unpack_for_uut(self.mock_parameters))
-        self.assertIsNone(result)
+        with self.assertRaises(CommercetoolsError):
+            mobile_uut(*self.unpack_for_uut(self.mock_parameters))
 
         refund_id = self.mock_parameters["refund"].get("id")
         mock_logger.error.assert_called_once_with(
