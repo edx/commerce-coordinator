@@ -401,7 +401,7 @@ packaging==24.2
     #   twine
 path==16.16.0
     # via edx-i18n-tools
-paypal-server-sdk==0.5.1
+paypal-server-sdk==1.1.0
     # via -r requirements/validation.txt
 pbr==6.1.1
     # via
