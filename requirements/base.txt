@@ -28,8 +28,10 @@ billiard==4.2.1
     # via celery
 cachecontrol==0.12.14
     # via apimatic-requests-client-adapter
-celery[redis]==5.5.2
-    # via -r requirements/base.in
+celery[redis]==5.4.0
+    # via
+    #   -c requirements/constraints.txt
+    #   -r requirements/base.in
 certifi==2025.4.26
     # via requests
 cffi==1.17.1
@@ -148,8 +150,9 @@ markupsafe==3.0.2
     # via
     #   jinja2
     #   werkzeug
-marshmallow==4.0.0
+marshmallow==3.26.1
     # via
+    #   -c requirements/constraints.txt
     #   commercetools
     #   marshmallow-enum
 marshmallow-enum==1.5.1
@@ -166,6 +169,8 @@ openapi-codec==1.3.2
     # via django-rest-swagger
 openedx-filters==2.1.0
     # via -r requirements/base.in
+packaging==25.0
+    # via marshmallow
 paypal-server-sdk==0.5.1
     # via
     #   -c requirements/constraints.txt
@@ -252,7 +257,7 @@ stevedore==5.4.1
     # via
     #   edx-django-utils
     #   edx-opaque-keys
-stripe==12.1.0
+stripe==12.2.0
     # via -r requirements/base.in
 tenacity==9.1.2
     # via -r requirements/base.in
@@ -261,7 +266,9 @@ typing-extensions==4.13.2
     #   edx-opaque-keys
     #   stripe
 tzdata==2025.2
-    # via kombu
+    # via
+    #   celery
+    #   kombu
 uritemplate==4.1.1
     # via coreapi
 urllib3==2.2.3

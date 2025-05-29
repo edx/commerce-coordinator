@@ -54,7 +54,7 @@ cachetools==6.0.0
     # via
     #   -r requirements/validation.txt
     #   tox
-celery[redis]==5.5.2
+celery[redis]==5.4.0
     # via -r requirements/validation.txt
 certifi==2025.4.26
     # via
@@ -130,7 +130,6 @@ cryptography==45.0.3
     # via
     #   -r requirements/validation.txt
     #   pyjwt
-    #   secretstorage
     #   social-auth-core
 currencies==2020.12.12
     # via -r requirements/validation.txt
@@ -272,11 +271,6 @@ jaraco-functools==4.1.0
     # via
     #   -r requirements/validation.txt
     #   keyring
-jeepney==0.9.0
-    # via
-    #   -r requirements/validation.txt
-    #   keyring
-    #   secretstorage
 jinja2==3.1.6
     # via
     #   -r requirements/validation.txt
@@ -314,7 +308,7 @@ markupsafe==3.0.2
     #   -r requirements/validation.txt
     #   jinja2
     #   werkzeug
-marshmallow==4.0.0
+marshmallow==3.26.1
     # via
     #   -r requirements/validation.txt
     #   commercetools
@@ -364,6 +358,7 @@ packaging==25.0
     #   -r requirements/pip-tools.txt
     #   -r requirements/validation.txt
     #   build
+    #   marshmallow
     #   pyproject-api
     #   pytest
     #   tox
@@ -547,10 +542,6 @@ rich==14.0.0
     # via
     #   -r requirements/validation.txt
     #   twine
-secretstorage==3.3.3
-    # via
-    #   -r requirements/validation.txt
-    #   keyring
 segment-analytics-python==2.3.4
     # via -r requirements/validation.txt
 semantic-version==2.10.0
@@ -592,7 +583,7 @@ stevedore==5.4.1
     #   code-annotations
     #   edx-django-utils
     #   edx-opaque-keys
-stripe==12.1.0
+stripe==12.2.0
     # via -r requirements/validation.txt
 tenacity==9.1.2
     # via -r requirements/validation.txt
@@ -618,6 +609,7 @@ typing-extensions==4.13.2
 tzdata==2025.2
     # via
     #   -r requirements/validation.txt
+    #   celery
     #   kombu
 uritemplate==4.1.1
     # via

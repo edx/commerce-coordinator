@@ -31,7 +31,7 @@ class TestStripeAPIClient(CoordinatorClientTestCase):
 
     expected_headers = {
         'Authorization': 'Bearer ' + TEST_SECRET,
-        'Stripe-Version': '2025-04-30.basil',
+        'Stripe-Version': '2022-08-01; server_side_confirmation_beta=v1',
     }
 
     def setUp(self):

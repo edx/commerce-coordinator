@@ -62,8 +62,10 @@ cachetools==6.0.0
     # via
     #   -r requirements/test.txt
     #   tox
-celery[redis]==5.5.2
-    # via -r requirements/test.txt
+celery[redis]==5.4.0
+    # via
+    #   -c requirements/constraints.txt
+    #   -r requirements/test.txt
 certifi==2025.4.26
     # via
     #   -r requirements/test.txt
@@ -135,7 +137,6 @@ cryptography==45.0.3
     # via
     #   -r requirements/test.txt
     #   pyjwt
-    #   secretstorage
     #   social-auth-core
 currencies==2020.12.12
     # via -r requirements/test.txt
@@ -268,10 +269,6 @@ jaraco-context==6.0.1
     # via keyring
 jaraco-functools==4.1.0
     # via keyring
-jeepney==0.9.0
-    # via
-    #   keyring
-    #   secretstorage
 jinja2==3.1.6
     # via
     #   -r requirements/test.txt
@@ -299,8 +296,9 @@ markupsafe==3.0.2
     #   -r requirements/test.txt
     #   jinja2
     #   werkzeug
-marshmallow==4.0.0
+marshmallow==3.26.1
     # via
+    #   -c requirements/constraints.txt
     #   -r requirements/test.txt
     #   commercetools
     #   marshmallow-enum
@@ -343,6 +341,7 @@ packaging==25.0
     # via
     #   -r requirements/test.txt
     #   build
+    #   marshmallow
     #   pydata-sphinx-theme
     #   pyproject-api
     #   pytest
@@ -516,8 +515,6 @@ rich==14.0.0
     # via twine
 roman-numerals-py==3.1.0
     # via sphinx
-secretstorage==3.3.3
-    # via keyring
 segment-analytics-python==2.3.4
     # via -r requirements/test.txt
 semantic-version==2.10.0
@@ -578,7 +575,7 @@ stevedore==5.4.1
     #   doc8
     #   edx-django-utils
     #   edx-opaque-keys
-stripe==12.1.0
+stripe==12.2.0
     # via -r requirements/test.txt
 tenacity==9.1.2
     # via -r requirements/test.txt
@@ -606,6 +603,7 @@ typing-extensions==4.13.2
 tzdata==2025.2
     # via
     #   -r requirements/test.txt
+    #   celery
     #   kombu
 uritemplate==4.1.1
     # via
