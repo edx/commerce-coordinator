@@ -36,6 +36,14 @@ commerce\_coordinator.apps.lms.tests.test\_tasks module
    :undoc-members:
    :show-inheritance:
 
+commerce\_coordinator.apps.lms.tests.test\_utils module
+-------------------------------------------------------
+
+.. automodule:: commerce_coordinator.apps.lms.tests.test_utils
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
 commerce\_coordinator.apps.lms.tests.test\_views module
 -------------------------------------------------------
 

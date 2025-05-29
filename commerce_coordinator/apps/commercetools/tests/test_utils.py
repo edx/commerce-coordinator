@@ -3,14 +3,14 @@ Tests for Commerce tools utils
 """
 import hashlib
 import unittest
-from unittest.mock import MagicMock
+from datetime import datetime, timezone
+from unittest.mock import MagicMock, Mock, patch
 
 from braze.client import BrazeClient
 from commercetools.platform.models import CentPrecisionMoney, MoneyType, TransactionState, TransactionType, TypedMoney
 from django.conf import settings
 from django.test import override_settings
 from django.urls import reverse
-from mock import Mock, patch
 
 from commerce_coordinator.apps.commercetools.tests.conftest import (
     gen_order,
@@ -29,6 +29,7 @@ from commerce_coordinator.apps.commercetools.utils import (
     get_refund_transaction_id_from_order,
     has_full_refund_transaction,
     has_refund_transaction,
+    prepare_default_params,
     send_fulfillment_error_email,
     send_order_confirmation_email,
     translate_refund_status_to_transaction_status
@@ -439,6 +440,32 @@ class TestRetirementAnonymizingTestCase(unittest.TestCase):
     def test_create_retired_fields_with_invalid_salt_list(self):
         with self.assertRaises(ValueError):
             create_retired_fields(self.field_value, "invalid_salt_list")
+
+
+class TestPrepareDefaultParams(unittest.TestCase):
+    """Tests for prepare_default_params function."""
+
+    def test_prepare_default_params(self):
+        """Test that default parameters are correctly prepared."""
+
+        mock_order = Mock()
+        mock_order.order_number = "ORD-12345"
+        mock_order.id = "testorder"
+        mock_order.last_modified_at = datetime(2025, 4, 28, 10, 30, 0, tzinfo=timezone.utc)
+
+        params = prepare_default_params(mock_order, "testuser", "commercetools")
+
+        expected_params = {
+            'email_opt_in': True,
+            'order_number': "ORD-12345",
+            'order_id': "testorder",
+            'provider_id': None,
+            'edx_lms_user_id': "testuser",
+            'date_placed': "2025-04-28T10:30:00Z",
+            'source_system': "commercetools",
+        }
+
+        self.assertEqual(params, expected_params)
 
 
 class TestGetRefundTransactionIdFromMobileOrder(unittest.TestCase):

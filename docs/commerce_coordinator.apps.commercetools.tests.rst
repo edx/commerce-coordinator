@@ -8,7 +8,6 @@ Subpackages
    :maxdepth: 4
 
    commerce_coordinator.apps.commercetools.tests.catalog_info
-   commerce_coordinator.apps.commercetools.tests.order_fulfillment_utils
    commerce_coordinator.apps.commercetools.tests.sub_messages
 
 Submodules
@@ -62,10 +61,34 @@ commerce\_coordinator.apps.commercetools.tests.test\_data module
    :undoc-members:
    :show-inheritance:
 
+commerce\_coordinator.apps.commercetools.tests.test\_http\_api\_client module
+-----------------------------------------------------------------------------
+
+.. automodule:: commerce_coordinator.apps.commercetools.tests.test_http_api_client
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
 commerce\_coordinator.apps.commercetools.tests.test\_pipeline module
 --------------------------------------------------------------------
 
 .. automodule:: commerce_coordinator.apps.commercetools.tests.test_pipeline
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+commerce\_coordinator.apps.commercetools.tests.test\_signals module
+-------------------------------------------------------------------
+
+.. automodule:: commerce_coordinator.apps.commercetools.tests.test_signals
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+commerce\_coordinator.apps.commercetools.tests.test\_tasks module
+-----------------------------------------------------------------
+
+.. automodule:: commerce_coordinator.apps.commercetools.tests.test_tasks
    :members:
    :undoc-members:
    :show-inheritance:

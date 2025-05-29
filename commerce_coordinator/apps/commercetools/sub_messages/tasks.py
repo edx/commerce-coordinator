@@ -30,11 +30,10 @@ from commerce_coordinator.apps.commercetools.catalog_info.utils import (
 from commerce_coordinator.apps.commercetools.clients import CommercetoolsAPIClient
 from commerce_coordinator.apps.commercetools.constants import EMAIL_NOTIFICATION_CACHE_TTL_SECS
 from commerce_coordinator.apps.commercetools.filters import OrderRefundRequested
-from commerce_coordinator.apps.commercetools.order_fulfillment_utils.utils import (
-    get_ct_order_and_customer,
-    prepare_default_params
+from commerce_coordinator.apps.commercetools.serializers import (
+    OrderFulfillmentRequestSerializer,
+    OrderFulfillViewInputSerializer
 )
-from commerce_coordinator.apps.commercetools.serializers import OrderFulfillViewInputSerializer
 from commerce_coordinator.apps.commercetools.signals import (
     fulfill_order_placed_send_enroll_in_course_signal,
     fulfill_order_placed_send_entitlement_signal
@@ -44,6 +43,7 @@ from commerce_coordinator.apps.commercetools.utils import (
     extract_ct_order_information_for_braze_canvas,
     extract_ct_product_information_for_braze_canvas,
     get_lob_from_variant_attr,
+    prepare_default_params,
     send_order_confirmation_email
 )
 from commerce_coordinator.apps.core.memcache import safe_key
@@ -97,7 +97,11 @@ def fulfill_order_placed_message_signal_task(
 
     client = CommercetoolsAPIClient()
 
-    order, customer = get_ct_order_and_customer(tag, order_id, message_id)
+    logging_context = {
+        'tag': tag,
+        'message_id': message_id
+    }
+    order, customer = client.get_order_and_customer_by_order_id(order_id, logging_context)
 
     if not (customer and order and is_edx_lms_order(order)):
         logger.info(f'[CT-{tag}] order {order_id} is not an edX order, message id: {message_id}')
@@ -175,7 +179,7 @@ def fulfill_order_placed_message_signal_task(
             serializer_data['lob'] = get_lob_from_variant_attr(item.variant) or 'edx'
             serializer_data['edx_lms_username'] = user.username
             serializer_data['bundle_id'] = bundle_id or None
-            serializer = OrderFulfillViewInputSerializer(data=serializer_data)
+            serializer = OrderFulfillmentRequestSerializer(data=serializer_data)
             serializer.is_valid(raise_exception=True)
             payload = serializer.validated_data
 

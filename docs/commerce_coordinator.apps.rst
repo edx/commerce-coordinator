@@ -21,7 +21,6 @@ Subpackages
    commerce_coordinator.apps.rollout
    commerce_coordinator.apps.stripe
 
-
 Module contents
 ---------------
 

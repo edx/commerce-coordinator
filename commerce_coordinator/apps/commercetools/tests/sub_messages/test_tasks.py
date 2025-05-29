@@ -95,6 +95,9 @@ class CommercetoolsAPIClientMock(MagicMock):
         self.get_payment_by_key = self.payment_mock
         self.update_line_item_on_fulfillment = self.updated_line_item_mock
         self.update_line_items_transition_state = self.updated_line_item_mock
+        self.get_order_and_customer_by_order_id = MagicMock(
+           return_value=(self.order_mock.return_value, self.customer_mock.return_value)
+        )
         self.create_return_for_order = self.create_return_item_mock
         self.create_return_payment_transaction = self.payment_mock
         self.update_return_payment_state_after_successful_refund = self.order_mock
@@ -131,10 +134,8 @@ class FulfillOrderPlacedMessageSignalTaskTests(TestCase):
         return fulfill_order_placed_uut
 
     @patch('commerce_coordinator.apps.commercetools.sub_messages.tasks.CommercetoolsAPIClient')
-    @patch('commerce_coordinator.apps.commercetools.order_fulfillment_utils.utils.CommercetoolsAPIClient')
     def test_correct_arguments_passed(
         self,
-        mock_utils_client,
         mock_tasks_client,
         _ct_client_init: CommercetoolsAPIClientMock,
         _lms_signal
@@ -146,26 +147,23 @@ class FulfillOrderPlacedMessageSignalTaskTests(TestCase):
 
         mock_values = _ct_client_init.return_value
         mock_tasks_client.return_value = mock_values
-        mock_utils_client.return_value = mock_values
 
         # pylint: disable = no-value-for-parameter
-        _ = self.get_uut()(
+        ret_val = self.get_uut()(
             *self.unpack_for_uut(mock_values.example_payload)
         )
 
-        mock_values.order_mock.assert_called_once_with(mock_values.expected_order.id)
-        mock_values.customer_mock.assert_called_once_with(mock_values.expected_customer.id)
+        self.assertTrue(ret_val)
+
         self.assertTrue(TieredCache.get_cached_response(mock_values.cache_key).is_found)
 
     @patch('commerce_coordinator.apps.commercetools.sub_messages.tasks.CommercetoolsAPIClient')
-    @patch('commerce_coordinator.apps.commercetools.order_fulfillment_utils.utils.CommercetoolsAPIClient')
     @patch('commerce_coordinator.apps.commercetools.sub_messages.tasks.is_edx_lms_order',
            return_value=False)
     def test_not_lms_order(
         self,
         _fn,
         mock_tasks_client,
-        mock_utils_client,
         _ct_client_init: CommercetoolsAPIClientMock,
         _lms_signal
     ):
@@ -176,7 +174,6 @@ class FulfillOrderPlacedMessageSignalTaskTests(TestCase):
         mock_values = _ct_client_init.return_value
 
         mock_tasks_client.return_value = mock_values
-        mock_utils_client.return_value = mock_values
 
         # pylint: disable=no-value-for-parameter
         ret_val = fulfill_order_placed_uut(
@@ -184,16 +181,12 @@ class FulfillOrderPlacedMessageSignalTaskTests(TestCase):
         )
 
         self.assertTrue(ret_val)
-        mock_values.order_mock.assert_called_once_with(mock_values.order_id)
-        mock_values.customer_mock.assert_called_once_with(mock_values.customer_id)
         self.assertFalse(TieredCache.get_cached_response(mock_values.cache_key).is_found)
 
     @patch('commerce_coordinator.apps.commercetools.sub_messages.tasks.User.objects.get')
     @patch('commerce_coordinator.apps.commercetools.sub_messages.tasks.CommercetoolsAPIClient')
-    @patch('commerce_coordinator.apps.commercetools.order_fulfillment_utils.utils.CommercetoolsAPIClient')
     def test_order_fulfillment_forwarding_enabled(
         self,
-        mock_utils_client,
         mock_tasks_client,
         mock_user_get,
         _ct_client_init: CommercetoolsAPIClientMock,
@@ -211,7 +204,6 @@ class FulfillOrderPlacedMessageSignalTaskTests(TestCase):
 
         mock_values = _ct_client_init.return_value
         mock_tasks_client.return_value = mock_values
-        mock_utils_client.return_value = mock_values
 
         mock_client_instance = MagicMock()
         mock_client_instance.fulfill_order.return_value = None

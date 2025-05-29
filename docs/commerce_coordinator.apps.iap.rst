@@ -20,6 +20,14 @@ commerce\_coordinator.apps.iap.apps module
    :undoc-members:
    :show-inheritance:
 
+commerce\_coordinator.apps.iap.segment\_events module
+-----------------------------------------------------
+
+.. automodule:: commerce_coordinator.apps.iap.segment_events
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
 commerce\_coordinator.apps.iap.serializers module
 -------------------------------------------------
 
