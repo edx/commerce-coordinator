@@ -143,7 +143,7 @@ def refund_from_stripe_task(
             f"object for [ {payment.id} ] on Stripe refund {stripe_refund['id']} "
             f"with error {err.errors} and correlation id {err.correlation_id}"
         )
-        return None
+        raise err
 
 
 @shared_task(
@@ -187,7 +187,7 @@ def refund_from_paypal_task(
             f"on PayPal refund {refund.get('id')} "
             f"with error {err.errors} and correlation id {err.correlation_id}"
         )
-        return None
+        raise err
 
 
 @shared_task(
@@ -253,4 +253,4 @@ def refund_from_mobile_task(
             f"on mobile refund {refund.get('id')} "
             f"with error {err.errors} and correlation id {err.correlation_id}"
         )
-        return None
+        raise err
