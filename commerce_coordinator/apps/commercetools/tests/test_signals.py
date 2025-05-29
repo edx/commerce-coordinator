@@ -1,4 +1,4 @@
-""" Test LMS App Signals """
+""" Test Commercetools App Signals """
 
 import logging
 from copy import copy
@@ -72,3 +72,83 @@ class RefundFromStripeTest(CoordinatorSignalReceiverTestCase):
         logger.info('result: %s', result)
         self.assertEqual(result[0][1], 'bogus_task_id',
                          'Check reciever result is same as return from task')
+
+
+@override_settings(
+    CC_SIGNALS={
+        "commerce_coordinator.apps.core.tests.utils.example_signal": [
+            "commerce_coordinator.apps.commercetools.signals.refund_from_paypal",
+        ],
+    }
+)
+@patch("commerce_coordinator.apps.commercetools.signals.refund_from_paypal_task")
+class RefundFromPaypalTest(CoordinatorSignalReceiverTestCase):
+    """PayPal Dashboard Refund Placed, Create Return CT Transaction Signal Tester"""
+
+    mock_parameters = {
+        "refund": {
+            "id": "paypal_refund_123",
+            "amount": "49.99",
+            "currency": "USD",
+            "status": "COMPLETED",
+        },
+        "paypal_capture_id": "capture_abc123",
+    }
+
+    def test_correct_arguments_passed(self, mock_task):
+        _, logs = self.fire_signal()
+        logger.info("logs.output: %s", logs.output)
+        mock_task.delay.assert_called_once_with(
+            refund=self.mock_parameters["refund"],
+            paypal_capture_id=self.mock_parameters["paypal_capture_id"],
+        )
+
+    def test_correct_response_returned(self, mock_task):
+        mock_task.delay.return_value.id = "paypal_task_id"
+        result, _ = self.fire_signal()
+        logger.info("result: %s", result)
+        self.assertEqual(
+            result[0][1],
+            "paypal_task_id",
+            "Check receiver result is same as return from task",
+        )
+
+
+@override_settings(
+    CC_SIGNALS={
+        "commerce_coordinator.apps.core.tests.utils.example_signal": [
+            "commerce_coordinator.apps.commercetools.signals.refund_from_mobile",
+        ],
+    }
+)
+@patch("commerce_coordinator.apps.commercetools.signals.refund_from_mobile_task")
+class RefundFromMobileTest(CoordinatorSignalReceiverTestCase):
+    """Mobile Platform Refund, Create Return CT Transaction Signal Tester"""
+
+    mock_parameters = {
+        "refund": {
+            "id": "mobile_refund_123",
+            "amount": "99.99",
+            "currency": "USD",
+            "status": "completed",
+        },
+        "payment_interface": "ios_iap_edx",
+    }
+
+    def test_correct_arguments_passed(self, mock_task):
+        _, logs = self.fire_signal()
+        logger.info("logs.output: %s", logs.output)
+        mock_task.delay.assert_called_once_with(
+            refund=self.mock_parameters["refund"],
+            payment_interface=self.mock_parameters["payment_interface"],
+        )
+
+    def test_correct_response_returned(self, mock_task):
+        mock_task.delay.return_value.id = "mobile_task_id"
+        result, _ = self.fire_signal()
+        logger.info("result: %s", result)
+        self.assertEqual(
+            result[0][1],
+            "mobile_task_id",
+            "Check receiver result is same as return from task",
+        )

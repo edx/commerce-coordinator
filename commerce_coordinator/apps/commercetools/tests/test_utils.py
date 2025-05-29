@@ -7,7 +7,14 @@ from datetime import datetime, timezone
 from unittest.mock import MagicMock, Mock, patch
 
 from braze.client import BrazeClient
-from commercetools.platform.models import CentPrecisionMoney, MoneyType, TransactionState, TransactionType, TypedMoney
+from commercetools.platform.models import (
+    CentPrecisionMoney,
+    MoneyType,
+    ReturnPaymentState,
+    TransactionState,
+    TransactionType,
+    TypedMoney
+)
 from django.conf import settings
 from django.test import override_settings
 from django.urls import reverse
@@ -27,6 +34,7 @@ from commerce_coordinator.apps.commercetools.utils import (
     find_refund_transaction,
     get_braze_client,
     get_refund_transaction_id_from_order,
+    get_unprocessed_return_item_ids_from_order,
     has_full_refund_transaction,
     has_refund_transaction,
     prepare_default_params,
@@ -509,3 +517,40 @@ class TestGetRefundTransactionIdFromMobileOrder(unittest.TestCase):
 
         result = get_refund_transaction_id_from_order(order)
         self.assertEqual(result, "")
+
+
+class TestExtractReturnItemIds(unittest.TestCase):
+    """
+    Tests for get_unprocessed_return_item_ids_from_order function
+    """
+
+    def test_extract_return_item_ids_with_refunded_items_no_transaction(self):
+        return_item = MagicMock()
+        return_item.id = "return_item_1"
+        return_item.payment_state = ReturnPaymentState.REFUNDED
+        return_item.custom = None
+        return_item2 = MagicMock()
+        return_item2.id = "return_item_2"
+        return_item2.payment_state = ReturnPaymentState.REFUNDED
+        return_item2.custom = None
+        return_info = MagicMock()
+        return_info.items = [return_item, return_item2]
+
+        order = MagicMock()
+        order.return_info = [return_info]
+
+        result = get_unprocessed_return_item_ids_from_order(order)
+        self.assertEqual(result, ["return_item_1", "return_item_2"])
+
+    def test_extract_return_item_ids_with_non_refunded_items(self):
+        return_item = MagicMock()
+        return_item.id = "return_item_1"
+        return_item.payment_state = ReturnPaymentState.NOT_REFUNDED
+        return_info = MagicMock()
+        return_info.items = [return_item]
+
+        order = MagicMock()
+        order.return_info = [return_info]
+
+        result = get_unprocessed_return_item_ids_from_order(order)
+        self.assertEqual(result, [])

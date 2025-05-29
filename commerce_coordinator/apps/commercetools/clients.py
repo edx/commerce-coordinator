@@ -5,9 +5,10 @@ API clients for commercetools app.
 import datetime
 import logging
 import uuid
+from decimal import Decimal
 from functools import wraps
 from types import SimpleNamespace
-from typing import Generic, List, Optional, Tuple, TypedDict, TypeVar, Union
+from typing import Generic, List, NamedTuple, Optional, Tuple, TypedDict, TypeVar, Union
 
 import requests
 from commercetools import Client, CommercetoolsError
@@ -72,6 +73,8 @@ from tenacity.wait import wait_incrementing
 
 from commerce_coordinator.apps.commercetools.catalog_info.constants import (
     DEFAULT_ORDER_EXPANSION,
+    EDX_ANDROID_IAP_PAYMENT_INTERFACE_NAME,
+    EDX_IOS_IAP_PAYMENT_INTERFACE_NAME,
     EDX_PAYPAL_PAYMENT_INTERFACE_NAME,
     EDX_STRIPE_PAYMENT_INTERFACE_NAME,
     EdXFieldNames,
@@ -82,6 +85,7 @@ from commerce_coordinator.apps.commercetools.utils import (
     find_latest_refund,
     find_refund_transaction,
     get_refund_transaction_id_from_order,
+    get_unprocessed_return_item_ids_from_order,
     handle_commercetools_error,
     translate_refund_status_to_transaction_status
 )
@@ -126,10 +130,32 @@ class Refund(TypedDict):
     """
 
     id: str
-    amount: Union[str, int]
+    amount: Union[str, int, Decimal]
     currency: str
     created: Union[str, int]
     status: str
+
+
+class ProcessedRefund(TypedDict):
+    """
+    Processed Refund object definition
+    """
+
+    id: str  # refund transaction id
+    amount: int
+    currency: str
+    created: datetime.datetime
+    status: TransactionState
+
+
+class OrderWithReturnInfo(NamedTuple):
+    """
+    Response object for order with return info
+    """
+
+    order_id: str
+    order_version: int
+    return_line_item_return_ids: list[str]
 
 
 class CommercetoolsAPIClient:
@@ -641,6 +667,8 @@ class CommercetoolsAPIClient:
         payment_intent_id: str,
         interaction_id: str,
         payment_state: ReturnPaymentState = ReturnPaymentState.REFUNDED,
+        payment: Payment | None = None,
+        should_transition_state: bool = True,
     ) -> Union[Order, None]:
         """
         Update paymentState on the LineItemReturnItem attached to the order.
@@ -655,15 +683,23 @@ class CommercetoolsAPIClient:
         Raises Exception: Error if update was unsuccessful.
         """
         try:
-            logger.info(
-                f"[CommercetoolsAPIClient] - Updating payment state for return "
-                f"with ids {return_line_item_return_ids} to '{ReturnPaymentState.REFUNDED}'."
-            )
+            if should_transition_state:
+                logger.info(
+                    f"[CommercetoolsAPIClient] - Updating payment state for return "
+                    f"with ids {return_line_item_return_ids} "
+                    f"to '{ReturnPaymentState.REFUNDED}'."
+                )
             if not payment_intent_id:
                 payment_intent_id = ""
-            logger.info(f"Updating return for order: {order_id} - payment_intent_id: {payment_intent_id}")
-            payment = self.get_payment_by_key(payment_intent_id)
-            logger.info(f"Payment found: {payment}")
+            logger.info(
+                f"Updating return for order: {order_id} "
+                f"- payment_intent_id: {payment_intent_id}"
+            )
+
+            if not payment:
+                payment = self.get_payment_by_key(payment_intent_id)
+                logger.info(f"Payment found: {payment}")
+
             transaction_id = find_refund_transaction(payment, interaction_id)
 
             # Handles the case when refund is created from PSP and interaction ID is not set. In that case
@@ -674,10 +710,13 @@ class CommercetoolsAPIClient:
             return_payment_state_actions = []
             update_transaction_id_actions = []
             for return_line_item_return_id in return_line_item_return_ids:
-                return_payment_state_actions.append(OrderSetReturnPaymentStateAction(
-                    return_item_id=return_line_item_return_id,
-                    payment_state=payment_state,
-                ))
+                if should_transition_state:
+                    return_payment_state_actions.append(
+                        OrderSetReturnPaymentStateAction(
+                            return_item_id=return_line_item_return_id,
+                            payment_state=payment_state,
+                        )
+                    )
                 custom_fields = {
                     "transactionId": refunded_line_item_refunds.get(return_line_item_return_id, transaction_id),
                 }
@@ -717,23 +756,44 @@ class CommercetoolsAPIClient:
                                        err, f"Unable to update ReturnPaymentState of order {order_id}")
             raise OpenEdxFilterException(str(err)) from err
 
-    def _preprocess_refund_object(self, refund: Refund, psp: str) -> Refund:
+    def _preprocess_refund_object(self, refund: Refund, psp: str) -> ProcessedRefund:
         """
         Pre process refund object based on PSP
         """
+        amount = refund["amount"]
+
         if psp == EDX_PAYPAL_PAYMENT_INTERFACE_NAME:
             # Paypal sends amount in dollars and CT expects it in cents
-            refund["amount"] = float(refund["amount"]) * 100
-            refund["created"] = datetime.datetime.fromisoformat(refund["created"])
-        else:
-            refund["created"] = datetime.datetime.utcfromtimestamp(refund["created"])
+            amount = float(amount) * 100
+            created = datetime.datetime.fromisoformat(refund["created"])
+        elif psp in (
+            EDX_ANDROID_IAP_PAYMENT_INTERFACE_NAME,
+            EDX_IOS_IAP_PAYMENT_INTERFACE_NAME,
+        ):
+            created = datetime.datetime.fromtimestamp(
+                int(refund["created"]) / 1000, datetime.timezone.utc
+            )
+        else:  # psp is EDX_STRIPE_PAYMENT_INTERFACE_NAME
+            created = datetime.datetime.fromtimestamp(
+                refund["created"], datetime.timezone.utc
+            )
 
-        refund["status"] = translate_refund_status_to_transaction_status(refund["status"])
-        refund["currency"] = refund["currency"].upper()
-        return refund
+        return {
+            "id": refund["id"],
+            "created": created,
+            "amount": int(amount),
+            "currency": refund["currency"].upper(),
+            "status": translate_refund_status_to_transaction_status(
+                refund["status"]
+            ),
+        }
 
     def create_return_payment_transaction(
-        self, payment_id: str, payment_version: int, refund: Refund, psp=EDX_STRIPE_PAYMENT_INTERFACE_NAME
+        self,
+        payment_id: str,
+        payment_version: int,
+        refund: Refund,
+        psp=EDX_STRIPE_PAYMENT_INTERFACE_NAME,
     ) -> Payment:
         """
         Create Commercetools payment transaction for refund
@@ -749,25 +809,29 @@ class CommercetoolsAPIClient:
                 f"[CommercetoolsAPIClient] - Creating refund transaction for payment with ID {payment_id} "
                 f"following successful refund {refund.get('id')} in PSP: {psp}"
             )
-            refund = self._preprocess_refund_object(refund, psp)
+            processed_refund = self._preprocess_refund_object(refund, psp)
 
             amount_as_money = Money(
-                cent_amount=int(refund["amount"]),
-                currency_code=refund["currency"],
+                cent_amount=processed_refund["amount"],
+                currency_code=processed_refund["currency"],
             )
 
             transaction_draft = TransactionDraft(
                 type=TransactionType.REFUND,
                 amount=amount_as_money,
-                timestamp=refund["created"],
-                state=refund["status"],
-                interaction_id=refund["id"],
+                timestamp=processed_refund["created"],
+                state=processed_refund["status"],
+                interaction_id=processed_refund["id"],
             )
 
-            add_transaction_action = PaymentAddTransactionAction(transaction=transaction_draft)
+            add_transaction_action = PaymentAddTransactionAction(
+                transaction=transaction_draft
+            )
 
             returned_payment = self.base_client.payments.update_by_id(
-                id=payment_id, version=payment_version, actions=[add_transaction_action]
+                id=payment_id,
+                version=payment_version,
+                actions=[add_transaction_action],
             )
 
             return returned_payment
@@ -776,7 +840,11 @@ class CommercetoolsAPIClient:
                 f"Unable to create refund payment transaction for payment {payment_id}, refund {refund['id']} "
                 f"with PSP: {psp}"
             )
-            handle_commercetools_error("[CommercetoolsAPIClient.create_return_payment_transaction]", err, context)
+            handle_commercetools_error(
+                "[CommercetoolsAPIClient.create_return_payment_transaction]",
+                err,
+                context,
+            )
             raise err
 
     def update_line_item_on_fulfillment(
@@ -1509,5 +1577,62 @@ class CommercetoolsAPIClient:
                 err,
                 f"Failed to create order from cart: {cart.id}"
                 f"for customer: {cart.customer_id}",
+            )
+            raise err
+
+    def find_order_with_unprocessed_return_for_payment(
+        self,
+        *,
+        payment_id: str,
+        customer_id: str,
+    ) -> OrderWithReturnInfo | None:
+        """
+        Find unprocessed return for payment ID
+
+        Args:
+            payment_id (str): Payment ID (UUID)
+
+        Returns:
+            OrderWithReturnInfo: Order with unprocessed return or None if not found
+        """
+        is_refunded = f'paymentState="{ReturnPaymentState.REFUNDED.value}"'
+        has_no_txn = f"custom(fields({TwoUKeys.TRANSACTION_ID} is not defined))"
+        try:
+            response = self.base_client.orders.query(
+                where=[
+                    "paymentInfo(payments(id=:payment_id))",
+                    f"returnInfo(items(({is_refunded} and {has_no_txn})))",
+                ],
+                predicate_var={"payment_id": payment_id},
+            )
+            if not response.results:
+                logger.info(
+                    "[CommercetoolsAPIClient] - No order with unprocessed return found"
+                    f" for payment: {payment_id} for customer: {customer_id}"
+                )
+                return None
+
+            order = response.results[0]
+            return_line_item_return_ids = get_unprocessed_return_item_ids_from_order(
+                order
+            )
+            result = OrderWithReturnInfo(
+                order_id=order.id,
+                order_version=order.version,
+                return_line_item_return_ids=return_line_item_return_ids,
+            )
+            logger.info(
+                "[CommercetoolsAPIClient] - Found order with unprocessed return "
+                f"for payment: {payment_id} for customer: {customer_id}. "
+                f"Details: {result._asdict()}"
+            )
+            return result
+
+        except CommercetoolsError as err:
+            handle_commercetools_error(
+                "[CommercetoolsAPIClient.find_order_with_unprocessed_return_for_payment]",
+                err,
+                f"Unable to check if there is an order with unprocessed return "
+                f"for payment: {payment_id} for customer: {customer_id}",
             )
             raise err
