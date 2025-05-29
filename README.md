@@ -158,7 +158,7 @@
 | commerce\_coordinator/apps/lms/tests/test\_signals.py                                  |       31 |        0 |        0 |        0 |    100% |           |
 | commerce\_coordinator/apps/lms/tests/test\_tasks.py                                    |      134 |       18 |        0 |        0 |     87% |   305-352 |
 | commerce\_coordinator/apps/lms/tests/test\_utils.py                                    |       64 |        0 |        0 |        0 |    100% |           |
-| commerce\_coordinator/apps/lms/tests/test\_views.py                                    |      352 |        0 |        0 |        0 |    100% |           |
+| commerce\_coordinator/apps/lms/tests/test\_views.py                                    |      348 |        0 |        0 |        0 |    100% |           |
 | commerce\_coordinator/apps/lms/urls.py                                                 |        4 |        0 |        0 |        0 |    100% |           |
 | commerce\_coordinator/apps/lms/utils.py                                                |       43 |        0 |       18 |        0 |    100% |           |
 | commerce\_coordinator/apps/lms/views.py                                                |      237 |       14 |       26 |        3 |     93% |237-240, 415, 431, 436, 444-448, 467, 554-556 |
@@ -179,8 +179,8 @@
 | commerce\_coordinator/apps/paypal/urls.py                                              |        4 |        0 |        0 |        0 |    100% |           |
 | commerce\_coordinator/apps/paypal/views.py                                             |       72 |        3 |       12 |        3 |     93% |45, 60-61, 107->112, 108->107 |
 | commerce\_coordinator/apps/rollout/\_\_init\_\_.py                                     |        0 |        0 |        0 |        0 |    100% |           |
-| commerce\_coordinator/apps/rollout/pipeline.py                                         |       59 |        1 |       18 |        1 |     97% |       119 |
-| commerce\_coordinator/apps/rollout/tests/test\_pipeline.py                             |      146 |        0 |        0 |        0 |    100% |           |
+| commerce\_coordinator/apps/rollout/pipeline.py                                         |       56 |        1 |       16 |        1 |     97% |       113 |
+| commerce\_coordinator/apps/rollout/tests/test\_pipeline.py                             |      119 |        0 |        0 |        0 |    100% |           |
 | commerce\_coordinator/apps/rollout/tests/test\_util\_functions.py                      |       27 |        0 |        0 |        0 |    100% |           |
 | commerce\_coordinator/apps/rollout/utils.py                                            |       28 |        3 |        8 |        0 |     86% |     80-82 |
 | commerce\_coordinator/apps/rollout/waffle.py                                           |       11 |        0 |        0 |        0 |    100% |           |
@@ -201,7 +201,7 @@
 | commerce\_coordinator/apps/stripe/views.py                                             |       63 |       11 |       10 |        3 |     78% |65, 67, 111-144 |
 | commerce\_coordinator/docker\_gunicorn\_configuration.py                               |       27 |       27 |       10 |        0 |      0% |      4-57 |
 | commerce\_coordinator/urls.py                                                          |       24 |        0 |        0 |        0 |    100% |           |
-|                                                                              **TOTAL** | **8184** |  **395** |  **574** |   **61** | **94%** |           |
+|                                                                              **TOTAL** | **8150** |  **395** |  **572** |   **61** | **94%** |           |
 
 
 ## Setup coverage badge
