@@ -1,6 +1,7 @@
 """ Commercetools API Client(s) Testing """
 
 from datetime import datetime
+from unittest.mock import MagicMock
 
 import pytest
 import requests_mock
@@ -1415,6 +1416,44 @@ class ClientTests(TestCase):
             self.assertEqual(request_body["orderState"], "Complete")
             self.assertEqual(request_body["paymentState"], "Paid")
             self.assertEqual(request_body["shipmentState"], "Shipped")
+
+    @patch('commerce_coordinator.apps.commercetools.clients.CommercetoolsAPIClient.get_order_by_id')
+    @patch('commerce_coordinator.apps.commercetools.clients.CommercetoolsAPIClient.get_customer_by_id')
+    def test_get_order_and_customer_by_order_id_success(self, mock_get_customer_by_id, mock_get_order_by_id):
+        order = MagicMock(spec=Order)
+        customer = MagicMock(spec=Customer)
+        order.id = "order-abc"
+        order.customer_id = "customer-123"
+        mock_get_order_by_id.return_value = order
+        mock_get_customer_by_id.return_value = customer
+
+        result_order, result_customer = self.client_set.client.get_order_and_customer_by_order_id(
+            "order-abc", logging_context="ctx")
+        assert result_order == order
+        assert result_customer == customer
+        mock_get_order_by_id.assert_called_once_with("order-abc")
+        mock_get_customer_by_id.assert_called_once_with("customer-123")
+
+    @patch('commerce_coordinator.apps.commercetools.clients.CommercetoolsAPIClient.get_order_by_id')
+    def test_get_order_and_customer_by_order_id_order_not_found(self, mock_get_order_by_id):
+        mock_get_order_by_id.side_effect = Exception("Order not found")
+        with pytest.raises(Exception) as exc:
+            self.client_set.client.get_order_and_customer_by_order_id("order-xyz", logging_context="ctx")
+        assert "Order not found" in str(exc.value)
+        mock_get_order_by_id.assert_called_once_with("order-xyz")
+
+    @patch('commerce_coordinator.apps.commercetools.clients.CommercetoolsAPIClient.get_order_by_id')
+    @patch('commerce_coordinator.apps.commercetools.clients.CommercetoolsAPIClient.get_customer_by_id')
+    def test_get_order_and_customer_by_order_id_customer_not_found(self, mock_get_customer_by_id, mock_get_order_by_id):
+        order = MagicMock(spec=Order)
+        order.customer_id = "customer-999"
+        mock_get_order_by_id.return_value = order
+        mock_get_customer_by_id.side_effect = Exception("Customer not found")
+        with pytest.raises(Exception) as exc:
+            self.client_set.client.get_order_and_customer_by_order_id("order-xyz", logging_context="ctx")
+        assert "Customer not found" in str(exc.value)
+        mock_get_order_by_id.assert_called_once_with("order-xyz")
+        mock_get_customer_by_id.assert_called_once_with("customer-999")
 
     @patch(
         'commerce_coordinator.apps.commercetools.clients.CommercetoolsAPIClient.get_payment_by_key'

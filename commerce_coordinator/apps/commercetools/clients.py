@@ -422,6 +422,33 @@ class CommercetoolsAPIClient:
 
         return orders, customer
 
+    def get_order_and_customer_by_order_id(self, order_id, logging_context=None) -> Tuple[Order, Customer]:
+        """
+        Get order and customer information from CommercetoolsAPIClient.
+
+        Args:
+            order_id (str): Order ID (UUID)
+            logging_context (str): Context for logging
+
+        Returns:
+            Tuple[Order, Customer]: Order and customer objects
+        """
+        try:
+            order = self.get_order_by_id(order_id)
+        except Exception as err:  # pragma no cover
+            logger.error(f'[CommercetoolsAPIClient] Order not found: {order_id} with CT error {err}, '
+                         f'data: {logging_context}')
+            raise err
+
+        try:
+            customer = self.get_customer_by_id(order.customer_id)
+        except Exception as err:  # pragma no cover
+            logger.error(f'[CommercetoolsAPIClient] Customer not found: {order.customer_id} for order {order_id} with '
+                         f'CT error {err}, data: {logging_context}')
+            raise err
+
+        return order, customer
+
     def get_customer_by_id(self, customer_id: str) -> Customer:
         logger.info(f"[CommercetoolsAPIClient] - Attempting to find customer with ID {customer_id}")
         return self.base_client.customers.get_by_id(customer_id)

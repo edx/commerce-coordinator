@@ -12,6 +12,14 @@ commerce\_coordinator.apps.paypal.tests.test\_pipeline module
    :undoc-members:
    :show-inheritance:
 
+commerce\_coordinator.apps.paypal.tests.test\_views module
+----------------------------------------------------------
+
+.. automodule:: commerce_coordinator.apps.paypal.tests.test_views
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
 Module contents
 ---------------
 

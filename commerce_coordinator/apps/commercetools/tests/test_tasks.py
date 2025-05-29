@@ -16,7 +16,11 @@ from commerce_coordinator.apps.commercetools.tasks import (
     refund_from_paypal_task,
     refund_from_stripe_task
 )
-from commerce_coordinator.apps.commercetools.tests.conftest import gen_payment, gen_payment_with_multiple_transactions
+from commerce_coordinator.apps.commercetools.tests.conftest import (
+    gen_order,
+    gen_payment,
+    gen_payment_with_multiple_transactions
+)
 from commerce_coordinator.apps.commercetools.tests.constants import (
     EXAMPLE_RETURNED_ORDER_STRIPE_CLIENT_PAYLOAD,
     EXAMPLE_RETURNED_ORDER_STRIPE_SIGNAL_PAYLOAD,
@@ -46,10 +50,7 @@ class UpdateLineItemStateOnFulfillmentCompletionTaskTest(TestCase):
         return (
             values['entitlement_uuid'],
             values['order_id'],
-            values['order_version'],
             values['line_item_id'],
-            values['item_quantity'],
-            values['from_state_id'],
             values['to_state_key']
         )
 
@@ -62,11 +63,14 @@ class UpdateLineItemStateOnFulfillmentCompletionTaskTest(TestCase):
         expected_data.
         '''
         # pylint: disable=no-value-for-parameter
+        mock_order = gen_order(EXAMPLE_UPDATE_LINE_ITEM_SIGNAL_PAYLOAD['order_id'])
+        mock_client().get_order_by_id.return_value = mock_order
+        mock_client().get_state_by_key.return_value = mock_order.line_items[0].state[0].state
+
         _ = fulfillment_uut(*self.unpack_for_uut(EXAMPLE_UPDATE_LINE_ITEM_SIGNAL_PAYLOAD))
         logger.info('mock_client().mock_calls: %s', mock_client().mock_calls)
         mock_client().update_line_item_on_fulfillment.assert_called_once_with(
-            *list(EXAMPLE_UPDATE_LINE_ITEM_SIGNAL_PAYLOAD.values())
-        )
+            *EXAMPLE_UPDATE_LINE_ITEM_SIGNAL_PAYLOAD.values())
 
 
 @patch('commerce_coordinator.apps.commercetools.tasks.CommercetoolsAPIClient')

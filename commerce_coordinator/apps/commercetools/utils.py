@@ -23,6 +23,7 @@ from django.urls import reverse
 
 from commerce_coordinator.apps.commercetools.catalog_info.constants import TwoUKeys
 from commerce_coordinator.apps.commercetools.catalog_info.edx_utils import cents_to_dollars
+from commerce_coordinator.apps.core.constants import ISO_8601_FORMAT
 
 logger = logging.getLogger(__name__)
 
@@ -342,6 +343,21 @@ def get_lob_from_variant_attr(variant):
         if attr.name == 'lob':
             return attr.value
     return None
+
+
+def prepare_default_params(order, lms_user_id, source_system):
+    """
+    Prepare default parameters for order fulfillment task
+    """
+    return {
+        'email_opt_in': True,
+        'order_number': order.order_number,
+        'order_id': order.id,
+        'provider_id': None,
+        'edx_lms_user_id': lms_user_id,
+        'date_placed': order.last_modified_at.strftime(ISO_8601_FORMAT),
+        'source_system': source_system,
+    }
 
 
 def get_unprocessed_return_item_ids_from_order(order: Order) -> list[str]:

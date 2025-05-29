@@ -14,7 +14,7 @@ from commerce_coordinator.apps.commercetools.authentication import JwtBearerAuth
 from commerce_coordinator.apps.core.views import SingleInvocationAPIView
 from commerce_coordinator.apps.lms.clients import FulfillmentType
 from commerce_coordinator.apps.lms.signals import fulfillment_completed_update_ct_line_item_signal
-from commerce_coordinator.apps.order_fulfillment.serializers import FulfillOrderWebhookSerializer
+from commerce_coordinator.apps.order_fulfillment.serializers import FulfilledOrderWebhookSerializer
 
 logger = logging.getLogger(__name__)
 
@@ -38,7 +38,7 @@ class OrderFulfillmentCompletionStatusWebhookView(SingleInvocationAPIView):
 
         logger.info(f'[CT-{tag}] Message received from order-fulfillment with details: {input_data}')
 
-        validator = FulfillOrderWebhookSerializer(data=input_data)
+        validator = FulfilledOrderWebhookSerializer(data=input_data)
         validator.is_valid(raise_exception=True)
         validated_data = validator.validated_data
 
