@@ -6,7 +6,7 @@
 #
 amqp==5.3.1
     # via kombu
-apimatic-core==0.2.18
+apimatic-core==0.2.19
     # via paypal-server-sdk
 apimatic-core-interfaces==0.1.6
     # via
