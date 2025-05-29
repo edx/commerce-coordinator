@@ -7,6 +7,7 @@ from logging import getLogger
 
 import attrs
 from commercetools import CommercetoolsError
+from commercetools.platform.models import ReturnPaymentState
 from django.conf import settings
 from openedx_filters import PipelineStep
 from openedx_filters.exceptions import OpenEdxFilterException
@@ -297,10 +298,10 @@ class UpdateCommercetoolsOrderReturnPaymentStatus(PipelineStep):
         """
         tag = type(self).__name__
 
-        # TODO: handle refund state update to NotRefunded. To be done in SONIC-938
+        payment_state = ReturnPaymentState.REFUNDED
+
         if kwargs.get('psp_refund_error'):
-            log.info(f"[{tag}] PSP Refund error, skipping order refund payment transaction updation")
-            return PipelineCommand.CONTINUE.value
+            payment_state = ReturnPaymentState.NOT_REFUNDED
 
         if kwargs.get('payment_intent_id') is None and kwargs.get('psp') is None:
             log.info(f"[{tag}] Payment data not found, skipping order refund payment transaction updation")
@@ -323,7 +324,8 @@ class UpdateCommercetoolsOrderReturnPaymentStatus(PipelineStep):
             return_line_entitlement_ids=return_line_entitlement_ids,
             refunded_line_item_refunds=refunded_line_item_refunds,
             payment_intent_id=kwargs['payment_intent_id'],
-            interaction_id=interaction_id
+            interaction_id=interaction_id,
+            payment_state=payment_state
         )
 
         return {

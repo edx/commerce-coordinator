@@ -666,6 +666,7 @@ class CommercetoolsAPIClient:
         refunded_line_item_refunds: dict,
         payment_intent_id: str,
         interaction_id: str,
+        payment_state: ReturnPaymentState = ReturnPaymentState.REFUNDED,
         payment: Payment | None = None,
         should_transition_state: bool = True,
     ) -> Union[Order, None]:
@@ -713,7 +714,7 @@ class CommercetoolsAPIClient:
                     return_payment_state_actions.append(
                         OrderSetReturnPaymentStateAction(
                             return_item_id=return_line_item_return_id,
-                            payment_state=ReturnPaymentState.REFUNDED,
+                            payment_state=payment_state,
                         )
                     )
                 custom_fields = {
