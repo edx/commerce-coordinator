@@ -14,5 +14,3 @@
 # This constraint can be removed once global Django constraint has been updated
 Django<4.3
 paypal-server-sdk == 0.5.1
-marshmallow == 3.26.1  #TODO: Remove constraint when commercetools SDK supports marshmallow v4.0+.
-celery[redis] == 5.4.0
