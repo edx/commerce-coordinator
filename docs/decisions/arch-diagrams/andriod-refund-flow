@@ -1,0 +1,18 @@
+ sequenceDiagram
+ %% ===== Android (Google) Refund Flow =====
+    participant Admin as Admin User
+    participant  CommerceCoordinator(CC) as CC refund view
+    participant GoogleAPI as Google Voided Purchases API
+    participant CTEventBridge as EventBridge (CT Return created)
+
+    Admin->>CommerceCoordinator(CC): GET /android/refunds
+    CommerceCoordinator(CC)->>CommerceCoordinator(CC): Load refund config (e.g., last 3 days)
+    CommerceCoordinator(CC)->>GoogleAPI: Request voided purchases (startTime)
+    GoogleAPI-->>CommerceCoordinator(CC): Return list of voided purchases
+
+    loop For each voided purchase
+        CommerceCoordinator(CC)->>CommerceCoordinator(CC): Create refund object (ID, time)
+        CommerceCoordinator(CC)->>CTEventBridge: Send refund signal (Android IAP)
+    end
+
+    CommerceCoordinator(CC)-->>Admin: Return success response (HTTP 200 OK)
