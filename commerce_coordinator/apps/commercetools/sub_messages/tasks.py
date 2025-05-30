@@ -217,6 +217,11 @@ def fulfill_order_placed_message_signal_task(
         product_information = extract_ct_product_information_for_braze_canvas(item)
         canvas_entry_properties["products"].append(product_information)
 
+    is_mobile_order = False
+    if hasattr(order, 'custom') and hasattr(order.custom, 'fields'):
+        is_mobile_order = order.custom.fields.get(TwoUKeys.ORDER_MOBILE_ORDER, False)
+    canvas_entry_properties.update({'is_mobile_order': is_mobile_order})
+
     cache_key = safe_key(key=order_id, key_prefix='send_order_confirmation_email', version='1')
 
     cache_entry = TieredCache.get_cached_response(cache_key)
