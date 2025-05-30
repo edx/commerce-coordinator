@@ -162,7 +162,7 @@
 | commerce\_coordinator/apps/lms/tests/test\_views.py                                    |      348 |        0 |        0 |        0 |    100% |           |
 | commerce\_coordinator/apps/lms/urls.py                                                 |        4 |        0 |        0 |        0 |    100% |           |
 | commerce\_coordinator/apps/lms/utils.py                                                |       43 |        0 |       18 |        0 |    100% |           |
-| commerce\_coordinator/apps/lms/views.py                                                |      237 |       14 |       26 |        3 |     93% |237-240, 415, 431, 436, 444-448, 467, 554-556 |
+| commerce\_coordinator/apps/lms/views.py                                                |      235 |       13 |       24 |        2 |     93% |237-240, 415, 431, 441-445, 464, 551-553 |
 | commerce\_coordinator/apps/order\_fulfillment/\_\_init\_\_.py                          |        0 |        0 |        0 |        0 |    100% |           |
 | commerce\_coordinator/apps/order\_fulfillment/clients.py                               |       34 |        1 |        4 |        1 |     95% |        67 |
 | commerce\_coordinator/apps/order\_fulfillment/serializers.py                           |        8 |        0 |        0 |        0 |    100% |           |
@@ -202,7 +202,7 @@
 | commerce\_coordinator/apps/stripe/views.py                                             |       63 |       11 |       10 |        3 |     78% |65, 67, 111-144 |
 | commerce\_coordinator/docker\_gunicorn\_configuration.py                               |       27 |       27 |       10 |        0 |      0% |      4-57 |
 | commerce\_coordinator/urls.py                                                          |       24 |        0 |        0 |        0 |    100% |           |
-|                                                                              **TOTAL** | **8524** |  **386** |  **596** |   **65** | **95%** |           |
+|                                                                              **TOTAL** | **8522** |  **385** |  **594** |   **64** | **95%** |           |
 
 
 ## Setup coverage badge
