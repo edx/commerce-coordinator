@@ -127,7 +127,7 @@ class CTCustomAPIClient:
         bundle_offer_without_codes = self._make_request(
             "GET",
             "cart-discounts",
-            params={"where": query_params, "sort": "sortOrder desc"},
+            params={"where": query_params, "sort": "sortOrder desc", "offset": 0, "limit": 100},
         )
         if not bundle_offer_without_codes:
             return []
