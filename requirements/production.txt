@@ -272,7 +272,7 @@ packaging==25.0
     #   -r requirements/base.txt
     #   gunicorn
     #   marshmallow
-paypal-server-sdk==0.5.1
+paypal-server-sdk==1.1.0
     # via -r requirements/base.txt
 pbr==6.1.1
     # via

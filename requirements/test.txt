@@ -315,10 +315,8 @@ packaging==25.0
     #   pyproject-api
     #   pytest
     #   tox
-paypal-server-sdk==0.5.1
-    # via
-    #   -c requirements/constraints.txt
-    #   -r requirements/base.txt
+paypal-server-sdk==1.1.0
+    # via -r requirements/base.txt
 pbr==6.1.1
     # via
     #   -r requirements/base.txt
