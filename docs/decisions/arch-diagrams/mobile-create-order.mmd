@@ -1,0 +1,72 @@
+sequenceDiagram
+    participant User
+    participant MobileApp
+    participant Backend
+    participant TokenChecker
+    participant GoogleApple
+    participant Commercetools
+    participant EventSystem
+
+    User->>MobileApp: Starts in-app purchase
+    MobileApp->>Backend: Sends purchase info (price, course, platform, token)
+
+    Backend->>Commercetools: Check if user already has a cart
+    Commercetools-->>Backend: Return existing cart or none
+    alt Cart exists
+        Backend->>Commercetools: Delete old cart
+    end
+
+    Backend->>Commercetools: Create a new cart with course and price
+    Commercetools-->>Backend: Return new cart
+
+    Backend->>TokenChecker: Ask to validate the purchase token
+    TokenChecker->>GoogleApple: Send token to Google or Apple
+    GoogleApple-->>TokenChecker: Get token result
+
+    TokenChecker->>Commercetools: Check if token was already used
+    alt Token is already used
+        TokenChecker-->>Backend: Tell backend it is a duplicate
+        Backend->>Commercetools: Delete the new cart
+        Backend-->>MobileApp: **Show error (payment already used)**
+    else Token is valid
+        TokenChecker-->>Backend: Send transaction info
+    end
+
+    Backend->>EventSystem: Send event - checkout started
+    Backend->>EventSystem: Send event - item added to cart
+
+    Backend->>Commercetools: Create a payment using the token info
+    alt Payment creation failed
+        Commercetools-->>Backend: **Error while creating payment**
+        Backend-->>MobileApp: **Show error (payment creation failed)**
+    else
+        Commercetools-->>Backend: Return payment
+        Backend->>EventSystem: Send event - payment method used
+
+        Backend->>Commercetools: Attach payment to the cart
+        alt Attaching payment failed
+            Commercetools-->>Backend: **Error while attaching payment**
+            Backend-->>MobileApp: **Show error (payment attach failed)**
+        else
+            Commercetools-->>Backend: Return updated cart
+
+            Backend->>Commercetools: Create order from cart
+            alt Order creation failed
+                Commercetools-->>Backend: **Error while creating order**
+                Backend-->>MobileApp: **Show error (order creation failed)**
+            else
+                Commercetools-->>Backend: Return order
+
+                Backend->>Commercetools: Mark items as ready for delivery
+                alt Updating item state failed
+                    Commercetools-->>Backend: **Error while updating item states**
+                    Backend-->>MobileApp: **Show error (item state update failed)**
+                else
+                    Commercetools-->>Backend: Return updated order
+
+                    Backend->>EventSystem: Send event - order completed
+                    Backend-->>MobileApp: Show success (order ID, number)
+                end
+            end
+        end
+    end

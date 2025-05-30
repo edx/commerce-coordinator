@@ -1,0 +1,39 @@
+sequenceDiagram
+    %% Apple Refund Flow
+    participant Apple as Apple Server
+    participant BackendIOS as iOS Refund View
+    participant EventSystem as Payment Refunded Signal
+
+    Apple->>BackendIOS: Send refund notification (POST)
+    BackendIOS->>BackendIOS: Parse and verify Apple notification
+    alt Notification is "REFUND"
+        BackendIOS->>BackendIOS: Check if already processed
+        alt Not already processed
+            BackendIOS->>BackendIOS: Mark as running
+            BackendIOS->>BackendIOS: Extract refund info (ID, time, amount, currency)
+            BackendIOS->>EventSystem: Send refund signal
+        else Already processing
+            BackendIOS->>BackendIOS: Skip refund
+        end
+    else Not a refund notification
+        BackendIOS->>BackendIOS: Ignore and log notification
+    end
+    BackendIOS-->>Apple: Respond with 200 OK
+
+    %% Google Refund Flow
+    participant Admin as Admin User
+    participant BackendAndroid as Android Refund View
+    participant GoogleAPI as Google API
+    participant EventSystem as Payment Refunded Signal
+
+    Admin->>BackendAndroid: Trigger refund check (GET)
+    BackendAndroid->>BackendAndroid: Load settings and date range
+    BackendAndroid->>GoogleAPI: Request list of refunded purchases
+    GoogleAPI-->>BackendAndroid: Return list of voided purchases
+
+    loop For each refunded purchase
+        BackendAndroid->>BackendAndroid: Create refund info (ID, time)
+        BackendAndroid->>EventSystem: Send refund signal
+    end
+
+    BackendAndroid-->>Admin: Return success response
