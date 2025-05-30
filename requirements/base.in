@@ -26,6 +26,7 @@ edx-rest-api-client
 google-api-python-client
 httplib2
 iso4217
+inapppy
 mysqlclient
 oauth2client
 openedx-filters

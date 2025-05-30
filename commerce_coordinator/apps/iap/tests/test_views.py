@@ -87,10 +87,12 @@ class MobileCreateOrderViewTests(APITestCase):
     @mock.patch("commerce_coordinator.apps.iap.views.get_standalone_price_for_sku")
     @mock.patch("commerce_coordinator.apps.iap.views.get_email_domain")
     @mock.patch("commerce_coordinator.apps.iap.views.get_edx_lms_user_id")
+    @mock.patch("commerce_coordinator.apps.iap.utils.IAPPaymentProcessor")
     @mock.patch("uuid.uuid4")
     def test_successful_order_creation(
         self,
         mock_uuid,
+        mock_payment_processor,
         mock_get_edx_lms_user_id,
         mock_get_email_domain,
         mock_get_standalone_price,
@@ -100,6 +102,22 @@ class MobileCreateOrderViewTests(APITestCase):
         mock_ct_client = args[-1]
         self.authenticate_user()
         mock_uuid.return_value = "test-uuid"
+
+        self.valid_payload = {
+            "payment_processor": "ios-iap",  # Must be valid!
+            "course_run_key": "demo-course-run",
+            "price": "49.99",
+            "currency_code": "USD",
+            "purchase_token": "dummy-token"
+        }
+
+        # Mock the validate_iap return value
+        mock_instance = mock_payment_processor.return_value
+        mock_instance.validate_iap.return_value = {
+            "receipt": {"receipt_creation_date": "2025-05-21T12:00:00Z"},
+            "transaction_id": "txn-123",
+            "in_app": [{"product_id": "demo-course-run", "original_transaction_id": "txn-123"}]
+        }
 
         mock_customer = mock.MagicMock()
         mock_customer.id = "customer-123"
