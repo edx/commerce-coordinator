@@ -36,6 +36,8 @@ astroid==3.3.8
     #   pylint-celery
 attrs==25.1.0
     # via -r requirements/validation.txt
+babel==2.17.0
+    # via -r requirements/validation.txt
 backoff==2.2.1
     # via
     #   -r requirements/validation.txt
