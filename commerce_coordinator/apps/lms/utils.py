@@ -53,7 +53,7 @@ def get_program_offer(cart_discounts: list, bundle_key: str) -> dict:
     default_program_offer = None
     for cart_discount in cart_discounts:
         cart_discount_key = cart_discount.get("key")
-        bundle_ids_from_predicate = extract_uuids_from_predicate(cart_discount.get("target", {}).get("predicate"))
+        bundle_ids_from_predicate = extract_uuids_from_predicate(cart_discount.get("cartPredicate", ""))
 
         if cart_discount_key == DEFAULT_BUNDLE_DISCOUNT_KEY:
             default_program_offer = cart_discount
@@ -64,8 +64,8 @@ def get_program_offer(cart_discounts: list, bundle_key: str) -> dict:
 
     # If no offer is applied on the program, check if it is also excluded from default 10% offer
     if not program_offer and default_program_offer:
-        predicate = default_program_offer.get("target", {}).get("predicate")
-        excluded_bundle_ids_for_default_discount = extract_uuids_from_predicate(predicate)
+        cart_predicate = default_program_offer.get("cartPredicate", "")
+        excluded_bundle_ids_for_default_discount = extract_uuids_from_predicate(cart_predicate)
 
         if bundle_key in excluded_bundle_ids_for_default_discount:
             return None
