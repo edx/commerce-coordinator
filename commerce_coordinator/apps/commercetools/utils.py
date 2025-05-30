@@ -5,6 +5,7 @@ Helpers for the commercetools app.
 import hashlib
 import logging
 
+from babel.numbers import format_currency
 from braze.client import BrazeClient
 from commercetools import CommercetoolsError
 from commercetools.platform.models import (
@@ -98,11 +99,12 @@ def send_fulfillment_error_email(
         logger.exception(f"Encountered exception sending Fulfillment error email. Exception: {exc}")
 
 
-def format_amount_for_braze_canvas(centAmount):
+def format_amount_for_braze_canvas(cent_amount, currency_code):
     """
     Utility to convert amount to dollar with 2 decimals percision. Also adds the Dollar signs to resulting value.
     """
-    return f"${(centAmount / 100):.2f}"
+    formatted_price = format_currency(cent_amount / 100, currency_code, locale='en_US')
+    return formatted_price
 
 
 def extract_ct_product_information_for_braze_canvas(item: LineItem):
@@ -116,7 +118,7 @@ def extract_ct_product_information_for_braze_canvas(item: LineItem):
 
     partner_name = attributes_dict.get('brand-text', '')
 
-    price = format_amount_for_braze_canvas(item.price.value.cent_amount)
+    price = format_amount_for_braze_canvas(item.price.value.cent_amount, item.price.value.currency_code)
 
     start_date = attributes_dict.get('courserun-start', '')
     duration_low = attributes_dict.get('duration-low', '')
@@ -184,6 +186,7 @@ def extract_ct_order_information_for_braze_canvas(customer: Customer, order: Ord
     total_discount = calculate_total_discount_on_order(order)
     # calculate subtotal by adding discount back if any discount is applied.
     subtotal = order.total_price.cent_amount + total_discount.cent_amount
+    currency_code = order.total_price.currency_code
     canvas_entry_properties = {
         "first_name": customer.first_name,
         "last_name": customer.last_name,
@@ -192,14 +195,14 @@ def extract_ct_order_information_for_braze_canvas(customer: Customer, order: Ord
                                 f"?order_number={order.order_number}",
         "purchase_date": formatted_order_placement_date,
         "purchase_time": formatted_order_placement_time,
-        "subtotal":  format_amount_for_braze_canvas(subtotal),
-        "total": format_amount_for_braze_canvas(order.total_price.cent_amount),
+        "subtotal":  format_amount_for_braze_canvas(subtotal, currency_code),
+        "total": format_amount_for_braze_canvas(order.total_price.cent_amount, currency_code),
     }
 
     if total_discount and total_discount.cent_amount != 0:
         canvas_entry_properties.update({
             "discount_code": order.discount_codes[0].discount_code.obj.code if order.discount_codes else None,
-            "discount_value": format_amount_for_braze_canvas(total_discount.cent_amount),
+            "discount_value": format_amount_for_braze_canvas(total_discount.cent_amount, currency_code),
         })
     return canvas_entry_properties
 
