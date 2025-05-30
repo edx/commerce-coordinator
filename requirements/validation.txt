@@ -9,7 +9,7 @@ amqp==5.3.1
     #   -r requirements/quality.txt
     #   -r requirements/test.txt
     #   kombu
-apimatic-core==0.2.18
+apimatic-core==0.2.19
     # via
     #   -r requirements/quality.txt
     #   -r requirements/test.txt
@@ -36,13 +36,13 @@ asgiref==3.7.2
     #   -r requirements/test.txt
     #   django
     #   django-cors-headers
-astroid==3.3.8
+astroid==3.3.10
     # via
     #   -r requirements/quality.txt
     #   -r requirements/test.txt
     #   pylint
     #   pylint-celery
-attrs==25.1.0
+attrs==25.3.0
     # via
     #   -r requirements/quality.txt
     #   -r requirements/test.txt
@@ -71,7 +71,7 @@ celery[redis]==5.4.0
     # via
     #   -r requirements/quality.txt
     #   -r requirements/test.txt
-certifi==2025.1.31
+certifi==2025.4.26
     # via
     #   -r requirements/quality.txt
     #   -r requirements/test.txt
@@ -88,12 +88,12 @@ chardet==5.2.0
     #   -r requirements/quality.txt
     #   -r requirements/test.txt
     #   tox
-charset-normalizer==3.4.1
+charset-normalizer==3.4.2
     # via
     #   -r requirements/quality.txt
     #   -r requirements/test.txt
     #   requests
-click==8.1.8
+click==8.2.1
     # via
     #   -r requirements/quality.txt
     #   -r requirements/test.txt
@@ -125,7 +125,7 @@ click-repl==0.3.0
     #   -r requirements/quality.txt
     #   -r requirements/test.txt
     #   celery
-code-annotations==2.2.0
+code-annotations==2.3.0
     # via
     #   -r requirements/quality.txt
     #   -r requirements/test.txt
@@ -150,12 +150,12 @@ coreschema==0.0.4
     #   -r requirements/quality.txt
     #   -r requirements/test.txt
     #   coreapi
-coverage[toml]==7.6.12
+coverage[toml]==7.8.2
     # via
     #   -r requirements/quality.txt
     #   -r requirements/test.txt
     #   pytest-cov
-cryptography==44.0.1
+cryptography==45.0.3
     # via
     #   -r requirements/quality.txt
     #   -r requirements/test.txt
@@ -177,7 +177,7 @@ defusedxml==0.7.1
     #   -r requirements/test.txt
     #   python3-openid
     #   social-auth-core
-dill==0.3.9
+dill==0.4.0
     # via
     #   -r requirements/quality.txt
     #   -r requirements/test.txt
@@ -187,7 +187,7 @@ distlib==0.3.9
     #   -r requirements/quality.txt
     #   -r requirements/test.txt
     #   virtualenv
-django==4.2.19
+django==4.2.21
     # via
     #   -r requirements/quality.txt
     #   -r requirements/test.txt
@@ -199,6 +199,7 @@ django==4.2.19
     #   djangorestframework
     #   drf-jwt
     #   edx-auth-backends
+    #   edx-braze-client
     #   edx-django-release-util
     #   edx-django-utils
     #   edx-drf-extensions
@@ -213,13 +214,13 @@ django-crum==0.7.9
     #   -r requirements/quality.txt
     #   -r requirements/test.txt
     #   edx-django-utils
-django-debug-toolbar==5.0.1
+django-debug-toolbar==5.2.0
     # via -r requirements/quality.txt
 django-dynamic-fixture==4.0.1
     # via
     #   -r requirements/quality.txt
     #   -r requirements/test.txt
-django-extensions==3.2.3
+django-extensions==4.1
     # via
     #   -r requirements/quality.txt
     #   -r requirements/test.txt
@@ -233,7 +234,7 @@ django-waffle==4.2.0
     #   -r requirements/test.txt
     #   edx-django-utils
     #   edx-drf-extensions
-djangorestframework==3.15.2
+djangorestframework==3.16.0
     # via
     #   -r requirements/quality.txt
     #   -r requirements/test.txt
@@ -254,25 +255,26 @@ drf-jwt==1.19.2
     #   -r requirements/quality.txt
     #   -r requirements/test.txt
     #   edx-drf-extensions
-edx-auth-backends==4.4.0
+edx-auth-backends==4.5.0
     # via
     #   -r requirements/quality.txt
     #   -r requirements/test.txt
-edx-braze-client==0.2.5
+edx-braze-client==1.0.2
     # via
     #   -r requirements/quality.txt
     #   -r requirements/test.txt
-edx-django-release-util==1.4.0
+edx-django-release-util==1.5.0
     # via
     #   -r requirements/quality.txt
     #   -r requirements/test.txt
-edx-django-utils==7.1.0
+edx-django-utils==8.0.0
     # via
     #   -r requirements/quality.txt
     #   -r requirements/test.txt
+    #   edx-braze-client
     #   edx-drf-extensions
     #   edx-rest-api-client
-edx-drf-extensions==10.5.0
+edx-drf-extensions==10.6.0
     # via
     #   -r requirements/quality.txt
     #   -r requirements/test.txt
@@ -280,17 +282,17 @@ edx-lint==5.6.0
     # via
     #   -r requirements/quality.txt
     #   -r requirements/test.txt
-edx-opaque-keys[django]==2.11.0
+edx-opaque-keys[django]==3.0.0
     # via
     #   -r requirements/quality.txt
     #   -r requirements/test.txt
     #   edx-drf-extensions
     #   openedx-filters
-edx-rest-api-client==6.1.0
+edx-rest-api-client==6.2.0
     # via
     #   -r requirements/quality.txt
     #   -r requirements/test.txt
-filelock==3.17.0
+filelock==3.18.0
     # via
     #   -r requirements/quality.txt
     #   -r requirements/test.txt
@@ -338,7 +340,7 @@ idna==3.10
     #   -r requirements/quality.txt
     #   -r requirements/test.txt
     #   requests
-iniconfig==2.0.0
+iniconfig==2.1.0
     # via
     #   -r requirements/quality.txt
     #   -r requirements/test.txt
@@ -347,7 +349,7 @@ iso4217==1.12.20240625
     # via
     #   -r requirements/quality.txt
     #   -r requirements/test.txt
-isort==6.0.0
+isort==6.0.1
     # via
     #   -r requirements/quality.txt
     #   -r requirements/test.txt
@@ -369,7 +371,7 @@ jaraco-functools==4.1.0
     # via
     #   -r requirements/quality.txt
     #   keyring
-jinja2==3.1.5
+jinja2==3.1.6
     # via
     #   -r requirements/quality.txt
     #   -r requirements/test.txt
@@ -389,7 +391,7 @@ keyring==25.6.0
     # via
     #   -r requirements/quality.txt
     #   twine
-kombu==5.4.2
+kombu==5.5.3
     # via
     #   -r requirements/quality.txt
     #   -r requirements/test.txt
@@ -424,11 +426,11 @@ mdurl==0.1.2
     # via
     #   -r requirements/quality.txt
     #   markdown-it-py
-mock==5.1.0
+mock==5.2.0
     # via
     #   -r requirements/quality.txt
     #   -r requirements/test.txt
-more-itertools==10.6.0
+more-itertools==10.7.0
     # via
     #   -r requirements/quality.txt
     #   jaraco-classes
@@ -442,12 +444,7 @@ mysqlclient==2.2.7
     # via
     #   -r requirements/quality.txt
     #   -r requirements/test.txt
-newrelic==10.6.0
-    # via
-    #   -r requirements/quality.txt
-    #   -r requirements/test.txt
-    #   edx-django-utils
-nh3==0.2.20
+nh3==0.2.21
     # via
     #   -r requirements/quality.txt
     #   readme-renderer
@@ -466,11 +463,11 @@ openapi-codec==1.3.2
     #   -r requirements/quality.txt
     #   -r requirements/test.txt
     #   django-rest-swagger
-openedx-filters==1.13.0
+openedx-filters==2.1.0
     # via
     #   -r requirements/quality.txt
     #   -r requirements/test.txt
-packaging==24.2
+packaging==25.0
     # via
     #   -r requirements/quality.txt
     #   -r requirements/test.txt
@@ -488,24 +485,24 @@ pbr==6.1.1
     #   -r requirements/quality.txt
     #   -r requirements/test.txt
     #   stevedore
-pillow==11.1.0
+pillow==11.2.1
     # via
     #   -r requirements/quality.txt
     #   -r requirements/test.txt
-platformdirs==4.3.6
+platformdirs==4.3.8
     # via
     #   -r requirements/quality.txt
     #   -r requirements/test.txt
     #   pylint
     #   tox
     #   virtualenv
-pluggy==1.5.0
+pluggy==1.6.0
     # via
     #   -r requirements/quality.txt
     #   -r requirements/test.txt
     #   pytest
     #   tox
-prompt-toolkit==3.0.50
+prompt-toolkit==3.0.51
     # via
     #   -r requirements/quality.txt
     #   -r requirements/test.txt
@@ -515,7 +512,7 @@ proto-plus==1.26.1
     #   -r requirements/quality.txt
     #   -r requirements/test.txt
     #   google-api-core
-protobuf==6.31.0
+protobuf==6.31.1
     # via
     #   -r requirements/quality.txt
     #   -r requirements/test.txt
@@ -540,7 +537,7 @@ pyasn1-modules==0.4.2
     #   -r requirements/test.txt
     #   google-auth
     #   oauth2client
-pycodestyle==2.12.1
+pycodestyle==2.13.0
     # via -r requirements/quality.txt
 pycparser==2.22
     # via
@@ -566,7 +563,7 @@ pyjwt[crypto]==2.10.1
     #   edx-rest-api-client
     #   segment-analytics-python
     #   social-auth-core
-pylint==3.3.4
+pylint==3.3.7
     # via
     #   -r requirements/quality.txt
     #   -r requirements/test.txt
@@ -590,7 +587,7 @@ pylint-plugin-utils==0.8.2
     #   -r requirements/test.txt
     #   pylint-celery
     #   pylint-django
-pymongo==4.11.1
+pymongo==4.13.0
     # via
     #   -r requirements/quality.txt
     #   -r requirements/test.txt
@@ -610,22 +607,22 @@ pyparsing==3.2.3
     #   -r requirements/quality.txt
     #   -r requirements/test.txt
     #   httplib2
-pyproject-api==1.9.0
+pyproject-api==1.9.1
     # via
     #   -r requirements/quality.txt
     #   -r requirements/test.txt
     #   tox
-pytest==8.3.4
+pytest==8.3.5
     # via
     #   -r requirements/quality.txt
     #   -r requirements/test.txt
     #   pytest-cov
     #   pytest-django
-pytest-cov==6.0.0
+pytest-cov==6.1.1
     # via
     #   -r requirements/quality.txt
     #   -r requirements/test.txt
-pytest-django==4.10.0
+pytest-django==4.11.1
     # via
     #   -r requirements/quality.txt
     #   -r requirements/test.txt
@@ -646,7 +643,7 @@ python3-openid==3.2.0
     #   -r requirements/quality.txt
     #   -r requirements/test.txt
     #   social-auth-core
-pytz==2025.1
+pytz==2025.2
     # via
     #   -r requirements/quality.txt
     #   -r requirements/test.txt
@@ -676,6 +673,7 @@ requests==2.32.3
     #   cachecontrol
     #   commercetools
     #   coreapi
+    #   edx-braze-client
     #   edx-drf-extensions
     #   edx-rest-api-client
     #   google-api-core
@@ -703,7 +701,7 @@ requests-toolbelt==1.0.0
     # via
     #   -r requirements/quality.txt
     #   twine
-responses==0.25.6
+responses==0.25.7
     # via
     #   -r requirements/quality.txt
     #   -r requirements/test.txt
@@ -711,7 +709,7 @@ rfc3986==2.0.0
     # via
     #   -r requirements/quality.txt
     #   twine
-rich==13.9.4
+rich==14.0.0
     # via
     #   -r requirements/quality.txt
     #   twine
@@ -721,7 +719,7 @@ rsa==4.9.1
     #   -r requirements/test.txt
     #   google-auth
     #   oauth2client
-segment-analytics-python==2.3.3
+segment-analytics-python==2.3.4
     # via
     #   -r requirements/quality.txt
     #   -r requirements/test.txt
@@ -730,7 +728,7 @@ semantic-version==2.10.0
     #   -r requirements/quality.txt
     #   -r requirements/test.txt
     #   edx-drf-extensions
-simplejson==3.19.3
+simplejson==3.20.1
     # via
     #   -r requirements/quality.txt
     #   -r requirements/test.txt
@@ -744,7 +742,7 @@ six==1.17.0
     #   edx-lint
     #   oauth2client
     #   python-dateutil
-snowballstemmer==2.2.0
+snowballstemmer==3.0.1
     # via
     #   -r requirements/quality.txt
     #   pydocstyle
@@ -753,7 +751,7 @@ social-auth-app-django==5.4.3
     #   -r requirements/quality.txt
     #   -r requirements/test.txt
     #   edx-auth-backends
-social-auth-core==4.5.6
+social-auth-core==4.6.1
     # via
     #   -r requirements/quality.txt
     #   -r requirements/test.txt
@@ -765,14 +763,14 @@ sqlparse==0.5.3
     #   -r requirements/test.txt
     #   django
     #   django-debug-toolbar
-stevedore==5.4.0
+stevedore==5.4.1
     # via
     #   -r requirements/quality.txt
     #   -r requirements/test.txt
     #   code-annotations
     #   edx-django-utils
     #   edx-opaque-keys
-stripe==11.5.0
+stripe==12.2.0
     # via
     #   -r requirements/quality.txt
     #   -r requirements/test.txt
@@ -794,20 +792,20 @@ tomlkit==0.13.2
     #   -r requirements/quality.txt
     #   -r requirements/test.txt
     #   pylint
-tox==4.24.1
+tox==4.26.0
     # via
     #   -r requirements/quality.txt
     #   -r requirements/test.txt
 twine==6.1.0
     # via -r requirements/quality.txt
-typing-extensions==4.12.2
+typing-extensions==4.13.2
     # via
     #   -r requirements/quality.txt
     #   -r requirements/test.txt
     #   edx-opaque-keys
     #   pyopenssl
     #   stripe
-tzdata==2025.1
+tzdata==2025.2
     # via
     #   -r requirements/quality.txt
     #   -r requirements/test.txt
@@ -833,7 +831,7 @@ vine==5.1.0
     #   amqp
     #   celery
     #   kombu
-virtualenv==20.29.2
+virtualenv==20.31.2
     # via
     #   -r requirements/quality.txt
     #   -r requirements/test.txt
