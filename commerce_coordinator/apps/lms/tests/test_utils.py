@@ -80,12 +80,12 @@ class TestGetProgramOffer(unittest.TestCase):
         self.cart_discounts = [
             {
                 "key": "BUNDLE_15_OFF",
-                "target": {"predicate": 'custom.bundleId is defined and (custom.bundleId = "bundle-key-123")'},
+                "cartPredicate": 'custom.bundleId is defined and (custom.bundleId = "bundle-key-123")',
                 "value": {"type": "absolute", "money": [{"centAmount": 1500}]}
             },
             {
                 "key": DEFAULT_BUNDLE_DISCOUNT_KEY,
-                "target": {"predicate": 'custom.bundleId is defined and (custom.bundleId != "bundle-key-123")'},
+                "cartPredicate": 'custom.bundleId is defined and (custom.bundleId != "bundle-key-123")',
                 "value": {"type": "relative", "permyriad": 1000}
             }
         ]
@@ -121,7 +121,7 @@ class TestGetProgramOffer(unittest.TestCase):
         cart_discounts = [
             {
                 "key": DEFAULT_BUNDLE_DISCOUNT_KEY,
-                "target": {"predicate": 'custom.bundleId != "bundle_3"'},
+                "cartPredicate": 'custom.bundleId != "bundle_3"',
                 "value": {"type": CT_ABSOLUTE_DISCOUNT_TYPE, "money": [{"centAmount": 1000}]}
             }
         ]
