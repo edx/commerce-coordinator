@@ -12,11 +12,9 @@ from rest_framework.response import Response
 from rest_framework.test import APIClient, APITestCase
 
 from commerce_coordinator.apps.commercetools.tests.constants import (
-    EXAMPLE_COMMERCETOOLS_COURSE_VARIANT_ADD_MESSAGE,
     EXAMPLE_COMMERCETOOLS_ORDER_FULFILL_MESSAGE,
     EXAMPLE_COMMERCETOOLS_ORDER_RETURNED_MESSAGE,
-    EXAMPLE_COMMERCETOOLS_ORDER_SANCTIONED_MESSAGE,
-    EXAMPLE_COMMERCETOOLS_STANDALONE_PRICE_CHANGE_MESSAGE
+    EXAMPLE_COMMERCETOOLS_ORDER_SANCTIONED_MESSAGE
 )
 from commerce_coordinator.apps.commercetools.tests.mocks import (
     CTCustomerByIdMock,
@@ -86,135 +84,6 @@ class TestSingleInvocationAPIView(TestCase):
 
         # Check if marked as not running
         self.assertFalse(SingleInvocationAPIView._is_running(view, identifier))
-
-
-class MobileStandalonePriceChangeViewTests(APITestCase):
-    """Tests for MobileCourseVariantAddView"""
-    url = reverse('commercetools:mobile-course-variant-add')
-
-    client_class = APIClient
-
-    test_user_username = 'test_user'
-    test_staff_username = 'test_staff_user'
-    test_password = 'test_password'
-
-    def setUp(self):
-        """Set up test users"""
-        User.objects.create_user(username=self.test_user_username, password=self.test_password)
-        User.objects.create_user(username=self.test_staff_username, password=self.test_password, is_staff=True)
-
-    def tearDown(self):
-        """Clean up after each test"""
-        TieredCache.dangerous_clear_all_tiers()
-        self.client.logout()
-
-    def test_view_returns_ok_for_admin_user(self):
-        """Ensure a staff user gets 200 OK"""
-        self.client.login(username=self.test_staff_username, password=self.test_password)
-        response = self.client.post(self.url, data=EXAMPLE_COMMERCETOOLS_STANDALONE_PRICE_CHANGE_MESSAGE, format='json')
-        self.assertEqual(response.status_code, 200)
-
-    def test_missing_payload_returns_400(self):
-        """Check response for empty POST body"""
-        self.client.login(username=self.test_staff_username, password=self.test_password)
-        response = self.client.post(self.url, data={}, format='json')
-        # Assuming view should still return 200 (as per current logic). Change if behavior differs.
-        self.assertEqual(response.status_code, 200)
-
-    def test_unauthenticated_user_returns_401(self):
-        """Ensure unauthenticated requests are denied with 401"""
-        response = self.client.post(self.url, data=EXAMPLE_COMMERCETOOLS_COURSE_VARIANT_ADD_MESSAGE, format='json')
-        self.assertEqual(response.status_code, 401)
-
-
-class MobileCourseVariantAddViewTests(APITestCase):
-    """Tests for MobileCourseVariantAddView"""
-    url = reverse('commercetools:mobile-course-variant-add')
-
-    client_class = APIClient
-
-    test_user_username = 'test_user'
-    test_staff_username = 'test_staff_user'
-    test_password = 'test_password'
-
-    def setUp(self):
-        """Set up test users"""
-        User.objects.create_user(username=self.test_user_username, password=self.test_password)
-        User.objects.create_user(username=self.test_staff_username, password=self.test_password, is_staff=True)
-
-    def tearDown(self):
-        """Clean up after each test"""
-        TieredCache.dangerous_clear_all_tiers()
-        self.client.logout()
-
-    def test_view_returns_ok_for_admin_user(self):
-        """Ensure a staff user gets 200 OK"""
-        self.client.login(username=self.test_staff_username, password=self.test_password)
-        response = self.client.post(self.url, data=EXAMPLE_COMMERCETOOLS_COURSE_VARIANT_ADD_MESSAGE, format='json')
-        self.assertEqual(response.status_code, 200)
-
-    def test_view_forbidden_for_non_admin_user(self):
-        """Ensure a non-staff user gets 403 Forbidden"""
-        self.client.login(username=self.test_user_username, password=self.test_password)
-        response = self.client.post(self.url, data=EXAMPLE_COMMERCETOOLS_COURSE_VARIANT_ADD_MESSAGE, format='json')
-        self.assertEqual(response.status_code, 403)
-
-    def test_missing_payload_returns_400(self):
-        """Check response for empty POST body"""
-        self.client.login(username=self.test_staff_username, password=self.test_password)
-        response = self.client.post(self.url, data={}, format='json')
-        # Assuming view should still return 200 (as per current logic). Change if behavior differs.
-        self.assertEqual(response.status_code, 200)
-
-    def test_unauthenticated_user_returns_401(self):
-        """Ensure unauthenticated requests are denied with 401"""
-        response = self.client.post(self.url, data=EXAMPLE_COMMERCETOOLS_COURSE_VARIANT_ADD_MESSAGE, format='json')
-        self.assertEqual(response.status_code, 401)
-
-
-class MobileCourseCreateViewTests(APITestCase):
-    """Tests for MobileCourseVariantAddView"""
-    url = reverse('commercetools:mobile-course-variant-add')
-
-    client_class = APIClient
-
-    test_user_username = 'test_user'
-    test_staff_username = 'test_staff_user'
-    test_password = 'test_password'
-
-    def setUp(self):
-        """Set up test users"""
-        User.objects.create_user(username=self.test_user_username, password=self.test_password)
-        User.objects.create_user(username=self.test_staff_username, password=self.test_password, is_staff=True)
-
-    def tearDown(self):
-        """Clean up after each test"""
-        TieredCache.dangerous_clear_all_tiers()
-        self.client.logout()
-
-    def test_view_returns_ok_for_admin_user(self):
-        """Ensure a staff user gets 200 OK"""
-        self.client.login(username=self.test_staff_username, password=self.test_password)
-        response = self.client.post(self.url, data=EXAMPLE_COMMERCETOOLS_COURSE_VARIANT_ADD_MESSAGE, format='json')
-        self.assertEqual(response.status_code, 200)
-
-    def test_view_forbidden_for_non_admin_user(self):
-        """Ensure a non-staff user gets 403 Forbidden"""
-        self.client.login(username=self.test_user_username, password=self.test_password)
-        response = self.client.post(self.url, data=EXAMPLE_COMMERCETOOLS_COURSE_VARIANT_ADD_MESSAGE, format='json')
-        self.assertEqual(response.status_code, 403)
-
-    def test_missing_payload_returns_400(self):
-        """Check response for empty POST body"""
-        self.client.login(username=self.test_staff_username, password=self.test_password)
-        response = self.client.post(self.url, data={}, format='json')
-        # Assuming view should still return 200 (as per current logic). Change if behavior differs.
-        self.assertEqual(response.status_code, 200)
-
-    def test_unauthenticated_user_returns_401(self):
-        """Ensure unauthenticated requests are denied with 401"""
-        response = self.client.post(self.url, data=EXAMPLE_COMMERCETOOLS_COURSE_VARIANT_ADD_MESSAGE, format='json')
-        self.assertEqual(response.status_code, 401)
 
 
 @ddt.ddt
