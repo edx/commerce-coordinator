@@ -220,7 +220,9 @@ def fulfill_order_placed_message_signal_task(
     is_mobile_order = False
     if hasattr(order, 'custom') and hasattr(order.custom, 'fields'):
         is_mobile_order = order.custom.fields.get(TwoUKeys.ORDER_MOBILE_ORDER, False)
-    canvas_entry_properties.update({'is_mobile_order': is_mobile_order})
+    is_enrollment_code_order = get_edx_psp_payment_id(order) is None and order.total_price.cent_amount == 0
+
+    canvas_entry_properties.update({'hide_receipt_cta': is_mobile_order or is_enrollment_code_order})
 
     cache_key = safe_key(key=order_id, key_prefix='send_order_confirmation_email', version='1')
 

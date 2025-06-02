@@ -2,10 +2,12 @@
 Helpers for the commercetools app.
 """
 
+from decimal import Decimal
 import hashlib
 import logging
+import re
 
-from babel.numbers import format_currency
+from babel.numbers import format_currency, get_currency_symbol
 from braze.client import BrazeClient
 from commercetools import CommercetoolsError
 from commercetools.platform.models import (
@@ -21,6 +23,7 @@ from commercetools.platform.models import (
 )
 from django.conf import settings
 from django.urls import reverse
+from iso4217 import Currency
 
 from commerce_coordinator.apps.commercetools.catalog_info.constants import TwoUKeys
 from commerce_coordinator.apps.commercetools.catalog_info.edx_utils import cents_to_dollars
@@ -61,9 +64,7 @@ def send_order_confirmation_email(
     lms_user_id, lms_user_email, canvas_entry_properties
 ):
     """ Sends order confirmation email via Braze. """
-    recipients = [{"external_user_id": lms_user_id, "attributes": {
-        "email": lms_user_email,
-    }}]
+    recipients = [{"external_user_id": 5264635}]
     canvas_id = settings.BRAZE_CT_ORDER_CONFIRMATION_CANVAS_ID
 
     try:
@@ -101,10 +102,30 @@ def send_fulfillment_error_email(
 
 def format_amount_for_braze_canvas(cent_amount, currency_code):
     """
-    Utility to convert amount to dollar with 2 decimals percision. Also adds the Dollar signs to resulting value.
+    Convert a cent amount (from Commercetools) to a properly formatted localized currency string
+    for display in Braze Canvas.
+
+    This uses ISO-aware formatting that inserts a space between the symbol and amount
+    when the currency code is used as the symbol (e.g., 'PKR 2840').
+
+    Args:
+        cent_amount (int): The price stored as centAmount in Commercetools.
+        currency_code (str): The ISO 4217 currency code (e.g., 'USD', 'PKR').
+
+    Returns:
+        str: Formatted currency string suitable for Braze messages.
     """
-    formatted_price = format_currency(cent_amount / 100, currency_code, locale='en_US')
-    return formatted_price
+    try:
+        localized_price = convert_ct_cent_amount_to_localized_price(
+            cent_amount=cent_amount,
+            currency_code=currency_code
+        )
+        return format_iso_like_currency_spacing(localized_price, currency_code)
+    except Exception as e:
+        # Log or handle the exception as needed
+        print(f"[format_amount_for_braze_canvas] Failed to format currency: {currency_code}, "
+              f"value: {cent_amount}, error: {e}")
+        return f"{currency_code} {cent_amount / 100:.2f}"
 
 
 def extract_ct_product_information_for_braze_canvas(item: LineItem):
@@ -384,3 +405,51 @@ def get_unprocessed_return_item_ids_from_order(order: Order) -> list[str]:
             return [item.id for item in return_info.items]
 
     return []
+
+
+def convert_ct_cent_amount_to_localized_price(
+    *,
+    cent_amount: int,
+    currency_code: str,
+) -> Decimal:
+    """
+    Convert a Commercetools centAmount back to the localized price.
+    Converts back from the commerce_coordinator/apps/iap/utils.convert_localized_price_to_ct_cent_amount
+
+    Args:
+        cent_amount (int): The stored integer price in centAmount format.
+        currency_code (str): The ISO 4217 currency code.
+
+    Returns:
+        Decimal: The localized price (e.g., 10.99 for USD).
+    """
+    fraction_digits = Currency(currency_code).exponent or 0
+    return Decimal(cent_amount).scaleb(-fraction_digits)
+
+
+def format_iso_like_currency_spacing(value, currency_code, locale_str='en_US'):
+    """
+    Format a currency amount with proper spacing for ISO-style currency codes used as symbols.
+
+    This function uses Babel to format a currency value and ensures that if the currency
+    symbol is the same as the currency code (e.g., 'PKR', 'AED'), a space is inserted
+    between the symbol and the numeric value (e.g., 'PKR 2840' instead of 'PKR2840').
+
+    For all other currencies where the symbol differs from the code (e.g., '$' for USD),
+    the default Babel formatting is used.
+
+    Args:
+        value (float or Decimal): The numeric amount to format.
+        currency_code (str): The ISO 4217 currency code (e.g., 'PKR', 'USD').
+        locale_str (str): The locale to use for formatting (default is 'en_US').
+
+    Returns:
+        str: The formatted currency string, with added spacing if symbol matches code.
+    """
+    formatted = format_currency(value, currency_code, locale=locale_str)
+    symbol = get_currency_symbol(currency_code, locale=locale_str)
+
+    if symbol == currency_code:
+        return re.sub(r'^([A-Z]{3})(.+)$', r'\1 \2', formatted)
+
+    return formatted
