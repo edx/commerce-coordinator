@@ -146,7 +146,7 @@ defusedxml==0.7.1
     #   -r requirements/validation.txt
     #   python3-openid
     #   social-auth-core
-diff-cover==9.3.1
+diff-cover==9.3.2
     # via -r requirements/dev.in
 dill==0.4.0
     # via
@@ -281,7 +281,7 @@ iniconfig==2.1.0
     # via
     #   -r requirements/validation.txt
     #   pytest
-iso4217==1.12.20240625
+iso4217==1.13.20250512
     # via -r requirements/validation.txt
 isort==6.0.1
     # via
@@ -321,7 +321,7 @@ keyring==25.6.0
     # via
     #   -r requirements/validation.txt
     #   twine
-kombu==5.5.3
+kombu==5.5.4
     # via
     #   -r requirements/validation.txt
     #   celery
@@ -392,6 +392,7 @@ packaging==25.0
     #   -r requirements/pip-tools.txt
     #   -r requirements/validation.txt
     #   build
+    #   kombu
     #   marshmallow
     #   pyproject-api
     #   pytest

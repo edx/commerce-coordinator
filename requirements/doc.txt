@@ -285,7 +285,7 @@ iniconfig==2.1.0
     # via
     #   -r requirements/test.txt
     #   pytest
-iso4217==1.12.20240625
+iso4217==1.13.20250512
     # via -r requirements/test.txt
 isort==6.0.1
     # via
@@ -317,7 +317,7 @@ jsonpointer==2.4
     #   apimatic-core
 keyring==25.6.0
     # via twine
-kombu==5.5.3
+kombu==5.5.4
     # via
     #   -r requirements/test.txt
     #   celery
@@ -375,6 +375,7 @@ packaging==25.0
     # via
     #   -r requirements/test.txt
     #   build
+    #   kombu
     #   marshmallow
     #   pydata-sphinx-theme
     #   pyproject-api

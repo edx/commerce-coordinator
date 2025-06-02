@@ -210,7 +210,7 @@ idna==3.10
     # via
     #   -r requirements/base.txt
     #   requests
-iso4217==1.12.20240625
+iso4217==1.13.20250512
     # via -r requirements/base.txt
 itypes==1.2.0
     # via
@@ -228,7 +228,7 @@ jsonpointer==2.4
     # via
     #   -r requirements/base.txt
     #   apimatic-core
-kombu==5.5.3
+kombu==5.5.4
     # via
     #   -r requirements/base.txt
     #   celery
@@ -271,6 +271,7 @@ packaging==25.0
     # via
     #   -r requirements/base.txt
     #   gunicorn
+    #   kombu
     #   marshmallow
 paypal-server-sdk==1.1.0
     # via -r requirements/base.txt
