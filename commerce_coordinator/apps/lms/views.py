@@ -432,10 +432,7 @@ class ProgramPriceView(APIView):
         else:
             discounted_price -= discounted_price * program_offer.get("discount_value_in_cents") / 10000
 
-        if discounted_price < 0:
-            return program_price
-
-        return discounted_price
+        return max(discounted_price, 0)
 
     def _extract_parent_course_key(self, course_key: str) -> str:
         """
