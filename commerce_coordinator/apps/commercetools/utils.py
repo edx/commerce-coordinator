@@ -2,10 +2,10 @@
 Helpers for the commercetools app.
 """
 
-from decimal import Decimal
 import hashlib
 import logging
 import re
+from decimal import Decimal
 
 from babel.numbers import format_currency, get_currency_symbol
 from braze.client import BrazeClient
@@ -64,7 +64,9 @@ def send_order_confirmation_email(
     lms_user_id, lms_user_email, canvas_entry_properties
 ):
     """ Sends order confirmation email via Braze. """
-    recipients = [{"external_user_id": 5264635}]
+    recipients = [{"external_user_id": lms_user_id, "attributes": {
+        "email": lms_user_email,
+    }}]
     canvas_id = settings.BRAZE_CT_ORDER_CONFIRMATION_CANVAS_ID
 
     try:
@@ -121,7 +123,7 @@ def format_amount_for_braze_canvas(cent_amount, currency_code):
             currency_code=currency_code
         )
         return format_iso_like_currency_spacing(localized_price, currency_code)
-    except Exception as e:
+    except (ValueError, TypeError) as e:
         # Log or handle the exception as needed
         print(f"[format_amount_for_braze_canvas] Failed to format currency: {currency_code}, "
               f"value: {cent_amount}, error: {e}")

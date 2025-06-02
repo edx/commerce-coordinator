@@ -2,8 +2,10 @@
 Tests for Commerce tools utils
 """
 import hashlib
+import re
 import unittest
 from datetime import datetime, timezone
+from decimal import Decimal
 from unittest.mock import MagicMock, Mock, patch
 
 from braze.client import BrazeClient
@@ -27,11 +29,13 @@ from commerce_coordinator.apps.commercetools.tests.conftest import (
 from commerce_coordinator.apps.commercetools.tests.constants import EXAMPLE_FULFILLMENT_SIGNAL_PAYLOAD
 from commerce_coordinator.apps.commercetools.utils import (
     calculate_total_discount_on_order,
+    convert_ct_cent_amount_to_localized_price,
     create_retired_fields,
     extract_ct_order_information_for_braze_canvas,
     extract_ct_product_information_for_braze_canvas,
     find_latest_refund,
     find_refund_transaction,
+    format_iso_like_currency_spacing,
     get_braze_client,
     get_refund_transaction_id_from_order,
     get_unprocessed_return_item_ids_from_order,
@@ -554,3 +558,46 @@ class TestExtractReturnItemIds(unittest.TestCase):
 
         result = get_unprocessed_return_item_ids_from_order(order)
         self.assertEqual(result, [])
+
+
+class TestCurrencyFormattingUtils(unittest.TestCase):
+    """
+    Unit tests for currency formatting utility functions.
+    """
+
+    def test_convert_ct_cent_amount_usd(self):
+        result = convert_ct_cent_amount_to_localized_price(cent_amount=1099, currency_code='USD')
+        self.assertEqual(result, Decimal('10.99'))
+
+    def test_convert_ct_cent_amount_jpy(self):
+        result = convert_ct_cent_amount_to_localized_price(cent_amount=5000, currency_code='JPY')
+        self.assertEqual(result, Decimal('5000'))
+
+    def test_convert_ct_cent_amount_with_zero(self):
+        result = convert_ct_cent_amount_to_localized_price(cent_amount=0, currency_code='EUR')
+        self.assertEqual(result, Decimal('0.00'))
+
+    def test_format_currency_symbol_differs_from_code(self):
+        # USD uses "$", so Babel should apply the symbol
+        result = format_iso_like_currency_spacing(Decimal('123.45'), 'USD')
+        self.assertIn('$', result)
+        self.assertNotIn('USD ', result)
+
+    def test_format_currency_symbol_matches_code(self):
+        # For PKR, the symbol is often "PKR", so we expect a space
+        result = format_iso_like_currency_spacing(Decimal('2840.00'), 'PKR')
+        self.assertTrue(re.match(r'^PKR\s\d', result))  # e.g., 'PKR 2,840.00'
+
+    def test_format_currency_with_custom_locale(self):
+        # In de_DE, decimal separator is comma
+        result = format_iso_like_currency_spacing(Decimal('1234.56'), 'EUR', locale_str='de_DE')
+        self.assertTrue('1.234,56' in result or '1 234,56' in result)
+
+    @patch('commerce_coordinator.apps.commercetools.utils.get_currency_symbol')
+    @patch('commerce_coordinator.apps.commercetools.utils.format_currency')
+    def test_format_currency_mocked_spacing(self, mock_format_currency, mock_get_currency_symbol):
+        mock_format_currency.return_value = 'PKR2840.00'
+        mock_get_currency_symbol.return_value = 'PKR'
+
+        result = format_iso_like_currency_spacing(Decimal('2840.00'), 'PKR')
+        self.assertEqual(result, 'PKR 2840.00')
