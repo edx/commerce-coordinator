@@ -5,7 +5,7 @@ Helpers for the commercetools app.
 import hashlib
 import logging
 import re
-from decimal import Decimal
+from decimal import Decimal, InvalidOperation
 
 from babel.numbers import format_currency, get_currency_symbol
 from braze.client import BrazeClient
@@ -23,7 +23,6 @@ from commercetools.platform.models import (
 )
 from django.conf import settings
 from django.urls import reverse
-from iso4217 import Currency
 
 from commerce_coordinator.apps.commercetools.catalog_info.constants import TwoUKeys
 from commerce_coordinator.apps.commercetools.catalog_info.edx_utils import cents_to_dollars
@@ -102,32 +101,26 @@ def send_fulfillment_error_email(
         logger.exception(f"Encountered exception sending Fulfillment error email. Exception: {exc}")
 
 
-def format_amount_for_braze_canvas(cent_amount, currency_code):
+def format_amount_for_braze_canvas(cent_amount, currency_code, fraction_digits):
     """
-    Convert a cent amount (from Commercetools) to a properly formatted localized currency string
-    for display in Braze Canvas.
-
-    This uses ISO-aware formatting that inserts a space between the symbol and amount
-    when the currency code is used as the symbol (e.g., 'PKR 2840').
+    Format a CentPrecisionMoney (from Commercetools) as a localized currency string for Braze Canvas.
 
     Args:
-        cent_amount (int): The price stored as centAmount in Commercetools.
-        currency_code (str): The ISO 4217 currency code (e.g., 'USD', 'PKR').
+        cent_amount (int): The amount in cents (e.g., 1099 for $10.99).
+        currency_code (str): ISO 4217 currency code (e.g., 'USD').
+        fraction_digits (int): Number of fraction digits used (e.g., 2 for USD, 0 for JPY).
 
     Returns:
-        str: Formatted currency string suitable for Braze messages.
+        str: A properly formatted currency string.
     """
     try:
-        localized_price = convert_ct_cent_amount_to_localized_price(
-            cent_amount=cent_amount,
-            currency_code=currency_code
-        )
+        localized_price = convert_ct_cent_amount_to_localized_price(cent_amount, fraction_digits)
         return format_iso_like_currency_spacing(localized_price, currency_code)
-    except (ValueError, TypeError) as e:
-        # Log or handle the exception as needed
+    except (ValueError, TypeError, InvalidOperation) as e:
         print(f"[format_amount_for_braze_canvas] Failed to format currency: {currency_code}, "
-              f"value: {cent_amount}, error: {e}")
-        return f"{currency_code} {cent_amount / 100:.2f}"
+              f"value: {cent_amount}, fraction_digits: {fraction_digits}, error: {e}")
+        fallback_price = Decimal(cent_amount).scaleb(-fraction_digits or 0)
+        return f"{currency_code} {fallback_price:.2f}"
 
 
 def extract_ct_product_information_for_braze_canvas(item: LineItem):
@@ -141,7 +134,9 @@ def extract_ct_product_information_for_braze_canvas(item: LineItem):
 
     partner_name = attributes_dict.get('brand-text', '')
 
-    price = format_amount_for_braze_canvas(item.price.value.cent_amount, item.price.value.currency_code)
+    price = format_amount_for_braze_canvas(
+        item.price.value.cent_amount, item.price.value.currency_code, item.price.value.fraction_digits
+    )
 
     start_date = attributes_dict.get('courserun-start', '')
     duration_low = attributes_dict.get('duration-low', '')
@@ -210,6 +205,7 @@ def extract_ct_order_information_for_braze_canvas(customer: Customer, order: Ord
     # calculate subtotal by adding discount back if any discount is applied.
     subtotal = order.total_price.cent_amount + total_discount.cent_amount
     currency_code = order.total_price.currency_code
+    fraction_digits = order.total_price.fraction_digits
     canvas_entry_properties = {
         "first_name": customer.first_name,
         "last_name": customer.last_name,
@@ -218,14 +214,16 @@ def extract_ct_order_information_for_braze_canvas(customer: Customer, order: Ord
                                 f"?order_number={order.order_number}",
         "purchase_date": formatted_order_placement_date,
         "purchase_time": formatted_order_placement_time,
-        "subtotal":  format_amount_for_braze_canvas(subtotal, currency_code),
-        "total": format_amount_for_braze_canvas(order.total_price.cent_amount, currency_code),
+        "subtotal":  format_amount_for_braze_canvas(subtotal, currency_code, fraction_digits),
+        "total": format_amount_for_braze_canvas(order.total_price.cent_amount, currency_code, fraction_digits),
     }
 
     if total_discount and total_discount.cent_amount != 0:
         canvas_entry_properties.update({
             "discount_code": order.discount_codes[0].discount_code.obj.code if order.discount_codes else None,
-            "discount_value": format_amount_for_braze_canvas(total_discount.cent_amount, currency_code),
+            "discount_value": format_amount_for_braze_canvas(
+                total_discount.cent_amount, currency_code, fraction_digits
+            ),
         })
     return canvas_entry_properties
 
@@ -409,27 +407,22 @@ def get_unprocessed_return_item_ids_from_order(order: Order) -> list[str]:
     return []
 
 
-def convert_ct_cent_amount_to_localized_price(
-    *,
-    cent_amount: int,
-    currency_code: str,
-) -> Decimal:
+def convert_ct_cent_amount_to_localized_price(cent_amount, fraction_digits) -> Decimal:
     """
-    Convert a Commercetools centAmount back to the localized price.
+    Convert a centAmount (int) from Commercetools to a localized price using the given fraction digits.
     Converts back from the commerce_coordinator/apps/iap/utils.convert_localized_price_to_ct_cent_amount
 
     Args:
-        cent_amount (int): The stored integer price in centAmount format.
-        currency_code (str): The ISO 4217 currency code.
+        cent_amount (int): The price stored as centAmount (e.g., 1099 for $10.99).
+        fraction_digits (int): Number of fraction digits for the currency (e.g., 2 for USD, 0 for JPY).
 
     Returns:
-        Decimal: The localized price (e.g., 10.99 for USD).
+        Decimal: Localized price (e.g., 10.99 for USD).
     """
-    fraction_digits = Currency(currency_code).exponent or 0
     return Decimal(cent_amount).scaleb(-fraction_digits)
 
 
-def format_iso_like_currency_spacing(value, currency_code, locale_str='en_US'):
+def format_iso_like_currency_spacing(value: Decimal, currency_code: str, locale_str: str = 'en_US') -> str:
     """
     Format a currency amount with proper spacing for ISO-style currency codes used as symbols.
 

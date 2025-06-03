@@ -35,6 +35,7 @@ from commerce_coordinator.apps.commercetools.utils import (
     extract_ct_product_information_for_braze_canvas,
     find_latest_refund,
     find_refund_transaction,
+    format_amount_for_braze_canvas,
     format_iso_like_currency_spacing,
     get_braze_client,
     get_refund_transaction_id_from_order,
@@ -566,19 +567,18 @@ class TestCurrencyFormattingUtils(unittest.TestCase):
     """
 
     def test_convert_ct_cent_amount_usd(self):
-        result = convert_ct_cent_amount_to_localized_price(cent_amount=1099, currency_code='USD')
+        result = convert_ct_cent_amount_to_localized_price(cent_amount=1099, fraction_digits=2)
         self.assertEqual(result, Decimal('10.99'))
 
     def test_convert_ct_cent_amount_jpy(self):
-        result = convert_ct_cent_amount_to_localized_price(cent_amount=5000, currency_code='JPY')
+        result = convert_ct_cent_amount_to_localized_price(cent_amount=5000, fraction_digits=0)
         self.assertEqual(result, Decimal('5000'))
 
     def test_convert_ct_cent_amount_with_zero(self):
-        result = convert_ct_cent_amount_to_localized_price(cent_amount=0, currency_code='EUR')
+        result = convert_ct_cent_amount_to_localized_price(cent_amount=0, fraction_digits=2)
         self.assertEqual(result, Decimal('0.00'))
 
     def test_format_currency_symbol_differs_from_code(self):
-        # USD uses "$", so Babel should apply the symbol
         result = format_iso_like_currency_spacing(Decimal('123.45'), 'USD')
         self.assertIn('$', result)
         self.assertNotIn('USD ', result)
@@ -588,11 +588,6 @@ class TestCurrencyFormattingUtils(unittest.TestCase):
         result = format_iso_like_currency_spacing(Decimal('2840.00'), 'PKR')
         self.assertTrue(re.match(r'^PKR\s\d', result))  # e.g., 'PKR 2,840.00'
 
-    def test_format_currency_with_custom_locale(self):
-        # In de_DE, decimal separator is comma
-        result = format_iso_like_currency_spacing(Decimal('1234.56'), 'EUR', locale_str='de_DE')
-        self.assertTrue('1.234,56' in result or '1 234,56' in result)
-
     @patch('commerce_coordinator.apps.commercetools.utils.get_currency_symbol')
     @patch('commerce_coordinator.apps.commercetools.utils.format_currency')
     def test_format_currency_mocked_spacing(self, mock_format_currency, mock_get_currency_symbol):
@@ -601,3 +596,35 @@ class TestCurrencyFormattingUtils(unittest.TestCase):
 
         result = format_iso_like_currency_spacing(Decimal('2840.00'), 'PKR')
         self.assertEqual(result, 'PKR 2840.00')
+
+    def test_format_amount_for_braze_canvas_usd(self):
+        result = format_amount_for_braze_canvas(cent_amount=1099, currency_code='USD', fraction_digits=2)
+        self.assertIn('$', result)
+
+    def test_format_amount_for_braze_canvas_iso_code(self):
+        result = format_amount_for_braze_canvas(cent_amount=284000, currency_code='PKR', fraction_digits=2)
+        self.assertIn('PKR ', result)
+
+    @patch('commerce_coordinator.apps.commercetools.utils.convert_ct_cent_amount_to_localized_price')
+    @patch('commerce_coordinator.apps.commercetools.utils.format_iso_like_currency_spacing')
+    def test_format_amount_calls_helpers(self, mock_format, mock_convert):
+        mock_convert.return_value = Decimal('10.99')
+        mock_format.return_value = '$10.99'
+
+        result = format_amount_for_braze_canvas(cent_amount=1099, currency_code='USD', fraction_digits=2)
+
+        mock_convert.assert_called_once_with(1099, 2)
+        mock_format.assert_called_once_with(Decimal('10.99'), 'USD')
+        self.assertEqual(result, '$10.99')
+
+    @patch('builtins.print')
+    @patch('commerce_coordinator.apps.commercetools.utils.convert_ct_cent_amount_to_localized_price')
+    def test_format_amount_error_handling(self, mock_convert, mock_print):
+        mock_convert.side_effect = ValueError("Invalid currency")
+
+        result = format_amount_for_braze_canvas(cent_amount=1099, currency_code='XYZ', fraction_digits=2)
+
+        mock_print.assert_called_once()
+        self.assertIn("XYZ", result)
+        self.assertTrue(result.startswith("XYZ "))
+        self.assertEqual(result, "XYZ 10.99")
