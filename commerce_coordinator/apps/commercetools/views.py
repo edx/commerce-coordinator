@@ -9,6 +9,9 @@ from rest_framework.permissions import IsAdminUser
 from rest_framework.response import Response
 
 from commerce_coordinator.apps.commercetools.authentication import JwtBearerAuthentication
+from commerce_coordinator.apps.commercetools.catalog_info.edx_utils import get_edx_product_course_run_key, get_edx_items
+from commerce_coordinator.apps.commercetools.catalog_info.utils import get_line_item_attribute
+from commerce_coordinator.apps.commercetools.clients import CommercetoolsAPIClient
 from commerce_coordinator.apps.commercetools.constants import SOURCE_SYSTEM
 from commerce_coordinator.apps.commercetools.serializers import (
     OrderLineItemMessageInputSerializer,

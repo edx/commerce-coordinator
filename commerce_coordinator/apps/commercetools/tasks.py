@@ -2,6 +2,7 @@
 Commercetools tasks
 """
 
+from django.contrib.auth import get_user_model
 import logging
 
 import stripe
@@ -14,14 +15,20 @@ from commerce_coordinator.apps.commercetools.catalog_info.constants import (
     EDX_ANDROID_IAP_PAYMENT_INTERFACE_NAME,
     EDX_PAYPAL_PAYMENT_INTERFACE_NAME
 )
-from commerce_coordinator.apps.commercetools.catalog_info.edx_utils import get_edx_line_item, get_edx_line_item_state
+from commerce_coordinator.apps.commercetools.catalog_info.edx_utils import get_edx_line_item, get_edx_line_item_state, \
+    get_edx_items, get_edx_product_course_run_key, get_edx_lms_user_id
 from commerce_coordinator.apps.core.memcache import safe_key
 from commerce_coordinator.apps.core.tasks import TASK_LOCK_RETRY, acquire_task_lock, release_task_lock
+from .catalog_info.utils import get_line_item_attribute
 
 from .clients import CommercetoolsAPIClient, Refund
-from .utils import has_full_refund_transaction, is_transaction_already_refunded
+from .serializers import OrderRevokeLineRequestSerializer
+from .utils import has_full_refund_transaction, is_transaction_already_refunded, get_lob_from_variant_attr
+from ..iap.signals import revoke_line_mobile_order_signal
+from ..order_fulfillment.clients import OrderFulfillmentAPIClient
 
 logger = logging.getLogger(__name__)
+User = get_user_model()
 
 stripe.api_key = settings.PAYMENT_PROCESSOR_CONFIG['edx']['stripe']['secret_key']
 
@@ -245,6 +252,11 @@ def refund_from_mobile_task(
                 should_transition_state=False,
             )
 
+        revoke_line_mobile_order_signal.send_robust(
+            sender=refund_from_mobile_task,
+            payment_id=payment.id
+        )
+
         return payment
     except CommercetoolsError as err:
         logger.error(
@@ -254,3 +266,67 @@ def refund_from_mobile_task(
             f"with error {err.errors} and correlation id {err.correlation_id}"
         )
         raise err
+
+
+@shared_task(
+    autoretry_for=(CommercetoolsError,),
+    retry_kwargs={"max_retries": 5, "countdown": 3},
+)
+def revoke_line_mobile_order_task(payment_id: str):
+    """
+    Celery task to unenroll a user from a course based on the given payment ID in mobile order.
+
+    Steps:
+    - Retrieve the order using the payment ID.
+    - Get the course run key from the order line item.
+    - Resolve LMS user from Commercetools customer.
+    - Call the Order Fulfillment API to revoke the enrollment.
+
+    Args:
+        payment_id (str): The ID of the payment linked to the order.
+    """
+
+    tag = "revoke_line_mobile_order_task"
+
+    logger.info(f"[CT-{tag}] Starting unenrollment task for payment_id {payment_id}")
+
+    client = CommercetoolsAPIClient()
+
+    order = client.get_order_by_payment_id(payment_id)
+    customer = client.get_customer_by_id(order.customer_id)
+
+    item_to_unenroll = get_edx_items(order)[0]
+    course_run_key = get_edx_product_course_run_key(item_to_unenroll)
+    course_mode = get_line_item_attribute(item_to_unenroll, "mode")
+
+    lms_user_id = get_edx_lms_user_id(customer)
+    user = User.objects.get(lms_user_id=lms_user_id)
+
+    logging_data = {
+        "order_id": order.id,
+        "payment_id": payment_id,
+        "customer_id": customer.id,
+        "course_run_key": course_run_key,
+        "lms_user_id": user.id,
+        "lms_user_name": user.username,
+        "course_mode": course_mode,
+    }
+
+    lob = get_lob_from_variant_attr(item_to_unenroll.variant) or "edx"
+    serializer = OrderRevokeLineRequestSerializer(data={
+        "edx_lms_username": user.username,
+        "course_run_key": course_run_key,
+        "course_mode": course_mode,
+        "lob": lob,
+    })
+    serializer.is_valid(raise_exception=True)
+
+    OrderFulfillmentAPIClient().revoke_line(
+        payload=serializer.validated_data,
+        logging_data=logging_data,
+    )
+
+    logger.info(f"[CT-{tag}] Successfully called revoke_line for user {user.username} "
+                f"on course {course_run_key} and {logging_data}")
+
+    return True
