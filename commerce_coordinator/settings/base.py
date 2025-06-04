@@ -332,6 +332,9 @@ CC_SIGNALS = {
     "commerce_coordinator.apps.iap.signals.payment_refunded_signal": [
         "commerce_coordinator.apps.commercetools.signals.refund_from_mobile",
     ],
+    "commerce_coordinator.apps.iap.signals.revoke_line_mobile_order_signal": [
+        "commerce_coordinator.apps.commercetools.signals.revoke_line_mobile_order",
+    ],
 }
 
 # Default timeouts for requests

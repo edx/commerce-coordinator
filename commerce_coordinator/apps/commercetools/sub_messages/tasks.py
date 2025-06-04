@@ -168,7 +168,7 @@ def fulfill_order_placed_message_signal_task(
                 'product_type': item.product_type.obj.key
             }
 
-        if is_order_fulfillment_forwarding_enabled:
+        if True:
             logger.info(f"[CT-{tag}] Order Fulfillment Redirection Flag [ENABLED]."
                         f"Order Id: {order_id}, User Id: {lms_user_id}, User Email: {customer.email}, "
                         f"Course Id: {serializer_data['course_id']}")
