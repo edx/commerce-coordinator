@@ -4,6 +4,7 @@ API clients for commercetools app.
 
 import datetime
 import logging
+import re
 import uuid
 from decimal import Decimal
 from functools import wraps
@@ -463,7 +464,13 @@ class CommercetoolsAPIClient:
 
     def get_payment_by_key(self, payment_key: str) -> Payment:
         logger.info(f"[CommercetoolsAPIClient] - Attempting to find payment with key {payment_key}")
-        return self.base_client.payments.get_by_key(payment_key)
+
+        # Normalize the key to match CT format by replacing any character that is not
+        # alphanumeric, underscore, or hyphen with an underscore.
+        # Example (Android payment):
+        # "GPA.9876-5432-1098-7654" becomes "GPA_9876-5432-1098-7654"
+        normalized_payment_key = re.sub(r"[^a-zA-Z0-9_-]", "_", payment_key)
+        return self.base_client.payments.get_by_key(normalized_payment_key)
 
     def get_payment_by_transaction_interaction_id(self, interaction_id: str) -> Payment:
         """
@@ -1503,8 +1510,17 @@ class CommercetoolsAPIClient:
                 ),
             ),
         )
+        
+        # Normalize the key to match CT format by replacing any character that is not
+        # alphanumeric, underscore, or hyphen with an underscore.
+        # Example for Android payment:
+        # "GPA.9876-5432-1098-7654" becomes "GPA_9876-5432-1098-7654"
+        # The use-case of the payment key is only for search optimization.
+        # For financial or any other purpose, `interface_id` should be used
+        # as it preserves the original PSP payment ID exactly.
+        normalized_payment_key = re.sub(r"[^a-zA-Z0-9_-]", "_", psp_payment_id)
         payment_draft = PaymentDraft(
-            key=psp_payment_id,
+            key=normalized_payment_key,
             amount_planned=amount_planned,
             customer=CustomerResourceIdentifier(id=customer_id),
             interface_id=psp_payment_id,
