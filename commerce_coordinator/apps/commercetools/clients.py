@@ -4,6 +4,7 @@ API clients for commercetools app.
 
 import datetime
 import logging
+import re
 import uuid
 from decimal import Decimal
 from functools import wraps
@@ -463,7 +464,8 @@ class CommercetoolsAPIClient:
 
     def get_payment_by_key(self, payment_key: str) -> Payment:
         logger.info(f"[CommercetoolsAPIClient] - Attempting to find payment with key {payment_key}")
-        return self.base_client.payments.get_by_key(payment_key)
+        normalized_payment_key = re.sub(r"[^a-zA-Z0-9_-]", "_", payment_key)
+        return self.base_client.payments.get_by_key(normalized_payment_key)
 
     def get_payment_by_transaction_interaction_id(self, interaction_id: str) -> Payment:
         """
@@ -1503,8 +1505,9 @@ class CommercetoolsAPIClient:
                 ),
             ),
         )
+        normalized_payment_key = re.sub(r"[^a-zA-Z0-9_-]", "_", psp_payment_id)
         payment_draft = PaymentDraft(
-            key=psp_payment_id,
+            key=normalized_payment_key,
             amount_planned=amount_planned,
             customer=CustomerResourceIdentifier(id=customer_id),
             interface_id=psp_payment_id,
