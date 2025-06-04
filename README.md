@@ -23,7 +23,7 @@
 | commerce\_coordinator/apps/commercetools/catalog\_info/utils.py                        |       69 |        0 |       30 |        0 |    100% |           |
 | commerce\_coordinator/apps/commercetools/clients.py                                    |      442 |       57 |       56 |       14 |     85% |193, 415, 472-473, 596-602, 629, 651-658, 686->692, 693, 699->703, 707->710, 713->720, 724->726, 741->752, 767-768, 773, 884-887, 953-954, 984-988, 1147-1153, 1201-1207, 1227-1240, 1256-1263, 1278-1284, 1317-1323, 1403-1409, 1444-1451, 1538-1544, 1574-1581, 1631-1638 |
 | commerce\_coordinator/apps/commercetools/constants.py                                  |        5 |        0 |        0 |        0 |    100% |           |
-| commerce\_coordinator/apps/commercetools/data.py                                       |       52 |        0 |       14 |        2 |     97% |97->96, 143->146 |
+| commerce\_coordinator/apps/commercetools/data.py                                       |       55 |        0 |       16 |        3 |     96% |97->96, 143->146, 148->157 |
 | commerce\_coordinator/apps/commercetools/filters.py                                    |        6 |        0 |        0 |        0 |    100% |           |
 | commerce\_coordinator/apps/commercetools/http\_api\_client.py                          |       68 |        9 |       16 |        4 |     85% |31-41, 133, 148, 163, 170->169 |
 | commerce\_coordinator/apps/commercetools/pipeline.py                                   |      158 |       20 |       34 |        4 |     84% |86-88, 130-132, 161, 178-181, 206-209, 215-217, 390-391 |
@@ -202,7 +202,7 @@
 | commerce\_coordinator/apps/stripe/views.py                                             |       63 |       11 |       10 |        3 |     78% |65, 67, 111-144 |
 | commerce\_coordinator/docker\_gunicorn\_configuration.py                               |       27 |       27 |       10 |        0 |      0% |      4-57 |
 | commerce\_coordinator/urls.py                                                          |       24 |        0 |        0 |        0 |    100% |           |
-|                                                                              **TOTAL** | **8641** |  **385** |  **598** |   **62** | **95%** |           |
+|                                                                              **TOTAL** | **8644** |  **385** |  **600** |   **63** | **95%** |           |
 
 
 ## Setup coverage badge
