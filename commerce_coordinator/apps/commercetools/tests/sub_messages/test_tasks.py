@@ -9,6 +9,7 @@ from commercetools.platform.models import ReturnInfo as CTReturnInfo
 from commercetools.platform.models import ReturnPaymentState as CTReturnPaymentState
 from edx_django_utils.cache import TieredCache
 
+from commerce_coordinator.apps.commercetools.catalog_info.constants import TwoUKeys
 from commerce_coordinator.apps.commercetools.clients import CommercetoolsAPIClient
 from commerce_coordinator.apps.commercetools.constants import SOURCE_SYSTEM
 from commerce_coordinator.apps.commercetools.sub_messages.tasks import (
@@ -266,6 +267,93 @@ class FulfillOrderPlacedMessageSignalTaskTests(TestCase):
             " order_id:test_order_id, Error message: Order not found",
             log.output[0]
         )
+
+    @patch('commerce_coordinator.apps.commercetools.sub_messages.tasks.get_edx_psp_payment_id')
+    @patch('commerce_coordinator.apps.commercetools.sub_messages.tasks.send_order_confirmation_email')
+    @patch('commerce_coordinator.apps.commercetools.sub_messages.tasks.CommercetoolsAPIClient')
+    def test_hide_receipt_cta_for_mobile_order(
+            self,
+            mock_tasks_client,
+            mock_send_email,
+            _mock_psp_payment_id: MagicMock,
+            ct_client_init: CommercetoolsAPIClientMock,
+            _lms_signal
+    ):
+        """Test that hide_receipt_cta is True when the order is a mobile order."""
+        mock_values = ct_client_init.return_value
+        mock_tasks_client.return_value = mock_values
+        _mock_psp_payment_id.return_value = 'android-payment-123'
+
+        # Configure the order to be a mobile order - correctly set up custom.fields
+        mock_custom = MagicMock()
+        mock_custom.fields = {TwoUKeys.ORDER_MOBILE_ORDER: True}
+        mock_values.order_mock.return_value.custom = mock_custom
+        mock_values.order_mock.return_value.total_price.cent_amount = 100  # Not an enrollment code order
+
+        # pylint: disable=no-value-for-parameter
+        ret_val = self.get_uut()(*self.unpack_for_uut(mock_values.example_payload))
+        self.assertTrue(ret_val)
+
+        # Verify the canvas_entry_properties was updated with hide_receipt_cta=True
+        self.assertTrue(mock_send_email.called)
+        canvas_entry_properties = mock_send_email.call_args[0][2]
+        self.assertTrue(canvas_entry_properties.get('hide_receipt_cta'))
+
+    @patch('commerce_coordinator.apps.commercetools.sub_messages.tasks.get_edx_psp_payment_id')
+    @patch('commerce_coordinator.apps.commercetools.sub_messages.tasks.send_order_confirmation_email')
+    @patch('commerce_coordinator.apps.commercetools.sub_messages.tasks.CommercetoolsAPIClient')
+    def test_hide_receipt_cta_for_enrollment_code_order(
+            self,
+            mock_tasks_client,
+            mock_send_email,
+            _mock_psp_payment_id: MagicMock,
+            ct_client_init: CommercetoolsAPIClientMock,
+            _lms_signal
+    ):
+        """Test that hide_receipt_cta is True when the order is an enrollment code order."""
+        mock_values = ct_client_init.return_value
+        mock_tasks_client.return_value = mock_values
+        _mock_psp_payment_id.return_value = None
+
+        mock_values.order_mock.return_value.custom = None
+        mock_values.order_mock.return_value.total_price.cent_amount = 0  # Enrollment code order has zero amount
+
+        # pylint: disable=no-value-for-parameter
+        ret_val = self.get_uut()(*self.unpack_for_uut(mock_values.example_payload))
+        self.assertTrue(ret_val)
+
+        # Verify the canvas_entry_properties was updated with hide_receipt_cta=True
+        self.assertTrue(mock_send_email.called)
+        canvas_entry_properties = mock_send_email.call_args[0][2]
+        self.assertTrue(canvas_entry_properties.get('hide_receipt_cta'))
+
+    @patch('commerce_coordinator.apps.commercetools.sub_messages.tasks.get_edx_psp_payment_id')
+    @patch('commerce_coordinator.apps.commercetools.sub_messages.tasks.send_order_confirmation_email')
+    @patch('commerce_coordinator.apps.commercetools.sub_messages.tasks.CommercetoolsAPIClient')
+    def test_show_receipt_cta_for_web_order(
+            self,
+            mock_tasks_client,
+            mock_send_email,
+            _mock_psp_payment_id: MagicMock,
+            ct_client_init: CommercetoolsAPIClientMock,
+            _lms_signal
+    ):
+        """Test that hide_receipt_cta is False for a normal order (not mobile, not enrollment code)."""
+        mock_values = ct_client_init.return_value
+        mock_tasks_client.return_value = mock_values
+        _mock_psp_payment_id.return_value = 'paypal-payment-123'
+
+        mock_values.order_mock.return_value.custom = None
+        mock_values.order_mock.return_value.total_price.cent_amount = 100  # Not an enrollment code order
+
+        # pylint: disable=no-value-for-parameter
+        ret_val = self.get_uut()(*self.unpack_for_uut(mock_values.example_payload))
+        self.assertTrue(ret_val)
+
+        # Verify the canvas_entry_properties was updated with hide_receipt_cta=False
+        self.assertTrue(mock_send_email.called)
+        canvas_entry_properties = mock_send_email.call_args[0][2]
+        self.assertFalse(canvas_entry_properties.get('hide_receipt_cta'))
 
 
 @patch('commerce_coordinator.apps.commercetools.sub_messages.tasks.LMSAPIClient.deactivate_user',

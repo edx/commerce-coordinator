@@ -42,6 +42,7 @@ attrs==25.3.0
     # via -r requirements/test.txt
 babel==2.17.0
     # via
+    #   -r requirements/test.txt
     #   pydata-sphinx-theme
     #   sphinx
 backoff==2.2.1
