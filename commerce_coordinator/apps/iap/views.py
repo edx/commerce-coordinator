@@ -7,13 +7,12 @@ import logging
 import uuid
 
 import app_store_notifications_v2_validator as ios_validator
-import httplib2
 from commercetools import CommercetoolsError
 from commercetools.platform.models import Money
 from django.conf import settings
 from django.views.decorators.csrf import csrf_exempt
+from google.oauth2 import service_account
 from googleapiclient.discovery import build
-from oauth2client.service_account import ServiceAccountCredentials
 from rest_framework import status
 from rest_framework.permissions import AllowAny, IsAdminUser, IsAuthenticated
 from rest_framework.request import Request
@@ -269,7 +268,7 @@ class AndroidRefundView(APIView):
         Get all refunds in last 3 days from voidedpurchases api
         and call refund method on every refund.
         """
-        configuration = settings.PAYMENT_PROCESSOR_CONFIG[self.processor_name]
+        configuration = settings.PAYMENT_PROCESSOR_CONFIG["edx"][self.processor_name]
 
         refunds_time = datetime.datetime.now() - datetime.timedelta(
             days=configuration["refunds_age_in_days"]
@@ -308,12 +307,10 @@ class AndroidRefundView(APIView):
 
     def _get_service(self, configuration):
         """Create a service to interact with google api."""
-        credentials = ServiceAccountCredentials.from_json_keyfile_dict(
-            configuration.get("google_service_account_key_file"),
-            configuration.get("google_publisher_api_scope"),
+        credentials = service_account.Credentials.from_service_account_info(
+            configuration["google_service_account_key_file"],
+            scopes=[configuration["google_publisher_api_scope"]],
         )
-        http = httplib2.Http(timeout=self.timeout)
-        http = credentials.authorize(http)
 
-        service = build("androidpublisher", "v3", http=http)
+        service = build("androidpublisher", "v3", credentials=credentials)
         return service
