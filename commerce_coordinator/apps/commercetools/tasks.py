@@ -15,8 +15,13 @@ from commerce_coordinator.apps.commercetools.catalog_info.constants import (
     EDX_ANDROID_IAP_PAYMENT_INTERFACE_NAME,
     EDX_PAYPAL_PAYMENT_INTERFACE_NAME
 )
-from commerce_coordinator.apps.commercetools.catalog_info.edx_utils import get_edx_line_item, get_edx_line_item_state, \
-    get_edx_items, get_edx_product_course_run_key, get_edx_lms_user_id
+from commerce_coordinator.apps.commercetools.catalog_info.edx_utils import (
+    get_edx_line_item,
+    get_edx_line_item_state,
+    get_edx_items,
+    get_edx_product_course_run_key,
+    get_edx_lms_user_id
+)
 from commerce_coordinator.apps.core.memcache import safe_key
 from commerce_coordinator.apps.core.tasks import TASK_LOCK_RETRY, acquire_task_lock, release_task_lock
 from .catalog_info.utils import get_line_item_attribute
