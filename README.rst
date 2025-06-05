@@ -93,7 +93,6 @@ Local setup with Commercetools
 
 4. Setup the AWS Event Bridge to send events to the Commerce Coordinator using the `AWS EventBridge setup guide <https://2u-internal.atlassian.net/wiki/spaces/ER/pages/760054641/Connecting+Commerce+Tools+to+Coordinator+via+AWS+EventBridge#Testing-locally>`_
 
-In case you run into issues while setting up the Commerce Coordinator, please refer to the `FAQ <>`_ for more details.
 
 Every time you develop something in this repo
 =============================================
