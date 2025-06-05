@@ -1637,7 +1637,6 @@ class CommercetoolsAPIClient:
             )
             raise err
 
-
     def get_order_by_payment_id(self, payment_id: str) -> Order:
         """
         Retrieves the order associated with a given payment ID.

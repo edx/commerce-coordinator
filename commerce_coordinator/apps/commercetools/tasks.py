@@ -1,8 +1,6 @@
 """
 Commercetools tasks
 """
-
-from django.contrib.auth import get_user_model
 import logging
 
 import stripe
@@ -10,27 +8,28 @@ from celery import shared_task
 from commercetools import CommercetoolsError
 from commercetools.platform.models import Payment
 from django.conf import settings
+from django.contrib.auth import get_user_model
 
 from commerce_coordinator.apps.commercetools.catalog_info.constants import (
     EDX_ANDROID_IAP_PAYMENT_INTERFACE_NAME,
     EDX_PAYPAL_PAYMENT_INTERFACE_NAME
 )
 from commerce_coordinator.apps.commercetools.catalog_info.edx_utils import (
+    get_edx_items,
     get_edx_line_item,
     get_edx_line_item_state,
-    get_edx_items,
-    get_edx_product_course_run_key,
-    get_edx_lms_user_id
+    get_edx_lms_user_id,
+    get_edx_product_course_run_key
 )
 from commerce_coordinator.apps.core.memcache import safe_key
 from commerce_coordinator.apps.core.tasks import TASK_LOCK_RETRY, acquire_task_lock, release_task_lock
-from .catalog_info.utils import get_line_item_attribute
 
-from .clients import CommercetoolsAPIClient, Refund
-from .serializers import OrderRevokeLineRequestSerializer
-from .utils import has_full_refund_transaction, is_transaction_already_refunded, get_lob_from_variant_attr
 from ..iap.signals import revoke_line_mobile_order_signal
 from ..order_fulfillment.clients import OrderFulfillmentAPIClient
+from .catalog_info.utils import get_line_item_attribute
+from .clients import CommercetoolsAPIClient, Refund
+from .serializers import OrderRevokeLineRequestSerializer
+from .utils import get_lob_from_variant_attr, has_full_refund_transaction, is_transaction_already_refunded
 
 logger = logging.getLogger(__name__)
 User = get_user_model()
