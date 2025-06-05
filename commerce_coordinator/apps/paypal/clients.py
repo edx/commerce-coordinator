@@ -6,7 +6,7 @@ from paypalserversdk.api_helper import ApiHelper
 from paypalserversdk.configuration import Environment
 from paypalserversdk.controllers.payments_controller import PaymentsController
 from paypalserversdk.http.auth.o_auth_2 import ClientCredentialsAuthCredentials
-from paypalserversdk.paypalserversdk_client import PaypalserversdkClient
+from paypalserversdk.paypal_serversdk_client import PaypalServersdkClient
 
 
 class PayPalClient:
@@ -14,7 +14,7 @@ class PayPalClient:
     PayPal SDK client to call PayPal APIs.
     """
     def __init__(self):
-        self.paypal_client: PaypalserversdkClient = PaypalserversdkClient(
+        self.paypal_client: PaypalServersdkClient = PaypalServersdkClient(
             client_credentials_auth_credentials=ClientCredentialsAuthCredentials(
                 o_auth_client_id=settings.PAYMENT_PROCESSOR_CONFIG['edx']['paypal']['client_id'],
                 o_auth_client_secret=settings.PAYMENT_PROCESSOR_CONFIG['edx']['paypal']['client_secret'],
@@ -50,7 +50,7 @@ class PayPalClient:
                 }
             }
         }
-        refund_response = payments_controller.captures_refund(collect)
+        refund_response = payments_controller.refund_captured_payment(collect)
 
         if refund_response.body:
             response = json.loads(ApiHelper.json_serialize(refund_response.body))

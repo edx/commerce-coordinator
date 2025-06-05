@@ -251,7 +251,7 @@ google-api-core==2.25.0
     #   google-api-python-client
 google-api-python-client==2.171.0
     # via -r requirements/validation.txt
-google-auth==2.40.2
+google-auth==2.40.3
     # via
     #   -r requirements/validation.txt
     #   google-api-core
@@ -399,7 +399,7 @@ packaging==25.0
     #   twine
 path==16.16.0
     # via edx-i18n-tools
-paypal-server-sdk==0.5.1
+paypal-server-sdk==1.1.0
     # via -r requirements/validation.txt
 pbr==6.1.1
     # via
@@ -662,7 +662,7 @@ text-unidecode==1.3
     # via
     #   -r requirements/validation.txt
     #   python-slugify
-tomlkit==0.13.2
+tomlkit==0.13.3
     # via
     #   -r requirements/validation.txt
     #   pylint

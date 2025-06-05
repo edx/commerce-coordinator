@@ -184,7 +184,7 @@ google-api-core==2.25.0
     #   google-api-python-client
 google-api-python-client==2.171.0
     # via -r requirements/base.txt
-google-auth==2.40.2
+google-auth==2.40.3
     # via
     #   -r requirements/base.txt
     #   google-api-core
@@ -272,7 +272,7 @@ packaging==25.0
     #   gunicorn
     #   kombu
     #   marshmallow
-paypal-server-sdk==0.5.1
+paypal-server-sdk==1.1.0
     # via -r requirements/base.txt
 pbr==6.1.1
     # via

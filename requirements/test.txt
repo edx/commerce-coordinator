@@ -221,7 +221,7 @@ google-api-core==2.25.0
     #   google-api-python-client
 google-api-python-client==2.171.0
     # via -r requirements/base.txt
-google-auth==2.40.2
+google-auth==2.40.3
     # via
     #   -r requirements/base.txt
     #   google-api-core
@@ -315,10 +315,8 @@ packaging==25.0
     #   pyproject-api
     #   pytest
     #   tox
-paypal-server-sdk==0.5.1
-    # via
-    #   -c requirements/constraints.txt
-    #   -r requirements/base.txt
+paypal-server-sdk==1.1.0
+    # via -r requirements/base.txt
 pbr==6.1.1
     # via
     #   -r requirements/base.txt
@@ -522,7 +520,7 @@ testfixtures==8.3.0
     # via -r requirements/test.in
 text-unidecode==1.3
     # via python-slugify
-tomlkit==0.13.2
+tomlkit==0.13.3
     # via pylint
 tox==4.26.0
     # via -r requirements/test.in
