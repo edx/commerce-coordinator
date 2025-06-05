@@ -121,6 +121,7 @@ class MobileCreateOrderView(APIView):
                     discount_codes=cart.discount_codes,
                 )
 
+            dummy_id = str(uuid.uuid4())
             payment = client.create_payment(
                 amount_planned=external_price,
                 customer_id=customer.id,
@@ -129,8 +130,8 @@ class MobileCreateOrderView(APIView):
                 payment_status="succeeded",
                 payment_processor=data.payment_processor,
                 # TODO: fetch from purchase token
-                psp_payment_id="Dummy-" + str(uuid.uuid4()),
-                psp_transaction_id="Dummy-" + str(uuid.uuid4()),
+                psp_payment_id=dummy_id,
+                psp_transaction_id=dummy_id,
                 psp_transaction_created_at=datetime.datetime.now(),
                 usd_cent_amount=standalone_price.cent_amount,
             )
@@ -252,6 +253,33 @@ class IOSRefundView(SingleInvocationAPIView):
             )
 
         return Response(status=status.HTTP_200_OK)
+
+
+class TestRefundView(APIView):
+    """
+    Test view to create a refund for testing purposes
+    """
+
+    def post(self, request):
+        """
+        Create a test refund
+        """
+        refund: Refund = {
+            "id": request.data["transaction_id"],
+            "created": int(datetime.datetime.now().timestamp()) * 1000,
+            "amount": request.data["price"],
+            "currency": request.data["currency_code"],
+            "status": "succeeded",
+        }
+        payment_refunded_signal.send_robust(
+            sender=self.__class__,
+            payment_interface=f"{request.data['payment_processor']}_edx",
+            refund=refund,
+        )
+        return Response(
+            data={"id": refund["id"]},
+            status=status.HTTP_200_OK,
+        )
 
 
 class AndroidRefundView(APIView):
