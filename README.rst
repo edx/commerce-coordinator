@@ -78,9 +78,11 @@ Local
 Local setup with Commercetools
 ===============================
 
-1. Update the following inside **`commerce_coordinator/settings/base.py`** file:
-    1. `COMMERCETOOLS_CONFIG`, The values can be found at: https://twou.frontastic.io/configuraaton?environment=development&project=checkout&locale=en_US
-    2. `COMMERCETOOLS_FRONTEND_URL` = `'http://localhost:3000/en/add-to-cart/'`
+1. Inside **`commerce_coordinator/settings/`** folder create a new file called `private.py` and copy the following:
+    1. Copy the `COMMERCETOOLS_CONFIG` present in `base.py` to `private.py` and update with values found in Keeper under `Shared-marketplace-commercetools` with the name `dev-commercetools-frontend API Key`
+    2. Copy the `PAYMENT_PROCESSOR_CONFIG` present in `base.py` to `private.py` and update with the following values:
+        - `Stripe publishable_key` and `Stripe secret_key` can be found at: https://dashboard.stripe.com/apikeys for `edx Local/Dev` account
+        - `Paypal client_id` and `Paypal client_secret` can be found from Keeper under `Shared-marketplace-commercetools` with the name `[PayPal-DEV] devstack-edx-commercetools-checkout`
 
 2. Update the following **waffle flags**:
     1. Go to http://localhost:8140/admin/waffle/flag/ and add these flags
