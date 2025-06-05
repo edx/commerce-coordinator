@@ -85,9 +85,9 @@ Local setup with Commercetools
         - ``Paypal client_id`` and ``Paypal client_secret`` can be found from Keeper under ``Shared-marketplace-commercetools`` with the name ``[PayPal-DEV] devstack-edx-commercetools-checkout``
 
 2. Go to http://localhost:8140/admin/waffle/flag/ and add the following waffle flags:
-        - `transition_to_commercetools.redirect_to_commercetools_checkout` flag with the **Everyone** attribute set to **Yes**.
-        - `transition_to_commercetools.order_fulfillment_service_forwarding_enabled` flag with the **Everyone** attribute set to **Yes**.
-        - `transition_to_commercetools.program_redirect_to_commercetools_checkout` flag with the **Everyone** attribute set to **Yes**.
+        - ``transition_to_commercetools.redirect_to_commercetools_checkout`` flag with the **Everyone** attribute set to **Yes**.
+        - ``transition_to_commercetools.order_fulfillment_service_forwarding_enabled`` flag with the **Everyone** attribute set to **Yes**.
+        - ``transition_to_commercetools.program_redirect_to_commercetools_checkout`` flag with the **Everyone** attribute set to **Yes**.
 
 3. Install and setup the ``edx-ecommerce-extension`` repo from the following link: https://github.com/edx/edx-ecommerce-extension
 
