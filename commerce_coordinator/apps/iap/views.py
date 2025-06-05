@@ -255,33 +255,6 @@ class IOSRefundView(SingleInvocationAPIView):
         return Response(status=status.HTTP_200_OK)
 
 
-class TestRefundView(APIView):
-    """
-    Test view to create a refund for testing purposes
-    """
-
-    def post(self, request):
-        """
-        Create a test refund
-        """
-        refund: Refund = {
-            "id": request.data["transaction_id"],
-            "created": int(datetime.datetime.now().timestamp()) * 1000,
-            "amount": request.data["price"],
-            "currency": request.data["currency_code"],
-            "status": "succeeded",
-        }
-        payment_refunded_signal.send_robust(
-            sender=self.__class__,
-            payment_interface=f"{request.data['payment_processor']}_edx",
-            refund=refund,
-        )
-        return Response(
-            data={"id": refund["id"]},
-            status=status.HTTP_200_OK,
-        )
-
-
 class AndroidRefundView(APIView):
     """
     Create refunds for orders refunded by Google
