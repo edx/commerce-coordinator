@@ -1637,7 +1637,6 @@ class CommercetoolsAPIClient:
             )
             raise err
 
-
     def get_order_by_payment_id(self, payment_id: str) -> Order:
         """
         Retrieves the order associated with a given payment ID.
@@ -1646,7 +1645,10 @@ class CommercetoolsAPIClient:
             payment_id (str): Payment ID
 
         Returns:
-            Order or None if not found.
+            Order if found.
+
+        Raises:
+            ValueError: If no order is found for the given payment ID.
         """
         try:
             response = self.base_client.orders.query(
@@ -1654,8 +1656,10 @@ class CommercetoolsAPIClient:
                 predicate_var={"payment_id": payment_id},
             )
 
-            order = response.results[0]
-            return order
+            if not response or not response.results:
+                raise Exception(f"No order found for payment ID {payment_id}")
+
+            return response.results[0]
 
         except CommercetoolsError as err:
             handle_commercetools_error(

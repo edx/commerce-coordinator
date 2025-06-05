@@ -93,16 +93,6 @@ class OrderFulfillmentRequestSerializer(CoordinatorSerializer):
     bundle_id = serializers.CharField(allow_null=True, required=False)
 
 
-class OrderRevokeLineRequestSerializer(CoordinatorSerializer):
-    """
-    Serializer for validating the payload for revoking a course line item.
-    """
-    edx_lms_username = serializers.CharField(allow_null=False)
-    course_run_key = serializers.CharField(allow_null=False)
-    course_mode = serializers.CharField(allow_null=False)
-    lob = serializers.CharField(allow_null=False)
-
-
 class OrderFulfillViewInputSerializer(OrderFulfillmentRequestSerializer):
     """
     Serializer for OrderFulfillView input validation.

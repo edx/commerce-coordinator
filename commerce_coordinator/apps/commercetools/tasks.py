@@ -1,8 +1,6 @@
 """
 Commercetools tasks
 """
-
-from django.contrib.auth import get_user_model
 import logging
 
 import stripe
@@ -16,24 +14,27 @@ from commerce_coordinator.apps.commercetools.catalog_info.constants import (
     EDX_PAYPAL_PAYMENT_INTERFACE_NAME
 )
 from commerce_coordinator.apps.commercetools.catalog_info.edx_utils import (
+    get_edx_items,
     get_edx_line_item,
     get_edx_line_item_state,
-    get_edx_items,
-    get_edx_product_course_run_key,
-    get_edx_lms_user_id
+    get_edx_lms_user_id,
+    get_edx_lms_user_name,
+    get_edx_product_course_run_key
+)
+from commerce_coordinator.apps.commercetools.catalog_info.utils import get_line_item_attribute
+from commerce_coordinator.apps.commercetools.clients import CommercetoolsAPIClient, Refund
+from commerce_coordinator.apps.commercetools.utils import (
+    get_lob_from_variant_attr,
+    has_full_refund_transaction,
+    is_transaction_already_refunded
 )
 from commerce_coordinator.apps.core.memcache import safe_key
 from commerce_coordinator.apps.core.tasks import TASK_LOCK_RETRY, acquire_task_lock, release_task_lock
-from .catalog_info.utils import get_line_item_attribute
-
-from .clients import CommercetoolsAPIClient, Refund
-from .serializers import OrderRevokeLineRequestSerializer
-from .utils import has_full_refund_transaction, is_transaction_already_refunded, get_lob_from_variant_attr
-from ..iap.signals import revoke_line_mobile_order_signal
-from ..order_fulfillment.clients import OrderFulfillmentAPIClient
+from commerce_coordinator.apps.iap.signals import revoke_line_mobile_order_signal
+from commerce_coordinator.apps.order_fulfillment.clients import OrderFulfillmentAPIClient
+from commerce_coordinator.apps.order_fulfillment.serializers import OrderRevokeLineRequestSerializer
 
 logger = logging.getLogger(__name__)
-User = get_user_model()
 
 stripe.api_key = settings.PAYMENT_PROCESSOR_CONFIG['edx']['stripe']['secret_key']
 
@@ -240,6 +241,11 @@ def refund_from_mobile_task(
                 psp=payment_interface,
             )
 
+            revoke_line_mobile_order_signal.send_robust(
+                sender=refund_from_mobile_task,
+                payment_id=payment.id
+            )
+
         result = client.find_order_with_unprocessed_return_for_payment(
             payment_id=payment.id,
             customer_id=payment.customer.id if payment.customer else "",
@@ -256,11 +262,6 @@ def refund_from_mobile_task(
                 return_line_entitlement_ids={},
                 should_transition_state=False,
             )
-
-        revoke_line_mobile_order_signal.send_robust(
-            sender=refund_from_mobile_task,
-            payment_id=payment.id
-        )
 
         return payment
     except CommercetoolsError as err:
@@ -305,21 +306,21 @@ def revoke_line_mobile_order_task(payment_id: str):
     course_mode = get_line_item_attribute(item_to_unenroll, "mode")
 
     lms_user_id = get_edx_lms_user_id(customer)
-    user = User.objects.get(lms_user_id=lms_user_id)
+    lms_user_username = get_edx_lms_user_name(customer)
 
     logging_data = {
         "order_id": order.id,
         "payment_id": payment_id,
         "customer_id": customer.id,
         "course_run_key": course_run_key,
-        "lms_user_id": user.id,
-        "lms_user_name": user.username,
+        "lms_user_id": lms_user_id,
+        "lms_user_name": lms_user_username,
         "course_mode": course_mode,
     }
 
     lob = get_lob_from_variant_attr(item_to_unenroll.variant) or "edx"
     serializer = OrderRevokeLineRequestSerializer(data={
-        "edx_lms_username": user.username,
+        "edx_lms_username": lms_user_username,
         "course_run_key": course_run_key,
         "course_mode": course_mode,
         "lob": lob,
@@ -331,7 +332,7 @@ def revoke_line_mobile_order_task(payment_id: str):
         logging_data=logging_data,
     )
 
-    logger.info(f"[CT-{tag}] Successfully called revoke_line for user {user.username} "
+    logger.info(f"[CT-{tag}] Successfully called revoke_line for user {lms_user_username} "
                 f"on course {course_run_key} and {logging_data}")
 
     return True

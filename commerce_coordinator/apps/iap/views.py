@@ -121,7 +121,6 @@ class MobileCreateOrderView(APIView):
                     discount_codes=cart.discount_codes,
                 )
 
-            dummy_id = str(uuid.uuid4())
             payment = client.create_payment(
                 amount_planned=external_price,
                 customer_id=customer.id,
@@ -130,8 +129,8 @@ class MobileCreateOrderView(APIView):
                 payment_status="succeeded",
                 payment_processor=data.payment_processor,
                 # TODO: fetch from purchase token
-                psp_payment_id=dummy_id,
-                psp_transaction_id=dummy_id,
+                psp_payment_id="Dummy-" + str(uuid.uuid4()),
+                psp_transaction_id="Dummy-" + str(uuid.uuid4()),
                 psp_transaction_created_at=datetime.datetime.now(),
                 usd_cent_amount=standalone_price.cent_amount,
             )
