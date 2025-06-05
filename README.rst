@@ -84,20 +84,16 @@ Local setup with Commercetools
         - `Stripe publishable_key` and `Stripe secret_key` can be found at: https://dashboard.stripe.com/apikeys for `edx Local/Dev` account
         - `Paypal client_id` and `Paypal client_secret` can be found from Keeper under `Shared-marketplace-commercetools` with the name `[PayPal-DEV] devstack-edx-commercetools-checkout`
 
-2. Update the following **waffle flags**:
-    1. Go to http://localhost:8140/admin/waffle/flag/ and add these flags
+2. Go to http://localhost:8140/admin/waffle/flag/ and add the following waffle flags:
         - `transition_to_commercetools.redirect_to_commercetools_checkout` flag with the **Everyone** attribute set to **Yes**.
-    2. Go to http://localhost:18000/admin/waffle/flag/ and add these flags
-        - `commerce.transition_to_coordinator.checkout` flag with the **Everyone** attribute set to **Yes**
-        - `commerce.transition_to_coordinator.refunds` flag with the **Everyone** attribute set to **Yes**
+        - `transition_to_commercetools.order_fulfillment_service_forwarding_enabled` flag with the **Everyone** attribute set to **Yes**.
+        - `transition_to_commercetools.program_redirect_to_commercetools_checkout` flag with the **Everyone** attribute set to **Yes**.
 
-3. Update the following inside your `'edx-platform/lms/envs/private.py'` file:
-    - COMMERCE_COORDINATOR_REFUND_SOURCE_SYSTEMS = ('commercetools',)
-    - COMMERCE_COORDINATOR_URL_ROOT = 'http://localhost:8140'
+3. Install and setup the ``edx-ecommerce-extension`` repo from the following link: https://github.com/edx/edx-ecommerce-extension
 
-4. For refunds flow, update this value and revert back after running refunds flow
-    - COMMERCE_COORDINATOR_URL_ROOT = 'http://host.docker.internal:8140'
+4. Setup the AWS Event Bridge to send events to the Commerce Coordinator using the `AWS EventBridge setup guide <https://2u-internal.atlassian.net/wiki/spaces/ER/pages/760054641/Connecting+Commerce+Tools+to+Coordinator+via+AWS+EventBridge#Testing-locally>`_
 
+In case you run into issues while setting up the Commerce Coordinator, please refer to the `FAQ <>`_ for more details.
 
 Every time you develop something in this repo
 =============================================
