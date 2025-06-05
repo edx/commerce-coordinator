@@ -143,6 +143,17 @@ def order_from_commercetools(order: CTOrder, customer: CTCustomer) -> LegacyOrde
     if hasattr(order, 'custom') and order.custom:
         mobile_order = order.custom.fields.get(TwoUKeys.ORDER_MOBILE_ORDER, False)
 
+    payment_interface = None
+
+    if (
+        hasattr(order, 'payment_info') and
+        order.payment_info and
+        hasattr(order.payment_info, 'payments') and
+        order.payment_info.payments and
+        len(order.payment_info.payments) > 0
+    ):
+        payment_interface = order.payment_info.payments[-1].obj.payment_method_info.payment_interface
+
     return LegacyOrder(
         user=convert_customer(customer),
         lines=[convert_line_item(x, payment_state) for x in order.line_items],
@@ -151,7 +162,7 @@ def order_from_commercetools(order: CTOrder, customer: CTCustomer) -> LegacyOrde
         total_excl_tax=typed_money_to_string(order.total_price, money_as_decimal_string=SEND_MONEY_AS_DECIMAL_STRING),
         number=order.order_number,
         currency=order.total_price.currency_code,
-        payment_processor="stripe via commercetools",
+        payment_processor=payment_interface,
         status=order.order_state.CONFIRMED.value,
         dashboard_url=settings.LMS_DASHBOARD_URL,
         mobile_order=mobile_order,

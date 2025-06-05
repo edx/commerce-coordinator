@@ -31,6 +31,8 @@ asgiref==3.7.2
     #   django-cors-headers
 attrs==25.3.0
     # via -r requirements/base.txt
+babel==2.17.0
+    # via -r requirements/base.txt
 backoff==2.2.1
     # via
     #   -r requirements/base.txt
