@@ -6,13 +6,25 @@
 #
 accessible-pygments==0.0.5
     # via pydata-sphinx-theme
+aiohappyeyeballs==2.6.1
+    # via
+    #   -r requirements/test.txt
+    #   aiohttp
+aiohttp==3.12.8
+    # via
+    #   -r requirements/test.txt
+    #   inapppy
+aiosignal==1.3.2
+    # via
+    #   -r requirements/test.txt
+    #   aiohttp
 alabaster==1.0.0
     # via sphinx
 amqp==5.3.1
     # via
     #   -r requirements/test.txt
     #   kombu
-apimatic-core==0.2.19
+apimatic-core==0.2.20
     # via
     #   -r requirements/test.txt
     #   paypal-server-sdk
@@ -39,7 +51,9 @@ astroid==3.3.10
     #   pylint
     #   pylint-celery
 attrs==25.3.0
-    # via -r requirements/test.txt
+    # via
+    #   -r requirements/test.txt
+    #   aiohttp
 babel==2.17.0
     # via
     #   -r requirements/test.txt
@@ -248,12 +262,19 @@ filelock==3.18.0
     #   -r requirements/test.txt
     #   tox
     #   virtualenv
-google-api-core==2.24.2
+frozenlist==1.6.2
+    # via
+    #   -r requirements/test.txt
+    #   aiohttp
+    #   aiosignal
+google-api-core==2.25.0
     # via
     #   -r requirements/test.txt
     #   google-api-python-client
-google-api-python-client==2.170.0
-    # via -r requirements/test.txt
+google-api-python-client==2.171.0
+    # via
+    #   -r requirements/test.txt
+    #   inapppy
 google-auth==2.40.2
     # via
     #   -r requirements/test.txt
@@ -280,8 +301,11 @@ idna==3.10
     # via
     #   -r requirements/test.txt
     #   requests
+    #   yarl
 imagesize==1.4.1
     # via sphinx
+inapppy==2.5.2
+    # via -r requirements/test.txt
 iniconfig==2.1.0
     # via
     #   -r requirements/test.txt
@@ -355,12 +379,19 @@ msgpack==1.1.0
     # via
     #   -r requirements/test.txt
     #   cachecontrol
+multidict==6.4.4
+    # via
+    #   -r requirements/test.txt
+    #   aiohttp
+    #   yarl
 mysqlclient==2.2.7
     # via -r requirements/test.txt
 nh3==0.2.21
     # via readme-renderer
 oauth2client==4.1.3
-    # via -r requirements/test.txt
+    # via
+    #   -r requirements/test.txt
+    #   inapppy
 oauthlib==3.2.2
     # via
     #   -r requirements/test.txt
@@ -407,6 +438,11 @@ prompt-toolkit==3.0.51
     # via
     #   -r requirements/test.txt
     #   click-repl
+propcache==0.3.1
+    # via
+    #   -r requirements/test.txt
+    #   aiohttp
+    #   yarl
 proto-plus==1.26.1
     # via
     #   -r requirements/test.txt
@@ -441,9 +477,11 @@ pydata-sphinx-theme==0.15.4
     # via sphinx-book-theme
 pygments==2.19.1
     # via
+    #   -r requirements/test.txt
     #   accessible-pygments
     #   doc8
     #   pydata-sphinx-theme
+    #   pytest
     #   readme-renderer
     #   rich
     #   sphinx
@@ -499,7 +537,7 @@ pyproject-api==1.9.1
     #   tox
 pyproject-hooks==1.2.0
     # via build
-pytest==8.3.5
+pytest==8.4.0
     # via
     #   -r requirements/test.txt
     #   pytest-cov
@@ -551,6 +589,7 @@ requests==2.32.3
     #   edx-rest-api-client
     #   google-api-core
     #   id
+    #   inapppy
     #   requests-mock
     #   requests-oauthlib
     #   requests-toolbelt
@@ -585,6 +624,7 @@ rsa==4.9.1
     # via
     #   -r requirements/test.txt
     #   google-auth
+    #   inapppy
     #   oauth2client
 segment-analytics-python==2.3.4
     # via -r requirements/test.txt
@@ -665,7 +705,7 @@ tox==4.26.0
     # via -r requirements/test.txt
 twine==6.1.0
     # via -r requirements/doc.in
-typing-extensions==4.13.2
+typing-extensions==4.14.0
     # via
     #   -r requirements/test.txt
     #   beautifulsoup4
@@ -678,7 +718,7 @@ tzdata==2025.2
     #   -r requirements/test.txt
     #   celery
     #   kombu
-uritemplate==4.1.1
+uritemplate==4.2.0
     # via
     #   -r requirements/test.txt
     #   coreapi
@@ -716,6 +756,10 @@ wrapt==1.17.2
     # via
     #   -r requirements/test.txt
     #   commercetools
+yarl==1.20.0
+    # via
+    #   -r requirements/test.txt
+    #   aiohttp
 
 # The following packages are considered to be unsafe in a requirements file:
 # setuptools

@@ -446,6 +446,9 @@ PAYMENT_PROCESSOR_CONFIG = {
             'google_publisher_api_scope': 'https://www.googleapis.com/auth/androidpublisher',
             'refunds_age_in_days': 3,
         },
+        'ios_iap': {
+            'ios_bundle_id': 'SET-ME-PLEASE',
+        }
     },
 }
 # END PAYMENT PROCESSING

@@ -6,13 +6,21 @@ from decimal import Decimal
 from unittest import TestCase, mock
 
 from commercetools.platform.models import Customer
+from rest_framework import status
 
 from commerce_coordinator.apps.commercetools.catalog_info.constants import EdXFieldNames
+from commerce_coordinator.apps.iap.payment_processor import (
+    PaymentError,
+    RedundantPaymentError,
+    UserCancelled,
+    ValidationError
+)
 from commerce_coordinator.apps.iap.utils import (
     _get_attributes_to_update,
     convert_localized_price_to_ct_cent_amount,
     get_ct_customer,
     get_email_domain,
+    get_payment_info_from_purchase_token,
     get_standalone_price_for_sku
 )
 
@@ -295,6 +303,83 @@ class GetStandalonePriceForSkuTests(TestCase):
             get_standalone_price_for_sku("test-sku")
 
         self.assertIn("No standalone price found", str(context.exception))
+
+
+class GetPaymentProcessorTests(TestCase):
+    """Tests for get_payment_info_from_purchase_token function."""
+
+    def setUp(self):
+        self.request_data = {
+            "payment_processor": "android-iap",
+            "purchase_token": "test-token"
+        }
+        self.cart = mock.MagicMock()
+        self.price = Decimal("9.99")  # Add a sample price to pass in tests
+
+    @mock.patch("commerce_coordinator.apps.iap.utils.IAPPaymentProcessor")
+    def test_valid_android_iap(self, MockProcessor):
+        """Test valid Android IAP payment processor."""
+        mock_processor_instance = MockProcessor.return_value
+        mock_processor_instance.validate_iap.return_value = {"success": True}
+
+        result = get_payment_info_from_purchase_token(self.request_data, self.cart, self.price)
+
+        self.assertEqual(result["status_code"], status.HTTP_200_OK)
+        self.assertEqual(result["response"], {"success": True})
+        mock_processor_instance.validate_iap.assert_called_once_with(self.request_data, self.cart, self.price)
+
+    @mock.patch("commerce_coordinator.apps.iap.utils.IAPPaymentProcessor")
+    def test_validation_error(self, MockProcessor):
+        """Test ValidationError handling."""
+        MockProcessor.return_value.validate_iap.side_effect = ValidationError("Invalid token")
+
+        result = get_payment_info_from_purchase_token(self.request_data, self.cart, self.price)
+        self.assertEqual(result["status_code"], status.HTTP_400_BAD_REQUEST)
+        self.assertEqual(result["response"], {"error": "Invalid token"})
+
+    @mock.patch("commerce_coordinator.apps.iap.utils.IAPPaymentProcessor")
+    def test_redundant_payment_error(self, MockProcessor):
+        """Test RedundantPaymentError handling."""
+        MockProcessor.return_value.validate_iap.side_effect = RedundantPaymentError("Duplicate payment")
+
+        result = get_payment_info_from_purchase_token(self.request_data, self.cart, self.price)
+        self.assertEqual(result["status_code"], status.HTTP_409_CONFLICT)
+        self.assertEqual(result["response"], {"error": "Duplicate payment"})
+
+    @mock.patch("commerce_coordinator.apps.iap.utils.IAPPaymentProcessor")
+    def test_user_cancelled_error(self, MockProcessor):
+        """Test UserCancelled exception handling."""
+        MockProcessor.return_value.validate_iap.side_effect = UserCancelled("User cancelled payment")
+
+        result = get_payment_info_from_purchase_token(self.request_data, self.cart, self.price)
+        self.assertEqual(result["status_code"], status.HTTP_400_BAD_REQUEST)
+        self.assertEqual(result["response"], {"error": "User cancelled payment"})
+
+    @mock.patch("commerce_coordinator.apps.iap.utils.IAPPaymentProcessor")
+    def test_payment_error(self, MockProcessor):
+        """Test PaymentError handling."""
+        MockProcessor.return_value.validate_iap.side_effect = PaymentError("Payment expired")
+
+        result = get_payment_info_from_purchase_token(self.request_data, self.cart, self.price)
+        self.assertEqual(result["status_code"], status.HTTP_400_BAD_REQUEST)
+        self.assertEqual(result["response"], {"error": "Payment expired"})
+
+    @mock.patch("commerce_coordinator.apps.iap.utils.IAPPaymentProcessor")
+    def test_unexpected_exception(self, MockProcessor):
+        """Test unexpected exception handling."""
+        MockProcessor.return_value.validate_iap.side_effect = Exception("Unexpected error")
+
+        result = get_payment_info_from_purchase_token(self.request_data, self.cart, self.price)
+        self.assertEqual(result["status_code"], status.HTTP_500_INTERNAL_SERVER_ERROR)
+        self.assertEqual(result["response"], {"error": "Internal Server Error"})
+
+    def test_unsupported_processor(self):
+        """Test unsupported payment processor."""
+        self.request_data["payment_processor"] = "unsupported-processor"
+
+        result = get_payment_info_from_purchase_token(self.request_data, self.cart, self.price)
+        self.assertEqual(result["status_code"], status.HTTP_400_BAD_REQUEST)
+        self.assertEqual(result["response"], {"error": "Unsupported payment processor"})
 
 
 class ConvertLocalizedPriceToCTCentAmountTests(TestCase):
