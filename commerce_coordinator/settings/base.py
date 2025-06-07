@@ -471,7 +471,7 @@ COMMERCETOOLS_CONFIG = {
 }
 
 # Checkout view urls
-COMMERCETOOLS_FRONTEND_URL = 'http://localhost:3000/SET-ME'
+COMMERCETOOLS_FRONTEND_URL = 'http://localhost:3000/en/add-to-cart/'
 
 COMMERCETOOLS_MERCHANT_CENTER_ORDERS_PAGE_URL = \
     f'https://mc.{_COMMERCETOOLS_CONFIG_GEO}.commercetools.com/{COMMERCETOOLS_CONFIG["projectKey"]}/orders'

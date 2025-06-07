@@ -1,5 +1,3 @@
-COMMERCETOOLS_FRONTEND_URL = 'http://localhost:3000/SET-ME'
-
 _COMMERCETOOLS_CONFIG_GEO = 'us-central1.gcp'
 COMMERCETOOLS_CONFIG = {
     'projectKey': 'SET-ME',
@@ -9,4 +7,39 @@ COMMERCETOOLS_CONFIG = {
     'apiUrl': f"https://api.{_COMMERCETOOLS_CONFIG_GEO}.commercetools.com",
     'importUrl': f"https://import.{_COMMERCETOOLS_CONFIG_GEO}.commercetools.com",  # Required for ImpEx
     'scopes': 'SET-ME'
+}
+
+STRIPE_PUBLISHABLE_KEY = 'SET-ME'
+STRIPE_SECRET_KEY = 'SET-ME'
+
+PAYPAL_CLIENT_ID = 'SET-ME'
+PAYPAL_CLIENT_SECRET = 'SET-ME'
+
+PAYMENT_PROCESSOR_CONFIG = {
+    'edx': {
+        'stripe': {
+            'api_version': '2022-08-01; server_side_confirmation_beta=v1',
+            'enable_telemetry': None,
+            'log_level': 'debug',
+            'max_network_retries': 0,
+            'proxy': None,
+            'publishable_key': STRIPE_PUBLISHABLE_KEY,
+            'secret_key': STRIPE_SECRET_KEY,
+            'source_system_identifier': 'edx/commerce_coordinator?v=1',
+            'webhook_endpoint_secret': 'SET-ME-PLEASE',
+        },
+        'paypal': {
+            'user_activity_page_url': 'https://sandbox.paypal.com/myaccount/activities/',
+            'paypal_webhook_id': 'SET-ME-PLEASE',
+            'client_id': PAYPAL_CLIENT_ID,
+            'client_secret': PAYPAL_CLIENT_SECRET,
+            'env': 'sandbox'
+        },
+        'android_iap': {
+            'google_bundle_id': 'SET-ME-PLEASE',
+            'google_service_account_key_file': 'SET-ME-PLEASE',
+            'google_publisher_api_scope': 'https://www.googleapis.com/auth/androidpublisher',
+            'refunds_age_in_days': 3,
+        },
+    },
 }
