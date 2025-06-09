@@ -6,7 +6,7 @@
 #
 amqp==5.3.1
     # via kombu
-apimatic-core==0.2.19
+apimatic-core==0.2.20
     # via paypal-server-sdk
 apimatic-core-interfaces==0.1.6
     # via
@@ -80,7 +80,7 @@ defusedxml==0.7.1
     # via
     #   python3-openid
     #   social-auth-core
-django==4.2.21
+django==4.2.22
     # via
     #   -c requirements/common_constraints.txt
     #   -c requirements/constraints.txt
@@ -141,11 +141,11 @@ edx-opaque-keys[django]==3.0.0
     #   openedx-filters
 edx-rest-api-client==6.2.0
     # via -r requirements/base.in
-google-api-core==2.24.2
+google-api-core==2.25.0
     # via google-api-python-client
-google-api-python-client==2.170.0
+google-api-python-client==2.171.0
     # via -r requirements/base.in
-google-auth==2.40.2
+google-auth==2.40.3
     # via
     #   google-api-core
     #   google-api-python-client
@@ -320,7 +320,7 @@ stripe==12.2.0
     # via -r requirements/base.in
 tenacity==9.1.2
     # via -r requirements/base.in
-typing-extensions==4.13.2
+typing-extensions==4.14.0
     # via
     #   edx-opaque-keys
     #   pyopenssl
@@ -329,7 +329,7 @@ tzdata==2025.2
     # via
     #   celery
     #   kombu
-uritemplate==4.1.1
+uritemplate==4.2.0
     # via
     #   coreapi
     #   google-api-python-client
