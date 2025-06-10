@@ -463,6 +463,7 @@ class CommercetoolsAPIClient:
         return self.base_client.states.get_by_key(state_key)
 
     def get_payment_by_key(self, payment_key: str) -> Payment:
+        """Fetch a payment by the payment key"""
         logger.info(f"[CommercetoolsAPIClient] - Attempting to find payment with key {payment_key}")
 
         # Normalize the key to match CT format by replacing any character that is not
@@ -1510,7 +1511,7 @@ class CommercetoolsAPIClient:
                 ),
             ),
         )
-        
+
         # Normalize the key to match CT format by replacing any character that is not
         # alphanumeric, underscore, or hyphen with an underscore.
         # Example for Android payment:
