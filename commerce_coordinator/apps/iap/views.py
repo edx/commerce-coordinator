@@ -329,11 +329,15 @@ class AndroidRefundView(SingleInvocationAPIView):
             return ok_response
 
         # Decode the base64 encoded data in the message
+        # Ref: https://developer.android.com/google/play/billing/rtdn-reference#encoding
         notification = GoogleNotification(
             **json.loads(base64.b64decode(message.get("data", {})).decode("utf-8"))
         )
         notification_type = notification.notification_type
 
+        # Android calls refunded purchases as Voided Purchase
+        # and we expect a voidedPurchaseNotification for refund
+        # Ref: https://developer.android.com/google/play/billing/rtdn-reference#voided-purchase
         if notification_type != "voidedPurchaseNotification":
             logger.info(
                 f"Ignoring notification type '{notification_type}' from google"
@@ -342,8 +346,15 @@ class AndroidRefundView(SingleInvocationAPIView):
             return ok_response
 
         voided_purchase = notification.data
-        refund_type = voided_purchase.get("refundType")
 
+        # The refundType for a voided purchase can have the following values:
+        # (1) REFUND_TYPE_FULL_REFUND - The purchase has been fully voided.
+        # (2) REFUND_TYPE_QUANTITY_BASED_PARTIAL_REFUND - The purchase has been
+        # partially voided by a quantity-based partial refund, applicable only
+        # to multi-quantity purchases.
+        # Ref: https://developer.android.com/google/play/billing/rtdn-reference#voided-purchase
+        refund_type = voided_purchase.get("refundType")
+        # We expect full refund notifications as we do not have multi-quantity purchase
         if refund_type != 1:
             logger.info(
                 f"Ignoring notification from google with refund type '{refund_type}'"
@@ -353,6 +364,11 @@ class AndroidRefundView(SingleInvocationAPIView):
 
         refund: Refund = {
             "id": voided_purchase["orderId"],
+            # We use the event time from the notification as the refund creation
+            # time in CT. This may not be the actual refund time, since the event
+            # is received some time after Google processes the refund. However,
+            # as we don't have a concrete use case for the exact refund timestamp,
+            # this approximation is acceptable.
             "created": notification.eventTimeMillis,
             # Google refund notification does not provide amount or currency
             # This is filled later from payment object in Commercetools
