@@ -332,6 +332,9 @@ CC_SIGNALS = {
     "commerce_coordinator.apps.iap.signals.payment_refunded_signal": [
         "commerce_coordinator.apps.commercetools.signals.refund_from_mobile",
     ],
+    "commerce_coordinator.apps.iap.signals.revoke_line_mobile_order_signal": [
+        "commerce_coordinator.apps.commercetools.signals.revoke_line_mobile_order",
+    ],
 }
 
 # Default timeouts for requests
@@ -446,6 +449,9 @@ PAYMENT_PROCESSOR_CONFIG = {
             'google_publisher_api_scope': 'https://www.googleapis.com/auth/androidpublisher',
             'refunds_age_in_days': 3,
         },
+        'ios_iap': {
+            'ios_bundle_id': 'SET-ME-PLEASE',
+        }
     },
 }
 # END PAYMENT PROCESSING
@@ -471,7 +477,7 @@ COMMERCETOOLS_CONFIG = {
 }
 
 # Checkout view urls
-COMMERCETOOLS_FRONTEND_URL = 'http://localhost:3000/SET-ME'
+COMMERCETOOLS_FRONTEND_URL = 'http://localhost:3000/en/add-to-cart/'
 
 COMMERCETOOLS_MERCHANT_CENTER_ORDERS_PAGE_URL = \
     f'https://mc.{_COMMERCETOOLS_CONFIG_GEO}.commercetools.com/{COMMERCETOOLS_CONFIG["projectKey"]}/orders'

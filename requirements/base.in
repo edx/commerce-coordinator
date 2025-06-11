@@ -27,6 +27,7 @@ edx-rest-api-client
 google-auth
 google-api-python-client
 iso4217
+inapppy
 mysqlclient
 openedx-filters
 Pillow

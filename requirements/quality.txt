@@ -4,6 +4,18 @@
 #
 #    make upgrade
 #
+aiohappyeyeballs==2.6.1
+    # via
+    #   -r requirements/test.txt
+    #   aiohttp
+aiohttp==3.12.8
+    # via
+    #   -r requirements/test.txt
+    #   inapppy
+aiosignal==1.3.2
+    # via
+    #   -r requirements/test.txt
+    #   aiohttp
 amqp==5.3.1
     # via
     #   -r requirements/test.txt
@@ -35,7 +47,9 @@ astroid==3.3.10
     #   pylint
     #   pylint-celery
 attrs==25.3.0
-    # via -r requirements/test.txt
+    # via
+    #   -r requirements/test.txt
+    #   aiohttp
 babel==2.17.0
     # via -r requirements/test.txt
 backoff==2.2.1
@@ -235,13 +249,20 @@ filelock==3.18.0
     #   -r requirements/test.txt
     #   tox
     #   virtualenv
+frozenlist==1.6.2
+    # via
+    #   -r requirements/test.txt
+    #   aiohttp
+    #   aiosignal
 google-api-core==2.25.0
     # via
     #   -r requirements/test.txt
     #   google-api-python-client
 google-api-python-client==2.171.0
-    # via -r requirements/test.txt
-google-auth==2.40.3
+    # via
+    #   -r requirements/test.txt
+    #   inapppy
+google-auth==2.40.2
     # via
     #   -r requirements/test.txt
     #   google-api-core
@@ -260,12 +281,16 @@ httplib2==0.22.0
     #   -r requirements/test.txt
     #   google-api-python-client
     #   google-auth-httplib2
+    #   oauth2client
 id==1.5.0
     # via twine
 idna==3.10
     # via
     #   -r requirements/test.txt
     #   requests
+    #   yarl
+inapppy==2.5.2
+    # via -r requirements/test.txt
 iniconfig==2.1.0
     # via
     #   -r requirements/test.txt
@@ -339,10 +364,19 @@ msgpack==1.1.0
     # via
     #   -r requirements/test.txt
     #   cachecontrol
+multidict==6.4.4
+    # via
+    #   -r requirements/test.txt
+    #   aiohttp
+    #   yarl
 mysqlclient==2.2.7
     # via -r requirements/test.txt
 nh3==0.2.21
     # via readme-renderer
+oauth2client==4.1.3
+    # via
+    #   -r requirements/test.txt
+    #   inapppy
 oauthlib==3.2.2
     # via
     #   -r requirements/test.txt
@@ -386,6 +420,11 @@ prompt-toolkit==3.0.51
     # via
     #   -r requirements/test.txt
     #   click-repl
+propcache==0.3.1
+    # via
+    #   -r requirements/test.txt
+    #   aiohttp
+    #   yarl
 proto-plus==1.26.1
     # via
     #   -r requirements/test.txt
@@ -403,12 +442,14 @@ psutil==7.0.0
 pyasn1==0.6.1
     # via
     #   -r requirements/test.txt
+    #   oauth2client
     #   pyasn1-modules
     #   rsa
 pyasn1-modules==0.4.2
     # via
     #   -r requirements/test.txt
     #   google-auth
+    #   oauth2client
 pycodestyle==2.13.0
     # via -r requirements/quality.in
 pycparser==2.22
@@ -526,6 +567,7 @@ requests==2.32.3
     #   edx-rest-api-client
     #   google-api-core
     #   id
+    #   inapppy
     #   requests-mock
     #   requests-oauthlib
     #   requests-toolbelt
@@ -555,6 +597,8 @@ rsa==4.9.1
     # via
     #   -r requirements/test.txt
     #   google-auth
+    #   inapppy
+    #   oauth2client
 segment-analytics-python==2.3.4
     # via -r requirements/test.txt
 semantic-version==2.10.0
@@ -571,6 +615,7 @@ six==1.17.0
     #   edx-auth-backends
     #   edx-django-release-util
     #   edx-lint
+    #   oauth2client
     #   python-dateutil
 snowballstemmer==3.0.1
     # via pydocstyle
@@ -604,7 +649,7 @@ text-unidecode==1.3
     # via
     #   -r requirements/test.txt
     #   python-slugify
-tomlkit==0.13.3
+tomlkit==0.13.2
     # via
     #   -r requirements/test.txt
     #   pylint
@@ -661,6 +706,10 @@ wrapt==1.17.2
     # via
     #   -r requirements/test.txt
     #   commercetools
+yarl==1.20.0
+    # via
+    #   -r requirements/test.txt
+    #   aiohttp
 
 # The following packages are considered to be unsafe in a requirements file:
 # setuptools

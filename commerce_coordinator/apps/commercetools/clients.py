@@ -4,6 +4,7 @@ API clients for commercetools app.
 
 import datetime
 import logging
+import re
 import uuid
 from decimal import Decimal
 from functools import wraps
@@ -462,8 +463,15 @@ class CommercetoolsAPIClient:
         return self.base_client.states.get_by_key(state_key)
 
     def get_payment_by_key(self, payment_key: str) -> Payment:
+        """Fetch a payment by the payment key"""
         logger.info(f"[CommercetoolsAPIClient] - Attempting to find payment with key {payment_key}")
-        return self.base_client.payments.get_by_key(payment_key)
+
+        # Normalize the key to match CT format by replacing any character that is not
+        # alphanumeric, underscore, or hyphen with an underscore.
+        # Example (Android payment):
+        # "GPA.9876-5432-1098-7654" becomes "GPA_9876-5432-1098-7654"
+        normalized_payment_key = re.sub(r"[^a-zA-Z0-9_-]", "_", payment_key)
+        return self.base_client.payments.get_by_key(normalized_payment_key)
 
     def get_payment_by_transaction_interaction_id(
         self, interaction_id: str
@@ -1469,21 +1477,6 @@ class CommercetoolsAPIClient:
             )
             raise err
 
-    def _map_payment_status_to_transaction_state(
-        self, payment_status: str  # pylint: disable=unused-argument
-    ) -> TransactionState:
-        """
-        Maps the status from the payment processor to the transaction state in commercetools
-
-        Args:
-            payment_status (str): Status from the payment processor
-
-        Returns:
-            Transaction state in commercetools
-        """
-        # TODO: implement
-        return TransactionState.SUCCESS
-
     @conditional_retry
     def create_payment(
         self,
@@ -1515,20 +1508,20 @@ class CommercetoolsAPIClient:
             Payment: The created payment object
         """
         payment_method_info = PaymentMethodInfo(
-            payment_interface=payment_processor,
+            payment_interface=f"{payment_processor}_edx",
             method=payment_method,
             name=LocalizedString(name=payment_method),
         )
         # translate this based on mobile status codes
         payment_status_draft = PaymentStatusDraft(
             interface_code=payment_status,
-            interface_text=payment_status,
+            interface_text=payment_status.capitalize(),
         )
         transaction_draft = TransactionDraft(
             type=TransactionType.CHARGE,
             amount=amount_planned,
             timestamp=psp_transaction_created_at,
-            state=self._map_payment_status_to_transaction_state(payment_status),
+            state=TransactionState.SUCCESS,
             interaction_id=psp_transaction_id,
             custom=CustomFieldsDraft(
                 type=TypeResourceIdentifier(key=TwoUKeys.TRANSACTION_CUSTOM_TYPE),
@@ -1537,8 +1530,17 @@ class CommercetoolsAPIClient:
                 ),
             ),
         )
+
+        # Normalize the key to match CT format by replacing any character that is not
+        # alphanumeric, underscore, or hyphen with an underscore.
+        # Example for Android payment:
+        # "GPA.9876-5432-1098-7654" becomes "GPA_9876-5432-1098-7654"
+        # The use-case of the payment key is only for search optimization.
+        # For financial or any other purpose, `interface_id` should be used
+        # as it preserves the original PSP payment ID exactly.
+        normalized_payment_key = re.sub(r"[^a-zA-Z0-9_-]", "_", psp_payment_id)
         payment_draft = PaymentDraft(
-            key=psp_payment_id,
+            key=normalized_payment_key,
             amount_planned=amount_planned,
             customer=CustomerResourceIdentifier(id=customer_id),
             interface_id=psp_payment_id,
@@ -1653,5 +1655,37 @@ class CommercetoolsAPIClient:
                 err,
                 f"Unable to check if there is an order with unprocessed return "
                 f"for payment: {payment_id} for customer: {customer_id}",
+            )
+            raise err
+
+    def get_order_by_payment_id(self, payment_id: str) -> Order:
+        """
+        Retrieves the order associated with a given payment ID.
+
+        Args:
+            payment_id (str): Payment ID
+
+        Returns:
+            Order if found.
+
+        Raises:
+            ValueError: If no order is found for the given payment ID.
+        """
+        try:
+            response = self.base_client.orders.query(
+                where=["paymentInfo(payments(id=:payment_id))"],
+                predicate_var={"payment_id": payment_id},
+            )
+
+            if not response or not response.results:
+                raise Exception(f"No order found for payment ID {payment_id}")
+
+            return response.results[0]
+
+        except CommercetoolsError as err:
+            handle_commercetools_error(
+                "[CommercetoolsAPIClient.find_order_with_payment_id]",
+                err,
+                f"Unable to find order for payment ID {payment_id}",
             )
             raise err

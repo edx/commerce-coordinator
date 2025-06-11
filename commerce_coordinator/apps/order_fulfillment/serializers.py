@@ -13,3 +13,13 @@ class FulfilledOrderWebhookSerializer(CoordinatorSerializer):
     entitlement_uuid = serializers.CharField(required=False, allow_null=True)
     order_id = serializers.CharField()
     line_item_id = serializers.CharField()
+
+
+class OrderRevokeLineRequestSerializer(CoordinatorSerializer):
+    """
+    Serializer for validating the payload for revoking a course line item.
+    """
+    edx_lms_username = serializers.CharField(allow_null=False)
+    course_run_key = serializers.CharField(allow_null=False)
+    course_mode = serializers.CharField(allow_null=False)
+    lob = serializers.CharField(allow_null=False)
