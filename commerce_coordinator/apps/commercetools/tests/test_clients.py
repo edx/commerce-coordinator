@@ -1273,8 +1273,8 @@ class ClientTests(TestCase):
         customer_id = uuid4_str()
 
         amount_planned = Money(cent_amount=4900, currency_code="USD")
-        payment_method = "Credit Card"
-        payment_processor = "stripe_edx"
+        payment_method = "Credit_Card"
+        payment_processor = "stripe"
         payment_status = "succeeded"
         psp_payment_id = "pi_12345"
         psp_transaction_id = "ch_12345"
@@ -1291,7 +1291,7 @@ class ClientTests(TestCase):
             result = self.client_set.client.create_payment(
                 amount_planned=amount_planned,
                 customer_id=customer_id,
-                payment_method=payment_method,
+                payment_method=payment_method.replace("-", " ").strip(),
                 payment_processor=payment_processor,
                 payment_status=payment_status,
                 psp_payment_id=psp_payment_id,
@@ -1315,10 +1315,10 @@ class ClientTests(TestCase):
             # Verify payment method info
             self.assertEqual(
                 request_body["paymentMethodInfo"]["paymentInterface"],
-                payment_processor,
+                f"{payment_processor}_edx",
             )
             self.assertEqual(
-                request_body["paymentMethodInfo"]["method"], payment_method
+                request_body["paymentMethodInfo"]["method"], payment_method.replace("-", " ").strip(),
             )
 
             # Verify transaction
@@ -1329,6 +1329,7 @@ class ClientTests(TestCase):
                 transaction["amount"]["centAmount"], amount_planned.cent_amount
             )
             self.assertEqual(transaction["interactionId"], psp_transaction_id)
+            self.assertEqual(transaction["state"], "Success")
             self.assertEqual(
                 transaction["custom"]["fields"]["usdCentAmount"], usd_cent_amount
             )
