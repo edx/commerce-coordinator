@@ -1638,3 +1638,35 @@ class CommercetoolsAPIClient:
                 f"for payment: {payment_id} for customer: {customer_id}",
             )
             raise err
+
+    def get_order_by_payment_id(self, payment_id: str) -> Order:
+        """
+        Retrieves the order associated with a given payment ID.
+
+        Args:
+            payment_id (str): Payment ID
+
+        Returns:
+            Order if found.
+
+        Raises:
+            ValueError: If no order is found for the given payment ID.
+        """
+        try:
+            response = self.base_client.orders.query(
+                where=["paymentInfo(payments(id=:payment_id))"],
+                predicate_var={"payment_id": payment_id},
+            )
+
+            if not response or not response.results:
+                raise Exception(f"No order found for payment ID {payment_id}")
+
+            return response.results[0]
+
+        except CommercetoolsError as err:
+            handle_commercetools_error(
+                "[CommercetoolsAPIClient.find_order_with_payment_id]",
+                err,
+                f"Unable to find order for payment ID {payment_id}",
+            )
+            raise err
