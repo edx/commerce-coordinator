@@ -171,8 +171,10 @@ googleapis-common-protos==1.70.0
     # via google-api-core
 httplib2==0.22.0
     # via
+    #   -r requirements/base.in
     #   google-api-python-client
     #   google-auth-httplib2
+    #   oauth2client
 idna==3.10
     # via
     #   requests
@@ -247,10 +249,13 @@ psutil==7.0.0
     # via edx-django-utils
 pyasn1==0.6.1
     # via
+    #   oauth2client
     #   pyasn1-modules
     #   rsa
 pyasn1-modules==0.4.2
-    # via google-auth
+    # via
+    #   google-auth
+    #   oauth2client
 pycparser==2.22
     # via
     #   app-store-notifications-v2-validator
@@ -326,6 +331,7 @@ six==1.17.0
     # via
     #   edx-auth-backends
     #   edx-django-release-util
+    #   oauth2client
     #   python-dateutil
 social-auth-app-django==5.4.3
     # via edx-auth-backends

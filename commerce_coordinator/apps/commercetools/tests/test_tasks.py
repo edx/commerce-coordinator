@@ -414,8 +414,8 @@ class ReturnedOrderfromMobileTaskTest(TestCase):
             refund_id = self.mock_parameters["refund"].get("id")
             # Check that the info message was logged
             mock_logger.info.assert_called_with(
-                f"Mobile refund event received, but Payment with ID {mock_payment.id} "
-                f"already has a refund with ID: {refund_id}. "
+                "[refund_from_mobile_task] Mobile refund event received, but Payment "
+                f"with ID {mock_payment.id} already has a refund with ID: {refund_id}."
                 "Skipping addition of refund transaction."
             )
 
@@ -448,9 +448,8 @@ class ReturnedOrderfromMobileTaskTest(TestCase):
 
         refund_id = self.mock_parameters["refund"].get("id")
         mock_logger.error.assert_called_once_with(
-            f"[refund_from_mobile_task] Unable to create CT payment's refund "
-            f"transaction object for payment {mock_payment.key} "
-            f"on mobile refund {refund_id} "
+            f"[refund_from_mobile_task] Unable to refund for mobile for "
+            f"transaction ID: {refund_id} of payment processor: ios_iap_edx."
             f"with error Some error message and correlation id 123456"
         )
 

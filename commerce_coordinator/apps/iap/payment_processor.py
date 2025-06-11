@@ -128,15 +128,16 @@ class IAPPaymentProcessor:
             logger.error(error_message)
             raise PaymentError(error_message)
 
-        try:
-            if self.client.get_payment_by_transaction_interaction_id(transaction_id):
-                msg = f"Execute payment failed for cart [{cart_id}]. Redundant payment."
-                logger.error(msg)
-                raise RedundantPaymentError(msg)
-        except Exception as exc:
-            msg = f"Redundant payment check failed for cart [{cart_id}]."
-            logger.exception(msg)
-            raise RedundantPaymentError(msg) from exc
+        payment = self.client.get_payment_by_transaction_interaction_id(
+            transaction_id
+        )
+        if payment:
+            msg = (
+                f"Redundant payment: existing payment found for cart id: {cart_id} "
+                f"with transaction ID: {transaction_id}."
+            )
+            logger.error(msg)
+            raise RedundantPaymentError(msg)
 
         logger.info("Android IAP validated successfully.")
         raw_response = validation_response.get('raw_response', {})
@@ -184,11 +185,16 @@ class IAPPaymentProcessor:
             logger.error(error_message)
             raise UserCancelled(error_message)
 
-        is_redundant_payment = self.client.get_payment_by_transaction_interaction_id(original_transaction_id)
-        if is_redundant_payment:
-            error_message = f"Execute payment failed for cart [{cart_id}]. Redundant payment."
-            logger.error(error_message)
-            raise RedundantPaymentError(error_message)
+        payment = self.client.get_payment_by_transaction_interaction_id(
+            original_transaction_id
+        )
+        if payment:
+            msg = (
+                f"Redundant payment: existing payment found for cart id: {cart_id} "
+                f"with transaction ID: {original_transaction_id}."
+            )
+            logger.error(msg)
+            raise RedundantPaymentError(msg)
 
         logger.info("iOS IAP validated successfully.")
         return {

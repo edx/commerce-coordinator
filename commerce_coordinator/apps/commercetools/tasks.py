@@ -254,15 +254,15 @@ def refund_from_mobile_task(
                 refund=refund,
                 psp=payment_interface,
             )
+
+            revoke_line_mobile_order_signal.send_robust(
+                sender=refund_from_mobile_task, payment_id=payment.id
+            )
+
             logger.info(
                 "[refund_from_mobile_task] Created refund transaction and triggered "
                 f"revoke line for Payment with ID {payment.id} and transaction ID: "
                 f"{refund['id']} of payment processor: {payment_interface}."
-            )
-
-            revoke_line_mobile_order_signal.send_robust(
-                sender=refund_from_mobile_task,
-                payment_id=payment.id
             )
 
         result = client.find_order_with_unprocessed_return_for_payment(

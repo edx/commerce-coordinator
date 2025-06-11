@@ -3,7 +3,6 @@ Views for the InAppPurchase app
 """
 
 import base64
-import datetime
 import json
 import logging
 from typing import NamedTuple
@@ -12,8 +11,6 @@ import app_store_notifications_v2_validator as ios_validator
 from commercetools import CommercetoolsError
 from commercetools.platform.models import Money
 from django.views.decorators.csrf import csrf_exempt
-from google.oauth2 import service_account
-from googleapiclient.discovery import build
 from rest_framework import status
 from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.request import Request
