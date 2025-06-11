@@ -36,7 +36,10 @@ class TestIAPPaymentProcessor(unittest.TestCase):
         MockGooglePlayValidator.return_value.validate.return_value = {
             'is_canceled': False,
             'is_expired': False,
-            'raw_response': {'orderId': 'transaction_123'}
+            'raw_response': {
+                'orderId': 'transaction_123',
+                'purchaseTimeMillis': '1622547800000',
+            },
         }
         self.MockCTClient.return_value.get_payment_by_transaction_interaction_id.return_value = None
 
@@ -144,12 +147,14 @@ class TestIAPPaymentProcessor(unittest.TestCase):
 
     @patch('commerce_coordinator.apps.iap.payment_processor.GooglePlayValidator')
     def test_android_created_at_parsing(self, MockGooglePlayValidator):
+        created_at = datetime(2024, 5, 1, 12, 0, tzinfo=timezone.utc)
+
         MockGooglePlayValidator.return_value.validate.return_value = {
             'is_canceled': False,
             'is_expired': False,
             'raw_response': {
                 'orderId': 'transaction_789',
-                'purchaseTimeMillis': str(int(datetime(2024, 5, 1, 12, 0, tzinfo=timezone.utc).timestamp() * 1000))
+                'purchaseTimeMillis': str(int(created_at.timestamp() * 1000))
             }
         }
         self.MockCTClient.return_value.get_payment_by_transaction_interaction_id.return_value = None
@@ -162,7 +167,7 @@ class TestIAPPaymentProcessor(unittest.TestCase):
         result = self.processor.validate_iap(request_data, cart_id='cart_001', price=100)
 
         self.assertEqual(result['transaction_id'], 'transaction_789')
-        self.assertEqual(result['created_at'], '2024-05-01 12:00:00 UTC')
+        self.assertEqual(result['created_at'], created_at)
 
     @patch('commerce_coordinator.apps.iap.payment_processor.IOSValidator')
     def test_ios_created_at_parsing(self, MockIOSValidator):

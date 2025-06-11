@@ -103,16 +103,18 @@ class MobileCreateOrderView(APIView):
                 order_number=order_number,
             )
             price = standalone_price.cent_amount / 100
-            payment_process_data = get_payment_info_from_purchase_token(request.data, cart.id, price)
+            payment_info = get_payment_info_from_purchase_token(
+                request.data, cart.id, price
+            )
 
-            if payment_process_data['status_code'] != 200:
-                error_msg = payment_process_data['response'].get('error', 'Unknown error')
+            if payment_info["status_code"] != 200:
+                error_msg = payment_info["response"].get("error", "Unknown error")
                 logger.error(error_msg)
                 client.delete_cart(cart)
 
                 return Response(
                     {"error": error_msg},
-                    status=payment_process_data['status_code'],
+                    status=payment_info["status_code"],
                 )
 
             emit_checkout_started_event(
@@ -140,9 +142,9 @@ class MobileCreateOrderView(APIView):
                 payment_method=data.payment_processor.replace("-", " ").strip(),
                 payment_status="succeeded",
                 payment_processor=data.payment_processor,
-                psp_payment_id=payment_process_data.get('transaction_id'),
-                psp_transaction_id=payment_process_data.get('transaction_id'),
-                psp_transaction_created_at=payment_process_data.get('created_at'),
+                psp_payment_id=payment_info["response"]["transaction_id"],
+                psp_transaction_id=payment_info["response"]["transaction_id"],
+                psp_transaction_created_at=payment_info["response"]["created_at"],
                 usd_cent_amount=standalone_price.cent_amount,
             )
             emit_payment_info_entered_event(
@@ -336,7 +338,7 @@ class AndroidRefundView(SingleInvocationAPIView):
 
         if subscription_type != self.refund_subscription_type:
             logger.info(
-                f"Ignoring subscription type '{subscription_type}' from google"
+                f"Ignoring subscription type '{subscription_type}' from google "
                 "since we are only expecting refund notifications"
             )
             return ok_response
@@ -353,7 +355,7 @@ class AndroidRefundView(SingleInvocationAPIView):
         # Ref: https://developer.android.com/google/play/billing/rtdn-reference#voided-purchase
         if notification_type != "voidedPurchaseNotification":
             logger.info(
-                f"Ignoring notification type '{notification_type}' from google"
+                f"Ignoring notification type '{notification_type}' from google "
                 "since we are only expecting refund notifications"
             )
             return ok_response
@@ -370,7 +372,7 @@ class AndroidRefundView(SingleInvocationAPIView):
         # We expect full refund notifications as we do not have multi-quantity purchase
         if refund_type != 1:
             logger.info(
-                f"Ignoring notification from google with refund type '{refund_type}'"
+                f"Ignoring notification from google with refund type '{refund_type}' "
                 "since we are only expecting full refund notification"
             )
             return ok_response

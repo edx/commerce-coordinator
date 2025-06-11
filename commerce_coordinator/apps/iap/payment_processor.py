@@ -141,13 +141,12 @@ class IAPPaymentProcessor:
 
         logger.info("Android IAP validated successfully.")
         raw_response = validation_response.get('raw_response', {})
-        purchase_utc_time = (
-            datetime.fromtimestamp(int(raw_response['purchaseTimeMillis']) / 1000, tz=timezone.utc)
-            if raw_response.get('purchaseTimeMillis') else None
+        purchase_utc_time = datetime.fromtimestamp(
+            int(raw_response["purchaseTimeMillis"]) / 1000, tz=timezone.utc
         )
         return {
             'transaction_id': transaction_id,
-            'created_at': purchase_utc_time.strftime("%Y-%m-%d %H:%M:%S %Z") if purchase_utc_time else None
+            'created_at': purchase_utc_time
         }
 
     def _handle_ios_validation(self, validation_response: dict, product_sku: str, cart_id) -> dict:

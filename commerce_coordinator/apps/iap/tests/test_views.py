@@ -115,9 +115,8 @@ class MobileCreateOrderViewTests(APITestCase):
         # Mock the validate_iap return value
         mock_instance = mock_payment_processor.return_value
         mock_instance.validate_iap.return_value = {
-            "receipt": {"receipt_creation_date": "2025-05-21T12:00:00Z"},
             "transaction_id": "txn-123",
-            "in_app": [{"product_id": "demo-course-run", "original_transaction_id": "txn-123"}]
+            "created_at": "2025-05-21T12:00:00Z"
         }
 
         mock_customer = mock.MagicMock()
@@ -207,13 +206,9 @@ class MobileCreateOrderViewTests(APITestCase):
         mock_get_email_domain,
         mock_get_standalone_price,
         mock_get_ct_customer,
-        _mock_emit_checkout_started_event,
-        _mock_emit_product_added_event,
-        _mock_emit_payment_info_entered_event,
-        _mock_emit_order_completed_event,
-        mock_ct_client,
+        *args,
     ):
-
+        mock_ct_client = args[-1]
         self.authenticate_user()
         mock_uuid.return_value = "test-uuid"
 
@@ -227,9 +222,8 @@ class MobileCreateOrderViewTests(APITestCase):
 
         mock_instance = mock_payment_processor.return_value
         mock_instance.validate_iap.return_value = {
-            "receipt": {"receipt_creation_date": "2025-05-21T12:00:00Z"},
             "transaction_id": "txn-123",
-            "in_app": [{"product_id": "demo-course-run", "original_transaction_id": "txn-123"}]
+            "created_at": "2025-05-21T12:00:00Z"
         }
 
         mock_customer = mock.MagicMock()
