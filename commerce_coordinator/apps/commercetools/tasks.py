@@ -41,7 +41,7 @@ stripe.api_key = settings.PAYMENT_PROCESSOR_CONFIG['edx']['stripe']['secret_key'
 
 @shared_task(bind=True, autoretry_for=(CommercetoolsError,), retry_kwargs={'max_retries': 5, 'countdown': 3})
 def fulfillment_completed_update_ct_line_item_task(
-    self,       # pylint: disable=unused-argument
+    self,  # pylint: disable=unused-argument
     entitlement_uuid,
     order_id,
     line_item_id,
@@ -178,6 +178,13 @@ def refund_from_paypal_task(
     client = CommercetoolsAPIClient()
     try:
         payment = client.get_payment_by_transaction_interaction_id(paypal_capture_id)
+        if not payment:
+            logger.warning(
+                "[refund_from_paypal_task] PayPal PAYMENT.CAPTURE.REFUNDED event "
+                "received, but could not find a CT Payment for PayPal captureID: "
+                f"{paypal_capture_id}."
+            )
+            return None
         if has_full_refund_transaction(payment) or is_transaction_already_refunded(
             payment, refund["id"]
         ):
@@ -221,12 +228,19 @@ def refund_from_mobile_task(
     client = CommercetoolsAPIClient()
     try:
         payment = client.get_payment_by_transaction_interaction_id(refund["id"])
+        if not payment:
+            logger.warning(
+                "[refund_from_mobile_task] Mobile refund event received, but "
+                f"could not find a CT Payment for transaction ID: {refund['id']}"
+                f"of payment processor: {payment_interface}."
+            )
+            return None
         if has_full_refund_transaction(payment) or is_transaction_already_refunded(
             payment, refund["id"]
         ):
             logger.info(
-                f"Mobile refund event received, but Payment with ID {payment.id} "
-                f"already has a refund with ID: {refund.get('id')}. "
+                "[refund_from_mobile_task] Mobile refund event received, but Payment "
+                f"with ID {payment.id} already has a refund with ID: {refund['id']}."
                 "Skipping addition of refund transaction."
             )
         else:
@@ -242,8 +256,13 @@ def refund_from_mobile_task(
             )
 
             revoke_line_mobile_order_signal.send_robust(
-                sender=refund_from_mobile_task,
-                payment_id=payment.id
+                sender=refund_from_mobile_task, payment_id=payment.id
+            )
+
+            logger.info(
+                "[refund_from_mobile_task] Created refund transaction and triggered "
+                f"revoke line for Payment with ID {payment.id} and transaction ID: "
+                f"{refund['id']} of payment processor: {payment_interface}."
             )
 
         result = client.find_order_with_unprocessed_return_for_payment(
@@ -266,9 +285,8 @@ def refund_from_mobile_task(
         return payment
     except CommercetoolsError as err:
         logger.error(
-            f"[refund_from_mobile_task] Unable to create CT payment's refund "
-            f"transaction object for payment {payment.key} "
-            f"on mobile refund {refund.get('id')} "
+            f"[refund_from_mobile_task] Unable to refund for mobile for "
+            f"transaction ID: {refund['id']} of payment processor: {payment_interface}."
             f"with error {err.errors} and correlation id {err.correlation_id}"
         )
         raise err

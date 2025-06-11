@@ -22,7 +22,7 @@ MOCK_PAYMENT_PROCESSOR_CONFIG = {
     'edx': {
         'android_iap': {
             'google_bundle_id': 'com.example.app',
-            'google_service_account_key_file': 'fake_service_account.json'
+            'google_service_account_key_file': '{"key": "value"}'
         }
     }
 }
@@ -36,7 +36,7 @@ class GooglePlayValidatorTests(unittest.TestCase):
 
     @override_settings(PAYMENT_PROCESSOR_CONFIG=MOCK_PAYMENT_PROCESSOR_CONFIG)
     @mock.patch("commerce_coordinator.apps.iap.google_validator.build")
-    @mock.patch("google.oauth2.service_account.Credentials.from_service_account_file")
+    @mock.patch("google.oauth2.service_account.Credentials.from_service_account_info")
     def test_validate_success(self, _, mock_build):
         # Mock the nested API call chain: purchases().products().get().execute()
         mock_service = mock.Mock()
@@ -55,7 +55,7 @@ class GooglePlayValidatorTests(unittest.TestCase):
 
     @override_settings(PAYMENT_PROCESSOR_CONFIG=MOCK_PAYMENT_PROCESSOR_CONFIG)
     @mock.patch("commerce_coordinator.apps.iap.google_validator.build")
-    @mock.patch("google.oauth2.service_account.Credentials.from_service_account_file")
+    @mock.patch("google.oauth2.service_account.Credentials.from_service_account_info")
     def test_validate_http_error(self, _, mock_build):
         mock_service = mock.Mock()
         mock_build.return_value = mock_service
@@ -70,7 +70,7 @@ class GooglePlayValidatorTests(unittest.TestCase):
 
     @override_settings(PAYMENT_PROCESSOR_CONFIG=MOCK_PAYMENT_PROCESSOR_CONFIG)
     @mock.patch("commerce_coordinator.apps.iap.google_validator.build", side_effect=Exception("Unexpected"))
-    @mock.patch("google.oauth2.service_account.Credentials.from_service_account_file")
+    @mock.patch("google.oauth2.service_account.Credentials.from_service_account_info")
     def test_validate_unexpected_error(self, _, _mock_build):
         result = self.validator.validate(VALID_PURCHASE_TOKEN, PRICE)
         self.assertIn("error", result)

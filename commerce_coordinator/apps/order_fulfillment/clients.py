@@ -22,7 +22,7 @@ class OrderFulfillmentAPIClient(BaseEdxOAuthClient):
     @property
     def api_order_fulfillment_post_base_url(self):
         """
-        Returns the base URL for the Order Fulfillment revoke-line POST API endpoint.
+        Returns the base URL for OF fulfill-order POST API endpoint.
         """
         return urljoin_directory(
             settings.ORDER_FULFILLMENT_URL_ROOT, '/api/fulfill-order/'
@@ -31,7 +31,7 @@ class OrderFulfillmentAPIClient(BaseEdxOAuthClient):
     @property
     def api_order_fulfillment_revoke_line_post_base_url(self):
         """
-        Returns the base URL for the Order Fulfillment POST API endpoint.
+        Returns the base URL for OF revoke-line POST API endpoint.
         """
         return urljoin_directory(
             settings.ORDER_FULFILLMENT_URL_ROOT, '/api/revoke-line/'

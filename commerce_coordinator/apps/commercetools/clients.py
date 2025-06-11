@@ -473,12 +473,31 @@ class CommercetoolsAPIClient:
         normalized_payment_key = re.sub(r"[^a-zA-Z0-9_-]", "_", payment_key)
         return self.base_client.payments.get_by_key(normalized_payment_key)
 
-    def get_payment_by_transaction_interaction_id(self, interaction_id: str) -> Payment:
+    def get_payment_by_transaction_interaction_id(
+        self, interaction_id: str
+    ) -> Payment | None:
         """
         Fetch a payment by the transaction interaction ID
         """
-        logger.info(f"[CommercetoolsAPIClient] - Attempting to find payment with interaction ID {interaction_id}")
-        return self.base_client.payments.query(where=f'transactions(interactionId="{interaction_id}")').results[0]
+        logger.info(
+            "[CommercetoolsAPIClient] - Attempting to find payment with "
+            f"interaction ID {interaction_id}"
+        )
+        results = self.base_client.payments.query(
+            where=f'transactions(interactionId="{interaction_id}")'
+        ).results
+        if not results:
+            logger.info(
+                "[CommercetoolsAPIClient] - No payment found with "
+                f"interaction ID {interaction_id}"
+            )
+            return None
+        else:
+            logger.info(
+                "[CommercetoolsAPIClient] - Payment found with "
+                f"interaction ID {interaction_id}"
+            )
+            return results[0]
 
     def get_product_by_program_id(self, program_id: str) -> Optional[ProductVariant]:
         """
