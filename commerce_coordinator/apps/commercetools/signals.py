@@ -9,7 +9,8 @@ from commerce_coordinator.apps.commercetools.tasks import (
     fulfillment_completed_update_ct_line_item_task,
     refund_from_mobile_task,
     refund_from_paypal_task,
-    refund_from_stripe_task
+    refund_from_stripe_task,
+    revoke_line_mobile_order_task
 )
 from commerce_coordinator.apps.core.signal_helpers import CoordinatorSignal, log_receiver
 
@@ -60,7 +61,8 @@ def refund_from_paypal(**kwargs):
     Create a refund transaction in Commercetools based on a refund created from the PayPal dashboard
     """
     async_result = refund_from_paypal_task.delay(
-        paypal_capture_id=kwargs["paypal_capture_id"], refund=kwargs["refund"],
+        paypal_capture_id=kwargs["paypal_capture_id"],
+        refund=kwargs["refund"],
         order_number=kwargs["order_number"]
     )
     return async_result.id
@@ -74,4 +76,14 @@ def refund_from_mobile(**kwargs):
     async_result = refund_from_mobile_task.delay(
         payment_interface=kwargs["payment_interface"], refund=kwargs["refund"]
     )
+    return async_result.id
+
+
+@log_receiver(logger)
+def revoke_line_mobile_order(**kwargs):
+    """
+    Trigger the refund_from_mobile_task to handle a refund transaction
+    for mobile platforms (iOS/Android) in Commercetools.
+    """
+    async_result = revoke_line_mobile_order_task.delay(payment_id=kwargs["payment_id"])
     return async_result.id

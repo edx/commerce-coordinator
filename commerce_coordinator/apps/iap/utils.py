@@ -7,10 +7,18 @@ from decimal import Decimal
 
 from commercetools.platform.models import CentPrecisionMoney, Customer
 from iso4217 import Currency
+from rest_framework import status
 
 from commerce_coordinator.apps.commercetools.catalog_info.constants import EdXFieldNames
 from commerce_coordinator.apps.commercetools.clients import CommercetoolsAPIClient
 from commerce_coordinator.apps.commercetools.http_api_client import CTCustomAPIClient
+from commerce_coordinator.apps.iap.payment_processor import (
+    IAPPaymentProcessor,
+    PaymentError,
+    RedundantPaymentError,
+    UserCancelled,
+    ValidationError
+)
 
 logger = logging.getLogger(__name__)
 
@@ -162,3 +170,44 @@ def convert_localized_price_to_ct_cent_amount(
     fraction_digits = Currency(currency_code).exponent or 0
 
     return int(Decimal(amount).scaleb(fraction_digits - exponent))
+
+
+def get_payment_info_from_purchase_token(request_data, cart_id, price):
+    """
+    Get and validate the payment processor for an in-app purchase (IAP).
+
+    Args:
+        request_data (dict): The request data containing payment processor information.
+        cart_id: The cart identifier for the purchase.
+
+    Returns:
+        dict: A dictionary with:
+            - 'response': dict with validation result or error message.
+            - 'status_code': int HTTP status code.
+
+    """
+    payment_processor = request_data.get('payment_processor', '').lower()
+
+    if payment_processor not in ['android-iap', 'ios-iap']:
+        return {
+            'response': {'error': 'Unsupported payment processor'},
+            'status_code': status.HTTP_400_BAD_REQUEST
+        }
+
+    processor = IAPPaymentProcessor()
+
+    try:
+        validation_response = processor.validate_iap(request_data, cart_id, price)
+        return {'response': validation_response, 'status_code': status.HTTP_200_OK}
+
+    except (ValidationError, UserCancelled, PaymentError) as e:
+        return {'response': {'error': str(e)}, 'status_code': status.HTTP_400_BAD_REQUEST}
+
+    except RedundantPaymentError as e:
+        return {'response': {'error': str(e)}, 'status_code': status.HTTP_409_CONFLICT}
+
+    except Exception as e:  # pylint: disable=broad-except
+        return {
+            'response': {'error': 'Internal Server Error'},
+            'status_code': status.HTTP_500_INTERNAL_SERVER_ERROR
+        }

@@ -1273,8 +1273,8 @@ class ClientTests(TestCase):
         customer_id = uuid4_str()
 
         amount_planned = Money(cent_amount=4900, currency_code="USD")
-        payment_method = "Credit Card"
-        payment_processor = "stripe_edx"
+        payment_method = "Credit_Card"
+        payment_processor = "stripe"
         payment_status = "succeeded"
         psp_payment_id = "pi_12345"
         psp_transaction_id = "ch_12345"
@@ -1291,7 +1291,7 @@ class ClientTests(TestCase):
             result = self.client_set.client.create_payment(
                 amount_planned=amount_planned,
                 customer_id=customer_id,
-                payment_method=payment_method,
+                payment_method=payment_method.replace("-", " ").strip(),
                 payment_processor=payment_processor,
                 payment_status=payment_status,
                 psp_payment_id=psp_payment_id,
@@ -1315,10 +1315,10 @@ class ClientTests(TestCase):
             # Verify payment method info
             self.assertEqual(
                 request_body["paymentMethodInfo"]["paymentInterface"],
-                payment_processor,
+                f"{payment_processor}_edx",
             )
             self.assertEqual(
-                request_body["paymentMethodInfo"]["method"], payment_method
+                request_body["paymentMethodInfo"]["method"], payment_method.replace("-", " ").strip(),
             )
 
             # Verify transaction
@@ -1329,6 +1329,7 @@ class ClientTests(TestCase):
                 transaction["amount"]["centAmount"], amount_planned.cent_amount
             )
             self.assertEqual(transaction["interactionId"], psp_transaction_id)
+            self.assertEqual(transaction["state"], "Success")
             self.assertEqual(
                 transaction["custom"]["fields"]["usdCentAmount"], usd_cent_amount
             )
@@ -1604,6 +1605,88 @@ class ClientTests(TestCase):
 
             # Verify no result is returned
             self.assertIsNone(result)
+
+    def test_get_order_by_payment_id_success(self):
+        """Test successfully retrieving an order by payment ID"""
+        base_url = self.client_set.get_base_url_from_client()
+        payment_id = "payment_123"
+        expected_order = gen_order("order_456")
+
+        mock_response = {
+            "results": [expected_order.serialize()],
+            "total": 1,
+            "count": 1,
+            "offset": 0,
+            "limit": 20
+        }
+
+        with requests_mock.Mocker(real_http=True, case_sensitive=False) as mocker:
+            mocker.get(
+                f"{base_url}orders?where=paymentInfo%28payments%28id%3D%3Apayment_id%29%29&var.payment_id={payment_id}",
+                json=mock_response,
+                status_code=200
+            )
+
+            result = self.client_set.client.get_order_by_payment_id(payment_id)
+
+            # Verify order was returned correctly
+            self.assertEqual(result.id, expected_order.id)
+
+    def test_get_order_by_payment_id_error(self):
+        """Test error handling when retrieving an order by payment ID fails"""
+        base_url = self.client_set.get_base_url_from_client()
+        payment_id = "payment_123"
+
+        mock_error_response = {
+            "message": "Resource not found",
+            "errors": [
+                {
+                    "code": "ResourceNotFound",
+                    "message": "Payment not found"
+                }
+            ],
+            "correlation_id": "123456"
+        }
+
+        with requests_mock.Mocker(real_http=True, case_sensitive=False) as mocker:
+            mocker.get(
+                f"{base_url}orders?where=paymentInfo%28payments%28id%3D%3Apayment_id%29%29&var.payment_id={payment_id}",
+                json=mock_error_response,
+                status_code=404
+            )
+
+            with patch('commerce_coordinator.apps.commercetools.clients.logging.Logger.error') as log_mock:
+                with self.assertRaises(CommercetoolsError):
+                    self.client_set.client.get_order_by_payment_id(payment_id)
+
+                # Verify error was logged
+                self.assertTrue(log_mock.called)
+
+    def test_get_order_by_payment_id_no_order_found(self):
+        """Test handling when no order is found for the given payment ID."""
+        base_url = self.client_set.get_base_url_from_client()
+        payment_id = "payment_123"
+
+        mock_empty_response = {
+            "results": [],
+            "total": 0,
+            "count": 0,
+            "offset": 0,
+            "limit": 20
+        }
+
+        with requests_mock.Mocker(real_http=True, case_sensitive=False) as mocker:
+            mocker.get(
+                f"{base_url}orders?where=paymentInfo%28payments%28id%3D%3Apayment_id%29%29&var.payment_id={payment_id}",
+                json=mock_empty_response,
+                status_code=200
+            )
+
+            with self.assertRaises(Exception) as exc:
+                self.client_set.client.get_order_by_payment_id(payment_id)
+
+            # Verify the exception message
+            self.assertEqual(str(exc.exception), f"No order found for payment ID {payment_id}")
 
 
 class PaginatedResultsTest(TestCase):

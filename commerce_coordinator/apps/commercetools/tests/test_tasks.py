@@ -3,7 +3,7 @@ Commercetools app Task Tests
 """
 
 import logging
-from unittest.mock import call, patch
+from unittest.mock import Mock, call, patch
 
 import stripe
 from commercetools import CommercetoolsError
@@ -14,7 +14,8 @@ from commerce_coordinator.apps.commercetools.tasks import (
     fulfillment_completed_update_ct_line_item_task,
     refund_from_mobile_task,
     refund_from_paypal_task,
-    refund_from_stripe_task
+    refund_from_stripe_task,
+    revoke_line_mobile_order_task
 )
 from commerce_coordinator.apps.commercetools.tests.conftest import (
     gen_order,
@@ -415,8 +416,8 @@ class ReturnedOrderfromMobileTaskTest(TestCase):
             refund_id = self.mock_parameters["refund"].get("id")
             # Check that the info message was logged
             mock_logger.info.assert_called_with(
-                f"Mobile refund event received, but Payment with ID {mock_payment.id} "
-                f"already has a refund with ID: {refund_id}. "
+                "[refund_from_mobile_task] Mobile refund event received, but Payment "
+                f"with ID {mock_payment.id} already has a refund with ID: {refund_id}."
                 "Skipping addition of refund transaction."
             )
 
@@ -449,8 +450,99 @@ class ReturnedOrderfromMobileTaskTest(TestCase):
 
         refund_id = self.mock_parameters["refund"].get("id")
         mock_logger.error.assert_called_once_with(
-            f"[refund_from_mobile_task] Unable to create CT payment's refund "
-            f"transaction object for payment {mock_payment.key} "
-            f"on mobile refund {refund_id} "
+            f"[refund_from_mobile_task] Unable to refund for mobile for "
+            f"transaction ID: {refund_id} of payment processor: ios_iap_edx."
             f"with error Some error message and correlation id 123456"
         )
+
+    @patch("commerce_coordinator.apps.commercetools.tasks.revoke_line_mobile_order_signal")
+    def test_signal_sent_after_refund(self, mock_signal, mock_client):
+        """
+        Test that the revoke_line_mobile_order_signal is sent after processing
+        a mobile refund with the correct parameters.
+        """
+        # Set up payment mock
+        mock_payment = gen_payment()
+        mock_payment.id = "mobile-payment-id-123"
+        mock_client.return_value.get_payment_by_transaction_interaction_id.return_value = mock_payment
+        mock_client.return_value.find_order_with_unprocessed_return_for_payment.return_value = None
+        mock_client.return_value.create_return_payment_transaction.return_value = mock_payment
+
+        # Call the task function
+        mobile_uut(*self.unpack_for_uut(self.mock_parameters))
+
+        # Assert that the signal was sent with the correct parameters
+        mock_signal.send_robust.assert_called_once_with(
+            sender=mobile_uut,
+            payment_id=mock_payment.id
+        )
+
+
+@patch("commerce_coordinator.apps.commercetools.tasks.OrderFulfillmentAPIClient")
+@patch("commerce_coordinator.apps.commercetools.tasks.CommercetoolsAPIClient")
+class RevokeLineMobileOrderTaskTest(TestCase):
+    """Tests for the revoke_line_mobile_order_task"""
+
+    def setUp(self):
+        self.user = User.objects.create(username="test-user", lms_user_id=4)
+        self.payment_id = "mobile-payment-123"
+
+    @patch("commerce_coordinator.apps.commercetools.tasks.get_line_item_attribute")
+    def test_successful_revoke_line(self, mock_get_attribute, mock_ct_client, mock_fulfillment_client):
+        """Test successful execution of the revoke_line_mobile_order_task"""
+        # Generate test data
+        mock_order = gen_order("order-123")
+        mock_order.customer_id = "customer-123"
+
+        # Set up line item attributes
+        mock_order.line_items[0].variant.attributes = [
+            Mock(name="course_id", value="course-v1:MichiganX+InjuryPreventionX+1T2021"),
+            Mock(name="lob", value="edx")
+        ]
+
+        # Configure the mocked get_line_item_attribute to return "verified" for mode
+        mock_get_attribute.return_value = "verified"
+
+        # Mock the customer with LMS user ID
+        mock_customer = Mock()
+        mock_customer.id = "customer-123"
+        mock_customer.custom = Mock()
+        mock_customer.custom.fields = {"edx-lms_user_id": "4", "edx-lms_user_name": "test-user"}
+
+        # Configure client returns
+        mock_ct_client.return_value.get_order_by_payment_id.return_value = mock_order
+        mock_ct_client.return_value.get_customer_by_id.return_value = mock_customer
+
+        # Execute the task
+        result = revoke_line_mobile_order_task(self.payment_id)
+
+        # Verify the OrderFulfillmentAPIClient was called with correct data
+        mock_fulfillment_client.return_value.revoke_line.assert_called_once()
+        call_kwargs = mock_fulfillment_client.return_value.revoke_line.call_args[1]
+
+        self.assertEqual(call_kwargs["payload"]["edx_lms_username"], "test-user")
+        self.assertEqual(
+            call_kwargs["payload"]["course_run_key"], "course-v1:MichiganX+InjuryPreventionX+1T2021"
+        )
+        self.assertEqual(call_kwargs["payload"]["course_mode"], "verified")
+        self.assertEqual(call_kwargs["payload"]["lob"], "edx")
+
+        # Verify the task returns True on success
+        self.assertTrue(result)
+
+    def test_commercetools_error(self, mock_ct_client, mock_fulfillment_client):
+        """Test handling of CommercetoolsError"""
+        # Make the API client raise an error
+        mock_ct_client.return_value.get_order_by_payment_id.side_effect = CommercetoolsError(
+            message="Could not find order",
+            errors="Order not found",
+            response={},
+            correlation_id="123456"
+        )
+
+        # Execute the task and verify it raises the exception
+        with self.assertRaises(CommercetoolsError):
+            revoke_line_mobile_order_task(self.payment_id)
+
+        # Verify the fulfillment client was not called
+        mock_fulfillment_client.return_value.revoke_line.assert_not_called()

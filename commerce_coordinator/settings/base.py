@@ -332,6 +332,9 @@ CC_SIGNALS = {
     "commerce_coordinator.apps.iap.signals.payment_refunded_signal": [
         "commerce_coordinator.apps.commercetools.signals.refund_from_mobile",
     ],
+    "commerce_coordinator.apps.iap.signals.revoke_line_mobile_order_signal": [
+        "commerce_coordinator.apps.commercetools.signals.revoke_line_mobile_order",
+    ],
 }
 
 # Default timeouts for requests
@@ -444,8 +447,10 @@ PAYMENT_PROCESSOR_CONFIG = {
             'google_bundle_id': 'SET-ME-PLEASE',
             'google_service_account_key_file': 'SET-ME-PLEASE',
             'google_publisher_api_scope': 'https://www.googleapis.com/auth/androidpublisher',
-            'refunds_age_in_days': 3,
         },
+        'ios_iap': {
+            'ios_bundle_id': 'SET-ME-PLEASE',
+        }
     },
 }
 # END PAYMENT PROCESSING

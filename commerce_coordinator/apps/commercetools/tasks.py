@@ -1,7 +1,6 @@
 """
 Commercetools tasks
 """
-
 import logging
 
 import stripe
@@ -16,17 +15,28 @@ from commerce_coordinator.apps.commercetools.catalog_info.constants import (
 )
 from commerce_coordinator.apps.commercetools.catalog_info.edx_utils import (
     check_is_bundle,
+    get_edx_items,
     get_edx_line_item,
     get_edx_line_item_state,
-    get_edx_lms_user_id
+    get_edx_lms_user_id,
+    get_edx_lms_user_name,
+    get_edx_product_course_run_key
 )
-from commerce_coordinator.apps.commercetools.catalog_info.utils import get_product_data
+from commerce_coordinator.apps.commercetools.catalog_info.utils import get_line_item_attribute, get_product_data
 from commerce_coordinator.apps.core.memcache import safe_key
 from commerce_coordinator.apps.core.segment import track
 from commerce_coordinator.apps.core.tasks import TASK_LOCK_RETRY, acquire_task_lock, release_task_lock
+from commerce_coordinator.apps.iap.signals import revoke_line_mobile_order_signal
+from commerce_coordinator.apps.order_fulfillment.clients import OrderFulfillmentAPIClient
+from commerce_coordinator.apps.order_fulfillment.serializers import OrderRevokeLineRequestSerializer
 
 from .clients import CommercetoolsAPIClient, Refund
-from .utils import has_full_refund_transaction, is_transaction_already_refunded, prepare_segment_event_properties
+from .utils import (
+    get_lob_from_variant_attr,
+    has_full_refund_transaction,
+    is_transaction_already_refunded,
+    prepare_segment_event_properties
+)
 
 logger = logging.getLogger(__name__)
 
@@ -35,7 +45,7 @@ stripe.api_key = settings.PAYMENT_PROCESSOR_CONFIG['edx']['stripe']['secret_key'
 
 @shared_task(bind=True, autoretry_for=(CommercetoolsError,), retry_kwargs={'max_retries': 5, 'countdown': 3})
 def fulfillment_completed_update_ct_line_item_task(
-    self,       # pylint: disable=unused-argument
+    self,  # pylint: disable=unused-argument
     entitlement_uuid,
     order_id,
     line_item_id,
@@ -144,7 +154,7 @@ def refund_from_stripe_task(
             payment_version=payment.version,
             refund=stripe_refund,
         )
-        _send_segement_event(order_number=order_number)
+        _send_segement_event(order_number=order_number, client=client)
         return updated_payment
     except CommercetoolsError as err:
         logger.error(
@@ -155,15 +165,13 @@ def refund_from_stripe_task(
         raise err
 
 
-def _send_segement_event(order_number):
+def _send_segement_event(order_number, client):
     """
     Send Segment event for order refund.
     Args:
         order_number (str): The order number for which the refund is processed.
     """
     tag = "order_refund_segment_event"
-
-    client = CommercetoolsAPIClient()
 
     try:
         order = client.get_order_by_number(order_number)
@@ -199,7 +207,6 @@ def _send_segement_event(order_number):
         )
         logger.info(f'[CT-{tag}] Customer found: {order.customer_id} for order {order.id} and '
                     f'send refund segment event')
-    print(segment_event_properties)
 
 
 @shared_task(
@@ -222,6 +229,13 @@ def refund_from_paypal_task(
     client = CommercetoolsAPIClient()
     try:
         payment = client.get_payment_by_transaction_interaction_id(paypal_capture_id)
+        if not payment:
+            logger.warning(
+                "[refund_from_paypal_task] PayPal PAYMENT.CAPTURE.REFUNDED event "
+                "received, but could not find a CT Payment for PayPal captureID: "
+                f"{paypal_capture_id}."
+            )
+            return None
         if has_full_refund_transaction(payment) or is_transaction_already_refunded(
             payment, refund["id"]
         ):
@@ -236,7 +250,7 @@ def refund_from_paypal_task(
             refund=refund,
             psp=EDX_PAYPAL_PAYMENT_INTERFACE_NAME,
         )
-        _send_segement_event(order_number=order_number)
+        _send_segement_event(order_number=order_number, client=client)
         return updated_payment
     except CommercetoolsError as err:
         logger.error(
@@ -266,12 +280,19 @@ def refund_from_mobile_task(
     client = CommercetoolsAPIClient()
     try:
         payment = client.get_payment_by_transaction_interaction_id(refund["id"])
+        if not payment:
+            logger.warning(
+                "[refund_from_mobile_task] Mobile refund event received, but "
+                f"could not find a CT Payment for transaction ID: {refund['id']}"
+                f"of payment processor: {payment_interface}."
+            )
+            return None
         if has_full_refund_transaction(payment) or is_transaction_already_refunded(
             payment, refund["id"]
         ):
             logger.info(
-                f"Mobile refund event received, but Payment with ID {payment.id} "
-                f"already has a refund with ID: {refund.get('id')}. "
+                "[refund_from_mobile_task] Mobile refund event received, but Payment "
+                f"with ID {payment.id} already has a refund with ID: {refund['id']}."
                 "Skipping addition of refund transaction."
             )
         else:
@@ -284,6 +305,16 @@ def refund_from_mobile_task(
                 payment_version=payment.version,
                 refund=refund,
                 psp=payment_interface,
+            )
+
+            revoke_line_mobile_order_signal.send_robust(
+                sender=refund_from_mobile_task, payment_id=payment.id
+            )
+
+            logger.info(
+                "[refund_from_mobile_task] Created refund transaction and triggered "
+                f"revoke line for Payment with ID {payment.id} and transaction ID: "
+                f"{refund['id']} of payment processor: {payment_interface}."
             )
 
         result = client.find_order_with_unprocessed_return_for_payment(
@@ -306,9 +337,72 @@ def refund_from_mobile_task(
         return payment
     except CommercetoolsError as err:
         logger.error(
-            f"[refund_from_mobile_task] Unable to create CT payment's refund "
-            f"transaction object for payment {payment.key} "
-            f"on mobile refund {refund.get('id')} "
+            f"[refund_from_mobile_task] Unable to refund for mobile for "
+            f"transaction ID: {refund['id']} of payment processor: {payment_interface}."
             f"with error {err.errors} and correlation id {err.correlation_id}"
         )
         raise err
+
+
+@shared_task(
+    autoretry_for=(CommercetoolsError,),
+    retry_kwargs={"max_retries": 5, "countdown": 3},
+)
+def revoke_line_mobile_order_task(payment_id: str):
+    """
+    Celery task to unenroll a user from a course based on the given payment ID in mobile order.
+
+    Steps:
+    - Retrieve the order using the payment ID.
+    - Get the course run key from the order line item.
+    - Resolve LMS user from Commercetools customer.
+    - Call the Order Fulfillment API to revoke the enrollment.
+
+    Args:
+        payment_id (str): The ID of the payment linked to the order.
+    """
+
+    tag = "revoke_line_mobile_order_task"
+
+    logger.info(f"[CT-{tag}] Starting unenrollment task for payment_id {payment_id}")
+
+    client = CommercetoolsAPIClient()
+
+    order = client.get_order_by_payment_id(payment_id)
+    customer = client.get_customer_by_id(order.customer_id)
+
+    item_to_unenroll = get_edx_items(order)[0]
+    course_run_key = get_edx_product_course_run_key(item_to_unenroll)
+    course_mode = get_line_item_attribute(item_to_unenroll, "mode")
+
+    lms_user_id = get_edx_lms_user_id(customer)
+    lms_user_username = get_edx_lms_user_name(customer)
+
+    logging_data = {
+        "order_id": order.id,
+        "payment_id": payment_id,
+        "customer_id": customer.id,
+        "course_run_key": course_run_key,
+        "lms_user_id": lms_user_id,
+        "lms_user_name": lms_user_username,
+        "course_mode": course_mode,
+    }
+
+    lob = get_lob_from_variant_attr(item_to_unenroll.variant) or "edx"
+    serializer = OrderRevokeLineRequestSerializer(data={
+        "edx_lms_username": lms_user_username,
+        "course_run_key": course_run_key,
+        "course_mode": course_mode,
+        "lob": lob,
+    })
+    serializer.is_valid(raise_exception=True)
+
+    OrderFulfillmentAPIClient().revoke_line(
+        payload=serializer.validated_data,
+        logging_data=logging_data,
+    )
+
+    logger.info(f"[CT-{tag}] Successfully called revoke_line for user {lms_user_username} "
+                f"on course {course_run_key} and {logging_data}")
+
+    return True
