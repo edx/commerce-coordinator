@@ -96,7 +96,8 @@ class WebhookView(SingleInvocationAPIView):
                 payment_refunded_signal.send_robust(
                     sender=self.__class__,
                     payment_intent_id=payment_intent_id,
-                    stripe_refund=latest_refund
+                    stripe_refund=latest_refund,
+                    order_number=order_number,
                 )
             else:
                 logger.info(

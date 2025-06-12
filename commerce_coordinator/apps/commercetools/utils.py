@@ -159,6 +159,23 @@ def extract_ct_product_information_for_braze_canvas(item: LineItem):
     return result
 
 
+def prepare_segment_event_properties(in_order, total_amount, line_item_ids):
+    return {
+        'track_plan_id': 19,
+        'trigger_source': 'server-side',
+        'order_id': in_order.order_number,
+        'checkout_id': in_order.cart.id,
+        'return_id': '',
+        'total': total_amount,
+        'currency': in_order.taxed_price.total_gross.currency_code,
+        'tax': cents_to_dollars(in_order.taxed_price.total_tax),
+        'coupon': in_order.discount_codes[-1].discount_code.obj.code if in_order.discount_codes else None,
+        'coupon_name': [discount.discount_code.obj.code for discount in in_order.discount_codes[:-1]],
+        'discount': cents_to_dollars(calculate_total_discount_on_order(in_order, line_item_ids)),
+        'products': []
+    }
+
+
 def calculate_total_discount_on_order(order: Order, line_item_ids=None) -> TypedMoney:
     """Calculate discount for cart level and line item level."""
     # discount amount on cart from a cart discount with target total price

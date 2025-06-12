@@ -16,6 +16,7 @@ from commerce_coordinator.apps.commercetools.catalog_info.constants import (
     SEND_MONEY_AS_DECIMAL_STRING,
     Languages
 )
+from commerce_coordinator.apps.commercetools.catalog_info.edx_utils import cents_to_dollars
 
 LSLike = Union[Dict[str, str], CTLocalizedString]
 
@@ -45,6 +46,22 @@ def get_line_item_attribute(in_line_item, in_attribute_name):  # pragma no cover
             break
 
     return attribute_value
+
+
+def get_product_data(line_item, is_bundle):
+    return {
+        'product_id': get_line_item_attribute(line_item, 'course-key') if is_bundle else line_item.product_key,
+        'sku': line_item.variant.sku if hasattr(line_item.variant, 'sku') else None,
+        'name': line_item.name['en-US'],
+        'price': cents_to_dollars(line_item.price.value),
+        'quantity': line_item.quantity,
+        'category': get_line_item_attribute(line_item, 'primary-subject-area'),
+        'image_url': line_item.variant.images[0].url if line_item.variant.images else None,
+        'brand': get_line_item_attribute(line_item, 'brand-text'),
+        'url': get_line_item_attribute(line_item, 'url-course'),
+        'lob': get_line_item_attribute(line_item, 'lob') or 'edx',
+        'product_type': line_item.product_type.obj.name
+    }
 
 
 def get_course_mode_from_ct_order(line_item: CTLineItem) -> str:

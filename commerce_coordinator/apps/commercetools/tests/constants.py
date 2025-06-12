@@ -106,7 +106,8 @@ EXAMPLE_RETURNED_ORDER_STRIPE_SIGNAL_PAYLOAD = {
         'currency': "usd",
         'payment_intent': "pi_3PNWMsH4caH7G0X109NekCG5",
         'status': "succeeded",
-    }
+    },
+    'order_number': '2U-123456',
 }
 
 EXAMPLE_RETURNED_ORDER_STRIPE_CLIENT_PAYLOAD = {

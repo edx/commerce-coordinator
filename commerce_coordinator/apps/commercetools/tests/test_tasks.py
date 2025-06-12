@@ -178,6 +178,7 @@ class ReturnedOrderfromPaypalTaskTest(TestCase):
         return (
             values["paypal_capture_id"],
             values["refund"],
+            values["order_number"],
         )
 
     def setUp(self):
@@ -189,6 +190,7 @@ class ReturnedOrderfromPaypalTaskTest(TestCase):
                 "currency": "USD",
                 "status": "COMPLETED",
             },
+            "order_number": "2U-123456",
             "paypal_capture_id": "capture_abc123",
         }
 

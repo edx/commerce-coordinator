@@ -146,7 +146,8 @@ class WebhooksViewTests(APITestCase):
             mock_refund_task.assert_called_with(
                 sender=WebhookView,
                 payment_intent_id=payment_intent_id,
-                stripe_refund=refund_data
+                stripe_refund=refund_data,
+                order_number=order_number
             )
         else:
             mock_refund_task.assert_not_called()
