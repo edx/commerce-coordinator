@@ -391,7 +391,7 @@ def fulfill_order_returned_signal_task(order_id, return_items, message_id):
             return_line_entitlement_ids=return_line_entitlement_ids,
             message_id=message_id,
         )
-
+        print("==============================================================")
         if 'refund_response' in result and result['refund_response']:
             if result['refund_response'] == 'charge_already_refunded':
                 logger.info(f'[CT-{tag}] payment {psp_payment_id} already has refunded transaction, '
@@ -408,12 +408,13 @@ def fulfill_order_returned_signal_task(order_id, return_items, message_id):
                 )
                 line_items = get_edx_items(order)
                 is_bundle = check_is_bundle(line_items)
-                event_title = ''
 
+                event_titles = []
                 for line_item in line_items:
                     if line_item.id in refunded_line_item_ids:
-                        if not event_title:
-                            event_title = line_item.name['en-US']
+                        name_dict = getattr(line_item, 'name', {})
+                        if isinstance(name_dict, dict) and 'en-US' in name_dict:
+                            event_titles.append(name_dict['en-US'])
 
                         course_run = get_edx_product_course_run_key(line_item)
                         # TODO: Remove LMS Enrollment. To be done in SONIC-96
@@ -425,7 +426,7 @@ def fulfill_order_returned_signal_task(order_id, return_items, message_id):
                         segment_event_properties['products'].append(product)
 
                 if segment_event_properties['products']:  # pragma no cover
-                    segment_event_properties['title'] = event_title
+                    segment_event_properties['title'] = ", ".join(event_titles)
                     # Emitting the 'Order Refunded' Segment event upon successfully processing a refund.
                     track(
                         lms_user_id=lms_user_id,
