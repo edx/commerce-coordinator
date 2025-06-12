@@ -39,7 +39,6 @@ PAYMENT_PROCESSOR_CONFIG = {
             'google_bundle_id': 'SET-ME-PLEASE',
             'google_service_account_key_file': 'SET-ME-PLEASE',
             'google_publisher_api_scope': 'https://www.googleapis.com/auth/androidpublisher',
-            'refunds_age_in_days': 3,
         },
     },
 }

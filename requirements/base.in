@@ -24,11 +24,11 @@ edx-django-utils
 edx-django-release-util
 edx-drf-extensions
 edx-rest-api-client
+google-auth
 google-api-python-client
-httplib2
 iso4217
+inapppy
 mysqlclient
-oauth2client
 openedx-filters
 Pillow
 paypal-server-sdk

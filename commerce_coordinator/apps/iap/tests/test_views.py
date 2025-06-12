@@ -2,7 +2,8 @@
 Tests for the InAppPurchase app views.
 """
 
-import datetime
+import base64
+import json
 from unittest import mock
 
 import ddt
@@ -87,10 +88,12 @@ class MobileCreateOrderViewTests(APITestCase):
     @mock.patch("commerce_coordinator.apps.iap.views.get_standalone_price_for_sku")
     @mock.patch("commerce_coordinator.apps.iap.views.get_email_domain")
     @mock.patch("commerce_coordinator.apps.iap.views.get_edx_lms_user_id")
+    @mock.patch("commerce_coordinator.apps.iap.utils.IAPPaymentProcessor")
     @mock.patch("uuid.uuid4")
     def test_successful_order_creation(
         self,
         mock_uuid,
+        mock_payment_processor,
         mock_get_edx_lms_user_id,
         mock_get_email_domain,
         mock_get_standalone_price,
@@ -100,6 +103,21 @@ class MobileCreateOrderViewTests(APITestCase):
         mock_ct_client = args[-1]
         self.authenticate_user()
         mock_uuid.return_value = "test-uuid"
+
+        self.valid_payload = {
+            "payment_processor": "ios-iap",  # Must be valid!
+            "course_run_key": "demo-course-run",
+            "price": "49.99",
+            "currency_code": "USD",
+            "purchase_token": "dummy-token"
+        }
+
+        # Mock the validate_iap return value
+        mock_instance = mock_payment_processor.return_value
+        mock_instance.validate_iap.return_value = {
+            "transaction_id": "txn-123",
+            "created_at": "2025-05-21T12:00:00Z"
+        }
 
         mock_customer = mock.MagicMock()
         mock_customer.id = "customer-123"
@@ -149,7 +167,7 @@ class MobileCreateOrderViewTests(APITestCase):
 
         response = self.client.post(self.url, self.valid_payload, format="json")
 
-        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertEqual(response.status_code, status.HTTP_500_INTERNAL_SERVER_ERROR)
         self.assertIn("error", response.data)
 
     @ddt.data(
@@ -169,6 +187,153 @@ class MobileCreateOrderViewTests(APITestCase):
 
         response = self.client.post(self.url, payload, format="json")
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+
+    @mock.patch("commerce_coordinator.apps.iap.views.emit_order_completed_event")
+    @mock.patch("commerce_coordinator.apps.iap.views.emit_payment_info_entered_event")
+    @mock.patch("commerce_coordinator.apps.iap.views.emit_product_added_event")
+    @mock.patch("commerce_coordinator.apps.iap.views.emit_checkout_started_event")
+    @mock.patch("commerce_coordinator.apps.iap.views.get_ct_customer")
+    @mock.patch("commerce_coordinator.apps.iap.views.get_standalone_price_for_sku")
+    @mock.patch("commerce_coordinator.apps.iap.views.get_email_domain")
+    @mock.patch("commerce_coordinator.apps.iap.views.get_edx_lms_user_id")
+    @mock.patch("commerce_coordinator.apps.iap.utils.IAPPaymentProcessor")
+    @mock.patch("uuid.uuid4")
+    def test_existing_cart_is_deleted(
+        self,
+        mock_uuid,
+        mock_payment_processor,
+        mock_get_edx_lms_user_id,
+        mock_get_email_domain,
+        mock_get_standalone_price,
+        mock_get_ct_customer,
+        *args,
+    ):
+        mock_ct_client = args[-1]
+        self.authenticate_user()
+        mock_uuid.return_value = "test-uuid"
+
+        self.valid_payload = {
+            "payment_processor": "ios-iap",
+            "course_run_key": "demo-course-run",
+            "price": "49.99",
+            "currency_code": "USD",
+            "purchase_token": "dummy-token"
+        }
+
+        mock_instance = mock_payment_processor.return_value
+        mock_instance.validate_iap.return_value = {
+            "transaction_id": "txn-123",
+            "created_at": "2025-05-21T12:00:00Z"
+        }
+
+        mock_customer = mock.MagicMock()
+        mock_customer.id = "customer-123"
+        mock_customer.email = self.test_user_email
+        mock_get_ct_customer.return_value = mock_customer
+
+        mock_get_email_domain.return_value = "example.com"
+        mock_get_standalone_price.return_value = mock.MagicMock(
+            cent_amount=4999,
+            currency_code="USD",
+            fraction_digits=2,
+        )
+        mock_get_edx_lms_user_id.return_value = 12345
+
+        existing_cart = mock.MagicMock()
+        existing_cart.id = "old-cart-id"
+        mock_ct_client.return_value.get_customer_cart.return_value = existing_cart
+        mock_ct_client.return_value.create_cart.return_value = mock.MagicMock(id="new-cart-id")
+        mock_ct_client.return_value.create_payment.return_value = mock.MagicMock(id="payment-id")
+
+        mock_order = mock.MagicMock()
+        mock_order.id = "order-123"
+        mock_order.order_number = "ORDER-123"
+        mock_order.version = 1
+        mock_order.cart.id = "new-cart-id"
+        mock_line_item = mock.MagicMock()
+        mock_line_item.state = [mock.MagicMock(state=mock.MagicMock(id="state-id"))]
+        mock_order.line_items = [mock_line_item]
+        mock_ct_client.return_value.create_order_from_cart.return_value = mock_order
+        mock_ct_client.return_value.update_line_items_transition_state.return_value = mock_order
+
+        response = self.client.post(self.url, self.valid_payload, format="json")
+
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+        mock_ct_client.return_value.delete_cart.assert_any_call(existing_cart)
+
+    @mock.patch("commerce_coordinator.apps.iap.views.get_ct_customer")
+    @mock.patch("commerce_coordinator.apps.iap.views.get_standalone_price_for_sku")
+    @mock.patch("commerce_coordinator.apps.iap.views.get_email_domain")
+    @mock.patch("commerce_coordinator.apps.iap.views.get_edx_lms_user_id")
+    @mock.patch("commerce_coordinator.apps.iap.views.get_payment_info_from_purchase_token")
+    def test_payment_processor_returns_error_and_cart_is_deleted(
+        self,
+        mock_get_payment_info,
+        mock_get_edx_lms_user_id,
+        mock_get_email_domain,
+        mock_get_standalone_price,
+        mock_get_ct_customer,
+        mock_ct_client,
+    ):
+        """Test handling when payment processor returns an error (non-200 status)."""
+        self.authenticate_user()
+
+        mock_customer = mock.MagicMock(id="customer-123", email=self.test_user_email)
+        mock_get_ct_customer.return_value = mock_customer
+        mock_cart = mock.MagicMock(id="cart-123")
+        mock_ct_client.return_value.get_customer_cart.return_value = None
+        mock_ct_client.return_value.create_cart.return_value = mock_cart
+        mock_get_email_domain.return_value = "example.com"
+        mock_get_standalone_price.return_value = Money(cent_amount=4999, currency_code="USD")
+        mock_get_edx_lms_user_id.return_value = 12345
+
+        mock_get_payment_info.return_value = {
+            "status_code": 400,
+            "response": {"error": "Invalid receipt"},
+        }
+
+        response = self.client.post(self.url, self.valid_payload, format="json")
+        mock_ct_client.return_value.delete_cart.assert_called_once_with(mock_cart)
+        self.assertEqual(response.status_code, 400)
+        self.assertIn("error", response.data)
+        self.assertEqual(response.data["error"], "Invalid receipt")
+
+        @mock.patch("commerce_coordinator.apps.iap.views.get_ct_customer")
+        @mock.patch("commerce_coordinator.apps.iap.views.get_standalone_price_for_sku")
+        @mock.patch("commerce_coordinator.apps.iap.views.get_email_domain")
+        @mock.patch("commerce_coordinator.apps.iap.views.get_edx_lms_user_id")
+        @mock.patch("commerce_coordinator.apps.iap.views.get_payment_info_from_purchase_token")
+        def test_payment_processor_returns_error_and_cart_is_deleted(
+            self,
+            mock_get_payment_info,
+            mock_get_edx_lms_user_id,
+            mock_get_email_domain,
+            mock_get_standalone_price,
+            mock_get_ct_customer,
+            mock_ct_client,
+        ):
+            """Test handling when payment processor returns an error (non-200 status)."""
+            self.authenticate_user()
+
+            mock_customer = mock.MagicMock(id="customer-123", email=self.test_user_email)
+            mock_get_ct_customer.return_value = mock_customer
+            mock_cart = mock.MagicMock(id="cart-123")
+            mock_ct_client.return_value.get_customer_cart.return_value = None
+            mock_ct_client.return_value.create_cart.return_value = mock_cart
+            mock_get_email_domain.return_value = "example.com"
+            mock_get_standalone_price.return_value = Money(cent_amount=4999, currency_code="USD")
+            mock_get_edx_lms_user_id.return_value = 12345
+
+            mock_get_payment_info.return_value = {
+                "status_code": 400,
+                "response": {"error": "Invalid receipt"},
+            }
+
+            response = self.client.post(self.url, self.valid_payload, format="json")
+            mock_ct_client.return_value.delete_cart.assert_called_once_with(mock_cart)
+            self.assertEqual(response.status_code, 400)
+            self.assertIn("error", response.data)
+            self.assertEqual(response.data["error"], "Invalid receipt")
 
 
 class IOSRefundViewTests(APITestCase):
@@ -234,105 +399,109 @@ class AndroidRefundViewTests(APITestCase):
     Tests for Android refund view.
     """
 
-    test_admin_username = "admin"
-    test_admin_email = "admin@example.com"
-    test_admin_password = "password"
     url = reverse("iap:android_refund")
+    base_notification_data = {
+        "version": "1.0",
+        "packageName": "org.edx.mobile",
+        "eventTimeMillis": "1746057600000",
+    }
 
-    def setUp(self):
-        super().setUp()
-        self.admin_user = User.objects.create_user(
-            self.test_admin_username,
-            self.test_admin_email,
-            self.test_admin_password,
-            is_staff=True,
-        )
-
-    def authenticate_admin(self):
-        """Helper to authenticate admin user."""
-        self.client.login(
-            username=self.test_admin_username, password=self.test_admin_password
-        )
-        self.client.force_authenticate(user=self.admin_user)
-
-    @mock.patch("commerce_coordinator.apps.iap.views.ServiceAccountCredentials")
     @mock.patch("commerce_coordinator.apps.iap.views.payment_refunded_signal")
-    @mock.patch("commerce_coordinator.apps.iap.views.settings")
-    @mock.patch("commerce_coordinator.apps.iap.views.build")
-    @mock.patch("commerce_coordinator.apps.iap.views.datetime")
-    def test_voided_purchases_processing(
-        self,
-        mock_datetime,
-        mock_build,
-        mock_settings,
-        mock_payment_refunded_signal,
-        _,
-    ):
-        """Test processing of voided purchases."""
-        self.authenticate_admin()
-
-        mock_settings.PAYMENT_PROCESSOR_CONFIG = {
-            "android_iap": {
-                "refunds_age_in_days": 3,
-                "google_bundle_id": "org.edx.mobile",
-                "google_service_account_key_file": {"key": "value"},
-                "google_publisher_api_scope": [
-                    "https://www.googleapis.com/auth/androidpublisher"
-                ],
-            }
+    def test_refund_notification_processing(self, mock_payment_refunded_signal):
+        """Test processing of refund notifications."""
+        notification_data = {
+            **self.base_notification_data,
+            "voidedPurchaseNotification": {
+                "orderId": "GPA.3388-4288-9788-12345",
+                "refundType": 1,
+            },
         }
-        mock_date = datetime.datetime(2025, 5, 2, 0, 0, 0)
-        mock_datetime.datetime.now.return_value = mock_date
-        mock_datetime.timedelta = datetime.timedelta
+        encoded_data = base64.b64encode(
+            json.dumps(notification_data).encode("utf-8")
+        ).decode("utf-8")
 
-        mock_service = mock.MagicMock()
-        mock_purchases = mock.MagicMock()
-        mock_voided_purchases = mock.MagicMock()
-        mock_list = mock.MagicMock()
-        mock_service.purchases.return_value = mock_purchases
-        mock_purchases.voidedpurchases.return_value = mock_voided_purchases
-        mock_voided_purchases.list.return_value = mock_list
-        mock_build.return_value = mock_service
-        mock_list.execute.return_value = {
-            "voidedPurchases": [
-                {
-                    "orderId": "GPA.1234-5432-1098-76543",
-                    "voidedReason": 0,
-                    "voidedSource": 1,
-                    "voidedTimeMillis": "1746057600000",  # May 1, 2025
-                },
-                {
-                    "orderId": "GPA.9876-5432-1098-76543",
-                    "voidedReason": 0,
-                    "voidedSource": 1,
-                    "voidedTimeMillis": "1748736000000",  # June 1, 2025
-                },
-            ]
+        payload = {
+            "message": {
+                "data": encoded_data,
+                "messageId": "test_refund_notification_processing",
+            },
+            "subscription": "projects/openedx-mobile/subscriptions/playRefundSubscriptionPush",
         }
 
-        response = self.client.get(self.url)
+        response = self.client.post(self.url, payload, format="json")
         self.assertEqual(response.status_code, status.HTTP_200_OK)
 
-        # Verify API was called correctly
-        expected_timestamp = 1745884800000
-        mock_voided_purchases.list.assert_called_once_with(
-            packageName="org.edx.mobile", startTime=expected_timestamp
-        )
+        # Verify signal was sent with correct parameters
+        mock_payment_refunded_signal.send_robust.assert_called_once()
+        args = mock_payment_refunded_signal.send_robust.call_args
+        self.assertEqual(args[1]["payment_interface"], "android_iap_edx")
+        refund = args[1]["refund"]
+        self.assertEqual(refund["id"], "GPA.3388-4288-9788-12345")
+        self.assertEqual(refund["created"], "1746057600000")
+        self.assertEqual(refund["status"], "succeeded")
+        self.assertEqual(refund["amount"], "UNSET")
+        self.assertEqual(refund["currency"], "UNSET")
 
-        # Verify signals were sent for each voided purchase
-        self.assertEqual(mock_payment_refunded_signal.send_robust.call_count, 2)
+    @mock.patch("commerce_coordinator.apps.iap.views.payment_refunded_signal")
+    def test_non_refund_notification(self, mock_payment_refunded_signal):
+        """Test handling of non-refund notifications."""
+        notification_data = {
+            **self.base_notification_data,
+            "testNotification": {"message": "Test message"},
+        }
+        encoded_data = base64.b64encode(
+            json.dumps(notification_data).encode("utf-8")
+        ).decode("utf-8")
 
-        # Verify first refund
-        first_call = mock_payment_refunded_signal.send_robust.call_args_list[0]
-        self.assertEqual(first_call[1]["payment_interface"], "android_iap_edx")
-        first_refund = first_call[1]["refund"]
-        self.assertEqual(first_refund["id"], "GPA.1234-5432-1098-76543")
-        self.assertEqual(first_refund["created"], "1746057600000")  # May 1, 2025
-        self.assertEqual(first_refund["status"], "succeeded")
+        payload = {
+            "message": {
+                "data": encoded_data,
+                "messageId": "test_non_refund_notification",
+            },
+            "subscription": "projects/openedx-mobile/subscriptions/playRefundSubscriptionPush",
+        }
 
-        # Verify second refund
-        second_call = mock_payment_refunded_signal.send_robust.call_args_list[1]
-        self.assertEqual(second_call[1]["payment_interface"], "android_iap_edx")
-        second_refund = second_call[1]["refund"]
-        self.assertEqual(second_refund["id"], "GPA.9876-5432-1098-76543")
-        self.assertEqual(second_refund["created"], "1748736000000")  # June 1, 2025
+        response = self.client.post(self.url, payload, format="json")
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        mock_payment_refunded_signal.send_robust.assert_not_called()
+
+    @mock.patch("commerce_coordinator.apps.iap.views.payment_refunded_signal")
+    def test_refund_type_check(self, mock_payment_refunded_signal):
+        """Test refund type validation."""
+        notification_data = {
+            **self.base_notification_data,
+            "voidedPurchaseNotification": {
+                "orderId": "GPA.3388-4288-9788-12345",
+                "refundType": 2,  # 2 is for partial refund
+            },
+        }
+        encoded_data = base64.b64encode(
+            json.dumps(notification_data).encode("utf-8")
+        ).decode("utf-8")
+
+        payload = {
+            "message": {
+                "data": encoded_data,
+                "messageId": "test_refund_type_check",
+            },
+            "subscription": "projects/openedx-mobile/subscriptions/playRefundSubscriptionPush",
+        }
+
+        response = self.client.post(self.url, payload, format="json")
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        mock_payment_refunded_signal.send_robust.assert_not_called()
+
+    @mock.patch("commerce_coordinator.apps.iap.views.payment_refunded_signal")
+    def test_subscription_type_check(self, mock_payment_refunded_signal):
+        """Test subscription type validation."""
+        payload = {
+            "message": {
+                "data": {},
+                "messageId": "test_subscription_type_check",
+            },
+            "subscription": "wrongSubscription",
+        }
+
+        response = self.client.post(self.url, payload, format="json")
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        mock_payment_refunded_signal.send_robust.assert_not_called()

@@ -2,20 +2,17 @@
 Views for the InAppPurchase app
 """
 
-import datetime
+import base64
+import json
 import logging
-import uuid
+from typing import NamedTuple
 
 import app_store_notifications_v2_validator as ios_validator
-import httplib2
 from commercetools import CommercetoolsError
 from commercetools.platform.models import Money
-from django.conf import settings
 from django.views.decorators.csrf import csrf_exempt
-from googleapiclient.discovery import build
-from oauth2client.service_account import ServiceAccountCredentials
 from rest_framework import status
-from rest_framework.permissions import AllowAny, IsAdminUser, IsAuthenticated
+from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.request import Request
 from rest_framework.response import Response
 from rest_framework.views import APIView
@@ -45,6 +42,7 @@ from commerce_coordinator.apps.iap.utils import (
     get_ct_customer,
     get_email_domain,
     get_standalone_price_for_sku,
+    get_payment_info_from_purchase_token,
 )
 from commerce_coordinator.apps.iap.serializers import (
     MobileOrderRequestData,
@@ -68,8 +66,11 @@ class MobileCreateOrderView(APIView):
     def post(self, request: Request) -> Response:
         """
         Handles POST request for preparing a cart in CT and then converting it
-        to an order for mobile In-App purchase
+        to an order for mobile In-App purchase.
         """
+        cart = None
+        client = None
+
         try:
             serializer = MobileOrderRequestSerializer(data=request.data)
             serializer.is_valid(raise_exception=True)
@@ -101,6 +102,20 @@ class MobileCreateOrderView(APIView):
                 external_price=external_price,
                 order_number=order_number,
             )
+            price = standalone_price.cent_amount / 100
+            payment_info = get_payment_info_from_purchase_token(
+                request.data, cart.id, price
+            )
+
+            if payment_info["status_code"] != 200:
+                error_msg = payment_info["response"].get("error", "Unknown error")
+                logger.error(error_msg)
+                client.delete_cart(cart)
+
+                return Response(
+                    {"error": error_msg},
+                    status=payment_info["status_code"],
+                )
 
             emit_checkout_started_event(
                 lms_user_id=lms_user_id,
@@ -124,17 +139,14 @@ class MobileCreateOrderView(APIView):
             payment = client.create_payment(
                 amount_planned=external_price,
                 customer_id=customer.id,
-                # TODO: finalize source of these
-                payment_method="Dummy Card",
+                payment_method=data.payment_processor.replace("-", " ").strip(),
                 payment_status="succeeded",
                 payment_processor=data.payment_processor,
-                # TODO: fetch from purchase token
-                psp_payment_id="Dummy-" + str(uuid.uuid4()),
-                psp_transaction_id="Dummy-" + str(uuid.uuid4()),
-                psp_transaction_created_at=datetime.datetime.now(),
+                psp_payment_id=payment_info["response"]["transaction_id"],
+                psp_transaction_id=payment_info["response"]["transaction_id"],
+                psp_transaction_created_at=payment_info["response"]["created_at"],
                 usd_cent_amount=standalone_price.cent_amount,
             )
-
             emit_payment_info_entered_event(
                 lms_user_id=lms_user_id,
                 cart_id=cart.id,
@@ -180,24 +192,23 @@ class MobileCreateOrderView(APIView):
             message = (
                 f"[CreateOrderView] Error creating order for LMS user: {lms_user_id}"
             )
-
             logger.exception(message, exc_info=err)
+
+            if cart and client:
+                client.delete_cart(cart)
 
             return Response(
                 {"error": message},
-                status=status.HTTP_400_BAD_REQUEST,
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR,
             )
 
 
 class IOSRefundView(SingleInvocationAPIView):
     """
     Create refunds for orders refunded by Apple
-
-    A 200 response should be returned as soon as possible as Apple
-    will retry the event if no response is received.
     """
 
-    http_method_names = ["post"]  # accept POST request only
+    http_method_names = ["post"]
     authentication_classes = []
     permission_classes = [AllowAny]
     apple_cert_file_path = "commerce_coordinator/apps/iap/AppleRootCA-G3.cer"
@@ -205,7 +216,10 @@ class IOSRefundView(SingleInvocationAPIView):
     @csrf_exempt
     def post(self, request):
         """
-        IOS refund view to receive refund webhook notifications from Apple
+        Handles POST requests for refund webhook notifications from Apple.
+
+        Returns a 200 response as soon as possible to prevent Apple
+        from retrying the event.
         """
         tag = type(self).__name__
         notification = ios_validator.parse(
@@ -254,66 +268,133 @@ class IOSRefundView(SingleInvocationAPIView):
         return Response(status=status.HTTP_200_OK)
 
 
-class AndroidRefundView(APIView):
+class GoogleNotification(NamedTuple):
+    """NamedTuple for the Google notification data"""
+
+    version: str
+    packageName: str
+    eventTimeMillis: str
+    oneTimeProductNotification: dict[str, str] | None = None
+    subscriptionNotification: dict[str, str] | None = None
+    voidedPurchaseNotification: dict[str, str] | None = None
+    testNotification: dict[str, str] | None = None
+
+    @property
+    def notification_type(self) -> str | None:
+        """Gets the type of notification"""
+        return next(
+            (
+                key
+                for key, value in self._asdict().items()  # pylint: disable=no-member
+                if "Notification" in key and value is not None
+            ),
+            None,
+        )
+
+    @property
+    def data(self) -> dict[str, str]:
+        """Gets the data from the notification"""
+        notification_type = self.notification_type
+        return getattr(self, notification_type) if notification_type else {}
+
+
+class AndroidRefundView(SingleInvocationAPIView):
     """
     Create refunds for orders refunded by Google
     """
 
-    http_method_names = ["get"]  # accept GET request only
-    permission_classes = (IsAuthenticated, IsAdminUser)
-    processor_name = "android_iap"
-    timeout = 30
+    http_method_names = ["post"]
+    authentication_classes = []
+    permission_classes = [AllowAny]
+    refund_subscription_type = (
+        "projects/openedx-mobile/subscriptions/playRefundSubscriptionPush"
+    )
 
-    def get(self, request):
+    @csrf_exempt
+    def post(self, request):
         """
-        Get all refunds in last 3 days from voidedpurchases api
-        and call refund method on every refund.
+        Handles POST requests for refund webhook notifications from Google.
+
+        Returns a 200 response as soon as possible to prevent Google
+        from retrying the event.
         """
-        configuration = settings.PAYMENT_PROCESSOR_CONFIG[self.processor_name]
+        tag = type(self).__name__
+        notification_event = request.data
+        message = notification_event.get("message", {})
+        message_id = message.get("messageId", "")
+        subscription_type = notification_event.get("subscription", "unknown")
+        ok_response = Response(status=status.HTTP_200_OK)
 
-        refunds_time = datetime.datetime.now() - datetime.timedelta(
-            days=configuration["refunds_age_in_days"]
+        logger.info(
+            "Received notification from google with subscription type: "
+            f"{subscription_type}"
         )
-        refunds_time_in_ms = round(refunds_time.timestamp() * 1000)
-        service = self._get_service(configuration)
 
-        voided_purchases_request = (
-            service.purchases()  # pylint: disable=no-member
-            .voidedpurchases()
-            .list(
-                packageName=configuration["google_bundle_id"],
-                startTime=refunds_time_in_ms,
+        if self._is_running(tag, message_id):  # pragma no cover
+            self.meta_should_mark_not_running = False
+            return ok_response
+        else:
+            self.mark_running(tag, message_id)
+
+        if subscription_type != self.refund_subscription_type:
+            logger.info(
+                f"Ignoring subscription type '{subscription_type}' from google "
+                "since we are only expecting refund notifications"
             )
-        )
-        voided_purchases_response = voided_purchases_request.execute()
-        voided_purchases = voided_purchases_response.get("voidedPurchases", [])
+            return ok_response
 
-        for voided_purchase in voided_purchases:
-            refund: Refund = {
-                "id": voided_purchase["orderId"],
-                "created": voided_purchase["voidedTimeMillis"],
-                # Google voided purchases api does not provide amount or currency
-                # This is filled later from payment object in Commercetools
-                "amount": "UNSET",
-                "currency": "UNSET",
-                "status": "succeeded",
-            }
-            payment_refunded_signal.send_robust(
-                sender=self.__class__,
-                payment_interface=EDX_ANDROID_IAP_PAYMENT_INTERFACE_NAME,
-                refund=refund,
+        # Decode the base64 encoded data in the message
+        # Ref: https://developer.android.com/google/play/billing/rtdn-reference#encoding
+        notification = GoogleNotification(
+            **json.loads(base64.b64decode(message.get("data", {})).decode("utf-8"))
+        )
+        notification_type = notification.notification_type
+
+        # Android calls refunded purchases as Voided Purchase
+        # and we expect a voidedPurchaseNotification for refund
+        # Ref: https://developer.android.com/google/play/billing/rtdn-reference#voided-purchase
+        if notification_type != "voidedPurchaseNotification":
+            logger.info(
+                f"Ignoring notification type '{notification_type}' from google "
+                "since we are only expecting refund notifications"
             )
+            return ok_response
 
-        return Response()
+        voided_purchase = notification.data
 
-    def _get_service(self, configuration):
-        """Create a service to interact with google api."""
-        credentials = ServiceAccountCredentials.from_json_keyfile_dict(
-            configuration.get("google_service_account_key_file"),
-            configuration.get("google_publisher_api_scope"),
+        # The refundType for a voided purchase can have the following values:
+        # (1) REFUND_TYPE_FULL_REFUND - The purchase has been fully voided.
+        # (2) REFUND_TYPE_QUANTITY_BASED_PARTIAL_REFUND - The purchase has been
+        # partially voided by a quantity-based partial refund, applicable only
+        # to multi-quantity purchases.
+        # Ref: https://developer.android.com/google/play/billing/rtdn-reference#voided-purchase
+        refund_type = voided_purchase.get("refundType")
+        # We expect full refund notifications as we do not have multi-quantity purchase
+        if refund_type != 1:
+            logger.info(
+                f"Ignoring notification from google with refund type '{refund_type}' "
+                "since we are only expecting full refund notification"
+            )
+            return ok_response
+
+        refund: Refund = {
+            "id": voided_purchase["orderId"],
+            # We use the event time from the notification as the refund creation
+            # time in CT. This may not be the actual refund time, since the event
+            # is received some time after Google processes the refund. However,
+            # as we don't have a concrete use case for the exact refund timestamp,
+            # this approximation is acceptable.
+            "created": notification.eventTimeMillis,
+            # Google refund notification does not provide amount or currency
+            # This is filled later from payment object in Commercetools
+            "amount": "UNSET",
+            "currency": "UNSET",
+            "status": "succeeded",
+        }
+        payment_refunded_signal.send_robust(
+            sender=self.__class__,
+            payment_interface=EDX_ANDROID_IAP_PAYMENT_INTERFACE_NAME,
+            refund=refund,
         )
-        http = httplib2.Http(timeout=self.timeout)
-        http = credentials.authorize(http)
 
-        service = build("androidpublisher", "v3", http=http)
-        return service
+        return ok_response

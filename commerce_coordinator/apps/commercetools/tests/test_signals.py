@@ -155,3 +155,36 @@ class RefundFromMobileTest(CoordinatorSignalReceiverTestCase):
             "mobile_task_id",
             "Check receiver result is same as return from task",
         )
+
+
+@override_settings(
+    CC_SIGNALS={
+        "commerce_coordinator.apps.core.tests.utils.example_signal": [
+            "commerce_coordinator.apps.commercetools.signals.revoke_line_mobile_order",
+        ],
+    }
+)
+@patch("commerce_coordinator.apps.commercetools.signals.revoke_line_mobile_order_task")
+class RevokeMobileOrderTest(CoordinatorSignalReceiverTestCase):
+    """Mobile Platform Revoke Order Line, Create Refund Transaction Signal Tester"""
+
+    mock_parameters = {
+        "payment_id": "mobile_payment_123",
+    }
+
+    def test_correct_arguments_passed(self, mock_task):
+        _, logs = self.fire_signal()
+        logger.info("logs.output: %s", logs.output)
+        mock_task.delay.assert_called_once_with(
+            payment_id=self.mock_parameters["payment_id"]
+        )
+
+    def test_correct_response_returned(self, mock_task):
+        mock_task.delay.return_value.id = "revoke_mobile_task_id"
+        result, _ = self.fire_signal()
+        logger.info("result: %s", result)
+        self.assertEqual(
+            result[0][1],
+            "revoke_mobile_task_id",
+            "Check receiver result is same as return from task",
+        )
