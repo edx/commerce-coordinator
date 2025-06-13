@@ -280,10 +280,12 @@ REST_FRAMEWORK = {
     ),
     'DEFAULT_THROTTLE_CLASSES': (
         'rest_framework.throttling.UserRateThrottle',
+        'rest_framework.throttling.AnonRateThrottle'
     ),
     'DEFAULT_THROTTLE_RATES': {
         'user': '75/minute',
         'get_payment': '1000/hour',
+        'anon': '10/minute'
     },
 }
 # END DRF CONFIGURATION

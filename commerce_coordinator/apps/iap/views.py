@@ -17,6 +17,8 @@ from rest_framework.request import Request
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
+from rest_framework.throttling import AnonRateThrottle
+
 # isort: off
 from commerce_coordinator.apps.commercetools.catalog_info.constants import (
     EDX_ANDROID_IAP_PAYMENT_INTERFACE_NAME,
@@ -211,6 +213,7 @@ class IOSRefundView(SingleInvocationAPIView):
     http_method_names = ["post"]
     authentication_classes = []
     permission_classes = [AllowAny]
+    throttle_classes = [AnonRateThrottle]
     apple_cert_file_path = "commerce_coordinator/apps/iap/AppleRootCA-G3.cer"
 
     @csrf_exempt
@@ -306,9 +309,11 @@ class AndroidRefundView(SingleInvocationAPIView):
     http_method_names = ["post"]
     authentication_classes = []
     permission_classes = [AllowAny]
+    throttle_classes = [AnonRateThrottle]
     refund_subscription_type = (
-        "projects/openedx-mobile/subscriptions/playRefundSubscriptionPush"
+        "projects/openedx-mobile/subscriptions/TestPushSubAndroidRefund"
     )
+
 
     @csrf_exempt
     def post(self, request):
