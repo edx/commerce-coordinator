@@ -96,20 +96,20 @@ class TestIAPPaymentProcessor(unittest.TestCase):
 
     def test_ios_handle_ios_validation_errors(self):
         with self.assertRaises(ValidationError):
-            self.processor._handle_ios_validation({'receipt': {'in_app': []}}, 'test_sku', 'cart_123')
+            self.processor._handle_ios_validation({'receipt': {'in_app': []}}, 100, 'cart_123')
 
         with self.assertRaises(ValidationError):
             self.processor._handle_ios_validation(
                 {'receipt': {'in_app': [{'product_id': 'wrong_sku', 'original_transaction_id': 'txn_999'}]}},
-                'test_sku', 'cart_123')
+                100, 'cart_123')
 
         with self.assertRaises(UserCancelled):
             self.processor._handle_ios_validation(
                 {'receipt': {'in_app': [{
-                    'product_id': 'test_sku',
+                    'product_id': 'mobile.ios.usd100',
                     'original_transaction_id': 'txn_123',
                     'cancellation_reason': 'user'}]}},
-                'test_sku', 'cart_123')
+                100, 'cart_123')
 
     def test_ios_redundant_payment_error(self):
         self.MockCTClient.return_value.get_payment_by_transaction_interaction_id.return_value = True
@@ -117,9 +117,9 @@ class TestIAPPaymentProcessor(unittest.TestCase):
         with self.assertRaises(RedundantPaymentError):
             self.processor._handle_ios_validation(
                 {'receipt': {'in_app': [{
-                    'product_id': 'test_sku',
+                    'product_id': 'mobile.ios.usd100',
                     'original_transaction_id': 'txn_123'}]}},
-                'test_sku', 'cart_123')
+                100, 'cart_123')
 
     def test_unsupported_payment_processor_raises_validation_error(self):
         request_data = {
@@ -132,18 +132,25 @@ class TestIAPPaymentProcessor(unittest.TestCase):
     @patch('commerce_coordinator.apps.iap.payment_processor.IOSValidator')
     def test_ios_validation_success(self, MockIOSValidator):
         MockIOSValidator.return_value.validate.return_value = {
-            'receipt': {'in_app': [{'product_id': 'test_sku', 'original_transaction_id': 'transaction_456'}]}
+            'receipt': {
+                'in_app': [{
+                    'product_id': 'mobile.ios.usd100',
+                    'original_transaction_id': 'transaction_456',
+                    'purchase_date_ms': '1716200130000'
+                }],
+                'receipt_creation_date': '2024-04-20 10:15:30 Etc/GMT'
+            }
         }
         self.MockCTClient.return_value.get_payment_by_transaction_interaction_id.return_value = None
 
         request_data = {
             'purchase_token': 'test_token',
-            'course_run_key': 'test_sku',
             'payment_processor': 'ios-iap',
         }
         result = self.processor.validate_iap(request_data, cart_id='cart_123', price=100)
 
         self.assertEqual(result['transaction_id'], 'transaction_456')
+        self.assertEqual(result['created_at'], '2024-04-20 10:15:30 Etc/GMT')
 
     @patch('commerce_coordinator.apps.iap.payment_processor.GooglePlayValidator')
     def test_android_created_at_parsing(self, MockGooglePlayValidator):
@@ -173,7 +180,11 @@ class TestIAPPaymentProcessor(unittest.TestCase):
     def test_ios_created_at_parsing(self, MockIOSValidator):
         MockIOSValidator.return_value.validate.return_value = {
             'receipt': {
-                'in_app': [{'product_id': 'test_sku', 'original_transaction_id': 'txn_101'}],
+                'in_app': [{
+                    'product_id': 'mobile.ios.usd100',
+                    'original_transaction_id': 'txn_101',
+                    'purchase_date_ms': '1716200130000'
+                }],
                 'receipt_creation_date': '2024-04-20 10:15:30 Etc/GMT'
             }
         }

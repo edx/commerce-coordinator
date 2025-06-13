@@ -27,7 +27,7 @@ class IOSValidator:
         Validates the provided iOS purchase receipt.
 
         Args:
-            receipt (dict): The receipt containing purchase details, including 'purchase_token'.
+            purchase_token (str): The purchase token received from the client.
 
         Returns:
             dict: The validation result from the App Store, or an error message if validation fails.
