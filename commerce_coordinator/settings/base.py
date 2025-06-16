@@ -500,3 +500,5 @@ BRAZE_CT_FULFILLMENT_UNSUPPORTED_MODE_ERROR_CANVAS_ID = ''
 SEGMENT_KEY = None
 
 FAVICON_URL = "https://edx-cdn.org/v3/prod/favicon.ico"
+
+IAP_ANDROID_REFUND_PUSH_SUBSCRIPTION = "projects/openedx-mobile/subscriptions/TestPushSubAndroidRefund"

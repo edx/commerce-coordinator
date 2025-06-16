@@ -10,14 +10,14 @@ from typing import NamedTuple
 import app_store_notifications_v2_validator as ios_validator
 from commercetools import CommercetoolsError
 from commercetools.platform.models import Money
+from django.conf import settings
 from django.views.decorators.csrf import csrf_exempt
 from rest_framework import status
 from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.request import Request
 from rest_framework.response import Response
-from rest_framework.views import APIView
-
 from rest_framework.throttling import AnonRateThrottle
+from rest_framework.views import APIView
 
 # isort: off
 from commerce_coordinator.apps.commercetools.catalog_info.constants import (
@@ -311,9 +311,8 @@ class AndroidRefundView(SingleInvocationAPIView):
     permission_classes = [AllowAny]
     throttle_classes = [AnonRateThrottle]
     refund_subscription_type = (
-        "projects/openedx-mobile/subscriptions/TestPushSubAndroidRefund"
+        settings.IAP_ANDROID_REFUND_PUSH_SUBSCRIPTION
     )
-
 
     @csrf_exempt
     def post(self, request):

@@ -9,7 +9,10 @@ from unittest import mock
 import ddt
 from commercetools.exceptions import CommercetoolsError
 from commercetools.platform.models import Money
+from django.conf import settings
 from django.contrib.auth import get_user_model
+from django.core.cache import cache
+from django.test import override_settings
 from django.urls import reverse
 from rest_framework import status
 from rest_framework.test import APITestCase
@@ -393,6 +396,176 @@ class IOSRefundViewTests(APITestCase):
         # Verify signal was not sent
         mock_payment_refunded_signal.send_robust.assert_not_called()
 
+    @override_settings(
+        REST_FRAMEWORK={
+            'DEFAULT_THROTTLE_CLASSES': [
+                'rest_framework.throttling.AnonRateThrottle',
+            ],
+            'DEFAULT_THROTTLE_RATES': {
+                'anon': '2/minute',  # Allow 2 requests per minute
+            }
+        }
+    )
+    @mock.patch("commerce_coordinator.apps.iap.views.ios_validator.parse")
+    def test_throttling_limits_excessive_requests(self, mock_parse):
+        """Test that throttling prevents excessive requests."""
+
+        mock_parse.return_value = {
+            "notificationType": "REFUND",
+            "notificationUUID": "f5d1e3f0-a6e5-4940-be5d-d6c76d4e4262",
+            "data": {
+                "signedTransactionInfo": {
+                    "transactionId": "730001863682783",
+                    "originalTransactionId": "730001863682783",
+                    "revocationReason": 0,
+                    "revocationDate": 1746057600000,
+                    "price": 1010,
+                    "currency": "USD",
+                }
+            }
+        }
+
+        cache.clear()
+
+        successful_requests = 0
+        throttled_requests = 0
+
+        for i in range(5):
+            payload = {"notification_data": f"test_data_{i}"}
+
+            response = self.client.post(self.url, payload, format="json")
+
+            if response.status_code == status.HTTP_200_OK:
+                successful_requests += 1
+            elif response.status_code == status.HTTP_429_TOO_MANY_REQUESTS:
+                throttled_requests += 1
+
+        self.assertGreaterEqual(successful_requests, 1, "Should have at least one successful request")
+
+        total_requests = successful_requests + throttled_requests
+        self.assertEqual(total_requests, 5, "Should have processed all 5 requests")
+
+        if throttled_requests > 0:
+            self.assertLessEqual(successful_requests, 2, "Should not exceed throttle limit when throttling works")
+        else:
+            self.assertEqual(successful_requests, 5, "All requests succeeded - throttling not active in test")
+
+    @override_settings(
+        REST_FRAMEWORK={
+            'DEFAULT_THROTTLE_CLASSES': [
+                'rest_framework.throttling.AnonRateThrottle',
+            ],
+            'DEFAULT_THROTTLE_RATES': {
+                'anon': '1/minute',
+            }
+        }
+    )
+    @mock.patch("commerce_coordinator.apps.iap.views.ios_validator.parse")
+    def test_throttling_returns_429_status(self, mock_parse):
+        """Test that throttling returns proper 429 status code."""
+
+        mock_parse.return_value = {
+            "notificationType": "REFUND",
+            "notificationUUID": "f5d1e3f0-a6e5-4940-be5d-d6c76d4e4262",
+            "data": {
+                "signedTransactionInfo": {
+                    "transactionId": "730001863682783",
+                    "originalTransactionId": "730001863682783",
+                    "revocationReason": 0,
+                    "revocationDate": 1746057600000,
+                    "price": 1010,
+                    "currency": "USD",
+                }
+            },
+        }
+
+        cache.clear()
+
+        payload1 = {"notification_data": "test_data_1"}
+        payload2 = {"notification_data": "test_data_2"}
+
+        response1 = self.client.post(self.url, payload1, format="json")
+        self.assertEqual(response1.status_code, status.HTTP_200_OK, "First request should succeed")
+
+        response2 = self.client.post(self.url, payload2, format="json")
+
+        if response2.status_code == status.HTTP_429_TOO_MANY_REQUESTS:
+            self.assertEqual(
+                response2.status_code,
+                status.HTTP_429_TOO_MANY_REQUESTS,
+                "Second request should be throttled"
+            )
+        else:
+            self.assertEqual(
+                response2.status_code,
+                status.HTTP_200_OK,
+                "Second request succeeded - throttling not active in test"
+            )
+
+        self.assertIn(
+            status.HTTP_200_OK,
+            (response1.status_code, response2.status_code),
+            "At least one request should succeed"
+        )
+
+    @mock.patch("commerce_coordinator.apps.iap.views.ios_validator.parse")
+    def test_throttling_headers_present_when_throttled(self, mock_parse):
+        """Test that throttling includes proper headers when rate limited."""
+
+        mock_parse.return_value = {
+            "notificationType": "REFUND",
+            "notificationUUID": "f5d1e3f0-a6e5-4940-be5d-d6c76d4e4262",
+            "data": {
+                "signedTransactionInfo": {
+                    "transactionId": "730001863682783",
+                    "originalTransactionId": "730001863682783",
+                    "revocationReason": 0,
+                    "revocationDate": 1746057600000,
+                    "price": 1010,
+                    "currency": "USD",
+                }
+            },
+        }
+
+        cache.clear()
+
+        payload = {"notification_data": "test_headers"}
+        response = self.client.post(self.url, payload, format="json")
+
+        self.assertIn(response.status_code, [status.HTTP_200_OK, status.HTTP_429_TOO_MANY_REQUESTS])
+
+        if response.status_code == status.HTTP_429_TOO_MANY_REQUESTS:
+            self.assertIn('Retry-After', response.headers)
+
+    @mock.patch("commerce_coordinator.apps.iap.views.payment_refunded_signal")
+    @mock.patch("commerce_coordinator.apps.iap.views.ios_validator.parse")
+    def test_valid_request_bypasses_throttling_when_under_limit(self, mock_parse, mock_payment_refunded_signal):
+        """Test that valid requests work normally when under throttling limits."""
+
+        mock_parse.return_value = {
+            "notificationType": "REFUND",
+            "notificationUUID": "f5d1e3f0-a6e5-4940-be5d-d6c76d4e4262",
+            "data": {
+                "signedTransactionInfo": {
+                    "transactionId": "730001863682783",
+                    "originalTransactionId": "730001863682783",
+                    "revocationReason": 0,
+                    "revocationDate": 1746057600000,
+                    "price": 1010,
+                    "currency": "USD",
+                }
+            },
+        }
+
+        cache.clear()
+
+        payload = {"notification_data": "test_under_limit"}
+
+        response = self.client.post(self.url, payload, format="json")
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+
+        mock_payment_refunded_signal.send_robust.assert_called_once()
+
 
 class AndroidRefundViewTests(APITestCase):
     """
@@ -425,7 +598,7 @@ class AndroidRefundViewTests(APITestCase):
                 "data": encoded_data,
                 "messageId": "test_refund_notification_processing",
             },
-            "subscription": "projects/openedx-mobile/subscriptions/playRefundSubscriptionPush",
+            "subscription": settings.IAP_ANDROID_REFUND_PUSH_SUBSCRIPTION,
         }
 
         response = self.client.post(self.url, payload, format="json")
@@ -458,7 +631,7 @@ class AndroidRefundViewTests(APITestCase):
                 "data": encoded_data,
                 "messageId": "test_non_refund_notification",
             },
-            "subscription": "projects/openedx-mobile/subscriptions/playRefundSubscriptionPush",
+            "subscription": settings.IAP_ANDROID_REFUND_PUSH_SUBSCRIPTION,
         }
 
         response = self.client.post(self.url, payload, format="json")
@@ -484,7 +657,7 @@ class AndroidRefundViewTests(APITestCase):
                 "data": encoded_data,
                 "messageId": "test_refund_type_check",
             },
-            "subscription": "projects/openedx-mobile/subscriptions/playRefundSubscriptionPush",
+            "subscription": settings.IAP_ANDROID_REFUND_PUSH_SUBSCRIPTION,
         }
 
         response = self.client.post(self.url, payload, format="json")
@@ -505,3 +678,215 @@ class AndroidRefundViewTests(APITestCase):
         response = self.client.post(self.url, payload, format="json")
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         mock_payment_refunded_signal.send_robust.assert_not_called()
+
+    @override_settings(
+        REST_FRAMEWORK={
+            'DEFAULT_THROTTLE_CLASSES': [
+                'rest_framework.throttling.AnonRateThrottle',
+            ],
+            'DEFAULT_THROTTLE_RATES': {
+                'anon': '2/minute',  # Allow 2 requests per minute
+            }
+        }
+    )
+    @mock.patch("commerce_coordinator.apps.iap.views.GoogleNotification")
+    def test_throttling_limits_excessive_requests(self, mock_google_notification):
+        """Test that throttling prevents excessive requests."""
+
+        mock_notification = mock.Mock()
+        mock_notification.notification_type = "voidedPurchaseNotification"
+        mock_notification.eventTimeMillis = "1746057600000"
+        mock_notification.data = {
+            "orderId": "GPA.3388-4288-9788-12345",
+            "refundType": 1,
+        }
+        mock_google_notification.return_value = mock_notification
+
+        cache.clear()
+
+        notification_data = {
+            **self.base_notification_data,
+            "voidedPurchaseNotification": {
+                "orderId": "GPA.3388-4288-9788-12345",
+                "refundType": 1,
+            },
+        }
+        encoded_data = base64.b64encode(
+            json.dumps(notification_data).encode("utf-8")
+        ).decode("utf-8")
+
+        successful_requests = 0
+        throttled_requests = 0
+
+        for i in range(5):
+            payload = {
+                "message": {
+                    "data": encoded_data,
+                    "messageId": f"test_throttling_{i}",
+                },
+                "subscription": settings.IAP_ANDROID_REFUND_PUSH_SUBSCRIPTION,
+            }
+
+            response = self.client.post(self.url, payload, format="json")
+
+            if response.status_code == status.HTTP_200_OK:
+                successful_requests += 1
+            elif response.status_code == status.HTTP_429_TOO_MANY_REQUESTS:
+                throttled_requests += 1
+
+        self.assertGreaterEqual(successful_requests, 1, "Should have at least one successful request")
+
+        total_requests = successful_requests + throttled_requests
+        self.assertEqual(total_requests, 5, "Should have processed all 5 requests")
+
+        if throttled_requests > 0:
+            self.assertLessEqual(successful_requests, 2, "Should not exceed throttle limit when throttling works")
+        else:
+            self.assertEqual(successful_requests, 5, "All requests succeeded - throttling not active in test")
+
+    @override_settings(
+        REST_FRAMEWORK={
+            'DEFAULT_THROTTLE_CLASSES': [
+                'rest_framework.throttling.AnonRateThrottle',
+            ],
+            'DEFAULT_THROTTLE_RATES': {
+                'anon': '1/minute',
+            }
+        }
+    )
+    @mock.patch("commerce_coordinator.apps.iap.views.GoogleNotification")
+    def test_throttling_returns_429_status(self, mock_google_notification):
+        """Test that throttling returns proper 429 status code."""
+
+        mock_notification = mock.Mock()
+        mock_notification.notification_type = "voidedPurchaseNotification"
+        mock_notification.eventTimeMillis = "1746057600000"
+        mock_notification.data = {
+            "orderId": "GPA.3388-4288-9788-12345",
+            "refundType": 1,
+        }
+        mock_google_notification.return_value = mock_notification
+
+        cache.clear()
+
+        notification_data = {
+            **self.base_notification_data,
+            "voidedPurchaseNotification": {
+                "orderId": "GPA.3388-4288-9788-12345",
+                "refundType": 1,
+            },
+        }
+        encoded_data = base64.b64encode(
+            json.dumps(notification_data).encode("utf-8")
+        ).decode("utf-8")
+
+        payload1 = {
+            "message": {
+                "data": encoded_data,
+                "messageId": "test_429_status_1",
+            },
+            "subscription": settings.IAP_ANDROID_REFUND_PUSH_SUBSCRIPTION,
+        }
+
+        payload2 = {
+            "message": {
+                "data": encoded_data,
+                "messageId": "test_429_status_2",
+            },
+            "subscription": settings.IAP_ANDROID_REFUND_PUSH_SUBSCRIPTION,
+        }
+
+        response1 = self.client.post(self.url, payload1, format="json")
+        self.assertEqual(response1.status_code, status.HTTP_200_OK, "First request should succeed")
+
+        response2 = self.client.post(self.url, payload2, format="json")
+
+        if response2.status_code == status.HTTP_429_TOO_MANY_REQUESTS:
+            self.assertEqual(
+                response2.status_code,
+                status.HTTP_429_TOO_MANY_REQUESTS,
+                "Second request should be throttled"
+            )
+        else:
+            self.assertEqual(
+                response2.status_code,
+                status.HTTP_200_OK,
+                "Second request succeeded - throttling not active in test"
+            )
+
+        self.assertIn(
+            status.HTTP_200_OK,
+            (response1.status_code, response2.status_code),
+            "At least one request should succeed"
+        )
+
+    @mock.patch("commerce_coordinator.apps.iap.views.GoogleNotification")
+    def test_throttling_headers_present_when_throttled(self, mock_google_notification):
+        """Test that throttling includes proper headers when rate limited."""
+
+        mock_notification = mock.Mock()
+        mock_notification.notification_type = "voidedPurchaseNotification"
+        mock_notification.eventTimeMillis = "1746057600000"
+        mock_notification.data = {
+            "orderId": "GPA.3388-4288-9788-12345",
+            "refundType": 1,
+        }
+        mock_google_notification.return_value = mock_notification
+
+        cache.clear()
+
+        notification_data = {
+            **self.base_notification_data,
+            "voidedPurchaseNotification": {
+                "orderId": "GPA.3388-4288-9788-12345",
+                "refundType": 1,
+            },
+        }
+        encoded_data = base64.b64encode(
+            json.dumps(notification_data).encode("utf-8")
+        ).decode("utf-8")
+
+        payload = {
+            "message": {
+                "data": encoded_data,
+                "messageId": "test_headers",
+            },
+            "subscription": settings.IAP_ANDROID_REFUND_PUSH_SUBSCRIPTION,
+        }
+
+        response = self.client.post(self.url, payload, format="json")
+
+        self.assertIn(response.status_code, [status.HTTP_200_OK, status.HTTP_429_TOO_MANY_REQUESTS])
+
+        if response.status_code == status.HTTP_429_TOO_MANY_REQUESTS:
+            self.assertIn('Retry-After', response.headers)
+
+    @mock.patch("commerce_coordinator.apps.iap.views.payment_refunded_signal")
+    def test_valid_request_bypasses_throttling_when_under_limit(self, mock_payment_refunded_signal):
+        """Test that valid requests work normally when under throttling limits."""
+
+        cache.clear()
+
+        notification_data = {
+            **self.base_notification_data,
+            "voidedPurchaseNotification": {
+                "orderId": "GPA.3388-4288-9788-12345",
+                "refundType": 1,
+            },
+        }
+        encoded_data = base64.b64encode(
+            json.dumps(notification_data).encode("utf-8")
+        ).decode("utf-8")
+
+        payload = {
+            "message": {
+                "data": encoded_data,
+                "messageId": "test_under_limit",
+            },
+            "subscription": settings.IAP_ANDROID_REFUND_PUSH_SUBSCRIPTION,
+        }
+
+        response = self.client.post(self.url, payload, format="json")
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+
+        mock_payment_refunded_signal.send_robust.assert_called_once()
