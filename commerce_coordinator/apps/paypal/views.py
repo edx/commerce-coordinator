@@ -125,7 +125,10 @@ class PayPalWebhookView(SingleInvocationAPIView):
             }
 
             payment_refunded_signal.send_robust(
-                sender=self.__class__, paypal_capture_id=paypal_capture_id, refund=refund
+                sender=self.__class__,
+                paypal_capture_id=paypal_capture_id,
+                refund=refund,
+                order_number=twou_order_number
             )
         else:
             logger.info(
