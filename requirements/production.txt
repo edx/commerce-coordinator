@@ -8,7 +8,7 @@ aiohappyeyeballs==2.6.1
     # via
     #   -r requirements/base.txt
     #   aiohttp
-aiohttp==3.12.8
+aiohttp==3.12.13
     # via
     #   -r requirements/base.txt
     #   inapppy
@@ -20,7 +20,7 @@ amqp==5.3.1
     # via
     #   -r requirements/base.txt
     #   kombu
-apimatic-core==0.2.20
+apimatic-core==0.2.21
     # via
     #   -r requirements/base.txt
     #   paypal-server-sdk
@@ -65,7 +65,7 @@ cachetools==5.5.2
     #   google-auth
 celery[redis]==5.4.0
     # via -r requirements/base.txt
-certifi==2025.4.26
+certifi==2025.6.15
     # via
     #   -r requirements/base.txt
     #   requests
@@ -110,7 +110,7 @@ coreschema==0.0.4
     # via
     #   -r requirements/base.txt
     #   coreapi
-cryptography==45.0.3
+cryptography==45.0.4
     # via
     #   -r requirements/base.txt
     #   app-store-notifications-v2-validator
@@ -124,7 +124,7 @@ defusedxml==0.7.1
     #   -r requirements/base.txt
     #   python3-openid
     #   social-auth-core
-django==4.2.21
+django==4.2.23
     # via
     #   -r requirements/base.txt
     #   django-cors-headers
@@ -150,7 +150,7 @@ django-extensions==4.1
     # via -r requirements/base.txt
 django-rest-swagger==2.2.0
     # via -r requirements/base.txt
-django-waffle==4.2.0
+django-waffle==5.0.0
     # via
     #   -r requirements/base.txt
     #   edx-django-utils
@@ -190,22 +190,22 @@ edx-opaque-keys[django]==3.0.0
     #   openedx-filters
 edx-rest-api-client==6.2.0
     # via -r requirements/base.txt
-frozenlist==1.6.2
+frozenlist==1.7.0
     # via
     #   -r requirements/base.txt
     #   aiohttp
     #   aiosignal
 gevent==25.5.1
     # via -r requirements/production.in
-google-api-core==2.25.0
+google-api-core==2.25.1
     # via
     #   -r requirements/base.txt
     #   google-api-python-client
-google-api-python-client==2.171.0
+google-api-python-client==2.172.0
     # via
     #   -r requirements/base.txt
     #   inapppy
-google-auth==2.40.2
+google-auth==2.40.3
     # via
     #   -r requirements/base.txt
     #   google-api-core
@@ -219,7 +219,7 @@ googleapis-common-protos==1.70.0
     # via
     #   -r requirements/base.txt
     #   google-api-core
-greenlet==3.2.2
+greenlet==3.2.3
     # via gevent
 gunicorn==23.0.0
     # via -r requirements/production.in
@@ -272,7 +272,7 @@ marshmallow-enum==1.5.1
     # via
     #   -r requirements/base.txt
     #   commercetools
-msgpack==1.1.0
+msgpack==1.1.1
     # via
     #   -r requirements/base.txt
     #   cachecontrol
@@ -318,7 +318,7 @@ prompt-toolkit==3.0.51
     # via
     #   -r requirements/base.txt
     #   click-repl
-propcache==0.3.1
+propcache==0.3.2
     # via
     #   -r requirements/base.txt
     #   aiohttp
@@ -365,7 +365,7 @@ pyjwt[crypto]==2.10.1
     #   social-auth-core
 pymemcache==4.0.0
     # via -r requirements/production.in
-pymongo==4.13.0
+pymongo==4.13.1
     # via
     #   -r requirements/base.txt
     #   edx-opaque-keys
@@ -404,7 +404,7 @@ redis==5.2.1
     # via
     #   -r requirements/base.txt
     #   celery
-requests==2.32.3
+requests==2.32.4
     # via
     #   -r requirements/base.txt
     #   apimatic-core
@@ -518,7 +518,7 @@ wrapt==1.17.2
     # via
     #   -r requirements/base.txt
     #   commercetools
-yarl==1.20.0
+yarl==1.20.1
     # via
     #   -r requirements/base.txt
     #   aiohttp
