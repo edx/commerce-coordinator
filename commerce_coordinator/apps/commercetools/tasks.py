@@ -14,6 +14,7 @@ from commerce_coordinator.apps.commercetools.catalog_info.constants import (
     EDX_PAYPAL_PAYMENT_INTERFACE_NAME
 )
 from commerce_coordinator.apps.commercetools.catalog_info.edx_utils import (
+    check_is_bundle,
     get_edx_items,
     get_edx_line_item,
     get_edx_line_item_state,
@@ -21,18 +22,21 @@ from commerce_coordinator.apps.commercetools.catalog_info.edx_utils import (
     get_edx_lms_user_name,
     get_edx_product_course_run_key
 )
-from commerce_coordinator.apps.commercetools.catalog_info.utils import get_line_item_attribute
-from commerce_coordinator.apps.commercetools.clients import CommercetoolsAPIClient, Refund
-from commerce_coordinator.apps.commercetools.utils import (
-    get_lob_from_variant_attr,
-    has_full_refund_transaction,
-    is_transaction_already_refunded
-)
+from commerce_coordinator.apps.commercetools.catalog_info.utils import get_line_item_attribute, get_product_data
 from commerce_coordinator.apps.core.memcache import safe_key
+from commerce_coordinator.apps.core.segment import track
 from commerce_coordinator.apps.core.tasks import TASK_LOCK_RETRY, acquire_task_lock, release_task_lock
 from commerce_coordinator.apps.iap.signals import revoke_line_mobile_order_signal
 from commerce_coordinator.apps.order_fulfillment.clients import OrderFulfillmentAPIClient
 from commerce_coordinator.apps.order_fulfillment.serializers import OrderRevokeLineRequestSerializer
+
+from .clients import CommercetoolsAPIClient, Refund
+from .utils import (
+    get_lob_from_variant_attr,
+    has_full_refund_transaction,
+    is_transaction_already_refunded,
+    prepare_segment_event_properties
+)
 
 logger = logging.getLogger(__name__)
 
@@ -120,6 +124,7 @@ def fulfillment_completed_update_ct_line_item_task(
 def refund_from_stripe_task(
     payment_intent_id: str,
     stripe_refund: Refund,
+    order_number: str | None = None
 ) -> Payment | None:
     """
     Celery task for handling a refund registered in the Stripe dashboard.
@@ -149,6 +154,7 @@ def refund_from_stripe_task(
             payment_version=payment.version,
             refund=stripe_refund,
         )
+        _send_segement_event(order_number=order_number, client=client)
         return updated_payment
     except CommercetoolsError as err:
         logger.error(
@@ -159,6 +165,50 @@ def refund_from_stripe_task(
         raise err
 
 
+def _send_segement_event(order_number, client):
+    """
+    Send Segment event for order refund.
+    Args:
+        order_number (str): The order number for which the refund is processed.
+    """
+    tag = "order_refund_segment_event"
+
+    try:
+        order = client.get_order_by_number(order_number)
+
+    except CommercetoolsError as err:  # pragma no cover
+        logger.error(f'[CT-{tag}] Order not found: {order_number} with CT error {err}, {err.errors}'
+                     f', ')
+        raise err
+
+    try:
+        customer = client.get_customer_by_id(order.customer_id)
+    except CommercetoolsError as err:  # pragma no cover
+        logger.error(f'[CT-{tag}] Customer not found: {order.customer_id} with error {err}, {err.errors}')
+        raise err
+
+    lms_user_id = get_edx_lms_user_id(customer)
+    line_item = order.line_items[0]
+    is_bundle = check_is_bundle(order.line_items)
+    product = get_product_data(line_item, is_bundle)
+    event_title = line_item.name['en-US']
+    segment_event_properties = prepare_segment_event_properties(
+                order, order.total_price.cent_amount, [order.line_items[0].id]
+            )
+
+    segment_event_properties['products'].append(product)
+    if segment_event_properties['products']:  # pragma no cover
+        segment_event_properties['title'] = event_title
+        # Emitting the 'Order Refunded' Segment event upon successfully processing a refunds.
+        track(
+            lms_user_id=lms_user_id,
+            event='Order Refunded',
+            properties=segment_event_properties
+        )
+        logger.info(f'[CT-{tag}] Customer found: {order.customer_id} for order {order.id} and '
+                    f'send refund segment event')
+
+
 @shared_task(
     autoretry_for=(CommercetoolsError,),
     retry_kwargs={"max_retries": 5, "countdown": 3},
@@ -166,6 +216,7 @@ def refund_from_stripe_task(
 def refund_from_paypal_task(
     paypal_capture_id: str,
     refund: Refund,
+    order_number: str,
 ) -> Payment | None:
     """
     Celery task for handling a refund registered in the PayPal dashboard.
@@ -199,6 +250,7 @@ def refund_from_paypal_task(
             refund=refund,
             psp=EDX_PAYPAL_PAYMENT_INTERFACE_NAME,
         )
+        _send_segement_event(order_number=order_number, client=client)
         return updated_payment
     except CommercetoolsError as err:
         logger.error(

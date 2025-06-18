@@ -63,7 +63,8 @@ class RefundFromStripeTest(CoordinatorSignalReceiverTestCase):
         logger.info('logs.output: %s', logs.output)
         mock_task.delay.assert_called_once_with(
             payment_intent_id=self.mock_parameters['payment_intent_id'],
-            stripe_refund=self.mock_parameters['stripe_refund']
+            stripe_refund=self.mock_parameters['stripe_refund'],
+            order_number=self.mock_parameters['order_number'],
         )
 
     def test_correct_response_returned(self, mock_task):
@@ -92,6 +93,7 @@ class RefundFromPaypalTest(CoordinatorSignalReceiverTestCase):
             "currency": "USD",
             "status": "COMPLETED",
         },
+        "order_number": "2U-123456",
         "paypal_capture_id": "capture_abc123",
     }
 
@@ -100,6 +102,7 @@ class RefundFromPaypalTest(CoordinatorSignalReceiverTestCase):
         logger.info("logs.output: %s", logs.output)
         mock_task.delay.assert_called_once_with(
             refund=self.mock_parameters["refund"],
+            order_number=self.mock_parameters["order_number"],
             paypal_capture_id=self.mock_parameters["paypal_capture_id"],
         )
 
