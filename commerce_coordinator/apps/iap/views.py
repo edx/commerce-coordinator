@@ -16,8 +16,9 @@ from rest_framework import status
 from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.request import Request
 from rest_framework.response import Response
-from rest_framework.throttling import AnonRateThrottle
 from rest_framework.views import APIView
+
+from commerce_coordinator.apps.iap.authentication import GoogleSubscriptionAuthentication
 
 # isort: off
 from commerce_coordinator.apps.commercetools.catalog_info.constants import (
@@ -213,7 +214,6 @@ class IOSRefundView(SingleInvocationAPIView):
     http_method_names = ["post"]
     authentication_classes = []
     permission_classes = [AllowAny]
-    throttle_classes = [AnonRateThrottle]
     apple_cert_file_path = "commerce_coordinator/apps/iap/AppleRootCA-G3.cer"
 
     @csrf_exempt
@@ -307,9 +307,9 @@ class AndroidRefundView(SingleInvocationAPIView):
     """
 
     http_method_names = ["post"]
-    authentication_classes = []
+    authentication_classes = [GoogleSubscriptionAuthentication]
     permission_classes = [AllowAny]
-    throttle_classes = [AnonRateThrottle]
+    throttle_classes = []
     refund_subscription_type = (
         settings.IAP_ANDROID_REFUND_PUSH_SUBSCRIPTION
     )
