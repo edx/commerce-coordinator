@@ -29,6 +29,7 @@ from commercetools.platform.models import TypeReference
 from django.test import TestCase
 from mock import patch
 from openedx_filters.exceptions import OpenEdxFilterException
+from requests import Response
 
 from commerce_coordinator.apps.commercetools.catalog_info.constants import EdXFieldNames, TwoUKeys
 from commerce_coordinator.apps.commercetools.catalog_info.foundational_types import TwoUCustomTypes
@@ -1363,7 +1364,7 @@ class ClientTests(TestCase):
                 status_code=200,
             )
 
-            result = self.client_set.client.add_payment_to_cart(
+            result = self.client_set.client.add_payment_and_address_to_cart(
                 cart=cart,
                 payment_id="payment-id",
             )
@@ -1455,6 +1456,48 @@ class ClientTests(TestCase):
         assert "Customer not found" in str(exc.value)
         mock_get_order_by_id.assert_called_once_with("order-xyz")
         mock_get_customer_by_id.assert_called_once_with("customer-999")
+
+    def test_get_dangling_payment_returns_true(self):
+        payment = gen_payment()
+        self.client_set.backend_repo.payments.add_existing(payment)
+
+        # Patch the carts query to return no carts
+        self.client_set.client.base_client.carts.query = MagicMock(return_value=MagicMock(results=[]))
+
+        result = self.client_set.client.get_dangling_payment(payment)
+        self.assertTrue(result)
+
+    def test_get_dangling_payment_returns_false_when_attached_to_cart(self):
+        payment = gen_payment()
+        self.client_set.backend_repo.payments.add_existing(payment)
+
+        # Patch the carts query to return a cart
+        fake_cart = MagicMock()
+        self.client_set.client.base_client.carts.query = MagicMock(return_value=MagicMock(results=[fake_cart]))
+
+        result = self.client_set.client.get_dangling_payment(payment)
+        self.assertFalse(result)
+
+    def test_get_dangling_payment_returns_false_on_exception(self):
+        payment = gen_payment()
+        self.client_set.backend_repo.payments.add_existing(payment)
+
+        # Create a mock Response and mock CommercetoolsError
+        mock_response = Response()
+        mock_response.status_code = 500
+
+        error = CommercetoolsError(
+            message="API failure",
+            errors=[],
+            response=mock_response
+        )
+
+        # Patch the query method to raise the error
+        self.client_set.client.base_client.carts.query = MagicMock(side_effect=error)
+
+        # Run and assert
+        result = self.client_set.client.get_dangling_payment(payment)
+        self.assertFalse(result)
 
     @patch(
         'commerce_coordinator.apps.commercetools.clients.CommercetoolsAPIClient.get_payment_by_key'
