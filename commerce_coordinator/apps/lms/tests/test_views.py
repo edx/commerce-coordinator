@@ -443,6 +443,15 @@ class RetirementViewTests(APITestCase):
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
         mock_filter.assert_called_once_with(127)
 
+    @patch('commerce_coordinator.apps.lms.views.UserRetirementRequested.run_filter')
+    def test_post_with_valid_data_pipeline_return_customer_not_found(self, mock_filter):
+        self.authenticate_user()
+        mock_filter.return_value = {'returned_customer': 'customer_not_found'}
+        response = self.client.post(self.url, self.valid_payload, format='json')
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        mock_filter.assert_called_once_with(127)
+
     def test_post_with_invalid_data_fails(self):
         self.authenticate_user()
         response = self.client.post(self.url, self.invalid_payload, format='json')

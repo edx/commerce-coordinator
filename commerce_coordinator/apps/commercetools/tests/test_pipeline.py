@@ -356,6 +356,19 @@ class AnonymizeRetiredUserPipelineTests(TestCase):
         result_data = ret['returned_customer']
         self.assertEqual(result_data, self.update_customer_response)
 
+    @patch(
+        'commerce_coordinator.apps.commercetools.clients.CommercetoolsAPIClient'
+        '.get_customer_by_lms_user_id'
+    )
+    def test_pipeline_customer_not_found(self, mock_customer_by_lms_id):
+        """Ensure pipeline is functioning as expected"""
+
+        pipe = AnonymizeRetiredUser("test_pipe", None)
+        mock_customer_by_lms_id.return_value = None
+        ret = pipe.run_filter(lms_user_id=self.mock_lms_user_id)
+        result_data = ret['returned_customer']
+        self.assertEqual(result_data, 'customer_not_found')
+
 
 class RefundPayPalPaymentTests(TestCase):
     """Tests for RefundPayPalPayment pipeline step"""
