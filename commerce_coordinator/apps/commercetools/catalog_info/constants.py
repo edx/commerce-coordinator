@@ -72,6 +72,21 @@ class TwoUKeys:
     ORDER_NUMBER_CUSTOM_OBJECT_KEY = 'orderNumber'
 
 
+class CourseModes:
+    """Course Mode keys for use in Commercetools"""
+
+    # Course Modes
+    AUDIT = 'audit'
+    VERIFIED = 'verified'
+    PROFESSIONAL = 'professional'
+    CREDIT = 'credit'
+    HONOR = 'honor'
+    MICRO_CREDENTIAL = 'micro-credential'
+    MICROBACHELOR = 'microbachelor'
+    MICRO_MASTER = 'micro-master'
+    MICRO_CREDENTIAL_VERIFIED = 'micro-credential-verified'
+
+
 class EdXFieldNames:
     """edX Specific field names for use in Commercetools"""
 

@@ -9,7 +9,7 @@ from django.contrib.auth import get_user_model
 from edx_django_utils.cache import TieredCache
 from requests import RequestException
 
-from commerce_coordinator.apps.commercetools.catalog_info.constants import TwoUKeys
+from commerce_coordinator.apps.commercetools.catalog_info.constants import CourseModes, TwoUKeys
 from commerce_coordinator.apps.commercetools.catalog_info.edx_utils import (
     cents_to_dollars,
     check_is_bundle,
@@ -150,6 +150,11 @@ def fulfill_order_placed_message_signal_task(
 
         product_title = ct_program_product.name.get('en-US', '') if ct_program_product else item.name.get('en-US', '')
 
+        course_mode = get_course_mode_from_ct_order(item)
+
+        if course_mode == CourseModes.CREDIT:
+            default_params['provider_id'] = get_line_item_attribute(item, 'credit-provider')
+
         serializer_data = {
                 **default_params,
                 # Due to CT Variant SKU storing different values for course and entitlement models
@@ -157,7 +162,7 @@ def fulfill_order_placed_message_signal_task(
                 # For non-bundles purchase, the course_id is the course_run_key
                 'course_id': get_edx_product_course_run_key(item),
                 'line_item_id': item.id,
-                'course_mode': get_course_mode_from_ct_order(item),
+                'course_mode': course_mode,
                 'item_quantity': item.quantity,
                 'line_item_state_id': line_item_state_id,
                 'message_id': message_id,
