@@ -450,6 +450,13 @@ class AnonymizeRetiredUser(PipelineStep):
         ct_api_client = CommercetoolsAPIClient()
         try:
             customer = ct_api_client.get_customer_by_lms_user_id(lms_user_id)
+
+            if not customer:
+                log.info(f"[{tag}] Commercetools Customer not found for LMS user ID: {lms_user_id}")
+                return {
+                    'returned_customer': 'customer_not_found'
+                }
+
             first_name = customer.first_name
             last_name = customer.last_name
             email = customer.email

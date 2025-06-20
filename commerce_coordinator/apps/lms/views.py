@@ -326,10 +326,10 @@ class RetirementView(APIView):
 
     def post(self, request) -> Response:
         """
-        Process a refund request from the LMS.
+        Process a user retirement request from the LMS.
 
         Args:
-            request (Request): The HTTP request object containing the refund details.
+            request (Request): The HTTP request object containing the retirement details.
 
         Returns:
             - Response:
@@ -366,10 +366,15 @@ class RetirementView(APIView):
 
         try:
             result = UserRetirementRequested.run_filter(lms_user_id)
+            returned_customer = result.get('returned_customer', None)
 
-            if result.get('returned_customer', None):
+            if returned_customer and returned_customer != 'customer_not_found':
                 logger.info(f"[RetirementView] Successfully anonymized fields for retired customer with "
                             f"LMS ID {lms_user_id}, with result: {result}.")
+                return Response(status=HTTP_200_OK)
+            elif returned_customer == 'customer_not_found':
+                logger.warning(f"[RetirementView] No Commercetools customer found for retired customer with "
+                               f"LMS ID {lms_user_id}. Skipped Anonymization process.")
                 return Response(status=HTTP_200_OK)
             else:
                 logger.error(f"[RetirementView] Failed anonymizing fields for retired customer with "
@@ -381,7 +386,7 @@ class RetirementView(APIView):
             return Response('Exception occurred while retiring Commercetools customer',
                             status=HTTP_500_INTERNAL_SERVER_ERROR)
         except Exception as e:  # pylint: disable=broad-except
-            logger.exception(f"[RefundView] Exception raised in {self.post.__name__} with error {repr(e)}")
+            logger.exception(f"[RetirementView] Exception raised in {self.post.__name__} with error {repr(e)}")
             return Response('Exception occurred while retiring Commercetools customer',
                             status=HTTP_500_INTERNAL_SERVER_ERROR)
 
