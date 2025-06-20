@@ -22,6 +22,13 @@ PAYMENT_PROCESSOR_CONFIG = {
             'client_secret': '',
             'env': 'test',
         },
+        'android_iap': {
+            'google_bundle_id': 'SET-ME-PLEASE',
+            'google_service_account_key_file': 'SET-ME-PLEASE',
+            'google_publisher_api_scope': 'https://www.googleapis.com/auth/androidpublisher',
+            'iap_android_refund_push_subscription': "projects/openedx-mobile/subscriptions/TestPushSubAndroidRefund",
+            'google_auth_aud_key': "dummy_key"
+        },
     },
 }
 # END PAYMENT PROCESSING

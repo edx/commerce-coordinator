@@ -3,6 +3,7 @@ Google push subscription authentication class.
 """
 import logging
 
+from django.conf import settings
 from google.auth.transport import requests as google_requests
 from google.oauth2 import id_token
 from rest_framework.authentication import BaseAuthentication
@@ -37,10 +38,22 @@ class GoogleSubscriptionAuthentication(BaseAuthentication):
 
         try:
             request_adapter = google_requests.Request()
-            id_token.verify_oauth2_token(token, request_adapter)
+            id_token.verify_oauth2_token(
+                token,
+                request_adapter,
+                audience=settings.PAYMENT_PROCESSOR_CONFIG['edx']['android_iap']['google_auth_aud_key']
+            )
 
         except Exception as e:
-            logger.error(f'Failed [GoogleSubscriptionAuthentication] JWT verification failed with error {str(e)}')
-            raise AuthenticationFailed(f"JWT verification failed: {str(e)}") from e
+            error_msg = str(e)
+
+            if "Token has wrong audience" in error_msg and "expected one of" in error_msg:
+                parsed_error_msg = error_msg.split("expected one of")[0].strip().rstrip(",")
+            else:
+                parsed_error_msg = error_msg
+
+            logger.error('Failed [GoogleSubscriptionAuthentication]'
+                         f'JWT verification failed with error {parsed_error_msg}')
+            raise AuthenticationFailed(f"JWT verification failed: {parsed_error_msg}") from e
 
         return (None, None)

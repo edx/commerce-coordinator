@@ -430,7 +430,11 @@ class AndroidRefundViewTests(APITestCase):
                 "data": encoded_data,
                 "messageId": "test_refund_notification_processing",
             },
-            "subscription": settings.IAP_ANDROID_REFUND_PUSH_SUBSCRIPTION,
+            "subscription": settings.PAYMENT_PROCESSOR_CONFIG[
+                                'edx'
+                            ]['android_iap'][
+                                'iap_android_refund_push_subscription'
+                            ]
         }
 
         response = self.client.post(self.url, payload, format="json")
@@ -467,7 +471,11 @@ class AndroidRefundViewTests(APITestCase):
                 "data": encoded_data,
                 "messageId": "test_non_refund_notification",
             },
-            "subscription": settings.IAP_ANDROID_REFUND_PUSH_SUBSCRIPTION,
+            "subscription": settings.PAYMENT_PROCESSOR_CONFIG[
+                                'edx'
+                            ]['android_iap'][
+                                'iap_android_refund_push_subscription'
+                            ]
         }
 
         response = self.client.post(self.url, payload, format="json")
@@ -496,7 +504,11 @@ class AndroidRefundViewTests(APITestCase):
                 "data": encoded_data,
                 "messageId": "test_refund_type_check",
             },
-            "subscription": settings.IAP_ANDROID_REFUND_PUSH_SUBSCRIPTION,
+            "subscription": settings.PAYMENT_PROCESSOR_CONFIG[
+                                'edx'
+                            ]['android_iap'][
+                                'iap_android_refund_push_subscription'
+                            ]
         }
 
         response = self.client.post(self.url, payload, format="json")
