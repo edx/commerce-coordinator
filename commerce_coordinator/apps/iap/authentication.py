@@ -1,11 +1,14 @@
 """
 Google push subscription authentication class.
 """
+import logging
 
 from google.auth.transport import requests as google_requests
 from google.oauth2 import id_token
 from rest_framework.authentication import BaseAuthentication
 from rest_framework.exceptions import AuthenticationFailed
+
+logger = logging.getLogger(__name__)
 
 
 class GoogleSubscriptionAuthentication(BaseAuthentication):
@@ -27,6 +30,7 @@ class GoogleSubscriptionAuthentication(BaseAuthentication):
         auth_header = request.META.get("HTTP_AUTHORIZATION")
 
         if not auth_header or not auth_header.startswith("Bearer "):
+            logger.error('Failed [GoogleSubscriptionAuthentication] Missing or invalid Authorization header')
             raise AuthenticationFailed("Missing or invalid Authorization header")
 
         token = auth_header.split("Bearer ")[1]
@@ -36,6 +40,7 @@ class GoogleSubscriptionAuthentication(BaseAuthentication):
             id_token.verify_oauth2_token(token, request_adapter)
 
         except Exception as e:
+            logger.error(f'Failed [GoogleSubscriptionAuthentication] JWT verification failed with error {str(e)}')
             raise AuthenticationFailed(f"JWT verification failed: {str(e)}") from e
 
         return (None, None)
