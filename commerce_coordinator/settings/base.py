@@ -501,4 +501,4 @@ FAVICON_URL = "https://edx-cdn.org/v3/prod/favicon.ico"
 
 IAP_ANDROID_REFUND_PUSH_SUBSCRIPTION = "projects/openedx-mobile/subscriptions/TestPushSubAndroidRefund"
 
-GOOGLE_AUTH_AUD_KEY = "google_aud_key_6QXhK5LvS4yGbMbVjE6JmgYWB9dt2uuRjQ4/U91idzw="
+GOOGLE_AUTH_AUD_KEY = "dummy_key"
