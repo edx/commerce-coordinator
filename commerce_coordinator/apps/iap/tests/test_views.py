@@ -9,6 +9,7 @@ from unittest import mock
 import ddt
 from commercetools.exceptions import CommercetoolsError
 from commercetools.platform.models import Money
+from django.conf import settings
 from django.contrib.auth import get_user_model
 from django.urls import reverse
 from rest_framework import status
@@ -406,9 +407,13 @@ class AndroidRefundViewTests(APITestCase):
         "eventTimeMillis": "1746057600000",
     }
 
+    @mock.patch("commerce_coordinator.apps.iap.views.GoogleSubscriptionAuthentication.authenticate")
     @mock.patch("commerce_coordinator.apps.iap.views.payment_refunded_signal")
-    def test_refund_notification_processing(self, mock_payment_refunded_signal):
+    def test_refund_notification_processing(self, mock_payment_refunded_signal, mock_auth):
         """Test processing of refund notifications."""
+
+        mock_auth.return_value = None
+
         notification_data = {
             **self.base_notification_data,
             "voidedPurchaseNotification": {
@@ -425,7 +430,7 @@ class AndroidRefundViewTests(APITestCase):
                 "data": encoded_data,
                 "messageId": "test_refund_notification_processing",
             },
-            "subscription": "projects/openedx-mobile/subscriptions/playRefundSubscriptionPush",
+            "subscription": settings.IAP_ANDROID_REFUND_PUSH_SUBSCRIPTION,
         }
 
         response = self.client.post(self.url, payload, format="json")
@@ -442,9 +447,13 @@ class AndroidRefundViewTests(APITestCase):
         self.assertEqual(refund["amount"], "UNSET")
         self.assertEqual(refund["currency"], "UNSET")
 
+    @mock.patch("commerce_coordinator.apps.iap.views.GoogleSubscriptionAuthentication.authenticate")
     @mock.patch("commerce_coordinator.apps.iap.views.payment_refunded_signal")
-    def test_non_refund_notification(self, mock_payment_refunded_signal):
+    def test_non_refund_notification(self, mock_payment_refunded_signal, mock_auth):
         """Test handling of non-refund notifications."""
+
+        mock_auth.return_value = None
+
         notification_data = {
             **self.base_notification_data,
             "testNotification": {"message": "Test message"},
@@ -458,16 +467,19 @@ class AndroidRefundViewTests(APITestCase):
                 "data": encoded_data,
                 "messageId": "test_non_refund_notification",
             },
-            "subscription": "projects/openedx-mobile/subscriptions/playRefundSubscriptionPush",
+            "subscription": settings.IAP_ANDROID_REFUND_PUSH_SUBSCRIPTION,
         }
 
         response = self.client.post(self.url, payload, format="json")
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         mock_payment_refunded_signal.send_robust.assert_not_called()
 
+    @mock.patch("commerce_coordinator.apps.iap.views.GoogleSubscriptionAuthentication.authenticate")
     @mock.patch("commerce_coordinator.apps.iap.views.payment_refunded_signal")
-    def test_refund_type_check(self, mock_payment_refunded_signal):
+    def test_refund_type_check(self, mock_payment_refunded_signal, mock_auth):
         """Test refund type validation."""
+        mock_auth.return_value = None
+
         notification_data = {
             **self.base_notification_data,
             "voidedPurchaseNotification": {
@@ -484,16 +496,20 @@ class AndroidRefundViewTests(APITestCase):
                 "data": encoded_data,
                 "messageId": "test_refund_type_check",
             },
-            "subscription": "projects/openedx-mobile/subscriptions/playRefundSubscriptionPush",
+            "subscription": settings.IAP_ANDROID_REFUND_PUSH_SUBSCRIPTION,
         }
 
         response = self.client.post(self.url, payload, format="json")
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         mock_payment_refunded_signal.send_robust.assert_not_called()
 
+    @mock.patch("commerce_coordinator.apps.iap.views.GoogleSubscriptionAuthentication.authenticate")
     @mock.patch("commerce_coordinator.apps.iap.views.payment_refunded_signal")
-    def test_subscription_type_check(self, mock_payment_refunded_signal):
+    def test_subscription_type_check(self, mock_payment_refunded_signal, mock_auth):
         """Test subscription type validation."""
+
+        mock_auth.return_value = None
+
         payload = {
             "message": {
                 "data": {},

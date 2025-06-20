@@ -283,7 +283,7 @@ REST_FRAMEWORK = {
     ),
     'DEFAULT_THROTTLE_RATES': {
         'user': '75/minute',
-        'get_payment': '1000/hour',
+        'get_payment': '1000/hour'
     },
 }
 # END DRF CONFIGURATION
@@ -498,3 +498,5 @@ BRAZE_CT_FULFILLMENT_UNSUPPORTED_MODE_ERROR_CANVAS_ID = ''
 SEGMENT_KEY = None
 
 FAVICON_URL = "https://edx-cdn.org/v3/prod/favicon.ico"
+
+IAP_ANDROID_REFUND_PUSH_SUBSCRIPTION = "projects/openedx-mobile/subscriptions/TestPushSubAndroidRefund"
