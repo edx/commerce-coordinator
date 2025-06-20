@@ -31,17 +31,29 @@ class GoogleSubscriptionAuthentication(BaseAuthentication):
         auth_header = request.META.get("HTTP_AUTHORIZATION")
 
         if not auth_header or not auth_header.startswith("Bearer "):
-            logger.error('Failed [GoogleSubscriptionAuthentication] Missing or invalid Authorization header.')
+            logger.error('Failed [GoogleSubscriptionAuthentication] Missing or invalid Authorization header')
             raise AuthenticationFailed("Missing or invalid Authorization header")
 
         token = auth_header.split("Bearer ")[1]
 
         try:
             request_adapter = google_requests.Request()
-            id_token.verify_oauth2_token(token, request_adapter, audience=settings.GOOGLE_AUTH_AUD_KEY)
+            id_token.verify_oauth2_token(
+                token,
+                request_adapter,
+                audience=settings.PAYMENT_PROCESSOR_CONFIG['edx']['android_iap']['google_auth_aud_key']
+            )
 
         except Exception as e:
-            logger.error('Failed [GoogleSubscriptionAuthentication] JWT verification failed.')
-            raise AuthenticationFailed("JWT verification failed") from e
+            error_msg = str(e)
+
+            if "Token has wrong audience" in error_msg and "expected one of" in error_msg:
+                parsed_error_msg = error_msg.split("expected one of")[0].strip().rstrip(",")
+            else:
+                parsed_error_msg = error_msg
+
+            logger.error('Failed [GoogleSubscriptionAuthentication]'
+                         f'JWT verification failed with error {parsed_error_msg}')
+            raise AuthenticationFailed(f"JWT verification failed: {parsed_error_msg}") from e
 
         return (None, None)
