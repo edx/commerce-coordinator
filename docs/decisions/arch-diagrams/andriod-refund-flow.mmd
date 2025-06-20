@@ -1,0 +1,19 @@
+ sequenceDiagram
+ %% ===== Android (Google) Refund Flow =====
+    participant GooglePlay as Google Play Notifications
+    participant CommerceCoordinator as CC refund view
+    participant GoogleAPI as Google Voided Purchases API
+    participant Commercetools as Commercetools (CoCo)
+    participant CTEventBridge as EventBridge (CT Return created)
+
+    GooglePlay->>CommerceCoordinator: Send refund notification (POST)
+    CommerceCoordinator->>CommerceCoordinator: Load refund config (e.g., last 3 days)
+    CommerceCoordinator->>GoogleAPI: Request voided purchases (startTime)
+    GoogleAPI-->>CommerceCoordinator: Return list of voided purchases
+
+    loop For each voided purchase
+        CommerceCoordinator->>Commercetools: Create refund object (ID, time)
+        Commercetools->>CTEventBridge: Emit CT `Return created` subscription message
+    end
+
+    CommerceCoordinator-->>GooglePlay: Return success response (HTTP 200 OK)
