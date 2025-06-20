@@ -152,9 +152,6 @@ def fulfill_order_placed_message_signal_task(
 
         course_mode = get_course_mode_from_ct_order(item)
 
-        if course_mode == CourseModes.CREDIT:
-            default_params['provider_id'] = get_line_item_attribute(item, 'credit-provider')
-
         serializer_data = {
                 **default_params,
                 # Due to CT Variant SKU storing different values for course and entitlement models
@@ -172,6 +169,10 @@ def fulfill_order_placed_message_signal_task(
                 'product_title': product_title,
                 'product_type': item.product_type.obj.key
             }
+
+        if course_mode == CourseModes.CREDIT:
+            serializer_data['provider_id'] = get_line_item_attribute(item, 'credit-provider')
+            serializer_data['course_id'] = get_line_item_attribute(item, 'external-ids-variant')
 
         if is_order_fulfillment_forwarding_enabled:
             logger.info(f"[CT-{tag}] Order Fulfillment Redirection Flag [ENABLED]."
