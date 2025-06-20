@@ -12,7 +12,7 @@ from django.contrib.auth import get_user_model
 from edx_django_utils.cache import TieredCache
 from requests import RequestException
 
-from commerce_coordinator.apps.commercetools.catalog_info.constants import TwoUKeys
+from commerce_coordinator.apps.commercetools.catalog_info.constants import CourseModes, TwoUKeys
 from commerce_coordinator.apps.commercetools.clients import CommercetoolsAPIClient
 from commerce_coordinator.apps.commercetools.constants import (
     CT_ORDER_PRODUCT_TYPE_FOR_BRAZE,
@@ -202,7 +202,7 @@ def fulfill_order_placed_send_enroll_in_course_task(
         ]
     }
 
-    if course_mode == 'credit':
+    if course_mode == CourseModes.CREDIT:
         enrollment_data['enrollment_attributes'].append({
             'namespace': 'credit',
             'name': 'provider_id',
