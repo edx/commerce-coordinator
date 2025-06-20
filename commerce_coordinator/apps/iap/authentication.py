@@ -3,11 +3,11 @@ Google push subscription authentication class.
 """
 import logging
 
+from django.conf import settings
 from google.auth.transport import requests as google_requests
 from google.oauth2 import id_token
 from rest_framework.authentication import BaseAuthentication
 from rest_framework.exceptions import AuthenticationFailed
-from django.conf import settings
 
 logger = logging.getLogger(__name__)
 
@@ -41,7 +41,7 @@ class GoogleSubscriptionAuthentication(BaseAuthentication):
             id_token.verify_oauth2_token(token, request_adapter, audience=settings.GOOGLE_AUTH_AUD_KEY)
 
         except Exception as e:
-            logger.error(f'Failed [GoogleSubscriptionAuthentication] JWT verification failed.')
-            raise AuthenticationFailed(f"JWT verification failed") from e
+            logger.error('Failed [GoogleSubscriptionAuthentication] JWT verification failed.')
+            raise AuthenticationFailed("JWT verification failed") from e
 
         return (None, None)
