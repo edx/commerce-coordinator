@@ -12,12 +12,17 @@ from commercetools.platform.models import TransactionType
 
 from commerce_coordinator.apps.commercetools.catalog_info.constants import (
     PAYMENT_STATUS_INTERFACE_CODE_SUCCEEDED,
+    CourseModes,
     EdXFieldNames,
     TwoUKeys
 )
 
 
-def get_edx_product_course_run_key(prodvar_or_li: Union[CTProductVariant, CTLineItem]) -> str:
+def get_edx_product_course_run_key(prodvar_or_li: Union[CTProductVariant, CTLineItem], course_mode=None) -> str:
+    if course_mode is not None and course_mode == CourseModes.CREDIT:
+        # To handle circular import issues, we import the utility function here
+        from commerce_coordinator.apps.commercetools.catalog_info.utils import get_line_item_attribute
+        return get_line_item_attribute(prodvar_or_li, 'external-ids-variant')
     if isinstance(prodvar_or_li, CTProductVariant):
         return prodvar_or_li.sku
     else:

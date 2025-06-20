@@ -80,11 +80,6 @@ class CourseModes:
     VERIFIED = 'verified'
     PROFESSIONAL = 'professional'
     CREDIT = 'credit'
-    HONOR = 'honor'
-    MICRO_CREDENTIAL = 'micro-credential'
-    MICROBACHELOR = 'microbachelor'
-    MICRO_MASTER = 'micro-master'
-    MICRO_CREDENTIAL_VERIFIED = 'micro-credential-verified'
 
 
 class EdXFieldNames:
