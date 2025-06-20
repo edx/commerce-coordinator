@@ -57,7 +57,7 @@ class OrderFulfillView(SingleInvocationAPIView):
 
         task_key = safe_key(key=order_id, key_prefix=tag, version='1')
 
-        if not acquire_task_lock(task_key):
+        if not acquire_task_lock(task_key, 1800):   # added 30 minutes cache timeout expiry for this 
             logger.info(
                 f"Task {task_key} is already running. Exiting current task. Order ID: {order_id}."
             )

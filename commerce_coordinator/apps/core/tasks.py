@@ -18,7 +18,7 @@ def debug_task():  # pragma no cover
     logger.info('Core debug_task fired.')
 
 
-def acquire_task_lock(task_key):
+def acquire_task_lock(task_key, task_expiry=TASK_LOCK_EXPIRE):
     """
     Mark the specified task_key as being in progress.
 
@@ -30,7 +30,7 @@ def acquire_task_lock(task_key):
     Returns true if the task_key was not already locked; false if it was.
     """
     # cache.add fails if the key already exists
-    succeeded = cache.add(task_key, 'true', TASK_LOCK_EXPIRE)
+    succeeded = cache.add(task_key, 'true', task_expiry)
     return succeeded
 
 
