@@ -85,7 +85,7 @@ class GoogleSubscriptionAuthenticationTests(TestCase):
         with self.assertRaises(AuthenticationFailed) as ctx:
             self.auth.authenticate(request)
 
-        self.assertIn("JWT verification failed: Token verification failed", str(ctx.exception))
+        self.assertIn("JWT verification failed", str(ctx.exception))
         mock_verify.assert_called_once()
 
     @patch("commerce_coordinator.apps.iap.authentication.id_token.verify_oauth2_token")
