@@ -151,6 +151,8 @@ PAYMENT_PROCESSOR_CONFIG = {
             'google_bundle_id': 'SET-ME-PLEASE',
             'google_service_account_key_file': 'SET-ME-PLEASE',
             'google_publisher_api_scope': 'https://www.googleapis.com/auth/androidpublisher',
+            'iap_android_refund_push_subscription': "projects/openedx-mobile/subscriptions/TestPushSubAndroidRefund",
+            'google_auth_aud_key': "dummy_key"
         },
         'ios_iap': {
             'ios_bundle_id': 'SET-ME-PLEASE',
