@@ -311,7 +311,7 @@ class AndroidRefundView(SingleInvocationAPIView):
     permission_classes = [AllowAny]
     throttle_classes = []
     refund_subscription_type = (
-        settings.IAP_ANDROID_REFUND_PUSH_SUBSCRIPTION
+        settings.PAYMENT_PROCESSOR_CONFIG['edx']['android_iap']['iap_android_refund_push_subscription']
     )
 
     @csrf_exempt
