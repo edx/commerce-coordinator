@@ -135,7 +135,7 @@
 | commerce\_coordinator/apps/frontend\_app\_payment/urls.py                              |        4 |        0 |        0 |        0 |    100% |           |
 | commerce\_coordinator/apps/frontend\_app\_payment/views.py                             |       18 |        6 |        0 |        0 |     67% |     28-36 |
 | commerce\_coordinator/apps/iap/\_\_init\_\_.py                                         |        0 |        0 |        0 |        0 |    100% |           |
-| commerce\_coordinator/apps/iap/authentication.py                                       |       20 |        0 |        2 |        0 |    100% |           |
+| commerce\_coordinator/apps/iap/authentication.py                                       |       25 |        1 |        4 |        1 |     93% |        51 |
 | commerce\_coordinator/apps/iap/google\_validator.py                                    |       37 |        0 |        4 |        0 |    100% |           |
 | commerce\_coordinator/apps/iap/ios\_validator.py                                       |       19 |        0 |        2 |        0 |    100% |           |
 | commerce\_coordinator/apps/iap/payment\_processor.py                                   |      101 |        0 |       22 |        0 |    100% |           |
@@ -210,7 +210,7 @@
 | commerce\_coordinator/apps/stripe/views.py                                             |       63 |       11 |       10 |        3 |     78% |65, 67, 112-145 |
 | commerce\_coordinator/docker\_gunicorn\_configuration.py                               |       27 |       27 |       10 |        0 |      0% |      4-57 |
 | commerce\_coordinator/urls.py                                                          |       24 |        0 |        0 |        0 |    100% |           |
-|                                                                              **TOTAL** | **9315** |  **400** |  **652** |   **64** | **95%** |           |
+|                                                                              **TOTAL** | **9320** |  **401** |  **654** |   **65** | **95%** |           |
 
 
 ## Setup coverage badge
