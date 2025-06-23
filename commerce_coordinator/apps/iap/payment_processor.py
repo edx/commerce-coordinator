@@ -31,12 +31,23 @@ class IAPPaymentProcessor:
     def __init__(self):
         self.client = CommercetoolsAPIClient()
 
+    def get_consumable_ios_sku(self, price: int) -> str:
+        """
+        Returns the iOS consumable product ID (SKU) based on the given price.
+
+        Args:
+            price (int): Price of the product in USD.
+
+        Returns:
+            str: Corresponding product SKU string.
+        """
+        return f"mobile.ios.usd{int(price)}"
+
     def validate_iap(self, request_data, cart_id, price) -> dict:
         """
         Validates IAP (In-App Purchase) based on the 'payment_processor' value in request_data.
         """
         purchase_token = request_data.get('purchase_token')
-        course_run_key = request_data.get('course_run_key')
         payment_processor = request_data.get('payment_processor')
 
         if payment_processor == 'android-iap':
@@ -65,7 +76,7 @@ class IAPPaymentProcessor:
         if payment_processor == 'android-iap':
             return self._handle_android_validation(validation_response, cart_id)
         else:
-            return self._handle_ios_validation(validation_response, course_run_key, cart_id)
+            return self._handle_ios_validation(validation_response, price, cart_id)
 
     @retry(
         stop=stop_after_attempt(AVAILABLE_ATTEMPTS + RETRY_ATTEMPTS),
@@ -149,13 +160,14 @@ class IAPPaymentProcessor:
             'created_at': purchase_utc_time
         }
 
-    def _handle_ios_validation(self, validation_response: dict, product_sku: str, cart_id) -> dict:
+    def _handle_ios_validation(self, validation_response: dict, price: int, cart_id) -> dict:
         """
         Handle iOS-specific IAP validation logic.
 
         Args:
             validation_response (dict): The validation response from App Store.
-            product_sku (str): The SKU of the product to validate.
+            price (int): The expected price of the consumable product in USD.
+            cart_id (str): The cart ID related to the transaction.
 
         Returns:
             dict: The processed validation result.
@@ -163,24 +175,30 @@ class IAPPaymentProcessor:
         receipt = validation_response.get('receipt', {})
         in_app_purchases = receipt.get('in_app', [])
 
-        matched_purchase = next(
-            (purchase for purchase in in_app_purchases if purchase.get('product_id') == product_sku),
-            None
-        )
+        product_sku = self.get_consumable_ios_sku(price)
+        matched_purchases = [
+            purchase for purchase in in_app_purchases if purchase.get('product_id') == product_sku
+        ]
 
-        if not matched_purchase:
+        if not matched_purchases:
             error_msg = f"No matching iOS IAP purchase found for SKU: {product_sku}"
             logger.error(error_msg)
             raise ValidationError(error_msg)
 
+        latest_match_purchase = max(
+            matched_purchases, key=lambda x: int(x.get('purchase_date_ms', 0))
+        )
+
         # Update the receipt to only include the matched purchase
-        receipt['in_app'] = [matched_purchase]
+        receipt['in_app'] = [latest_match_purchase]
         validation_response['receipt'] = receipt
 
-        original_transaction_id = matched_purchase.get('original_transaction_id')
+        original_transaction_id = latest_match_purchase.get('original_transaction_id')
 
-        if 'cancellation_reason' in matched_purchase:
-            error_message = f'iOS payment is cancelled for [{original_transaction_id}] in cart [{cart_id}]'
+        if 'cancellation_reason' in latest_match_purchase:
+            error_message = (
+                f'iOS payment is cancelled for [{original_transaction_id}] in cart [{cart_id}]'
+            )
             logger.error(error_message)
             raise UserCancelled(error_message)
 
@@ -198,7 +216,7 @@ class IAPPaymentProcessor:
         logger.info("iOS IAP validated successfully.")
         return {
             'transaction_id': original_transaction_id,
-            'created_at': validation_response.get('receipt', {}).get('receipt_creation_date')
+            'created_at': receipt.get('receipt_creation_date')
         }
 
 
