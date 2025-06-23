@@ -10,7 +10,7 @@ aiohappyeyeballs==2.6.1
     # via
     #   -r requirements/test.txt
     #   aiohttp
-aiohttp==3.12.8
+aiohttp==3.12.13
     # via
     #   -r requirements/test.txt
     #   inapppy
@@ -24,7 +24,7 @@ amqp==5.3.1
     # via
     #   -r requirements/test.txt
     #   kombu
-apimatic-core==0.2.20
+apimatic-core==0.2.21
     # via
     #   -r requirements/test.txt
     #   paypal-server-sdk
@@ -84,7 +84,7 @@ celery[redis]==5.4.0
     # via
     #   -c requirements/constraints.txt
     #   -r requirements/test.txt
-certifi==2025.4.26
+certifi==2025.6.15
     # via
     #   -r requirements/test.txt
     #   requests
@@ -148,16 +148,17 @@ coreschema==0.0.4
     # via
     #   -r requirements/test.txt
     #   coreapi
-coverage[toml]==7.8.2
+coverage[toml]==7.9.1
     # via
     #   -r requirements/test.txt
     #   pytest-cov
-cryptography==45.0.3
+cryptography==45.0.4
     # via
     #   -r requirements/test.txt
     #   app-store-notifications-v2-validator
     #   pyjwt
     #   pyopenssl
+    #   secretstorage
     #   social-auth-core
 currencies==2020.12.12
     # via -r requirements/test.txt
@@ -176,7 +177,7 @@ distlib==0.3.9
     # via
     #   -r requirements/test.txt
     #   virtualenv
-django==4.2.21
+django==4.2.23
     # via
     #   -c requirements/common_constraints.txt
     #   -c requirements/constraints.txt
@@ -206,7 +207,7 @@ django-extensions==4.1
     # via -r requirements/test.txt
 django-rest-swagger==2.2.0
     # via -r requirements/test.txt
-django-waffle==4.2.0
+django-waffle==5.0.0
     # via
     #   -r requirements/test.txt
     #   edx-django-utils
@@ -221,7 +222,7 @@ dnspython==2.7.0
     # via
     #   -r requirements/test.txt
     #   pymongo
-doc8==1.1.2
+doc8==2.0.0
     # via -r requirements/doc.in
 docutils==0.21.2
     # via
@@ -262,20 +263,20 @@ filelock==3.18.0
     #   -r requirements/test.txt
     #   tox
     #   virtualenv
-frozenlist==1.6.2
+frozenlist==1.7.0
     # via
     #   -r requirements/test.txt
     #   aiohttp
     #   aiosignal
-google-api-core==2.25.0
+google-api-core==2.25.1
     # via
     #   -r requirements/test.txt
     #   google-api-python-client
-google-api-python-client==2.171.0
+google-api-python-client==2.173.0
     # via
     #   -r requirements/test.txt
     #   inapppy
-google-auth==2.40.2
+google-auth==2.40.3
     # via
     #   -r requirements/test.txt
     #   google-api-core
@@ -310,7 +311,7 @@ iniconfig==2.1.0
     # via
     #   -r requirements/test.txt
     #   pytest
-iso4217==1.13.20250512
+iso4217==1.14.20250512
     # via -r requirements/test.txt
 isort==6.0.1
     # via
@@ -324,8 +325,12 @@ jaraco-classes==3.4.0
     # via keyring
 jaraco-context==6.0.1
     # via keyring
-jaraco-functools==4.1.0
+jaraco-functools==4.2.1
     # via keyring
+jeepney==0.9.0
+    # via
+    #   keyring
+    #   secretstorage
 jinja2==3.1.6
     # via
     #   -r requirements/test.txt
@@ -375,11 +380,11 @@ more-itertools==10.7.0
     # via
     #   jaraco-classes
     #   jaraco-functools
-msgpack==1.1.0
+msgpack==1.1.1
     # via
     #   -r requirements/test.txt
     #   cachecontrol
-multidict==6.4.4
+multidict==6.5.0
     # via
     #   -r requirements/test.txt
     #   aiohttp
@@ -392,7 +397,7 @@ oauth2client==4.1.3
     # via
     #   -r requirements/test.txt
     #   inapppy
-oauthlib==3.2.2
+oauthlib==3.3.1
     # via
     #   -r requirements/test.txt
     #   requests-oauthlib
@@ -433,12 +438,13 @@ pluggy==1.6.0
     # via
     #   -r requirements/test.txt
     #   pytest
+    #   pytest-cov
     #   tox
 prompt-toolkit==3.0.51
     # via
     #   -r requirements/test.txt
     #   click-repl
-propcache==0.3.1
+propcache==0.3.2
     # via
     #   -r requirements/test.txt
     #   aiohttp
@@ -475,7 +481,7 @@ pycparser==2.22
     #   cffi
 pydata-sphinx-theme==0.15.4
     # via sphinx-book-theme
-pygments==2.19.1
+pygments==2.19.2
     # via
     #   -r requirements/test.txt
     #   accessible-pygments
@@ -515,7 +521,7 @@ pylint-plugin-utils==0.8.2
     #   -r requirements/test.txt
     #   pylint-celery
     #   pylint-django
-pymongo==4.13.0
+pymongo==4.13.2
     # via
     #   -r requirements/test.txt
     #   edx-opaque-keys
@@ -537,12 +543,12 @@ pyproject-api==1.9.1
     #   tox
 pyproject-hooks==1.2.0
     # via build
-pytest==8.4.0
+pytest==8.4.1
     # via
     #   -r requirements/test.txt
     #   pytest-cov
     #   pytest-django
-pytest-cov==6.1.1
+pytest-cov==6.2.1
     # via -r requirements/test.txt
 pytest-django==4.11.1
     # via -r requirements/test.txt
@@ -576,7 +582,7 @@ redis==5.2.1
     # via
     #   -r requirements/test.txt
     #   celery
-requests==2.32.3
+requests==2.32.4
     # via
     #   -r requirements/test.txt
     #   apimatic-core
@@ -626,6 +632,8 @@ rsa==4.9.1
     #   google-auth
     #   inapppy
     #   oauth2client
+secretstorage==3.3.3
+    # via keyring
 segment-analytics-python==2.3.4
     # via -r requirements/test.txt
 semantic-version==2.10.0
@@ -697,11 +705,11 @@ text-unidecode==1.3
     # via
     #   -r requirements/test.txt
     #   python-slugify
-tomlkit==0.13.2
+tomlkit==0.13.3
     # via
     #   -r requirements/test.txt
     #   pylint
-tox==4.26.0
+tox==4.27.0
     # via -r requirements/test.txt
 twine==6.1.0
     # via -r requirements/doc.in
@@ -756,7 +764,7 @@ wrapt==1.17.2
     # via
     #   -r requirements/test.txt
     #   commercetools
-yarl==1.20.0
+yarl==1.20.1
     # via
     #   -r requirements/test.txt
     #   aiohttp
