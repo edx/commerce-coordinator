@@ -10,6 +10,7 @@ from typing import NamedTuple
 import app_store_notifications_v2_validator as ios_validator
 from commercetools import CommercetoolsError
 from commercetools.platform.models import Money
+from commercetools.platform.models.common import BaseAddress
 from django.conf import settings
 from django.views.decorators.csrf import csrf_exempt
 from rest_framework import status
@@ -139,17 +140,18 @@ class MobileCreateOrderView(APIView):
                     discount_codes=cart.discount_codes,
                 )
 
-            payment = client.create_payment(
-                amount_planned=external_price,
-                customer_id=customer.id,
-                payment_method=data.payment_processor.replace("-", " ").strip(),
-                payment_status="succeeded",
-                payment_processor=data.payment_processor,
-                psp_payment_id=payment_info["response"]["transaction_id"],
-                psp_transaction_id=payment_info["response"]["transaction_id"],
-                psp_transaction_created_at=payment_info["response"]["created_at"],
-                usd_cent_amount=standalone_price.cent_amount,
-            )
+            # Use existing payment if provided, otherwise create new one
+            payment = payment_info["response"].get("payment") or client.create_payment(
+                    amount_planned=external_price,
+                    customer_id=customer.id,
+                    payment_method=data.payment_processor.replace("_", " ").strip(),
+                    payment_status="succeeded",
+                    payment_processor=data.payment_processor,
+                    psp_payment_id=payment_info["response"]["transaction_id"],
+                    psp_transaction_id=payment_info["response"]["transaction_id"],
+                    psp_transaction_created_at=payment_info["response"]["created_at"],
+                    usd_cent_amount=standalone_price.cent_amount,
+                )
             emit_payment_info_entered_event(
                 lms_user_id=lms_user_id,
                 cart_id=cart.id,
@@ -157,9 +159,13 @@ class MobileCreateOrderView(APIView):
                 payment_method=payment.payment_method_info.payment_interface,
             )
 
-            cart = client.add_payment_to_cart(
+            region_code = payment_info['response'].get('region_code')
+            address = BaseAddress(country=region_code.upper()) if region_code else None
+
+            cart = client.add_payment_and_address_to_cart(
                 cart=cart,
                 payment_id=payment.id,
+                address=address,
             )
             order = client.create_order_from_cart(cart)
             order = client.update_line_items_transition_state(
