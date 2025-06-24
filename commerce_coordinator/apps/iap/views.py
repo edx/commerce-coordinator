@@ -112,7 +112,10 @@ class MobileCreateOrderView(APIView):
             )
 
             if payment_info["status_code"] != 200:
-                error_msg = payment_info["response"].get("error", "Unknown error")
+                error_msg = "[CreateOrderView] Payment Validation Failed. "
+                validation_error = payment_info["response"].get("error")
+                if validation_error:
+                    error_msg += f"Error: {validation_error}"
                 logger.error(error_msg)
                 client.delete_cart(cart)
 

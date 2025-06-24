@@ -297,44 +297,10 @@ class MobileCreateOrderViewTests(APITestCase):
         mock_ct_client.return_value.delete_cart.assert_called_once_with(mock_cart)
         self.assertEqual(response.status_code, 400)
         self.assertIn("error", response.data)
-        self.assertEqual(response.data["error"], "Invalid receipt")
-
-        @mock.patch("commerce_coordinator.apps.iap.views.get_ct_customer")
-        @mock.patch("commerce_coordinator.apps.iap.views.get_standalone_price_for_sku")
-        @mock.patch("commerce_coordinator.apps.iap.views.get_email_domain")
-        @mock.patch("commerce_coordinator.apps.iap.views.get_edx_lms_user_id")
-        @mock.patch("commerce_coordinator.apps.iap.views.get_payment_info_from_purchase_token")
-        def test_payment_processor_returns_error_and_cart_is_deleted(
-            self,
-            mock_get_payment_info,
-            mock_get_edx_lms_user_id,
-            mock_get_email_domain,
-            mock_get_standalone_price,
-            mock_get_ct_customer,
-            mock_ct_client,
-        ):
-            """Test handling when payment processor returns an error (non-200 status)."""
-            self.authenticate_user()
-
-            mock_customer = mock.MagicMock(id="customer-123", email=self.test_user_email)
-            mock_get_ct_customer.return_value = mock_customer
-            mock_cart = mock.MagicMock(id="cart-123")
-            mock_ct_client.return_value.get_customer_cart.return_value = None
-            mock_ct_client.return_value.create_cart.return_value = mock_cart
-            mock_get_email_domain.return_value = "example.com"
-            mock_get_standalone_price.return_value = Money(cent_amount=4999, currency_code="USD")
-            mock_get_edx_lms_user_id.return_value = 12345
-
-            mock_get_payment_info.return_value = {
-                "status_code": 400,
-                "response": {"error": "Invalid receipt"},
-            }
-
-            response = self.client.post(self.url, self.valid_payload, format="json")
-            mock_ct_client.return_value.delete_cart.assert_called_once_with(mock_cart)
-            self.assertEqual(response.status_code, 400)
-            self.assertIn("error", response.data)
-            self.assertEqual(response.data["error"], "Invalid receipt")
+        self.assertEqual(
+            response.data["error"],
+            "[CreateOrderView] Payment Validation Failed. Error: Invalid receipt"
+        )
 
     @mock.patch("commerce_coordinator.apps.iap.views.emit_order_completed_event")
     @mock.patch("commerce_coordinator.apps.iap.views.emit_payment_info_entered_event")
