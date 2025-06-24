@@ -154,7 +154,7 @@ class MobileCreateOrderView(APIView):
                 lms_user_id=lms_user_id,
                 cart_id=cart.id,
                 standalone_price=standalone_price,
-                payment_method=payment.payment_method_info.payment_interface,
+                payment_method=payment.payment_method_info.method,
             )
 
             cart = client.add_payment_to_cart(
@@ -175,9 +175,11 @@ class MobileCreateOrderView(APIView):
                 lms_user_id=lms_user_id,
                 cart_id=order.cart.id,
                 order_id=order.id,
+                tax=order.taxed_price,
                 standalone_price=standalone_price,
                 line_items=cart.line_items,
-                payment_method=payment.payment_method_info.payment_interface,
+                payment_method=payment.payment_method_info.method,
+                processor_name=payment.payment_method_info.name.get("en", "android iap"),
                 discount_codes=order.discount_codes,
                 discount_on_line_items=None,
                 discount_on_total_price=cart.discount_on_total_price,

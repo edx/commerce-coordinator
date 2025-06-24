@@ -1,4 +1,5 @@
 import decimal
+from types import SimpleNamespace
 from typing import List, Optional, Union
 
 from commercetools.platform.models import Attribute, CentPrecisionMoney
@@ -112,7 +113,7 @@ def get_edx_is_sanctioned(order: CTOrder) -> bool:
 def cents_to_dollars(in_amount):
 
     if not in_amount:
-        return None
+        return 0
     else:
         return in_amount.cent_amount / pow(
             10, in_amount.fraction_digits
@@ -230,11 +231,11 @@ def sum_money(*args: Optional[list[CentPrecisionMoney]]) -> CentPrecisionMoney:
 
     total_cent_amount = sum(amount.cent_amount for amount in amount_list)
 
-    return {
-        'cent_amount': total_cent_amount,
-        'fraction_digits': amount_list[0].fraction_digits,
-        'currency_code': amount_list[0].currency_code
-    }
+    return SimpleNamespace(
+        cent_amount=total_cent_amount,
+        fraction_digits=amount_list[0].fraction_digits,
+        currency_code=amount_list[0].currency_code
+    )
 
 
 def get_attribute_value(attributes: list[Attribute], key: str):
@@ -280,7 +281,7 @@ def get_product_from_line_item(line_item: CTLineItem, standalone_price: CentPrec
     """
 
     product_key = line_item.product_key
-    name = line_item.name
+    name = line_item.name.get("en-US", "")
     product_type = line_item.product_type
     count = line_item.quantity
     variant = line_item.variant
@@ -305,7 +306,7 @@ def get_product_from_line_item(line_item: CTLineItem, standalone_price: CentPrec
         "category": get_attribute_value(attributes, "primary-subject-area"),
         "url": get_attribute_value(attributes, "url-course"),
         "lob": get_attribute_value(attributes, "lob") or "edx",
-        "image_url": images[0] if images else None,
+        "image_url": images[0].get("url") if images else None,
         "brand": get_attribute_value(attributes, "brand-text"),
         "product_type": product_type.obj.name if product_type.obj.name else None,
     }
