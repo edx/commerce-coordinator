@@ -67,7 +67,7 @@
             <a id="nextFileLink" class="nav" href="z_34aa2e157a66e0c1_views_py.html">&#xbb; next</a>
             &nbsp; &nbsp; &nbsp;
             <a class="nav" href="https://coverage.readthedocs.io/en/7.9.1">coverage.py v7.9.1</a>,
-            created at 2025-06-23 05:28 +0000
+            created at 2025-06-24 11:40 +0000
         </p>
         <aside class="hidden">
             <button type="button" class="button_next_chunk" data-shortcut="j"></button>
@@ -93,7 +93,7 @@
     <p class="run"><span class="n"><a id="t9" href="#t9">9</a></span><span class="t"><span class="key">from</span> <span class="nam">iso4217</span> <span class="key">import</span> <span class="nam">Currency</span>&nbsp;</span><span class="r"></span></p>
     <p class="run"><span class="n"><a id="t10" href="#t10">10</a></span><span class="t"><span class="key">from</span> <span class="nam">rest_framework</span> <span class="key">import</span> <span class="nam">status</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t11" href="#t11">11</a></span><span class="t">&nbsp;</span><span class="r"></span></p>
-    <p class="run"><span class="n"><a id="t12" href="#t12">12</a></span><span class="t"><span class="key">from</span> <span class="nam">commerce_coordinator</span><span class="op">.</span><span class="nam">apps</span><span class="op">.</span><span class="nam">commercetools</span><span class="op">.</span><span class="nam">catalog_info</span><span class="op">.</span><span class="nam">constants</span> <span class="key">import</span> <span class="nam">EdXFieldNames</span>&nbsp;</span><span class="r"></span></p>
+    <p class="run"><span class="n"><a id="t12" href="#t12">12</a></span><span class="t"><span class="key">from</span> <span class="nam">commerce_coordinator</span><span class="op">.</span><span class="nam">apps</span><span class="op">.</span><span class="nam">commercetools</span><span class="op">.</span><span class="nam">catalog_info</span><span class="op">.</span><span class="nam">constants</span> <span class="key">import</span> <span class="nam">ANDROID_IAP</span><span class="op">,</span> <span class="nam">IOS_IAP</span><span class="op">,</span> <span class="nam">EdXFieldNames</span>&nbsp;</span><span class="r"></span></p>
     <p class="run"><span class="n"><a id="t13" href="#t13">13</a></span><span class="t"><span class="key">from</span> <span class="nam">commerce_coordinator</span><span class="op">.</span><span class="nam">apps</span><span class="op">.</span><span class="nam">commercetools</span><span class="op">.</span><span class="nam">clients</span> <span class="key">import</span> <span class="nam">CommercetoolsAPIClient</span>&nbsp;</span><span class="r"></span></p>
     <p class="run"><span class="n"><a id="t14" href="#t14">14</a></span><span class="t"><span class="key">from</span> <span class="nam">commerce_coordinator</span><span class="op">.</span><span class="nam">apps</span><span class="op">.</span><span class="nam">commercetools</span><span class="op">.</span><span class="nam">http_api_client</span> <span class="key">import</span> <span class="nam">CTCustomAPIClient</span>&nbsp;</span><span class="r"></span></p>
     <p class="run"><span class="n"><a id="t15" href="#t15">15</a></span><span class="t"><span class="key">from</span> <span class="nam">commerce_coordinator</span><span class="op">.</span><span class="nam">apps</span><span class="op">.</span><span class="nam">iap</span><span class="op">.</span><span class="nam">payment_processor</span> <span class="key">import</span> <span class="op">(</span>&nbsp;</span><span class="r"></span></p>
@@ -272,7 +272,7 @@
     <p class="pln"><span class="n"><a id="t188" href="#t188">188</a></span><span class="t"><span class="str">    """</span>&nbsp;</span><span class="r"></span></p>
     <p class="run"><span class="n"><a id="t189" href="#t189">189</a></span><span class="t">    <span class="nam">payment_processor</span> <span class="op">=</span> <span class="nam">request_data</span><span class="op">.</span><span class="nam">get</span><span class="op">(</span><span class="str">'payment_processor'</span><span class="op">,</span> <span class="str">''</span><span class="op">)</span><span class="op">.</span><span class="nam">lower</span><span class="op">(</span><span class="op">)</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t190" href="#t190">190</a></span><span class="t">&nbsp;</span><span class="r"></span></p>
-    <p class="run"><span class="n"><a id="t191" href="#t191">191</a></span><span class="t">    <span class="key">if</span> <span class="nam">payment_processor</span> <span class="key">not</span> <span class="key">in</span> <span class="op">[</span><span class="str">'android-iap'</span><span class="op">,</span> <span class="str">'ios-iap'</span><span class="op">]</span><span class="op">:</span>&nbsp;</span><span class="r"></span></p>
+    <p class="run"><span class="n"><a id="t191" href="#t191">191</a></span><span class="t">    <span class="key">if</span> <span class="nam">payment_processor</span> <span class="key">not</span> <span class="key">in</span> <span class="op">[</span><span class="nam">ANDROID_IAP</span><span class="op">,</span> <span class="nam">IOS_IAP</span><span class="op">]</span><span class="op">:</span>&nbsp;</span><span class="r"></span></p>
     <p class="run"><span class="n"><a id="t192" href="#t192">192</a></span><span class="t">        <span class="key">return</span> <span class="op">{</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t193" href="#t193">193</a></span><span class="t">            <span class="str">'response'</span><span class="op">:</span> <span class="op">{</span><span class="str">'error'</span><span class="op">:</span> <span class="str">'Unsupported payment processor'</span><span class="op">}</span><span class="op">,</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t194" href="#t194">194</a></span><span class="t">            <span class="str">'status_code'</span><span class="op">:</span> <span class="nam">status</span><span class="op">.</span><span class="nam">HTTP_400_BAD_REQUEST</span>&nbsp;</span><span class="r"></span></p>
@@ -304,7 +304,7 @@
             <a class="nav" href="z_34aa2e157a66e0c1_views_py.html">&#xbb; next</a>
             &nbsp; &nbsp; &nbsp;
             <a class="nav" href="https://coverage.readthedocs.io/en/7.9.1">coverage.py v7.9.1</a>,
-            created at 2025-06-23 05:28 +0000
+            created at 2025-06-24 11:40 +0000
         </p>
     </div>
 </footer>
