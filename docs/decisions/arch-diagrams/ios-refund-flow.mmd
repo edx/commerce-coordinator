@@ -1,0 +1,27 @@
+sequenceDiagram
+    %% ===== iOS (Apple) Refund Flow =====
+    participant Apple as Apple Server
+    participant CommerceCoordinator(CC) as CC refund view
+    participant Commercetools as Commercetools (CoCo)
+    participant CTEventBridge as EventBridge (CT Return created)
+
+    Apple->>CommerceCoordinator(CC): Send refund notification (POST)
+    CommerceCoordinator(CC)->>CommerceCoordinator(CC): Parse and verify Apple notification
+
+    alt notificationType == "REFUND"
+        CommerceCoordinator(CC)->>CommerceCoordinator(CC): Check if notification already processed
+        alt Not processed yet
+            CommerceCoordinator(CC)->>CommerceCoordinator(CC): Mark as running
+            CommerceCoordinator(CC)->>CommerceCoordinator(CC): Validate and retrieve latest refund from consumable products
+            CommerceCoordinator(CC)->>CommerceCoordinator(CC): Extract refund info (ID, time, price, currency)
+            CommerceCoordinator(CC)->>Commercetools: Create refund object (ID, time)
+            Commercetools->>CTEventBridge: Emit CT `Return created` subscription message
+        else Already processing
+            CommerceCoordinator(CC)->>CommerceCoordinator(CC): Skip processing
+        end
+    else Other notification types
+        CommerceCoordinator(CC)->>CommerceCoordinator(CC): Log and ignore
+    end
+
+    CommerceCoordinator(CC)-->>Apple: Respond with HTTP 200 OK
+
