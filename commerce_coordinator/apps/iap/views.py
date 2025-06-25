@@ -147,7 +147,7 @@ class MobileCreateOrderView(APIView):
             payment = payment_info["response"].get("payment") or client.create_payment(
                     amount_planned=external_price,
                     customer_id=customer.id,
-                    payment_method=data.payment_processor.replace("_", " ").strip(),
+                    payment_method=data.payment_processor,
                     payment_status="succeeded",
                     payment_processor=data.payment_processor,
                     psp_payment_id=payment_info["response"]["transaction_id"],
