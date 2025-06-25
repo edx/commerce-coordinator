@@ -1,0 +1,88 @@
+flowchart TD
+    %% User and App
+    User["👤 User"] --> MobileApp["📱 Mobile App (iOS/Android)"]
+    MobileApp --> CTBackend["CT Backend Server"]
+
+    %% Customer Handling with Commercetools
+    CTBackend --> GetCustomer["Get CT customer by LMS user ID"]
+    GetCustomer -->|Customer not found| CreateCustomer["Create customer with user info"]
+    CreateCustomer --> CoCo
+    CoCo --> ReturnNewCustomer["Return newly created customer"]
+    ReturnNewCustomer --> CTBackend
+
+    GetCustomer -->|Customer exists| UpdateCustomer["Update customer if needed"]
+    UpdateCustomer --> CoCo
+    CoCo --> ReturnUpdatedCustomer["Return updated customer"]
+    ReturnUpdatedCustomer --> CTBackend
+
+    %% Cart Flow
+    CTBackend --> CheckCart["Check if cart exists"]
+    CheckCart -->|Exists| DeleteCart["Delete existing cart"]
+    CheckCart -->|Not found| CreateCart["Create new cart with course & price"]
+    CreateCart --> CoCo["Commercetools (CoCo)"]
+
+    %% IAP Token Validation
+    CTBackend --> IAPValidator["Validate Token (IAPValidator)"]
+    IAPValidator --> GooglePlay["Google Play"]
+    IAPValidator --> AppleStore["Apple App Store"]
+    IAPValidator --> CheckTokenReuse["Check if token already used"]
+
+    CheckTokenReuse -->|Used| ErrorDuplicate["❌ Duplicate token"]
+    ErrorDuplicate --> DeleteCart --> MobileApp
+
+    CheckTokenReuse -->|Valid| ProceedPayment["Proceed with payment"]
+
+    %% Payment Creation
+    ProceedPayment --> CreatePayment["Create Payment Object in CoCo"]
+    CreatePayment --> UpdateCustomField["Add usdCentAmount (USD price)"]
+    UpdateCustomField --> AttachPayment["Attach payment to cart"]
+    AttachPayment -->|Fail| PaymentError["❌ Payment attach failed"]
+    PaymentError --> MobileApp
+
+    AttachPayment --> CreateOrder["Create Order from Cart"]
+    CreateOrder -->|Fail| OrderFail["❌ Order creation failed"]
+    OrderFail --> MobileApp
+
+    CreateOrder --> UpdateItemStates["Mark items as ready for delivery"]
+    UpdateItemStates -->|Fail| StateFail["❌ State update failed"]
+    StateFail --> MobileApp
+
+    UpdateItemStates --> FinalOrder["✅ Order complete"]
+    FinalOrder --> MobileApp
+
+    %% Events
+    CTBackend --> EventCheckout["Event: Checkout started"]
+    CTBackend --> EventAddToCart["Event: Item added"]
+    CTBackend --> EventPayment["Event: Payment used"]
+    FinalOrder --> EventOrderComplete["Event: Order completed"]
+
+    %% Refunds - Android (Manual via Admin or Mobile Trigger)
+    MobileApp --> AndroidRefund["Android Refund View"]
+    Admin["🧑‍💼 Admin"] --> AndroidRefund
+    AndroidRefund --> GoogleVoided["Google Voided Purchases API"]
+    AndroidRefund --> AndroidBridge["Send EventBridge Signal"]
+    AndroidBridge --> CoCoordinator["Commerce Coordinator"]
+    CoCoordinator --> RefundUpdateCT["Update refund status in CoCo"]
+    RefundUpdateCT --> MobileApp
+
+    %% Refunds - iOS (Push from Apple)
+    AppleServer["🍎 Apple Server"] --> AppleNotification["Apple Refund Notification"]
+    AppleNotification --> ParseNotif["Parse & verify notification"]
+    ParseNotif --> CheckProcessed["Already processed?"]
+    CheckProcessed -->|Yes| SkipNotif["Skip duplicate"]
+    CheckProcessed -->|No| ExtractRefund["Extract refund info"]
+    ExtractRefund --> AppleBridge["Send EventBridge Signal"]
+    AppleBridge --> CoCoordinator
+    CoCoordinator --> RefundUpdateCTiOS["Update refund status in CoCo"]
+    RefundUpdateCTiOS --> MobileApp
+
+    %% Styling
+    classDef logic fill:#fff8e1,stroke:#fdd835,stroke-width:1px;
+    classDef store fill:#e1f5fe,stroke:#4fc3f7,stroke-width:1px;
+    classDef error fill:#ffebee,stroke:#e57373,stroke-width:1px;
+    classDef event fill:#e8f5e9,stroke:#81c784,stroke-width:1px;
+
+    class CheckCart,DeleteCart,CreateCart,ProceedPayment,CreatePayment,UpdateCustomField,AttachPayment,CreateOrder,UpdateItemStates,FinalOrder,GetCustomer,CreateCustomer,UpdateCustomer logic;
+    class GooglePlay,AppleStore,GoogleVoided,AppleServer,CoCo store;
+    class ErrorDuplicate,PaymentError,OrderFail,StateFail,SkipNotif error;
+    class EventCheckout,EventAddToCart,EventPayment,EventOrderComplete,AndroidBridge,AppleBridge event;

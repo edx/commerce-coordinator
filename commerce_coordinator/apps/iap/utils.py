@@ -9,7 +9,7 @@ from commercetools.platform.models import CentPrecisionMoney, Customer
 from iso4217 import Currency
 from rest_framework import status
 
-from commerce_coordinator.apps.commercetools.catalog_info.constants import EdXFieldNames
+from commerce_coordinator.apps.commercetools.catalog_info.constants import ANDROID_IAP, IOS_IAP, EdXFieldNames
 from commerce_coordinator.apps.commercetools.clients import CommercetoolsAPIClient
 from commerce_coordinator.apps.commercetools.http_api_client import CTCustomAPIClient
 from commerce_coordinator.apps.iap.payment_processor import (
@@ -188,7 +188,7 @@ def get_payment_info_from_purchase_token(request_data, cart_id, price):
     """
     payment_processor = request_data.get('payment_processor', '').lower()
 
-    if payment_processor not in ['android-iap', 'ios-iap']:
+    if payment_processor not in [ANDROID_IAP, IOS_IAP]:
         return {
             'response': {'error': 'Unsupported payment processor'},
             'status_code': status.HTTP_400_BAD_REQUEST

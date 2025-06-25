@@ -151,7 +151,7 @@ def fulfill_order_placed_message_signal_task(
         product_title = ct_program_product.name.get('en-US', '') if ct_program_product else item.name.get('en-US', '')
 
         course_mode = get_course_mode_from_ct_order(item)
-        default_params['provider'] = get_line_item_attribute(item, 'credit-provider')
+        default_params['provider_id'] = get_line_item_attribute(item, 'credit-provider')
 
         serializer_data = {
                 **default_params,

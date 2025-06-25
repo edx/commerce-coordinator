@@ -106,7 +106,7 @@ class MobileCreateOrderViewTests(APITestCase):
         mock_uuid.return_value = "test-uuid"
 
         self.valid_payload = {
-            "payment_processor": "ios-iap",  # Must be valid!
+            "payment_processor": "ios_iap",  # Must be valid!
             "course_run_key": "demo-course-run",
             "price": "49.99",
             "currency_code": "USD",
@@ -214,7 +214,7 @@ class MobileCreateOrderViewTests(APITestCase):
         mock_uuid.return_value = "test-uuid"
 
         self.valid_payload = {
-            "payment_processor": "ios-iap",
+            "payment_processor": "ios_iap",
             "course_run_key": "demo-course-run",
             "price": "49.99",
             "currency_code": "USD",
@@ -297,44 +297,77 @@ class MobileCreateOrderViewTests(APITestCase):
         mock_ct_client.return_value.delete_cart.assert_called_once_with(mock_cart)
         self.assertEqual(response.status_code, 400)
         self.assertIn("error", response.data)
-        self.assertEqual(response.data["error"], "Invalid receipt")
+        self.assertEqual(
+            response.data["error"],
+            "[CreateOrderView] Payment Validation Failed. Error: Invalid receipt"
+        )
 
-        @mock.patch("commerce_coordinator.apps.iap.views.get_ct_customer")
-        @mock.patch("commerce_coordinator.apps.iap.views.get_standalone_price_for_sku")
-        @mock.patch("commerce_coordinator.apps.iap.views.get_email_domain")
-        @mock.patch("commerce_coordinator.apps.iap.views.get_edx_lms_user_id")
-        @mock.patch("commerce_coordinator.apps.iap.views.get_payment_info_from_purchase_token")
-        def test_payment_processor_returns_error_and_cart_is_deleted(
-            self,
-            mock_get_payment_info,
-            mock_get_edx_lms_user_id,
-            mock_get_email_domain,
-            mock_get_standalone_price,
-            mock_get_ct_customer,
-            mock_ct_client,
-        ):
-            """Test handling when payment processor returns an error (non-200 status)."""
-            self.authenticate_user()
+    @mock.patch("commerce_coordinator.apps.iap.views.emit_order_completed_event")
+    @mock.patch("commerce_coordinator.apps.iap.views.emit_payment_info_entered_event")
+    @mock.patch("commerce_coordinator.apps.iap.views.emit_product_added_event")
+    @mock.patch("commerce_coordinator.apps.iap.views.emit_checkout_started_event")
+    @mock.patch("commerce_coordinator.apps.iap.views.get_ct_customer")
+    @mock.patch("commerce_coordinator.apps.iap.views.get_standalone_price_for_sku")
+    @mock.patch("commerce_coordinator.apps.iap.views.get_email_domain")
+    @mock.patch("commerce_coordinator.apps.iap.views.get_edx_lms_user_id")
+    @mock.patch("commerce_coordinator.apps.iap.views.get_payment_info_from_purchase_token")
+    def test_existing_payment_is_used_instead_of_creating_new(
+        self,
+        mock_get_payment_info,
+        mock_get_edx_lms_user_id,
+        mock_get_email_domain,
+        mock_get_standalone_price,
+        mock_get_ct_customer,
+        *args,
+    ):
+        mock_ct_client = args[-1]
+        self.authenticate_user()
 
-            mock_customer = mock.MagicMock(id="customer-123", email=self.test_user_email)
-            mock_get_ct_customer.return_value = mock_customer
-            mock_cart = mock.MagicMock(id="cart-123")
-            mock_ct_client.return_value.get_customer_cart.return_value = None
-            mock_ct_client.return_value.create_cart.return_value = mock_cart
-            mock_get_email_domain.return_value = "example.com"
-            mock_get_standalone_price.return_value = Money(cent_amount=4999, currency_code="USD")
-            mock_get_edx_lms_user_id.return_value = 12345
+        # Mock user and CT objects
+        mock_customer = mock.MagicMock()
+        mock_customer.id = "customer-1"
+        mock_customer.email = self.test_user_email
+        mock_get_ct_customer.return_value = mock_customer
+        mock_get_email_domain.return_value = "example.com"
+        mock_get_edx_lms_user_id.return_value = 12345
 
-            mock_get_payment_info.return_value = {
-                "status_code": 400,
-                "response": {"error": "Invalid receipt"},
-            }
+        mock_get_standalone_price.return_value = Money(cent_amount=4999, currency_code="USD")
 
-            response = self.client.post(self.url, self.valid_payload, format="json")
-            mock_ct_client.return_value.delete_cart.assert_called_once_with(mock_cart)
-            self.assertEqual(response.status_code, 400)
-            self.assertIn("error", response.data)
-            self.assertEqual(response.data["error"], "Invalid receipt")
+        mock_cart = mock.MagicMock(id="cart-xyz", line_items=[])
+        mock_ct_client.return_value.get_customer_cart.return_value = None
+        mock_ct_client.return_value.create_cart.return_value = mock_cart
+
+        mock_order = mock.MagicMock()
+        mock_order.id = "order-id-xyz"
+        mock_order.order_number = "ORDER-XYZ"
+        mock_order.version = 1
+        mock_order.line_items = [mock.MagicMock(state=[mock.MagicMock(state=mock.MagicMock(id="state-id"))])]
+        mock_order.cart.id = "cart-xyz"
+        mock_ct_client.return_value.create_order_from_cart.return_value = mock_order
+        mock_ct_client.return_value.update_line_items_transition_state.return_value = mock_order
+
+        # Fake existing payment
+        existing_payment = mock.MagicMock(id="existing-payment-id")
+        mock_get_payment_info.return_value = {
+            "status_code": 200,
+            "response": {
+                "transaction_id": "txn-123",
+                "created_at": "2025-05-21T12:00:00Z",
+                "payment": existing_payment,  # <- triggers the `payment = existing_payment` path
+            },
+        }
+
+        response = self.client.post(self.url, self.valid_payload, format="json")
+
+        # Assert response is successful
+        self.assertEqual(response.status_code, 201)
+        self.assertEqual(response.data["order_id"], "order-id-xyz")
+
+        mock_ct_client.return_value.create_payment.assert_not_called()
+
+        mock_ct_client.return_value.add_payment_and_address_to_cart.assert_called_once_with(
+            cart=mock_cart, payment_id="existing-payment-id", address=None,
+        )
 
 
 class IOSRefundViewTests(APITestCase):
@@ -430,7 +463,11 @@ class AndroidRefundViewTests(APITestCase):
                 "data": encoded_data,
                 "messageId": "test_refund_notification_processing",
             },
-            "subscription": settings.IAP_ANDROID_REFUND_PUSH_SUBSCRIPTION,
+            "subscription": settings.PAYMENT_PROCESSOR_CONFIG[
+                                'edx'
+                            ]['android_iap'][
+                                'iap_android_refund_push_subscription'
+                            ]
         }
 
         response = self.client.post(self.url, payload, format="json")
@@ -467,7 +504,11 @@ class AndroidRefundViewTests(APITestCase):
                 "data": encoded_data,
                 "messageId": "test_non_refund_notification",
             },
-            "subscription": settings.IAP_ANDROID_REFUND_PUSH_SUBSCRIPTION,
+            "subscription": settings.PAYMENT_PROCESSOR_CONFIG[
+                                'edx'
+                            ]['android_iap'][
+                                'iap_android_refund_push_subscription'
+                            ]
         }
 
         response = self.client.post(self.url, payload, format="json")
@@ -496,7 +537,11 @@ class AndroidRefundViewTests(APITestCase):
                 "data": encoded_data,
                 "messageId": "test_refund_type_check",
             },
-            "subscription": settings.IAP_ANDROID_REFUND_PUSH_SUBSCRIPTION,
+            "subscription": settings.PAYMENT_PROCESSOR_CONFIG[
+                                'edx'
+                            ]['android_iap'][
+                                'iap_android_refund_push_subscription'
+                            ]
         }
 
         response = self.client.post(self.url, payload, format="json")

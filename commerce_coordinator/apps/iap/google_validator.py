@@ -15,6 +15,8 @@ from google.oauth2 import service_account
 from googleapiclient.discovery import build
 from googleapiclient.errors import HttpError
 
+from commerce_coordinator.apps.commercetools.catalog_info.constants import ANDROID_IAP
+
 logger = logging.getLogger(__name__)
 
 
@@ -47,7 +49,7 @@ class GooglePlayValidator:
         Returns:
             dict: A dictionary containing the raw API response and status flags.
         """
-        configuration = settings.PAYMENT_PROCESSOR_CONFIG["edx"]["android_iap"]
+        configuration = settings.PAYMENT_PROCESSOR_CONFIG["edx"][ANDROID_IAP]
         bundle_id = configuration.get("google_bundle_id")
         service_account_info = configuration.get("google_service_account_key_file")
         if isinstance(service_account_info, str):
