@@ -310,7 +310,7 @@ class GetPaymentProcessorTests(TestCase):
 
     def setUp(self):
         self.request_data = {
-            "payment_processor": "android-iap",
+            "payment_processor": "android_iap",
             "purchase_token": "test-token"
         }
         self.cart = mock.MagicMock()

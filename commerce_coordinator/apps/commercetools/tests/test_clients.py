@@ -1,13 +1,14 @@
 """ Commercetools API Client(s) Testing """
 
 from datetime import datetime
-from unittest.mock import MagicMock
+from unittest.mock import MagicMock, Mock
 
 import pytest
 import requests_mock
 import stripe
 from commercetools import CommercetoolsError
 from commercetools.platform.models import (
+    BaseAddress,
     Customer,
     CustomerDraft,
     CustomerPagedQueryResponse,
@@ -29,6 +30,7 @@ from commercetools.platform.models import TypeReference
 from django.test import TestCase
 from mock import patch
 from openedx_filters.exceptions import OpenEdxFilterException
+from requests import Response
 
 from commerce_coordinator.apps.commercetools.catalog_info.constants import EdXFieldNames, TwoUKeys
 from commerce_coordinator.apps.commercetools.catalog_info.foundational_types import TwoUCustomTypes
@@ -1363,7 +1365,7 @@ class ClientTests(TestCase):
                 status_code=200,
             )
 
-            result = self.client_set.client.add_payment_to_cart(
+            result = self.client_set.client.add_payment_and_address_to_cart(
                 cart=cart,
                 payment_id="payment-id",
             )
@@ -1379,6 +1381,110 @@ class ClientTests(TestCase):
             self.assertEqual(len(actions), 1)
             self.assertEqual(actions[0]["action"], "addPayment")
             self.assertEqual(actions[0]["payment"]["id"], "payment-id")
+
+    def test_add_payment_and_address_to_cart(self):
+        """Test adding a payment and address to a cart"""
+        base_url = self.client_set.get_base_url_from_client()
+        cart_id = uuid4_str()
+        cart_version = 1
+        customer_id = uuid4_str()
+        email = "user@example.com"
+
+        cart = gen_cart(
+            cart_id=cart_id,
+            cart_version=cart_version,
+            customer_id=customer_id,
+            customer_email=email,
+        )
+
+        updated_cart = gen_cart(
+            cart_id=cart_id,
+            cart_version=cart_version + 1,
+            customer_id=customer_id,
+            customer_email=email,
+        )
+
+        address = BaseAddress(country="US")
+
+        with requests_mock.Mocker(real_http=True, case_sensitive=False) as mocker:
+            mocker.post(
+                f"{base_url}carts/{cart_id}",
+                json=updated_cart.serialize(),
+                status_code=200,
+            )
+
+            result = self.client_set.client.add_payment_and_address_to_cart(
+                cart=cart,
+                payment_id="payment-id",
+                address=address,
+            )
+
+            # Verify cart was updated correctly
+            self.assertEqual(result.id, cart_id)
+            self.assertEqual(result.version, cart_version + 1)
+
+            # Verify request had correct actions
+            request_body = mocker.last_request.json()
+            actions = request_body["actions"]
+
+            self.assertEqual(len(actions), 3)
+
+            self.assertEqual(actions[0]["action"], "addPayment")
+            self.assertEqual(actions[0]["payment"]["id"], "payment-id")
+
+            self.assertEqual(actions[1]["action"], "setBillingAddress")
+            self.assertEqual(actions[1]["address"]["country"], "US")
+
+            self.assertEqual(actions[2]["action"], "setShippingAddress")
+            self.assertEqual(actions[2]["address"]["country"], "US")
+
+    def test_add_payment_to_cart_commercetools_error(self):
+        """Test handling CommercetoolsError when adding payment to cart"""
+        cart_id = uuid4_str()
+        cart_version = 1
+        customer_id = uuid4_str()
+        email = "user@example.com"
+
+        cart = gen_cart(
+            cart_id=cart_id,
+            cart_version=cart_version,
+            customer_id=customer_id,
+            customer_email=email,
+        )
+
+        # Create dummy response and errors
+        dummy_response = Mock()
+        dummy_response.status_code = 400
+        dummy_response.headers = {"X-Correlation-ID": "mock-correlation-id"}
+
+        dummy_errors = [{"code": "InvalidOperation", "message": "Invalid cart update"}]
+
+        error = CommercetoolsError(
+            message="Update failed",
+            errors=dummy_errors,
+            response=dummy_response
+        )
+
+        with patch.object(
+            self.client_set.client.base_client.carts, "update_by_id", side_effect=error
+        ), patch(
+            "commerce_coordinator.apps.commercetools.clients.logging.Logger.error"
+        ) as log_mock:
+            with self.assertRaises(CommercetoolsError):
+                self.client_set.client.add_payment_and_address_to_cart(
+                    cart=cart,
+                    payment_id="payment-id",
+                )
+
+            expected_message = (
+                f"[CommercetoolsAPIClient.add_payment_and_address_to_cart] "
+                f"Failed to add payment to cart: {cart.id} "
+                f"for customer: {cart.customer_id}"
+            )
+
+            log_mock.assert_called_once()
+            logged_msg = log_mock.call_args[0][0]
+            assert expected_message in logged_msg
 
     def test_create_order_from_cart(self):
         """Test creating an order from a cart"""
@@ -1455,6 +1561,48 @@ class ClientTests(TestCase):
         assert "Customer not found" in str(exc.value)
         mock_get_order_by_id.assert_called_once_with("order-xyz")
         mock_get_customer_by_id.assert_called_once_with("customer-999")
+
+    def test_get_dangling_payment_returns_true(self):
+        payment = gen_payment()
+        self.client_set.backend_repo.payments.add_existing(payment)
+
+        # Patch the carts query to return no carts
+        self.client_set.client.base_client.carts.query = MagicMock(return_value=MagicMock(results=[]))
+
+        result = self.client_set.client.is_dangling_payment(payment)
+        self.assertTrue(result)
+
+    def test_get_dangling_payment_returns_false_when_attached_to_cart(self):
+        payment = gen_payment()
+        self.client_set.backend_repo.payments.add_existing(payment)
+
+        # Patch the carts query to return a cart
+        fake_cart = MagicMock()
+        self.client_set.client.base_client.carts.query = MagicMock(return_value=MagicMock(results=[fake_cart]))
+
+        result = self.client_set.client.is_dangling_payment(payment)
+        self.assertFalse(result)
+
+    def test_get_dangling_payment_returns_false_on_exception(self):
+        payment = gen_payment()
+        self.client_set.backend_repo.payments.add_existing(payment)
+
+        # Create a mock Response and mock CommercetoolsError
+        mock_response = Response()
+        mock_response.status_code = 500
+
+        error = CommercetoolsError(
+            message="API failure",
+            errors=[],
+            response=mock_response
+        )
+
+        # Patch the query method to raise the error
+        self.client_set.client.base_client.carts.query = MagicMock(side_effect=error)
+
+        # Run and assert
+        result = self.client_set.client.is_dangling_payment(payment)
+        self.assertFalse(result)
 
     @patch(
         'commerce_coordinator.apps.commercetools.clients.CommercetoolsAPIClient.get_payment_by_key'

@@ -46,7 +46,7 @@ class TestIAPPaymentProcessor(unittest.TestCase):
         request_data = {
             'purchase_token': 'test_token',
             'course_run_key': 'test_course',
-            'payment_processor': 'android-iap',
+            'payment_processor': 'android_iap',
         }
         result = self.processor.validate_iap(request_data, cart_id='cart_123', price=100)
 
@@ -58,7 +58,7 @@ class TestIAPPaymentProcessor(unittest.TestCase):
 
         request_data = {
             'purchase_token': 'test_token',
-            'payment_processor': 'android-iap',
+            'payment_processor': 'android_iap',
         }
         with self.assertRaises(ValidationError) as cm:
             self.processor.validate_iap(request_data, cart_id='cart_123', price=100)
@@ -83,16 +83,44 @@ class TestIAPPaymentProcessor(unittest.TestCase):
     @patch('commerce_coordinator.apps.iap.payment_processor.GooglePlayValidator')
     def test_android_redundant_payment_error(self, MockGooglePlayValidator):
         MockGooglePlayValidator.return_value.validate.return_value = {
-            'raw_response': {'orderId': 'txn_123'}
+            'raw_response': {
+                'orderId': 'txn_123',
+                'purchaseTimeMillis': '1622547800000'
+            }
         }
-        self.MockCTClient.return_value.get_payment_by_transaction_interaction_id.return_value = True
+        mock_payment = MagicMock()
+        self.MockCTClient.return_value.get_payment_by_transaction_interaction_id.return_value = mock_payment
+        self.MockCTClient.return_value.is_dangling_payment.return_value = False
 
         with self.assertRaises(RedundantPaymentError):
             self.processor.validate_iap(
-                {'purchase_token': 'token', 'payment_processor': 'android-iap'},
+                {'purchase_token': 'token', 'payment_processor': 'android_iap'},
                 cart_id='cart_123',
                 price=100
             )
+
+    @patch('commerce_coordinator.apps.iap.payment_processor.logger')
+    def test_android_dangling_payment_logged(self, mock_logger):
+        transaction_id = 'txn_456'
+        mock_payment = MagicMock()
+        self.MockCTClient.return_value.get_payment_by_transaction_interaction_id.return_value = mock_payment
+        self.MockCTClient.return_value.is_dangling_payment.return_value = True  # dangling
+
+        validation_response = {
+            'raw_response': {
+                'orderId': transaction_id,
+                'purchaseTimeMillis': str(int(datetime.now(tz=timezone.utc).timestamp() * 1000))
+            },
+            'is_canceled': False,
+            'is_expired': False,
+        }
+
+        self.processor._handle_android_validation(validation_response, cart_id='cart_123')
+
+        mock_logger.info.assert_any_call(
+            f"Dangling payment {mock_payment.id} found with transaction ID: {transaction_id}. "
+            f"Will reuse this payment for cart cart_123."
+        )
 
     def test_ios_handle_ios_validation_errors(self):
         with self.assertRaises(ValidationError):
@@ -112,14 +140,24 @@ class TestIAPPaymentProcessor(unittest.TestCase):
                 100, 'cart_123')
 
     def test_ios_redundant_payment_error(self):
-        self.MockCTClient.return_value.get_payment_by_transaction_interaction_id.return_value = True
+        mock_payment = MagicMock()
+        self.MockCTClient.return_value.get_payment_by_transaction_interaction_id.return_value = mock_payment
+        self.MockCTClient.return_value.is_dangling_payment.return_value = False  # Force redundant
 
         with self.assertRaises(RedundantPaymentError):
             self.processor._handle_ios_validation(
-                {'receipt': {'in_app': [{
-                    'product_id': 'mobile.ios.usd100',
-                    'original_transaction_id': 'txn_123'}]}},
-                100, 'cart_123')
+                {
+                    'receipt': {
+                        'in_app': [{
+                            'product_id': 'mobile.ios.usd100',
+                            'original_transaction_id': 'txn_123'
+                        }],
+                        'receipt_creation_date': '2024-04-20 10:15:30 Etc/GMT'
+                    }
+                },
+                100,
+                'cart_123'
+            )
 
     def test_unsupported_payment_processor_raises_validation_error(self):
         request_data = {
@@ -145,12 +183,13 @@ class TestIAPPaymentProcessor(unittest.TestCase):
 
         request_data = {
             'purchase_token': 'test_token',
-            'payment_processor': 'ios-iap',
+            'payment_processor': 'ios_iap',
         }
         result = self.processor.validate_iap(request_data, cart_id='cart_123', price=100)
 
         self.assertEqual(result['transaction_id'], 'transaction_456')
-        self.assertEqual(result['created_at'], '2024-04-20 10:15:30 Etc/GMT')
+        expected_datetime = datetime(2024, 4, 20, 10, 15, 30, tzinfo=timezone.utc)
+        self.assertEqual(result['created_at'], expected_datetime)
 
     @patch('commerce_coordinator.apps.iap.payment_processor.GooglePlayValidator')
     def test_android_created_at_parsing(self, MockGooglePlayValidator):
@@ -169,7 +208,7 @@ class TestIAPPaymentProcessor(unittest.TestCase):
         request_data = {
             'purchase_token': 'token',
             'course_run_key': 'course',
-            'payment_processor': 'android-iap',
+            'payment_processor': 'android_iap',
         }
         result = self.processor.validate_iap(request_data, cart_id='cart_001', price=100)
 
@@ -193,9 +232,34 @@ class TestIAPPaymentProcessor(unittest.TestCase):
         request_data = {
             'purchase_token': 'test_token',
             'course_run_key': 'test_sku',
-            'payment_processor': 'ios-iap',
+            'payment_processor': 'ios_iap',
         }
         result = self.processor.validate_iap(request_data, cart_id='cart_123', price=100)
 
         self.assertEqual(result['transaction_id'], 'txn_101')
-        self.assertEqual(result['created_at'], '2024-04-20 10:15:30 Etc/GMT')
+        expected_datetime = datetime(2024, 4, 20, 10, 15, 30, tzinfo=timezone.utc)
+        self.assertEqual(result['created_at'], expected_datetime)
+
+    @patch('commerce_coordinator.apps.iap.payment_processor.logger')
+    def test_ios_dangling_payment_logged(self, mock_logger):
+        transaction_id = 'txn_789'
+        mock_payment = MagicMock()
+        self.MockCTClient.return_value.get_payment_by_transaction_interaction_id.return_value = mock_payment
+        self.MockCTClient.return_value.is_dangling_payment.return_value = True  # dangling
+
+        validation_response = {
+            'receipt': {
+                'in_app': [{
+                    'product_id': 'mobile.ios.usd100',
+                    'original_transaction_id': transaction_id
+                }],
+                'receipt_creation_date': '2024-04-20 10:15:30 Etc/GMT'
+            }
+        }
+
+        self.processor._handle_ios_validation(validation_response, 100, 'cart_123')
+
+        mock_logger.info.assert_any_call(
+            f"Dangling payment {mock_payment.id} found with transaction ID: {transaction_id}. "
+            f"Will reuse this payment for cart cart_123."
+        )
