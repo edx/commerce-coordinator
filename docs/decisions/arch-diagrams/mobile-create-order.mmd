@@ -1,0 +1,82 @@
+sequenceDiagram
+    participant User
+    participant MobileApp
+    participant CTBackend as CT Backend
+    participant IAPValidator as IAP Validator (Android/iOS)
+    participant MobileStore as Mobile Store (Android/iOS)
+    participant CoCo as Commercetools (CoCo)
+    participant EventSystem
+
+    User->>MobileApp: Starts in-app purchase
+    MobileApp->>CTBackend: Sends purchase info (price, course, platform, token)
+
+    CTBackend->>CoCo: Get CT customer by LMS user ID
+    alt Customer does not exist
+        CTBackend->>CoCo: Create customer with user info
+        CoCo-->>CTBackend: Return newly created customer
+    else Customer exists
+        CTBackend->>CoCo: Update customer if needed
+        CoCo-->>CTBackend: Return updated customer
+    end
+
+    CTBackend->>CoCo: Check if user already has a cart
+    CoCo-->>CTBackend: Return existing cart or none
+    alt Cart exists
+        CTBackend->>CoCo: Delete old cart
+    end
+
+    CTBackend->>CoCo: Add the product, set external price (localized), set `mobileOrder=true` in new cart
+    CoCo-->>CTBackend: Return new cart
+
+    CTBackend->>IAPValidator: Validate the purchase token
+    IAPValidator->>MobileStore: Send token to Google or Apple
+    MobileStore-->>IAPValidator: Get token result
+
+    IAPValidator->>CoCo: Check if token was already used
+    alt Token is already used
+        IAPValidator-->>CTBackend: Tell backend it is a duplicate
+        CTBackend->>CoCo: Delete the new cart
+        CTBackend-->>MobileApp: **Show error (payment already used)**
+    else Token is valid
+        IAPValidator-->>CTBackend: Send transaction info
+    end
+
+    CTBackend->>EventSystem: Send event - checkout started
+    CTBackend->>EventSystem: Send event - item added to cart
+
+    CTBackend->>CoCo: Create a payment using the token info
+    CTBackend->>CoCo: Updates payment object to set custom field usdCentAmount with product's USD price
+    alt Payment creation failed
+        CoCo-->>CTBackend: **Error while creating payment**
+        CTBackend-->>MobileApp: **Show error (payment creation failed)**
+    else
+        CoCo-->>CTBackend: Return payment
+        CTBackend->>EventSystem: Send event - payment method used
+
+        CTBackend->>CoCo: Attach payment to the cart
+        alt Attaching payment failed
+            CoCo-->>CTBackend: **Error while attaching payment**
+            CTBackend-->>MobileApp: **Show error (payment attach failed)**
+        else
+            CoCo-->>CTBackend: Return updated cart
+
+            CTBackend->>CoCo: Create order from cart
+            alt Order creation failed
+                CoCo-->>CTBackend: **Error while creating order**
+                CTBackend-->>MobileApp: **Show error (order creation failed)**
+            else
+                CoCo-->>CTBackend: Return order
+
+                CTBackend->>CoCo: Mark items as ready for delivery
+                alt Updating item state failed
+                    CoCo-->>CTBackend: **Error while updating item states**
+                    CTBackend-->>MobileApp: **Show error (item state update failed)**
+                else
+                    CoCo-->>CTBackend: Return updated order
+
+                    CTBackend->>EventSystem: Send event - order completed
+                    CTBackend-->>MobileApp: Show success (order ID, number)
+                end
+            end
+        end
+    end
