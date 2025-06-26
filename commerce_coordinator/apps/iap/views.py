@@ -188,7 +188,7 @@ class MobileCreateOrderView(APIView):
                 standalone_price=standalone_price,
                 line_items=cart.line_items,
                 payment_method=payment.payment_method_info.method,
-                processor_name=payment.payment_method_info.name.get("en", "android iap"),
+                processor_name=payment.payment_method_info.name.get("en", ""),
                 discount_codes=order.discount_codes,
                 discount_on_line_items=None,
                 discount_on_total_price=cart.discount_on_total_price,

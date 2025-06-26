@@ -201,7 +201,7 @@ def test_emit_payment_info_entered_event(
     assert props["cart_id"] == "cart123"
     assert props["checkout_id"] == "cart123"
     assert props["currency"] == "USD"
-    assert props["payment_method"] == "android_iap"
+    assert props["payment_method"] == mock_payment_method
     assert props["is_mobile"] is True
 
 
