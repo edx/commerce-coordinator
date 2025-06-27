@@ -8,6 +8,7 @@ from celery import shared_task
 from commercetools import CommercetoolsError
 from commercetools.platform.models import Payment
 from django.conf import settings
+from django.http import HttpRequest
 
 from commerce_coordinator.apps.commercetools.catalog_info.constants import (
     EDX_ANDROID_IAP_PAYMENT_INTERFACE_NAME,
@@ -271,7 +272,7 @@ def refund_from_paypal_task(
 def refund_from_mobile_task(
     payment_interface: str,
     refund: Refund,
-    http_request: Request,
+    http_request: HttpRequest,
 ) -> Payment | None:
     """
     Celery task for handling a refund registered in the mobile platforms (iOS/Android).
