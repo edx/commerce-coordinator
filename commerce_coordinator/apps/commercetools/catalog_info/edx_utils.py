@@ -311,7 +311,7 @@ def get_product_from_line_item(line_item: CTLineItem, standalone_price: CentPrec
         "category": get_attribute_value(attributes, "primary-subject-area"),
         "url": get_attribute_value(attributes, "url-course"),
         "lob": get_attribute_value(attributes, "lob") or "edx",
-        "image_url": images[0].get("url") if images else None,
+        "image_url": images[0].url if images else None,
         "brand": get_attribute_value(attributes, "brand-text"),
         "product_type": product_type.obj.name if product_type.obj.name else None,
     }
