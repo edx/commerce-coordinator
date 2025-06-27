@@ -8,7 +8,7 @@ from unittest.mock import Mock, patch, sentinel
 from django.test import TestCase
 from requests import RequestException
 
-from commerce_coordinator.apps.commercetools.catalog_info.constants import TwoUKeys
+from commerce_coordinator.apps.commercetools.catalog_info.constants import CourseModes, TwoUKeys
 from commerce_coordinator.apps.commercetools.constants import CT_ORDER_PRODUCT_TYPE_FOR_BRAZE
 from commerce_coordinator.apps.commercetools.tests.conftest import gen_line_item_state, gen_order
 from commerce_coordinator.apps.core.models import User
@@ -86,14 +86,14 @@ class FulfillOrderPlacedSendEnrollInCourseTaskTest(TestCase):
         '''
         # Change course_mode to credit:
         credit_mock_parameters = EXAMPLE_FULFILLMENT_SIGNAL_PAYLOAD.copy()
-        credit_mock_parameters['course_mode'] = 'credit'
+        credit_mock_parameters['course_mode'] = CourseModes.CREDIT
         credit_mock_parameters['provider_id'] = 'test-provider'
 
         # Add credit enrollment_attribute:
         credit_expected_data = EXAMPLE_ENROLLMENT_FULFILLMENT_REQUEST_PAYLOAD.copy()
-        credit_expected_data['mode'] = 'credit'
+        credit_expected_data['mode'] = CourseModes.CREDIT
         credit_expected_data['enrollment_attributes'].append({
-            'namespace': 'credit',
+            'namespace': CourseModes.CREDIT,
             'name': 'provider_id',
             'value': 'test-provider',
         })
