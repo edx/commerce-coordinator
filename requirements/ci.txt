@@ -120,6 +120,7 @@ code-annotations==2.3.0
     # via
     #   -r requirements/test.txt
     #   edx-lint
+    #   edx-toggles
 colorama==0.4.6
     # via
     #   -r requirements/test.txt
@@ -163,20 +164,23 @@ distlib==0.3.9
     # via
     #   -r requirements/test.txt
     #   virtualenv
-django==4.2.21
+django==4.2.23
     # via
     #   -r requirements/test.txt
     #   django-cors-headers
     #   django-crum
     #   django-extensions
+    #   django-push-notifications
     #   django-waffle
     #   djangorestframework
     #   drf-jwt
+    #   edx-ace
     #   edx-auth-backends
     #   edx-braze-client
     #   edx-django-release-util
     #   edx-django-utils
     #   edx-drf-extensions
+    #   edx-toggles
     #   openedx-filters
     #   social-auth-app-django
 django-cors-headers==4.7.0
@@ -185,6 +189,7 @@ django-crum==0.7.9
     # via
     #   -r requirements/test.txt
     #   edx-django-utils
+    #   edx-toggles
 django-dynamic-fixture==4.0.1
     # via -r requirements/test.txt
 django-extensions==4.1
@@ -196,6 +201,7 @@ django-waffle==4.2.0
     #   -r requirements/test.txt
     #   edx-django-utils
     #   edx-drf-extensions
+    #   edx-toggles
 djangorestframework==3.16.0
     # via
     #   -r requirements/test.txt
@@ -210,7 +216,7 @@ drf-jwt==1.19.2
     # via
     #   -r requirements/test.txt
     #   edx-drf-extensions
-edx-auth-backends==4.5.0
+edx-auth-backends==4.6.0
     # via -r requirements/test.txt
 edx-braze-client==1.0.2
     # via -r requirements/test.txt
@@ -219,9 +225,11 @@ edx-django-release-util==1.5.0
 edx-django-utils==8.0.0
     # via
     #   -r requirements/test.txt
+    #   edx-auth-backends
     #   edx-braze-client
     #   edx-drf-extensions
     #   edx-rest-api-client
+    #   edx-toggles
 edx-drf-extensions==10.6.0
     # via -r requirements/test.txt
 edx-lint==5.6.0
@@ -233,6 +241,10 @@ edx-opaque-keys[django]==3.0.0
     #   openedx-filters
 edx-rest-api-client==6.2.0
     # via -r requirements/test.txt
+edx-toggles==5.3.0
+    # via
+    #   -r requirements/test.txt
+    #   edx-auth-backends
 filelock==3.18.0
     # via
     #   -r requirements/test.txt

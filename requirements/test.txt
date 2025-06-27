@@ -115,8 +115,10 @@ click-repl==0.3.0
     #   celery
 code-annotations==2.3.0
     # via
+    #   -r requirements/base.txt
     #   -r requirements/test.in
     #   edx-lint
+    #   edx-toggles
 colorama==0.4.6
     # via tox
 commercetools @ git+https://github.com/edx/commercetools-python-sdk.git@main
@@ -169,6 +171,7 @@ distlib==0.3.9
     #   edx-django-release-util
     #   edx-django-utils
     #   edx-drf-extensions
+    #   edx-toggles
     #   openedx-filters
     #   social-auth-app-django
 django-cors-headers==4.7.0
@@ -177,17 +180,19 @@ django-crum==0.7.9
     # via
     #   -r requirements/base.txt
     #   edx-django-utils
+    #   edx-toggles
 django-dynamic-fixture==4.0.1
     # via -r requirements/test.in
 django-extensions==4.1
     # via -r requirements/base.txt
 django-rest-swagger==2.2.0
     # via -r requirements/base.txt
-django-waffle==4.2.0
+django-waffle==5.0.0
     # via
     #   -r requirements/base.txt
     #   edx-django-utils
     #   edx-drf-extensions
+    #   edx-toggles
 djangorestframework==3.16.0
     # via
     #   -r requirements/base.txt
@@ -202,7 +207,7 @@ drf-jwt==1.19.2
     # via
     #   -r requirements/base.txt
     #   edx-drf-extensions
-edx-auth-backends==4.5.0
+edx-auth-backends==4.6.0
     # via -r requirements/base.txt
 edx-braze-client==1.0.2
     # via -r requirements/base.txt
@@ -211,9 +216,11 @@ edx-django-release-util==1.5.0
 edx-django-utils==8.0.0
     # via
     #   -r requirements/base.txt
+    #   edx-auth-backends
     #   edx-braze-client
     #   edx-drf-extensions
     #   edx-rest-api-client
+    #   edx-toggles
 edx-drf-extensions==10.6.0
     # via -r requirements/base.txt
 edx-lint==5.6.0
@@ -225,6 +232,10 @@ edx-opaque-keys[django]==3.0.0
     #   openedx-filters
 edx-rest-api-client==6.2.0
     # via -r requirements/base.txt
+edx-toggles==5.3.0
+    # via
+    #   -r requirements/base.txt
+    #   edx-auth-backends
 filelock==3.18.0
     # via
     #   tox
@@ -484,7 +495,7 @@ redis==5.2.1
     # via
     #   -r requirements/base.txt
     #   celery
-requests==2.32.3
+requests==2.32.4
     # via
     #   -r requirements/base.txt
     #   apimatic-core

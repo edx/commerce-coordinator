@@ -68,6 +68,8 @@ click-plugins==1.1.1
     # via celery
 click-repl==0.3.0
     # via celery
+code-annotations==2.3.0
+    # via edx-toggles
 commercetools @ git+https://github.com/edx/commercetools-python-sdk.git@main
     # via -r requirements/base.in
 coreapi==2.3.3
@@ -88,7 +90,7 @@ defusedxml==0.7.1
     # via
     #   python3-openid
     #   social-auth-core
-django==4.2.21
+django==4.2.23
     # via
     #   -c requirements/common_constraints.txt
     #   -c requirements/constraints.txt
@@ -96,6 +98,7 @@ django==4.2.21
     #   django-cors-headers
     #   django-crum
     #   django-extensions
+    #   django-push-notifications
     #   django-waffle
     #   djangorestframework
     #   drf-jwt
@@ -104,6 +107,7 @@ django==4.2.21
     #   edx-django-release-util
     #   edx-django-utils
     #   edx-drf-extensions
+    #   edx-toggles
     #   openedx-filters
     #   social-auth-app-django
 django-cors-headers==4.7.0
@@ -114,11 +118,12 @@ django-extensions==4.1
     # via -r requirements/base.in
 django-rest-swagger==2.2.0
     # via -r requirements/base.in
-django-waffle==4.2.0
+django-waffle==5.0.0
     # via
     #   -r requirements/base.in
     #   edx-django-utils
     #   edx-drf-extensions
+    #   edx-toggles
 djangorestframework==3.16.0
     # via
     #   -r requirements/base.in
@@ -129,7 +134,7 @@ dnspython==2.7.0
     # via pymongo
 drf-jwt==1.19.2
     # via edx-drf-extensions
-edx-auth-backends==4.5.0
+edx-auth-backends==4.6.0
     # via -r requirements/base.in
 edx-braze-client==1.0.2
     # via -r requirements/base.in
@@ -138,9 +143,11 @@ edx-django-release-util==1.5.0
 edx-django-utils==8.0.0
     # via
     #   -r requirements/base.in
+    #   edx-auth-backends
     #   edx-braze-client
     #   edx-drf-extensions
     #   edx-rest-api-client
+    #   edx-toggles
 edx-drf-extensions==10.6.0
     # via -r requirements/base.in
 edx-opaque-keys[django]==3.0.0
@@ -149,15 +156,22 @@ edx-opaque-keys[django]==3.0.0
     #   openedx-filters
 edx-rest-api-client==6.2.0
     # via -r requirements/base.in
+edx-toggles==5.3.0
+    # via edx-auth-backends
 frozenlist==1.6.2
     # via
     #   aiohttp
     #   aiosignal
-google-api-core==2.25.0
-    # via google-api-python-client
-google-api-python-client==2.171.0
+google-api-core[grpc]==2.25.1
+    # via
+    #   google-api-python-client
+    #   google-cloud-core
+    #   google-cloud-firestore
+    #   google-cloud-storage
+google-api-python-client==2.174.0
     # via
     #   -r requirements/base.in
+
     #   inapppy
 google-auth==2.40.2
     # via
