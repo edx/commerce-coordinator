@@ -10,6 +10,8 @@ import logging
 from django.conf import ImproperlyConfigured, settings
 from inapppy import AppStoreValidator, InAppPyValidationError
 
+from commerce_coordinator.apps.commercetools.catalog_info.constants import IOS_IAP
+
 logger = logging.getLogger(__name__)
 
 
@@ -32,7 +34,7 @@ class IOSValidator:
         Returns:
             dict: The validation result from the App Store, or an error message if validation fails.
         """
-        configuration = settings.PAYMENT_PROCESSOR_CONFIG["edx"]["ios_iap"]
+        configuration = settings.PAYMENT_PROCESSOR_CONFIG["edx"][IOS_IAP]
         bundle_id = configuration.get("ios_bundle_id")
 
         if not bundle_id:

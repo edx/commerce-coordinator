@@ -19,6 +19,8 @@ from commercetools.platform.models import (
     Cart,
     CartAddPaymentAction,
     CartDraft,
+    CartSetBillingAddressAction,
+    CartSetShippingAddressAction,
     Customer,
     CustomerChangeEmailAction,
     CustomerDraft,
@@ -73,11 +75,14 @@ from tenacity.stop import stop_after_attempt
 from tenacity.wait import wait_incrementing
 
 from commerce_coordinator.apps.commercetools.catalog_info.constants import (
+    ANDROID_IAP,
     DEFAULT_ORDER_EXPANSION,
     EDX_ANDROID_IAP_PAYMENT_INTERFACE_NAME,
+    EDX_INTERFACE_SUFFIX,
     EDX_IOS_IAP_PAYMENT_INTERFACE_NAME,
     EDX_PAYPAL_PAYMENT_INTERFACE_NAME,
     EDX_STRIPE_PAYMENT_INTERFACE_NAME,
+    IOS_IAP,
     EdXFieldNames,
     TwoUKeys
 )
@@ -498,6 +503,24 @@ class CommercetoolsAPIClient:
                 f"interaction ID {interaction_id}"
             )
             return results[0]
+
+    def is_dangling_payment(self, payment) -> bool:
+        """
+        Returns True if the payment is not attached to any cart (i.e., dangling).
+        Returns False if an error occurs or the payment is attached.
+        """
+        try:
+            carts = self.base_client.carts.query(
+                where=f'paymentInfo(payments(id="{payment.id}"))'
+            ).results
+            return len(carts) == 0
+        except CommercetoolsError as err:
+            handle_commercetools_error(
+                "[CommercetoolsAPIClient.is_dangling_payment]",
+                err,
+                f"Error checking dangling status for payment {payment.id}",
+            )
+            return False
 
     def get_product_by_program_id(self, program_id: str) -> Optional[ProductVariant]:
         """
@@ -1436,18 +1459,20 @@ class CommercetoolsAPIClient:
             raise err
 
     @conditional_retry
-    def add_payment_to_cart(
+    def add_payment_and_address_to_cart(
         self,
         *,
         cart: Cart,
         payment_id: str,
+        address: Optional[BaseAddress] = None,
     ) -> Cart:
         """
-        Add a payment to a cart
+        Add a payment to a cart and update billing/shipping address
 
         Args:
             cart (Cart): The cart to update
             payment_id (str): The ID of the payment to add
+            address (BaseAddress): The address to set as both billing and shipping
 
         Returns:
             Cart: The updated cart object
@@ -1458,6 +1483,13 @@ class CommercetoolsAPIClient:
                     payment=PaymentResourceIdentifier(id=payment_id)
                 ),
             ]
+
+            if address:
+                actions += [
+                    CartSetBillingAddressAction(address=address),
+                    CartSetShippingAddressAction(address=address),
+                ]
+
             expand = ["lineItems[*].productType.obj", "custom"]
 
             updated_cart = self.base_client.carts.update_by_id(
@@ -1470,7 +1502,7 @@ class CommercetoolsAPIClient:
             return updated_cart
         except CommercetoolsError as err:
             handle_commercetools_error(
-                "[CommercetoolsAPIClient.add_payment_to_cart]",
+                "[CommercetoolsAPIClient.add_payment_and_address_to_cart]",
                 err,
                 f"Failed to add payment to cart: {cart.id} "
                 f"for customer: {cart.customer_id}",
@@ -1507,10 +1539,14 @@ class CommercetoolsAPIClient:
         Returns:
             Payment: The created payment object
         """
+        payment_names = {
+            ANDROID_IAP: "Android In-app Purchase",
+            IOS_IAP: "iOS In-app Purchase",
+        }
         payment_method_info = PaymentMethodInfo(
-            payment_interface=f"{payment_processor}_edx",
+            payment_interface=payment_processor + EDX_INTERFACE_SUFFIX,
             method=payment_method,
-            name=LocalizedString(name=payment_method),
+            name=LocalizedString({"en": payment_names.get(payment_method, payment_method)}),
         )
         # translate this based on mobile status codes
         payment_status_draft = PaymentStatusDraft(

@@ -72,6 +72,16 @@ class TwoUKeys:
     ORDER_NUMBER_CUSTOM_OBJECT_KEY = 'orderNumber'
 
 
+class CourseModes:
+    """Course Mode keys for use in Commercetools"""
+
+    # Course Modes
+    AUDIT = 'audit'
+    VERIFIED = 'verified'
+    PROFESSIONAL = 'professional'
+    CREDIT = 'credit'
+
+
 class EdXFieldNames:
     """edX Specific field names for use in Commercetools"""
 
@@ -110,9 +120,16 @@ EDX_STRIPE_PAYMENT_INTERFACE_NAME = "stripe_edx"
 
 EDX_PAYPAL_PAYMENT_INTERFACE_NAME = "paypal_edx"
 
-EDX_ANDROID_IAP_PAYMENT_INTERFACE_NAME = "android_iap_edx"
+# Payment types
+ANDROID_IAP = "android_iap"
+IOS_IAP = "ios_iap"
 
-EDX_IOS_IAP_PAYMENT_INTERFACE_NAME = "ios_iap_edx"
+# Interface suffix
+EDX_INTERFACE_SUFFIX = "_edx"
+
+EDX_ANDROID_IAP_PAYMENT_INTERFACE_NAME = ANDROID_IAP + EDX_INTERFACE_SUFFIX
+
+EDX_IOS_IAP_PAYMENT_INTERFACE_NAME = IOS_IAP + EDX_INTERFACE_SUFFIX
 
 CART_DISCOUNT_TYPES = [
     {"key": "course-discount", "label": "Course Discount"},

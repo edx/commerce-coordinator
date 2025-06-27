@@ -10,6 +10,7 @@ from datetime import datetime, timezone
 
 from tenacity import retry, retry_if_exception_type, stop_after_attempt, wait_fixed
 
+from commerce_coordinator.apps.commercetools.catalog_info.constants import ANDROID_IAP, IOS_IAP
 from commerce_coordinator.apps.commercetools.clients import CommercetoolsAPIClient
 from commerce_coordinator.apps.iap.google_validator import GooglePlayValidator
 from commerce_coordinator.apps.iap.ios_validator import IOSValidator
@@ -31,6 +32,41 @@ class IAPPaymentProcessor:
     def __init__(self):
         self.client = CommercetoolsAPIClient()
 
+    def parse_ios_receipt_date(self, date_str: str) -> datetime:
+        """
+        Parses an iOS-style receipt date string like '2025-06-12 10:58:27 Etc/GMT'
+        and returns a UTC-aware datetime object.
+        """
+        date_str = date_str.replace(" Etc/GMT", "")
+        return datetime.strptime(date_str, "%Y-%m-%d %H:%M:%S").replace(tzinfo=timezone.utc)
+
+    def _check_existing_payment(self, transaction_id: str, cart_id: str):
+        """
+        Checks if a payment with the given transaction ID exists and handles dangling or redundant cases.
+
+        Returns:
+            payment (object or None): The existing payment object or None if it doesn't exist.
+        Raises:
+            RedundantPaymentError: If payment exists and is not dangling.
+        """
+        payment = self.client.get_payment_by_transaction_interaction_id(transaction_id)
+        if payment:
+            if not self.client.is_dangling_payment(payment):
+                msg = (
+                    f"Redundant payment: existing payment found with transaction ID: {transaction_id}, "
+                    f"already attached to a cart."
+                )
+                logger.error(msg)
+                raise RedundantPaymentError(msg)
+
+            logger.info(
+                f"Dangling payment {payment.id} found with transaction ID: {transaction_id}. "
+                f"Will reuse this payment for cart {cart_id}."
+            )
+        else:
+            logger.info("No existing payment found. Proceeding to create new one.")
+        return payment
+
     def get_consumable_ios_sku(self, price: int) -> str:
         """
         Returns the iOS consumable product ID (SKU) based on the given price.
@@ -50,13 +86,13 @@ class IAPPaymentProcessor:
         purchase_token = request_data.get('purchase_token')
         payment_processor = request_data.get('payment_processor')
 
-        if payment_processor == 'android-iap':
+        if payment_processor == ANDROID_IAP:
             validator = GooglePlayValidator()
 
             def validation_func():
                 return self._validate_android(validator, purchase_token, price)
 
-        elif payment_processor == 'ios-iap':
+        elif payment_processor == IOS_IAP:
             validator = IOSValidator()
 
             def validation_func():
@@ -73,7 +109,7 @@ class IAPPaymentProcessor:
             logger.error("Exhausted all attempts to validate [%s] IAP. Final error: %s", payment_processor, str(e))
             raise ValidationError(str(e)) from e
 
-        if payment_processor == 'android-iap':
+        if payment_processor == ANDROID_IAP:
             return self._handle_android_validation(validation_response, cart_id)
         else:
             return self._handle_ios_validation(validation_response, price, cart_id)
@@ -119,6 +155,7 @@ class IAPPaymentProcessor:
 
         Args:
             validation_response (dict): The validation response from Google Play.
+            cart_id (str): The cart ID associated with the validation request.
 
         Returns:
             dict: The processed validation result.
@@ -139,25 +176,19 @@ class IAPPaymentProcessor:
             logger.error(error_message)
             raise PaymentError(error_message)
 
-        payment = self.client.get_payment_by_transaction_interaction_id(
-            transaction_id
-        )
-        if payment:
-            msg = (
-                f"Redundant payment: existing payment found for cart id: {cart_id} "
-                f"with transaction ID: {transaction_id}."
-            )
-            logger.error(msg)
-            raise RedundantPaymentError(msg)
+        payment = self._check_existing_payment(transaction_id, cart_id)
 
         logger.info("Android IAP validated successfully.")
         raw_response = validation_response.get('raw_response', {})
         purchase_utc_time = datetime.fromtimestamp(
             int(raw_response["purchaseTimeMillis"]) / 1000, tz=timezone.utc
         )
+
         return {
             'transaction_id': transaction_id,
-            'created_at': purchase_utc_time
+            'created_at': purchase_utc_time,
+            'payment': payment if payment else None,
+            'region_code': raw_response.get('regionCode'),
         }
 
     def _handle_ios_validation(self, validation_response: dict, price: int, cart_id) -> dict:
@@ -202,21 +233,14 @@ class IAPPaymentProcessor:
             logger.error(error_message)
             raise UserCancelled(error_message)
 
-        payment = self.client.get_payment_by_transaction_interaction_id(
-            original_transaction_id
-        )
-        if payment:
-            msg = (
-                f"Redundant payment: existing payment found for cart id: {cart_id} "
-                f"with transaction ID: {original_transaction_id}."
-            )
-            logger.error(msg)
-            raise RedundantPaymentError(msg)
+        payment = self._check_existing_payment(original_transaction_id, cart_id)
 
-        logger.info("iOS IAP validated successfully.")
         return {
             'transaction_id': original_transaction_id,
-            'created_at': receipt.get('receipt_creation_date')
+            'created_at': self.parse_ios_receipt_date(
+                                validation_response.get('receipt', {}).get('receipt_creation_date', '')
+                            ),
+            'payment': payment if payment else None,
         }
 
 
