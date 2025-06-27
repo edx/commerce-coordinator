@@ -271,7 +271,7 @@ def refund_from_paypal_task(
 def refund_from_mobile_task(
     payment_interface: str,
     refund: Refund,
-    request: Request,
+    http_request: Request,
 ) -> Payment | None:
     """
     Celery task for handling a refund registered in the mobile platforms (iOS/Android).
@@ -290,9 +290,9 @@ def refund_from_mobile_task(
                 f"could not find a CT Payment for transaction ID: {refund['id']}"
                 f"of payment processor: {payment_interface}."
             )
-            if is_redirect_to_legacy_enabled(request):
+            if is_redirect_to_legacy_enabled(http_request):
                 if payment_interface == EDX_IOS_IAP_PAYMENT_INTERFACE_NAME:
-                    EcommerceAPIClient().refund_for_ios(payload=request.body)
+                    EcommerceAPIClient().refund_for_ios(payload=http_request.body)
             return None
         if has_full_refund_transaction(payment) or is_transaction_already_refunded(
             payment, refund["id"]
