@@ -170,7 +170,7 @@
 | commerce\_coordinator/apps/lms/tests/test\_views.py                                    |      355 |        0 |        0 |        0 |    100% |           |
 | commerce\_coordinator/apps/lms/urls.py                                                 |        4 |        0 |        0 |        0 |    100% |           |
 | commerce\_coordinator/apps/lms/utils.py                                                |       43 |        0 |       18 |        0 |    100% |           |
-| commerce\_coordinator/apps/lms/views.py                                                |      239 |       13 |       26 |        2 |     94% |237-240, 420, 436, 446-450, 469, 556-558 |
+| commerce\_coordinator/apps/lms/views.py                                                |      239 |       13 |       26 |        2 |     94% |238-241, 421, 437, 447-451, 470, 557-559 |
 | commerce\_coordinator/apps/order\_fulfillment/\_\_init\_\_.py                          |        0 |        0 |        0 |        0 |    100% |           |
 | commerce\_coordinator/apps/order\_fulfillment/clients.py                               |       38 |        0 |        2 |        0 |    100% |           |
 | commerce\_coordinator/apps/order\_fulfillment/serializers.py                           |       13 |        0 |        0 |        0 |    100% |           |
