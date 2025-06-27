@@ -201,7 +201,7 @@ def test_emit_payment_info_entered_event(
     assert props["cart_id"] == "cart123"
     assert props["checkout_id"] == "cart123"
     assert props["currency"] == "USD"
-    assert props["payment"] == "android_iap"
+    assert props["payment_method"] == mock_payment_method
     assert props["is_mobile"] is True
 
 
@@ -242,13 +242,50 @@ def test_emit_order_completed_event(
         "product_type": "edX Course"
     }
 
+    mock_tax = {
+        "total_net": {
+            "type": "centPrecision",
+            "currency_code": "USD",
+            "cent_amount": 15000,
+            "fraction_digits": 2
+        },
+        "total_gross": {
+            "type": "centPrecision",
+            "currency_code": "USD",
+            "cent_amount": 15000,
+            "fraction_digits": 2
+        },
+        "tax_portions": [
+            {
+                "rate": 0,
+                "amount": {
+                    "type": "centPrecision",
+                    "currency_code": "USD",
+                    "cent_amount": 0,
+                    "fraction_digits": 2
+                },
+                "name": "Disabled tax calculation"
+            }
+        ],
+        "total_tax": {
+            "type": "centPrecision",
+            "currency_code": "USD",
+            "cent_amount": 0,
+            "fraction_digits": 2
+        }
+    }
+
+    mock_processor_name = "android iap"
+
     emit_order_completed_event(
         lms_user_id=1,
         cart_id="cart123",
         order_id="order123",
+        tax=mock_tax,
         standalone_price=mock_price,
         line_items=[mock_line_item],
         payment_method=mock_payment_method,
+        processor_name=mock_processor_name,
         discount_codes=[],
         discount_on_line_items=[],
         discount_on_total_price=None
@@ -264,10 +301,10 @@ def test_emit_order_completed_event(
     assert props["checkout_id"] == "cart123"
     assert props["currency"] == "USD"
     assert props["total"] == 100.0
-    assert props["tax"] is None
+    assert props["tax"] == 0
     assert props["coupon"] is None
     assert props["discount"] is None
     assert props["payment_method"] == "android_iap"
-    assert props["processor_name"] == "android_iap"
+    assert props["processor_name"] == "android iap"
     assert props["products"][0]["product_id"] == "course-v1:edX+DemoX+Demo_Course"
     assert props["is_mobile"] is True
