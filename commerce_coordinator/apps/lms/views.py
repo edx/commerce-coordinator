@@ -19,6 +19,7 @@ from rest_framework.permissions import IsAdminUser, IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.status import (
     HTTP_200_OK,
+    HTTP_204_NO_CONTENT,
     HTTP_303_SEE_OTHER,
     HTTP_400_BAD_REQUEST,
     HTTP_404_NOT_FOUND,
@@ -333,7 +334,7 @@ class RetirementView(APIView):
 
         Returns:
             - Response:
-                - 200 OK if the refund was successfully processed with the result of
+                - 204 If the refund was successfully processed with the result of
                     the UserRetirementRequested filter/pipeline.
                 - 400 If the retirement request failed due to an invalid lms user uuid.
                 - 500 If an OpenEdxFilterException occurred while anonymizing the customer fields.
@@ -345,8 +346,8 @@ class RetirementView(APIView):
         The user retirement/field anonymization is processed by running the UserRetirementRequested
         filter/pipeline using the provided lms_user_id from the request
 
-        If the retirement is successfully marked in CT (the PII fields are successfully anonymized), a 200 OK
-        response is returned along with the result from the UserRetirementRequested filter/pipeline.
+        If the retirement is successfully marked in CT (the PII fields are successfully anonymized), a 204
+        No Content is returned.
 
         If the retirement fails due to a bad pipeline response, a 400 Bad Request is returned.
 
@@ -371,11 +372,11 @@ class RetirementView(APIView):
             if returned_customer and returned_customer != 'customer_not_found':
                 logger.info(f"[RetirementView] Successfully anonymized fields for retired customer with "
                             f"LMS ID {lms_user_id}, with result: {result}.")
-                return Response(status=HTTP_200_OK)
+                return Response(status=HTTP_204_NO_CONTENT)
             elif returned_customer == 'customer_not_found':
                 logger.warning(f"[RetirementView] No Commercetools customer found for retired customer with "
                                f"LMS ID {lms_user_id}. Skipped Anonymization process.")
-                return Response(status=HTTP_200_OK)
+                return Response(status=HTTP_204_NO_CONTENT)
             else:
                 logger.error(f"[RetirementView] Failed anonymizing fields for retired customer with "
                              f"LMS ID {lms_user_id}, with invalid filter/pipeline result: {result}.")
