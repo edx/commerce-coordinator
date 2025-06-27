@@ -125,9 +125,9 @@ class TestSumMoney(unittest.TestCase):
 
         result = sum_money(money1, money2, money3)
 
-        assert result['cent_amount'] == 11000
-        assert result['currency_code'] == "USD"
-        assert result['fraction_digits'] == 2
+        assert result.cent_amount == 11000
+        assert result.currency_code == "USD"
+        assert result.fraction_digits == 2
 
     def test_sum_money_with_none_values(self):
         """Test summing with None values and edge cases"""
@@ -136,9 +136,9 @@ class TestSumMoney(unittest.TestCase):
         money2 = None
 
         result = sum_money(money1, money2)
-        assert result['cent_amount'] == 1000
-        assert result['currency_code'] == "USD"
-        assert result['fraction_digits'] == 2
+        assert result.cent_amount == 1000
+        assert result.currency_code == "USD"
+        assert result.fraction_digits == 2
 
         result = sum_money(None, None)
         assert result is None

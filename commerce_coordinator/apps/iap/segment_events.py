@@ -2,10 +2,10 @@
 This module provides utility functions for emitting analytics events to Segment.
 
 """
-
+from types import SimpleNamespace
 from typing import Optional
 
-from commercetools.platform.models import CentPrecisionMoney, DiscountCode, LineItem
+from commercetools.platform.models import CentPrecisionMoney, DiscountCode, LineItem, TaxedPrice
 
 from commerce_coordinator.apps.commercetools.catalog_info.edx_utils import (
     cents_to_dollars,
@@ -162,7 +162,7 @@ def emit_payment_info_entered_event(
         "cart_id": cart_id,
         "checkout_id": cart_id,
         "currency": standalone_price.currency_code,
-        "payment": payment_method,
+        "payment_method": payment_method,
         "is_mobile": True
     }
 
@@ -177,9 +177,11 @@ def emit_order_completed_event(
     lms_user_id: int,
     cart_id: str,
     order_id: str,
+    tax: TaxedPrice,
     standalone_price: CentPrecisionMoney,
     line_items: list[LineItem],
     payment_method: str,
+    processor_name: str,
     discount_codes: list[DiscountCode],
     discount_on_line_items: Optional[list[CentPrecisionMoney]],
     discount_on_total_price: Optional[CentPrecisionMoney] = None
@@ -225,6 +227,21 @@ def emit_order_completed_event(
         for item in line_items
     ]
 
+    coupon_name = [
+        dc["code"] for dc in discount_codes[:-1]
+        if isinstance(dc, dict) and "code" in dc and dc["code"]
+    ]
+
+    total_tax = tax.get("totalTax", {})
+
+    tax_summary = SimpleNamespace(
+        currency_code=total_tax.get("currencyCode", 0),
+        cent_amount=total_tax.get("centAmount", 0),
+        fraction_digits=total_tax.get("fractionDigits", 0)
+    )
+
+    taxed_amount = cents_to_dollars(tax_summary)
+
     event_props = {
         "track_plan_id": 18,
         "trigger_source": 'server-side',
@@ -232,12 +249,12 @@ def emit_order_completed_event(
         "checkout_id": cart_id,
         "currency": standalone_price.currency_code,
         "total": cents_to_dollars(standalone_price),
-        "tax": None,
+        "tax": taxed_amount,
         "coupon": discount_code,
-        "coupon_name": 'a',
+        "coupon_name": coupon_name,
         "discount": discount_in_dollars,
         "payment_method": payment_method,
-        "processor_name": payment_method,
+        "processor_name": processor_name,
         "products": products,
         "is_mobile": True
     }
