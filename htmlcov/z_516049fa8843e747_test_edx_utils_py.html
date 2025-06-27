@@ -67,7 +67,7 @@
             <a id="nextFileLink" class="nav" href="z_516049fa8843e747_test_utils_py.html">&#xbb; next</a>
             &nbsp; &nbsp; &nbsp;
             <a class="nav" href="https://coverage.readthedocs.io/en/7.9.1">coverage.py v7.9.1</a>,
-            created at 2025-06-26 07:45 +0000
+            created at 2025-06-27 05:36 +0000
         </p>
         <aside class="hidden">
             <button type="button" class="button_next_chunk" data-shortcut="j"></button>
@@ -209,9 +209,9 @@
     <p class="pln"><span class="n"><a id="t125" href="#t125">125</a></span><span class="t">&nbsp;</span><span class="r"></span></p>
     <p class="run"><span class="n"><a id="t126" href="#t126">126</a></span><span class="t">        <span class="nam">result</span> <span class="op">=</span> <span class="nam">sum_money</span><span class="op">(</span><span class="nam">money1</span><span class="op">,</span> <span class="nam">money2</span><span class="op">,</span> <span class="nam">money3</span><span class="op">)</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t127" href="#t127">127</a></span><span class="t">&nbsp;</span><span class="r"></span></p>
-    <p class="run"><span class="n"><a id="t128" href="#t128">128</a></span><span class="t">        <span class="key">assert</span> <span class="nam">result</span><span class="op">[</span><span class="str">'cent_amount'</span><span class="op">]</span> <span class="op">==</span> <span class="num">11000</span>&nbsp;</span><span class="r"></span></p>
-    <p class="run"><span class="n"><a id="t129" href="#t129">129</a></span><span class="t">        <span class="key">assert</span> <span class="nam">result</span><span class="op">[</span><span class="str">'currency_code'</span><span class="op">]</span> <span class="op">==</span> <span class="str">"USD"</span>&nbsp;</span><span class="r"></span></p>
-    <p class="run"><span class="n"><a id="t130" href="#t130">130</a></span><span class="t">        <span class="key">assert</span> <span class="nam">result</span><span class="op">[</span><span class="str">'fraction_digits'</span><span class="op">]</span> <span class="op">==</span> <span class="num">2</span>&nbsp;</span><span class="r"></span></p>
+    <p class="run"><span class="n"><a id="t128" href="#t128">128</a></span><span class="t">        <span class="key">assert</span> <span class="nam">result</span><span class="op">.</span><span class="nam">cent_amount</span> <span class="op">==</span> <span class="num">11000</span>&nbsp;</span><span class="r"></span></p>
+    <p class="run"><span class="n"><a id="t129" href="#t129">129</a></span><span class="t">        <span class="key">assert</span> <span class="nam">result</span><span class="op">.</span><span class="nam">currency_code</span> <span class="op">==</span> <span class="str">"USD"</span>&nbsp;</span><span class="r"></span></p>
+    <p class="run"><span class="n"><a id="t130" href="#t130">130</a></span><span class="t">        <span class="key">assert</span> <span class="nam">result</span><span class="op">.</span><span class="nam">fraction_digits</span> <span class="op">==</span> <span class="num">2</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t131" href="#t131">131</a></span><span class="t">&nbsp;</span><span class="r"></span></p>
     <p class="run"><span class="n"><a id="t132" href="#t132">132</a></span><span class="t">    <span class="key">def</span> <span class="nam">test_sum_money_with_none_values</span><span class="op">(</span><span class="nam">self</span><span class="op">)</span><span class="op">:</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t133" href="#t133">133</a></span><span class="t">        <span class="str">"""Test summing with None values and edge cases"""</span>&nbsp;</span><span class="r"></span></p>
@@ -220,9 +220,9 @@
     <p class="run"><span class="n"><a id="t136" href="#t136">136</a></span><span class="t">        <span class="nam">money2</span> <span class="op">=</span> <span class="key">None</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t137" href="#t137">137</a></span><span class="t">&nbsp;</span><span class="r"></span></p>
     <p class="run"><span class="n"><a id="t138" href="#t138">138</a></span><span class="t">        <span class="nam">result</span> <span class="op">=</span> <span class="nam">sum_money</span><span class="op">(</span><span class="nam">money1</span><span class="op">,</span> <span class="nam">money2</span><span class="op">)</span>&nbsp;</span><span class="r"></span></p>
-    <p class="run"><span class="n"><a id="t139" href="#t139">139</a></span><span class="t">        <span class="key">assert</span> <span class="nam">result</span><span class="op">[</span><span class="str">'cent_amount'</span><span class="op">]</span> <span class="op">==</span> <span class="num">1000</span>&nbsp;</span><span class="r"></span></p>
-    <p class="run"><span class="n"><a id="t140" href="#t140">140</a></span><span class="t">        <span class="key">assert</span> <span class="nam">result</span><span class="op">[</span><span class="str">'currency_code'</span><span class="op">]</span> <span class="op">==</span> <span class="str">"USD"</span>&nbsp;</span><span class="r"></span></p>
-    <p class="run"><span class="n"><a id="t141" href="#t141">141</a></span><span class="t">        <span class="key">assert</span> <span class="nam">result</span><span class="op">[</span><span class="str">'fraction_digits'</span><span class="op">]</span> <span class="op">==</span> <span class="num">2</span>&nbsp;</span><span class="r"></span></p>
+    <p class="run"><span class="n"><a id="t139" href="#t139">139</a></span><span class="t">        <span class="key">assert</span> <span class="nam">result</span><span class="op">.</span><span class="nam">cent_amount</span> <span class="op">==</span> <span class="num">1000</span>&nbsp;</span><span class="r"></span></p>
+    <p class="run"><span class="n"><a id="t140" href="#t140">140</a></span><span class="t">        <span class="key">assert</span> <span class="nam">result</span><span class="op">.</span><span class="nam">currency_code</span> <span class="op">==</span> <span class="str">"USD"</span>&nbsp;</span><span class="r"></span></p>
+    <p class="run"><span class="n"><a id="t141" href="#t141">141</a></span><span class="t">        <span class="key">assert</span> <span class="nam">result</span><span class="op">.</span><span class="nam">fraction_digits</span> <span class="op">==</span> <span class="num">2</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t142" href="#t142">142</a></span><span class="t">&nbsp;</span><span class="r"></span></p>
     <p class="run"><span class="n"><a id="t143" href="#t143">143</a></span><span class="t">        <span class="nam">result</span> <span class="op">=</span> <span class="nam">sum_money</span><span class="op">(</span><span class="key">None</span><span class="op">,</span> <span class="key">None</span><span class="op">)</span>&nbsp;</span><span class="r"></span></p>
     <p class="run"><span class="n"><a id="t144" href="#t144">144</a></span><span class="t">        <span class="key">assert</span> <span class="nam">result</span> <span class="key">is</span> <span class="key">None</span>&nbsp;</span><span class="r"></span></p>
@@ -292,7 +292,7 @@
             <a class="nav" href="z_516049fa8843e747_test_utils_py.html">&#xbb; next</a>
             &nbsp; &nbsp; &nbsp;
             <a class="nav" href="https://coverage.readthedocs.io/en/7.9.1">coverage.py v7.9.1</a>,
-            created at 2025-06-26 07:45 +0000
+            created at 2025-06-27 05:36 +0000
         </p>
     </div>
 </footer>
