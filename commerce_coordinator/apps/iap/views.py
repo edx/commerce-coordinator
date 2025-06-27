@@ -261,6 +261,7 @@ class IOSRefundView(SingleInvocationAPIView):
                 sender=self.__class__,
                 payment_interface=EDX_IOS_IAP_PAYMENT_INTERFACE_NAME,
                 refund=refund,
+                request=request
             )
         else:
             logger.info(
