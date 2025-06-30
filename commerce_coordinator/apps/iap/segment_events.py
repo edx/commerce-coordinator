@@ -2,7 +2,6 @@
 This module provides utility functions for emitting analytics events to Segment.
 
 """
-from types import SimpleNamespace
 from typing import Optional
 
 from commercetools.platform.models import CentPrecisionMoney, DiscountCode, LineItem, TaxedPrice
@@ -13,6 +12,10 @@ from commerce_coordinator.apps.commercetools.catalog_info.edx_utils import (
     sum_money
 )
 from commerce_coordinator.apps.core.segment import track
+
+# TODO: For all events, we are using cart's values for discount and tax
+# but these are in localized currency of cart, not USD as we would want
+# This is not an issue as of now as discount and tax are always 0 for mobile orders
 
 
 def emit_checkout_started_event(
@@ -177,7 +180,7 @@ def emit_order_completed_event(
     lms_user_id: int,
     cart_id: str,
     order_id: str,
-    tax: TaxedPrice,
+    tax: TaxedPrice | None,
     standalone_price: CentPrecisionMoney,
     line_items: list[LineItem],
     payment_method: str,
@@ -232,15 +235,9 @@ def emit_order_completed_event(
         if isinstance(dc, dict) and "code" in dc and dc["code"]
     ]
 
-    total_tax = tax.get("totalTax", {})
-
-    tax_summary = SimpleNamespace(
-        currency_code=total_tax.get("currencyCode", 0),
-        cent_amount=total_tax.get("centAmount", 0),
-        fraction_digits=total_tax.get("fractionDigits", 0)
-    )
-
-    taxed_amount = cents_to_dollars(tax_summary)
+    taxed_amount = 0
+    if tax and tax.total_tax:
+        taxed_amount = cents_to_dollars(tax.total_tax)
 
     event_props = {
         "track_plan_id": 18,
