@@ -431,7 +431,7 @@ class RetirementViewTests(APITestCase):
         mock_filter.return_value = {'returned_customer': True}
         response = self.client.post(self.url, self.valid_payload, format='json')
 
-        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT)
         mock_filter.assert_called_once_with(127)
 
     @patch('commerce_coordinator.apps.lms.views.UserRetirementRequested.run_filter')
@@ -449,7 +449,7 @@ class RetirementViewTests(APITestCase):
         mock_filter.return_value = {'returned_customer': 'customer_not_found'}
         response = self.client.post(self.url, self.valid_payload, format='json')
 
-        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT)
         mock_filter.assert_called_once_with(127)
 
     def test_post_with_invalid_data_fails(self):
