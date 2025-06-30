@@ -7,7 +7,7 @@ Test suite for segment events utilities
 from unittest.mock import MagicMock, patch
 
 import pytest
-from commercetools.platform.models import CentPrecisionMoney, LineItem, PaymentMethodInfo
+from commercetools.platform.models import CentPrecisionMoney, LineItem, PaymentMethodInfo, TaxedPrice
 
 from commerce_coordinator.apps.iap.segment_events import (
     emit_checkout_started_event,
@@ -242,38 +242,15 @@ def test_emit_order_completed_event(
         "product_type": "edX Course"
     }
 
-    mock_tax = {
-        "total_net": {
-            "type": "centPrecision",
-            "currency_code": "USD",
-            "cent_amount": 15000,
-            "fraction_digits": 2
-        },
-        "total_gross": {
-            "type": "centPrecision",
-            "currency_code": "USD",
-            "cent_amount": 15000,
-            "fraction_digits": 2
-        },
-        "tax_portions": [
-            {
-                "rate": 0,
-                "amount": {
-                    "type": "centPrecision",
-                    "currency_code": "USD",
-                    "cent_amount": 0,
-                    "fraction_digits": 2
-                },
-                "name": "Disabled tax calculation"
-            }
-        ],
-        "total_tax": {
-            "type": "centPrecision",
-            "currency_code": "USD",
-            "cent_amount": 0,
-            "fraction_digits": 2
-        }
-    }
+    mock_tax_amount = CentPrecisionMoney(
+        cent_amount=0, currency_code="USD", fraction_digits=2
+    )
+    mock_tax = TaxedPrice(
+        total_tax=mock_tax_amount,
+        total_gross=mock_price,
+        total_net=mock_price,
+        tax_portions=[],
+    )
 
     mock_processor_name = "android iap"
 
