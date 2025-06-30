@@ -80,7 +80,7 @@ class OrderFulfillmentRequestSerializer(CoordinatorSerializer):
     line_item_id = serializers.CharField(allow_null=False)
     order_number = serializers.CharField(allow_null=False)
     order_id = serializers.CharField(allow_null=False)
-    provider_id = serializers.CharField(allow_null=True)
+    provider_id = serializers.CharField(allow_null=True, allow_blank=True)
     source_system = serializers.CharField(allow_null=False)
     edx_lms_user_id = serializers.IntegerField(allow_null=False)
     product_title = serializers.CharField(allow_null=False)
