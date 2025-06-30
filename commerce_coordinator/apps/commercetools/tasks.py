@@ -32,6 +32,7 @@ from commerce_coordinator.apps.ecommerce.clients import EcommerceAPIClient
 from commerce_coordinator.apps.iap.signals import revoke_line_mobile_order_signal
 from commerce_coordinator.apps.order_fulfillment.clients import OrderFulfillmentAPIClient
 from commerce_coordinator.apps.order_fulfillment.serializers import OrderRevokeLineRequestSerializer
+from commerce_coordinator.apps.rollout.waffle import is_redirect_to_legacy_enabled
 
 from .clients import CommercetoolsAPIClient, Refund
 from .utils import (

@@ -285,6 +285,7 @@ class ReturnedOrderfromMobileTaskTest(TestCase):
         return (
             values["payment_interface"],
             values["refund"],
+            values["http_request"],
         )
 
     def setUp(self):
@@ -297,6 +298,7 @@ class ReturnedOrderfromMobileTaskTest(TestCase):
                 "status": "completed",
             },
             "payment_interface": "ios_iap_edx",
+            "http_request": Mock(),
         }
 
     def test_correct_arguments_passed(self, mock_client):
