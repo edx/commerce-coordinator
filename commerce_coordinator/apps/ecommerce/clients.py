@@ -53,7 +53,7 @@ class EcommerceAPIClient(BaseEdxOAuthClient):
         """
         try:
             resource_url = urljoin_directory(self.base_url, 'api/iap/v1/ios/refund/')
-            response = self.client.post(resource_url, data=payload)
+            response = self.client.post(resource_url, json=payload)
             response.raise_for_status()
         except RequestException as exc:
             self.log_request_exception("[EcommerceAPIClient.refund_for_ios]", logger, exc)
