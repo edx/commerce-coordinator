@@ -2,7 +2,7 @@
 
 import logging
 from copy import copy
-from unittest.mock import patch, Mock
+from unittest.mock import Mock, patch
 
 from django.test import override_settings
 

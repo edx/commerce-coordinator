@@ -14,6 +14,7 @@ ORDER_FULFILLMENT_SERVICE_FORWARDING_ENABLED = f'{WAFFLE_FLAG_NAMESPACE}.order_f
 
 REDIRECT_TO_LEGACY_ENABLED = 'redirect_to_legacy_enabled'
 
+
 def is_redirect_to_commercetools_enabled_for_user(request):
     """
     Check if REDIRECT_TO_COMMERCETOOLS_CHECKOUT flag is enabled.
@@ -34,6 +35,7 @@ def is_order_fulfillment_service_forwarding_enabled(request):
 
     """
     return waffle.flag_is_active(request, ORDER_FULFILLMENT_SERVICE_FORWARDING_ENABLED)
+
 
 def is_redirect_to_legacy_enabled(request):
     """

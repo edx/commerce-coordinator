@@ -52,7 +52,7 @@ class EcommerceAPIClient(BaseEdxOAuthClient):
             payload: Payload to pass as request body.
         """
         try:
-            resource_url = urljoin_directory(self.base_url, f'api/iap/v1/ios/refund/')
+            resource_url = urljoin_directory(self.base_url, 'api/iap/v1/ios/refund/')
             response = self.client.post(resource_url, data=payload)
             response.raise_for_status()
         except RequestException as exc:
