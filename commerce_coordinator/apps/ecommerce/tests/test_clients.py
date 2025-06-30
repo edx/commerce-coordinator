@@ -61,6 +61,7 @@ class EcommerceAPIClientTests(CoordinatorOAuthClientTestCase):
                 mock_url=url,
                 mock_status=400,
             )
+
     def test_refund_for_ios_success(self):
         """Test successful refund_for_ios call."""
         url = urljoin_directory(TEST_ECOMMERCE_URL, 'api/iap/v1/ios/refund/')

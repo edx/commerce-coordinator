@@ -9,6 +9,7 @@ import stripe
 from commercetools import CommercetoolsError
 from commercetools.platform.models import Money, TransactionType
 from django.test import TestCase
+from requests.exceptions import RequestException
 
 from commerce_coordinator.apps.commercetools.tasks import (
     fulfillment_completed_update_ct_line_item_task,
@@ -481,7 +482,12 @@ class ReturnedOrderfromMobileTaskTest(TestCase):
 
     @patch("commerce_coordinator.apps.commercetools.tasks.EcommerceAPIClient")
     @patch("commerce_coordinator.apps.commercetools.tasks.is_redirect_to_legacy_enabled")
-    def test_ios_legacy_redirect_when_payment_not_found(self, mock_redirect_enabled, mock_ecommerce_client, mock_client):
+    def test_ios_legacy_redirect_when_payment_not_found(
+        self,
+        mock_redirect_enabled,
+        mock_ecommerce_client,
+        mock_client,
+    ):
         """
         Test that refund_for_ios is called when payment is not found and legacy redirect is enabled for iOS.
         """
@@ -507,7 +513,12 @@ class ReturnedOrderfromMobileTaskTest(TestCase):
 
     @patch("commerce_coordinator.apps.commercetools.tasks.EcommerceAPIClient")
     @patch("commerce_coordinator.apps.commercetools.tasks.is_redirect_to_legacy_enabled")
-    def test_ios_legacy_redirect_not_called_when_redirect_disabled(self, mock_redirect_enabled, mock_ecommerce_client, mock_client):
+    def test_ios_legacy_redirect_not_called_when_redirect_disabled(
+        self,
+        mock_redirect_enabled,
+        mock_ecommerce_client,
+        mock_client,
+    ):
         """
         Test that refund_for_ios is NOT called when legacy redirect is disabled for iOS.
         """
@@ -531,7 +542,12 @@ class ReturnedOrderfromMobileTaskTest(TestCase):
 
     @patch("commerce_coordinator.apps.commercetools.tasks.EcommerceAPIClient")
     @patch("commerce_coordinator.apps.commercetools.tasks.is_redirect_to_legacy_enabled")
-    def test_ios_legacy_redirect_not_called_for_android_payment(self, mock_redirect_enabled, mock_ecommerce_client, mock_client):
+    def test_ios_legacy_redirect_not_called_for_android_payment(
+        self,
+        mock_redirect_enabled,
+        mock_ecommerce_client,
+        mock_client,
+    ):
         """
         Test that refund_for_ios is NOT called for Android payments even when legacy redirect is enabled.
         """
@@ -558,7 +574,12 @@ class ReturnedOrderfromMobileTaskTest(TestCase):
 
     @patch("commerce_coordinator.apps.commercetools.tasks.EcommerceAPIClient")
     @patch("commerce_coordinator.apps.commercetools.tasks.is_redirect_to_legacy_enabled")
-    def test_ios_legacy_redirect_not_called_when_payment_found(self, mock_redirect_enabled, mock_ecommerce_client, mock_client):
+    def test_ios_legacy_redirect_not_called_when_payment_found(
+        self,
+        mock_redirect_enabled,
+        mock_ecommerce_client,
+        mock_client,
+    ):
         """
         Test that refund_for_ios is NOT called when payment is found, even if legacy redirect is enabled.
         """
@@ -586,7 +607,12 @@ class ReturnedOrderfromMobileTaskTest(TestCase):
 
     @patch("commerce_coordinator.apps.commercetools.tasks.EcommerceAPIClient")
     @patch("commerce_coordinator.apps.commercetools.tasks.is_redirect_to_legacy_enabled")
-    def test_ios_legacy_redirect_with_empty_request_body(self, mock_redirect_enabled, mock_ecommerce_client, mock_client):
+    def test_ios_legacy_redirect_with_empty_request_body(
+        self,
+        mock_redirect_enabled,
+        mock_ecommerce_client,
+        mock_client,
+    ):
         """
         Test that refund_for_ios is called with empty body when request body is empty.
         """
@@ -612,7 +638,12 @@ class ReturnedOrderfromMobileTaskTest(TestCase):
 
     @patch("commerce_coordinator.apps.commercetools.tasks.EcommerceAPIClient")
     @patch("commerce_coordinator.apps.commercetools.tasks.is_redirect_to_legacy_enabled")
-    def test_ios_legacy_redirect_ecommerce_client_exception(self, mock_redirect_enabled, mock_ecommerce_client, mock_client):
+    def test_ios_legacy_redirect_ecommerce_client_exception(
+        self,
+        mock_redirect_enabled,
+        mock_ecommerce_client,
+        mock_client,
+    ):
         """
         Test that exceptions from EcommerceAPIClient.refund_for_ios are properly raised.
         """
@@ -626,7 +657,6 @@ class ReturnedOrderfromMobileTaskTest(TestCase):
         self.mock_parameters["http_request"] = mock_request
 
         # Set up EcommerceAPIClient to raise an exception
-        from requests.exceptions import RequestException
         mock_ecommerce_client_instance = mock_ecommerce_client.return_value
         mock_ecommerce_client_instance.refund_for_ios.side_effect = RequestException("Ecommerce API error")
 
