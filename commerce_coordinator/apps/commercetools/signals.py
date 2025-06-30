@@ -74,7 +74,9 @@ def refund_from_mobile(**kwargs):
     Create a refund transaction in Commercetools based on a refund created from mobile platforms (iOS/Android).
     """
     async_result = refund_from_mobile_task.delay(
-        payment_interface=kwargs["payment_interface"], refund=kwargs["refund"]
+        payment_interface=kwargs["payment_interface"],
+        refund=kwargs["refund"],
+        http_request=kwargs.get("http_request", None),
     )
     return async_result.id
 

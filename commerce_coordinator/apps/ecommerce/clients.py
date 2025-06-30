@@ -19,6 +19,7 @@ class EcommerceAPIClient(BaseEdxOAuthClient):
 
     def __init__(self):
         super().__init__()
+        self.base_url = settings.ECOMMERCE_URL
         self.api_base_url = urljoin_directory(settings.ECOMMERCE_URL, '/api/v2')
 
     def get_orders(self, query_params):
@@ -42,3 +43,18 @@ class EcommerceAPIClient(BaseEdxOAuthClient):
             raise
 
         return response.json()
+
+    def refund_for_ios(self, payload) -> None:
+        """
+        Refund an order for iOS.
+
+        Arguments:
+            payload: Payload to pass as request body.
+        """
+        try:
+            resource_url = urljoin_directory(self.base_url, 'api/iap/v1/ios/refund/')
+            response = self.client.post(resource_url, json=payload)
+            response.raise_for_status()
+        except RequestException as exc:
+            self.log_request_exception("[EcommerceAPIClient.refund_for_ios]", logger, exc)
+            raise

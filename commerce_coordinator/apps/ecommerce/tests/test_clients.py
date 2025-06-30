@@ -61,3 +61,30 @@ class EcommerceAPIClientTests(CoordinatorOAuthClientTestCase):
                 mock_url=url,
                 mock_status=400,
             )
+
+    def test_refund_for_ios_success(self):
+        """Test successful refund_for_ios call."""
+        url = urljoin_directory(TEST_ECOMMERCE_URL, 'api/iap/v1/ios/refund/')
+        payload = {"order_number": "ORDER123", "amount": "9.99"}
+        self.assertJSONClientResponse(
+            uut=self.client.refund_for_ios,
+            input_kwargs={'payload': payload},
+            expected_request=payload,
+            mock_method='POST',
+            mock_url=url,
+            mock_response=None,
+            expected_output=None,
+        )
+
+    def test_refund_for_ios_failure(self):
+        """Test refund_for_ios raises exception on error response."""
+        url = urljoin_directory(TEST_ECOMMERCE_URL, 'api/iap/v1/ios/refund/')
+        payload = {"order_number": "ORDER123", "amount": "9.99"}
+        with self.assertRaises(HTTPError):
+            self.assertJSONClientResponse(
+                uut=self.client.refund_for_ios,
+                input_kwargs={'payload': payload},
+                mock_method='POST',
+                mock_url=url,
+                mock_status=400,
+            )
