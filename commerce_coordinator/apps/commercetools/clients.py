@@ -1745,30 +1745,33 @@ class CommercetoolsAPIClient:
         Optional[ProductVariant]
             The first matching variant or `None` if none found.
         """
-        filter_expr = [
-            f'variants.attributes.external-ids-variant:"{course_run_key}"',
-            'variants.attributes.mode:"credit"'
-        ]
+        try:
+            filter_expr = [
+                f'variants.attributes.external-ids-variant:"{course_run_key}"',
+                'variants.attributes.mode:"credit"'
+            ]
 
-        results = self.base_client.product_projections.search(
-            False, filter=filter_expr, with_total=False,
-        ).results
+            results = self.base_client.product_projections.search(
+                True, filter=filter_expr, with_total=False
+            ).results
 
-        if not results:
+            if not results:
+                return None
+
+            for product in results:
+                for variant in product.variants:
+                    if (
+                        variant.is_matching_variant
+                        and get_attribute_value(variant.attributes, "external-ids-variant") == course_run_key
+                        and get_attribute_value(variant.attributes, "mode") == "credit"
+                    ):
+                        return variant
+
             return None
-
-        # Flatten master + variants across all matched products
-        all_variants = [
-            variant
-            for product in results
-            for variant in [product.master_variant, *product.variants]
-        ]
-
-        for variant in all_variants:
-            if (
-                get_attribute_value(variant.attributes, "external-ids-variant") == course_run_key
-                and get_attribute_value(variant.attributes, "mode") == "credit"
-            ):
-                return variant
-
-        return None
+        except CommercetoolsError as err:
+            handle_commercetools_error(
+                "[CommercetoolsAPIClient.get_credit_variant_by_course_run]",
+                err,
+                f"Unable to find credit variant with course run key {course_run_key}",
+            )
+            raise err

@@ -1844,6 +1844,7 @@ class ClientTests(TestCase):
             "id": "mock_product_id",
             "variants": [{
                 "id": 1,
+                "isMatchingVariant": True,
                 "attributes": [
                     {"name": "external-ids-variant", "value": course_run_key},
                     {"name": "mode", "value": "credit"}
@@ -1859,7 +1860,7 @@ class ClientTests(TestCase):
         with requests_mock.Mocker(real_http=True, case_sensitive=False) as mocker:
             mocker.get(
                 f"{base_url}product-projections/search"
-                f"?withTotal=False&markMatchingVariants=False"
+                f"?withTotal=False&markMatchingVariants=True"
                 f"&filter=variants.attributes.external-ids-variant%3A%22course-v1%3AedX%2BDemoX%2B2025_T1%22"
                 f"&filter=variants.attributes.mode%3A%22credit%22",
                 json=mock_response,
@@ -1868,6 +1869,7 @@ class ClientTests(TestCase):
 
             result = self.client_set.client.get_credit_variant_by_course_run(course_run_key)
             self.assertIsNotNone(result)
+            self.assertTrue(result.is_matching_variant)
             self.assertEqual(result.attributes[0].value, course_run_key)
             self.assertEqual(result.attributes[1].value, "credit")
 
