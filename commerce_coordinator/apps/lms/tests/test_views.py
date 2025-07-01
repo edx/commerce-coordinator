@@ -657,3 +657,149 @@ class ProgramPriceViewTests(APITestCase):
 
         self.assertEqual(response.status_code, status.HTTP_500_INTERNAL_SERVER_ERROR)
         self.assertEqual(response.data, 'Error occurred while fetching data')
+
+
+@ddt.ddt
+class CreditCheckoutViewTests(APITestCase):
+    """
+    Tests for credit checkout view.
+    """
+    # Define test user properties
+    test_user_username = 'test'
+    test_user_email = 'test@example.com'
+    test_user_password = 'secret'
+    test_course_run_key = 'course-v1:MichiganX+CreditCourse+1T2021'
+
+    def setUp(self):
+        super().setUp()
+        self.client_set = APITestingSet.new_instance()
+        self.user = User.objects.create_user(
+            self.test_user_username,
+            self.test_user_email,
+            self.test_user_password,
+        )
+        self.url = reverse('lms:credit_checkout', kwargs={'course_run_key': self.test_course_run_key})
+
+    def tearDown(self):
+        # force deconstructor call or some test get flaky
+        del self.client_set
+        super().tearDown()
+        self.client.logout()
+
+    def test_view_rejects_session_auth(self):
+        """Check Session Auth Not Allowed."""
+        # Login
+        self.client.login(username=self.test_user_username, password=self.test_user_password)
+        # Request credit checkout
+        response = self.client.get(self.url)
+        # Error HTTP_400_BAD_REQUEST
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+
+    def test_view_rejects_unauthorized(self):
+        """Check unauthorized users are redirected to login page."""
+        # Logout user
+        self.client.logout()
+        # Request credit checkout
+        response = self.client.get(self.url)
+        # Error HTTP_302_FOUND
+        self.assertEqual(response.status_code, status.HTTP_302_FOUND)
+
+    @patch('commerce_coordinator.apps.lms.views.CommercetoolsAPIClient')
+    def test_successful_credit_checkout_redirect(self, mock_ct_client):
+        """Test successful redirect to payment page with credit variant."""
+        self.client.force_authenticate(user=self.user)
+
+        # Mock the credit variant response
+        mock_variant = mock.Mock()
+        mock_variant.sku = 'credit-course-v1:MichiganX+CreditCourse+1T2021'
+        mock_ct_client.return_value.get_credit_variant_by_course_run.return_value = mock_variant
+
+        response = self.client.get(self.url)
+
+        self.assertEqual(response.status_code, status.HTTP_302_FOUND)
+        self.assertIn('/lms/payment_page_redirect/', response.url)
+        self.assertIn('course_run_key=credit-course-v1%3AMichiganX%2BCreditCourse%2B1T2021', response.url)
+        mock_ct_client.return_value.get_credit_variant_by_course_run.assert_called_once_with(
+            self.test_course_run_key
+        )
+
+    @patch('commerce_coordinator.apps.lms.views.CommercetoolsAPIClient')
+    def test_credit_variant_not_found(self, mock_ct_client):
+        """Test when no credit variant is found for the course run."""
+        self.client.force_authenticate(user=self.user)
+
+        # Mock no variant found
+        mock_ct_client.return_value.get_credit_variant_by_course_run.return_value = None
+
+        response = self.client.get(self.url)
+
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertEqual(response.content.decode(), "Something went wrong.")
+        mock_ct_client.return_value.get_credit_variant_by_course_run.assert_called_once_with(
+            self.test_course_run_key
+        )
+
+    @patch('commerce_coordinator.apps.lms.views.CommercetoolsAPIClient')
+    def test_commercetools_error_handling(self, mock_ct_client):
+        """Test handling of CommercetoolsError exceptions."""
+        self.client.force_authenticate(user=self.user)
+
+        # Mock CommercetoolsError
+        mock_ct_client.return_value.get_credit_variant_by_course_run.side_effect = CommercetoolsError(
+            message="API Error",
+            errors="Some error",
+            response={}
+        )
+
+        response = self.client.get(self.url)
+
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertEqual(response.content.decode(), "Something went wrong.")
+
+    @patch('commerce_coordinator.apps.lms.views.CommercetoolsAPIClient')
+    def test_empty_course_run_key(self, mock_ct_client):
+        """Test with empty course run key."""
+        self.client.force_authenticate(user=self.user)
+
+        # Use a placeholder course run key since empty string fails URL reverse
+        empty_url = reverse('lms:credit_checkout', kwargs={'course_run_key': 'empty'})
+
+        mock_ct_client.return_value.get_credit_variant_by_course_run.return_value = None
+
+        response = self.client.get(empty_url)
+
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        mock_ct_client.return_value.get_credit_variant_by_course_run.assert_called_once_with('empty')
+
+    @patch('commerce_coordinator.apps.lms.views.CommercetoolsAPIClient')
+    def test_user_lms_id_logging(self, mock_ct_client):
+        """Test that user.add_lms_user_id is called for logging purposes."""
+        self.client.force_authenticate(user=self.user)
+
+        mock_variant = mock.Mock()
+        mock_variant.sku = 'credit-course-sku'
+        mock_ct_client.return_value.get_credit_variant_by_course_run.return_value = mock_variant
+
+        with patch.object(self.user, 'add_lms_user_id') as mock_add_lms_id:
+            response = self.client.get(self.url)
+
+            mock_add_lms_id.assert_called_once_with("CreditCheckoutView GET method")
+            self.assertEqual(response.status_code, status.HTTP_302_FOUND)
+
+    @patch('commerce_coordinator.apps.lms.views.CommercetoolsAPIClient')
+    def test_redirect_url_construction(self, mock_ct_client):
+        """Test that the redirect URL is constructed correctly."""
+        self.client.force_authenticate(user=self.user)
+
+        mock_variant = mock.Mock()
+        mock_variant.sku = 'test-credit-sku'
+        mock_ct_client.return_value.get_credit_variant_by_course_run.return_value = mock_variant
+
+        response = self.client.get(self.url)
+
+        self.assertEqual(response.status_code, status.HTTP_302_FOUND)
+        # Verify the redirect URL contains the expected components
+        self.assertIn('payment_page_redirect', response.url)
+        self.assertIn('course_run_key=test-credit-sku', response.url)
+        # Verify it's an absolute URL
+        self.assertTrue(response.url.startswith('http'))

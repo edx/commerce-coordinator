@@ -86,6 +86,7 @@ from commerce_coordinator.apps.commercetools.catalog_info.constants import (
     EdXFieldNames,
     TwoUKeys
 )
+from commerce_coordinator.apps.commercetools.catalog_info.edx_utils import get_attribute_value
 from commerce_coordinator.apps.commercetools.catalog_info.foundational_types import TwoUCustomTypes
 from commerce_coordinator.apps.commercetools.utils import (
     find_latest_refund,
@@ -1725,3 +1726,49 @@ class CommercetoolsAPIClient:
                 f"Unable to find order for payment ID {payment_id}",
             )
             raise err
+
+    @conditional_retry
+    def get_credit_variant_by_course_run(
+            self, course_run_key: str
+    ) -> Optional["ProductVariant"]:
+        """
+        Fetch the credit variant whose custom Attribute
+        `external-ids-variant` equals `course_run_key`.
+
+        Parameters
+        ----------
+        course_run_key : str
+            The edX course‑run key (e.g. `course‑v1:edX+DemoX+2025_T1`).
+
+        Returns
+        -------
+        Optional[ProductVariant]
+            The first matching variant or `None` if none found.
+        """
+        filter_expr = [
+            f'variants.attributes.external-ids-variant:"{course_run_key}"',
+            'variants.attributes.mode:"credit"'
+        ]
+
+        results = self.base_client.product_projections.search(
+            False, filter=filter_expr, with_total=False,
+        ).results
+
+        if not results:
+            return None
+
+        # Flatten master + variants across all matched products
+        all_variants = [
+            variant
+            for product in results
+            for variant in [product.master_variant, *product.variants]
+        ]
+
+        for variant in all_variants:
+            if (
+                get_attribute_value(variant.attributes, "external-ids-variant") == course_run_key
+                and get_attribute_value(variant.attributes, "mode") == "credit"
+            ):
+                return variant
+
+        return None

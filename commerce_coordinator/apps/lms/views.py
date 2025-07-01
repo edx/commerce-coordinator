@@ -10,6 +10,7 @@ from urllib.parse import urlencode, urljoin
 from commercetools import CommercetoolsError
 from django.conf import settings
 from django.http import HttpResponseBadRequest, HttpResponseRedirect
+from django.urls import reverse
 from edx_rest_framework_extensions.auth.jwt.authentication import JwtAuthentication
 from edx_rest_framework_extensions.permissions import LoginRedirectIfUnauthenticated
 from openedx_filters.exceptions import OpenEdxFilterException
@@ -557,3 +558,71 @@ class ProgramPriceView(APIView):
         except Exception as err:  # pylint: disable=broad-except
             logger.exception(f"[ProgramPriceView] Unexpected Error: {err}")
             return Response('Unexpected error occurred', status=HTTP_500_INTERNAL_SERVER_ERROR)
+
+
+class CreditCheckoutView(APIView):
+    """Accept incoming request for routing users to the credit checkout view."""
+    permission_classes = (LoginRedirectIfUnauthenticated,)
+    throttle_classes = (UserRateThrottle,)
+
+    def get(self, request, course_run_key=''):
+        """
+        Handle GET request to redirect authenticated users to credit course checkout.
+
+        Fetches the credit variant for the specified course run from Commercetools
+        and redirects the user to the payment page with the variant's SKU as the
+        course run key parameter.
+
+        Args:
+            request: HTTP request object containing user and headers information
+            course_run_key (str): The course run identifier to find credit variant for.
+                                 Defaults to empty string.
+
+        Returns:
+            HttpResponseRedirect: Redirect to payment_page_redirect with credit variant SKU
+                                 as course_run_key query parameter
+            HttpResponseBadRequest: If no credit variant found for the course run key
+                                   or if CommercetoolsError occurs
+
+        Raises:
+            CommercetoolsError: If there's an error communicating with Commercetools API
+
+        Notes:
+            - Requires authenticated user (LoginRedirectIfUnauthenticated permission)
+            - Rate limited by UserRateThrottle
+            - Logs user LMS ID and request details for debugging
+            - Redirects to absolute URL constructed from payment_page_redirect view
+        """
+        logger.debug(f'{self.get.__qualname__} request object: {request.data}.')
+        logger.debug(f'{self.get.__qualname__} headers: {request.headers}.')
+
+        try:
+            user = request.user
+            user.add_lms_user_id("CreditCheckoutView GET method")
+            logger.info(
+                f"{self.get.__qualname__} Received request to redirect user having lms_user_id: {user.lms_user_id}"
+                f" to credit checkout with query params: {list(self.request.GET.lists())}"
+            )
+
+            ct_api_client = CommercetoolsAPIClient(enable_retries=True)
+            # Get the credit course run variant from Commercetools
+            course_run_variant = ct_api_client.get_credit_variant_by_course_run(course_run_key)
+            if not course_run_variant:
+                logger.warning(
+                    f"{self.get.__qualname__} No credit variant found for course_run_key={course_run_key}"
+                )
+                return HttpResponseBadRequest("Something went wrong.")
+
+            # Build redirect URL to payment_page_redirect
+            payment_path = reverse("lms:payment_page_redirect")
+            query = urlencode({"course_run_key": course_run_variant.sku})
+            redirect_url = request.build_absolute_uri(f"{payment_path}?{query}")
+
+            logger.info(
+                f"{self.get.__qualname__} Redirecting user lms_user_id={user.lms_user_id} to {redirect_url}"
+                f" for credit course purchase."
+            )
+            return HttpResponseRedirect(redirect_url)
+        except CommercetoolsError as e:
+            logger.exception(f"Something went wrong! Exception raised in {self.get.__name__} with error {repr(e)}")
+            return HttpResponseBadRequest('Something went wrong.')
