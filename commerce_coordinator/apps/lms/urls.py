@@ -5,6 +5,7 @@ LMS (edx-platform) app URLS
 from django.urls import path
 
 from commerce_coordinator.apps.lms.views import (
+    CreditCheckoutView,
     FirstTimeDiscountEligibleView,
     OrderDetailsRedirectView,
     PaymentPageRedirectView,
@@ -21,4 +22,5 @@ urlpatterns = [
     path('user_retirement/', RetirementView.as_view(), name='user_retirement'),
     path('first-time-discount-eligible/', FirstTimeDiscountEligibleView.as_view(), name='first_time_discount_eligible'),
     path('program-price-info/<str:bundle_key>/', ProgramPriceView.as_view(), name='program_price_info'),
+    path('credit/checkout/<str:course_run_key>/', CreditCheckoutView.as_view(), name='credit_checkout'),
 ]

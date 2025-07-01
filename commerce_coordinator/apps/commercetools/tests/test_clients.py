@@ -1836,6 +1836,43 @@ class ClientTests(TestCase):
             # Verify the exception message
             self.assertEqual(str(exc.exception), f"No order found for payment ID {payment_id}")
 
+    def test_get_credit_variant_by_course_run(self):
+        base_url = self.client_set.get_base_url_from_client()
+        course_run_key = "course-v1:edX+DemoX+2025_T1"
+
+        mock_product = {
+            "id": "mock_product_id",
+            "variants": [{
+                "id": 1,
+                "isMatchingVariant": True,
+                "attributes": [
+                    {"name": "external-ids-variant", "value": course_run_key},
+                    {"name": "mode", "value": "credit"}
+                ]
+            }],
+            "masterVariant": {
+                "attributes": []
+            }
+        }
+
+        mock_response = {"results": [mock_product], "total": 1}
+
+        with requests_mock.Mocker(real_http=True, case_sensitive=False) as mocker:
+            mocker.get(
+                f"{base_url}product-projections/search"
+                f"?withTotal=False&markMatchingVariants=True"
+                f"&filter=variants.attributes.external-ids-variant%3A%22course-v1%3AedX%2BDemoX%2B2025_T1%22"
+                f"&filter=variants.attributes.mode%3A%22credit%22",
+                json=mock_response,
+                status_code=200
+            )
+
+            result = self.client_set.client.get_credit_variant_by_course_run(course_run_key)
+            self.assertIsNotNone(result)
+            self.assertTrue(result.is_matching_variant)
+            self.assertEqual(result.attributes[0].value, course_run_key)
+            self.assertEqual(result.attributes[1].value, "credit")
+
 
 class PaginatedResultsTest(TestCase):
     """Tests for the simple logic in our Paginated Results Class"""
