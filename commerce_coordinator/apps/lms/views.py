@@ -624,5 +624,5 @@ class CreditCheckoutView(APIView):
             )
             return HttpResponseRedirect(redirect_url)
         except CommercetoolsError as e:
-            logger.exception(f"Something went wrong! Exception raised in {self.get.__name__} with error {repr(e)}")
+            logger.exception(f"Something went wrong! Exception raised in {self.get.__qualname__} with error {repr(e)}")
             return HttpResponseBadRequest('Something went wrong.')
