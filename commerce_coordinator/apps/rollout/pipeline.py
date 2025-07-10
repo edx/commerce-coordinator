@@ -67,9 +67,9 @@ class GetActiveOrderManagementSystem(PipelineStep):
                 if not commercetools_available_product:
                     logger.warning(
                         f'[get_product_variant_by_course_run] Course not found in Commercetools. '
-                        f'course_run: {course_run} with exception: {exc}'
+                        f'course_run: {course_run}. Please ensure it is properly synced.'
                     )
-            except CommercetoolsError as exc:  # pragma no cover
+            except CommercetoolsError as exc:
                 logger.exception(
                     f'[get_product_variant_by_course_run] Failed to get CT course '
                     f'for course_run: {course_run} with exception: {exc}'
@@ -79,7 +79,7 @@ class GetActiveOrderManagementSystem(PipelineStep):
         if commercetools_available_product:
             logger.info(
                 f'Commercetools product found with {product_log_msg}. '
-                f'Redirecting to Commercetools checkout.'
+                f'Redirecting to Commercetools Checkout.'
             )
             active_order_management_system = COMMERCETOOLS_FRONTEND
         elif bundle or sku_params:
