@@ -2,9 +2,9 @@
 
 import logging
 
+from commercetools import CommercetoolsError
 from openedx_filters import PipelineStep
 from openedx_filters.exceptions import OpenEdxFilterException
-from requests import HTTPError
 
 from commerce_coordinator.apps.commercetools.clients import CommercetoolsAPIClient
 from commerce_coordinator.apps.commercetools.constants import COMMERCETOOLS_ORDER_MANAGEMENT_SYSTEM
@@ -55,24 +55,38 @@ class GetActiveOrderManagementSystem(PipelineStep):
                         f'[get_product_by_program_id] Program not found in Commercetools. '
                         f'Program product id: {bundle}. Please ensure it is properly synced.'
                     )
-            except HTTPError as exc:
+            except CommercetoolsError as exc:
                 logger.exception(
                     f'[get_product_by_program_id] Failed to get CT program '
-                    f'for product_id: {bundle} with exception: {exc}'
+                    f'for program_id: {bundle} with exception: {exc}'
                 )
         elif course_run and is_redirect_to_commercetools_enabled_for_user(request):
             try:
                 ct_api_client = CommercetoolsAPIClient()
                 commercetools_available_product = ct_api_client.get_product_variant_by_course_run(course_run)
-            except HTTPError as exc:  # pragma no cover
+                if not commercetools_available_product:
+                    logger.warning(
+                        f'[get_product_variant_by_course_run] Course not found in Commercetools. '
+                        f'course_run: {course_run}. Please ensure it is properly synced.'
+                    )
+            except CommercetoolsError as exc:
                 logger.exception(
                     f'[get_product_variant_by_course_run] Failed to get CT course '
                     f'for course_run: {course_run} with exception: {exc}'
                 )
 
+        product_log_msg = f'program_id={bundle}' if bundle else f'course_run_key={course_run}'
         if commercetools_available_product:
+            logger.info(
+                f'Commercetools product found with {product_log_msg}. '
+                f'Redirecting to Commercetools Checkout.'
+            )
             active_order_management_system = COMMERCETOOLS_FRONTEND
         elif bundle or sku_params:
+            logger.info(
+                f'Commercetools product not found with {product_log_msg}. '
+                f'Redirecting to Legacy Ecommerce Checkout.'
+            )
             active_order_management_system = FRONTEND_APP_PAYMENT_CHECKOUT
         else:
             logger.exception('An error occurred while determining the active order management system.'
