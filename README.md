@@ -188,7 +188,7 @@
 | commerce\_coordinator/apps/paypal/urls.py                                              |        4 |        0 |        0 |        0 |    100% |           |
 | commerce\_coordinator/apps/paypal/views.py                                             |       72 |        3 |       12 |        3 |     93% |45, 60-61, 107->112, 108->107 |
 | commerce\_coordinator/apps/rollout/\_\_init\_\_.py                                     |        0 |        0 |        0 |        0 |    100% |           |
-| commerce\_coordinator/apps/rollout/pipeline.py                                         |       56 |        1 |       16 |        1 |     97% |       113 |
+| commerce\_coordinator/apps/rollout/pipeline.py                                         |       63 |        2 |       18 |        2 |     95% |   68, 127 |
 | commerce\_coordinator/apps/rollout/tests/test\_pipeline.py                             |      119 |        0 |        0 |        0 |    100% |           |
 | commerce\_coordinator/apps/rollout/tests/test\_util\_functions.py                      |       27 |        0 |        0 |        0 |    100% |           |
 | commerce\_coordinator/apps/rollout/utils.py                                            |       28 |        3 |        8 |        0 |     86% |     80-82 |
@@ -210,7 +210,7 @@
 | commerce\_coordinator/apps/stripe/views.py                                             |       63 |       11 |       10 |        3 |     78% |65, 67, 112-145 |
 | commerce\_coordinator/docker\_gunicorn\_configuration.py                               |       27 |       27 |       10 |        0 |      0% |      4-57 |
 | commerce\_coordinator/urls.py                                                          |       24 |        0 |        0 |        0 |    100% |           |
-|                                                                              **TOTAL** | **9704** |  **387** |  **676** |   **69** | **95%** |           |
+|                                                                              **TOTAL** | **9711** |  **388** |  **678** |   **70** | **95%** |           |
 
 
 ## Setup coverage badge
