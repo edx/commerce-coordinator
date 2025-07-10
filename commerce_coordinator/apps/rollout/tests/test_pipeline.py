@@ -1,8 +1,8 @@
 from unittest import TestCase
 from unittest.mock import MagicMock, patch
 
+from commercetools import CommercetoolsError
 from openedx_filters.exceptions import OpenEdxFilterException
-from requests import HTTPError
 
 from commerce_coordinator.apps.commercetools_frontend.constants import COMMERCETOOLS_FRONTEND
 from commerce_coordinator.apps.frontend_app_payment.constants import FRONTEND_APP_PAYMENT_CHECKOUT
@@ -78,7 +78,9 @@ class TestGetActiveOrderManagementSystem(TestCase):
     ):
         mock_is_program_redirection_to_ct_enabled.return_value = True
         mock_client = MockCommercetoolsAPIClient.return_value
-        mock_client.get_product_by_program_id.side_effect = HTTPError("API error")
+        mock_client.get_product_by_program_id.side_effect = CommercetoolsError(
+            message="API Error", response={}, errors="API Error"
+        )
 
         request = MagicMock()
         request.query_params.getlist.return_value = []
@@ -167,7 +169,9 @@ class TestGetActiveOrderManagementSystem(TestCase):
     ):
         mock_is_redirect_to_commercetools_enabled_for_user.return_value = True
         mock_client = MockCommercetoolsAPIClient.return_value
-        mock_client.get_product_variant_by_course_run.side_effect = HTTPError("API error")
+        mock_client.get_product_variant_by_course_run.side_effect = CommercetoolsError(
+            message="API Error", response={}, errors="API Error"
+        )
 
         request = MagicMock()
         request.query_params.getlist.return_value = ['sku1', 'sku2']
