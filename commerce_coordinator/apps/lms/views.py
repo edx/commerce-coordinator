@@ -408,7 +408,10 @@ class FirstTimeDiscountEligibleView(APIView):
 
         try:
             ct_api_client = CommercetoolsAPIClient()
-            is_eligible = ct_api_client.is_first_time_discount_eligible(email, code)
+            is_eligible = ct_api_client.is_first_time_discount_eligible(
+                code=code,
+                customer_email=email,
+            )
 
             output = {
                 'is_eligible': is_eligible
@@ -626,3 +629,60 @@ class CreditCheckoutView(APIView):
         except CommercetoolsError as e:
             logger.exception(f"Something went wrong! Exception raised in {self.get.__qualname__} with error {repr(e)}")
             return HttpResponseBadRequest('Something went wrong.')
+
+
+class DiscountCodeInfoView(APIView):
+    """
+    View to get discount code information including applicability and discount percentage.
+    """
+
+    authentication_classes = (JwtAuthentication,)
+    permission_classes = (IsAuthenticated,)
+    throttle_classes = []
+
+    def get(self, request):
+        """
+        Get discount code information.
+
+        Args:
+            code (str): Discount code to check
+
+        Returns:
+            Response: JSON containing is_applicable and discount_percentage
+        """
+        try:
+            code = request.query_params.get("code", "")
+            if not code:
+                return HttpResponseBadRequest("Discount code is required")
+
+            client = CommercetoolsAPIClient(enable_retries=True)
+            discount_code_info = client.get_discount_code_info(code)
+            if not discount_code_info:
+                return HttpResponseBadRequest("Discount code not found")
+
+            is_applicable = discount_code_info[is_applicable]
+            if (
+                is_applicable
+                and discount_code_info["max_applications_per_customer"] > 0
+            ):
+                customer = client.get_customer_by_lms_user_id(
+                    request.user.lms_user_id
+                )
+                if customer:
+                    is_applicable = client.is_first_time_discount_eligible(
+                        code=code,
+                        customer_id=customer.id,
+                        reraise=True,
+                    )
+
+            return Response(
+                {
+                    "is_applicable": is_applicable,
+                    "discount_percentage": discount_code_info["discount_percentage"],
+                }
+            )
+        except CommercetoolsError as e:
+            logger.exception(
+                f"Something went wrong! Exception raised in {self.get.__qualname__} with error {repr(e)}"
+            )
+            return HttpResponseBadRequest("Something went wrong.")

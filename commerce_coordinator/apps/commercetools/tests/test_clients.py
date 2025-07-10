@@ -995,7 +995,10 @@ class ClientTests(TestCase):
                 status_code=200
             )
 
-            result = self.client_set.client.is_first_time_discount_eligible(email, code)
+            result = self.client_set.client.is_first_time_discount_eligible(
+                code=code,
+                customer_email=email,
+            )
             self.assertTrue(result)
 
     def test_is_first_time_discount_not_eligible(self):
@@ -1027,7 +1030,10 @@ class ClientTests(TestCase):
                 status_code=200
             )
 
-            result = self.client_set.client.is_first_time_discount_eligible(email, code)
+            result = self.client_set.client.is_first_time_discount_eligible(
+                code=code,
+                customer_email=email,
+            )
             self.assertFalse(result)
 
     def test_is_first_time_discount_eligible_invalid_email(self):
@@ -1046,7 +1052,10 @@ class ClientTests(TestCase):
                 status_code=200
             )
 
-            result = self.client_set.client.is_first_time_discount_eligible(invalid_email, code)
+            result = self.client_set.client.is_first_time_discount_eligible(
+                code=code,
+                customer_email=invalid_email,
+            )
             self.assertTrue(result)
 
     def test_create_customer(self):
