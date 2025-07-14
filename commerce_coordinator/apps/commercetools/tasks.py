@@ -1,10 +1,9 @@
 """
 Commercetools tasks
 """
-import logging
-
 import stripe
 from celery import shared_task
+from celery.utils.log import get_task_logger
 from commercetools import CommercetoolsError
 from commercetools.platform.models import Payment
 from django.conf import settings
@@ -42,7 +41,7 @@ from .utils import (
     prepare_segment_event_properties
 )
 
-logger = logging.getLogger(__name__)
+logger = get_task_logger(__name__)
 
 stripe.api_key = settings.PAYMENT_PROCESSOR_CONFIG['edx']['stripe']['secret_key']
 
