@@ -1151,8 +1151,8 @@ class CommercetoolsAPIClient:
             discounted_orders = discounted_orders.results
 
             for order in discounted_orders:
-                discount_code = order.discount_codes[0].discount_code.obj.code
-                if discount_code == code:
+                discount_code = order.discount_codes[0].discount_code.obj
+                if discount_code and discount_code.code == code:
                     return False
 
             return True
