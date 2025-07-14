@@ -33,7 +33,7 @@
 | commerce\_coordinator/apps/commercetools/sub\_messages/signals\_delayed.py             |       16 |        0 |        0 |        0 |    100% |           |
 | commerce\_coordinator/apps/commercetools/sub\_messages/signals\_dispatch.py            |        4 |        0 |        0 |        0 |    100% |           |
 | commerce\_coordinator/apps/commercetools/sub\_messages/tasks.py                        |      163 |        1 |       32 |        3 |     98% |210, 419->422, 449->455 |
-| commerce\_coordinator/apps/commercetools/tasks.py                                      |      141 |       13 |       20 |        2 |     91% |66-67, 74-87, 105-115, 237-242 |
+| commerce\_coordinator/apps/commercetools/tasks.py                                      |      141 |       13 |       20 |        2 |     91% |65-66, 73-86, 104-114, 236-241 |
 | commerce\_coordinator/apps/commercetools/tests/\_\_init\_\_.py                         |        0 |        0 |        0 |        0 |    100% |           |
 | commerce\_coordinator/apps/commercetools/tests/\_test\_cases.py                        |       25 |        0 |        2 |        1 |     96% |  36->exit |
 | commerce\_coordinator/apps/commercetools/tests/catalog\_info/\_\_init\_\_.py           |        0 |        0 |        0 |        0 |    100% |           |
