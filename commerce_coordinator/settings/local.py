@@ -18,6 +18,7 @@ INSTALLED_APPS += (
 CORS_ORIGIN_WHITELIST = [
     'http://localhost:1996',  # frontend-app-ecommerce
     'http://localhost:1998',  # frontend-app-payment
+    'http://localhost:2000',  # frontend-app-learning
     'http://localhost:3000',  # commercetools-frontend
 ]
 # END CORS CONFIGURATION
