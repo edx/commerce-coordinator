@@ -638,7 +638,7 @@ class DiscountCodeInfoView(APIView):
 
     authentication_classes = (JwtAuthentication,)
     permission_classes = (IsAuthenticated,)
-    throttle_classes = []
+    throttle_classes = (UserRateThrottle,)
 
     def get(self, request):
         """
@@ -651,16 +651,19 @@ class DiscountCodeInfoView(APIView):
             Response: JSON containing is_applicable and discount_percentage
         """
         try:
-            code = request.query_params.get("code", "")
+            code = request.query_params.get("code")
             if not code:
                 return HttpResponseBadRequest("Discount code is required")
 
             client = CommercetoolsAPIClient(enable_retries=True)
             discount_code_info = client.get_discount_code_info(code)
             if not discount_code_info:
+                logger.warning(
+                    f"{self.get.__qualname__} Could not find discount code: {code} in CT"
+                )
                 return HttpResponseBadRequest("Discount code not found")
 
-            is_applicable = discount_code_info[is_applicable]
+            is_applicable = discount_code_info["is_applicable"]
             if (
                 is_applicable
                 and discount_code_info["max_applications_per_customer"] > 0
@@ -674,6 +677,11 @@ class DiscountCodeInfoView(APIView):
                         customer_id=customer.id,
                         reraise=True,
                     )
+
+            if not is_applicable:
+                logger.info(
+                    f"{self.get.__qualname__} Discount code {code} is not applicable for user {request.user.lms_user_id}"
+                )
 
             return Response(
                 {
