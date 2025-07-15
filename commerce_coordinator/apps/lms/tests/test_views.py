@@ -530,7 +530,10 @@ class FirstTimeDiscountEligibleViewTests(APITestCase):
 
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(response.data, {"is_eligible": True})
-        mock_is_first_time_discount_eligible.assert_called_once_with(self.test_user_email, self.test_discount)
+        mock_is_first_time_discount_eligible.assert_called_once_with(
+            code=self.test_discount,
+            customer_email=self.test_user_email,
+        )
 
     @patch(
         'commerce_coordinator.apps.commercetools.clients.CommercetoolsAPIClient'
@@ -547,7 +550,10 @@ class FirstTimeDiscountEligibleViewTests(APITestCase):
 
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(response.data, {"is_eligible": False})
-        mock_is_first_time_discount_eligible.assert_called_once_with(self.test_user_email, self.test_discount)
+        mock_is_first_time_discount_eligible.assert_called_once_with(
+            code=self.test_discount,
+            customer_email=self.test_user_email,
+        )
 
     def test_get_with_missing_email_fails(self):
         """
@@ -803,3 +809,125 @@ class CreditCheckoutViewTests(APITestCase):
         self.assertIn('course_run_key=test-credit-sku', response.url)
         # Verify it's an absolute URL
         self.assertTrue(response.url.startswith('http'))
+
+
+@ddt.ddt
+@patch("commerce_coordinator.apps.lms.views.CommercetoolsAPIClient")
+class DiscountCodeInfoViewTests(APITestCase):
+    """
+    Tests for DiscountCodeInfoView to get discount code information.
+    """
+
+    test_user_username = "test"
+    test_user_email = "test@example.com"
+    test_user_password = "secret"
+
+    url = reverse("lms:discount_code_info")
+
+    def setUp(self):
+        super().setUp()
+        self.user = User.objects.create_user(
+            self.test_user_username,
+            self.test_user_email,
+            self.test_user_password,
+            is_staff=True,
+            lms_user_id=123,
+        )
+
+    def tearDown(self):
+        super().tearDown()
+        self.client.logout()
+
+    def authenticate_user(self):
+        self.client.login(
+            username=self.test_user_username, password=self.test_user_password
+        )
+        self.client.force_authenticate(user=self.user)
+
+    def test_missing_discount_code(self, mock_ct_client):
+        """Test when discount code parameter is missing."""
+        self.authenticate_user()
+        response = self.client.get(self.url)
+
+        mock_ct_client.assert_not_called()
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertEqual(response.content.decode(), "Discount code is required")
+
+    def test_discount_code_not_found(self, mock_ct_client):
+        """Test when discount code is not found in CT."""
+        self.authenticate_user()
+        mock_client_instance = mock_ct_client.return_value
+        mock_client_instance.get_discount_code_info.return_value = None
+
+        response = self.client.get(self.url, {"code": "INVALID"})
+
+        mock_client_instance.get_discount_code_info.assert_called_once_with(
+            "INVALID"
+        )
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertEqual(response.content.decode(), "Discount code not found")
+
+    def test_get_discount_code_info_success(self, mock_ct_client):
+        """Test successful discount code info retrieval."""
+        self.authenticate_user()
+        mock_client_instance = mock_ct_client.return_value
+        mock_client_instance.get_discount_code_info.return_value = {
+            "is_applicable": True,
+            "discount_percentage": 20,
+            "max_applications_per_customer": 0,
+        }
+
+        response = self.client.get(self.url, {"code": "SAVE20"})
+
+        mock_client_instance.get_discount_code_info.assert_called_once_with("SAVE20")
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(
+            response.data, {"is_applicable": True, "discount_percentage": 20}
+        )
+
+    def test_get_discount_code_info_with_customer_eligibility_check(
+        self, mock_ct_client
+    ):
+        """Test discount code info with first-time customer eligibility check."""
+        self.authenticate_user()
+        mock_customer = mock.Mock()
+        mock_customer.id = "customer-123"
+        mock_client_instance = mock_ct_client.return_value
+        mock_client_instance.get_discount_code_info.return_value = {
+            "is_applicable": True,
+            "discount_percentage": 15,
+            "max_applications_per_customer": 1,
+        }
+        mock_client_instance.get_customer_by_lms_user_id.return_value = mock_customer
+        mock_client_instance.is_first_time_discount_eligible.return_value = False
+
+        response = self.client.get(self.url, {"code": "FIRSTTIME15"})
+
+        mock_client_instance.get_customer_by_lms_user_id.assert_called_once_with(123)
+        mock_client_instance.is_first_time_discount_eligible.assert_called_once_with(
+            code="FIRSTTIME15", customer_id="customer-123", reraise=True
+        )
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(
+            response.data, {"is_applicable": False, "discount_percentage": 15}
+        )
+
+    def test_commercetools_error_handling(self, mock_ct_client):
+        """Test handling of CommercetoolsError exceptions."""
+        self.authenticate_user()
+        mock_client_instance = mock_ct_client.return_value
+        mock_client_instance.get_discount_code_info.side_effect = CommercetoolsError(
+            message="API Error", errors="Some error", response={}
+        )
+
+        response = self.client.get(self.url, {"code": "SAVE20"})
+
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertEqual(response.content.decode(), "Something went wrong.")
+
+    def test_unauthenticated_user(self, mock_ct_client):
+        """Test that unauthenticated users are rejected."""
+        response = self.client.get(self.url, {"code": "SAVE20"})
+
+        mock_ct_client.assert_not_called()
+        self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
