@@ -659,7 +659,8 @@ class DiscountCodeInfoView(APIView):
             discount_code_info = client.get_discount_code_info(code)
             if not discount_code_info:
                 logger.warning(
-                    f"{self.get.__qualname__} Could not find discount code: {code} in CT"
+                    f"{self.get.__qualname__} Could not find discount code: "
+                    f"{code} in CT"
                 )
                 return HttpResponseBadRequest("Discount code not found")
 
@@ -680,7 +681,8 @@ class DiscountCodeInfoView(APIView):
 
             if not is_applicable:
                 logger.info(
-                    f"{self.get.__qualname__} Discount code {code} is not applicable for user {request.user.lms_user_id}"
+                    f"{self.get.__qualname__} Discount code {code} is not "
+                    f"applicable for user {request.user.lms_user_id}"
                 )
 
             return Response(
