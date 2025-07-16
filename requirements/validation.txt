@@ -9,12 +9,12 @@ aiohappyeyeballs==2.6.1
     #   -r requirements/quality.txt
     #   -r requirements/test.txt
     #   aiohttp
-aiohttp==3.12.8
+aiohttp==3.12.14
     # via
     #   -r requirements/quality.txt
     #   -r requirements/test.txt
     #   inapppy
-aiosignal==1.3.2
+aiosignal==1.4.0
     # via
     #   -r requirements/quality.txt
     #   -r requirements/test.txt
@@ -24,7 +24,12 @@ amqp==5.3.1
     #   -r requirements/quality.txt
     #   -r requirements/test.txt
     #   kombu
-apimatic-core==0.2.20
+anyio==4.9.0
+    # via
+    #   -r requirements/quality.txt
+    #   -r requirements/test.txt
+    #   httpx
+apimatic-core==0.2.21
     # via
     #   -r requirements/quality.txt
     #   -r requirements/test.txt
@@ -51,7 +56,7 @@ asgiref==3.7.2
     #   -r requirements/test.txt
     #   django
     #   django-cors-headers
-astroid==3.3.10
+astroid==3.3.11
     # via
     #   -r requirements/quality.txt
     #   -r requirements/test.txt
@@ -62,6 +67,7 @@ attrs==25.3.0
     #   -r requirements/quality.txt
     #   -r requirements/test.txt
     #   aiohttp
+    #   edx-ace
 babel==2.17.0
     # via
     #   -r requirements/quality.txt
@@ -81,6 +87,7 @@ cachecontrol==0.12.14
     #   -r requirements/quality.txt
     #   -r requirements/test.txt
     #   apimatic-requests-client-adapter
+    #   firebase-admin
 cachetools==5.5.2
     # via
     #   -r requirements/quality.txt
@@ -91,10 +98,12 @@ celery[redis]==5.4.0
     # via
     #   -r requirements/quality.txt
     #   -r requirements/test.txt
-certifi==2025.4.26
+certifi==2025.7.9
     # via
     #   -r requirements/quality.txt
     #   -r requirements/test.txt
+    #   httpcore
+    #   httpx
     #   requests
 cffi==1.17.1
     # via
@@ -135,7 +144,7 @@ click-log==0.4.0
     #   -r requirements/quality.txt
     #   -r requirements/test.txt
     #   edx-lint
-click-plugins==1.1.1
+click-plugins==1.1.1.2
     # via
     #   -r requirements/quality.txt
     #   -r requirements/test.txt
@@ -150,6 +159,7 @@ code-annotations==2.3.0
     #   -r requirements/quality.txt
     #   -r requirements/test.txt
     #   edx-lint
+    #   edx-toggles
 colorama==0.4.6
     # via
     #   -r requirements/quality.txt
@@ -170,18 +180,19 @@ coreschema==0.0.4
     #   -r requirements/quality.txt
     #   -r requirements/test.txt
     #   coreapi
-coverage[toml]==7.8.2
+coverage[toml]==7.9.2
     # via
     #   -r requirements/quality.txt
     #   -r requirements/test.txt
     #   pytest-cov
-cryptography==45.0.3
+cryptography==45.0.5
     # via
     #   -r requirements/quality.txt
     #   -r requirements/test.txt
     #   app-store-notifications-v2-validator
     #   pyjwt
     #   pyopenssl
+    #   secretstorage
     #   social-auth-core
 currencies==2020.12.12
     # via
@@ -207,7 +218,7 @@ distlib==0.3.9
     #   -r requirements/quality.txt
     #   -r requirements/test.txt
     #   virtualenv
-django==4.2.21
+django==4.2.23
     # via
     #   -r requirements/quality.txt
     #   -r requirements/test.txt
@@ -215,14 +226,17 @@ django==4.2.21
     #   django-crum
     #   django-debug-toolbar
     #   django-extensions
+    #   django-push-notifications
     #   django-waffle
     #   djangorestframework
     #   drf-jwt
+    #   edx-ace
     #   edx-auth-backends
     #   edx-braze-client
     #   edx-django-release-util
     #   edx-django-utils
     #   edx-drf-extensions
+    #   edx-toggles
     #   openedx-filters
     #   social-auth-app-django
 django-cors-headers==4.7.0
@@ -234,6 +248,7 @@ django-crum==0.7.9
     #   -r requirements/quality.txt
     #   -r requirements/test.txt
     #   edx-django-utils
+    #   edx-toggles
 django-debug-toolbar==5.2.0
     # via -r requirements/quality.txt
 django-dynamic-fixture==4.0.1
@@ -244,16 +259,22 @@ django-extensions==4.1
     # via
     #   -r requirements/quality.txt
     #   -r requirements/test.txt
+django-push-notifications==3.2.1
+    # via
+    #   -r requirements/quality.txt
+    #   -r requirements/test.txt
+    #   edx-ace
 django-rest-swagger==2.2.0
     # via
     #   -r requirements/quality.txt
     #   -r requirements/test.txt
-django-waffle==4.2.0
+django-waffle==5.0.0
     # via
     #   -r requirements/quality.txt
     #   -r requirements/test.txt
     #   edx-django-utils
     #   edx-drf-extensions
+    #   edx-toggles
 djangorestframework==3.16.0
     # via
     #   -r requirements/quality.txt
@@ -275,11 +296,16 @@ drf-jwt==1.19.2
     #   -r requirements/quality.txt
     #   -r requirements/test.txt
     #   edx-drf-extensions
-edx-auth-backends==4.5.0
+edx-ace==1.15.0
     # via
     #   -r requirements/quality.txt
     #   -r requirements/test.txt
-edx-braze-client==1.0.2
+    #   edx-braze-client
+edx-auth-backends==4.6.0
+    # via
+    #   -r requirements/quality.txt
+    #   -r requirements/test.txt
+edx-braze-client==1.1.2
     # via
     #   -r requirements/quality.txt
     #   -r requirements/test.txt
@@ -291,9 +317,12 @@ edx-django-utils==8.0.0
     # via
     #   -r requirements/quality.txt
     #   -r requirements/test.txt
+    #   edx-ace
+    #   edx-auth-backends
     #   edx-braze-client
     #   edx-drf-extensions
     #   edx-rest-api-client
+    #   edx-toggles
 edx-drf-extensions==10.6.0
     # via
     #   -r requirements/quality.txt
@@ -312,45 +341,122 @@ edx-rest-api-client==6.2.0
     # via
     #   -r requirements/quality.txt
     #   -r requirements/test.txt
+edx-toggles==5.3.0
+    # via
+    #   -r requirements/quality.txt
+    #   -r requirements/test.txt
+    #   edx-auth-backends
 filelock==3.18.0
     # via
     #   -r requirements/quality.txt
     #   -r requirements/test.txt
     #   tox
     #   virtualenv
-frozenlist==1.6.2
+firebase-admin==6.9.0
+    # via
+    #   -r requirements/quality.txt
+    #   -r requirements/test.txt
+    #   edx-ace
+frozenlist==1.7.0
     # via
     #   -r requirements/quality.txt
     #   -r requirements/test.txt
     #   aiohttp
     #   aiosignal
-google-api-core==2.25.0
+google-api-core[grpc]==2.25.1
     # via
     #   -r requirements/quality.txt
     #   -r requirements/test.txt
+    #   firebase-admin
     #   google-api-python-client
-google-api-python-client==2.171.0
+    #   google-cloud-core
+    #   google-cloud-firestore
+    #   google-cloud-storage
+google-api-python-client==2.176.0
     # via
     #   -r requirements/quality.txt
     #   -r requirements/test.txt
+    #   firebase-admin
     #   inapppy
-google-auth==2.40.2
+google-auth==2.40.3
     # via
     #   -r requirements/quality.txt
     #   -r requirements/test.txt
     #   google-api-core
     #   google-api-python-client
     #   google-auth-httplib2
+    #   google-cloud-core
+    #   google-cloud-firestore
+    #   google-cloud-storage
 google-auth-httplib2==0.2.0
     # via
     #   -r requirements/quality.txt
     #   -r requirements/test.txt
     #   google-api-python-client
+google-cloud-core==2.4.3
+    # via
+    #   -r requirements/quality.txt
+    #   -r requirements/test.txt
+    #   google-cloud-firestore
+    #   google-cloud-storage
+google-cloud-firestore==2.21.0
+    # via
+    #   -r requirements/quality.txt
+    #   -r requirements/test.txt
+    #   firebase-admin
+google-cloud-storage==3.2.0
+    # via
+    #   -r requirements/quality.txt
+    #   -r requirements/test.txt
+    #   firebase-admin
+google-crc32c==1.7.1
+    # via
+    #   -r requirements/quality.txt
+    #   -r requirements/test.txt
+    #   google-cloud-storage
+    #   google-resumable-media
+google-resumable-media==2.7.2
+    # via
+    #   -r requirements/quality.txt
+    #   -r requirements/test.txt
+    #   google-cloud-storage
 googleapis-common-protos==1.70.0
     # via
     #   -r requirements/quality.txt
     #   -r requirements/test.txt
     #   google-api-core
+    #   grpcio-status
+grpcio==1.73.1
+    # via
+    #   -r requirements/quality.txt
+    #   -r requirements/test.txt
+    #   google-api-core
+    #   grpcio-status
+grpcio-status==1.73.1
+    # via
+    #   -r requirements/quality.txt
+    #   -r requirements/test.txt
+    #   google-api-core
+h11==0.16.0
+    # via
+    #   -r requirements/quality.txt
+    #   -r requirements/test.txt
+    #   httpcore
+h2==4.2.0
+    # via
+    #   -r requirements/quality.txt
+    #   -r requirements/test.txt
+    #   httpx
+hpack==4.1.0
+    # via
+    #   -r requirements/quality.txt
+    #   -r requirements/test.txt
+    #   h2
+httpcore==1.0.9
+    # via
+    #   -r requirements/quality.txt
+    #   -r requirements/test.txt
+    #   httpx
 httplib2==0.22.0
     # via
     #   -r requirements/quality.txt
@@ -358,6 +464,16 @@ httplib2==0.22.0
     #   google-api-python-client
     #   google-auth-httplib2
     #   oauth2client
+httpx[http2]==0.28.1
+    # via
+    #   -r requirements/quality.txt
+    #   -r requirements/test.txt
+    #   firebase-admin
+hyperframe==6.1.0
+    # via
+    #   -r requirements/quality.txt
+    #   -r requirements/test.txt
+    #   h2
 id==1.5.0
     # via
     #   -r requirements/quality.txt
@@ -366,6 +482,8 @@ idna==3.10
     # via
     #   -r requirements/quality.txt
     #   -r requirements/test.txt
+    #   anyio
+    #   httpx
     #   requests
     #   yarl
 inapppy==2.5.2
@@ -377,7 +495,7 @@ iniconfig==2.1.0
     #   -r requirements/quality.txt
     #   -r requirements/test.txt
     #   pytest
-iso4217==1.13.20250512
+iso4217==1.14.20250512
     # via
     #   -r requirements/quality.txt
     #   -r requirements/test.txt
@@ -399,10 +517,15 @@ jaraco-context==6.0.1
     # via
     #   -r requirements/quality.txt
     #   keyring
-jaraco-functools==4.1.0
+jaraco-functools==4.2.1
     # via
     #   -r requirements/quality.txt
     #   keyring
+jeepney==0.9.0
+    # via
+    #   -r requirements/quality.txt
+    #   keyring
+    #   secretstorage
 jinja2==3.1.6
     # via
     #   -r requirements/quality.txt
@@ -467,12 +590,12 @@ more-itertools==10.7.0
     #   -r requirements/quality.txt
     #   jaraco-classes
     #   jaraco-functools
-msgpack==1.1.0
+msgpack==1.1.1
     # via
     #   -r requirements/quality.txt
     #   -r requirements/test.txt
     #   cachecontrol
-multidict==6.4.4
+multidict==6.6.3
     # via
     #   -r requirements/quality.txt
     #   -r requirements/test.txt
@@ -491,7 +614,7 @@ oauth2client==4.1.3
     #   -r requirements/quality.txt
     #   -r requirements/test.txt
     #   inapppy
-oauthlib==3.2.2
+oauthlib==3.3.1
     # via
     #   -r requirements/quality.txt
     #   -r requirements/test.txt
@@ -525,7 +648,7 @@ pbr==6.1.1
     #   -r requirements/quality.txt
     #   -r requirements/test.txt
     #   stevedore
-pillow==11.2.1
+pillow==11.3.0
     # via
     #   -r requirements/quality.txt
     #   -r requirements/test.txt
@@ -541,13 +664,14 @@ pluggy==1.6.0
     #   -r requirements/quality.txt
     #   -r requirements/test.txt
     #   pytest
+    #   pytest-cov
     #   tox
 prompt-toolkit==3.0.51
     # via
     #   -r requirements/quality.txt
     #   -r requirements/test.txt
     #   click-repl
-propcache==0.3.1
+propcache==0.3.2
     # via
     #   -r requirements/quality.txt
     #   -r requirements/test.txt
@@ -558,12 +682,15 @@ proto-plus==1.26.1
     #   -r requirements/quality.txt
     #   -r requirements/test.txt
     #   google-api-core
+    #   google-cloud-firestore
 protobuf==6.31.1
     # via
     #   -r requirements/quality.txt
     #   -r requirements/test.txt
     #   google-api-core
+    #   google-cloud-firestore
     #   googleapis-common-protos
+    #   grpcio-status
     #   proto-plus
 psutil==7.0.0
     # via
@@ -583,7 +710,7 @@ pyasn1-modules==0.4.2
     #   -r requirements/test.txt
     #   google-auth
     #   oauth2client
-pycodestyle==2.13.0
+pycodestyle==2.14.0
     # via -r requirements/quality.txt
 pycparser==2.22
     # via
@@ -593,7 +720,7 @@ pycparser==2.22
     #   cffi
 pydocstyle==6.3.0
     # via -r requirements/quality.txt
-pygments==2.19.1
+pygments==2.19.2
     # via
     #   -r requirements/quality.txt
     #   -r requirements/test.txt
@@ -609,6 +736,7 @@ pyjwt[crypto]==2.10.1
     #   edx-auth-backends
     #   edx-drf-extensions
     #   edx-rest-api-client
+    #   firebase-admin
     #   segment-analytics-python
     #   social-auth-core
 pylint==3.3.7
@@ -629,13 +757,13 @@ pylint-django==2.6.1
     #   -r requirements/quality.txt
     #   -r requirements/test.txt
     #   edx-lint
-pylint-plugin-utils==0.8.2
+pylint-plugin-utils==0.9.0
     # via
     #   -r requirements/quality.txt
     #   -r requirements/test.txt
     #   pylint-celery
     #   pylint-django
-pymongo==4.13.0
+pymongo==4.13.2
     # via
     #   -r requirements/quality.txt
     #   -r requirements/test.txt
@@ -660,13 +788,13 @@ pyproject-api==1.9.1
     #   -r requirements/quality.txt
     #   -r requirements/test.txt
     #   tox
-pytest==8.4.0
+pytest==8.4.1
     # via
     #   -r requirements/quality.txt
     #   -r requirements/test.txt
     #   pytest-cov
     #   pytest-django
-pytest-cov==6.1.1
+pytest-cov==6.2.1
     # via
     #   -r requirements/quality.txt
     #   -r requirements/test.txt
@@ -680,6 +808,7 @@ python-dateutil==2.9.0.post0
     #   -r requirements/test.txt
     #   apimatic-core
     #   celery
+    #   edx-ace
     #   segment-analytics-python
 python-slugify==8.0.4
     # via
@@ -712,7 +841,7 @@ redis==5.2.1
     #   -r requirements/quality.txt
     #   -r requirements/test.txt
     #   celery
-requests==2.32.3
+requests==2.32.4
     # via
     #   -r requirements/quality.txt
     #   -r requirements/test.txt
@@ -725,12 +854,14 @@ requests==2.32.3
     #   edx-drf-extensions
     #   edx-rest-api-client
     #   google-api-core
+    #   google-cloud-storage
     #   id
     #   inapppy
     #   requests-mock
     #   requests-oauthlib
     #   requests-toolbelt
     #   responses
+    #   sailthru-client
     #   segment-analytics-python
     #   social-auth-core
     #   stripe
@@ -769,6 +900,15 @@ rsa==4.9.1
     #   google-auth
     #   inapppy
     #   oauth2client
+sailthru-client==2.2.3
+    # via
+    #   -r requirements/quality.txt
+    #   -r requirements/test.txt
+    #   edx-ace
+secretstorage==3.3.3
+    # via
+    #   -r requirements/quality.txt
+    #   keyring
 segment-analytics-python==2.3.4
     # via
     #   -r requirements/quality.txt
@@ -783,15 +923,22 @@ simplejson==3.20.1
     #   -r requirements/quality.txt
     #   -r requirements/test.txt
     #   django-rest-swagger
+    #   sailthru-client
 six==1.17.0
     # via
     #   -r requirements/quality.txt
     #   -r requirements/test.txt
+    #   edx-ace
     #   edx-auth-backends
     #   edx-django-release-util
     #   edx-lint
     #   oauth2client
     #   python-dateutil
+sniffio==1.3.1
+    # via
+    #   -r requirements/quality.txt
+    #   -r requirements/test.txt
+    #   anyio
 snowballstemmer==3.0.1
     # via
     #   -r requirements/quality.txt
@@ -801,7 +948,7 @@ social-auth-app-django==5.4.3
     #   -r requirements/quality.txt
     #   -r requirements/test.txt
     #   edx-auth-backends
-social-auth-core==4.6.1
+social-auth-core==4.7.0
     # via
     #   -r requirements/quality.txt
     #   -r requirements/test.txt
@@ -818,9 +965,10 @@ stevedore==5.4.1
     #   -r requirements/quality.txt
     #   -r requirements/test.txt
     #   code-annotations
+    #   edx-ace
     #   edx-django-utils
     #   edx-opaque-keys
-stripe==12.2.0
+stripe==12.3.0
     # via
     #   -r requirements/quality.txt
     #   -r requirements/test.txt
@@ -828,7 +976,7 @@ tenacity==9.1.2
     # via
     #   -r requirements/quality.txt
     #   -r requirements/test.txt
-testfixtures==8.3.0
+testfixtures==9.1.0
     # via
     #   -r requirements/quality.txt
     #   -r requirements/test.txt
@@ -837,21 +985,23 @@ text-unidecode==1.3
     #   -r requirements/quality.txt
     #   -r requirements/test.txt
     #   python-slugify
-tomlkit==0.13.2
+tomlkit==0.13.3
     # via
     #   -r requirements/quality.txt
     #   -r requirements/test.txt
     #   pylint
-tox==4.26.0
+tox==4.27.0
     # via
     #   -r requirements/quality.txt
     #   -r requirements/test.txt
 twine==6.1.0
     # via -r requirements/quality.txt
-typing-extensions==4.14.0
+typing-extensions==4.14.1
     # via
     #   -r requirements/quality.txt
     #   -r requirements/test.txt
+    #   aiosignal
+    #   anyio
     #   edx-opaque-keys
     #   pyopenssl
     #   stripe
@@ -906,7 +1056,7 @@ wrapt==1.17.2
     #   -r requirements/quality.txt
     #   -r requirements/test.txt
     #   commercetools
-yarl==1.20.0
+yarl==1.20.1
     # via
     #   -r requirements/quality.txt
     #   -r requirements/test.txt
