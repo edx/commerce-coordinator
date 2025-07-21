@@ -51,7 +51,7 @@ celery[redis]==5.4.0
     # via
     #   -c requirements/constraints.txt
     #   -r requirements/base.in
-certifi==2025.7.9
+certifi==2025.7.14
     # via
     #   httpcore
     #   httpx
