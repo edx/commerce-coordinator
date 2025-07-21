@@ -407,7 +407,7 @@ class FirstTimeDiscountEligibleView(APIView):
         code = validator.validated_data['code']
 
         try:
-            ct_api_client = CommercetoolsAPIClient()
+            ct_api_client = CommercetoolsAPIClient(enable_retries=True)
             is_eligible = ct_api_client.is_first_time_discount_eligible(
                 code=code,
                 customer_email=email,
