@@ -165,6 +165,15 @@ class OrderWithReturnInfo(NamedTuple):
     return_line_item_return_ids: list[str]
 
 
+class DiscountCodeInfo(NamedTuple):
+    """Discount information object for a discount code"""
+
+    cart_predicate: str
+    discount_percentage: float
+    is_applicable: bool
+    max_applications_per_customer: int
+
+
 class CommercetoolsAPIClient:
     """Commercetools API Client"""
 
@@ -535,6 +544,7 @@ class CommercetoolsAPIClient:
 
         return results[0] if results else None
 
+    @conditional_retry
     def get_product_variant_by_course_run(self, cr_id: str) -> Optional[ProductVariant]:
         """
         Args:
@@ -1803,7 +1813,7 @@ class CommercetoolsAPIClient:
             raise err
 
     @conditional_retry
-    def get_discount_code_info(self, code: str):
+    def get_discount_code_info(self, code: str) -> DiscountCodeInfo | None:
         """
         Get discount code information by code.
 
@@ -1820,46 +1830,48 @@ class CommercetoolsAPIClient:
                 expand=["cartDiscounts[*]"],
             )
 
-            if response.results and response.results[0].cart_discounts:
-                discount_code = response.results[0]
-                cart_discount = discount_code.cart_discounts[0].obj
-                discount_percentage = (
-                    cart_discount.value.permyriad / 10_000
-                    if cart_discount.value.type == "relative"
-                    else 0
-                )
+            if not response.results or not response.results[0].cart_discounts:
+                return None
 
-                is_applicable = (
-                    discount_code.is_active
-                    and cart_discount
-                    and cart_discount.is_active
-                    and discount_percentage > 0
-                    and (
-                        not cart_discount.valid_from
-                        or (
-                            cart_discount.valid_from
-                            <= datetime.datetime.now(
-                                tz=cart_discount.valid_from.tzinfo
-                            )
-                        )
-                    )
-                    and (
-                        not cart_discount.valid_until
-                        or (
-                            datetime.datetime.now(
-                                tz=cart_discount.valid_until.tzinfo
-                            )
-                            <= cart_discount.valid_until
-                        )
+            discount_code = response.results[0]
+            cart_discount = discount_code.cart_discounts[0].obj
+
+            if not cart_discount:
+                return None
+
+            discount_percentage = (
+                cart_discount.value.permyriad / 10_000
+                if cart_discount.value.type == "relative"
+                else 0
+            )
+
+            is_applicable = (
+                discount_code.is_active
+                and cart_discount
+                and cart_discount.is_active
+                and discount_percentage > 0
+                and (
+                    not cart_discount.valid_from
+                    or (
+                        cart_discount.valid_from
+                        <= datetime.datetime.now(tz=cart_discount.valid_from.tzinfo)
                     )
                 )
+                and (
+                    not cart_discount.valid_until
+                    or (
+                        datetime.datetime.now(tz=cart_discount.valid_until.tzinfo)
+                        <= cart_discount.valid_until
+                    )
+                )
+            )
 
-                return {
-                    "discount_percentage": discount_percentage,
-                    "max_applications_per_customer": discount_code.max_applications_per_customer,
-                    "is_applicable": is_applicable,
-                }
-            return None
+            return DiscountCodeInfo(
+                cart_predicate=cart_discount.cart_predicate,
+                discount_percentage=discount_percentage,
+                is_applicable=is_applicable,
+                max_applications_per_customer=discount_code.max_applications_per_customer or 0,
+            )
         except CommercetoolsError as err:
             handle_commercetools_error(
                 "[CommercetoolsAPIClient.get_discount_code_info]",
