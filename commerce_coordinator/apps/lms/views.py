@@ -41,12 +41,14 @@ from commerce_coordinator.apps.lms.filters import (
 )
 from commerce_coordinator.apps.lms.serializers import (
     CourseRefundInputSerializer,
+    DiscountCodeInfoInputSerializer,
     EntitlementRefundInputSerializer,
     FirstTimeDiscountInputSerializer,
     UserRetiredInputSerializer,
     enrollment_attribute_key
 )
 from commerce_coordinator.apps.lms.utils import get_order_line_item_info_from_entitlement_uuid, get_program_offer
+from commerce_coordinator.apps.lms.predicate_parser import CartPredicateParser
 from commerce_coordinator.apps.rollout.utils import is_legacy_order
 
 logger = logging.getLogger(__name__)
@@ -464,9 +466,9 @@ class ProgramPriceView(APIView):
         return course_key
 
     def _get_program_entitlements_to_be_purchased(
-            self,
-            program_variants: List[object],
-            user_enrollable_course_keys: List[object],
+        self,
+        program_variants: List[object],
+        user_enrollable_course_keys: List[object],
     ) -> List[str]:
         """Filter out bundle entitlements based on enrollable conditions."""
 
@@ -651,27 +653,33 @@ class DiscountCodeInfoView(APIView):
             Response: JSON containing is_applicable and discount_percentage
         """
         try:
-            code = request.query_params.get("code")
-            if not code:
-                return HttpResponseBadRequest("Discount code is required")
+            lms_user_id = request.user.lms_user_id
+            for_user_msg = f"for LMS user: {lms_user_id}"
+            logger.info(
+                f"{self.get.__qualname__} Request Received to check discount "
+                f" code applicability {for_user_msg}"
+            )
+
+            serializer = DiscountCodeInfoInputSerializer(data=request.query_params)
+            serializer.is_valid(raise_exception=True)
+            code: str = serializer.validated_data["code"]
+            course_run_key: str = serializer.validated_data["course_run_key"]
 
             client = CommercetoolsAPIClient(enable_retries=True)
             discount_code_info = client.get_discount_code_info(code)
             if not discount_code_info:
                 logger.warning(
                     f"{self.get.__qualname__} Could not find discount code: "
-                    f"{code} in CT"
+                    f"{code} in CT {for_user_msg}"
                 )
                 return HttpResponseBadRequest("Discount code not found")
 
-            is_applicable = discount_code_info["is_applicable"]
+            is_applicable = discount_code_info.is_applicable
             if (
                 is_applicable
-                and discount_code_info["max_applications_per_customer"] > 0
+                and discount_code_info.max_applications_per_customer > 0
             ):
-                customer = client.get_customer_by_lms_user_id(
-                    request.user.lms_user_id
-                )
+                customer = client.get_customer_by_lms_user_id(lms_user_id)
                 if customer:
                     is_applicable = client.is_first_time_discount_eligible(
                         code=code,
@@ -679,16 +687,47 @@ class DiscountCodeInfoView(APIView):
                         reraise=True,
                     )
 
-            if not is_applicable:
+            if is_applicable and discount_code_info.cart_predicate != "1 = 1":
                 logger.info(
-                    f"{self.get.__qualname__} Discount code {code} is not "
-                    f"applicable for user {request.user.lms_user_id}"
+                    f"{self.get.__qualname__} Checking if {course_run_key} "
+                    f"matches the criteria for discount code {code} {for_user_msg}"
                 )
+
+                commercetools_available_product = (
+                    client.get_product_variant_by_course_run(course_run_key)
+                )
+
+                if commercetools_available_product:
+                    try:
+                        print(commercetools_available_product.serialize())
+                        parser = CartPredicateParser()
+                        is_applicable = parser.check(
+                            predicate=discount_code_info.cart_predicate,
+                            context=commercetools_available_product.serialize()
+                        )
+                    except Exception as exc:  # pylint: disable=broad-exception-caught
+                        logger.exception(
+                            f"{self.get.__qualname__} An error occurred while checking "
+                            f"the cart predicate for discount code {code} "
+                            f"{for_user_msg}. Bypassing the check.",
+                            exc_info=exc
+                        )
+
+            applicable_msg = (
+                f"applicable with discount percentage: {discount_code_info.discount_percentage}"
+                if is_applicable
+                else "not applicable"
+            )
+
+            logger.info(
+                f"{self.get.__qualname__} Request completed successfully! "
+                f"The Discount code: {code} is {applicable_msg} {for_user_msg}"
+            )
 
             return Response(
                 {
                     "is_applicable": is_applicable,
-                    "discount_percentage": discount_code_info["discount_percentage"],
+                    "discount_percentage": discount_code_info.discount_percentage,
                 }
             )
         except CommercetoolsError as e:
