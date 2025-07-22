@@ -112,3 +112,10 @@ class FirstTimeDiscountInputSerializer(CoordinatorSerializer):
     """
     email = serializers.EmailField(required=True)
     code = serializers.CharField(required=True)
+
+
+class DiscountCodeInfoInputSerializer(CoordinatorSerializer):
+    """Serializer for the request params of the discount code info endpoint."""
+
+    code = serializers.CharField(required=True, help_text="Discount code")
+    course_run_key = serializers.CharField(required=True, help_text="Course run key")
