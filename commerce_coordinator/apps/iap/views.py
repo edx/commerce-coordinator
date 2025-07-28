@@ -27,9 +27,6 @@ from commerce_coordinator.apps.commercetools.catalog_info.constants import (
     EDX_IOS_IAP_PAYMENT_INTERFACE_NAME,
     TwoUKeys,
 )
-from commerce_coordinator.apps.commercetools.catalog_info.edx_utils import (
-    get_edx_lms_user_id,
-)
 from commerce_coordinator.apps.commercetools.clients import (
     CommercetoolsAPIClient,
     Refund,

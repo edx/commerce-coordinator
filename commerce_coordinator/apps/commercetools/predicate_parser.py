@@ -11,47 +11,60 @@ from lark import Lark, Transformer, v_args
 
 @v_args(inline=True)
 class PredicateTransformer(Transformer):
+    """Transformer for parsing and transforming predicates in Commercetools."""
     def backtick_name(self, token):
+        """Handles backtick names in predicates."""
         return token
 
     def dotted_name(self, *parts):
+        """Handles dotted names in predicates."""
         return ".".join(str(part) for part in parts)
 
     def function_call(self, name, args=None):
+        """Handles function calls in predicates."""
         return ("func", str(name), args or [])
 
     def args(self, *args):
+        """Handles arguments in function calls."""
         return list(args)
 
     def field(self, f):
+        """Handles fields in predicates."""
         return f
 
     def comparison(self, field, op, value):
+        """Handles comparisons in predicates."""
         return ("cmp", str(op), field, value)
 
     def and_expr(self, a, b):
+        """Handles 'and' expressions in predicates."""
         return ("and", a, b)
 
     def or_expr(self, a, b):
+        """Handles 'or' expressions in predicates."""
         return ("or", a, b)
 
     def list_(self, *items):
+        """Handles lists in predicates."""
         return list(items)
 
     def start(self, expr):
+        """Handles the start of the predicate expression."""
         return expr
 
     def is_defined_expr(self, field, not_token=None):
+        """Handles 'is defined' expressions in predicates."""
         negate = False
         if not_token and str(not_token) == "not":
             negate = True
         return ("is_defined", field, negate)
 
     def in_expr(self, field, *tokens):
+        """Handles 'in' expressions in predicates."""
         items = []
         negate = False
         for token in tokens:
-            if type(token) is list:
+            if isinstance(token, list):
                 items = token
             elif str(token) == "not":
                 negate = True
@@ -59,6 +72,7 @@ class PredicateTransformer(Transformer):
         return ("in_expr", field, items, negate)
 
     def value(self, v):
+        """Handles values in predicates."""
         if hasattr(v, "children"):
             return self.transform(v.children[0])
         else:
@@ -71,6 +85,7 @@ class PredicateTransformer(Transformer):
 
 
 class CartPredicateParser:
+    """Parser for Commercetools Cart predicates."""
     grammar = r"""
         ?start: expr
 
@@ -116,6 +131,7 @@ class CartPredicateParser:
     def create_context_from_ct_product_and_variant(
         self, *, product: ProductProjection, product_variant: ProductVariant
     ) -> dict:
+        """Create a context dictionary to be used by the parser from Commercetools product and variant."""
         if product_variant.attributes:
             attributes = {
                 attribute.name: (
@@ -143,7 +159,18 @@ class CartPredicateParser:
         }
 
     def check(self, *, predicate: str, context: dict, debug=False) -> bool:
-        self.context = context
+        """
+        Check if the predicate evaluates to True or False based on the provided context.
+
+        Args:
+            predicate (str): The predicate to evaluate.
+            context (dict): The context to use for evaluation.
+            debug (bool): If True, prints debug output.
+
+        Returns:
+            bool: The result of the predicate evaluation.
+        """
+        self.context = context  # pylint: disable=attribute-defined-outside-init
         parsed_tree = self.parser.parse(predicate)
         transformed_expression = self.transformer.transform(parsed_tree)
 
@@ -155,7 +182,8 @@ class CartPredicateParser:
         else:
             result = self._evaluate(transformed_expression)
 
-        self.context = None  # clear context after evaluation
+        # clear context after evaluation
+        self.context = None  # pylint: disable=attribute-defined-outside-init
         if not isinstance(result, bool):
             raise ValueError(
                 f"Predicate evaluation must return a boolean, got {result}"
@@ -251,7 +279,7 @@ class CartPredicateParser:
         else:
             raise ValueError(f"Unknown expression type: {kind} with params {params}")
 
-    def _evaluate_with_debug_output(self, expression, depth=0):
+    def _evaluate_with_debug_output(self, expression, depth=0):  # pylint: disable=too-many-statements
         """
         Evaluate the expression with debug output.
 
