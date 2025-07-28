@@ -653,7 +653,9 @@ class DiscountCodeInfoView(APIView):
             Response: JSON containing is_applicable and discount_percentage
         """
         try:
-            lms_user_id = request.user.lms_user_id
+            user = request.user
+            user.add_lms_user_id("DiscountCodeInfoView GET method")
+            lms_user_id = user.lms_user_id
             for_user_msg = f"for LMS user: {lms_user_id}"
             logger.info(
                 "[DiscountCodeInfoView] Request Received to check discount code "

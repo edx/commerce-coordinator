@@ -76,7 +76,9 @@ class MobileCreateOrderView(APIView):
         client = None
 
         try:
-            lms_user_id = request.user.lms_user_id
+            user = request.user
+            user.add_lms_user_id("CreateOrderView GET method")
+            lms_user_id = user.lms_user_id
             for_user_msg = f"for LMS user: {lms_user_id}"
             logger.info(
                 f"[CreateOrderView] Request received to create order {for_user_msg}"
@@ -87,7 +89,7 @@ class MobileCreateOrderView(APIView):
             data = MobileOrderRequestData(**serializer.validated_data)  # type: ignore
 
             client = CommercetoolsAPIClient(enable_retries=True)
-            customer = get_ct_customer(client, request.user)
+            customer = get_ct_customer(client, user)
 
             for_user_msg += f", Customer ID: {customer.id}"
             logger.info(f"[CreateOrderView] Finding cart {for_user_msg}")
