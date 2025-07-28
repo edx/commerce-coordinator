@@ -51,7 +51,7 @@ celery[redis]==5.4.0
     # via
     #   -c requirements/constraints.txt
     #   -r requirements/base.in
-certifi==2025.7.9
+certifi==2025.7.14
     # via
     #   httpcore
     #   httpx
@@ -188,7 +188,7 @@ google-api-core[grpc]==2.25.1
     #   google-cloud-core
     #   google-cloud-firestore
     #   google-cloud-storage
-google-api-python-client==2.176.0
+google-api-python-client==2.177.0
     # via
     #   -r requirements/base.in
     #   firebase-admin
@@ -222,11 +222,11 @@ googleapis-common-protos==1.70.0
     # via
     #   google-api-core
     #   grpcio-status
-grpcio==1.73.1
+grpcio==1.74.0
     # via
     #   google-api-core
     #   grpcio-status
-grpcio-status==1.73.1
+grpcio-status==1.74.0
     # via google-api-core
 h11==0.16.0
     # via httpcore
@@ -346,6 +346,7 @@ pyjwt[crypto]==2.10.1
     #   edx-drf-extensions
     #   edx-rest-api-client
     #   firebase-admin
+    #   redis
     #   segment-analytics-python
     #   social-auth-core
 pymongo==4.13.2
@@ -375,7 +376,7 @@ pyyaml==6.0.2
     # via
     #   code-annotations
     #   edx-django-release-util
-redis==5.2.1
+redis==5.3.1
     # via celery
 requests==2.32.4
     # via

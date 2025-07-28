@@ -90,7 +90,7 @@ celery[redis]==5.4.0
     # via
     #   -c requirements/constraints.txt
     #   -r requirements/test.txt
-certifi==2025.7.9
+certifi==2025.7.14
     # via
     #   -r requirements/test.txt
     #   httpcore
@@ -157,7 +157,7 @@ coreschema==0.0.4
     # via
     #   -r requirements/test.txt
     #   coreapi
-coverage[toml]==7.9.2
+coverage[toml]==7.10.1
     # via
     #   -r requirements/test.txt
     #   pytest-cov
@@ -182,7 +182,7 @@ dill==0.4.0
     # via
     #   -r requirements/test.txt
     #   pylint
-distlib==0.3.9
+distlib==0.4.0
     # via
     #   -r requirements/test.txt
     #   virtualenv
@@ -309,7 +309,7 @@ google-api-core[grpc]==2.25.1
     #   google-cloud-core
     #   google-cloud-firestore
     #   google-cloud-storage
-google-api-python-client==2.176.0
+google-api-python-client==2.177.0
     # via
     #   -r requirements/test.txt
     #   firebase-admin
@@ -354,12 +354,12 @@ googleapis-common-protos==1.70.0
     #   -r requirements/test.txt
     #   google-api-core
     #   grpcio-status
-grpcio==1.73.1
+grpcio==1.74.0
     # via
     #   -r requirements/test.txt
     #   google-api-core
     #   grpcio-status
-grpcio-status==1.73.1
+grpcio-status==1.74.0
     # via
     #   -r requirements/test.txt
     #   google-api-core
@@ -490,7 +490,7 @@ multidict==6.6.3
     #   yarl
 mysqlclient==2.2.7
     # via -r requirements/test.txt
-nh3==0.2.21
+nh3==0.3.0
     # via readme-renderer
 oauth2client==4.1.3
     # via
@@ -602,6 +602,7 @@ pyjwt[crypto]==2.10.1
     #   edx-drf-extensions
     #   edx-rest-api-client
     #   firebase-admin
+    #   redis
     #   segment-analytics-python
     #   social-auth-core
 pylint==3.3.7
@@ -682,7 +683,7 @@ pyyaml==6.0.2
     #   responses
 readme-renderer==44.0
     # via twine
-redis==5.2.1
+redis==5.3.1
     # via
     #   -r requirements/test.txt
     #   celery
@@ -728,7 +729,7 @@ restructuredtext-lint==1.4.0
     # via doc8
 rfc3986==2.0.0
     # via twine
-rich==14.0.0
+rich==14.1.0
     # via twine
 roman-numerals-py==3.1.0
     # via sphinx
@@ -863,7 +864,7 @@ vine==5.1.0
     #   amqp
     #   celery
     #   kombu
-virtualenv==20.31.2
+virtualenv==20.32.0
     # via
     #   -r requirements/test.txt
     #   tox
