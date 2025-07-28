@@ -54,6 +54,7 @@ from commercetools.platform.models import (
     PaymentSetTransactionCustomTypeAction,
     PaymentState,
     PaymentStatusDraft,
+    ProductProjection,
     ProductVariant,
     ReturnItemDraft,
     ReturnPaymentState,
@@ -1788,7 +1789,9 @@ class CommercetoolsAPIClient:
             ]
 
             results = self.base_client.product_projections.search(
-                True, filter=filter_expr, with_total=False
+                filter=filter_expr,
+                mark_matching_variants=True,
+                with_total=False,
             ).results
 
             if not results:
@@ -1809,6 +1812,41 @@ class CommercetoolsAPIClient:
                 "[CommercetoolsAPIClient.get_credit_variant_by_course_run]",
                 err,
                 f"Unable to find credit variant with course run key {course_run_key}",
+            )
+            raise err
+
+    @conditional_retry
+    def get_product_and_variant_by_course_run_key(
+        self, course_run_key: str
+    ) -> Tuple[ProductProjection | None, ProductVariant | None]:
+        """
+        Fetches a product and its variant by matching course run key with variant sku
+
+        Args:
+            course_run_key: course run key
+
+        Returns:
+            Tuple[ProductProjection, ProductVariant] if found, None otherwise.
+        """
+        try:
+            results = self.base_client.product_projections.search(
+                filter=f'variants.sku:"{course_run_key}"',
+                mark_matching_variants=True,
+                with_total=False,
+            ).results
+
+            for product in results:
+                all_variants = [product.master_variant, *product.variants]
+                for variant in all_variants:
+                    if variant.is_matching_variant and variant.sku == course_run_key:
+                        return product, variant
+
+            return None, None
+        except CommercetoolsError as err:
+            handle_commercetools_error(
+                "[CommercetoolsAPIClient.get_product_and_variant_by_course_run_key]",
+                err,
+                f"Error finding product and variant for course run key {course_run_key}",
             )
             raise err
 

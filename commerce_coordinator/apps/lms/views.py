@@ -656,8 +656,8 @@ class DiscountCodeInfoView(APIView):
             lms_user_id = request.user.lms_user_id
             for_user_msg = f"for LMS user: {lms_user_id}"
             logger.info(
-                f"{self.get.__qualname__} Request Received to check discount "
-                f" code applicability {for_user_msg}"
+                "[DiscountCodeInfoView] Request Received to check discount code "
+                f"applicability {for_user_msg}"
             )
 
             serializer = DiscountCodeInfoInputSerializer(data=request.query_params)
@@ -669,7 +669,7 @@ class DiscountCodeInfoView(APIView):
             discount_code_info = client.get_discount_code_info(code)
             if not discount_code_info:
                 logger.warning(
-                    f"{self.get.__qualname__} Could not find discount code: "
+                    "[DiscountCodeInfoView] Could not find discount code: "
                     f"{code} in CT {for_user_msg}"
                 )
                 return HttpResponseBadRequest("Discount code not found")
@@ -681,6 +681,11 @@ class DiscountCodeInfoView(APIView):
             ):
                 customer = client.get_customer_by_lms_user_id(lms_user_id)
                 if customer:
+                    for_user_msg += f", Customer ID: {customer.id}"
+                    logger.info(
+                        f"[DiscountCodeInfoView] Checking if discount code {code} "
+                        f"has already been used by customer {for_user_msg}"
+                    )
                     is_applicable = client.is_first_time_discount_eligible(
                         code=code,
                         customer_id=customer.id,
@@ -689,28 +694,31 @@ class DiscountCodeInfoView(APIView):
 
             if is_applicable and discount_code_info.cart_predicate != "1 = 1":
                 logger.info(
-                    f"{self.get.__qualname__} Checking if {course_run_key} "
+                    f"[DiscountCodeInfoView] Checking if {course_run_key} "
                     f"matches the criteria for discount code {code} {for_user_msg}"
                 )
 
-                commercetools_available_product = (
-                    client.get_product_variant_by_course_run(course_run_key)
+                product, product_variant = client.get_product_and_variant_by_course_run_key(
+                    course_run_key
                 )
 
-                if commercetools_available_product:
+                if product and product_variant:
                     try:
-                        print(commercetools_available_product.serialize())
                         parser = CartPredicateParser()
+                        context = parser.create_context_from_ct_product_and_variant(
+                            product=product,
+                            product_variant=product_variant,
+                        )
                         is_applicable = parser.check(
                             predicate=discount_code_info.cart_predicate,
-                            context=commercetools_available_product.serialize()
+                            context=context,
                         )
                     except Exception as exc:  # pylint: disable=broad-exception-caught
                         logger.exception(
-                            f"{self.get.__qualname__} An error occurred while checking "
+                            "[DiscountCodeInfoView] An error occurred while checking "
                             f"the cart predicate for discount code {code} "
                             f"{for_user_msg}. Bypassing the check.",
-                            exc_info=exc
+                            exc_info=exc,
                         )
 
             applicable_msg = (
@@ -720,7 +728,7 @@ class DiscountCodeInfoView(APIView):
             )
 
             logger.info(
-                f"{self.get.__qualname__} Request completed successfully! "
+                "[DiscountCodeInfoView] Request completed successfully! "
                 f"The Discount code: {code} is {applicable_msg} {for_user_msg}"
             )
 

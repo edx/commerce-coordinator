@@ -1,6 +1,7 @@
 from functools import reduce
 from operator import getitem
 
+from commercetools.platform.models import ProductProjection, ProductVariant
 from lark import Lark, Transformer, v_args
 
 
@@ -107,6 +108,35 @@ class CartPredicateParser:
     def __init__(self):
         self.parser = Lark(self.grammar, parser="lalr")
         self.transformer = PredicateTransformer()
+
+    def create_context_from_ct_product_and_variant(
+        self, *, product: ProductProjection, product_variant: ProductVariant
+    ) -> dict:
+        if product_variant.attributes:
+            attributes = {
+                attribute.name: (
+                    attribute.value["key"]
+                    if isinstance(attribute.value, dict) and "key" in attribute.value
+                    else attribute.value
+                )
+                for attribute in product_variant.attributes
+            }
+        else:
+            attributes = {}
+
+        return {
+            "quantity": 1,
+            "custom": {"bundleId": None},
+            "product": {
+                "id": product.id,
+                "key": product.key,
+            },
+            "variant": {
+                "sku": product_variant.key,
+                "key": product_variant.sku,
+            },
+            "attributes": attributes,
+        }
 
     def check(self, *, predicate: str, context: dict, debug=False) -> bool:
         self.context = context
