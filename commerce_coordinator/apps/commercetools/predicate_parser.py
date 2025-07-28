@@ -1,3 +1,7 @@
+"""
+Predicate Parser for Commercetools Cart Predicates
+"""
+
 from functools import reduce
 from operator import getitem
 

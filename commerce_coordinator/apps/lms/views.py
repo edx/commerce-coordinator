@@ -31,6 +31,7 @@ from rest_framework.views import APIView
 
 from commerce_coordinator.apps.commercetools.clients import CommercetoolsAPIClient
 from commerce_coordinator.apps.commercetools.http_api_client import CTCustomAPIClient
+from commerce_coordinator.apps.commercetools.predicate_parser import CartPredicateParser
 from commerce_coordinator.apps.core.constants import HttpHeadersNames, MediaTypes
 from commerce_coordinator.apps.core.exceptions import InvalidFilterType
 from commerce_coordinator.apps.lms.constants import CT_ABSOLUTE_DISCOUNT_TYPE
@@ -48,7 +49,6 @@ from commerce_coordinator.apps.lms.serializers import (
     enrollment_attribute_key
 )
 from commerce_coordinator.apps.lms.utils import get_order_line_item_info_from_entitlement_uuid, get_program_offer
-from commerce_coordinator.apps.lms.predicate_parser import CartPredicateParser
 from commerce_coordinator.apps.rollout.utils import is_legacy_order
 
 logger = logging.getLogger(__name__)
