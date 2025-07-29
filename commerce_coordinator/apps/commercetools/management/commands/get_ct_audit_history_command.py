@@ -1,12 +1,11 @@
 import csv
-from time import sleep
 from datetime import datetime
+from time import sleep
 
 import django.conf
+
 from commerce_coordinator.apps.commercetools.http_api_client import CTCustomAPIClient
-from commerce_coordinator.apps.commercetools.management.commands._timed_command import (
-    TimedCommand,
-)
+from commerce_coordinator.apps.commercetools.management.commands._timed_command import TimedCommand
 
 
 class Command(TimedCommand):
