@@ -49,7 +49,7 @@ class CTCustomAPIClient:
             total_retries: int = 3,
             base_backoff: int = 1,
             log_info: str = "",
-            url_override=None
+            url_override: Optional[str] = None
     ) -> Union[Dict, None]:
         """
         Make an HTTP request to the Commercetools API with retry logic.
@@ -62,6 +62,7 @@ class CTCustomAPIClient:
             total_retries (int): Number of retries after the first attempt.
             base_backoff (int): Base backoff time in seconds.
             log_info (str): Additional log info to be appended in error/warn logs.
+            url_override (Optional[str]): Override the URL for the request.
 
         Returns:
             Union[Dict, None]: JSON response from the API or None if all retries fail.

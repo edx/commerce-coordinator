@@ -9,6 +9,9 @@ from commerce_coordinator.apps.commercetools.management.commands._timed_command 
 
 
 class Command(TimedCommand):
+    HISTORY_API_URL = "https://history.us-central1.gcp.commercetools.com/"
+    DEFAULT_COOLDOWN = 5
+    RETRY_COOLDOWN = 30
     """Command to get Commercetools audit history."""
 
     def handle(self, *args, **options):
@@ -22,7 +25,7 @@ class Command(TimedCommand):
             response = client._make_request(
                 method="GET",
                 endpoint="",
-                base_backoff=60,
+                base_backoff=self.RETRY_COOLDOWN,
                 params={
                     "limit": 20,
                     "date.from": "2025-01-01T00:00:00.000Z",
@@ -51,7 +54,7 @@ class Command(TimedCommand):
                         "type",
                     ],
                 },
-                url_override=f"https://history.us-central1.gcp.commercetools.com/{config['projectKey']}",
+                url_override=self.HISTORY_API_URL + config["projectKey"],
             )
             if response and response["results"]:
                 data = [
@@ -60,7 +63,7 @@ class Command(TimedCommand):
                 ]
                 self.write_attributes_to_csv(data, mode="a" if results else "w")
                 results.extend(data)
-                sleep(5)
+                sleep(self.DEFAULT_COOLDOWN)
             else:
                 break
 
