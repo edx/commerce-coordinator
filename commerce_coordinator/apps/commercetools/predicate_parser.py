@@ -1,5 +1,65 @@
 """
 Predicate Parser for Commercetools Cart Predicates
+
+Overview:
+---------
+This parser evaluates Commercetools cart predicates used in discount codes.
+It uses a grammar-based approach with the Lark library to parse and handle
+complex predicate expressions. It supports:
+
+- Logical operations (AND, OR) e.g. quantity = 1 and attributes.mode = "verified"
+- Comparison operations (=, !=, >, <, >=, <=) e.g. product.key = "TestX+CS101
+- Field access with dot notation e.g. product.key, attributes.`course-key`
+- List membership checks (in, not in) e.g. attributes.mode in ("verified", "professional")
+- Existence checks (is defined, is not defined) e.g. custom.bundleId is defined
+- Complex expressions: Nested parentheses and multiple conditions
+- Specific function call: `lineItemCount(expression) = 1`
+
+Key Components:
+--------------
+3. Grammar definition: Lark grammar for predicate syntax
+1. PredicateTransformer: Transforms parsed AST into evaluable expressions
+2. CartPredicateParser: Main parser class with evaluation logic
+
+Context Structure and Limitations:
+---------------------------------
+It currently supports evaluation of predicates against a limited context structure.
+The context is generated from Commercetools product and variant data with these fields:
+
+{
+    'quantity': 1,  # Fixed value, always 1
+    'custom': {'bundleId': None},  # Fixed value, always None
+    'product': {'id': product.id, 'key': product.key} # only key and id of product
+    'variant': {'sku': variant.key, 'key': variant.sku} # only sku and key of variant
+    'attributes': {attribute_name: attribute_value, ...} # all attributes of the variant
+}
+
+Note: The current implementation only supports these specific fields.
+To support additional fields, the create_context_from_ct_product_and_variant
+method would need to be updated to include those fields in the context dictionary.
+
+Debug Mode:
+----------
+The parser includes a debug mode that provides colorized output showing
+the evaluation process and intermediate results, useful for troubleshooting
+complex predicate expressions.The red and green color coding indicates
+the success or failure of each evaluation step.
+
+Debug mode can be enabled by passing `debug=True` to the `check` method
+
+Usage Example:
+-------------
+```python
+parser = CartPredicateParser()
+context = parser.create_context_from_ct_product_and_variant(
+    product=product_projection,
+    product_variant=variant
+)
+result = parser.check(
+    predicate='quantity = 1 and attributes.mode = "verified"',
+    context=context
+)
+```
 """
 
 from functools import reduce
@@ -213,7 +273,7 @@ class CartPredicateParser:
         """
         kind, *params = expression
 
-        if kind == "cmp":
+        if kind == "cmp":  # pragma: no cover
             operator, expression, expected = params
             if isinstance(expression, tuple) and expression[0] == "func":
                 evaluated = self._evaluate(expression)
@@ -281,10 +341,9 @@ class CartPredicateParser:
         else:
             raise ValueError(f"Unknown expression type: {kind} with params {params}")
 
-    # pragma: no cover
     def _evaluate_with_debug_output(
         self, expression, depth=0
-    ):  # pylint: disable=too-many-statements
+    ):  # pragma: no cover  pylint: disable=too-many-statements
         """
         Evaluate the expression with debug output.
 

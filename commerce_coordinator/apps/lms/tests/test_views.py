@@ -958,7 +958,16 @@ class DiscountCodeInfoViewTests(APITestCase):
 
         mock_client_instance = mock_ct_client.return_value
         mock_client_instance.get_discount_code_info.return_value = DiscountCodeInfo(
-            cart_predicate='lineItemCount(quantity = 1 and custom.bundleId is not defined and attributes.mode = "verified" and (product.key != "GTx+MGT6203x" and product.key != "GTx+CSE6040x" and product.key != "GTx+ISYE6501x")) = 1',
+            cart_predicate=' '.join("""lineItemCount(
+                quantity = 1
+                and custom.bundleId is not defined
+                and attributes.mode = "verified"
+                and (
+                    product.key != "GTx+MGT6203x"
+                    and product.key != "GTx+CSE6040x"
+                    and product.key != "GTx+ISYE6501x"
+                )
+            ) = 1""".split()),
             is_applicable=True,
             discount_percentage=25,
             max_applications_per_customer=0,
@@ -995,7 +1004,15 @@ class DiscountCodeInfoViewTests(APITestCase):
 
         mock_client_instance = mock_ct_client.return_value
         mock_client_instance.get_discount_code_info.return_value = DiscountCodeInfo(
-            cart_predicate='lineItemCount((quantity = 1 or custom.bundleId is not defined) and attributes.`mode` in ("verified","professional") and (product.key != "GTx+MGT6203x" and product.key != "GTx+CSE6040x" and product.key != "GTx+ISYE6501x")) = 1',
+            cart_predicate=' '.join("""lineItemCount(
+                (quantity = 1 or custom.bundleId is not defined)
+                and attributes.`mode` in ("verified","professional")
+                and (
+                    product.key != "GTx+MGT6203x"
+                    and product.key != "GTx+CSE6040x"
+                    and product.key != "GTx+ISYE6501x"
+                )
+            ) = 1""".split()),
             is_applicable=True,
             discount_percentage=30,
             max_applications_per_customer=0,
@@ -1019,7 +1036,16 @@ class DiscountCodeInfoViewTests(APITestCase):
         self.authenticate_user()
         mock_client_instance = mock_ct_client.return_value
         mock_client_instance.get_discount_code_info.return_value = DiscountCodeInfo(
-            cart_predicate='lineItemCount(quantity = 1 and custom.bundleId is not defined and attributes.mode = "verified" and (product.key != "GTx+MGT6203x" and product.key != "GTx+CSE6040x" and product.key != "GTx+ISYE6501x")) = 1',
+            cart_predicate=' '.join("""lineItemCount(
+                quantity = 1
+                and custom.bundleId is not defined
+                and attributes.mode = "verified"
+                and (
+                    product.key != "GTx+MGT6203x"
+                    and product.key != "GTx+CSE6040x"
+                    and product.key != "GTx+ISYE6501x"
+                )
+            ) = 1""".split()),
             is_applicable=True,
             discount_percentage=20,
             max_applications_per_customer=0,
@@ -1054,7 +1080,16 @@ class DiscountCodeInfoViewTests(APITestCase):
 
         mock_client_instance = mock_ct_client.return_value
         mock_client_instance.get_discount_code_info.return_value = DiscountCodeInfo(
-            cart_predicate='lineItemCount(quantity = 1 and custom.bundleId is not defined and attributes.mode = "verified" and (product.key != "GTx+MGT6203x" and product.key != "GTx+CSE6040x" and product.key != "GTx+ISYE6501x")) = 1',
+            cart_predicate=' '.join("""lineItemCount(
+                quantity = 1
+                and custom.bundleId is not defined
+                and attributes.mode = "verified"
+                and (
+                    product.key != "GTx+MGT6203x"
+                    and product.key != "GTx+CSE6040x"
+                    and product.key != "GTx+ISYE6501x"
+                )
+            ) = 1""".split()),
             is_applicable=True,
             discount_percentage=15,
             max_applications_per_customer=0,

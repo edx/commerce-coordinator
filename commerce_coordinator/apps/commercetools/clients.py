@@ -545,7 +545,6 @@ class CommercetoolsAPIClient:
 
         return results[0] if results else None
 
-    @conditional_retry
     def get_product_variant_by_course_run(self, cr_id: str) -> Optional[ProductVariant]:
         """
         Args:
@@ -1835,14 +1834,17 @@ class CommercetoolsAPIClient:
                 with_total=False,
             ).results
 
-            for product in results:
-                all_variants = [product.master_variant, *product.variants]
-                for variant in all_variants:
-                    if variant.is_matching_variant and variant.sku == course_run_key:
-                        return product, variant
-
-            return None, None
-        except CommercetoolsError as err:
+            # return the first matching product and variant
+            return next(
+                (
+                    (product, variant)
+                    for product in results
+                    for variant in product.variants
+                    if variant.is_matching_variant and variant.sku == course_run_key
+                ),
+                (None, None),
+            )
+        except CommercetoolsError as err:  # pragma: no cover
             handle_commercetools_error(
                 "[CommercetoolsAPIClient.get_product_and_variant_by_course_run_key]",
                 err,
@@ -1910,7 +1912,7 @@ class CommercetoolsAPIClient:
                 is_applicable=is_applicable,
                 max_applications_per_customer=discount_code.max_applications_per_customer or 0,
             )
-        except CommercetoolsError as err:
+        except CommercetoolsError as err:  # pragma: no cover
             handle_commercetools_error(
                 "[CommercetoolsAPIClient.get_discount_code_info]",
                 err,
