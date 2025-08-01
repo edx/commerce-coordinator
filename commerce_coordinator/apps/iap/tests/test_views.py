@@ -73,7 +73,6 @@ class MobileCreateOrderViewTests(APITestCase):
     @mock.patch("commerce_coordinator.apps.iap.views.get_ct_customer")
     @mock.patch("commerce_coordinator.apps.iap.views.get_standalone_price_for_sku")
     @mock.patch("commerce_coordinator.apps.iap.views.get_email_domain")
-    @mock.patch("commerce_coordinator.apps.iap.views.get_edx_lms_user_id")
     def test_post_with_invalid_data_fails(self, *_):
         self.authenticate_user()
         response = self.client.post(self.url, self.invalid_payload, format="json")
@@ -88,14 +87,12 @@ class MobileCreateOrderViewTests(APITestCase):
     @mock.patch("commerce_coordinator.apps.iap.views.get_ct_customer")
     @mock.patch("commerce_coordinator.apps.iap.views.get_standalone_price_for_sku")
     @mock.patch("commerce_coordinator.apps.iap.views.get_email_domain")
-    @mock.patch("commerce_coordinator.apps.iap.views.get_edx_lms_user_id")
     @mock.patch("commerce_coordinator.apps.iap.utils.IAPPaymentProcessor")
     @mock.patch("uuid.uuid4")
     def test_successful_order_creation(
         self,
         mock_uuid,
         mock_payment_processor,
-        mock_get_edx_lms_user_id,
         mock_get_email_domain,
         mock_get_standalone_price,
         mock_get_ct_customer,
@@ -129,7 +126,6 @@ class MobileCreateOrderViewTests(APITestCase):
         mock_get_standalone_price.return_value = Money(
             cent_amount=4999, currency_code="USD"
         )
-        mock_get_edx_lms_user_id.return_value = 12345
 
         mock_cart = mock.MagicMock()
         mock_cart.id = "cart-123"
@@ -179,7 +175,6 @@ class MobileCreateOrderViewTests(APITestCase):
     @mock.patch("commerce_coordinator.apps.iap.views.get_ct_customer")
     @mock.patch("commerce_coordinator.apps.iap.views.get_standalone_price_for_sku")
     @mock.patch("commerce_coordinator.apps.iap.views.get_email_domain")
-    @mock.patch("commerce_coordinator.apps.iap.views.get_edx_lms_user_id")
     def test_invalid_request_variations(self, invalid_data, *_):
         """Test various invalid request scenarios."""
         self.authenticate_user()
@@ -196,14 +191,12 @@ class MobileCreateOrderViewTests(APITestCase):
     @mock.patch("commerce_coordinator.apps.iap.views.get_ct_customer")
     @mock.patch("commerce_coordinator.apps.iap.views.get_standalone_price_for_sku")
     @mock.patch("commerce_coordinator.apps.iap.views.get_email_domain")
-    @mock.patch("commerce_coordinator.apps.iap.views.get_edx_lms_user_id")
     @mock.patch("commerce_coordinator.apps.iap.utils.IAPPaymentProcessor")
     @mock.patch("uuid.uuid4")
     def test_existing_cart_is_deleted(
         self,
         mock_uuid,
         mock_payment_processor,
-        mock_get_edx_lms_user_id,
         mock_get_email_domain,
         mock_get_standalone_price,
         mock_get_ct_customer,
@@ -238,7 +231,6 @@ class MobileCreateOrderViewTests(APITestCase):
             currency_code="USD",
             fraction_digits=2,
         )
-        mock_get_edx_lms_user_id.return_value = 12345
 
         existing_cart = mock.MagicMock()
         existing_cart.id = "old-cart-id"
@@ -265,12 +257,10 @@ class MobileCreateOrderViewTests(APITestCase):
     @mock.patch("commerce_coordinator.apps.iap.views.get_ct_customer")
     @mock.patch("commerce_coordinator.apps.iap.views.get_standalone_price_for_sku")
     @mock.patch("commerce_coordinator.apps.iap.views.get_email_domain")
-    @mock.patch("commerce_coordinator.apps.iap.views.get_edx_lms_user_id")
     @mock.patch("commerce_coordinator.apps.iap.views.get_payment_info_from_purchase_token")
     def test_payment_processor_returns_error_and_cart_is_deleted(
         self,
         mock_get_payment_info,
-        mock_get_edx_lms_user_id,
         mock_get_email_domain,
         mock_get_standalone_price,
         mock_get_ct_customer,
@@ -286,7 +276,6 @@ class MobileCreateOrderViewTests(APITestCase):
         mock_ct_client.return_value.create_cart.return_value = mock_cart
         mock_get_email_domain.return_value = "example.com"
         mock_get_standalone_price.return_value = Money(cent_amount=4999, currency_code="USD")
-        mock_get_edx_lms_user_id.return_value = 12345
 
         mock_get_payment_info.return_value = {
             "status_code": 400,
@@ -299,7 +288,8 @@ class MobileCreateOrderViewTests(APITestCase):
         self.assertIn("error", response.data)
         self.assertEqual(
             response.data["error"],
-            "[CreateOrderView] Payment Validation Failed. Error: Invalid receipt"
+            "[CreateOrderView] Payment Validation Failed for LMS user: None, "
+            "Customer ID: customer-123. Error: Invalid receipt"
         )
 
     @mock.patch("commerce_coordinator.apps.iap.views.emit_order_completed_event")
@@ -309,12 +299,10 @@ class MobileCreateOrderViewTests(APITestCase):
     @mock.patch("commerce_coordinator.apps.iap.views.get_ct_customer")
     @mock.patch("commerce_coordinator.apps.iap.views.get_standalone_price_for_sku")
     @mock.patch("commerce_coordinator.apps.iap.views.get_email_domain")
-    @mock.patch("commerce_coordinator.apps.iap.views.get_edx_lms_user_id")
     @mock.patch("commerce_coordinator.apps.iap.views.get_payment_info_from_purchase_token")
     def test_existing_payment_is_used_instead_of_creating_new(
         self,
         mock_get_payment_info,
-        mock_get_edx_lms_user_id,
         mock_get_email_domain,
         mock_get_standalone_price,
         mock_get_ct_customer,
@@ -329,7 +317,6 @@ class MobileCreateOrderViewTests(APITestCase):
         mock_customer.email = self.test_user_email
         mock_get_ct_customer.return_value = mock_customer
         mock_get_email_domain.return_value = "example.com"
-        mock_get_edx_lms_user_id.return_value = 12345
 
         mock_get_standalone_price.return_value = Money(cent_amount=4999, currency_code="USD")
 

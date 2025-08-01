@@ -12,6 +12,7 @@ from lark import Lark, Transformer, v_args
 @v_args(inline=True)
 class PredicateTransformer(Transformer):
     """Transformer for parsing and transforming predicates in Commercetools."""
+
     def backtick_name(self, token):
         """Handles backtick names in predicates."""
         return token
@@ -86,6 +87,7 @@ class PredicateTransformer(Transformer):
 
 class CartPredicateParser:
     """Parser for Commercetools Cart predicates."""
+
     grammar = r"""
         ?start: expr
 
@@ -174,7 +176,7 @@ class CartPredicateParser:
         parsed_tree = self.parser.parse(predicate)
         transformed_expression = self.transformer.transform(parsed_tree)
 
-        if debug:
+        if debug:  # pragma: no cover
             result, debug_output = self._evaluate_with_debug_output(
                 transformed_expression
             )
@@ -279,7 +281,10 @@ class CartPredicateParser:
         else:
             raise ValueError(f"Unknown expression type: {kind} with params {params}")
 
-    def _evaluate_with_debug_output(self, expression, depth=0):  # pylint: disable=too-many-statements
+    # pragma: no cover
+    def _evaluate_with_debug_output(
+        self, expression, depth=0
+    ):  # pylint: disable=too-many-statements
         """
         Evaluate the expression with debug output.
 

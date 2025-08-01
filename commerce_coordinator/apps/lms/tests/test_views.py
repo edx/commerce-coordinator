@@ -18,6 +18,7 @@ from requests import HTTPError
 from rest_framework import status
 from rest_framework.test import APITestCase
 
+from commerce_coordinator.apps.commercetools.clients import DiscountCodeInfo
 from commerce_coordinator.apps.commercetools.tests.conftest import (
     APITestingSet,
     gen_program_search_result,
@@ -851,7 +852,8 @@ class DiscountCodeInfoViewTests(APITestCase):
 
         mock_ct_client.assert_not_called()
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
-        self.assertEqual(response.content.decode(), "Discount code is required")
+        self.assertIn("code", response.data)
+        self.assertEqual(response.data["code"], ["This field is required."])
 
     def test_discount_code_not_found(self, mock_ct_client):
         """Test when discount code is not found in CT."""
@@ -859,7 +861,9 @@ class DiscountCodeInfoViewTests(APITestCase):
         mock_client_instance = mock_ct_client.return_value
         mock_client_instance.get_discount_code_info.return_value = None
 
-        response = self.client.get(self.url, {"code": "INVALID"})
+        response = self.client.get(
+            self.url, {"code": "INVALID", "course_run_key": "course"}
+        )
 
         mock_client_instance.get_discount_code_info.assert_called_once_with(
             "INVALID"
@@ -871,13 +875,15 @@ class DiscountCodeInfoViewTests(APITestCase):
         """Test successful discount code info retrieval."""
         self.authenticate_user()
         mock_client_instance = mock_ct_client.return_value
-        mock_client_instance.get_discount_code_info.return_value = {
-            "is_applicable": True,
-            "discount_percentage": 20,
-            "max_applications_per_customer": 0,
-        }
-
-        response = self.client.get(self.url, {"code": "SAVE20"})
+        mock_client_instance.get_discount_code_info.return_value = DiscountCodeInfo(
+            cart_predicate="1 = 1",
+            is_applicable=True,
+            discount_percentage=20,
+            max_applications_per_customer=0,
+        )
+        response = self.client.get(
+            self.url, {"code": "SAVE20", "course_run_key": "course"}
+        )
 
         mock_client_instance.get_discount_code_info.assert_called_once_with("SAVE20")
         self.assertEqual(response.status_code, status.HTTP_200_OK)
@@ -893,15 +899,18 @@ class DiscountCodeInfoViewTests(APITestCase):
         mock_customer = mock.Mock()
         mock_customer.id = "customer-123"
         mock_client_instance = mock_ct_client.return_value
-        mock_client_instance.get_discount_code_info.return_value = {
-            "is_applicable": True,
-            "discount_percentage": 15,
-            "max_applications_per_customer": 1,
-        }
+        mock_client_instance.get_discount_code_info.return_value = DiscountCodeInfo(
+            cart_predicate="1 = 1",
+            is_applicable=True,
+            discount_percentage=15,
+            max_applications_per_customer=1,
+        )
         mock_client_instance.get_customer_by_lms_user_id.return_value = mock_customer
         mock_client_instance.is_first_time_discount_eligible.return_value = False
 
-        response = self.client.get(self.url, {"code": "FIRSTTIME15"})
+        response = self.client.get(
+            self.url, {"code": "FIRSTTIME15", "course_run_key": "course"}
+        )
 
         mock_client_instance.get_customer_by_lms_user_id.assert_called_once_with(123)
         mock_client_instance.is_first_time_discount_eligible.assert_called_once_with(
@@ -920,7 +929,9 @@ class DiscountCodeInfoViewTests(APITestCase):
             message="API Error", errors="Some error", response={}
         )
 
-        response = self.client.get(self.url, {"code": "SAVE20"})
+        response = self.client.get(
+            self.url, {"code": "SAVE20", "course_run_key": "course"}
+        )
 
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
         self.assertEqual(response.content.decode(), "Something went wrong.")
@@ -931,3 +942,134 @@ class DiscountCodeInfoViewTests(APITestCase):
 
         mock_ct_client.assert_not_called()
         self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
+
+    def test_cart_predicate_check_success(self, mock_ct_client):
+        """Test cart predicate check when predicate matches the course."""
+        self.authenticate_user()
+        mock_product = mock.Mock()
+        mock_variant = mock.Mock()
+        mock_mode_attr = mock.Mock()
+        mock_product.key = "TestX+CS101"
+        mock_variant.sku = "course-v1:TestX+CS101+2025"
+        mock_variant.key = "course-v1:TestX+CS101+2025"
+        mock_mode_attr.name = "mode"
+        mock_mode_attr.value = "verified"
+        mock_variant.attributes = [mock_mode_attr]
+
+        mock_client_instance = mock_ct_client.return_value
+        mock_client_instance.get_discount_code_info.return_value = DiscountCodeInfo(
+            cart_predicate='lineItemCount(quantity = 1 and custom.bundleId is not defined and attributes.mode = "verified" and (product.key != "GTx+MGT6203x" and product.key != "GTx+CSE6040x" and product.key != "GTx+ISYE6501x")) = 1',
+            is_applicable=True,
+            discount_percentage=25,
+            max_applications_per_customer=0,
+        )
+        mock_client_instance.get_product_and_variant_by_course_run_key.return_value = (
+            mock_product,
+            mock_variant,
+        )
+
+        response = self.client.get(
+            self.url, {"code": "VALID", "course_run_key": "course-v1:TestX+CS101+2023"}
+        )
+
+        mock_client_instance.get_product_and_variant_by_course_run_key.assert_called_once_with(
+            "course-v1:TestX+CS101+2023"
+        )
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(
+            response.data, {"is_applicable": True, "discount_percentage": 25}
+        )
+
+    def test_cart_predicate_check_failure(self, mock_ct_client):
+        """Test cart predicate check when predicate doesn't match the course."""
+        self.authenticate_user()
+        mock_product = mock.Mock()
+        mock_variant = mock.Mock()
+        mock_mode_attr = mock.Mock()
+        mock_product.key = "GTx+MGT6203x"  # This key is excluded in the predicate
+        mock_variant.sku = "course-v1:GTx+MGT6203x+2025"
+        mock_variant.key = "course-v1:GTx+MGT6203x+2025"
+        mock_mode_attr.name = "mode"
+        mock_mode_attr.value = "verified"
+        mock_variant.attributes = [mock_mode_attr]
+
+        mock_client_instance = mock_ct_client.return_value
+        mock_client_instance.get_discount_code_info.return_value = DiscountCodeInfo(
+            cart_predicate='lineItemCount((quantity = 1 or custom.bundleId is not defined) and attributes.`mode` in ("verified","professional") and (product.key != "GTx+MGT6203x" and product.key != "GTx+CSE6040x" and product.key != "GTx+ISYE6501x")) = 1',
+            is_applicable=True,
+            discount_percentage=30,
+            max_applications_per_customer=0,
+        )
+        mock_client_instance.get_product_and_variant_by_course_run_key.return_value = (
+            mock_product,
+            mock_variant,
+        )
+
+        response = self.client.get(
+            self.url, {"code": "VALID", "course_run_key": "course-v1:TestX+CS101+2023"}
+        )
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(
+            response.data, {"is_applicable": False, "discount_percentage": 30}
+        )
+
+    def test_cart_predicate_check_no_product_found(self, mock_ct_client):
+        """Test cart predicate check when no product/variant is found."""
+        self.authenticate_user()
+        mock_client_instance = mock_ct_client.return_value
+        mock_client_instance.get_discount_code_info.return_value = DiscountCodeInfo(
+            cart_predicate='lineItemCount(quantity = 1 and custom.bundleId is not defined and attributes.mode = "verified" and (product.key != "GTx+MGT6203x" and product.key != "GTx+CSE6040x" and product.key != "GTx+ISYE6501x")) = 1',
+            is_applicable=True,
+            discount_percentage=20,
+            max_applications_per_customer=0,
+        )
+        mock_client_instance.get_product_and_variant_by_course_run_key.return_value = (None, None)
+
+        response = self.client.get(
+            self.url, {"code": "VALID", "course_run_key": "course-v1:NonExistent+Course+2023"}
+        )
+
+        mock_client_instance.get_product_and_variant_by_course_run_key.assert_called_once_with(
+            "course-v1:NonExistent+Course+2023"
+        )
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+
+        # Should remain applicable since predicate check is bypassed when no product found
+        self.assertEqual(
+            response.data, {"is_applicable": True, "discount_percentage": 20}
+        )
+
+    def test_cart_predicate_parser_exception(self, mock_ct_client):
+        """Test cart predicate check when parser raises an exception."""
+        self.authenticate_user()
+        mock_product = mock.Mock()
+        mock_variant = mock.Mock()
+        mock_product.key = "TestX+CS101"
+        mock_variant.sku = "course-v1:TestX+CS101+2025"
+        mock_variant.key = "course-v1:TestX+CS101+2025"
+
+        # Simulate error by having missing `mode` in `attributes` in parser context
+        mock_variant.attributes = []
+
+        mock_client_instance = mock_ct_client.return_value
+        mock_client_instance.get_discount_code_info.return_value = DiscountCodeInfo(
+            cart_predicate='lineItemCount(quantity = 1 and custom.bundleId is not defined and attributes.mode = "verified" and (product.key != "GTx+MGT6203x" and product.key != "GTx+CSE6040x" and product.key != "GTx+ISYE6501x")) = 1',
+            is_applicable=True,
+            discount_percentage=15,
+            max_applications_per_customer=0,
+        )
+        mock_client_instance.get_product_and_variant_by_course_run_key.return_value = (
+            mock_product,
+            mock_variant,
+        )
+
+        response = self.client.get(
+            self.url, {"code": "VALID", "course_run_key": "course-v1:TestX+CS101+2023"}
+        )
+
+        # Should still return the original is_applicable value when exception occurs
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(
+            response.data, {"is_applicable": True, "discount_percentage": 15}
+        )

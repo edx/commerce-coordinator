@@ -1859,7 +1859,7 @@ class CommercetoolsAPIClient:
             code (str): Discount code
 
         Returns:
-            dict: Discount code information
+            DiscountCodeInfo: Discount code information or None if not found
         """
         try:
             response = self.base_client.discount_codes.query(
