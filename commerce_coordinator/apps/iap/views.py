@@ -27,9 +27,6 @@ from commerce_coordinator.apps.commercetools.catalog_info.constants import (
     EDX_IOS_IAP_PAYMENT_INTERFACE_NAME,
     TwoUKeys,
 )
-from commerce_coordinator.apps.commercetools.catalog_info.edx_utils import (
-    get_edx_lms_user_id,
-)
 from commerce_coordinator.apps.commercetools.clients import (
     CommercetoolsAPIClient,
     Refund,
@@ -76,14 +73,26 @@ class MobileCreateOrderView(APIView):
         client = None
 
         try:
+            user = request.user
+            user.add_lms_user_id("CreateOrderView GET method")
+            lms_user_id = user.lms_user_id
+            for_user_msg = f"for LMS user: {lms_user_id}"
+            logger.info(
+                f"[CreateOrderView] Request received to create order {for_user_msg}"
+            )
+
             serializer = MobileOrderRequestSerializer(data=request.data)
             serializer.is_valid(raise_exception=True)
             data = MobileOrderRequestData(**serializer.validated_data)  # type: ignore
 
             client = CommercetoolsAPIClient(enable_retries=True)
-            customer = get_ct_customer(client, request.user)
-            lms_user_id = get_edx_lms_user_id(customer)
+            customer = get_ct_customer(client, user)
+
+            for_user_msg += f", Customer ID: {customer.id}"
+            logger.info(f"[CreateOrderView] Finding cart {for_user_msg}")
             cart = client.get_customer_cart(customer.id)
+            if cart:
+                client.delete_cart(cart)
 
             external_price = Money(
                 cent_amount=convert_localized_price_to_ct_cent_amount(
@@ -94,9 +103,6 @@ class MobileCreateOrderView(APIView):
             standalone_price = get_standalone_price_for_sku(
                 sku=data.course_run_key,
             )
-
-            if cart:
-                client.delete_cart(cart)
 
             order_number = client.get_new_order_number()
             cart = client.create_cart(
@@ -112,7 +118,9 @@ class MobileCreateOrderView(APIView):
             )
 
             if payment_info["status_code"] != 200:
-                error_msg = "[CreateOrderView] Payment Validation Failed. "
+                error_msg = (
+                    f"[CreateOrderView] Payment Validation Failed {for_user_msg}. "
+                )
                 validation_error = payment_info["response"].get("error")
                 if validation_error:
                     error_msg += f"Error: {validation_error}"
@@ -144,17 +152,19 @@ class MobileCreateOrderView(APIView):
                 )
 
             # Use existing payment if provided, otherwise create new one
-            payment = payment_info["response"].get("payment") or client.create_payment(
-                    amount_planned=external_price,
-                    customer_id=customer.id,
-                    payment_method=data.payment_processor,
-                    payment_status="succeeded",
-                    payment_processor=data.payment_processor,
-                    psp_payment_id=payment_info["response"]["transaction_id"],
-                    psp_transaction_id=payment_info["response"]["transaction_id"],
-                    psp_transaction_created_at=payment_info["response"]["created_at"],
-                    usd_cent_amount=standalone_price.cent_amount,
-                )
+            payment = payment_info["response"].get(
+                "payment"
+            ) or client.create_payment(
+                amount_planned=external_price,
+                customer_id=customer.id,
+                payment_method=data.payment_processor,
+                payment_status="succeeded",
+                payment_processor=data.payment_processor,
+                psp_payment_id=payment_info["response"]["transaction_id"],
+                psp_transaction_id=payment_info["response"]["transaction_id"],
+                psp_transaction_created_at=payment_info["response"]["created_at"],
+                usd_cent_amount=standalone_price.cent_amount,
+            )
             emit_payment_info_entered_event(
                 lms_user_id=lms_user_id,
                 cart_id=cart.id,
@@ -162,8 +172,10 @@ class MobileCreateOrderView(APIView):
                 payment_method=payment.payment_method_info.method,
             )
 
-            region_code = payment_info['response'].get('region_code')
-            address = BaseAddress(country=region_code.upper()) if region_code else None
+            region_code = payment_info["response"].get("region_code")
+            address = (
+                BaseAddress(country=region_code.upper()) if region_code else None
+            )
 
             cart = client.add_payment_and_address_to_cart(
                 cart=cart,
@@ -192,6 +204,11 @@ class MobileCreateOrderView(APIView):
                 discount_codes=order.discount_codes,
                 discount_on_line_items=None,
                 discount_on_total_price=cart.discount_on_total_price,
+            )
+
+            logger.info(
+                f"[CreateOrderView] Request completed successfully {for_user_msg}. "
+                f"Created Order with id: {order.id}"
             )
 
             return Response(

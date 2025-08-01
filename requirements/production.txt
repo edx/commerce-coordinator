@@ -362,6 +362,8 @@ kombu==5.5.4
     # via
     #   -r requirements/base.txt
     #   celery
+lark==1.2.2
+    # via -r requirements/base.txt
 markupsafe==3.0.2
     # via
     #   -r requirements/base.txt

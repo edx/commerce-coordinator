@@ -31,6 +31,7 @@ from rest_framework.views import APIView
 
 from commerce_coordinator.apps.commercetools.clients import CommercetoolsAPIClient
 from commerce_coordinator.apps.commercetools.http_api_client import CTCustomAPIClient
+from commerce_coordinator.apps.commercetools.predicate_parser import CartPredicateParser
 from commerce_coordinator.apps.core.constants import HttpHeadersNames, MediaTypes
 from commerce_coordinator.apps.core.exceptions import InvalidFilterType
 from commerce_coordinator.apps.lms.constants import CT_ABSOLUTE_DISCOUNT_TYPE
@@ -41,6 +42,7 @@ from commerce_coordinator.apps.lms.filters import (
 )
 from commerce_coordinator.apps.lms.serializers import (
     CourseRefundInputSerializer,
+    DiscountCodeInfoInputSerializer,
     EntitlementRefundInputSerializer,
     FirstTimeDiscountInputSerializer,
     UserRetiredInputSerializer,
@@ -407,8 +409,11 @@ class FirstTimeDiscountEligibleView(APIView):
         code = validator.validated_data['code']
 
         try:
-            ct_api_client = CommercetoolsAPIClient()
-            is_eligible = ct_api_client.is_first_time_discount_eligible(email, code)
+            ct_api_client = CommercetoolsAPIClient(enable_retries=True)
+            is_eligible = ct_api_client.is_first_time_discount_eligible(
+                code=code,
+                customer_email=email,
+            )
 
             output = {
                 'is_eligible': is_eligible
@@ -461,9 +466,9 @@ class ProgramPriceView(APIView):
         return course_key
 
     def _get_program_entitlements_to_be_purchased(
-            self,
-            program_variants: List[object],
-            user_enrollable_course_keys: List[object],
+        self,
+        program_variants: List[object],
+        user_enrollable_course_keys: List[object],
     ) -> List[str]:
         """Filter out bundle entitlements based on enrollable conditions."""
 
@@ -626,3 +631,117 @@ class CreditCheckoutView(APIView):
         except CommercetoolsError as e:
             logger.exception(f"Something went wrong! Exception raised in {self.get.__qualname__} with error {repr(e)}")
             return HttpResponseBadRequest('Something went wrong.')
+
+
+class DiscountCodeInfoView(APIView):
+    """
+    View to get discount code information including applicability and discount percentage.
+    """
+
+    authentication_classes = (JwtAuthentication,)
+    permission_classes = (IsAuthenticated,)
+    throttle_classes = (UserRateThrottle,)
+
+    def get(self, request):
+        """
+        Get discount code information.
+
+        Args:
+            code (str): Discount code to check
+
+        Returns:
+            Response: JSON containing is_applicable and discount_percentage
+        """
+        try:
+            user = request.user
+            user.add_lms_user_id("DiscountCodeInfoView GET method")
+            lms_user_id = user.lms_user_id
+            for_user_msg = f"for LMS user: {lms_user_id}"
+            logger.info(
+                "[DiscountCodeInfoView] Request Received to check discount code "
+                f"applicability {for_user_msg}"
+            )
+
+            serializer = DiscountCodeInfoInputSerializer(data=request.query_params)
+            serializer.is_valid(raise_exception=True)
+            code: str = serializer.validated_data["code"]
+            course_run_key: str = serializer.validated_data["course_run_key"]
+
+            client = CommercetoolsAPIClient(enable_retries=True)
+            discount_code_info = client.get_discount_code_info(code)
+            if not discount_code_info:
+                logger.warning(
+                    "[DiscountCodeInfoView] Could not find discount code: "
+                    f"{code} in CT {for_user_msg}"
+                )
+                return HttpResponseBadRequest("Discount code not found")
+
+            is_applicable = discount_code_info.is_applicable
+            if (
+                is_applicable
+                and discount_code_info.max_applications_per_customer > 0
+            ):
+                customer = client.get_customer_by_lms_user_id(lms_user_id)
+                if customer:
+                    for_user_msg += f", Customer ID: {customer.id}"
+                    logger.info(
+                        f"[DiscountCodeInfoView] Checking if discount code {code} "
+                        f"has already been used by customer {for_user_msg}"
+                    )
+                    is_applicable = client.is_first_time_discount_eligible(
+                        code=code,
+                        customer_id=customer.id,
+                        reraise=True,
+                    )
+
+            if is_applicable and discount_code_info.cart_predicate != "1 = 1":
+                logger.info(
+                    f"[DiscountCodeInfoView] Checking if {course_run_key} "
+                    f"matches the criteria for discount code {code} {for_user_msg}"
+                )
+
+                product, product_variant = client.get_product_and_variant_by_course_run_key(
+                    course_run_key
+                )
+
+                if product and product_variant:
+                    try:
+                        parser = CartPredicateParser()
+                        context = parser.create_context_from_ct_product_and_variant(
+                            product=product,
+                            product_variant=product_variant,
+                        )
+                        is_applicable = parser.check(
+                            predicate=discount_code_info.cart_predicate,
+                            context=context,
+                        )
+                    except Exception as exc:  # pylint: disable=broad-exception-caught
+                        logger.exception(
+                            "[DiscountCodeInfoView] An error occurred while checking "
+                            f"the cart predicate for discount code {code} "
+                            f"{for_user_msg}. Bypassing the check.",
+                            exc_info=exc,
+                        )
+
+            applicable_msg = (
+                f"applicable with discount percentage: {discount_code_info.discount_percentage}"
+                if is_applicable
+                else "not applicable"
+            )
+
+            logger.info(
+                "[DiscountCodeInfoView] Request completed successfully! "
+                f"The Discount code: {code} is {applicable_msg} {for_user_msg}"
+            )
+
+            return Response(
+                {
+                    "is_applicable": is_applicable,
+                    "discount_percentage": discount_code_info.discount_percentage,
+                }
+            )
+        except CommercetoolsError as e:
+            logger.exception(
+                f"Something went wrong! Exception raised in {self.get.__qualname__} with error {repr(e)}"
+            )
+            return HttpResponseBadRequest("Something went wrong.")

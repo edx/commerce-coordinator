@@ -456,6 +456,8 @@ kombu==5.5.4
     # via
     #   -r requirements/validation.txt
     #   celery
+lark==1.2.2
+    # via -r requirements/validation.txt
 lxml[html-clean,html_clean]==6.0.0
     # via
     #   edx-i18n-tools

@@ -267,6 +267,8 @@ jsonpointer==2.4
     # via apimatic-core
 kombu==5.5.4
     # via celery
+lark==1.2.2
+    # via -r requirements/base.in
 markupsafe==3.0.2
     # via
     #   jinja2

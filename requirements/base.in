@@ -28,6 +28,7 @@ google-auth
 google-api-python-client
 iso4217
 inapppy
+lark
 mysqlclient
 openedx-filters
 Pillow

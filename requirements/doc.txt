@@ -450,6 +450,8 @@ kombu==5.5.4
     # via
     #   -r requirements/test.txt
     #   celery
+lark==1.2.2
+    # via -r requirements/test.txt
 markdown-it-py==3.0.0
     # via rich
 markupsafe==3.0.2

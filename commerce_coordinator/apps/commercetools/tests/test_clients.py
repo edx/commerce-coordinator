@@ -9,18 +9,24 @@ import stripe
 from commercetools import CommercetoolsError
 from commercetools.platform.models import (
     BaseAddress,
+    CartDiscount,
+    CartDiscountReference,
+    CartDiscountValue,
     Customer,
     CustomerDraft,
     CustomerPagedQueryResponse,
     CustomFields,
     CustomObject,
+    DiscountCode,
     FieldContainer,
+    LocalizedString,
     Money,
     Order,
     OrderPagedQueryResponse,
     ReturnInfo,
     ReturnPaymentState,
     ReturnShipmentState,
+    StackingMode,
     TransactionState,
     TransactionType
 )
@@ -995,7 +1001,10 @@ class ClientTests(TestCase):
                 status_code=200
             )
 
-            result = self.client_set.client.is_first_time_discount_eligible(email, code)
+            result = self.client_set.client.is_first_time_discount_eligible(
+                code=code,
+                customer_email=email,
+            )
             self.assertTrue(result)
 
     def test_is_first_time_discount_not_eligible(self):
@@ -1027,7 +1036,10 @@ class ClientTests(TestCase):
                 status_code=200
             )
 
-            result = self.client_set.client.is_first_time_discount_eligible(email, code)
+            result = self.client_set.client.is_first_time_discount_eligible(
+                code=code,
+                customer_email=email,
+            )
             self.assertFalse(result)
 
     def test_is_first_time_discount_eligible_invalid_email(self):
@@ -1046,7 +1058,10 @@ class ClientTests(TestCase):
                 status_code=200
             )
 
-            result = self.client_set.client.is_first_time_discount_eligible(invalid_email, code)
+            result = self.client_set.client.is_first_time_discount_eligible(
+                code=code,
+                customer_email=invalid_email,
+            )
             self.assertTrue(result)
 
     def test_create_customer(self):
@@ -1872,6 +1887,126 @@ class ClientTests(TestCase):
             self.assertTrue(result.is_matching_variant)
             self.assertEqual(result.attributes[0].value, course_run_key)
             self.assertEqual(result.attributes[1].value, "credit")
+
+    def test_get_product_and_variant_by_course_run_key_success(self):
+        """Test successfully getting product and variant by course run key"""
+        base_url = self.client_set.get_base_url_from_client()
+        course_run_key = "course-v1:edX+DemoX+2025_T1"
+
+        mock_product = {
+            "id": "mock_product_id",
+            "key": "product_key",
+            "name": {"en": "Mock Product"},
+            "variants": [
+                {
+                    "id": 1,
+                    "sku": course_run_key,
+                    "isMatchingVariant": True,
+                    "attributes": [],
+                }
+            ],
+            "masterVariant": {
+                "id": 0,
+                "sku": "different_sku",
+                "isMatchingVariant": False,
+                "attributes": [],
+            },
+        }
+
+        mock_response = {"results": [mock_product], "total": 1}
+
+        with requests_mock.Mocker(real_http=True, case_sensitive=False) as mocker:
+            mocker.get(
+                f"{base_url}product-projections/search",
+                json=mock_response,
+                status_code=200,
+            )
+
+            product, variant = (
+                self.client_set.client.get_product_and_variant_by_course_run_key(
+                    course_run_key
+                )
+            )
+
+            self.assertIsNotNone(product)
+            self.assertIsNotNone(variant)
+            self.assertEqual(product.id, "mock_product_id")
+            self.assertEqual(variant.sku, course_run_key)
+            self.assertTrue(variant.is_matching_variant)
+
+    def test_get_product_and_variant_by_course_run_key_not_found(self):
+        """Test when no product/variant is found for course run key"""
+        base_url = self.client_set.get_base_url_from_client()
+        course_run_key = "course-v1:NonExistent+Course+2025_T1"
+
+        mock_response = {"results": [], "total": 0}
+
+        with requests_mock.Mocker(real_http=True, case_sensitive=False) as mocker:
+            mocker.get(
+                f"{base_url}product-projections/search",
+                json=mock_response,
+                status_code=200,
+            )
+
+            product, variant = (
+                self.client_set.client.get_product_and_variant_by_course_run_key(
+                    course_run_key
+                )
+            )
+
+            self.assertIsNone(product)
+            self.assertIsNone(variant)
+
+    def test_get_discount_code_info(self):
+        base_url = self.client_set.get_base_url_from_client()
+        mock_code = "mock_discount_code"
+        mock_common_attributes = {
+            "created_at": datetime.now(),
+            "last_modified_at": datetime.now(),
+            "id": uuid4_str(),
+            "version": 1,
+            "is_active": True,
+            "references": [],
+        }
+        mock_discount_code = DiscountCode(
+            **mock_common_attributes,
+            code=mock_code,
+            max_applications_per_customer=1,
+            cart_discounts=[
+                CartDiscountReference(
+                    id=uuid4_str(),
+                    obj=CartDiscount(
+                        **mock_common_attributes,
+                        name=LocalizedString({"en": "Mock Discount"}),
+                        value=CartDiscountValue(type="absolute"),
+                        cart_predicate="1=1",
+                        requires_discount_code=True,
+                        sort_order="0.1",
+                        stacking_mode=StackingMode.STOP_AFTER_THIS_DISCOUNT,
+                        stores=[],
+                    ),
+                )
+            ],
+            groups=[],
+        )
+        mock_response = {
+            "results": [mock_discount_code.serialize()],
+            "total": 1,
+            "count": 1,
+            "offset": 0,
+            "limit": 20,
+        }
+
+        with requests_mock.Mocker(real_http=True, case_sensitive=False) as mocker:
+            mocker.get(
+                f"{base_url}discount-codes?where=code%3D%3Acode&var.code={mock_code}&expand=cartDiscounts%5B%2A%5D",
+                json=mock_response,
+                status_code=200,
+            )
+
+            result = self.client_set.client.get_discount_code_info(mock_code)
+            self.assertEqual(result.is_applicable, False)
+            self.assertEqual(result.max_applications_per_customer, 1)
 
 
 class PaginatedResultsTest(TestCase):

@@ -54,6 +54,7 @@ from commercetools.platform.models import (
     PaymentSetTransactionCustomTypeAction,
     PaymentState,
     PaymentStatusDraft,
+    ProductProjection,
     ProductVariant,
     ReturnItemDraft,
     ReturnPaymentState,
@@ -163,6 +164,15 @@ class OrderWithReturnInfo(NamedTuple):
     order_id: str
     order_version: int
     return_line_item_return_ids: list[str]
+
+
+class DiscountCodeInfo(NamedTuple):
+    """Discount information object for a discount code"""
+
+    cart_predicate: str
+    discount_percentage: float
+    is_applicable: bool
+    max_applications_per_customer: int
 
 
 class CommercetoolsAPIClient:
@@ -1105,23 +1115,44 @@ class CommercetoolsAPIClient:
             )
             raise err
 
-    def is_first_time_discount_eligible(self, email: str, code: str) -> bool:
+    @conditional_retry
+    def is_first_time_discount_eligible(
+        self,
+        *,
+        code: str,
+        customer_id: str = "",
+        customer_email: str = "",
+        reraise: bool = False,
+    ) -> bool:
         """
         Check if a user is eligible for a first time discount
         Args:
-            email (str): Email of the user
             code (str): First time discount code
+            customer_id (str): Customer ID to check
+            customer_email (str): Customer email to check
+            reraise (bool): Whether to raise an exception on failure
+
         Returns (bool): True if the user is eligible for a first time discount
         """
         try:
+            customer = customer_id or customer_email
+            if not customer:
+                raise ValueError(
+                    "Either customer_id or customer_email must be provided"
+                )
+
             discounted_orders = self.base_client.orders.query(
                 where=[
-                    "customerEmail=:email",
+                    (
+                        "customerId=:customer"
+                        if customer_id
+                        else "customerEmail=:customer"
+                    ),
                     "orderState=:orderState",
-                    "discountCodes(discountCode is defined)"
+                    "discountCodes(discountCode is defined)",
                 ],
-                predicate_var={'email': email, 'orderState': 'Complete'},
-                expand=["discountCodes[*].discountCode"]
+                predicate_var={"customer": customer, "orderState": "Complete"},
+                expand=["discountCodes[*].discountCode"],
             )
 
             if discounted_orders.total < 1:
@@ -1130,17 +1161,22 @@ class CommercetoolsAPIClient:
             discounted_orders = discounted_orders.results
 
             for order in discounted_orders:
-                discount_code = order.discount_codes[0].discount_code.obj.code
-                if discount_code == code:
+                discount_code = order.discount_codes[0].discount_code.obj
+                if discount_code and discount_code.code == code:
                     return False
 
             return True
         except CommercetoolsError as err:  # pragma no cover
             # Logs & ignores version conflict errors due to duplicate Commercetools messages
-            handle_commercetools_error("[CommercetoolsAPIClient.is_first_time_discount_eligible]",
-                                       err, f"Unable to check if user {email} is eligible for a "
-                                            f"first time discount", True)
-            return True
+            handle_commercetools_error(
+                "[CommercetoolsAPIClient.is_first_time_discount_eligible]",
+                err,
+                f"Unable to check if user {customer} is eligible for a first time discount",
+                not reraise,
+            )
+            if not reraise:
+                return True
+            raise err
 
     @conditional_retry
     def create_customer(
@@ -1729,7 +1765,7 @@ class CommercetoolsAPIClient:
 
     @conditional_retry
     def get_credit_variant_by_course_run(
-            self, course_run_key: str
+        self, course_run_key: str
     ) -> Optional["ProductVariant"]:
         """
         Fetch the credit variant whose custom Attribute
@@ -1752,7 +1788,9 @@ class CommercetoolsAPIClient:
             ]
 
             results = self.base_client.product_projections.search(
-                True, filter=filter_expr, with_total=False
+                filter=filter_expr,
+                mark_matching_variants=True,
+                with_total=False,
             ).results
 
             if not results:
@@ -1773,5 +1811,111 @@ class CommercetoolsAPIClient:
                 "[CommercetoolsAPIClient.get_credit_variant_by_course_run]",
                 err,
                 f"Unable to find credit variant with course run key {course_run_key}",
+            )
+            raise err
+
+    @conditional_retry
+    def get_product_and_variant_by_course_run_key(
+        self, course_run_key: str
+    ) -> Tuple[ProductProjection | None, ProductVariant | None]:
+        """
+        Fetches a product and its variant by matching course run key with variant sku
+
+        Args:
+            course_run_key: course run key
+
+        Returns:
+            Tuple[ProductProjection, ProductVariant] if found, None otherwise.
+        """
+        try:
+            results = self.base_client.product_projections.search(
+                filter=f'variants.sku:"{course_run_key}"',
+                mark_matching_variants=True,
+                with_total=False,
+            ).results
+
+            # return the first matching product and variant
+            return next(
+                (
+                    (product, variant)
+                    for product in results
+                    for variant in product.variants
+                    if variant.is_matching_variant and variant.sku == course_run_key
+                ),
+                (None, None),
+            )
+        except CommercetoolsError as err:  # pragma: no cover
+            handle_commercetools_error(
+                "[CommercetoolsAPIClient.get_product_and_variant_by_course_run_key]",
+                err,
+                f"Error finding product and variant for course run key {course_run_key}",
+            )
+            raise err
+
+    @conditional_retry
+    def get_discount_code_info(self, code: str) -> DiscountCodeInfo | None:
+        """
+        Get discount code information by code.
+
+        Args:
+            code (str): Discount code
+
+        Returns:
+            DiscountCodeInfo: Discount code information or None if not found
+        """
+        try:
+            response = self.base_client.discount_codes.query(
+                where=["code=:code"],
+                predicate_var={"code": code},
+                expand=["cartDiscounts[*]"],
+            )
+
+            if not response.results or not response.results[0].cart_discounts:
+                return None
+
+            discount_code = response.results[0]
+            cart_discount = discount_code.cart_discounts[0].obj
+
+            if not cart_discount:
+                return None
+
+            discount_percentage = (
+                cart_discount.value.permyriad / 10_000
+                if cart_discount.value.type == "relative"
+                else 0
+            )
+
+            is_applicable = (
+                discount_code.is_active
+                and cart_discount
+                and cart_discount.is_active
+                and discount_percentage > 0
+                and (
+                    not cart_discount.valid_from
+                    or (
+                        cart_discount.valid_from
+                        <= datetime.datetime.now(tz=cart_discount.valid_from.tzinfo)
+                    )
+                )
+                and (
+                    not cart_discount.valid_until
+                    or (
+                        datetime.datetime.now(tz=cart_discount.valid_until.tzinfo)
+                        <= cart_discount.valid_until
+                    )
+                )
+            )
+
+            return DiscountCodeInfo(
+                cart_predicate=cart_discount.cart_predicate,
+                discount_percentage=discount_percentage,
+                is_applicable=is_applicable,
+                max_applications_per_customer=discount_code.max_applications_per_customer or 0,
+            )
+        except CommercetoolsError as err:  # pragma: no cover
+            handle_commercetools_error(
+                "[CommercetoolsAPIClient.get_discount_code_info]",
+                err,
+                f"Unable to get discount code info for code {code}",
             )
             raise err

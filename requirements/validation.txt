@@ -551,6 +551,10 @@ kombu==5.5.4
     #   -r requirements/quality.txt
     #   -r requirements/test.txt
     #   celery
+lark==1.2.2
+    # via
+    #   -r requirements/quality.txt
+    #   -r requirements/test.txt
 markdown-it-py==3.0.0
     # via
     #   -r requirements/quality.txt
