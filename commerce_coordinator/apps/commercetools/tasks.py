@@ -8,6 +8,7 @@ from commercetools import CommercetoolsError
 from commercetools.platform.models import Payment
 from django.conf import settings
 from django.http import HttpRequest
+from iso4217 import Currency
 
 from commerce_coordinator.apps.commercetools.catalog_info.constants import (
     EDX_ANDROID_IAP_PAYMENT_INTERFACE_NAME,
@@ -35,6 +36,7 @@ from commerce_coordinator.apps.rollout.waffle import is_redirect_to_legacy_enabl
 
 from .clients import CommercetoolsAPIClient, Refund
 from .utils import (
+    convert_ct_cent_amount_to_localized_price,
     get_lob_from_variant_attr,
     has_full_refund_transaction,
     is_transaction_already_refunded,
@@ -152,12 +154,21 @@ def refund_from_stripe_task(
                 f"already has a full refund. Skipping task to add refund transaction"
             )
             return None
+
         updated_payment = client.create_return_payment_transaction(
             payment_id=payment.id,
             payment_version=payment.version,
             refund=stripe_refund,
         )
-        _send_segement_event(order_number=order_number, client=client)
+        total_in_dollars = convert_ct_cent_amount_to_localized_price(
+            stripe_refund["amount"],
+            Currency(stripe_refund["currency"].upper()).exponent,
+        )
+        _send_segement_event(
+            order_number=order_number,
+            total_in_dollars=str(total_in_dollars),
+            client=client,
+        )
         return updated_payment
     except CommercetoolsError as err:
         logger.error(
@@ -168,7 +179,7 @@ def refund_from_stripe_task(
         raise err
 
 
-def _send_segement_event(order_number, client):
+def _send_segement_event(*, order_number, total_in_dollars, client) -> None:
     """
     Send Segment event for order refund.
     Args:
@@ -196,8 +207,10 @@ def _send_segement_event(order_number, client):
     product = get_product_data(line_item, is_bundle)
     event_title = line_item.name['en-US']
     segment_event_properties = prepare_segment_event_properties(
-                order, order.total_price.cent_amount, [order.line_items[0].id]
-            )
+        order=order,
+        total_in_dollars=total_in_dollars,
+        line_item_ids=[line_item.id],
+    )
 
     segment_event_properties['products'].append(product)
     if segment_event_properties['products']:  # pragma no cover
@@ -247,13 +260,18 @@ def refund_from_paypal_task(
                 f"already has a refund with ID: {refund.get('id')}. Skipping task to add refund transaction."
             )
             return None
+
         updated_payment = client.create_return_payment_transaction(
             payment_id=payment.id,
             payment_version=payment.version,
             refund=refund,
             psp=EDX_PAYPAL_PAYMENT_INTERFACE_NAME,
         )
-        _send_segement_event(order_number=order_number, client=client)
+        _send_segement_event(
+            order_number=order_number,
+            total_in_dollars=float(refund["amount"]),
+            client=client,
+        )
         return updated_payment
     except CommercetoolsError as err:
         logger.error(
