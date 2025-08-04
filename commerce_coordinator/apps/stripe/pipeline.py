@@ -160,7 +160,11 @@ class RefundPaymentIntent(PipelineStep):
 
         tag = type(self).__name__
 
-        if psp != EDX_STRIPE_PAYMENT_INTERFACE_NAME or not payment_intent_id or not amount_in_dollars:  # pragma: no cover
+        if not (
+            psp == EDX_STRIPE_PAYMENT_INTERFACE_NAME
+            and payment_intent_id
+            and amount_in_dollars
+        ):  # pragma: no cover
             logger.info(f'[{tag}] payment_intent_id or amount_in_dollars not set, skipping.')
             return PipelineCommand.CONTINUE.value
 

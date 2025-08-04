@@ -268,7 +268,7 @@ class OrderReturnPipelineTests(TestCase):
         mock_order_return_update.return_value = self.update_order_response
         ret = pipe.run_filter(
             order_data=self.update_order_data, returned_order=self.update_order_data,
-            payment_intent_id="mock_payment_intent_id", amount_in_cents=10000,
+            payment_intent_id="mock_payment_intent_id", amount_in_dollars=10000,
             return_line_items={"mock_line_item_id": 'mock_return_item_id'},
             refunded_line_item_refunds=["refunded_line_item_refunds"],
             return_line_entitlement_ids={'mock_return_item_id': 'mock_entitlement_id'}
@@ -289,7 +289,7 @@ class OrderReturnPipelineTests(TestCase):
 
         ret = pipe.run_filter(
             order_data=self.update_order_data, returned_order=self.update_order_data,
-            payment_intent_id="mock_payment_intent_id", amount_in_cents=10000,
+            payment_intent_id="mock_payment_intent_id", amount_in_dollars=10000,
             return_line_items={"mock_line_item_id": 'mock_return_item_id'},
             refunded_line_item_refunds=["refunded_line_item_refunds"],
             return_line_entitlement_ids={'mock_return_item_id': 'mock_entitlement_id'},
@@ -376,7 +376,7 @@ class RefundPayPalPaymentTests(TestCase):
     def setUp(self):
         self.refund_pipe = RefundPayPalPayment("test_pipe", None)
         self.order_id = "mock_order_id"
-        self.amount_in_cents = 1000
+        self.amount_in_dollars = 1000
         self.ct_transaction_interaction_id = "mock_capture_id"
         self.psp = EDX_PAYPAL_PAYMENT_INTERFACE_NAME
 
@@ -387,7 +387,7 @@ class RefundPayPalPaymentTests(TestCase):
 
         ret = self.refund_pipe.run_filter(
             order_id=self.order_id,
-            amount_in_cents=self.amount_in_cents,
+            amount_in_dollars=self.amount_in_dollars,
             has_been_refunded=False,
             ct_transaction_interaction_id=self.ct_transaction_interaction_id,
             psp=self.psp,
@@ -396,13 +396,13 @@ class RefundPayPalPaymentTests(TestCase):
 
         self.assertEqual(ret['refund_response'], {"status": "COMPLETED"})
         mock_refund_order.assert_called_once_with(capture_id=self.ct_transaction_interaction_id,
-                                                  amount=self.amount_in_cents)
+                                                  amount=self.amount_in_dollars)
 
     def test_refund_already_refunded(self):
         """Test refund when payment has already been refunded"""
         ret = self.refund_pipe.run_filter(
             order_id=self.order_id,
-            amount_in_cents=self.amount_in_cents,
+            amount_in_dollars=self.amount_in_dollars,
             has_been_refunded=True,
             ct_transaction_interaction_id=self.ct_transaction_interaction_id,
             psp=self.psp
@@ -414,7 +414,7 @@ class RefundPayPalPaymentTests(TestCase):
         """Test refund with invalid PSP"""
         ret = self.refund_pipe.run_filter(
             order_id=self.order_id,
-            amount_in_cents=self.amount_in_cents,
+            amount_in_dollars=self.amount_in_dollars,
             has_been_refunded=False,
             ct_transaction_interaction_id=self.ct_transaction_interaction_id,
             psp="invalid_psp"
@@ -426,7 +426,7 @@ class RefundPayPalPaymentTests(TestCase):
         """Test refund with missing amount or capture ID"""
         ret = self.refund_pipe.run_filter(
             order_id=self.order_id,
-            amount_in_cents=None,
+            amount_in_dollars=None,
             has_been_refunded=False,
             ct_transaction_interaction_id=self.ct_transaction_interaction_id,
             psp=self.psp
@@ -436,7 +436,7 @@ class RefundPayPalPaymentTests(TestCase):
 
         ret = self.refund_pipe.run_filter(
             order_id=self.order_id,
-            amount_in_cents=self.amount_in_cents,
+            amount_in_dollars=self.amount_in_dollars,
             has_been_refunded=False,
             ct_transaction_interaction_id=None,
             psp=self.psp
@@ -451,7 +451,7 @@ class RefundPayPalPaymentTests(TestCase):
 
         ret = self.refund_pipe.run_filter(
             order_id=self.order_id,
-            amount_in_cents=self.amount_in_cents,
+            amount_in_dollars=self.amount_in_dollars,
             has_been_refunded=False,
             ct_transaction_interaction_id=self.ct_transaction_interaction_id,
             psp=self.psp,
