@@ -41,7 +41,7 @@ class RefundPayPalPayment(PipelineStep):
     def run_filter(
         self,
         order_id,
-        amount_in_cents,
+        amount_in_dollars,
         has_been_refunded,
         ct_transaction_interaction_id,
         psp,
@@ -51,15 +51,15 @@ class RefundPayPalPayment(PipelineStep):
         Execute a filter with the signature specified.
         Arguments:
             order_id (str): The identifier of the order.
-            amount_in_cents (decimal): Total amount to refund
+            amount_in_dollars (decimal): Total amount to refund
             has_been_refunded (bool): Has this payment been refunded
             kwargs: arguments passed through from the filter.
         """
 
         tag = type(self).__name__
 
-        if psp != EDX_PAYPAL_PAYMENT_INTERFACE_NAME or not amount_in_cents or not ct_transaction_interaction_id:
-            logger.info(f'[{tag}] capture_id or amount_in_cents not set, '
+        if psp != EDX_PAYPAL_PAYMENT_INTERFACE_NAME or not amount_in_dollars or not ct_transaction_interaction_id:
+            logger.info(f'[{tag}] capture_id or amount_in_dollars not set, '
                         f'skipping refund for order: {order_id} with psp: {psp}')
             return PipelineCommand.CONTINUE.value
 
@@ -72,7 +72,7 @@ class RefundPayPalPayment(PipelineStep):
         try:
             paypal_client = PayPalClient()
             paypal_refund_response = paypal_client.refund_order(
-                capture_id=ct_transaction_interaction_id, amount=amount_in_cents)
+                capture_id=ct_transaction_interaction_id, amount=amount_in_dollars)
 
             return {
                 'refund_response': paypal_refund_response,
