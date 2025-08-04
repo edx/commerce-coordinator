@@ -269,7 +269,7 @@ def refund_from_paypal_task(
         )
         _send_segement_event(
             order_number=order_number,
-            total_in_dollars=float(refund["amount"]),
+            total_in_dollars=refund["amount"],
             client=client,
         )
         return updated_payment
