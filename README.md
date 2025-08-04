@@ -26,15 +26,15 @@
 | commerce\_coordinator/apps/commercetools/data.py                                       |       55 |        0 |       16 |        3 |     96% |97->96, 143->146, 148->157 |
 | commerce\_coordinator/apps/commercetools/filters.py                                    |        6 |        0 |        0 |        0 |    100% |           |
 | commerce\_coordinator/apps/commercetools/http\_api\_client.py                          |       68 |        9 |       16 |        4 |     85% |31-41, 135, 150, 165, 172->171 |
-| commerce\_coordinator/apps/commercetools/pipeline.py                                   |      161 |       20 |       36 |        4 |     85% |86-88, 130-132, 161, 178-181, 206-209, 215-217, 390-391 |
+| commerce\_coordinator/apps/commercetools/pipeline.py                                   |      161 |       20 |       36 |        4 |     85% |86-88, 128-130, 159, 176-179, 204-207, 213-215, 388-389 |
 | commerce\_coordinator/apps/commercetools/predicate\_parser.py                          |      103 |       13 |       38 |       10 |     82% |114, 119->121, 130-131, 138, 145, 250, 257-258, 305, 315, 330, 339-342 |
 | commerce\_coordinator/apps/commercetools/serializers.py                                |       97 |        0 |        2 |        1 |     99% |    21->23 |
 | commerce\_coordinator/apps/commercetools/signals.py                                    |       31 |        0 |        2 |        0 |    100% |           |
 | commerce\_coordinator/apps/commercetools/sub\_messages/\_\_init\_\_.py                 |        0 |        0 |        0 |        0 |    100% |           |
 | commerce\_coordinator/apps/commercetools/sub\_messages/signals\_delayed.py             |       16 |        0 |        0 |        0 |    100% |           |
 | commerce\_coordinator/apps/commercetools/sub\_messages/signals\_dispatch.py            |        4 |        0 |        0 |        0 |    100% |           |
-| commerce\_coordinator/apps/commercetools/sub\_messages/tasks.py                        |      163 |        1 |       32 |        3 |     98% |210, 419->422, 449->455 |
-| commerce\_coordinator/apps/commercetools/tasks.py                                      |      141 |       13 |       20 |        2 |     91% |65-66, 73-86, 104-114, 236-241 |
+| commerce\_coordinator/apps/commercetools/sub\_messages/tasks.py                        |      161 |        1 |       32 |        3 |     98% |210, 406->409, 436->442 |
+| commerce\_coordinator/apps/commercetools/tasks.py                                      |      143 |       13 |       20 |        2 |     91% |67-68, 75-88, 106-116, 249-254 |
 | commerce\_coordinator/apps/commercetools/tests/\_\_init\_\_.py                         |        0 |        0 |        0 |        0 |    100% |           |
 | commerce\_coordinator/apps/commercetools/tests/\_test\_cases.py                        |       25 |        0 |        2 |        1 |     96% |  36->exit |
 | commerce\_coordinator/apps/commercetools/tests/catalog\_info/\_\_init\_\_.py           |        0 |        0 |        0 |        0 |    100% |           |
@@ -56,7 +56,7 @@
 | commerce\_coordinator/apps/commercetools/tests/test\_utils.py                          |      306 |        0 |        0 |        0 |    100% |           |
 | commerce\_coordinator/apps/commercetools/tests/test\_views.py                          |      197 |        0 |        0 |        0 |    100% |           |
 | commerce\_coordinator/apps/commercetools/urls.py                                       |        4 |        0 |        0 |        0 |    100% |           |
-| commerce\_coordinator/apps/commercetools/utils.py                                      |      154 |        2 |       44 |        3 |     97% |94->exit, 281, 385 |
+| commerce\_coordinator/apps/commercetools/utils.py                                      |      154 |        2 |       44 |        3 |     97% |94->exit, 296, 400 |
 | commerce\_coordinator/apps/commercetools/views.py                                      |       61 |        0 |        2 |        0 |    100% |           |
 | commerce\_coordinator/apps/commercetools\_frontend/constants.py                        |        1 |        0 |        0 |        0 |    100% |           |
 | commerce\_coordinator/apps/commercetools\_frontend/pipeline.py                         |        9 |        0 |        2 |        0 |    100% |           |
@@ -199,7 +199,7 @@
 | commerce\_coordinator/apps/stripe/constants.py                                         |       11 |        0 |        0 |        0 |    100% |           |
 | commerce\_coordinator/apps/stripe/exceptions.py                                        |       29 |        0 |        0 |        0 |    100% |           |
 | commerce\_coordinator/apps/stripe/filters.py                                           |        9 |        2 |        0 |        0 |     78% |     25-26 |
-| commerce\_coordinator/apps/stripe/pipeline.py                                          |       54 |       21 |       10 |        2 |     58% |39-62, 92-105, 118-119, 168-169 |
+| commerce\_coordinator/apps/stripe/pipeline.py                                          |       54 |       21 |       10 |        2 |     58% |39-62, 92-105, 118-119, 172-173 |
 | commerce\_coordinator/apps/stripe/signals.py                                           |        3 |        0 |        0 |        0 |    100% |           |
 | commerce\_coordinator/apps/stripe/tests/\_\_init\_\_.py                                |        0 |        0 |        0 |        0 |    100% |           |
 | commerce\_coordinator/apps/stripe/tests/test\_clients.py                               |       78 |        0 |        2 |        0 |    100% |           |
