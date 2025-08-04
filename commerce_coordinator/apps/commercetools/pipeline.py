@@ -100,10 +100,8 @@ class FetchOrderDetailsByOrderNumber(PipelineStep):
             kwargs: The keyword arguments passed through from the filter
         Returns:
             order_data (CTOrder): The object of the order
+            psp (str): The payment service provider used for the order
             payment_intent_id (str): The Stripe PaymentIntent ID
-            amount_in_cents (decimal): Total amount to refund
-            has_been_refunded (bool): Has this payment been refunded
-            payment_data (CTPayment): Payment object of the order
         """
         if active_order_management_system != COMMERCETOOLS_ORDER_MANAGEMENT_SYSTEM:
             return PipelineCommand.CONTINUE.value
@@ -152,7 +150,7 @@ class FetchOrderDetailsByOrderID(PipelineStep):
             order_data (CTOrder): The object of the order
             order_id (str): Order ID
             payment_intent_id (str): The Stripe PaymentIntent ID
-            amount_in_cents (decimal): Total amount to refund
+            amount_in_dollars (decimal): Total amount to refund
             has_been_refunded (bool): Has this payment been refunded
             payment_data (CTPayment): Payment object of the order
         """
@@ -198,12 +196,12 @@ class FetchOrderDetailsByOrderID(PipelineStep):
                 ct_payment = ct_api_client.get_payment_by_key(payment.interface_id)
                 refund_amount, ct_transaction_interaction_id = get_edx_refund_info(
                     ct_payment, ct_order, filtered_line_item_ids)
-                ret_val['amount_in_cents'] = refund_amount
+                ret_val['amount_in_dollars'] = refund_amount
                 ret_val['ct_transaction_interaction_id'] = ct_transaction_interaction_id
                 ret_val['has_been_refunded'] = has_full_refund_transaction(ct_payment) or refund_amount == 0
                 ret_val['payment_data'] = ct_payment
             else:
-                ret_val['amount_in_cents'] = decimal.Decimal(0.00)
+                ret_val['amount_in_dollars'] = decimal.Decimal(0.00)
                 ret_val['ct_transaction_interaction_id'] = None
                 ret_val['has_been_refunded'] = False
                 ret_val['payment_data'] = None

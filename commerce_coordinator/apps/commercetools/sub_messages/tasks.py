@@ -39,11 +39,11 @@ from commerce_coordinator.apps.commercetools.signals import (
     fulfill_order_placed_send_entitlement_signal
 )
 from commerce_coordinator.apps.commercetools.utils import (
-    calculate_total_discount_on_order,
     extract_ct_order_information_for_braze_canvas,
     extract_ct_product_information_for_braze_canvas,
     get_lob_from_variant_attr,
     prepare_default_params,
+    prepare_segment_event_properties,
     send_order_confirmation_email
 )
 from commerce_coordinator.apps.core.memcache import safe_key
@@ -313,22 +313,6 @@ def fulfill_order_returned_signal_task(order_id, return_items, message_id):
             'product_type': line_item.product_type.obj.name
         }
 
-    def _prepare_segment_event_properties(in_order, total_amount, return_line_item_return_id, line_item_ids):
-        return {
-            'track_plan_id': 19,
-            'trigger_source': 'server-side',
-            'order_id': in_order.order_number,
-            'checkout_id': in_order.cart.id,
-            'return_id': return_line_item_return_id,
-            'total': total_amount,
-            'currency': in_order.taxed_price.total_gross.currency_code,
-            'tax': cents_to_dollars(in_order.taxed_price.total_tax),
-            'coupon': in_order.discount_codes[-1].discount_code.obj.code if in_order.discount_codes else None,
-            'coupon_name': [discount.discount_code.obj.code for discount in in_order.discount_codes[:-1]],
-            'discount': cents_to_dollars(calculate_total_discount_on_order(in_order, line_item_ids)),
-            'products': []
-        }
-
     tag = "fulfill_order_returned_signal_task"
 
     # List of return line Item Ids
@@ -402,12 +386,15 @@ def fulfill_order_returned_signal_task(order_id, return_items, message_id):
             else:
                 logger.info(f'[CT-{tag}] payment {psp_payment_id} refunded for message id: {message_id}')
 
-                total_amount = result.get('amount_in_cents')
+                total_in_dollars = result.get('amount_in_dollars')
                 refunded_line_item_ids = result.get('filtered_line_item_ids', return_line_item_ids)
                 returned_item_ids = [return_id for item_id, return_id in return_line_items.items()
                                      if item_id in refunded_line_item_ids]
-                segment_event_properties = _prepare_segment_event_properties(
-                    order, total_amount, ', '.join(returned_item_ids), refunded_line_item_ids
+                segment_event_properties = prepare_segment_event_properties(
+                    order=order,
+                    total_in_dollars=total_in_dollars,
+                    line_item_ids=refunded_line_item_ids,
+                    return_id=", ".join(returned_item_ids),
                 )
                 line_items = get_edx_items(order)
                 is_bundle = check_is_bundle(line_items)

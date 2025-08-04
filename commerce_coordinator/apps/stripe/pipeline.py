@@ -143,7 +143,7 @@ class RefundPaymentIntent(PipelineStep):
         self,
         order_id,
         payment_intent_id,
-        amount_in_cents,
+        amount_in_dollars,
         has_been_refunded,
         psp,
         **kwargs
@@ -153,15 +153,19 @@ class RefundPaymentIntent(PipelineStep):
         Arguments:
             order_id (str): The identifier of the order.
             payment_intent_id (str): The Stripe PaymentIntent id to look up.
-            amount_in_cents (decimal): Total amount to refund
+            amount_in_dollars (decimal): Total amount to refund
             has_been_refunded (bool): Has this payment been refunded
             kwargs: arguments passed through from the filter.
         """
 
         tag = type(self).__name__
 
-        if psp != EDX_STRIPE_PAYMENT_INTERFACE_NAME or not payment_intent_id or not amount_in_cents:  # pragma: no cover
-            logger.info(f'[{tag}] payment_intent_id or amount_in_cents not set, skipping.')
+        if not (
+            psp == EDX_STRIPE_PAYMENT_INTERFACE_NAME
+            and payment_intent_id
+            and amount_in_dollars
+        ):  # pragma: no cover
+            logger.info(f'[{tag}] payment_intent_id or amount_in_dollars not set, skipping.')
             return PipelineCommand.CONTINUE.value
 
         if has_been_refunded:
@@ -175,7 +179,7 @@ class RefundPaymentIntent(PipelineStep):
         try:
             ret_val = stripe_api_client.refund_payment_intent(
                 payment_intent_id=payment_intent_id,
-                amount=amount_in_cents,
+                amount=amount_in_dollars,
                 order_uuid=order_id
             )
             return {

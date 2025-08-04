@@ -159,20 +159,35 @@ def extract_ct_product_information_for_braze_canvas(item: LineItem):
     return result
 
 
-def prepare_segment_event_properties(in_order, total_amount, line_item_ids):
+def prepare_segment_event_properties(
+    *,
+    order,
+    total_in_dollars,
+    line_item_ids,
+    return_id="",
+) -> dict:
+    """Utility to prepare properties for Segment event"""
     return {
-        'track_plan_id': 19,
-        'trigger_source': 'server-side',
-        'order_id': in_order.order_number,
-        'checkout_id': in_order.cart.id,
-        'return_id': '',
-        'total': total_amount,
-        'currency': in_order.taxed_price.total_gross.currency_code,
-        'tax': cents_to_dollars(in_order.taxed_price.total_tax),
-        'coupon': in_order.discount_codes[-1].discount_code.obj.code if in_order.discount_codes else None,
-        'coupon_name': [discount.discount_code.obj.code for discount in in_order.discount_codes[:-1]],
-        'discount': cents_to_dollars(calculate_total_discount_on_order(in_order, line_item_ids)),
-        'products': []
+        "track_plan_id": 19,
+        "trigger_source": "server-side",
+        "order_id": order.order_number,
+        "checkout_id": order.cart.id,
+        "return_id": return_id,
+        "total": total_in_dollars,
+        "currency": order.taxed_price.total_gross.currency_code,
+        "tax": cents_to_dollars(order.taxed_price.total_tax),
+        "coupon": (
+            order.discount_codes[-1].discount_code.obj.code
+            if order.discount_codes
+            else None
+        ),
+        "coupon_name": [
+            discount.discount_code.obj.code for discount in order.discount_codes[:-1]
+        ],
+        "discount": cents_to_dollars(
+            calculate_total_discount_on_order(order, line_item_ids)
+        ),
+        "products": [],
     }
 
 
