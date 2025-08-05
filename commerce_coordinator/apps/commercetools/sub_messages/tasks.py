@@ -7,9 +7,14 @@ from celery.utils.log import get_task_logger
 from commercetools import CommercetoolsError
 from django.contrib.auth import get_user_model
 from edx_django_utils.cache import TieredCache
+from iso4217 import Currency
 from requests import RequestException
 
-from commerce_coordinator.apps.commercetools.catalog_info.constants import TwoUKeys
+from commerce_coordinator.apps.commercetools.catalog_info.constants import (
+    EDX_PAYPAL_PAYMENT_INTERFACE_NAME,
+    EDX_STRIPE_PAYMENT_INTERFACE_NAME,
+    TwoUKeys
+)
 from commerce_coordinator.apps.commercetools.catalog_info.edx_utils import (
     cents_to_dollars,
     check_is_bundle,
@@ -39,6 +44,7 @@ from commerce_coordinator.apps.commercetools.signals import (
     fulfill_order_placed_send_entitlement_signal
 )
 from commerce_coordinator.apps.commercetools.utils import (
+    convert_ct_cent_amount_to_localized_price,
     extract_ct_order_information_for_braze_canvas,
     extract_ct_product_information_for_braze_canvas,
     get_lob_from_variant_attr,
@@ -356,7 +362,6 @@ def fulfill_order_returned_signal_task(order_id, return_items, message_id):
     # Retrieve the payment service provider (PSP) payment ID from an order.
     # Either Stripe Payment Intent ID Or PayPal Order ID
     psp_payment_id = get_edx_psp_payment_id(order)
-    lms_user_name = get_edx_lms_user_name(customer)
     lms_user_id = get_edx_lms_user_id(customer)
 
     logger.info(f'[CT-{tag}] calling PSP to refund payment "{psp_payment_id}", message id: {message_id}')
@@ -386,13 +391,33 @@ def fulfill_order_returned_signal_task(order_id, return_items, message_id):
             else:
                 logger.info(f'[CT-{tag}] payment {psp_payment_id} refunded for message id: {message_id}')
 
-                total_in_dollars = result.get('amount_in_dollars')
-                refunded_line_item_ids = result.get('filtered_line_item_ids', return_line_item_ids)
-                returned_item_ids = [return_id for item_id, return_id in return_line_items.items()
-                                     if item_id in refunded_line_item_ids]
+                psp = result.get("psp", None)
+                refund_response = result["refund_response"]
+                refunded_line_item_ids = result.get("filtered_line_item_ids", return_line_item_ids)
+
+                if psp == EDX_STRIPE_PAYMENT_INTERFACE_NAME:
+                    fraction_digits = Currency(
+                        refund_response["currency"].upper()
+                    ).exponent
+                    refund_amount_in_dollars = str(
+                        convert_ct_cent_amount_to_localized_price(
+                            refund_response["amount"],
+                            fraction_digits,
+                        )
+                    )
+                elif psp == EDX_PAYPAL_PAYMENT_INTERFACE_NAME:
+                    refund_amount_in_dollars = result["refund_response"]["amount"]
+                else:
+                    refund_amount_in_dollars = result.get("amount_in_dollars")
+
+                returned_item_ids = [
+                    return_id
+                    for item_id, return_id in return_line_items.items()
+                    if item_id in refunded_line_item_ids
+                ]
                 segment_event_properties = prepare_segment_event_properties(
                     order=order,
-                    total_in_dollars=total_in_dollars,
+                    total_in_dollars=refund_amount_in_dollars,
                     line_item_ids=refunded_line_item_ids,
                     return_id=", ".join(returned_item_ids),
                 )
@@ -406,12 +431,6 @@ def fulfill_order_returned_signal_task(order_id, return_items, message_id):
                         if isinstance(name_dict, dict) and 'en-US' in name_dict:
                             refund_items_titles.append(name_dict['en-US'])
 
-                        course_run = get_edx_product_course_run_key(line_item)
-                        # TODO: Remove LMS Enrollment. To be done in SONIC-96
-                        logger.info(
-                            f'[CT-{tag}] calling lms to unenroll user {lms_user_name} in {course_run}'
-                            f', message id: {message_id}'
-                        )
                         product = _get_product_data(line_item, is_bundle)
                         segment_event_properties['products'].append(product)
 

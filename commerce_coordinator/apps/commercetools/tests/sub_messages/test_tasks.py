@@ -500,6 +500,10 @@ class OrderReturnedMessageSignalTaskTests(TestCase):
         expected_data.
         """
         mock_values = self.mock
+        _stripe_api_mock.return_value.refund_payment_intent.return_value = {
+            "currency": "usd",
+            "amount": 1000
+        }
         ret_val = self.get_uut()(*self.unpack_for_uut(self.mock.example_payload))
 
         self.assertTrue(ret_val)
@@ -521,9 +525,9 @@ class OrderReturnedMessageSignalTaskTests(TestCase):
         """
         mock_values = self.mock
         mock_values.order_mock.return_value.return_info = []
-        _stripe_api_mock.return_value.refund_payment_intent.return_value.return_value = {
-            "id": "123",
-            "status": "succeeded"
+        _stripe_api_mock.return_value.refund_payment_intent.return_value = {
+            "currency": "usd",
+            "amount": 1000
         }
         _return_order_mock.return_value = CTOrder.deserialize(mock_values.order_mock.return_value.serialize())
         _return_order_mock.return_value.return_info.append(
