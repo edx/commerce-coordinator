@@ -6,13 +6,13 @@
 #
 aiohappyeyeballs==2.6.1
     # via aiohttp
-aiohttp==3.12.14
+aiohttp==3.12.15
     # via inapppy
 aiosignal==1.4.0
     # via aiohttp
 amqp==5.3.1
     # via kombu
-anyio==4.9.0
+anyio==4.10.0
     # via httpx
 apimatic-core==0.2.21
     # via paypal-server-sdk
@@ -51,7 +51,7 @@ celery[redis]==5.4.0
     # via
     #   -c requirements/constraints.txt
     #   -r requirements/base.in
-certifi==2025.7.9
+certifi==2025.8.3
     # via
     #   httpcore
     #   httpx
@@ -61,7 +61,7 @@ cffi==1.17.1
     #   app-store-notifications-v2-validator
     #   cryptography
     #   pynacl
-charset-normalizer==3.4.2
+charset-normalizer==3.4.3
     # via requests
 click==8.2.1
     # via
@@ -87,7 +87,7 @@ coreapi==2.3.3
     #   openapi-codec
 coreschema==0.0.4
     # via coreapi
-cryptography==45.0.5
+cryptography==45.0.6
     # via
     #   app-store-notifications-v2-validator
     #   pyjwt
@@ -138,7 +138,7 @@ django-waffle==5.0.0
     #   edx-django-utils
     #   edx-drf-extensions
     #   edx-toggles
-djangorestframework==3.16.0
+djangorestframework==3.16.1
     # via
     #   -r requirements/base.in
     #   django-rest-swagger
@@ -173,7 +173,7 @@ edx-opaque-keys[django]==3.0.0
     #   openedx-filters
 edx-rest-api-client==6.2.0
     # via -r requirements/base.in
-edx-toggles==5.3.0
+edx-toggles==5.4.1
     # via edx-auth-backends
 firebase-admin==6.9.0
     # via edx-ace
@@ -188,7 +188,7 @@ google-api-core[grpc]==2.25.1
     #   google-cloud-core
     #   google-cloud-firestore
     #   google-cloud-storage
-google-api-python-client==2.176.0
+google-api-python-client==2.178.0
     # via
     #   -r requirements/base.in
     #   firebase-admin
@@ -222,11 +222,11 @@ googleapis-common-protos==1.70.0
     # via
     #   google-api-core
     #   grpcio-status
-grpcio==1.73.1
+grpcio==1.74.0
     # via
     #   google-api-core
     #   grpcio-status
-grpcio-status==1.73.1
+grpcio-status==1.74.0
     # via google-api-core
 h11==0.16.0
     # via httpcore
@@ -348,9 +348,10 @@ pyjwt[crypto]==2.10.1
     #   edx-drf-extensions
     #   edx-rest-api-client
     #   firebase-admin
+    #   redis
     #   segment-analytics-python
     #   social-auth-core
-pymongo==4.13.2
+pymongo==4.14.0
     # via edx-opaque-keys
 pynacl==1.5.0
     # via edx-django-utils
@@ -377,7 +378,7 @@ pyyaml==6.0.2
     # via
     #   code-annotations
     #   edx-django-release-util
-redis==5.2.1
+redis==5.3.1
     # via celery
 requests==2.32.4
     # via
@@ -442,7 +443,7 @@ stevedore==5.4.1
     #   edx-ace
     #   edx-django-utils
     #   edx-opaque-keys
-stripe==12.3.0
+stripe==12.4.0
     # via -r requirements/base.in
 tenacity==9.1.2
     # via -r requirements/base.in
@@ -463,10 +464,8 @@ uritemplate==4.2.0
     # via
     #   coreapi
     #   google-api-python-client
-urllib3==2.2.3
-    # via
-    #   -c requirements/common_constraints.txt
-    #   requests
+urllib3==2.5.0
+    # via requests
 vine==5.1.0
     # via
     #   amqp
