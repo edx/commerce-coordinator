@@ -253,6 +253,7 @@ class IOSRefundView(SingleInvocationAPIView):
         from retrying the event.
         """
         tag = type(self).__name__
+        logger.info(f"Received notification from apple with body {request.body}")
         notification = ios_validator.parse(
             request.body, apple_root_cert_path=self.apple_cert_file_path
         )
