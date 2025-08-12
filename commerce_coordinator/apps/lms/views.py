@@ -5,7 +5,7 @@ import datetime
 import logging
 import re
 from typing import List
-from urllib.parse import urlencode, urljoin
+from urllib.parse import quote, urlencode, urljoin
 
 from commercetools import CommercetoolsError
 from django.conf import settings
@@ -616,7 +616,11 @@ class CreditCheckoutView(APIView):
                 logger.warning(
                     f"{self.get.__qualname__} No credit variant found for course_run_key={course_run_key}"
                 )
-                return HttpResponseBadRequest("Something went wrong.")
+                # TODO: This redirection will be removed as part of the SONIC-1110
+                safe_course_run_key = quote(str(course_run_key), safe='')
+                redirect_url = f"{settings.ECOMMERCE_URL}/credit/checkout/{safe_course_run_key}/"
+                # Redirect to legacy credit checkout if course not found on CT
+                return HttpResponseRedirect(redirect_url)
 
             # Build redirect URL to payment_page_redirect
             payment_path = reverse("lms:payment_page_redirect")

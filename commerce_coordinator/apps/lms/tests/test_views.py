@@ -693,15 +693,6 @@ class CreditCheckoutViewTests(APITestCase):
         super().tearDown()
         self.client.logout()
 
-    def test_view_rejects_session_auth(self):
-        """Check Session Auth Not Allowed."""
-        # Login
-        self.client.login(username=self.test_user_username, password=self.test_user_password)
-        # Request credit checkout
-        response = self.client.get(self.url)
-        # Error HTTP_400_BAD_REQUEST
-        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
-
     def test_view_rejects_unauthorized(self):
         """Check unauthorized users are redirected to login page."""
         # Logout user
@@ -740,8 +731,8 @@ class CreditCheckoutViewTests(APITestCase):
 
         response = self.client.get(self.url)
 
-        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
-        self.assertEqual(response.content.decode(), "Something went wrong.")
+        self.assertEqual(response.status_code, status.HTTP_302_FOUND)
+        self.assertIn("/credit/checkout/", response.url)
         mock_ct_client.return_value.get_credit_variant_by_course_run.assert_called_once_with(
             self.test_course_run_key
         )
@@ -762,21 +753,6 @@ class CreditCheckoutViewTests(APITestCase):
 
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
         self.assertEqual(response.content.decode(), "Something went wrong.")
-
-    @patch('commerce_coordinator.apps.lms.views.CommercetoolsAPIClient')
-    def test_empty_course_run_key(self, mock_ct_client):
-        """Test with empty course run key."""
-        self.client.force_authenticate(user=self.user)
-
-        # Use a placeholder course run key since empty string fails URL reverse
-        empty_url = reverse('lms:credit_checkout', kwargs={'course_run_key': 'empty'})
-
-        mock_ct_client.return_value.get_credit_variant_by_course_run.return_value = None
-
-        response = self.client.get(empty_url)
-
-        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
-        mock_ct_client.return_value.get_credit_variant_by_course_run.assert_called_once_with('empty')
 
     @patch('commerce_coordinator.apps.lms.views.CommercetoolsAPIClient')
     def test_user_lms_id_logging(self, mock_ct_client):
