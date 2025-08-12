@@ -616,7 +616,10 @@ class CreditCheckoutView(APIView):
                 logger.warning(
                     f"{self.get.__qualname__} No credit variant found for course_run_key={course_run_key}"
                 )
-                return HttpResponseBadRequest("Something went wrong.")
+                # TODO: This redirection will be removed as part of the SONIC-1110
+                redirect_url = f"{settings.ECOMMERCE_URL}/credit/checkout/{course_run_key}/"
+                # Redirect to legacy credit checkout if course not found on CT
+                return HttpResponseRedirect(redirect_url)
 
             # Build redirect URL to payment_page_redirect
             payment_path = reverse("lms:payment_page_redirect")
