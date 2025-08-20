@@ -67,7 +67,7 @@
             <a id="nextFileLink" class="nav" href="z_516049fa8843e747_test_edx_utils_py.html">&#xbb; next</a>
             &nbsp; &nbsp; &nbsp;
             <a class="nav" href="https://coverage.readthedocs.io/en/7.10.3">coverage.py v7.10.3</a>,
-            created at 2025-08-19 14:30 +0000
+            created at 2025-08-20 12:15 +0000
         </p>
         <aside class="hidden">
             <button type="button" class="button_next_chunk" data-shortcut="j"></button>
@@ -125,16 +125,21 @@
     <p class="pln"><span class="n"><a id="t41" href="#t41">41</a></span><span class="t">        <span class="com"># noinspection PyUnusedLocal</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t42" href="#t42">42</a></span><span class="t">        <span class="com"># pylint: disable=unused-argument # needed for kwargs</span>&nbsp;</span><span class="r"></span></p>
     <p class="run"><span class="n"><a id="t43" href="#t43">43</a></span><span class="t">        <span class="key">def</span> <span class="nam">_get_orders_for_customer</span><span class="op">(</span>&nbsp;</span><span class="r"></span></p>
-    <p class="run run2"><span class="n"><a id="t44" href="#t44">44</a></span><span class="t">            <span class="nam">_</span><span class="op">,</span> <span class="nam">edx_lms_user_id</span><span class="op">:</span> <span class="nam">int</span><span class="op">,</span> <span class="nam">offset</span><span class="op">=</span><span class="num">0</span><span class="op">,</span> <span class="nam">customer_id</span><span class="op">=</span><span class="key">None</span><span class="op">,</span> <span class="nam">email</span><span class="op">=</span><span class="key">None</span><span class="op">,</span> <span class="nam">username</span><span class="op">=</span><span class="key">None</span><span class="op">,</span>&nbsp;</span><span class="r"></span></p>
-    <p class="run run2"><span class="n"><a id="t45" href="#t45">45</a></span><span class="t">                <span class="nam">limit</span><span class="op">=</span><span class="nam">ORDER_HISTORY_PER_SYSTEM_REQ_LIMIT</span>&nbsp;</span><span class="r"></span></p>
-    <p class="run run2"><span class="n"><a id="t46" href="#t46">46</a></span><span class="t">        <span class="op">)</span> <span class="op">-></span> <span class="op">(</span><span class="nam">PaginatedResult</span><span class="op">[</span><span class="nam">CTOrder</span><span class="op">]</span><span class="op">,</span> <span class="nam">CTCustomer</span><span class="op">)</span><span class="op">:</span>&nbsp;</span><span class="r"></span></p>
-    <p class="run"><span class="n"><a id="t47" href="#t47">47</a></span><span class="t">            <span class="key">return</span> <span class="op">(</span>&nbsp;</span><span class="r"></span></p>
-    <p class="run run2"><span class="n"><a id="t48" href="#t48">48</a></span><span class="t">                <span class="nam">PaginatedResult</span><span class="op">(</span><span class="nam">self</span><span class="op">.</span><span class="nam">orders</span><span class="op">,</span> <span class="nam">len</span><span class="op">(</span><span class="nam">self</span><span class="op">.</span><span class="nam">orders</span><span class="op">)</span><span class="op">,</span> <span class="nam">offset</span><span class="op">)</span><span class="op">,</span>&nbsp;</span><span class="r"></span></p>
-    <p class="run run2"><span class="n"><a id="t49" href="#t49">49</a></span><span class="t">                <span class="nam">gen_customer</span><span class="op">(</span><span class="nam">email</span><span class="op">=</span><span class="str">"hiya@email.test"</span><span class="op">,</span> <span class="nam">un</span><span class="op">=</span><span class="str">"dave"</span><span class="op">)</span>&nbsp;</span><span class="r"></span></p>
-    <p class="run run2"><span class="n"><a id="t50" href="#t50">50</a></span><span class="t">            <span class="op">)</span>&nbsp;</span><span class="r"></span></p>
-    <p class="pln"><span class="n"><a id="t51" href="#t51">51</a></span><span class="t">        <span class="com"># pylint: enable=unused-argument # needed for kwargs</span>&nbsp;</span><span class="r"></span></p>
-    <p class="pln"><span class="n"><a id="t52" href="#t52">52</a></span><span class="t">&nbsp;</span><span class="r"></span></p>
-    <p class="run"><span class="n"><a id="t53" href="#t53">53</a></span><span class="t">        <span class="key">return</span> <span class="nam">_get_orders_for_customer</span>&nbsp;</span><span class="r"></span></p>
+    <p class="run run2"><span class="n"><a id="t44" href="#t44">44</a></span><span class="t">            <span class="nam">_</span><span class="op">,</span>&nbsp;</span><span class="r"></span></p>
+    <p class="run run2"><span class="n"><a id="t45" href="#t45">45</a></span><span class="t">            <span class="nam">edx_lms_user_id</span><span class="op">:</span> <span class="nam">int</span><span class="op">,</span>&nbsp;</span><span class="r"></span></p>
+    <p class="run run2"><span class="n"><a id="t46" href="#t46">46</a></span><span class="t">            <span class="nam">offset</span><span class="op">=</span><span class="num">0</span><span class="op">,</span>&nbsp;</span><span class="r"></span></p>
+    <p class="run run2"><span class="n"><a id="t47" href="#t47">47</a></span><span class="t">            <span class="nam">customer_id</span><span class="op">=</span><span class="key">None</span><span class="op">,</span>&nbsp;</span><span class="r"></span></p>
+    <p class="run run2"><span class="n"><a id="t48" href="#t48">48</a></span><span class="t">            <span class="nam">email</span><span class="op">=</span><span class="key">None</span><span class="op">,</span>&nbsp;</span><span class="r"></span></p>
+    <p class="run run2"><span class="n"><a id="t49" href="#t49">49</a></span><span class="t">            <span class="nam">username</span><span class="op">=</span><span class="key">None</span><span class="op">,</span>&nbsp;</span><span class="r"></span></p>
+    <p class="run run2"><span class="n"><a id="t50" href="#t50">50</a></span><span class="t">            <span class="nam">limit</span><span class="op">=</span><span class="nam">ORDER_HISTORY_PER_SYSTEM_REQ_LIMIT</span><span class="op">,</span>&nbsp;</span><span class="r"></span></p>
+    <p class="run run2"><span class="n"><a id="t51" href="#t51">51</a></span><span class="t">            <span class="nam">cutoff_in_days</span><span class="op">=</span><span class="key">None</span><span class="op">,</span>&nbsp;</span><span class="r"></span></p>
+    <p class="run run2"><span class="n"><a id="t52" href="#t52">52</a></span><span class="t">        <span class="op">)</span> <span class="op">-></span> <span class="op">(</span><span class="nam">PaginatedResult</span><span class="op">[</span><span class="nam">CTOrder</span><span class="op">]</span><span class="op">,</span> <span class="nam">CTCustomer</span><span class="op">)</span><span class="op">:</span>&nbsp;</span><span class="r"></span></p>
+    <p class="run"><span class="n"><a id="t53" href="#t53">53</a></span><span class="t">            <span class="key">return</span> <span class="op">(</span>&nbsp;</span><span class="r"></span></p>
+    <p class="run run2"><span class="n"><a id="t54" href="#t54">54</a></span><span class="t">                <span class="nam">PaginatedResult</span><span class="op">(</span><span class="nam">self</span><span class="op">.</span><span class="nam">orders</span><span class="op">,</span> <span class="nam">len</span><span class="op">(</span><span class="nam">self</span><span class="op">.</span><span class="nam">orders</span><span class="op">)</span><span class="op">,</span> <span class="nam">offset</span><span class="op">)</span><span class="op">,</span>&nbsp;</span><span class="r"></span></p>
+    <p class="run run2"><span class="n"><a id="t55" href="#t55">55</a></span><span class="t">                <span class="nam">gen_customer</span><span class="op">(</span><span class="nam">email</span><span class="op">=</span><span class="str">"hiya@email.test"</span><span class="op">,</span> <span class="nam">un</span><span class="op">=</span><span class="str">"dave"</span><span class="op">)</span>&nbsp;</span><span class="r"></span></p>
+    <p class="run run2"><span class="n"><a id="t56" href="#t56">56</a></span><span class="t">            <span class="op">)</span>&nbsp;</span><span class="r"></span></p>
+    <p class="pln"><span class="n"><a id="t57" href="#t57">57</a></span><span class="t">&nbsp;</span><span class="r"></span></p>
+    <p class="run"><span class="n"><a id="t58" href="#t58">58</a></span><span class="t">        <span class="key">return</span> <span class="nam">_get_orders_for_customer</span>&nbsp;</span><span class="r"></span></p>
 </main>
 <footer>
     <div class="content">
@@ -144,7 +149,7 @@
             <a class="nav" href="z_516049fa8843e747_test_edx_utils_py.html">&#xbb; next</a>
             &nbsp; &nbsp; &nbsp;
             <a class="nav" href="https://coverage.readthedocs.io/en/7.10.3">coverage.py v7.10.3</a>,
-            created at 2025-08-19 14:30 +0000
+            created at 2025-08-20 12:15 +0000
         </p>
     </div>
 </footer>
