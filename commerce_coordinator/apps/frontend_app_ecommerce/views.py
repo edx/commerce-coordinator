@@ -2,7 +2,8 @@
 Views for the frontend_app_ecommerce app
 """
 import logging
-from datetime import datetime
+from datetime import datetime, timedelta, timezone
+from itertools import chain, takewhile
 from typing import Union
 
 from dateutil import parser as dateparser
@@ -14,7 +15,11 @@ from rest_framework.status import HTTP_303_SEE_OTHER, HTTP_400_BAD_REQUEST
 from rest_framework.throttling import UserRateThrottle
 from rest_framework.views import APIView
 
-from commerce_coordinator.apps.core.constants import ORDER_HISTORY_PER_SYSTEM_REQ_LIMIT, HttpHeadersNames
+from commerce_coordinator.apps.core.constants import (
+    ORDER_HISTORY_PER_SYSTEM_REQ_CUTOFF_IN_DAYS,
+    ORDER_HISTORY_PER_SYSTEM_REQ_LIMIT,
+    HttpHeadersNames
+)
 from commerce_coordinator.apps.frontend_app_ecommerce.filters import (
     OrderHistoryRequested,
     OrderReceiptRedirectionUrlRequested
@@ -83,7 +88,8 @@ class UserOrdersView(APIView):
             'email': request.user.email,
             "edx_lms_user_id": request.user.lms_user_id,
             "page": 0,
-            "page_size": ORDER_HISTORY_PER_SYSTEM_REQ_LIMIT
+            "page_size": ORDER_HISTORY_PER_SYSTEM_REQ_LIMIT,
+            "cutoff_in_days": ORDER_HISTORY_PER_SYSTEM_REQ_CUTOFF_IN_DAYS,
         }
 
         # deny global queries
@@ -101,18 +107,30 @@ class UserOrdersView(APIView):
 
         try:
             order_data = OrderHistoryRequested.run_filter(request, params)
+            orders = chain.from_iterable(
+                order_set["results"] for order_set in order_data
+            )
+            orders = sorted(
+                orders,
+                key=lambda order: date_conv(order["date_placed"]),
+                reverse=True,
+            )
 
-            output_orders = []
-
-            for order_set in order_data:
-                output_orders.extend(order_set['results'])
+            if params["cutoff_in_days"]:
+                cutoff_date = datetime.now(timezone.utc) - timedelta(
+                    days=params["cutoff_in_days"]
+                )
+                orders = takewhile(
+                    lambda order: date_conv(order["date_placed"]) >= cutoff_date,
+                    orders,
+                )
 
             output = {
                 # This suppresses the ecomm mfe Order History Pagination control
                 "count": request.query_params['page_size'],
                 "next": None,
                 "previous": None,
-                "results": sorted(output_orders, key=lambda item: date_conv(item["date_placed"]), reverse=True)
+                "results": orders
             }
 
             return Response(output)

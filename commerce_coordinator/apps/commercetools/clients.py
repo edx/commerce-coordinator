@@ -367,6 +367,7 @@ class CommercetoolsAPIClient:
         limit=ORDER_HISTORY_PER_SYSTEM_REQ_LIMIT,
         expand: ExpandList = DEFAULT_ORDER_EXPANSION,
         order_state="Complete",
+        cutoff_in_days: int | None = None,
     ) -> PaginatedResult[Order]:
         """
         Call commercetools API overview endpoint for data about historical orders.
@@ -386,12 +387,18 @@ class CommercetoolsAPIClient:
         logger.info(
             f"[CommercetoolsAPIClient] - Attempting to find all completed orders for " f"customer with ID {customer_id}"
         )
-        order_where_clause = f'orderState="{order_state}"'
+
+        order_clauses = [f'customerId="{customer_id}"', f'orderState="{order_state}"']
+        if cutoff_in_days:
+            cutoff_date = (
+                datetime.datetime.now(datetime.timezone.utc)
+                - datetime.timedelta(days=cutoff_in_days)
+            ).date()
+            order_clauses.append(f'createdAt > "{cutoff_date}"')
 
         start_time = datetime.datetime.now()
         values = self.base_client.orders.query(
-            where=["customerId=:cid", order_where_clause],
-            predicate_var={"cid": customer_id},
+            where=order_clauses,
             sort=["completedAt desc", "lastModifiedAt desc"],
             limit=limit,
             offset=offset,
@@ -410,6 +417,7 @@ class CommercetoolsAPIClient:
         customer_id=None,
         email=None,
         username=None,
+        cutoff_in_days: int | None = None,
     ) -> (PaginatedResult[Order], Customer):
         """
 
@@ -435,7 +443,7 @@ class CommercetoolsAPIClient:
                 custom=SimpleNamespace(fields={EdXFieldNames.LMS_USER_NAME: username}),
             )
 
-        orders = self.get_orders(customer_id, offset, limit)
+        orders = self.get_orders(customer_id, offset, limit, cutoff_in_days=cutoff_in_days)
 
         return orders, customer
 

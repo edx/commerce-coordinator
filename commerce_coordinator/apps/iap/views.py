@@ -70,6 +70,7 @@ class MobileCreateOrderView(APIView):
         to an order for mobile In-App purchase.
         """
         cart = None
+        order = None
         client = None
 
         try:
@@ -225,7 +226,7 @@ class MobileCreateOrderView(APIView):
             )
             logger.exception(message, exc_info=err)
 
-            if cart and client:
+            if cart and client and not order:
                 client.delete_cart(cart)
 
             return Response(

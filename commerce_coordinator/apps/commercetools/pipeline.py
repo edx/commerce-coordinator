@@ -63,7 +63,8 @@ class GetCommercetoolsOrders(PipelineStep):
                 username=params["username"],
                 edx_lms_user_id=params["edx_lms_user_id"],
                 limit=params["page_size"],
-                offset=params["page"] * params["page_size"]
+                offset=params["page"] * params["page_size"],
+                cutoff_in_days=params["cutoff_in_days"],
             )
 
             # noinspection PyTypeChecker
