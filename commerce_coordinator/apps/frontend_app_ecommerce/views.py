@@ -107,10 +107,6 @@ class UserOrdersView(APIView):
 
         try:
             order_data = OrderHistoryRequested.run_filter(request, params)
-
-            cutoff_date = datetime.now(timezone.utc) - timedelta(
-                days=params["cutoff_in_days"]
-            )
             orders = chain.from_iterable(
                 order_set["results"] for order_set in order_data
             )
@@ -119,10 +115,15 @@ class UserOrdersView(APIView):
                 key=lambda order: date_conv(order["date_placed"]),
                 reverse=True,
             )
-            orders = takewhile(
-                lambda order: date_conv(order["date_placed"]) >= cutoff_date,
-                orders,
-            )
+
+            if params["cutoff_in_days"]:
+                cutoff_date = datetime.now(timezone.utc) - timedelta(
+                    days=params["cutoff_in_days"]
+                )
+                orders = takewhile(
+                    lambda order: date_conv(order["date_placed"]) >= cutoff_date,
+                    orders,
+                )
 
             output = {
                 # This suppresses the ecomm mfe Order History Pagination control
