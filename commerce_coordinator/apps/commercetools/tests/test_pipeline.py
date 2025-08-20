@@ -58,6 +58,7 @@ class PipelineTests(MonkeyPatchedGetOrderTestCase):
                 "username": "test",
                 "page_size": ORDER_HISTORY_PER_SYSTEM_REQ_LIMIT,
                 "page": 0,
+                "cutoff_in_days": None,
             },
             []
         )

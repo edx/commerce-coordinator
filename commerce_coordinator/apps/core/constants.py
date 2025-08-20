@@ -91,6 +91,7 @@ class HttpHeadersNames(Enum):
     """Set the Caching Control info of a Response"""
 
 
+ORDER_HISTORY_PER_SYSTEM_REQ_CUTOFF_IN_DAYS = 90
 ORDER_HISTORY_PER_SYSTEM_REQ_LIMIT = 200
 """The number of Order History items to pull per Catalog/Ordering System"""
 
