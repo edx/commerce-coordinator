@@ -2,7 +2,7 @@
 
 import logging
 from copy import copy
-from unittest.mock import Mock, patch
+from unittest.mock import patch
 
 from django.test import override_settings
 
@@ -136,7 +136,8 @@ class RefundFromMobileTest(CoordinatorSignalReceiverTestCase):
             "status": "completed",
         },
         "payment_interface": "ios_iap_edx",
-        "http_request": Mock(),
+        "redirect_to_legacy_enabled": False,
+        "legacy_redirect_payload": b'',
     }
 
     def test_correct_arguments_passed(self, mock_task):
@@ -145,7 +146,8 @@ class RefundFromMobileTest(CoordinatorSignalReceiverTestCase):
         mock_task.delay.assert_called_once_with(
             refund=self.mock_parameters["refund"],
             payment_interface=self.mock_parameters["payment_interface"],
-            http_request=self.mock_parameters["http_request"],
+            redirect_to_legacy_enabled=self.mock_parameters["redirect_to_legacy_enabled"],
+            legacy_redirect_payload=self.mock_parameters["legacy_redirect_payload"],
         )
 
     def test_correct_response_returned(self, mock_task):

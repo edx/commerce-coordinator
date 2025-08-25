@@ -20,6 +20,7 @@ from rest_framework.response import Response
 from rest_framework.views import APIView
 
 from commerce_coordinator.apps.iap.authentication import GoogleSubscriptionAuthentication
+from commerce_coordinator.apps.rollout.waffle import is_redirect_to_legacy_enabled
 
 # isort: off
 from commerce_coordinator.apps.commercetools.catalog_info.constants import (
@@ -290,11 +291,12 @@ class IOSRefundView(SingleInvocationAPIView):
                 sender=self.__class__,
                 payment_interface=EDX_IOS_IAP_PAYMENT_INTERFACE_NAME,
                 refund=refund,
-                http_request=request,
+                redirect_to_legacy_enabled=is_redirect_to_legacy_enabled(request),
+                legacy_redirect_payload=request.body,
             )
         else:
             logger.info(
-                f"Ignoring notification type '{notification_type}' from apple"
+                f"Ignoring notification type '{notification_type}' from apple "
                 "since we are only expecting refund notifications"
             )
 

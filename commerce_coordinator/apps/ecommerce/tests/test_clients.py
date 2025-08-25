@@ -1,6 +1,7 @@
 """
 Tests for the ecommerce app API clients.
 """
+import json
 import logging
 
 from django.test import override_settings
@@ -68,7 +69,7 @@ class EcommerceAPIClientTests(CoordinatorOAuthClientTestCase):
         payload = {"order_number": "ORDER123", "amount": "9.99"}
         self.assertJSONClientResponse(
             uut=self.client.refund_for_ios,
-            input_kwargs={'payload': payload},
+            input_kwargs={'payload': json.dumps(payload).encode("utf-8")},
             expected_request=payload,
             mock_method='POST',
             mock_url=url,

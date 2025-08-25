@@ -277,8 +277,8 @@ class ReturnedOrderfromPaypalTaskTest(TestCase):
 
 
 @patch("commerce_coordinator.apps.commercetools.tasks.CommercetoolsAPIClient")
-class ReturnedOrderfromMobileTaskTest(TestCase):
-    """Returned Order From Mobile Task Test"""
+class RefundFromMobileTaskTest(TestCase):
+    """Refund From Mobile Task Test"""
 
     @staticmethod
     def unpack_for_uut(values):
@@ -286,7 +286,8 @@ class ReturnedOrderfromMobileTaskTest(TestCase):
         return (
             values["payment_interface"],
             values["refund"],
-            values["http_request"],
+            values["redirect_to_legacy_enabled"],
+            values["legacy_redirect_payload"],
         )
 
     def setUp(self):
@@ -299,7 +300,8 @@ class ReturnedOrderfromMobileTaskTest(TestCase):
                 "status": "completed",
             },
             "payment_interface": "ios_iap_edx",
-            "http_request": Mock(),
+            "redirect_to_legacy_enabled": True,
+            "legacy_redirect_payload": b'{"test": "data"}',
         }
 
     def test_correct_arguments_passed(self, mock_client):
@@ -481,10 +483,8 @@ class ReturnedOrderfromMobileTaskTest(TestCase):
         )
 
     @patch("commerce_coordinator.apps.commercetools.tasks.EcommerceAPIClient")
-    @patch("commerce_coordinator.apps.commercetools.tasks.is_redirect_to_legacy_enabled")
     def test_ios_legacy_redirect_when_payment_not_found(
         self,
-        mock_redirect_enabled,
         mock_ecommerce_client,
         mock_client,
     ):
@@ -493,12 +493,6 @@ class ReturnedOrderfromMobileTaskTest(TestCase):
         """
         # Set up mocks
         mock_client.return_value.get_payment_by_transaction_interaction_id.return_value = None
-        mock_redirect_enabled.return_value = True
-
-        # Create a mock request with body
-        mock_request = Mock()
-        mock_request.body = b'{"test": "data"}'
-        self.mock_parameters["http_request"] = mock_request
 
         # Call the task function
         result = mobile_uut(*self.unpack_for_uut(self.mock_parameters))
@@ -506,16 +500,14 @@ class ReturnedOrderfromMobileTaskTest(TestCase):
         # Verify EcommerceAPIClient was called with correct parameters
         mock_ecommerce_client.assert_called_once()
         mock_ecommerce_client_instance = mock_ecommerce_client.return_value
-        mock_ecommerce_client_instance.refund_for_ios.assert_called_once_with(payload=mock_request.body)
+        mock_ecommerce_client_instance.refund_for_ios.assert_called_once_with(payload=b'{"test": "data"}')
 
         # Verify the function returns None when payment is not found
         self.assertIsNone(result)
 
     @patch("commerce_coordinator.apps.commercetools.tasks.EcommerceAPIClient")
-    @patch("commerce_coordinator.apps.commercetools.tasks.is_redirect_to_legacy_enabled")
     def test_ios_legacy_redirect_not_called_when_redirect_disabled(
         self,
-        mock_redirect_enabled,
         mock_ecommerce_client,
         mock_client,
     ):
@@ -524,12 +516,7 @@ class ReturnedOrderfromMobileTaskTest(TestCase):
         """
         # Set up mocks
         mock_client.return_value.get_payment_by_transaction_interaction_id.return_value = None
-        mock_redirect_enabled.return_value = False
-
-        # Create a mock request with body
-        mock_request = Mock()
-        mock_request.body = b'{"test": "data"}'
-        self.mock_parameters["http_request"] = mock_request
+        self.mock_parameters["redirect_to_legacy_enabled"] = False
 
         # Call the task function
         result = mobile_uut(*self.unpack_for_uut(self.mock_parameters))
@@ -541,10 +528,8 @@ class ReturnedOrderfromMobileTaskTest(TestCase):
         self.assertIsNone(result)
 
     @patch("commerce_coordinator.apps.commercetools.tasks.EcommerceAPIClient")
-    @patch("commerce_coordinator.apps.commercetools.tasks.is_redirect_to_legacy_enabled")
     def test_ios_legacy_redirect_not_called_for_android_payment(
         self,
-        mock_redirect_enabled,
         mock_ecommerce_client,
         mock_client,
     ):
@@ -553,15 +538,9 @@ class ReturnedOrderfromMobileTaskTest(TestCase):
         """
         # Set up mocks
         mock_client.return_value.get_payment_by_transaction_interaction_id.return_value = None
-        mock_redirect_enabled.return_value = True
 
         # Change payment interface to Android
         self.mock_parameters["payment_interface"] = "android_iap_edx"
-
-        # Create a mock request with body
-        mock_request = Mock()
-        mock_request.body = b'{"test": "data"}'
-        self.mock_parameters["http_request"] = mock_request
 
         # Call the task function
         result = mobile_uut(*self.unpack_for_uut(self.mock_parameters))
@@ -573,10 +552,8 @@ class ReturnedOrderfromMobileTaskTest(TestCase):
         self.assertIsNone(result)
 
     @patch("commerce_coordinator.apps.commercetools.tasks.EcommerceAPIClient")
-    @patch("commerce_coordinator.apps.commercetools.tasks.is_redirect_to_legacy_enabled")
     def test_ios_legacy_redirect_not_called_when_payment_found(
         self,
-        mock_redirect_enabled,
         mock_ecommerce_client,
         mock_client,
     ):
@@ -589,12 +566,6 @@ class ReturnedOrderfromMobileTaskTest(TestCase):
         mock_client.return_value.get_payment_by_transaction_interaction_id.return_value = mock_payment
         mock_client.return_value.find_order_with_unprocessed_return_for_payment.return_value = None
         mock_client.return_value.create_return_payment_transaction.return_value = mock_payment
-        mock_redirect_enabled.return_value = True
-
-        # Create a mock request with body
-        mock_request = Mock()
-        mock_request.body = b'{"test": "data"}'
-        self.mock_parameters["http_request"] = mock_request
 
         # Call the task function
         result = mobile_uut(*self.unpack_for_uut(self.mock_parameters))
@@ -606,10 +577,8 @@ class ReturnedOrderfromMobileTaskTest(TestCase):
         self.assertEqual(result, mock_payment)
 
     @patch("commerce_coordinator.apps.commercetools.tasks.EcommerceAPIClient")
-    @patch("commerce_coordinator.apps.commercetools.tasks.is_redirect_to_legacy_enabled")
     def test_ios_legacy_redirect_with_empty_request_body(
         self,
-        mock_redirect_enabled,
         mock_ecommerce_client,
         mock_client,
     ):
@@ -618,12 +587,9 @@ class ReturnedOrderfromMobileTaskTest(TestCase):
         """
         # Set up mocks
         mock_client.return_value.get_payment_by_transaction_interaction_id.return_value = None
-        mock_redirect_enabled.return_value = True
 
-        # Create a mock request with empty body
-        mock_request = Mock()
-        mock_request.body = b''
-        self.mock_parameters["http_request"] = mock_request
+        # Override payload to be empty
+        self.mock_parameters["legacy_redirect_payload"] = b''
 
         # Call the task function
         result = mobile_uut(*self.unpack_for_uut(self.mock_parameters))
@@ -637,10 +603,8 @@ class ReturnedOrderfromMobileTaskTest(TestCase):
         self.assertIsNone(result)
 
     @patch("commerce_coordinator.apps.commercetools.tasks.EcommerceAPIClient")
-    @patch("commerce_coordinator.apps.commercetools.tasks.is_redirect_to_legacy_enabled")
     def test_ios_legacy_redirect_ecommerce_client_exception(
         self,
-        mock_redirect_enabled,
         mock_ecommerce_client,
         mock_client,
     ):
@@ -649,12 +613,6 @@ class ReturnedOrderfromMobileTaskTest(TestCase):
         """
         # Set up mocks
         mock_client.return_value.get_payment_by_transaction_interaction_id.return_value = None
-        mock_redirect_enabled.return_value = True
-
-        # Create a mock request with body
-        mock_request = Mock()
-        mock_request.body = b'{"test": "data"}'
-        self.mock_parameters["http_request"] = mock_request
 
         # Set up EcommerceAPIClient to raise an exception
         mock_ecommerce_client_instance = mock_ecommerce_client.return_value
@@ -666,7 +624,7 @@ class ReturnedOrderfromMobileTaskTest(TestCase):
 
         # Verify EcommerceAPIClient was called
         mock_ecommerce_client.assert_called_once()
-        mock_ecommerce_client_instance.refund_for_ios.assert_called_once_with(payload=mock_request.body)
+        mock_ecommerce_client_instance.refund_for_ios.assert_called_once_with(payload=b'{"test": "data"}')
 
 
 @patch("commerce_coordinator.apps.commercetools.tasks.OrderFulfillmentAPIClient")

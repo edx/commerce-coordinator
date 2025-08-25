@@ -7,7 +7,6 @@ from celery.utils.log import get_task_logger
 from commercetools import CommercetoolsError
 from commercetools.platform.models import Payment
 from django.conf import settings
-from django.http import HttpRequest
 from iso4217 import Currency
 
 from commerce_coordinator.apps.commercetools.catalog_info.constants import (
@@ -32,7 +31,6 @@ from commerce_coordinator.apps.ecommerce.clients import EcommerceAPIClient
 from commerce_coordinator.apps.iap.signals import revoke_line_mobile_order_signal
 from commerce_coordinator.apps.order_fulfillment.clients import OrderFulfillmentAPIClient
 from commerce_coordinator.apps.order_fulfillment.serializers import OrderRevokeLineRequestSerializer
-from commerce_coordinator.apps.rollout.waffle import is_redirect_to_legacy_enabled
 
 from .clients import CommercetoolsAPIClient, Refund
 from .utils import (
@@ -290,7 +288,8 @@ def refund_from_paypal_task(
 def refund_from_mobile_task(
     payment_interface: str,
     refund: Refund,
-    http_request: HttpRequest,
+    redirect_to_legacy_enabled: bool,
+    legacy_redirect_payload: bytes,
 ) -> Payment | None:
     """
     Celery task for handling a refund registered in the mobile platforms (iOS/Android).
@@ -309,9 +308,9 @@ def refund_from_mobile_task(
                 f"could not find a CT Payment for transaction ID: {refund['id']}"
                 f"of payment processor: {payment_interface}."
             )
-            if is_redirect_to_legacy_enabled(http_request):
+            if redirect_to_legacy_enabled:
                 if payment_interface == EDX_IOS_IAP_PAYMENT_INTERFACE_NAME:
-                    EcommerceAPIClient().refund_for_ios(payload=http_request.body)
+                    EcommerceAPIClient().refund_for_ios(payload=legacy_redirect_payload)
             return None
         if has_full_refund_transaction(payment) or is_transaction_already_refunded(
             payment, refund["id"]
