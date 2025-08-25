@@ -76,7 +76,8 @@ def refund_from_mobile(**kwargs):
     async_result = refund_from_mobile_task.delay(
         payment_interface=kwargs["payment_interface"],
         refund=kwargs["refund"],
-        http_request=kwargs.get("http_request", None),
+        redirect_to_legacy_enabled=kwargs.get("redirect_to_legacy_enabled", False),
+        legacy_redirect_payload=kwargs.get("legacy_redirect_payload", b''),
     )
     return async_result.id
 
