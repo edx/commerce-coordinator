@@ -289,7 +289,7 @@ class MobileCreateOrderViewTests(APITestCase):
         self.assertEqual(
             response.data["error"],
             "[CreateOrderView] Payment Validation Failed for LMS user: None, "
-            "Customer ID: customer-123. Error: Invalid receipt"
+            "Customer ID: customer-123, PSP: apple-iap. Error: Invalid receipt"
         )
 
     @mock.patch("commerce_coordinator.apps.iap.views.emit_order_completed_event")
