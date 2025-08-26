@@ -18,9 +18,9 @@ class BillingAddress:
     """
     first_name: Optional[str] = field(validator=optional([instance_of(str), max_len(255)]))
     last_name: Optional[str] = field(validator=optional([instance_of(str), max_len(255)]))
-    line1: str = field(validator=[instance_of(str), max_len(255), min_len(1)])
+    line1: Optional[str] = field(validator=optional([instance_of(str), max_len(255)]))
     line2: Optional[str] = field(validator=optional([instance_of(str), max_len(255)]))
-    city: str = field(validator=optional([instance_of(str), max_len(255), min_len(1)]))
+    city: Optional[str] = field(validator=optional([instance_of(str), max_len(255)]))
     state: Optional[str] = field(validator=optional([instance_of(str), max_len(255)]))
     postcode: Optional[str] = field(validator=optional([instance_of(str), max_len(64)]))
     country: str
