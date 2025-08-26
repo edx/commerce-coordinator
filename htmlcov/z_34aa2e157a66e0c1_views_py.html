@@ -67,7 +67,7 @@
             <a id="nextFileLink" class="nav" href="z_d5675f6c6e564c4f_clients_py.html">&#xbb; next</a>
             &nbsp; &nbsp; &nbsp;
             <a class="nav" href="https://coverage.readthedocs.io/en/7.10.5">coverage.py v7.10.5</a>,
-            created at 2025-08-26 07:57 +0000
+            created at 2025-08-26 11:11 +0000
         </p>
         <aside class="hidden">
             <button type="button" class="button_next_chunk" data-shortcut="j"></button>
@@ -174,7 +174,7 @@
     <p class="run"><span class="n"><a id="t90" href="#t90">90</a></span><span class="t">            <span class="nam">client</span> <span class="op">=</span> <span class="nam">CommercetoolsAPIClient</span><span class="op">(</span><span class="nam">enable_retries</span><span class="op">=</span><span class="key">True</span><span class="op">)</span>&nbsp;</span><span class="r"></span></p>
     <p class="run"><span class="n"><a id="t91" href="#t91">91</a></span><span class="t">            <span class="nam">customer</span> <span class="op">=</span> <span class="nam">get_ct_customer</span><span class="op">(</span><span class="nam">client</span><span class="op">,</span> <span class="nam">user</span><span class="op">)</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t92" href="#t92">92</a></span><span class="t">&nbsp;</span><span class="r"></span></p>
-    <p class="run"><span class="n"><a id="t93" href="#t93">93</a></span><span class="t">            <span class="nam">for_user_msg</span> <span class="op">+=</span> <span class="fst">f"</span><span class="fst">, Customer ID: </span><span class="op">{</span><span class="nam">customer</span><span class="op">.</span><span class="nam">id</span><span class="op">}</span><span class="fst">"</span>&nbsp;</span><span class="r"></span></p>
+    <p class="run"><span class="n"><a id="t93" href="#t93">93</a></span><span class="t">            <span class="nam">for_user_msg</span> <span class="op">+=</span> <span class="fst">f"</span><span class="fst">, Customer ID: </span><span class="op">{</span><span class="nam">customer</span><span class="op">.</span><span class="nam">id</span><span class="op">}</span><span class="fst">, PSP: </span><span class="op">{</span><span class="nam">data</span><span class="op">.</span><span class="nam">payment_processor</span><span class="op">}</span><span class="fst">"</span>&nbsp;</span><span class="r"></span></p>
     <p class="run"><span class="n"><a id="t94" href="#t94">94</a></span><span class="t">            <span class="nam">logger</span><span class="op">.</span><span class="nam">info</span><span class="op">(</span><span class="fst">f"</span><span class="fst">[CreateOrderView] Finding cart </span><span class="op">{</span><span class="nam">for_user_msg</span><span class="op">}</span><span class="fst">"</span><span class="op">)</span>&nbsp;</span><span class="r"></span></p>
     <p class="run"><span class="n"><a id="t95" href="#t95">95</a></span><span class="t">            <span class="nam">cart</span> <span class="op">=</span> <span class="nam">client</span><span class="op">.</span><span class="nam">get_customer_cart</span><span class="op">(</span><span class="nam">customer</span><span class="op">.</span><span class="nam">id</span><span class="op">)</span>&nbsp;</span><span class="r"></span></p>
     <p class="run"><span class="n"><a id="t96" href="#t96">96</a></span><span class="t">            <span class="key">if</span> <span class="nam">cart</span><span class="op">:</span>&nbsp;</span><span class="r"></span></p>
@@ -527,7 +527,7 @@
             <a class="nav" href="z_d5675f6c6e564c4f_clients_py.html">&#xbb; next</a>
             &nbsp; &nbsp; &nbsp;
             <a class="nav" href="https://coverage.readthedocs.io/en/7.10.5">coverage.py v7.10.5</a>,
-            created at 2025-08-26 07:57 +0000
+            created at 2025-08-26 11:11 +0000
         </p>
     </div>
 </footer>
