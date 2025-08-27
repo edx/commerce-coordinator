@@ -34,7 +34,7 @@
 | commerce\_coordinator/apps/commercetools/sub\_messages/signals\_delayed.py             |       16 |        0 |        0 |        0 |    100% |           |
 | commerce\_coordinator/apps/commercetools/sub\_messages/signals\_dispatch.py            |        4 |        0 |        0 |        0 |    100% |           |
 | commerce\_coordinator/apps/commercetools/sub\_messages/tasks.py                        |      166 |        2 |       36 |        4 |     97% |216, 409, 431->434, 455->461 |
-| commerce\_coordinator/apps/commercetools/tasks.py                                      |      141 |       13 |       20 |        2 |     91% |65-66, 73-86, 104-114, 247-252 |
+| commerce\_coordinator/apps/commercetools/tasks.py                                      |      143 |       13 |       20 |        2 |     91% |66-67, 74-87, 105-115, 248-253 |
 | commerce\_coordinator/apps/commercetools/tests/\_\_init\_\_.py                         |        0 |        0 |        0 |        0 |    100% |           |
 | commerce\_coordinator/apps/commercetools/tests/\_test\_cases.py                        |       25 |        0 |        2 |        1 |     96% |  36->exit |
 | commerce\_coordinator/apps/commercetools/tests/catalog\_info/\_\_init\_\_.py           |        0 |        0 |        0 |        0 |    100% |           |
@@ -153,7 +153,7 @@
 | commerce\_coordinator/apps/iap/tests/test\_views.py                                    |      266 |        0 |        0 |        0 |    100% |           |
 | commerce\_coordinator/apps/iap/urls.py                                                 |        4 |        0 |        0 |        0 |    100% |           |
 | commerce\_coordinator/apps/iap/utils.py                                                |       70 |        0 |       20 |        0 |    100% |           |
-| commerce\_coordinator/apps/iap/views.py                                                |      148 |        2 |       18 |        3 |     97% |127->129, 148, 231 |
+| commerce\_coordinator/apps/iap/views.py                                                |      153 |        5 |       20 |        4 |     95% |128->130, 149, 226, 233, 305-306 |
 | commerce\_coordinator/apps/lms/\_\_init\_\_.py                                         |        0 |        0 |        0 |        0 |    100% |           |
 | commerce\_coordinator/apps/lms/clients.py                                              |       50 |        3 |        2 |        1 |     92% |42, 113, 165 |
 | commerce\_coordinator/apps/lms/constants.py                                            |        2 |        0 |        0 |        0 |    100% |           |
@@ -211,7 +211,7 @@
 | commerce\_coordinator/apps/stripe/views.py                                             |       63 |       11 |       10 |        3 |     78% |65, 67, 112-145 |
 | commerce\_coordinator/docker\_gunicorn\_configuration.py                               |       27 |       27 |       10 |        0 |      0% |      4-57 |
 | commerce\_coordinator/urls.py                                                          |       24 |        0 |        0 |        0 |    100% |           |
-|                                                                              **TOTAL** | **10016** |  **408** |  **738** |   **88** | **95%** |           |
+|                                                                              **TOTAL** | **10023** |  **411** |  **740** |   **89** | **95%** |           |
 
 
 ## Setup coverage badge
