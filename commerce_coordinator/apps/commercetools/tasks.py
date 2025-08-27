@@ -8,6 +8,7 @@ from commercetools import CommercetoolsError
 from commercetools.platform.models import Payment
 from django.conf import settings
 from iso4217 import Currency
+from requests import RequestException
 
 from commerce_coordinator.apps.commercetools.catalog_info.constants import (
     EDX_ANDROID_IAP_PAYMENT_INTERFACE_NAME,
@@ -282,7 +283,7 @@ def refund_from_paypal_task(
 
 
 @shared_task(
-    autoretry_for=(CommercetoolsError,),
+    autoretry_for=(RequestException, CommercetoolsError),
     retry_kwargs={"max_retries": 5, "countdown": 3},
 )
 def refund_from_mobile_task(
