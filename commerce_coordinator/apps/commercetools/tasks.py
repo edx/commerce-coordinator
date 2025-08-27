@@ -305,11 +305,15 @@ def refund_from_mobile_task(
         if not payment:
             logger.warning(
                 "[refund_from_mobile_task] Mobile refund event received, but "
-                f"could not find a CT Payment for transaction ID: {refund['id']}"
+                f"could not find a CT Payment for transaction ID: {refund['id']} "
                 f"of payment processor: {payment_interface}."
             )
             if redirect_to_legacy_enabled:
                 if payment_interface == EDX_IOS_IAP_PAYMENT_INTERFACE_NAME:
+                    logger.info(
+                        "[refund_from_mobile_task] Calling legacy ecommerce ios refund "
+                        f"for transaction ID: {refund['id']}."
+                    )
                     EcommerceAPIClient().refund_for_ios(payload=legacy_redirect_payload)
             return None
         if has_full_refund_transaction(payment) or is_transaction_already_refunded(
@@ -317,7 +321,7 @@ def refund_from_mobile_task(
         ):
             logger.info(
                 "[refund_from_mobile_task] Mobile refund event received, but Payment "
-                f"with ID {payment.id} already has a refund with ID: {refund['id']}."
+                f"with ID {payment.id} already has a refund with ID: {refund['id']}. "
                 "Skipping addition of refund transaction."
             )
         else:
