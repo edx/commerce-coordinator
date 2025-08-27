@@ -65,7 +65,7 @@ class MobileCreateOrderView(APIView):
 
     permission_classes = (IsAuthenticated,)
 
-    def post(self, request: Request) -> Response:
+    def post(self, request: Request) -> Response:  # pylint: disable=too-many-statements
         """
         Handles POST request for preparing a cart in CT and then converting it
         to an order for mobile In-App purchase.
@@ -73,6 +73,7 @@ class MobileCreateOrderView(APIView):
         cart = None
         order = None
         client = None
+        for_user_msg = None
 
         try:
             user = request.user
@@ -221,9 +222,10 @@ class MobileCreateOrderView(APIView):
                 status=status.HTTP_201_CREATED,
             )
         except CommercetoolsError as err:
-            lms_user_id = request.user.lms_user_id
+            if not for_user_msg:
+                for_user_msg = f"for LMS user: {request.user.lms_user_id}"
             message = (
-                f"[CreateOrderView] Error creating order for LMS user: {lms_user_id}"
+                f"[CreateOrderView] Error creating order {for_user_msg}"
             )
             logger.exception(message, exc_info=err)
 
@@ -255,49 +257,54 @@ class IOSRefundView(SingleInvocationAPIView):
         from retrying the event.
         """
         tag = type(self).__name__
-        notification = ios_validator.parse(
-            request.body, apple_root_cert_path=self.apple_cert_file_path
-        )
-        notification_type = notification.get("notificationType", "")
-        logger.info(
-            "Received notification from apple with notification type: "
-            f"{notification_type}"
-        )
-        if notification_type == "REFUND":
-            transaction = notification["data"]["signedTransactionInfo"]
-            transaction_id = transaction["originalTransactionId"]
-            notification_id = notification.get("notificationUUID", transaction_id)
-
-            if self._is_running(tag, notification_id):  # pragma no cover
-                self.meta_should_mark_not_running = False
-                return Response(status=status.HTTP_200_OK)
-            else:
-                self.mark_running(tag, notification_id)
-
-            refund: Refund = {
-                "id": transaction_id,
-                "created": transaction["revocationDate"],
-                "amount": convert_localized_price_to_ct_cent_amount(
-                    amount=transaction["price"],
-                    currency_code=transaction["currency"],
-                    # price received from notification is scaled by 1000
-                    # Ref: https://developer.apple.com/documentation/appstoreserverapi/jwstransactiondecodedpayload
-                    exponent=3,
-                ),
-                "currency": transaction["currency"],
-                "status": "succeeded",
-            }
-            payment_refunded_signal.send_robust(
-                sender=self.__class__,
-                payment_interface=EDX_IOS_IAP_PAYMENT_INTERFACE_NAME,
-                refund=refund,
-                redirect_to_legacy_enabled=is_redirect_to_legacy_enabled(request),
-                legacy_redirect_payload=request.body,
+        try:
+            notification = ios_validator.parse(
+                request.body, apple_root_cert_path=self.apple_cert_file_path
             )
-        else:
+            notification_type = notification.get("notificationType", "")
             logger.info(
-                f"Ignoring notification type '{notification_type}' from apple "
-                "since we are only expecting refund notifications"
+                "Received notification from apple with notification type: "
+                f"{notification_type}"
+            )
+            if notification_type == "REFUND":
+                transaction = notification["data"]["signedTransactionInfo"]
+                transaction_id = transaction["originalTransactionId"]
+                notification_id = notification.get("notificationUUID", transaction_id)
+
+                if self._is_running(tag, notification_id):  # pragma no cover
+                    self.meta_should_mark_not_running = False
+                    return Response(status=status.HTTP_200_OK)
+                else:
+                    self.mark_running(tag, notification_id)
+
+                refund: Refund = {
+                    "id": transaction_id,
+                    "created": transaction["revocationDate"],
+                    "amount": convert_localized_price_to_ct_cent_amount(
+                        amount=transaction["price"],
+                        currency_code=transaction["currency"],
+                        # price received from notification is scaled by 1000
+                        # Ref: https://developer.apple.com/documentation/appstoreserverapi/jwstransactiondecodedpayload
+                        exponent=3,
+                    ),
+                    "currency": transaction["currency"],
+                    "status": "succeeded",
+                }
+                payment_refunded_signal.send_robust(
+                    sender=self.__class__,
+                    payment_interface=EDX_IOS_IAP_PAYMENT_INTERFACE_NAME,
+                    refund=refund,
+                    redirect_to_legacy_enabled=is_redirect_to_legacy_enabled(request),
+                    legacy_redirect_payload=request.body,
+                )
+            else:
+                logger.info(
+                    f"Ignoring notification type '{notification_type}' from apple "
+                    "since we are only expecting refund notifications"
+                )
+        except Exception as exc:  # pylint: disable=broad-exception-caught
+            logger.exception(
+                "[IOSRefundView] Error processing apple notification", exc_info=exc
             )
 
         return Response(status=status.HTTP_200_OK)
