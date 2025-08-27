@@ -91,7 +91,10 @@ class MobileCreateOrderView(APIView):
             client = CommercetoolsAPIClient(enable_retries=True)
             customer = get_ct_customer(client, user)
 
-            for_user_msg += f", Customer ID: {customer.id}, PSP: {data.payment_processor}"
+            for_user_msg += (f", Customer ID: {customer.id}, "
+                    f"PSP: {data.payment_processor}, "
+                    f"course_run_key: {data.course_run_key}, "
+                    f"price: {data.currency_code} {data.price}")
             logger.info(f"[CreateOrderView] Finding cart {for_user_msg}")
             cart = client.get_customer_cart(customer.id)
             if cart:
