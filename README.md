@@ -153,7 +153,7 @@
 | commerce\_coordinator/apps/iap/tests/test\_views.py                                    |      266 |        0 |        0 |        0 |    100% |           |
 | commerce\_coordinator/apps/iap/urls.py                                                 |        4 |        0 |        0 |        0 |    100% |           |
 | commerce\_coordinator/apps/iap/utils.py                                                |       70 |        0 |       20 |        0 |    100% |           |
-| commerce\_coordinator/apps/iap/views.py                                                |      153 |        5 |       20 |        4 |     95% |128->130, 149, 226, 233, 305-306 |
+| commerce\_coordinator/apps/iap/views.py                                                |      153 |        5 |       20 |        4 |     95% |134->136, 155, 232, 239, 311-312 |
 | commerce\_coordinator/apps/lms/\_\_init\_\_.py                                         |        0 |        0 |        0 |        0 |    100% |           |
 | commerce\_coordinator/apps/lms/clients.py                                              |       50 |        3 |        2 |        1 |     92% |42, 113, 165 |
 | commerce\_coordinator/apps/lms/constants.py                                            |        2 |        0 |        0 |        0 |    100% |           |
