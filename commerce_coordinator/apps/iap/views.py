@@ -81,7 +81,8 @@ class MobileCreateOrderView(APIView):
             lms_user_id = user.lms_user_id
             for_user_msg = f"for LMS user: {lms_user_id}"
             logger.info(
-                f"[CreateOrderView] Request received to create order {for_user_msg}"
+                f"[CreateOrderView] Request received to create order {for_user_msg} "
+                f"with {request.data}"
             )
 
             serializer = MobileOrderRequestSerializer(data=request.data)
@@ -91,10 +92,12 @@ class MobileCreateOrderView(APIView):
             client = CommercetoolsAPIClient(enable_retries=True)
             customer = get_ct_customer(client, user)
 
-            for_user_msg += (f", Customer ID: {customer.id}, "
-                    f"PSP: {data.payment_processor}, "
-                    f"course_run_key: {data.course_run_key}, "
-                    f"price: {data.currency_code} {data.price}")
+            for_user_msg += (
+                f", Customer ID: {customer.id}, "
+                f"PSP: {data.payment_processor}, "
+                f"course_run_key: {data.course_run_key}, "
+                f"price: {data.currency_code} {data.price}"
+            )
             logger.info(f"[CreateOrderView] Finding cart {for_user_msg}")
             cart = client.get_customer_cart(customer.id)
             if cart:
