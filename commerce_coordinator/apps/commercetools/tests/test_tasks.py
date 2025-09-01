@@ -422,7 +422,7 @@ class RefundFromMobileTaskTest(TestCase):
             # Check that the info message was logged
             mock_logger.info.assert_called_with(
                 "[refund_from_mobile_task] Mobile refund event received, but Payment "
-                f"with ID {mock_payment.id} already has a refund with ID: {refund_id}."
+                f"with ID {mock_payment.id} already has a refund with ID: {refund_id}. "
                 "Skipping addition of refund transaction."
             )
 

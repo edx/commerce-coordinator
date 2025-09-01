@@ -212,7 +212,10 @@ class IAPPaymentProcessor:
         ]
 
         if not matched_purchases:
-            error_msg = f"No matching iOS IAP purchase found for SKU: {product_sku}"
+            error_msg = (
+                "No matching iOS IAP purchase found "
+                f"for SKU: {product_sku} for receipt: {receipt}"
+            )
             logger.error(error_msg)
             raise ValidationError(error_msg)
 
