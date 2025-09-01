@@ -958,7 +958,7 @@ class CommercetoolsAPIClient:
                     name=TwoUKeys.LINE_ITEM_LMS_ENTITLEMENT_ID,
                     value=entitlement_uuid,
                 ))
-            if new_state_key != from_state_key:
+            if new_state_key != from_state_key and from_state_key != TwoUKeys.SUCCESS_FULFILMENT_STATE:
                 actions.append(OrderTransitionLineItemStateAction(
                     line_item_id=line_item_id,
                     quantity=item_quantity,
