@@ -47,7 +47,11 @@ logger = get_task_logger(__name__)
 stripe.api_key = settings.PAYMENT_PROCESSOR_CONFIG['edx']['stripe']['secret_key']
 
 
-@shared_task(bind=True, autoretry_for=(CommercetoolsError,), retry_kwargs={'max_retries': 5, 'countdown': 3})
+@shared_task(
+    bind=True,
+    autoretry_for=(CommercetoolsError, Exception),
+    retry_kwargs={'max_retries': 5, 'countdown': 300}  # waiting 5 minutes between retries, to cover time during outage
+)
 def fulfillment_completed_update_ct_line_item_task(
     self,  # pylint: disable=unused-argument
     entitlement_uuid,
@@ -105,14 +109,14 @@ def fulfillment_completed_update_ct_line_item_task(
     except CommercetoolsError as err:
         release_task_lock(task_key)
         raise err
-    except Exception as exc:  # pylint: disable=broad-exception-caught
+    except Exception as exc:
         _log_error_and_release_lock(
             f'[CT-{tag}] Unexpected error occurred while updating line item {line_item_id} for order {order_id}'
             + entitlement_info
             + 'Releasing lock.'
             + f'Exception: {exc}'
         )
-        return None
+        raise exc
 
     _log_info_and_release_lock(
         f'[CT-{tag}] Line item {line_item_id} updated for order {order_id}' + entitlement_info
