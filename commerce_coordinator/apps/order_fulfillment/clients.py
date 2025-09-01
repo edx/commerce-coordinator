@@ -17,7 +17,7 @@ class OrderFulfillmentAPIClient(BaseEdxOAuthClient):
     API client for making requests to the edX Order Fulfillment service.
     """
 
-    ORDER_FULFILLMENT_SERVICE_TIMEOUT = 5  # seconds
+    ORDER_FULFILLMENT_SERVICE_TIMEOUT = 10  # seconds
 
     @property
     def api_order_fulfillment_post_base_url(self):
