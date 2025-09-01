@@ -67,7 +67,7 @@
             <a id="nextFileLink" class="nav" href="z_72e25f89af3afb71_constants_py.html">&#xbb; next</a>
             &nbsp; &nbsp; &nbsp;
             <a class="nav" href="https://coverage.readthedocs.io/en/7.10.5">coverage.py v7.10.5</a>,
-            created at 2025-08-29 15:19 +0000
+            created at 2025-09-01 09:14 +0000
         </p>
         <aside class="hidden">
             <button type="button" class="button_next_chunk" data-shortcut="j"></button>
@@ -1042,7 +1042,7 @@
     <p class="mis mis2 show_mis"><span class="n"><a id="t958" href="#t958">958</a></span><span class="t">                    <span class="nam">name</span><span class="op">=</span><span class="nam">TwoUKeys</span><span class="op">.</span><span class="nam">LINE_ITEM_LMS_ENTITLEMENT_ID</span><span class="op">,</span>&nbsp;</span><span class="r"></span></p>
     <p class="mis mis2 show_mis"><span class="n"><a id="t959" href="#t959">959</a></span><span class="t">                    <span class="nam">value</span><span class="op">=</span><span class="nam">entitlement_uuid</span><span class="op">,</span>&nbsp;</span><span class="r"></span></p>
     <p class="mis mis2 show_mis"><span class="n"><a id="t960" href="#t960">960</a></span><span class="t">                <span class="op">)</span><span class="op">)</span>&nbsp;</span><span class="r"></span></p>
-    <p class="run"><span class="n"><a id="t961" href="#t961">961</a></span><span class="t">            <span class="key">if</span> <span class="nam">new_state_key</span> <span class="op">!=</span> <span class="nam">from_state_key</span><span class="op">:</span>&nbsp;</span><span class="r"></span></p>
+    <p class="run"><span class="n"><a id="t961" href="#t961">961</a></span><span class="t">            <span class="key">if</span> <span class="nam">from_state_key</span> <span class="key">not</span> <span class="key">in</span> <span class="op">(</span><span class="nam">new_state_key</span><span class="op">,</span> <span class="nam">TwoUKeys</span><span class="op">.</span><span class="nam">SUCCESS_FULFILMENT_STATE</span><span class="op">)</span><span class="op">:</span>&nbsp;</span><span class="r"></span></p>
     <p class="run"><span class="n"><a id="t962" href="#t962">962</a></span><span class="t">                <span class="nam">actions</span><span class="op">.</span><span class="nam">append</span><span class="op">(</span><span class="nam">OrderTransitionLineItemStateAction</span><span class="op">(</span>&nbsp;</span><span class="r"></span></p>
     <p class="run run2"><span class="n"><a id="t963" href="#t963">963</a></span><span class="t">                    <span class="nam">line_item_id</span><span class="op">=</span><span class="nam">line_item_id</span><span class="op">,</span>&nbsp;</span><span class="r"></span></p>
     <p class="run run2"><span class="n"><a id="t964" href="#t964">964</a></span><span class="t">                    <span class="nam">quantity</span><span class="op">=</span><span class="nam">item_quantity</span><span class="op">,</span>&nbsp;</span><span class="r"></span></p>
@@ -2020,7 +2020,7 @@
             <a class="nav" href="z_72e25f89af3afb71_constants_py.html">&#xbb; next</a>
             &nbsp; &nbsp; &nbsp;
             <a class="nav" href="https://coverage.readthedocs.io/en/7.10.5">coverage.py v7.10.5</a>,
-            created at 2025-08-29 15:19 +0000
+            created at 2025-09-01 09:14 +0000
         </p>
     </div>
 </footer>
