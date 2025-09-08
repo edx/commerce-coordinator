@@ -8,7 +8,7 @@ aiohappyeyeballs==2.6.1
     # via
     #   -r requirements/base.txt
     #   aiohttp
-aiohttp==3.12.14
+aiohttp==3.12.15
     # via
     #   -r requirements/base.txt
     #   inapppy
@@ -20,11 +20,11 @@ amqp==5.3.1
     # via
     #   -r requirements/base.txt
     #   kombu
-anyio==4.9.0
+anyio==4.10.0
     # via
     #   -r requirements/base.txt
     #   httpx
-apimatic-core==0.2.21
+apimatic-core==0.2.22
     # via
     #   -r requirements/base.txt
     #   paypal-server-sdk
@@ -34,7 +34,7 @@ apimatic-core-interfaces==0.1.6
     #   apimatic-core
     #   apimatic-requests-client-adapter
     #   paypal-server-sdk
-apimatic-requests-client-adapter==0.1.7
+apimatic-requests-client-adapter==0.1.8
     # via
     #   -r requirements/base.txt
     #   paypal-server-sdk
@@ -71,7 +71,7 @@ cachetools==5.5.2
     #   google-auth
 celery[redis]==5.4.0
     # via -r requirements/base.txt
-certifi==2025.7.9
+certifi==2025.8.3
     # via
     #   -r requirements/base.txt
     #   httpcore
@@ -83,7 +83,7 @@ cffi==1.17.1
     #   app-store-notifications-v2-validator
     #   cryptography
     #   pynacl
-charset-normalizer==3.4.2
+charset-normalizer==3.4.3
     # via
     #   -r requirements/base.txt
     #   requests
@@ -123,7 +123,7 @@ coreschema==0.0.4
     # via
     #   -r requirements/base.txt
     #   coreapi
-cryptography==45.0.5
+cryptography==45.0.7
     # via
     #   -r requirements/base.txt
     #   app-store-notifications-v2-validator
@@ -137,7 +137,7 @@ defusedxml==0.7.1
     #   -r requirements/base.txt
     #   python3-openid
     #   social-auth-core
-django==4.2.23
+django==4.2.24
     # via
     #   -r requirements/base.txt
     #   django-cors-headers
@@ -177,13 +177,13 @@ django-waffle==5.0.0
     #   edx-django-utils
     #   edx-drf-extensions
     #   edx-toggles
-djangorestframework==3.16.0
+djangorestframework==3.16.1
     # via
     #   -r requirements/base.txt
     #   django-rest-swagger
     #   drf-jwt
     #   edx-drf-extensions
-dnspython==2.7.0
+dnspython==2.8.0
     # via
     #   -r requirements/base.txt
     #   pymongo
@@ -197,7 +197,7 @@ edx-ace==1.15.0
     #   edx-braze-client
 edx-auth-backends==4.6.0
     # via -r requirements/base.txt
-edx-braze-client==1.1.2
+edx-braze-client==1.1.3
     # via -r requirements/base.txt
 edx-django-release-util==1.5.0
     # via -r requirements/base.txt
@@ -219,7 +219,7 @@ edx-opaque-keys[django]==3.0.0
     #   openedx-filters
 edx-rest-api-client==6.2.0
     # via -r requirements/base.txt
-edx-toggles==5.3.0
+edx-toggles==5.4.1
     # via
     #   -r requirements/base.txt
     #   edx-auth-backends
@@ -232,7 +232,7 @@ frozenlist==1.7.0
     #   -r requirements/base.txt
     #   aiohttp
     #   aiosignal
-gevent==25.5.1
+gevent==25.8.2
     # via -r requirements/production.in
 google-api-core[grpc]==2.25.1
     # via
@@ -242,7 +242,7 @@ google-api-core[grpc]==2.25.1
     #   google-cloud-core
     #   google-cloud-firestore
     #   google-cloud-storage
-google-api-python-client==2.176.0
+google-api-python-client==2.181.0
     # via
     #   -r requirements/base.txt
     #   firebase-admin
@@ -269,7 +269,7 @@ google-cloud-firestore==2.21.0
     # via
     #   -r requirements/base.txt
     #   firebase-admin
-google-cloud-storage==3.2.0
+google-cloud-storage==3.3.1
     # via
     #   -r requirements/base.txt
     #   firebase-admin
@@ -287,14 +287,14 @@ googleapis-common-protos==1.70.0
     #   -r requirements/base.txt
     #   google-api-core
     #   grpcio-status
-greenlet==3.2.3
+greenlet==3.2.4
     # via gevent
-grpcio==1.73.1
+grpcio==1.74.0
     # via
     #   -r requirements/base.txt
     #   google-api-core
     #   grpcio-status
-grpcio-status==1.73.1
+grpcio-status==1.74.0
     # via
     #   -r requirements/base.txt
     #   google-api-core
@@ -304,7 +304,7 @@ h11==0.16.0
     # via
     #   -r requirements/base.txt
     #   httpcore
-h2==4.2.0
+h2==4.3.0
     # via
     #   -r requirements/base.txt
     #   httpx
@@ -316,7 +316,7 @@ httpcore==1.0.9
     # via
     #   -r requirements/base.txt
     #   httpx
-httplib2==0.22.0
+httplib2==0.30.0
     # via
     #   -r requirements/base.txt
     #   google-api-python-client
@@ -382,7 +382,7 @@ msgpack==1.1.1
     # via
     #   -r requirements/base.txt
     #   cachecontrol
-multidict==6.6.3
+multidict==6.6.4
     # via
     #   -r requirements/base.txt
     #   aiohttp
@@ -414,13 +414,9 @@ packaging==25.0
     #   marshmallow
 paypal-server-sdk==1.1.0
     # via -r requirements/base.txt
-pbr==6.1.1
-    # via
-    #   -r requirements/base.txt
-    #   stevedore
 pillow==11.3.0
     # via -r requirements/base.txt
-prompt-toolkit==3.0.51
+prompt-toolkit==3.0.52
     # via
     #   -r requirements/base.txt
     #   click-repl
@@ -434,7 +430,7 @@ proto-plus==1.26.1
     #   -r requirements/base.txt
     #   google-api-core
     #   google-cloud-firestore
-protobuf==6.31.1
+protobuf==6.32.0
     # via
     #   -r requirements/base.txt
     #   google-api-core
@@ -471,11 +467,12 @@ pyjwt[crypto]==2.10.1
     #   edx-drf-extensions
     #   edx-rest-api-client
     #   firebase-admin
+    #   redis
     #   segment-analytics-python
     #   social-auth-core
 pymemcache==4.0.0
     # via -r requirements/production.in
-pymongo==4.13.2
+pymongo==4.14.1
     # via
     #   -r requirements/base.txt
     #   edx-opaque-keys
@@ -516,11 +513,11 @@ pyyaml==6.0.2
     #   -r requirements/production.in
     #   code-annotations
     #   edx-django-release-util
-redis==5.2.1
+redis==5.3.1
     # via
     #   -r requirements/base.txt
     #   celery
-requests==2.32.4
+requests==2.32.5
     # via
     #   -r requirements/base.txt
     #   apimatic-core
@@ -595,14 +592,14 @@ sqlparse==0.5.3
     # via
     #   -r requirements/base.txt
     #   django
-stevedore==5.4.1
+stevedore==5.5.0
     # via
     #   -r requirements/base.txt
     #   code-annotations
     #   edx-ace
     #   edx-django-utils
     #   edx-opaque-keys
-stripe==12.3.0
+stripe==12.5.1
     # via -r requirements/base.txt
 tenacity==9.1.2
     # via -r requirements/base.txt
@@ -610,7 +607,7 @@ text-unidecode==1.3
     # via
     #   -r requirements/base.txt
     #   python-slugify
-typing-extensions==4.14.1
+typing-extensions==4.15.0
     # via
     #   -r requirements/base.txt
     #   aiosignal
@@ -628,7 +625,7 @@ uritemplate==4.2.0
     #   -r requirements/base.txt
     #   coreapi
     #   google-api-python-client
-urllib3==2.2.3
+urllib3==2.5.0
     # via
     #   -r requirements/base.txt
     #   requests
@@ -650,7 +647,7 @@ werkzeug==3.1.3
     # via
     #   -r requirements/base.txt
     #   commercetools
-wrapt==1.17.2
+wrapt==1.17.3
     # via
     #   -r requirements/base.txt
     #   commercetools
@@ -658,7 +655,7 @@ yarl==1.20.1
     # via
     #   -r requirements/base.txt
     #   aiohttp
-zope-event==5.1
+zope-event==5.1.1
     # via gevent
 zope-interface==7.2
     # via gevent

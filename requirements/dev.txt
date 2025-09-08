@@ -8,7 +8,7 @@ aiohappyeyeballs==2.6.1
     # via
     #   -r requirements/validation.txt
     #   aiohttp
-aiohttp==3.12.14
+aiohttp==3.12.15
     # via
     #   -r requirements/validation.txt
     #   inapppy
@@ -20,11 +20,11 @@ amqp==5.3.1
     # via
     #   -r requirements/validation.txt
     #   kombu
-anyio==4.9.0
+anyio==4.10.0
     # via
     #   -r requirements/validation.txt
     #   httpx
-apimatic-core==0.2.21
+apimatic-core==0.2.22
     # via
     #   -r requirements/validation.txt
     #   paypal-server-sdk
@@ -34,7 +34,7 @@ apimatic-core-interfaces==0.1.6
     #   apimatic-core
     #   apimatic-requests-client-adapter
     #   paypal-server-sdk
-apimatic-requests-client-adapter==0.1.7
+apimatic-requests-client-adapter==0.1.8
     # via
     #   -r requirements/validation.txt
     #   paypal-server-sdk
@@ -65,7 +65,7 @@ billiard==4.2.1
     # via
     #   -r requirements/validation.txt
     #   celery
-build==1.2.2.post1
+build==1.3.0
     # via
     #   -r requirements/pip-tools.txt
     #   pip-tools
@@ -81,7 +81,7 @@ cachetools==5.5.2
     #   tox
 celery[redis]==5.4.0
     # via -r requirements/validation.txt
-certifi==2025.7.9
+certifi==2025.8.3
     # via
     #   -r requirements/validation.txt
     #   httpcore
@@ -98,7 +98,7 @@ chardet==5.2.0
     #   -r requirements/validation.txt
     #   diff-cover
     #   tox
-charset-normalizer==3.4.2
+charset-normalizer==3.4.3
     # via
     #   -r requirements/validation.txt
     #   requests
@@ -151,11 +151,11 @@ coreschema==0.0.4
     # via
     #   -r requirements/validation.txt
     #   coreapi
-coverage[toml]==7.9.2
+coverage[toml]==7.10.6
     # via
     #   -r requirements/validation.txt
     #   pytest-cov
-cryptography==45.0.5
+cryptography==45.0.7
     # via
     #   -r requirements/validation.txt
     #   app-store-notifications-v2-validator
@@ -172,17 +172,17 @@ defusedxml==0.7.1
     #   -r requirements/validation.txt
     #   python3-openid
     #   social-auth-core
-diff-cover==9.5.0
+diff-cover==9.6.0
     # via -r requirements/dev.in
 dill==0.4.0
     # via
     #   -r requirements/validation.txt
     #   pylint
-distlib==0.3.9
+distlib==0.4.0
     # via
     #   -r requirements/validation.txt
     #   virtualenv
-django==4.2.23
+django==4.2.24
     # via
     #   -r requirements/validation.txt
     #   django-cors-headers
@@ -210,7 +210,7 @@ django-crum==0.7.9
     #   -r requirements/validation.txt
     #   edx-django-utils
     #   edx-toggles
-django-debug-toolbar==5.2.0
+django-debug-toolbar==6.0.0
     # via
     #   -r requirements/dev.in
     #   -r requirements/validation.txt
@@ -230,17 +230,17 @@ django-waffle==5.0.0
     #   edx-django-utils
     #   edx-drf-extensions
     #   edx-toggles
-djangorestframework==3.16.0
+djangorestframework==3.16.1
     # via
     #   -r requirements/validation.txt
     #   django-rest-swagger
     #   drf-jwt
     #   edx-drf-extensions
-dnspython==2.7.0
+dnspython==2.8.0
     # via
     #   -r requirements/validation.txt
     #   pymongo
-docutils==0.21.2
+docutils==0.22
     # via
     #   -r requirements/validation.txt
     #   readme-renderer
@@ -254,7 +254,7 @@ edx-ace==1.15.0
     #   edx-braze-client
 edx-auth-backends==4.6.0
     # via -r requirements/validation.txt
-edx-braze-client==1.1.2
+edx-braze-client==1.1.3
     # via -r requirements/validation.txt
 edx-django-release-util==1.5.0
     # via -r requirements/validation.txt
@@ -280,11 +280,11 @@ edx-opaque-keys[django]==3.0.0
     #   openedx-filters
 edx-rest-api-client==6.2.0
     # via -r requirements/validation.txt
-edx-toggles==5.3.0
+edx-toggles==5.4.1
     # via
     #   -r requirements/validation.txt
     #   edx-auth-backends
-filelock==3.18.0
+filelock==3.19.1
     # via
     #   -r requirements/validation.txt
     #   tox
@@ -306,7 +306,7 @@ google-api-core[grpc]==2.25.1
     #   google-cloud-core
     #   google-cloud-firestore
     #   google-cloud-storage
-google-api-python-client==2.176.0
+google-api-python-client==2.181.0
     # via
     #   -r requirements/validation.txt
     #   firebase-admin
@@ -333,7 +333,7 @@ google-cloud-firestore==2.21.0
     # via
     #   -r requirements/validation.txt
     #   firebase-admin
-google-cloud-storage==3.2.0
+google-cloud-storage==3.3.1
     # via
     #   -r requirements/validation.txt
     #   firebase-admin
@@ -351,12 +351,12 @@ googleapis-common-protos==1.70.0
     #   -r requirements/validation.txt
     #   google-api-core
     #   grpcio-status
-grpcio==1.73.1
+grpcio==1.74.0
     # via
     #   -r requirements/validation.txt
     #   google-api-core
     #   grpcio-status
-grpcio-status==1.73.1
+grpcio-status==1.74.0
     # via
     #   -r requirements/validation.txt
     #   google-api-core
@@ -364,7 +364,7 @@ h11==0.16.0
     # via
     #   -r requirements/validation.txt
     #   httpcore
-h2==4.2.0
+h2==4.3.0
     # via
     #   -r requirements/validation.txt
     #   httpx
@@ -376,7 +376,7 @@ httpcore==1.0.9
     # via
     #   -r requirements/validation.txt
     #   httpx
-httplib2==0.22.0
+httplib2==0.30.0
     # via
     #   -r requirements/validation.txt
     #   google-api-python-client
@@ -425,7 +425,7 @@ jaraco-context==6.0.1
     # via
     #   -r requirements/validation.txt
     #   keyring
-jaraco-functools==4.2.1
+jaraco-functools==4.3.0
     # via
     #   -r requirements/validation.txt
     #   keyring
@@ -458,13 +458,13 @@ kombu==5.5.4
     #   celery
 lark==1.2.2
     # via -r requirements/validation.txt
-lxml[html-clean,html_clean]==6.0.0
+lxml[html-clean]==6.0.1
     # via
     #   edx-i18n-tools
     #   lxml-html-clean
 lxml-html-clean==0.4.2
     # via lxml
-markdown-it-py==3.0.0
+markdown-it-py==4.0.0
     # via
     #   -r requirements/validation.txt
     #   rich
@@ -492,7 +492,7 @@ mdurl==0.1.2
     #   markdown-it-py
 mock==5.2.0
     # via -r requirements/validation.txt
-more-itertools==10.7.0
+more-itertools==10.8.0
     # via
     #   -r requirements/validation.txt
     #   jaraco-classes
@@ -501,14 +501,14 @@ msgpack==1.1.1
     # via
     #   -r requirements/validation.txt
     #   cachecontrol
-multidict==6.6.3
+multidict==6.6.4
     # via
     #   -r requirements/validation.txt
     #   aiohttp
     #   yarl
 mysqlclient==2.2.7
     # via -r requirements/validation.txt
-nh3==0.2.21
+nh3==0.3.0
     # via
     #   -r requirements/validation.txt
     #   readme-renderer
@@ -542,15 +542,11 @@ path==16.16.0
     # via edx-i18n-tools
 paypal-server-sdk==1.1.0
     # via -r requirements/validation.txt
-pbr==6.1.1
-    # via
-    #   -r requirements/validation.txt
-    #   stevedore
 pillow==11.3.0
     # via -r requirements/validation.txt
-pip-tools==7.4.1
+pip-tools==7.5.0
     # via -r requirements/pip-tools.txt
-platformdirs==4.3.8
+platformdirs==4.4.0
     # via
     #   -r requirements/validation.txt
     #   pylint
@@ -565,7 +561,7 @@ pluggy==1.6.0
     #   tox
 polib==1.2.0
     # via edx-i18n-tools
-prompt-toolkit==3.0.51
+prompt-toolkit==3.0.52
     # via
     #   -r requirements/validation.txt
     #   click-repl
@@ -579,7 +575,7 @@ proto-plus==1.26.1
     #   -r requirements/validation.txt
     #   google-api-core
     #   google-cloud-firestore
-protobuf==6.31.1
+protobuf==6.32.0
     # via
     #   -r requirements/validation.txt
     #   google-api-core
@@ -627,9 +623,10 @@ pyjwt[crypto]==2.10.1
     #   edx-drf-extensions
     #   edx-rest-api-client
     #   firebase-admin
+    #   redis
     #   segment-analytics-python
     #   social-auth-core
-pylint==3.3.7
+pylint==3.3.8
     # via
     #   -r requirements/validation.txt
     #   edx-lint
@@ -649,7 +646,7 @@ pylint-plugin-utils==0.9.0
     #   -r requirements/validation.txt
     #   pylint-celery
     #   pylint-django
-pymongo==4.13.2
+pymongo==4.14.1
     # via
     #   -r requirements/validation.txt
     #   edx-opaque-keys
@@ -674,12 +671,12 @@ pyproject-hooks==1.2.0
     #   -r requirements/pip-tools.txt
     #   build
     #   pip-tools
-pytest==8.4.1
+pytest==8.4.2
     # via
     #   -r requirements/validation.txt
     #   pytest-cov
     #   pytest-django
-pytest-cov==6.2.1
+pytest-cov==6.3.0
     # via -r requirements/validation.txt
 pytest-django==4.11.1
     # via -r requirements/validation.txt
@@ -713,11 +710,11 @@ readme-renderer==44.0
     # via
     #   -r requirements/validation.txt
     #   twine
-redis==5.2.1
+redis==5.3.1
     # via
     #   -r requirements/validation.txt
     #   celery
-requests==2.32.4
+requests==2.32.5
     # via
     #   -r requirements/validation.txt
     #   apimatic-core
@@ -754,13 +751,13 @@ requests-toolbelt==1.0.0
     # via
     #   -r requirements/validation.txt
     #   twine
-responses==0.25.7
+responses==0.25.8
     # via -r requirements/validation.txt
 rfc3986==2.0.0
     # via
     #   -r requirements/validation.txt
     #   twine
-rich==14.0.0
+rich==14.1.0
     # via
     #   -r requirements/validation.txt
     #   twine
@@ -820,14 +817,14 @@ sqlparse==0.5.3
     #   -r requirements/validation.txt
     #   django
     #   django-debug-toolbar
-stevedore==5.4.1
+stevedore==5.5.0
     # via
     #   -r requirements/validation.txt
     #   code-annotations
     #   edx-ace
     #   edx-django-utils
     #   edx-opaque-keys
-stripe==12.3.0
+stripe==12.5.1
     # via -r requirements/validation.txt
 tenacity==9.1.2
     # via -r requirements/validation.txt
@@ -843,9 +840,9 @@ tomlkit==0.13.3
     #   pylint
 tox==4.27.0
     # via -r requirements/validation.txt
-twine==6.1.0
+twine==6.2.0
     # via -r requirements/validation.txt
-typing-extensions==4.14.1
+typing-extensions==4.15.0
     # via
     #   -r requirements/validation.txt
     #   aiosignal
@@ -863,7 +860,7 @@ uritemplate==4.2.0
     #   -r requirements/validation.txt
     #   coreapi
     #   google-api-python-client
-urllib3==2.2.3
+urllib3==2.5.0
     # via
     #   -r requirements/validation.txt
     #   requests
@@ -875,7 +872,7 @@ vine==5.1.0
     #   amqp
     #   celery
     #   kombu
-virtualenv==20.31.2
+virtualenv==20.34.0
     # via
     #   -r requirements/validation.txt
     #   tox
@@ -895,7 +892,7 @@ wheel==0.45.1
     # via
     #   -r requirements/pip-tools.txt
     #   pip-tools
-wrapt==1.17.2
+wrapt==1.17.3
     # via
     #   -r requirements/validation.txt
     #   commercetools
