@@ -12,7 +12,8 @@ from commerce_coordinator.apps.lms.views import (
     PaymentPageRedirectView,
     ProgramPriceView,
     RefundView,
-    RetirementView
+    RetirementView,
+    SDNFailureView
 )
 
 app_name = 'lms'
@@ -25,4 +26,5 @@ urlpatterns = [
     path('program-price-info/<str:bundle_key>/', ProgramPriceView.as_view(), name='program_price_info'),
     path('discount-code-info/', DiscountCodeInfoView.as_view(), name='discount_code_info'),
     path('credit/checkout/<str:course_run_key>/', CreditCheckoutView.as_view(), name='credit_checkout'),
+    path('sdn-failure/', SDNFailureView.as_view(), name='sdn_failure')
 ]

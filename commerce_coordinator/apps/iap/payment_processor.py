@@ -206,6 +206,11 @@ class IAPPaymentProcessor:
         receipt = validation_response.get('receipt', {})
         in_app_purchases = receipt.get('in_app', [])
 
+        if not in_app_purchases:
+            error_msg = f"No in-app purchases found in the receipt: {receipt}"
+            logger.error(error_msg)
+            raise ReceiptError(error_msg)
+
         product_sku = self.get_consumable_ios_sku(price)
         matched_purchases = [
             purchase for purchase in in_app_purchases if purchase.get('product_id') == product_sku
@@ -253,6 +258,10 @@ class RedundantPaymentError(Exception):
 
 class ValidationError(Exception):
     """Exception raised when a payment validation fails due to invalid input or state."""
+
+
+class ReceiptError(Exception):
+    """Exception raised when no receipt is found in the validated response."""
 
 
 class UserCancelled(Exception):
