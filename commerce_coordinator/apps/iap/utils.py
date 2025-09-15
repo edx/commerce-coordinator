@@ -15,6 +15,7 @@ from commerce_coordinator.apps.commercetools.http_api_client import CTCustomAPIC
 from commerce_coordinator.apps.iap.payment_processor import (
     IAPPaymentProcessor,
     PaymentError,
+    ReceiptError,
     RedundantPaymentError,
     UserCancelled,
     ValidationError
@@ -202,6 +203,9 @@ def get_payment_info_from_purchase_token(request_data, cart_id, price):
 
     except (ValidationError, UserCancelled, PaymentError) as e:
         return {'response': {'error': str(e)}, 'status_code': status.HTTP_400_BAD_REQUEST}
+
+    except ReceiptError as e:
+        return {'response': {'error': str(e)}, 'status_code': status.HTTP_402_PAYMENT_REQUIRED}
 
     except RedundantPaymentError as e:
         return {'response': {'error': str(e)}, 'status_code': status.HTTP_409_CONFLICT}

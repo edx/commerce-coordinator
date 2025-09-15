@@ -13,6 +13,7 @@ from unittest.mock import MagicMock, patch
 from commerce_coordinator.apps.iap.payment_processor import (
     IAPPaymentProcessor,
     PaymentError,
+    ReceiptError,
     RedundantPaymentError,
     UserCancelled,
     ValidationError
@@ -123,7 +124,7 @@ class TestIAPPaymentProcessor(unittest.TestCase):
         )
 
     def test_ios_handle_ios_validation_errors(self):
-        with self.assertRaises(ValidationError):
+        with self.assertRaises(ReceiptError):
             self.processor._handle_ios_validation({'receipt': {'in_app': []}}, 100, 'cart_123')
 
         with self.assertRaises(ValidationError):

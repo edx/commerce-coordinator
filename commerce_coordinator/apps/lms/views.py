@@ -11,6 +11,7 @@ from commercetools import CommercetoolsError
 from django.conf import settings
 from django.http import HttpResponseBadRequest, HttpResponseRedirect
 from django.urls import reverse
+from django.views.generic import TemplateView
 from edx_rest_framework_extensions.auth.jwt.authentication import JwtAuthentication
 from edx_rest_framework_extensions.permissions import LoginRedirectIfUnauthenticated
 from openedx_filters.exceptions import OpenEdxFilterException
@@ -749,3 +750,14 @@ class DiscountCodeInfoView(APIView):
                 f"Something went wrong! Exception raised in {self.get.__qualname__} with error {repr(e)}"
             )
             return HttpResponseBadRequest("Something went wrong.")
+
+
+class SDNFailureView(TemplateView):
+    """ Display an error page when the SDN check fails at checkout. """
+    template_name = 'sdn_failure.html'
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['logout_url'] = urljoin(settings.LMS_URL_ROOT, '/logout')
+        context['logo_url'] = settings.LOGO_URL
+        return context
