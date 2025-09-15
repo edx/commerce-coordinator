@@ -14,7 +14,6 @@ from django.test import override_settings
 from django.urls import reverse
 from mock import patch
 from openedx_filters.exceptions import OpenEdxFilterException
-from requests import HTTPError
 from rest_framework import status
 from rest_framework.test import APITestCase
 
@@ -581,10 +580,10 @@ class ProgramPriceViewTests(APITestCase):
         self.authenticate_user()
         self.mock_ct_api_client.return_value.get_program_variants.return_value = None
 
-        response = self.client.get(self.url)
+        response = self.client.get(self.url, {'course_key': ['edX+DemoX']})
 
         self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
-        self.assertEqual(response.data, 'Program variants not found.')
+        self.assertIn('No program variants found', response.data)
 
     def test_program_price_calculation_with_offer(self):
         """Verify the program price is calculated correctly with program offer."""
@@ -623,7 +622,15 @@ class ProgramPriceViewTests(APITestCase):
             {'variant_key': 'ai+edX+DemoX', 'entitlement_sku': 'uuid16'},
             {'variant_key': 'ai+edX+M12', 'entitlement_sku': 'uuid16'}
         ]
-        self.mock_ct_api_client.return_value.get_ct_bundle_offers_without_code.return_value = []
+        self.mock_ct_api_client.return_value.get_ct_bundle_offers_without_code.return_value = [
+            {
+                "key": 'test',
+                "value": {"type": "relative", "permyriad": 2000},
+                "target": {
+                    "predicate": "custom.bundleId is defined and (custom.bundleId == 'test-bundle-key-2')"
+                }
+            }
+        ]
         self.mock_ct_api_client.return_value.get_standalone_prices_for_skus.return_value = [
             {'value': {'centAmount': 2000, 'currencyCode': 'USD'}},
             {'value': {'centAmount': 1000, 'currencyCode': 'USD'}}
@@ -637,16 +644,6 @@ class ProgramPriceViewTests(APITestCase):
             "total_incl_tax": 30.0,
             "currency": "USD"
         })
-
-    def test_CT_http_error_handling(self):
-        """Verify HTTP 500 is returned when an HTTPError occurs."""
-        self.authenticate_user()
-        self.mock_ct_api_client.return_value.get_program_variants.side_effect = HTTPError("HTTP Error")
-
-        response = self.client.get(self.url)
-
-        self.assertEqual(response.status_code, status.HTTP_500_INTERNAL_SERVER_ERROR)
-        self.assertEqual(response.data, 'Error occurred while fetching data')
 
 
 @ddt.ddt

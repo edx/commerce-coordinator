@@ -527,9 +527,7 @@ class ProgramPriceView(APIView):
                 purchasable_entitlements_skus
             )
             if not entitlements_standalone_prices:
-                log_message = (
-                    f"No standalone prices found {for_user_msg}"
-                )
+                log_message = f"No standalone prices found {for_user_msg}"
                 logger.error(f"[ProgramPriceView] {log_message}")
                 return Response(log_message, status=HTTP_500_INTERNAL_SERVER_ERROR)
 
