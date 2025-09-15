@@ -340,7 +340,7 @@ CC_SIGNALS = {
 # Default timeouts for requests
 # (See https://docs.python-requests.org/en/master/user/advanced/#timeouts for more info.)
 REQUEST_CONNECT_TIMEOUT_SECONDS = 3.05
-REQUEST_READ_TIMEOUT_SECONDS = 5
+REQUEST_READ_TIMEOUT_SECONDS = 12
 
 # Special timeout for fulfillment
 FULFILLMENT_TIMEOUT = 7

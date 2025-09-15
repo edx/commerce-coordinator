@@ -1,7 +1,6 @@
 """
 Views for the ecommerce app
 """
-import datetime
 import logging
 import re
 from typing import List
@@ -15,7 +14,7 @@ from django.views.generic import TemplateView
 from edx_rest_framework_extensions.auth.jwt.authentication import JwtAuthentication
 from edx_rest_framework_extensions.permissions import LoginRedirectIfUnauthenticated
 from openedx_filters.exceptions import OpenEdxFilterException
-from requests import HTTPError
+from requests import HTTPError, RequestException
 from rest_framework.exceptions import ValidationError
 from rest_framework.permissions import IsAdminUser, IsAuthenticated
 from rest_framework.response import Response
@@ -463,13 +462,10 @@ class ProgramPriceView(APIView):
 
     def _get_program_entitlements_to_be_purchased(
         self,
-        program_variants: List[object],
-        user_enrollable_course_keys: List[object],
+        program_variants: List[dict[str, str]],
+        user_enrollable_course_keys: List[dict[str, str]],
     ) -> List[str]:
         """Filter out bundle entitlements based on enrollable conditions."""
-
-        if not user_enrollable_course_keys:
-            return [variant.get("entitlement_sku") for variant in program_variants]
 
         return [
             variant.get("entitlement_sku")
@@ -484,35 +480,41 @@ class ProgramPriceView(APIView):
 
     def get(self, request, bundle_key=None):
         """Return the price of the bundle for the specified course."""
+        user = request.user
+        user.add_lms_user_id("ProgramPriceView GET method")
         user_purchasable_course_keys = request.GET.getlist("course_key")
 
+        for_user_msg = (
+            f"for program: {bundle_key} with course keys: "
+            f"{user_purchasable_course_keys} for LMS user: {user.lms_user_id}"
+        )
+        logger.info(
+            f"[ProgramPriceView] Request received to get program price {for_user_msg}"
+        )
+        if not user_purchasable_course_keys:
+            log_message = f"No course keys provided {for_user_msg}"
+            logger.error(f"[ProgramPriceView] {log_message}")
+            return Response(log_message, status=HTTP_400_BAD_REQUEST)
+
         try:
-            view_start_time = datetime.datetime.now()
             ct_api_client = CTCustomAPIClient()
 
             # Fetch bundle variants with entitlements
-            start_time = datetime.datetime.now()
             ct_program_variants = ct_api_client.get_program_variants(bundle_key)
-            duration = (datetime.datetime.now() - start_time).total_seconds()
-            logger.info(
-                f"[Performance Check - ProgramPriceView] - ct_program_variants took {duration} seconds. "
-                f"Bundle key: {bundle_key}"
-            )
-
             if not ct_program_variants:
-                logger.error(f"[ProgramPriceView] No program variants found for the program: {bundle_key}.")
-                return Response('Program variants not found.', status=HTTP_404_NOT_FOUND)
+                log_message = f"No program variants found {for_user_msg}"
+                logger.error(f"[ProgramPriceView] {log_message}")
+                return Response(log_message, status=HTTP_404_NOT_FOUND)
 
-            start_time = datetime.datetime.now()
-            ct_discount_offers = ct_api_client.get_ct_bundle_offers_without_code()
-            duration = (datetime.datetime.now() - start_time).total_seconds()
-            logger.info(
-                f"[Performance Check - ProgramPriceView] - get_ct_bundle_offers_without_code took {duration} seconds. "
-                f"Bundle key: {bundle_key}"
-            )
+            # Fetch bundle offers for the program
+            ct_bundle_offers = ct_api_client.get_ct_bundle_offers_without_code()
+            if not ct_bundle_offers:
+                log_message = f"Failed to retrieve bundle offers {for_user_msg}."
+                logger.error(f"[ProgramPriceView] {log_message}")
+                return Response(log_message, status=HTTP_500_INTERNAL_SERVER_ERROR)
 
             # Get applied program offer
-            program_offer = get_program_offer(ct_discount_offers, bundle_key)
+            program_offer = get_program_offer(ct_bundle_offers, bundle_key)
 
             # Calculate program price based on already filtered course keys passed from LMS
             purchasable_entitlements_skus = self._get_program_entitlements_to_be_purchased(
@@ -521,22 +523,22 @@ class ProgramPriceView(APIView):
             )
 
             # Get price of each entitlement in the bundle
-            start_time = datetime.datetime.now()
             entitlements_standalone_prices = ct_api_client.get_standalone_prices_for_skus(
                 purchasable_entitlements_skus
             )
-            duration = (datetime.datetime.now() - start_time).total_seconds()
-            logger.info(
-                f"[Performance Check - ProgramPriceView] - entitlements_standalone_prices took {duration} seconds. "
-                f"Bundle key: {bundle_key}, purchasable_entitlements_skus: {purchasable_entitlements_skus}"
-            )
+            if not entitlements_standalone_prices:
+                log_message = (
+                    f"No standalone prices found {for_user_msg}"
+                )
+                logger.error(f"[ProgramPriceView] {log_message}")
+                return Response(log_message, status=HTTP_500_INTERNAL_SERVER_ERROR)
 
             # Calculate total price of the bundle
             total_cent_amount = sum(item.get("value", {}).get("centAmount") for item in entitlements_standalone_prices)
 
             discounted_cent_amount = self._calculate_discounted_price(program_offer, total_cent_amount)
             currencyCode = (
-                entitlements_standalone_prices[0].get("value").get("currencyCode")
+                entitlements_standalone_prices[0].get("value", {}).get("currencyCode")
                 if entitlements_standalone_prices
                 else ""
             )
@@ -546,15 +548,15 @@ class ProgramPriceView(APIView):
                 "total_incl_tax": self._cents_to_dollars(discounted_cent_amount),
                 "currency": currencyCode,
             }
-            view_duration = (datetime.datetime.now() - view_start_time).total_seconds()
             logger.info(
-                f"[Performance Check - ProgramPriceView] - view execution took {view_duration} seconds. "
-                f"Bundle key: {bundle_key}, output: {output}"
+                f"[ProgramPriceView] Request completed successfully {for_user_msg}"
+                f"with output: {output}"
             )
+
             return Response(output, status=HTTP_200_OK)
 
-        except HTTPError as err:
-            logger.exception(f"[ProgramPriceView] HTTP Error: {err}")
+        except RequestException as err:
+            logger.exception(f"[ProgramPriceView] RequestException: {err}")
             return Response('Error occurred while fetching data', status=HTTP_500_INTERNAL_SERVER_ERROR)
         except Exception as err:  # pylint: disable=broad-except
             logger.exception(f"[ProgramPriceView] Unexpected Error: {err}")
