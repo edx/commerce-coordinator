@@ -85,7 +85,7 @@ certifi==2025.8.3
     #   httpcore
     #   httpx
     #   requests
-cffi==1.17.1
+cffi==2.0.0
     # via
     #   -r requirements/test.txt
     #   app-store-notifications-v2-validator
@@ -156,6 +156,7 @@ cryptography==45.0.7
     #   app-store-notifications-v2-validator
     #   pyjwt
     #   pyopenssl
+    #   secretstorage
     #   social-auth-core
 currencies==2020.12.12
     # via -r requirements/test.txt
@@ -227,7 +228,7 @@ djangorestframework==3.16.1
     #   django-rest-swagger
     #   drf-jwt
     #   edx-drf-extensions
-dnspython==2.7.0
+dnspython==2.8.0
     # via
     #   -r requirements/test.txt
     #   pymongo
@@ -269,7 +270,7 @@ edx-opaque-keys[django]==3.0.0
     #   openedx-filters
 edx-rest-api-client==6.2.0
     # via -r requirements/test.txt
-edx-toggles==5.3.0
+edx-toggles==5.4.1
     # via
     #   -r requirements/test.txt
     #   edx-auth-backends
@@ -295,7 +296,7 @@ google-api-core[grpc]==2.25.1
     #   google-cloud-core
     #   google-cloud-firestore
     #   google-cloud-storage
-google-api-python-client==2.176.0
+google-api-python-client==2.181.0
     # via
     #   -r requirements/test.txt
     #   firebase-admin
@@ -322,7 +323,7 @@ google-cloud-firestore==2.21.0
     # via
     #   -r requirements/test.txt
     #   firebase-admin
-google-cloud-storage==3.2.0
+google-cloud-storage==3.3.1
     # via
     #   -r requirements/test.txt
     #   firebase-admin
@@ -365,7 +366,7 @@ httpcore==1.0.9
     # via
     #   -r requirements/test.txt
     #   httpx
-httplib2==0.22.0
+httplib2==0.31.0
     # via
     #   -r requirements/test.txt
     #   google-api-python-client
@@ -411,6 +412,10 @@ jaraco-context==6.0.1
     # via keyring
 jaraco-functools==4.3.0
     # via keyring
+jeepney==0.9.0
+    # via
+    #   keyring
+    #   secretstorage
 jinja2==3.1.6
     # via
     #   -r requirements/test.txt
@@ -528,7 +533,7 @@ proto-plus==1.26.1
     #   -r requirements/test.txt
     #   google-api-core
     #   google-cloud-firestore
-protobuf==6.32.0
+protobuf==6.32.1
     # via
     #   -r requirements/test.txt
     #   google-api-core
@@ -553,7 +558,7 @@ pyasn1-modules==0.4.2
     #   oauth2client
 pycodestyle==2.14.0
     # via -r requirements/quality.in
-pycparser==2.22
+pycparser==2.23
     # via
     #   -r requirements/test.txt
     #   app-store-notifications-v2-validator
@@ -575,6 +580,7 @@ pyjwt[crypto]==2.10.1
     #   edx-drf-extensions
     #   edx-rest-api-client
     #   firebase-admin
+    #   redis
     #   segment-analytics-python
     #   social-auth-core
 pylint==3.3.8
@@ -597,7 +603,7 @@ pylint-plugin-utils==0.9.0
     #   -r requirements/test.txt
     #   pylint-celery
     #   pylint-django
-pymongo==4.13.2
+pymongo==4.15.0
     # via
     #   -r requirements/test.txt
     #   edx-opaque-keys
@@ -605,11 +611,11 @@ pynacl==1.6.0
     # via
     #   -r requirements/test.txt
     #   edx-django-utils
-pyopenssl==25.1.0
+pyopenssl==25.2.0
     # via
     #   -r requirements/test.txt
     #   app-store-notifications-v2-validator
-pyparsing==3.2.3
+pyparsing==3.2.4
     # via
     #   -r requirements/test.txt
     #   httplib2
@@ -653,7 +659,7 @@ pyyaml==6.0.2
     #   responses
 readme-renderer==44.0
     # via twine
-redis==5.2.1
+redis==5.3.1
     # via
     #   -r requirements/test.txt
     #   celery
@@ -708,6 +714,8 @@ sailthru-client==2.2.3
     # via
     #   -r requirements/test.txt
     #   edx-ace
+secretstorage==3.4.0
+    # via keyring
 segment-analytics-python==2.3.4
     # via -r requirements/test.txt
 semantic-version==2.10.0
@@ -755,7 +763,7 @@ stevedore==5.5.0
     #   edx-ace
     #   edx-django-utils
     #   edx-opaque-keys
-stripe==12.3.0
+stripe==12.5.1
     # via -r requirements/test.txt
 tenacity==9.1.2
     # via -r requirements/test.txt
@@ -791,7 +799,7 @@ uritemplate==4.2.0
     #   -r requirements/test.txt
     #   coreapi
     #   google-api-python-client
-urllib3==2.2.3
+urllib3==2.5.0
     # via
     #   -r requirements/test.txt
     #   requests
