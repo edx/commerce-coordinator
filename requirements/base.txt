@@ -56,7 +56,7 @@ certifi==2025.8.3
     #   httpcore
     #   httpx
     #   requests
-cffi==1.17.1
+cffi==2.0.0
     # via
     #   app-store-notifications-v2-validator
     #   cryptography
@@ -144,7 +144,7 @@ djangorestframework==3.16.1
     #   django-rest-swagger
     #   drf-jwt
     #   edx-drf-extensions
-dnspython==2.7.0
+dnspython==2.8.0
     # via pymongo
 drf-jwt==1.19.2
     # via edx-drf-extensions
@@ -173,7 +173,7 @@ edx-opaque-keys[django]==3.0.0
     #   openedx-filters
 edx-rest-api-client==6.2.0
     # via -r requirements/base.in
-edx-toggles==5.3.0
+edx-toggles==5.4.1
     # via edx-auth-backends
 firebase-admin==6.9.0
     # via edx-ace
@@ -188,7 +188,7 @@ google-api-core[grpc]==2.25.1
     #   google-cloud-core
     #   google-cloud-firestore
     #   google-cloud-storage
-google-api-python-client==2.176.0
+google-api-python-client==2.181.0
     # via
     #   -r requirements/base.in
     #   firebase-admin
@@ -210,7 +210,7 @@ google-cloud-core==2.4.3
     #   google-cloud-storage
 google-cloud-firestore==2.21.0
     # via firebase-admin
-google-cloud-storage==3.2.0
+google-cloud-storage==3.3.1
     # via firebase-admin
 google-crc32c==1.7.1
     # via
@@ -236,7 +236,7 @@ hpack==4.1.0
     # via h2
 httpcore==1.0.9
     # via httpx
-httplib2==0.22.0
+httplib2==0.31.0
     # via
     #   google-api-python-client
     #   google-auth-httplib2
@@ -316,7 +316,7 @@ proto-plus==1.26.1
     # via
     #   google-api-core
     #   google-cloud-firestore
-protobuf==6.32.0
+protobuf==6.32.1
     # via
     #   google-api-core
     #   google-cloud-firestore
@@ -334,7 +334,7 @@ pyasn1-modules==0.4.2
     # via
     #   google-auth
     #   oauth2client
-pycparser==2.22
+pycparser==2.23
     # via
     #   app-store-notifications-v2-validator
     #   cffi
@@ -346,15 +346,16 @@ pyjwt[crypto]==2.10.1
     #   edx-drf-extensions
     #   edx-rest-api-client
     #   firebase-admin
+    #   redis
     #   segment-analytics-python
     #   social-auth-core
-pymongo==4.13.2
+pymongo==4.15.0
     # via edx-opaque-keys
 pynacl==1.6.0
     # via edx-django-utils
-pyopenssl==25.1.0
+pyopenssl==25.2.0
     # via app-store-notifications-v2-validator
-pyparsing==3.2.3
+pyparsing==3.2.4
     # via httplib2
 python-dateutil==2.9.0.post0
     # via
@@ -375,7 +376,7 @@ pyyaml==6.0.2
     # via
     #   code-annotations
     #   edx-django-release-util
-redis==5.2.1
+redis==5.3.1
     # via celery
 requests==2.32.5
     # via
@@ -440,7 +441,7 @@ stevedore==5.5.0
     #   edx-ace
     #   edx-django-utils
     #   edx-opaque-keys
-stripe==12.3.0
+stripe==12.5.1
     # via -r requirements/base.in
 tenacity==9.1.2
     # via -r requirements/base.in
@@ -461,10 +462,8 @@ uritemplate==4.2.0
     # via
     #   coreapi
     #   google-api-python-client
-urllib3==2.2.3
-    # via
-    #   -c requirements/common_constraints.txt
-    #   requests
+urllib3==2.5.0
+    # via requests
 vine==5.1.0
     # via
     #   amqp
