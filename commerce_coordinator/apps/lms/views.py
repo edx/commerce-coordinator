@@ -5,7 +5,7 @@ import datetime
 import logging
 import re
 from typing import List
-from urllib.parse import quote, urlencode, urljoin
+from urllib.parse import urlencode, urljoin
 
 from commercetools import CommercetoolsError
 from django.conf import settings
@@ -36,11 +36,7 @@ from commerce_coordinator.apps.commercetools.predicate_parser import CartPredica
 from commerce_coordinator.apps.core.constants import HttpHeadersNames, MediaTypes
 from commerce_coordinator.apps.core.exceptions import InvalidFilterType
 from commerce_coordinator.apps.lms.constants import CT_ABSOLUTE_DISCOUNT_TYPE
-from commerce_coordinator.apps.lms.filters import (
-    OrderRefundRequested,
-    PaymentPageRedirectRequested,
-    UserRetirementRequested
-)
+from commerce_coordinator.apps.lms.filters import OrderRefundRequested, UserRetirementRequested
 from commerce_coordinator.apps.lms.serializers import (
     CourseRefundInputSerializer,
     DiscountCodeInfoInputSerializer,
@@ -104,9 +100,8 @@ class PaymentPageRedirectView(APIView):
         """
 
         get_items = list(self.request.GET.lists())
-        redirect_url_obj = PaymentPageRedirectRequested.run_filter(request)
         redirect_url = self._add_query_params_to_redirect_url(
-            redirect_url_obj["redirect_url"], get_items
+            settings.COMMERCETOOLS_FRONTEND_URL, get_items
         )
         redirect = HttpResponseRedirect(redirect_url, status=HTTP_303_SEE_OTHER)
         redirect.headers[HttpHeadersNames.CONTENT_TYPE.value] = MediaTypes.JSON.value
@@ -614,14 +609,11 @@ class CreditCheckoutView(APIView):
             # Get the credit course run variant from Commercetools
             course_run_variant = ct_api_client.get_credit_variant_by_course_run(course_run_key)
             if not course_run_variant:
+                log_message = f"No credit variant found for course_run_key={course_run_key}"
                 logger.warning(
-                    f"{self.get.__qualname__} No credit variant found for course_run_key={course_run_key}"
+                    f"{self.get.__qualname__} {log_message}"
                 )
-                # TODO: This redirection will be removed as part of the SONIC-1110
-                safe_course_run_key = quote(str(course_run_key), safe='')
-                redirect_url = f"{settings.ECOMMERCE_URL}/credit/checkout/{safe_course_run_key}/"
-                # Redirect to legacy credit checkout if course not found on CT
-                return HttpResponseRedirect(redirect_url)
+                return Response(log_message, status=HTTP_400_BAD_REQUEST)
 
             # Build redirect URL to payment_page_redirect
             payment_path = reverse("lms:payment_page_redirect")

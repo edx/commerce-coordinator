@@ -60,15 +60,6 @@ class PaymentPageRedirectViewTests(APITestCase):
         super().tearDown()
         self.client.logout()
 
-    def test_view_rejects_session_auth(self):
-        """Check Session Auth Not Allowed."""
-        # Login
-        self.client.login(username=self.test_user_username, password=self.test_user_password)
-        # Request Order create
-        response = self.client.get(self.url)
-        # Error HTTP_400_BAD_REQUEST
-        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
-
     def test_view_rejects_unauthorized(self):
         """Check unauthorized users querying orders are redirected to login page."""
         # Logout user
@@ -102,14 +93,6 @@ class PaymentPageRedirectViewTests(APITestCase):
             )
             self.assertTrue(response.url.startswith(settings.COMMERCETOOLS_FRONTEND_URL))
             self.assertIn(ret_variant.sku, unquote(unquote(response.url)))
-
-    @patch('commerce_coordinator.apps.rollout.pipeline.is_redirect_to_commercetools_enabled_for_user')
-    def test_run_filter_only_sku_available(self, is_redirect_mock):
-        self.client.login(username=self.test_user_username, password=self.test_user_password)
-        is_redirect_mock.return_value = False
-        self.client.force_authenticate(user=self.user)
-        response = self.client.get(self.url, {'sku': ['sku1']})
-        self.assertTrue(response.url.startswith(settings.ECOMMERCE_URL))
 
     @ddt.unpack
     @patch('commerce_coordinator.apps.rollout.pipeline.is_redirect_to_commercetools_enabled_for_user')
@@ -731,8 +714,7 @@ class CreditCheckoutViewTests(APITestCase):
 
         response = self.client.get(self.url)
 
-        self.assertEqual(response.status_code, status.HTTP_302_FOUND)
-        self.assertIn("/credit/checkout/", response.url)
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
         mock_ct_client.return_value.get_credit_variant_by_course_run.assert_called_once_with(
             self.test_course_run_key
         )
