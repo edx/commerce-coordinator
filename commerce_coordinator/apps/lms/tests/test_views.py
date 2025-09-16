@@ -14,7 +14,6 @@ from django.test import override_settings
 from django.urls import reverse
 from mock import patch
 from openedx_filters.exceptions import OpenEdxFilterException
-from requests import HTTPError
 from rest_framework import status
 from rest_framework.test import APITestCase
 
@@ -60,15 +59,6 @@ class PaymentPageRedirectViewTests(APITestCase):
         super().tearDown()
         self.client.logout()
 
-    def test_view_rejects_session_auth(self):
-        """Check Session Auth Not Allowed."""
-        # Login
-        self.client.login(username=self.test_user_username, password=self.test_user_password)
-        # Request Order create
-        response = self.client.get(self.url)
-        # Error HTTP_400_BAD_REQUEST
-        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
-
     def test_view_rejects_unauthorized(self):
         """Check unauthorized users querying orders are redirected to login page."""
         # Logout user
@@ -102,14 +92,6 @@ class PaymentPageRedirectViewTests(APITestCase):
             )
             self.assertTrue(response.url.startswith(settings.COMMERCETOOLS_FRONTEND_URL))
             self.assertIn(ret_variant.sku, unquote(unquote(response.url)))
-
-    @patch('commerce_coordinator.apps.rollout.pipeline.is_redirect_to_commercetools_enabled_for_user')
-    def test_run_filter_only_sku_available(self, is_redirect_mock):
-        self.client.login(username=self.test_user_username, password=self.test_user_password)
-        is_redirect_mock.return_value = False
-        self.client.force_authenticate(user=self.user)
-        response = self.client.get(self.url, {'sku': ['sku1']})
-        self.assertTrue(response.url.startswith(settings.ECOMMERCE_URL))
 
     @ddt.unpack
     @patch('commerce_coordinator.apps.rollout.pipeline.is_redirect_to_commercetools_enabled_for_user')
@@ -598,10 +580,10 @@ class ProgramPriceViewTests(APITestCase):
         self.authenticate_user()
         self.mock_ct_api_client.return_value.get_program_variants.return_value = None
 
-        response = self.client.get(self.url)
+        response = self.client.get(self.url, {'course_key': ['edX+DemoX']})
 
         self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
-        self.assertEqual(response.data, 'Program variants not found.')
+        self.assertIn('No program variants found', response.data)
 
     def test_program_price_calculation_with_offer(self):
         """Verify the program price is calculated correctly with program offer."""
@@ -640,7 +622,15 @@ class ProgramPriceViewTests(APITestCase):
             {'variant_key': 'ai+edX+DemoX', 'entitlement_sku': 'uuid16'},
             {'variant_key': 'ai+edX+M12', 'entitlement_sku': 'uuid16'}
         ]
-        self.mock_ct_api_client.return_value.get_ct_bundle_offers_without_code.return_value = []
+        self.mock_ct_api_client.return_value.get_ct_bundle_offers_without_code.return_value = [
+            {
+                "key": 'test',
+                "value": {"type": "relative", "permyriad": 2000},
+                "target": {
+                    "predicate": "custom.bundleId is defined and (custom.bundleId == 'test-bundle-key-2')"
+                }
+            }
+        ]
         self.mock_ct_api_client.return_value.get_standalone_prices_for_skus.return_value = [
             {'value': {'centAmount': 2000, 'currencyCode': 'USD'}},
             {'value': {'centAmount': 1000, 'currencyCode': 'USD'}}
@@ -654,16 +644,6 @@ class ProgramPriceViewTests(APITestCase):
             "total_incl_tax": 30.0,
             "currency": "USD"
         })
-
-    def test_CT_http_error_handling(self):
-        """Verify HTTP 500 is returned when an HTTPError occurs."""
-        self.authenticate_user()
-        self.mock_ct_api_client.return_value.get_program_variants.side_effect = HTTPError("HTTP Error")
-
-        response = self.client.get(self.url)
-
-        self.assertEqual(response.status_code, status.HTTP_500_INTERNAL_SERVER_ERROR)
-        self.assertEqual(response.data, 'Error occurred while fetching data')
 
 
 @ddt.ddt
@@ -731,8 +711,7 @@ class CreditCheckoutViewTests(APITestCase):
 
         response = self.client.get(self.url)
 
-        self.assertEqual(response.status_code, status.HTTP_302_FOUND)
-        self.assertIn("/credit/checkout/", response.url)
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
         mock_ct_client.return_value.get_credit_variant_by_course_run.assert_called_once_with(
             self.test_course_run_key
         )

@@ -116,7 +116,7 @@ class CTCustomAPIClient:
 
         return attempt(0)
 
-    def get_ct_bundle_offers_without_code(self) -> Dict:
+    def get_ct_bundle_offers_without_code(self) -> list:
         """
         Fetch cart discounts without a discount code from Commercetools.
 
@@ -136,7 +136,7 @@ class CTCustomAPIClient:
 
         return bundle_offer_without_codes.get("results", [])
 
-    def get_program_variants(self, product_key: str) -> List[dict]:
+    def get_program_variants(self, product_key: str | None) -> List[dict]:
         """
         Fetch program variants with entitlement for the given program key using product projections.
 
