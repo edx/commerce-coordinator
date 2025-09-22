@@ -39,7 +39,7 @@ babel==2.17.0
     # via -r requirements/base.in
 backoff==2.2.1
     # via segment-analytics-python
-billiard==4.2.1
+billiard==4.2.2
     # via celery
 cachecontrol==0.12.14
     # via
@@ -56,14 +56,14 @@ certifi==2025.8.3
     #   httpcore
     #   httpx
     #   requests
-cffi==1.17.1
+cffi==2.0.0
     # via
     #   app-store-notifications-v2-validator
     #   cryptography
     #   pynacl
 charset-normalizer==3.4.3
     # via requests
-click==8.2.1
+click==8.3.0
     # via
     #   celery
     #   click-didyoumean
@@ -87,7 +87,7 @@ coreapi==2.3.3
     #   openapi-codec
 coreschema==0.0.4
     # via coreapi
-cryptography==45.0.7
+cryptography==46.0.1
     # via
     #   app-store-notifications-v2-validator
     #   pyjwt
@@ -120,7 +120,7 @@ django==4.2.24
     #   edx-toggles
     #   openedx-filters
     #   social-auth-app-django
-django-cors-headers==4.8.0
+django-cors-headers==4.9.0
     # via -r requirements/base.in
 django-crum==0.7.9
     # via
@@ -144,7 +144,7 @@ djangorestframework==3.16.1
     #   django-rest-swagger
     #   drf-jwt
     #   edx-drf-extensions
-dnspython==2.7.0
+dnspython==2.8.0
     # via pymongo
 drf-jwt==1.19.2
     # via edx-drf-extensions
@@ -173,7 +173,7 @@ edx-opaque-keys[django]==3.0.0
     #   openedx-filters
 edx-rest-api-client==6.2.0
     # via -r requirements/base.in
-edx-toggles==5.3.0
+edx-toggles==5.4.1
     # via edx-auth-backends
 firebase-admin==6.9.0
     # via edx-ace
@@ -188,7 +188,7 @@ google-api-core[grpc]==2.25.1
     #   google-cloud-core
     #   google-cloud-firestore
     #   google-cloud-storage
-google-api-python-client==2.176.0
+google-api-python-client==2.182.0
     # via
     #   -r requirements/base.in
     #   firebase-admin
@@ -210,7 +210,7 @@ google-cloud-core==2.4.3
     #   google-cloud-storage
 google-cloud-firestore==2.21.0
     # via firebase-admin
-google-cloud-storage==3.2.0
+google-cloud-storage==3.4.0
     # via firebase-admin
 google-crc32c==1.7.1
     # via
@@ -222,11 +222,11 @@ googleapis-common-protos==1.70.0
     # via
     #   google-api-core
     #   grpcio-status
-grpcio==1.74.0
+grpcio==1.75.0
     # via
     #   google-api-core
     #   grpcio-status
-grpcio-status==1.74.0
+grpcio-status==1.75.0
     # via google-api-core
 h11==0.16.0
     # via httpcore
@@ -236,7 +236,7 @@ hpack==4.1.0
     # via h2
 httpcore==1.0.9
     # via httpx
-httplib2==0.22.0
+httplib2==0.31.0
     # via
     #   google-api-python-client
     #   google-auth-httplib2
@@ -316,14 +316,14 @@ proto-plus==1.26.1
     # via
     #   google-api-core
     #   google-cloud-firestore
-protobuf==6.32.0
+protobuf==6.32.1
     # via
     #   google-api-core
     #   google-cloud-firestore
     #   googleapis-common-protos
     #   grpcio-status
     #   proto-plus
-psutil==7.0.0
+psutil==7.1.0
     # via edx-django-utils
 pyasn1==0.6.1
     # via
@@ -334,7 +334,7 @@ pyasn1-modules==0.4.2
     # via
     #   google-auth
     #   oauth2client
-pycparser==2.22
+pycparser==2.23
     # via
     #   app-store-notifications-v2-validator
     #   cffi
@@ -346,15 +346,16 @@ pyjwt[crypto]==2.10.1
     #   edx-drf-extensions
     #   edx-rest-api-client
     #   firebase-admin
+    #   redis
     #   segment-analytics-python
     #   social-auth-core
-pymongo==4.13.2
+pymongo==4.15.1
     # via edx-opaque-keys
 pynacl==1.6.0
     # via edx-django-utils
-pyopenssl==25.1.0
+pyopenssl==25.3.0
     # via app-store-notifications-v2-validator
-pyparsing==3.2.3
+pyparsing==3.2.5
     # via httplib2
 python-dateutil==2.9.0.post0
     # via
@@ -375,7 +376,7 @@ pyyaml==6.0.2
     # via
     #   code-annotations
     #   edx-django-release-util
-redis==5.2.1
+redis==5.3.1
     # via celery
 requests==2.32.5
     # via
@@ -440,7 +441,7 @@ stevedore==5.5.0
     #   edx-ace
     #   edx-django-utils
     #   edx-opaque-keys
-stripe==12.3.0
+stripe==12.5.1
     # via -r requirements/base.in
 tenacity==9.1.2
     # via -r requirements/base.in
@@ -451,6 +452,7 @@ typing-extensions==4.15.0
     #   aiosignal
     #   anyio
     #   edx-opaque-keys
+    #   grpcio
     #   pyopenssl
     #   stripe
 tzdata==2025.2
@@ -461,10 +463,8 @@ uritemplate==4.2.0
     # via
     #   coreapi
     #   google-api-python-client
-urllib3==2.2.3
-    # via
-    #   -c requirements/common_constraints.txt
-    #   requests
+urllib3==2.5.0
+    # via requests
 vine==5.1.0
     # via
     #   amqp
