@@ -443,7 +443,13 @@ class CommercetoolsAPIClient:
                 custom=SimpleNamespace(fields={EdXFieldNames.LMS_USER_NAME: username}),
             )
 
-        orders = self.get_orders(customer_id, offset, limit, cutoff_in_days=cutoff_in_days)
+        orders = self.get_orders(
+            customer_id,
+            offset,
+            limit,
+            expand=[*DEFAULT_ORDER_EXPANSION, "lineItems[*].state[*].state.obj"],
+            cutoff_in_days=cutoff_in_days,
+        )
 
         return orders, customer
 

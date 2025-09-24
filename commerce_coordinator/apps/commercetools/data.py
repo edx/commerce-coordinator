@@ -16,6 +16,7 @@ from commerce_coordinator.apps.commercetools.catalog_info.constants import (
     EdXFieldNames,
     TwoUKeys
 )
+from commerce_coordinator.apps.commercetools.catalog_info.edx_utils import get_attribute_value
 from commerce_coordinator.apps.commercetools.catalog_info.utils import (
     attribute_dict,
     get_line_item_attribute,
@@ -50,15 +51,32 @@ def convert_address(address: Optional[CTAddress]) -> Optional[BillingAddress]:
     )
 
 
-def convert_line_item(li: CTLineItem, payment_state: str) -> Line:
+def convert_line_item(li: CTLineItem, order_id: str) -> Line:
     return Line(
         title=un_ls(li.name),
         quantity=li.quantity,
         course_organization=get_line_item_attribute(li, 'brand-text'),
         description=un_ls(li.name),
-        status=payment_state,
+        status=un_ls(li.state[0].state.obj.name),
         line_price_excl_tax=price_to_string(li.price, money_as_decimal_string=SEND_MONEY_AS_DECIMAL_STRING),
-        unit_price_excl_tax=price_to_string(li.price, money_as_decimal_string=SEND_MONEY_AS_DECIMAL_STRING)
+        unit_price_excl_tax=price_to_string(li.price, money_as_decimal_string=SEND_MONEY_AS_DECIMAL_STRING),
+        product={
+            "url": (
+                settings.COMMERCETOOLS_MERCHANT_CENTER_ORDERS_PAGE_URL
+                + f"/{order_id}/general/line-items/{li.id}/attributes"
+            ),
+            "title": un_ls(li.name),
+            "expires": get_attribute_value(
+                li.variant.attributes, "verification-upgrade-deadline"
+            ),
+            "attributeValues": [
+                {
+                    "name": "certificate_type",
+                    "code": "certificate_type",
+                    "value": get_attribute_value(li.variant.attributes, "mode"),
+                }
+            ],
+        },
     )
 
 
@@ -135,7 +153,6 @@ def order_from_commercetools(order: CTOrder, customer: CTCustomer) -> LegacyOrde
         LegacyOrder: A converted order object used in the legacy system.
     """
 
-    payment_state = order.payment_state.value
     discounted_amount = calculate_total_discount_on_order(order)
 
     mobile_order = False
@@ -156,14 +173,14 @@ def order_from_commercetools(order: CTOrder, customer: CTCustomer) -> LegacyOrde
 
     return LegacyOrder(
         user=convert_customer(customer),
-        lines=[convert_line_item(x, payment_state) for x in order.line_items],
+        lines=[convert_line_item(li, order.id) for li in order.line_items],
         billing_address=convert_address(order.billing_address),
         date_placed=order.last_modified_at,
         total_excl_tax=typed_money_to_string(order.total_price, money_as_decimal_string=SEND_MONEY_AS_DECIMAL_STRING),
         number=order.order_number,
         currency=order.total_price.currency_code,
         payment_processor=payment_interface,
-        status=order.order_state.CONFIRMED.value,
+        status=order.order_state.value,
         dashboard_url=settings.LMS_DASHBOARD_URL,
         mobile_order=mobile_order,
         order_product_ids=", ".join([convert_line_item_prod_id(x) for x in order.line_items]),
