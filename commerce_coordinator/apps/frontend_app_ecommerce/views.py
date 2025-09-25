@@ -105,8 +105,8 @@ class UserOrdersView(APIView):
                 params["edx_lms_user_id"] = learner.lms_user_id
             except User.DoesNotExist:
                 logger.info(
-                    "[UserOrdersView] User does not exist in Coordinator "
-                    "and hence doesn't have any Commercetools orders either"
+                    "[UserOrdersView] User does not exist in Coordinator, "
+                    "continue search by username instead of lms_user_id"
                 )
         else:
             params["customer_id"] = request.query_params.get("customer_id")
@@ -124,7 +124,8 @@ class UserOrdersView(APIView):
 
         logger.info(
             "[UserOrdersView] Received request for retrieving order history "
-            f"for user: {params["edx_lms_user_id"]} by user: {request.user.lms_user_id}",
+            f"for user: {params["edx_lms_user_id"] or params["username"]} "
+            f"by user: {request.user.lms_user_id}"
         )
 
         try:
