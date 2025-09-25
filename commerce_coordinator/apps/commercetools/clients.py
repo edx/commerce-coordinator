@@ -291,6 +291,68 @@ class CommercetoolsAPIClient:
         return ret
 
     @conditional_retry
+    def get_customer_by_lms_user(
+        self,
+        *,
+        lms_user_id: Optional[int] = None,
+        lms_username: Optional[str] = None,
+    ) -> Optional[Customer]:
+        """
+        Get a Commercetools Customer by their LMS User ID or Username
+
+        Args:
+            lms_user_id: edX LMS User ID
+            lms_username: edX LMS Username
+
+        Returns:
+            Customer if found, None otherwise
+        Raises:
+            ValueError: If neither or both of lms_user_id and lms_username are provided
+            ValueError: If more than one customer is found.
+        """
+        if lms_user_id:
+            user = lms_user_id
+            user_message = f"with LMS user id: {user}"
+            user_field = EdXFieldNames.LMS_USER_ID
+        elif lms_username:
+            user = lms_username
+            user_message = f"with LMS username: {user}"
+            user_field = EdXFieldNames.LMS_USER_NAME
+        else:
+            raise ValueError("Must provide either lms_user_id or lms_username")
+
+        logger.info(
+            f"[CommercetoolsAPIClient] - Attempting to get customer {user_message}"
+        )
+
+        results = self.base_client.customers.query(
+            where=f"custom(fields({user_field}=:id))",
+            limit=2,
+            predicate_var={"id": f"{user}"},
+        )
+
+        if results.count > 1:
+            # We are unable due to CT Limitations to enforce unique LMS ID or Username
+            # values on Customers, so let's do a backhanded check by trying to pull
+            # two users and raising error if we find a discrepancy.
+            logger.info(
+                "[CommercetoolsAPIClient] - More than one customer found "
+                f"{user_message}, raising error"
+            )
+            raise ValueError(
+                f"More than one user was returned from CT {user_message}, "
+                "This should be unique."
+            )
+
+        if results.count == 0:
+            logger.info(
+                f"[CommercetoolsAPIClient] - No customer found {user_message}"
+            )
+            return None
+        else:
+            logger.info(f"[CommercetoolsAPIClient] - Customer found {user_message}")
+            return results.results[0]
+
     def get_customer_by_lms_user_id(self, lms_user_id: int) -> Optional[Customer]:
         """
         Get a Commercetools Customer by their LMS User ID
@@ -299,40 +361,11 @@ class CommercetoolsAPIClient:
             lms_user_id: edX LMS User ID
 
         Returns:
-            Optional[Customer], A Commercetools Customer Object, or None if not found, may throw if more than one user
-             is returned.
+            Customer if found, None otherwise
+        Raises:
+            ValueError: If more than one customer is found.
         """
-
-        logger.info(f"[CommercetoolsAPIClient] - Attempting to get customer with LMS user id: {lms_user_id}")
-
-        edx_lms_user_id_key = EdXFieldNames.LMS_USER_ID
-
-        start_time = datetime.datetime.now()
-        results = self.base_client.customers.query(
-            where=f"custom(fields({edx_lms_user_id_key}=:id))",
-            limit=2,
-            predicate_var={"id": f"{lms_user_id}"},
-        )
-        duration = (datetime.datetime.now() - start_time).total_seconds()
-        logger.info(f"[Performance Check] - customerId query took {duration} seconds")
-
-        if results.count > 1:
-            # We are unable due to CT Limitations to enforce unique LMS ID values on Customers on the catalog side, so
-            #   let's do a backhanded check by trying to pull 2 users and erroring if we find a discrepancy.
-            logger.info(
-                f"[CommercetoolsAPIClient] - More than one customer found with LMS "
-                f"user id: {lms_user_id}, raising error"
-            )
-            raise ValueError(
-                "More than one user was returned from the catalog with this edX LMS User ID, these must be unique."
-            )
-
-        if results.count == 0:
-            logger.info(f"[CommercetoolsAPIClient] - No customer found with LMS user id: {lms_user_id}")
-            return None
-        else:
-            logger.info(f"[CommercetoolsAPIClient] - Customer found with LMS user id: {lms_user_id}")
-            return results.results[0]
+        return self.get_customer_by_lms_user(lms_user_id=lms_user_id)
 
     def get_order_by_id(self, order_id: str, expand: ExpandList = DEFAULT_ORDER_EXPANSION) -> Order:
         """
@@ -411,12 +444,12 @@ class CommercetoolsAPIClient:
 
     def get_orders_for_customer(
         self,
-        edx_lms_user_id: int,
+        edx_lms_user_id: int | None,
         offset=0,
         limit=ORDER_HISTORY_PER_SYSTEM_REQ_LIMIT,
         customer_id=None,
         email=None,
-        username=None,
+        username: str | None = None,
         cutoff_in_days: int | None = None,
     ) -> (PaginatedResult[Order], Customer):
         """
@@ -427,7 +460,9 @@ class CommercetoolsAPIClient:
             limit:
         """
         if not customer_id:
-            customer = self.get_customer_by_lms_user_id(edx_lms_user_id)
+            customer = self.get_customer_by_lms_user(
+                lms_user_id=edx_lms_user_id, lms_username=username
+            )
 
             if customer is None:  # pragma: no cover
                 raise ValueError(f"Unable to locate customer with ID #{edx_lms_user_id}")
@@ -443,7 +478,13 @@ class CommercetoolsAPIClient:
                 custom=SimpleNamespace(fields={EdXFieldNames.LMS_USER_NAME: username}),
             )
 
-        orders = self.get_orders(customer_id, offset, limit, cutoff_in_days=cutoff_in_days)
+        orders = self.get_orders(
+            customer_id,
+            offset,
+            limit,
+            expand=[*DEFAULT_ORDER_EXPANSION, "lineItems[*].state[*].state.obj"],
+            cutoff_in_days=cutoff_in_days,
+        )
 
         return orders, customer
 

@@ -20,6 +20,7 @@ CORS_ORIGIN_WHITELIST = [
     'http://localhost:1998',  # frontend-app-payment
     'http://localhost:2000',  # frontend-app-learning
     'http://localhost:3000',  # commercetools-frontend
+    'http://localhost:18450',  # frontend-app-support-tools
 ]
 # END CORS CONFIGURATION
 

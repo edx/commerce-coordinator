@@ -182,7 +182,40 @@
           "quantity": 1,
           "state": {
             "typeId": "state",
-            "id": "de47c5ea-36df-4161-a232-7da0b0db49d1"
+            "id": "de47c5ea-36df-4161-a232-7da0b0db49d1",
+            "obj": {
+              "id": "de47c5ea-36df-4161-a232-7da0b0db49d1",
+              "version": 4,
+              "versionModifiedAt": "2024-04-30T12:32:56.106Z",
+              "createdAt": "2023-10-19T17:11:49.816Z",
+              "lastModifiedAt": "2024-04-30T12:32:56.106Z",
+              "lastModifiedBy": {
+                "clientId": "0skB5647I8oK2unU5Mj7QiTg",
+                "isPlatformClient": false
+              },
+              "createdBy": {
+                "isPlatformClient": true
+              },
+              "key": "Initial",
+              "type": "LineItemState",
+              "roles": [],
+              "name": {
+                "en": "Fulfillment Initial",
+                "en-US": "Fulfillment Initial"
+              },
+              "description": {
+                "en": "This order line item has not yet been fulfilled",
+                "en-US": "This order line item has not yet been fulfilled"
+              },
+              "builtIn": true,
+              "transitions": [
+                {
+                  "typeId": "state",
+                  "id": "669d3d11-5eaa-4521-b146-ccbd408ae940"
+                }
+              ],
+              "initial": true
+            }
           }
         }
       ],

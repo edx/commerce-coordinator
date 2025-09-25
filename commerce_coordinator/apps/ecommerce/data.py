@@ -88,6 +88,7 @@ class Line:
     description: Optional[str] = field(validator=optional(instance_of(str)))
     status: Optional[str] = field(validator=optional([instance_of(str), max_len(255)]))
     unit_price_excl_tax: Optional[str] = field(validator=optional(instance_of(str)))
+    product: Optional[dict] = field(validator=optional(instance_of(dict)))
 
 
 @mutable

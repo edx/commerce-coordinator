@@ -117,7 +117,7 @@ class TestCTOrderConversionToLegacyOrders(TestCase):
     def test_convert_line_item(self):
         order = gen_order(uuid4_str())
         li = order.line_items[0]
-        ret = convert_line_item(li, order.payment_state.value)
+        ret = convert_line_item(li, order.id)
 
         self.assertEqual(
             ret,
@@ -126,9 +126,25 @@ class TestCTOrderConversionToLegacyOrders(TestCase):
                 quantity=li.quantity,
                 course_organization="MichiganX",
                 description=un_ls(li.name),
-                status="Paid",
+                status="Fulfillment Initial",
                 line_price_excl_tax=price_to_string(li.price, SEND_MONEY_AS_DECIMAL_STRING),
-                unit_price_excl_tax=price_to_string(li.price, SEND_MONEY_AS_DECIMAL_STRING)
+                unit_price_excl_tax=price_to_string(li.price, SEND_MONEY_AS_DECIMAL_STRING),
+                product={
+                    "url": (
+                        "https://mc.us-central1.gcp.commercetools.com/SET_ME/orders/"
+                        f"{order.id}/general/line-items/822d77c4-00a6-4fb9-909b-094ef0b"
+                        "8c4b9/attributes"
+                    ),
+                    "title": "Injury Prevention for Children & Teens",
+                    "expires": None,
+                    "attributeValues": [
+                        {
+                            "name": "certificate_type",
+                            "code": "certificate_type",
+                            "value": "professional",
+                        }
+                    ]
+                }
             )
         )
 
