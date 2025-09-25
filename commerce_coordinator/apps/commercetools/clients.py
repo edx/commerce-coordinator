@@ -353,7 +353,6 @@ class CommercetoolsAPIClient:
             logger.info(f"[CommercetoolsAPIClient] - Customer found {user_message}")
             return results.results[0]
 
-    @conditional_retry
     def get_customer_by_lms_user_id(self, lms_user_id: int) -> Optional[Customer]:
         """
         Get a Commercetools Customer by their LMS User ID
