@@ -39,6 +39,20 @@ class Command(CommercetoolsAPIClientCommand):
                 f"Found {response.results}/{response.total} carts to delete "
                 f"in batch {batch_number}"
             )
+
+            orders = ",".join(
+                [
+                    f'"{cart.custom.fields.get("orderNumber")}"'
+                    for cart in carts
+                    if cart.custom
+                ]
+            )
+            orders = self.ct_api_client.base_client.orders.query(
+                where=[f"orderNumber in ({orders})"],
+                limit=limit,
+            )
+            orders = {order.order_number for order in orders.results}
+
             deleted_count_in_loop = 0
             for cart in carts:
                 try:
@@ -47,6 +61,12 @@ class Command(CommercetoolsAPIClientCommand):
                         if cart.custom
                         else None
                     )
+                    if order_number in orders:
+                        print(
+                            f"Skipping cart {cart.id} with existing order "
+                            f"number: {order_number}"
+                        )
+                        continue
                     if (
                         not order_number
                         or not order_number.startswith("2U-")
