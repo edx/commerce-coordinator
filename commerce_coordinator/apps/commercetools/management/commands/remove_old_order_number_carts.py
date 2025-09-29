@@ -36,7 +36,7 @@ class Command(CommercetoolsAPIClientCommand):
                 break
 
             print(
-                f"Found {response.results}/{response.total} carts to delete "
+                f"Found {len(carts)}/{response.total} carts to delete "
                 f"in batch {batch_number}"
             )
 
