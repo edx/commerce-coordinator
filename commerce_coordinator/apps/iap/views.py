@@ -158,6 +158,7 @@ class MobileCreateOrderView(APIView):
                     standalone_price=standalone_price,
                     line_item=item,
                     discount_codes=cart.discount_codes,
+                    line_items=cart.line_items,
                 )
 
             # Use existing payment if provided, otherwise create new one

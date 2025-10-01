@@ -92,6 +92,7 @@ def emit_product_added_event(
     standalone_price: CentPrecisionMoney,
     line_item: LineItem,
     discount_codes: list[dict[str, any]],
+    line_items: list[LineItem],
 ) -> None:
 
     """
@@ -103,6 +104,7 @@ def emit_product_added_event(
         standalone_price (CentPrecisionMoney): Price object for the added product before discounts.
         line_item (LineItem): The product line item that was added to the cart.
         discount_codes (list[dict[str, any]]): List of discount code dictionaries applied to the cart.
+        line_items (list[LineItem]): All line items in the cart to determine multi-item status.
 
     Emits:
         A "Product Added" event with details including:
@@ -110,6 +112,7 @@ def emit_product_added_event(
             - Cart ID and checkout ID
             - Applied coupon (if any)
             - Device context (hardcoded as mobile)
+            - Multi-item cart flag
     """
 
     discount_code = (
@@ -128,7 +131,7 @@ def emit_product_added_event(
         "coupon": discount_code,
         **product_info,
         "is_mobile": True,
-        "multi_item_cart_enabled": False  # Cannot determine cart state without context
+        "multi_item_cart_enabled": len(line_items) > 1
     }
 
     track(
