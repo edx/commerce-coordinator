@@ -10,6 +10,7 @@ import pytest
 from commercetools.platform.models import CentPrecisionMoney, LineItem, PaymentMethodInfo, TaxedPrice
 
 from commerce_coordinator.apps.iap.segment_events import (
+    emit_cart_viewed_event,
     emit_checkout_started_event,
     emit_order_completed_event,
     emit_payment_info_entered_event,
@@ -285,3 +286,73 @@ def test_emit_order_completed_event(
     assert props["processor_name"] == "android iap"
     assert props["products"][0]["product_id"] == "course-v1:edX+DemoX+Demo_Course"
     assert props["is_mobile"] is True
+
+
+@patch('commerce_coordinator.apps.iap.segment_events.track')
+def test_emit_cart_viewed_event(mock_track, mock_price, mock_line_item):
+    """
+    Test that the Cart Viewed event is emitted with correct properties and multiple products support
+    """
+    emit_cart_viewed_event(
+        lms_user_id=1,
+        cart_id="cart123",
+        standalone_price=mock_price,
+        line_items=[mock_line_item],
+        discount_codes=[],
+        discount_on_line_items=[],
+        discount_on_total_price=None
+    )
+
+    mock_track.assert_called_once()
+    _, kwargs = mock_track.call_args
+
+    assert kwargs["lms_user_id"] == 1
+    assert kwargs["event"] == "Cart Viewed"
+    props = kwargs["properties"]
+    assert props["cart_id"] == "cart123"
+    assert props["currency"] == "USD"
+    assert props["value"] == 100.0
+    assert props["coupon"] is None
+    assert props["discount"] is None
+    assert props["products"][0]["product_id"] == "course-v1:edX+DemoX+Demo_Course"
+    assert props["products"][0]["position"] == 1
+    assert props["multi_item_cart_enabled"] is False  # Cannot determine cart state without context
+
+
+@patch('commerce_coordinator.apps.iap.segment_events.track')
+def test_emit_cart_viewed_event_multiple_products(mock_track, mock_price, mock_line_item):
+    """
+    Test that the Cart Viewed event handles multiple products correctly
+    """
+    # Create a second line item
+    mock_line_item_2 = MagicMock()
+    mock_line_item_2.name = {"en-US": "Second Course"}
+    mock_line_item_2.variant.sku = "demo-sku-2"
+    mock_line_item_2.variant.attributes = []
+    mock_line_item_2.price.value = mock_price
+    mock_line_item_2.quantity = 1
+    mock_line_item_2.id = "line-item-2"
+
+    emit_cart_viewed_event(
+        lms_user_id=1,
+        cart_id="cart123",
+        standalone_price=mock_price,
+        line_items=[mock_line_item, mock_line_item_2],
+        discount_codes=[],
+        discount_on_line_items=[],
+        discount_on_total_price=None
+    )
+
+    mock_track.assert_called_once()
+    _, kwargs = mock_track.call_args
+
+    assert kwargs["lms_user_id"] == 1
+    assert kwargs["event"] == "Cart Viewed"
+    props = kwargs["properties"]
+    assert props["cart_id"] == "cart123"
+    assert len(props["products"]) == 2
+    assert props["products"][0]["position"] == 1
+    assert props["products"][1]["position"] == 2
+    assert props["multi_item_cart_enabled"] is True  # Multiple items cart
+
+
