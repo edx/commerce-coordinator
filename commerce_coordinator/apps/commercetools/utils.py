@@ -188,6 +188,7 @@ def prepare_segment_event_properties(
             calculate_total_discount_on_order(order, line_item_ids)
         ),
         "products": [],
+        "multi_item_cart_enabled": len(order.line_items) > 1,
     }
 
 

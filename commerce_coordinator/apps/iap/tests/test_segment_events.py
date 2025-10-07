@@ -138,10 +138,13 @@ def test_emit_checkout_started_event(
 
 @patch("commerce_coordinator.apps.iap.segment_events.track")
 @patch("commerce_coordinator.apps.iap.segment_events.get_product_from_line_item")
-def test_emit_product_added_event(
+def test_emit_product_added_event_single_item(
     mock_get_product_from_line_item,
-    mock_track
+    mock_track,
+    mock_price,
+    mock_line_item
 ):
+    """Test Product Added event with single item cart"""
 
     mock_get_product_from_line_item.return_value = {
         "product_id": "course-v1:edX+DemoX+Demo_Course",
@@ -162,7 +165,8 @@ def test_emit_product_added_event(
         cart_id="cart123",
         standalone_price=mock_price,
         line_item=mock_line_item,
-        discount_codes=[]
+        discount_codes=[],
+        line_items=[mock_line_item]  # Single item cart
     )
 
     mock_track.assert_called_once()
@@ -176,6 +180,61 @@ def test_emit_product_added_event(
     assert props["coupon"] is None
     assert props["product_id"] == "course-v1:edX+DemoX+Demo_Course"
     assert props["is_mobile"] is True
+    assert props["multi_item_cart_enabled"] is False
+
+
+@patch("commerce_coordinator.apps.iap.segment_events.track")
+@patch("commerce_coordinator.apps.iap.segment_events.get_product_from_line_item")
+def test_emit_product_added_event_multi_item(
+    mock_get_product_from_line_item,
+    mock_track,
+    mock_price,
+    mock_line_item
+):
+    """Test Product Added event with multi-item cart"""
+
+    mock_get_product_from_line_item.return_value = {
+        "product_id": "course-v1:edX+DemoX+Demo_Course",
+        "sku": "demo-sku",
+        "name": {"en-US": "Demo Course"},
+        "price": 100.0,
+        "quantity": 1,
+        "category": "business",
+        "url": "https://example.com/course",
+        "lob": "edx",
+        "image_url": "https://example.com/image.jpg",
+        "brand": "edX",
+        "product_type": "edX Course"
+    }
+
+    # Create a second line item for multi-item cart
+    mock_line_item_2 = MagicMock()
+    mock_line_item_2.name = {"en-US": "Second Course"}
+    mock_line_item_2.variant.sku = "demo-sku-2"
+    mock_line_item_2.quantity = 1
+    mock_line_item_2.product_key = "test-sku-2"
+
+    emit_product_added_event(
+        lms_user_id=1,
+        cart_id="cart123",
+        standalone_price=mock_price,
+        line_item=mock_line_item,
+        discount_codes=[],
+        line_items=[mock_line_item, mock_line_item_2]  # Multi-item cart
+    )
+
+    mock_track.assert_called_once()
+    _, kwargs = mock_track.call_args
+
+    assert kwargs["lms_user_id"] == 1
+    assert kwargs["event"] == "Product Added"
+    props = kwargs["properties"]
+    assert props["cart_id"] == "cart123"
+    assert props["checkout_id"] == "cart123"
+    assert props["coupon"] is None
+    assert props["product_id"] == "course-v1:edX+DemoX+Demo_Course"
+    assert props["is_mobile"] is True
+    assert props["multi_item_cart_enabled"] is True
 
 
 @patch("commerce_coordinator.apps.iap.segment_events.track")
@@ -189,7 +248,8 @@ def test_emit_payment_info_entered_event(
         lms_user_id=1,
         cart_id="cart123",
         standalone_price=mock_price,
-        payment_method=mock_payment_method
+        payment_method=mock_payment_method,
+        line_items=[mock_line_item]
     )
 
     mock_track.assert_called_once()

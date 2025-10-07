@@ -75,7 +75,8 @@ def emit_checkout_started_event(
         "coupon": discount_code,
         "discount": discount_in_dollars,
         "products": products,
-        "is_mobile": True
+        "is_mobile": True,
+        "multi_item_cart_enabled": len(line_items) > 1
     }
 
     track(
@@ -91,6 +92,7 @@ def emit_product_added_event(
     standalone_price: CentPrecisionMoney,
     line_item: LineItem,
     discount_codes: list[dict[str, any]],
+    line_items: list[LineItem],
 ) -> None:
 
     """
@@ -102,6 +104,7 @@ def emit_product_added_event(
         standalone_price (CentPrecisionMoney): Price object for the added product before discounts.
         line_item (LineItem): The product line item that was added to the cart.
         discount_codes (list[dict[str, any]]): List of discount code dictionaries applied to the cart.
+        line_items (list[LineItem]): All line items in the cart to determine multi-item status.
 
     Emits:
         A "Product Added" event with details including:
@@ -109,6 +112,7 @@ def emit_product_added_event(
             - Cart ID and checkout ID
             - Applied coupon (if any)
             - Device context (hardcoded as mobile)
+            - Multi-item cart flag
     """
 
     discount_code = (
@@ -126,7 +130,8 @@ def emit_product_added_event(
         "checkout_id": cart_id,
         "coupon": discount_code,
         **product_info,
-        "is_mobile": True
+        "is_mobile": True,
+        "multi_item_cart_enabled": len(line_items) > 1
     }
 
     track(
@@ -140,7 +145,8 @@ def emit_payment_info_entered_event(
     lms_user_id: int,
     cart_id: str,
     standalone_price: CentPrecisionMoney,
-    payment_method: str
+    payment_method: str,
+    line_items: list[LineItem]
 ) -> None:
 
     """
@@ -150,6 +156,8 @@ def emit_payment_info_entered_event(
         lms_user_id (int): ID of the user entering payment information.
         cart_id (str): Unique identifier of the user's shopping cart.
         standalone_price (CentPrecisionMoney): The total price of the cart used to extract currency.
+        payment_method (str): The payment method being used.
+        line_items (list[LineItem]): List of line items in the cart to determine multi-item status.
 
     Emits:
         A "Payment Info Entered" event with details such as:
@@ -157,6 +165,7 @@ def emit_payment_info_entered_event(
             - currency code
             - payment method (defaulted to 'android-iap')
             - is_mobile flag (set to True for mobile platforms)
+            - multi_item_cart_enabled flag
     """
 
     event_props = {
@@ -166,7 +175,8 @@ def emit_payment_info_entered_event(
         "checkout_id": cart_id,
         "currency": standalone_price.currency_code,
         "payment_method": payment_method,
-        "is_mobile": True
+        "is_mobile": True,
+        "multi_item_cart_enabled": len(line_items) > 1
     }
 
     track(
@@ -253,7 +263,8 @@ def emit_order_completed_event(
         "payment_method": payment_method,
         "processor_name": processor_name,
         "products": products,
-        "is_mobile": True
+        "is_mobile": True,
+        "multi_item_cart_enabled": len(line_items) > 1
     }
 
     track(
