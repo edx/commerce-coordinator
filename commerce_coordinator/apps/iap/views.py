@@ -180,6 +180,7 @@ class MobileCreateOrderView(APIView):
                 cart_id=cart.id,
                 standalone_price=standalone_price,
                 payment_method=payment.payment_method_info.method,
+                line_items=cart.line_items,
             )
 
             region_code = payment_info["response"].get("region_code")

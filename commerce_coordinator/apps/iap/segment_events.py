@@ -145,7 +145,8 @@ def emit_payment_info_entered_event(
     lms_user_id: int,
     cart_id: str,
     standalone_price: CentPrecisionMoney,
-    payment_method: str
+    payment_method: str,
+    line_items: list[LineItem]
 ) -> None:
 
     """
@@ -155,6 +156,8 @@ def emit_payment_info_entered_event(
         lms_user_id (int): ID of the user entering payment information.
         cart_id (str): Unique identifier of the user's shopping cart.
         standalone_price (CentPrecisionMoney): The total price of the cart used to extract currency.
+        payment_method (str): The payment method being used.
+        line_items (list[LineItem]): List of line items in the cart to determine multi-item status.
 
     Emits:
         A "Payment Info Entered" event with details such as:
@@ -162,6 +165,7 @@ def emit_payment_info_entered_event(
             - currency code
             - payment method (defaulted to 'android-iap')
             - is_mobile flag (set to True for mobile platforms)
+            - multi_item_cart_enabled flag
     """
 
     event_props = {
@@ -172,7 +176,7 @@ def emit_payment_info_entered_event(
         "currency": standalone_price.currency_code,
         "payment_method": payment_method,
         "is_mobile": True,
-        "multi_item_cart_enabled": False  # Cannot determine cart state without context
+        "multi_item_cart_enabled": len(line_items) > 1
     }
 
     track(
@@ -266,73 +270,5 @@ def emit_order_completed_event(
     track(
         lms_user_id=lms_user_id,
         event='Order Completed',
-        properties=event_props
-    )
-
-
-def emit_cart_viewed_event(
-    lms_user_id: int,
-    cart_id: str,
-    standalone_price: CentPrecisionMoney,
-    line_items: list[LineItem],
-    discount_codes: list[DiscountCode],
-    discount_on_line_items: Optional[list[CentPrecisionMoney]],
-    discount_on_total_price: Optional[CentPrecisionMoney] = None
-) -> None:
-
-    """
-    Triggers the Segment v2 ecommerce "Cart Viewed" event with multiple products support.
-
-    Args:
-        lms_user_id (int): ID of the user viewing the cart.
-        cart_id (str): Unique identifier for the shopping cart.
-        standalone_price (CentPrecisionMoney): The total price of the cart before discounts.
-        line_items (list[LineItem]): List of line items in the cart.
-        discount_codes (list[DiscountCode]): List of discount code dictionaries applied to the cart.
-        discount_on_line_items (list[CentPrecisionMoney]): Discounts applied to individual items.
-        discount_on_total_price (Optional[CentPrecisionMoney]): Discount applied to the entire cart.
-
-    Emits:
-        A Segment v2 ecommerce "Cart Viewed" event with details such as:
-            - cart_id
-            - currency and total value
-            - applied coupon and total discount
-            - products array with multiple products support
-            - multi_item_cart_enabled flag
-    """
-    discount_code = (
-        discount_codes[-1]["code"]
-        if discount_codes and "code" in discount_codes[-1]
-        else None
-    )
-
-    discount_in_dollars = cents_to_dollars(
-        sum_money(discount_on_total_price, discount_on_line_items)
-    )
-
-    # Create products array following Segment v2 ecommerce specification
-    products = []
-    for position, item in enumerate(line_items, 1):
-        product_info = get_product_from_line_item(item, standalone_price)
-        # Add position for Segment v2 ecommerce specification
-        product_info["position"] = position
-        products.append(product_info)
-
-    event_props = {
-        "track_plan_id": 20,
-        "trigger_source": 'server-side',
-        "cart_id": cart_id,
-        "currency": standalone_price.currency_code,
-        "value": cents_to_dollars(standalone_price),
-        "coupon": discount_code,
-        "discount": discount_in_dollars,
-        "products": products,
-        "is_mobile": True,
-        "multi_item_cart_enabled": len(line_items) > 1
-    }
-
-    track(
-        lms_user_id=lms_user_id,
-        event='Cart Viewed',
         properties=event_props
     )
