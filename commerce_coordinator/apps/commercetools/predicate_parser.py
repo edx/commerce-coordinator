@@ -325,7 +325,7 @@ class CartPredicateParser:
 
         elif kind == "func":
             name, args = params
-            if name == "lineItemCount":
+            if name in ("lineItemCount", "lineItemExists"):
                 if not args:
                     raise ValueError(f"Function {name} called with no arguments")
 
@@ -441,7 +441,7 @@ class CartPredicateParser:
 
         elif kind == "func":
             name, args = params
-            if name == "lineItemCount":
+            if name in ("lineItemCount", "lineItemExists"):
                 if not args:
                     print(f"Function {name} called with no arguments, returning 0")
                     return 0

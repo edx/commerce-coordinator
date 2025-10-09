@@ -944,6 +944,51 @@ class DiscountCodeInfoViewTests(APITestCase):
             response.data, {"is_applicable": True, "discount_percentage": 25}
         )
 
+    def test_cart_predicate_check_success_new_format(self, mock_ct_client):
+        """Test cart predicate check when predicate matches the course."""
+        self.authenticate_user()
+        mock_product = mock.Mock()
+        mock_variant = mock.Mock()
+        mock_mode_attr = mock.Mock()
+        mock_product.key = "TestX+CS101"
+        mock_variant.sku = "course-v1:TestX+CS101+2025"
+        mock_variant.key = "course-v1:TestX+CS101+2025"
+        mock_mode_attr.name = "mode"
+        mock_mode_attr.value = "verified"
+        mock_variant.attributes = [mock_mode_attr]
+
+        mock_client_instance = mock_ct_client.return_value
+        mock_client_instance.get_discount_code_info.return_value = DiscountCodeInfo(
+            cart_predicate=' '.join("""lineItemExists(
+                custom.bundleId is not defined
+                and attributes.mode = "verified"
+                and (
+                    product.key != "GTx+MGT6203x"
+                    and product.key != "GTx+CSE6040x"
+                    and product.key != "GTx+ISYE6501x"
+                )
+            ) = true""".split()),
+            is_applicable=True,
+            discount_percentage=25,
+            max_applications_per_customer=0,
+        )
+        mock_client_instance.get_product_and_variant_by_course_run_key.return_value = (
+            mock_product,
+            mock_variant,
+        )
+
+        response = self.client.get(
+            self.url, {"code": "VALID", "course_run_key": "course-v1:TestX+CS101+2023"}
+        )
+
+        mock_client_instance.get_product_and_variant_by_course_run_key.assert_called_once_with(
+            "course-v1:TestX+CS101+2023"
+        )
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(
+            response.data, {"is_applicable": True, "discount_percentage": 25}
+        )
+
     def test_cart_predicate_check_failure(self, mock_ct_client):
         """Test cart predicate check when predicate doesn't match the course."""
         self.authenticate_user()
