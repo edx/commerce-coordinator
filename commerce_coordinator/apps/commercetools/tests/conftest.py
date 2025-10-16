@@ -173,6 +173,17 @@ def gen_order(uuid_id, with_discount=True) -> Order:
         return Order.deserialize(obj)
 
 
+def gen_order_multiple_line_items(uuid_id) -> Order:
+    """
+    Generate a Order object from a json file
+    """
+    order_json_file = 'raw_ct_order_with_multiple_line_items.json'
+    with open(os.path.join(pathlib.Path(__file__).parent.resolve(), order_json_file)) as f:
+        obj = json.load(f)
+        obj['id'] = uuid_id
+        return Order.deserialize(obj)
+
+
 def gen_program_order(uuid_id) -> Order:
     """
     Generate a Order object from a json file

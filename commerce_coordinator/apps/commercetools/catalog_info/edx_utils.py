@@ -164,15 +164,12 @@ def get_line_item_price_to_refund(order: CTOrder, return_line_item_ids: List[str
     Returns:
         decimal.Decimal: The discounted price of the line item in dollars. Returns 0.00 if no discounted price is found.
     """
-    if check_is_bundle(order.line_items):
-        bundle_amount = 0
-        for line_item in get_edx_items(order):
-            if line_item.id in return_line_item_ids:
-                bundle_amount += cents_to_dollars(line_item.total_price)
+    refund_amount = 0.00
+    for line_item in get_edx_items(order):
+        if line_item.id in return_line_item_ids:
+            refund_amount += cents_to_dollars(line_item.total_price)
 
-        return bundle_amount
-
-    return cents_to_dollars(order.total_price)
+    return refund_amount
 
 
 def get_edx_refund_info(payment: CTPayment, order: CTOrder, return_line_item_ids: List[str]) -> (decimal.Decimal, str):
