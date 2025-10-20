@@ -341,7 +341,7 @@
           },
           {
             "name": "external-ids-variant",
-            "value": "course-v1:MichiganX+InjuryPreventionX+1T2021"
+            "value": "course-v1:MichiganX+InjuryPreventionX+1T2025"
           },
           {
             "name": "test-reference-category",
@@ -474,13 +474,13 @@
   },
   "taxedPrice": {
     "totalNet": {
-      "centAmount": 4900,
+      "centAmount": 9800,
       "currencyCode": "USD",
       "type": "centPrecision",
       "fractionDigits": 2
     },
     "totalGross": {
-      "centAmount": 4900,
+      "centAmount": 9800,
       "currencyCode": "USD",
       "type": "centPrecision",
       "fractionDigits": 2
