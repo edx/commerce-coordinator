@@ -262,6 +262,7 @@ class CartPredicateParser:
         return reduce(getitem, keys, self.context)
 
     def _normalize_expected(self, expected):
+        """Normalize expected value to 1 or 0"""
         if expected == "true":
             return 1
         elif expected == "false":
