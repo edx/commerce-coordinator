@@ -177,7 +177,7 @@ class CartPredicateParser:
 
         NOT: "not"
 
-        value: ESCAPED_STRING | SIGNED_NUMBER
+        value: ESCAPED_STRING | SIGNED_NUMBER | CNAME
 
         %import common.CNAME
         %import common.ESCAPED_STRING
@@ -362,6 +362,12 @@ class CartPredicateParser:
 
         if kind == "cmp":
             operator, expression, expected = params
+
+            if expected == "true":
+                expected = 1
+            elif expected == "false":
+                expected = 0
+
             if isinstance(expression, tuple) and expression[0] == "func":
                 evaluated, debug_output = self._evaluate_with_debug_output(
                     expression, depth + 1
