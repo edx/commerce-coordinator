@@ -512,10 +512,14 @@ class OrderReturnedMessageSignalTaskTests(TestCase):
 
     @patch('commerce_coordinator.apps.commercetools.sub_messages.tasks.is_edx_lms_order')
     @patch('commerce_coordinator.apps.stripe.pipeline.StripeAPIClient')
+    @patch('commerce_coordinator.apps.commercetools.sub_messages.tasks.get_edx_psp_payment_id')
+    @patch('commerce_coordinator.apps.commercetools.pipeline.get_edx_refund_info')
     @patch('commerce_coordinator.apps.commercetools.clients.CommercetoolsAPIClient.create_return_for_order')
     def test_correct_arguments_passed_valid_stripe_refund(
         self,
         _return_order_mock: MagicMock,
+        _refund_info_mock: MagicMock,
+        _mock_psp_payment_id: MagicMock,
         _stripe_api_mock: MagicMock,
         _lms_signal
     ):
@@ -533,6 +537,8 @@ class OrderReturnedMessageSignalTaskTests(TestCase):
         _return_order_mock.return_value.return_info.append(
             CTReturnInfo(items=[gen_return_item("mock_return_item_id", CTReturnPaymentState.INITIAL)])
         )
+        _refund_info_mock.return_value = 1000, "mock_ct_transaction_interaction_id"
+        _mock_psp_payment_id.return_value = "mock_payment_intent_id"
 
         ret_val = self.get_uut()(*self.unpack_for_uut(self.mock.example_payload))
 

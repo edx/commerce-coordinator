@@ -1,0 +1,667 @@
+{
+  "id": "7506b6f1-8fe2-440d-ac76-4f62dfbd3775",
+  "orderNumber": "2U-000001",
+  "version": 7,
+  "createdAt": "2023-10-31T19:51:46.791Z",
+  "lastModifiedAt": "2023-10-31T19:56:36.957Z",
+  "customerId": "ea421ddf-22ef-43b1-b97b-f06e5a5b8b49",
+  "customerEmail": "test_customer_6@example.com",
+  "lineItems": [
+    {
+      "id": "822d77c4-00a6-4fb9-909b-094ef0b8c4b9",
+      "productId": "9895858a-2d43-471d-be25-7a5007d52b9f",
+      "productKey": "MichiganX+InjuryPreventionX",
+      "name": {
+        "en-US": "Injury Prevention for Children & Teens"
+      },
+      "productSlug": {
+        "en-US": "injury-prevention-for-children-teens"
+      },
+      "productType": {
+        "typeId": "product-type",
+        "id": "b2aa56d2-7b98-4d51-9d70-81d675a45686",
+        "obj": {
+          "name": "edX Course",
+          "key": "edx_course"
+        }
+      },
+      "variant": {
+        "id": 1,
+        "sku": "course-v1:MichiganX+InjuryPreventionX+1T2021",
+        "key": "course-v1:MichiganX+InjuryPreventionX+1T2021",
+        "prices": [
+        ],
+        "attributes": [
+          {
+            "name": "primary-subject-area",
+            "value": {
+              "key": "business",
+              "label": "Business"
+            }
+          },
+          {
+            "name": "brand-text",
+            "value": "MichiganX"
+          },
+          {
+            "name": "mode",
+            "value": "professional"
+          },
+          {
+            "name": "date-created",
+            "value": "2019-08-21T00:02:00.000Z"
+          },
+          {
+            "name": "status",
+            "value": {
+              "key": "Published",
+              "label": "Published"
+            }
+          },
+          {
+            "name": "duration-low",
+            "value": 4
+          },
+          {
+            "name": "duration-high",
+            "value": 5
+          },
+          {
+            "name": "duration-unit",
+            "value": {
+              "key": "duration-weeks",
+              "label": "Weeks"
+            }
+          },
+          {
+            "name": "effort-low",
+            "value": 4
+          },
+          {
+            "name": "effort-high",
+            "value": 6
+          },
+          {
+            "name": "effort-unit",
+            "value": {
+              "key": "effot-per-week",
+              "label": "Hours per Week"
+            }
+          },
+          {
+            "name": "courserun-id",
+            "value": "32126"
+          },
+          {
+            "name": "courserun-start",
+            "value": "2021-04-19"
+          },
+          {
+            "name": "courserun-end",
+            "value": "2024-04-18"
+          },
+          {
+            "name": "courserun-status",
+            "value": {
+              "key": "courserun-status-published",
+              "label": "Published"
+            }
+          },
+          {
+            "name": "external-ids-product",
+            "value": "MichiganX+InjuryPreventionX"
+          },
+          {
+            "name": "external-ids-variant",
+            "value": "course-v1:MichiganX+InjuryPreventionX+1T2021"
+          },
+          {
+            "name": "test-reference-category",
+            "value": {
+              "typeId": "category",
+              "id": "d4ae2b24-3be4-4033-b55c-237ca62cc4bf"
+            }
+          }
+        ],
+        "images": [
+          {
+            "url": "https://90bbf3dd6df9e8673f39-65625168de2b7f206447b8dd2ec7c899.ssl.cf1.rackcdn.com/image%20(47)-4DyzF3NF.png",
+            "dimensions": {
+              "w": 678,
+              "h": 402
+            },
+            "label": "MichiganX: Injury Prevention for Children & Teens"
+          }
+        ],
+        "assets": [
+        ]
+      },
+      "price": {
+        "id": "093c48bb-2b46-4c7c-8e22-f4e16edd8761",
+        "key": "open-course-verified-price",
+        "value": {
+          "centAmount": 4900,
+          "currencyCode": "USD",
+          "type": "centPrecision",
+          "fractionDigits": 2
+        }
+      },
+      "quantity": 1,
+      "totalPrice": {
+        "centAmount": 4900,
+        "currencyCode": "USD",
+        "type": "centPrecision",
+        "fractionDigits": 2
+      },
+      "discountedPricePerQuantity": [
+      ],
+      "taxedPrice": {
+        "totalNet": {
+          "centAmount": 4900,
+          "currencyCode": "USD",
+          "type": "centPrecision",
+          "fractionDigits": 2
+        },
+        "totalGross": {
+          "centAmount": 4900,
+          "currencyCode": "USD",
+          "type": "centPrecision",
+          "fractionDigits": 2
+        },
+        "totalTax": {
+          "centAmount": 0,
+          "currencyCode": "USD",
+          "type": "centPrecision",
+          "fractionDigits": 2
+        }
+      },
+      "taxedPricePortions": [
+      ],
+      "state": [
+        {
+          "quantity": 1,
+          "state": {
+            "typeId": "state",
+            "id": "de47c5ea-36df-4161-a232-7da0b0db49d1",
+            "obj": {
+              "id": "de47c5ea-36df-4161-a232-7da0b0db49d1",
+              "version": 4,
+              "versionModifiedAt": "2024-04-30T12:32:56.106Z",
+              "createdAt": "2023-10-19T17:11:49.816Z",
+              "lastModifiedAt": "2024-04-30T12:32:56.106Z",
+              "lastModifiedBy": {
+                "clientId": "0skB5647I8oK2unU5Mj7QiTg",
+                "isPlatformClient": false
+              },
+              "createdBy": {
+                "isPlatformClient": true
+              },
+              "key": "Initial",
+              "type": "LineItemState",
+              "roles": [],
+              "name": {
+                "en": "Fulfillment Initial",
+                "en-US": "Fulfillment Initial"
+              },
+              "description": {
+                "en": "This order line item has not yet been fulfilled",
+                "en-US": "This order line item has not yet been fulfilled"
+              },
+              "builtIn": true,
+              "transitions": [
+                {
+                  "typeId": "state",
+                  "id": "669d3d11-5eaa-4521-b146-ccbd408ae940"
+                }
+              ],
+              "initial": true
+            }
+          }
+        }
+      ],
+      "taxRate": {
+        "name": "Disabled tax calculation",
+        "amount": 0,
+        "includedInPrice": false,
+        "country": "AL",
+        "state": "Berat District",
+        "subRates": [
+        ]
+      },
+      "perMethodTaxRate": [
+      ],
+      "priceMode": "Platform",
+      "lineItemMode": "Standard",
+      "addedAt": "2024-02-13T09:33:49.848000+00:00",
+      "lastModifiedAt": "2024-02-13T09:33:49.848000+00:00"
+    },
+    {
+      "id": "f902b3ac-4e63-426a-b1d9-f2f5d23da398",
+      "productId": "9895858a-2d43-471d-be25-7a5007d52b9f",
+      "productKey": "MichiganX+InjuryPreventionX",
+      "name": {
+        "en-US": "Injury Prevention for Children & Teens"
+      },
+      "productSlug": {
+        "en-US": "injury-prevention-for-children-teens"
+      },
+      "productType": {
+        "typeId": "product-type",
+        "id": "b2aa56d2-7b98-4d51-9d70-81d675a45686",
+        "obj": {
+          "name": "edX Course",
+          "key": "edx_course"
+        }
+      },
+      "variant": {
+        "id": 1,
+        "sku": "course-v1:MichiganX+InjuryPreventionX+1T2025",
+        "key": "course-v1:MichiganX+InjuryPreventionX+1T2025",
+        "prices": [
+        ],
+        "attributes": [
+          {
+            "name": "primary-subject-area",
+            "value": {
+              "key": "business",
+              "label": "Business"
+            }
+          },
+          {
+            "name": "brand-text",
+            "value": "MichiganX"
+          },
+          {
+            "name": "mode",
+            "value": "professional"
+          },
+          {
+            "name": "date-created",
+            "value": "2019-08-21T00:02:00.000Z"
+          },
+          {
+            "name": "status",
+            "value": {
+              "key": "Published",
+              "label": "Published"
+            }
+          },
+          {
+            "name": "duration-low",
+            "value": 4
+          },
+          {
+            "name": "duration-high",
+            "value": 5
+          },
+          {
+            "name": "duration-unit",
+            "value": {
+              "key": "duration-weeks",
+              "label": "Weeks"
+            }
+          },
+          {
+            "name": "effort-low",
+            "value": 4
+          },
+          {
+            "name": "effort-high",
+            "value": 6
+          },
+          {
+            "name": "effort-unit",
+            "value": {
+              "key": "effot-per-week",
+              "label": "Hours per Week"
+            }
+          },
+          {
+            "name": "courserun-id",
+            "value": "32126"
+          },
+          {
+            "name": "courserun-start",
+            "value": "2021-04-19"
+          },
+          {
+            "name": "courserun-end",
+            "value": "2024-04-18"
+          },
+          {
+            "name": "courserun-status",
+            "value": {
+              "key": "courserun-status-published",
+              "label": "Published"
+            }
+          },
+          {
+            "name": "external-ids-product",
+            "value": "MichiganX+InjuryPreventionX"
+          },
+          {
+            "name": "external-ids-variant",
+            "value": "course-v1:MichiganX+InjuryPreventionX+1T2025"
+          },
+          {
+            "name": "test-reference-category",
+            "value": {
+              "typeId": "category",
+              "id": "d4ae2b24-3be4-4033-b55c-237ca62cc4bf"
+            }
+          }
+        ],
+        "images": [
+          {
+            "url": "https://90bbf3dd6df9e8673f39-65625168de2b7f206447b8dd2ec7c899.ssl.cf1.rackcdn.com/image%20(47)-4DyzF3NF.png",
+            "dimensions": {
+              "w": 678,
+              "h": 402
+            },
+            "label": "MichiganX: Injury Prevention for Children & Teens"
+          }
+        ],
+        "assets": [
+        ]
+      },
+      "price": {
+        "id": "093c48bb-2b46-4c7c-8e22-f4e16edd8761",
+        "key": "open-course-verified-price",
+        "value": {
+          "centAmount": 4900,
+          "currencyCode": "USD",
+          "type": "centPrecision",
+          "fractionDigits": 2
+        }
+      },
+      "quantity": 1,
+      "totalPrice": {
+        "centAmount": 4900,
+        "currencyCode": "USD",
+        "type": "centPrecision",
+        "fractionDigits": 2
+      },
+      "discountedPricePerQuantity": [
+      ],
+      "taxedPrice": {
+        "totalNet": {
+          "centAmount": 4900,
+          "currencyCode": "USD",
+          "type": "centPrecision",
+          "fractionDigits": 2
+        },
+        "totalGross": {
+          "centAmount": 4900,
+          "currencyCode": "USD",
+          "type": "centPrecision",
+          "fractionDigits": 2
+        },
+        "totalTax": {
+          "centAmount": 0,
+          "currencyCode": "USD",
+          "type": "centPrecision",
+          "fractionDigits": 2
+        }
+      },
+      "taxedPricePortions": [
+      ],
+      "state": [
+        {
+          "quantity": 1,
+          "state": {
+            "typeId": "state",
+            "id": "de47c5ea-36df-4161-a232-7da0b0db49d1",
+            "obj": {
+              "id": "de47c5ea-36df-4161-a232-7da0b0db49d1",
+              "version": 4,
+              "versionModifiedAt": "2024-04-30T12:32:56.106Z",
+              "createdAt": "2023-10-19T17:11:49.816Z",
+              "lastModifiedAt": "2024-04-30T12:32:56.106Z",
+              "lastModifiedBy": {
+                "clientId": "0skB5647I8oK2unU5Mj7QiTg",
+                "isPlatformClient": false
+              },
+              "createdBy": {
+                "isPlatformClient": true
+              },
+              "key": "Initial",
+              "type": "LineItemState",
+              "roles": [],
+              "name": {
+                "en": "Fulfillment Initial",
+                "en-US": "Fulfillment Initial"
+              },
+              "description": {
+                "en": "This order line item has not yet been fulfilled",
+                "en-US": "This order line item has not yet been fulfilled"
+              },
+              "builtIn": true,
+              "transitions": [
+                {
+                  "typeId": "state",
+                  "id": "669d3d11-5eaa-4521-b146-ccbd408ae940"
+                }
+              ],
+              "initial": true
+            }
+          }
+        }
+      ],
+      "taxRate": {
+        "name": "Disabled tax calculation",
+        "amount": 0,
+        "includedInPrice": false,
+        "country": "AL",
+        "state": "Berat District",
+        "subRates": [
+        ]
+      },
+      "perMethodTaxRate": [
+      ],
+      "priceMode": "Platform",
+      "lineItemMode": "Standard",
+      "addedAt": "2024-02-13T09:33:49.848000+00:00",
+      "lastModifiedAt": "2024-02-13T09:33:49.848000+00:00"
+    }
+  ],
+  "customLineItems": [
+  ],
+  "totalPrice": {
+    "centAmount": 4900,
+    "currencyCode": "USD",
+    "type": "centPrecision",
+    "fractionDigits": 2
+  },
+  "taxedPrice": {
+    "totalNet": {
+      "centAmount": 9800,
+      "currencyCode": "USD",
+      "type": "centPrecision",
+      "fractionDigits": 2
+    },
+    "totalGross": {
+      "centAmount": 9800,
+      "currencyCode": "USD",
+      "type": "centPrecision",
+      "fractionDigits": 2
+    },
+    "taxPortions": [
+      {
+        "name": "Disabled tax calculation",
+        "rate": 0,
+        "amount": {
+          "centAmount": 0,
+          "currencyCode": "USD",
+          "type": "centPrecision",
+          "fractionDigits": 2
+        }
+      }
+    ],
+    "totalTax": {
+      "centAmount": 0,
+      "currencyCode": "USD",
+      "type": "centPrecision",
+      "fractionDigits": 2
+    }
+  },
+  "taxMode": "Platform",
+  "taxRoundingMode": "HalfEven",
+  "taxCalculationMode": "LineItemLevel",
+  "inventoryMode": "None",
+  "shippingAddress": {
+    "country": "US"
+  },
+  "shippingMode": "Single",
+  "shipping": [],
+  "itemShippingAddresses": [],
+  "discountCodes": [
+    {
+      "discountCode": {
+        "obj": {
+          "code": "TEST_DISCOUNT_CODE"
+        }
+      }
+    }
+  ],
+  "directDiscounts": [],
+  "refusedGifts": [],
+  "paymentInfo": {
+    "payments": [
+      {
+        "typeId": "payment",
+        "id": "33766483-1428-41b0-81bb-c2ea565f7aeb",
+        "obj": {
+          "id": "33766483-1428-41b0-81bb-c2ea565f7aeb",
+          "version": 1,
+          "createdAt": "2023-10-31T19:56:36.798Z",
+          "lastModifiedAt": "2023-10-31T19:56:36.798Z",
+          "lastModifiedBy": {
+            "clientId": "E1UbNz9SHIG_n4nnSAUP1uW4"
+          },
+          "createdBy": {
+            "clientId": "E1UbNz9SHIG_n4nnSAUP1uW4"
+          },
+          "customer": {
+            "typeId": "customer",
+            "id": "d04dd210-9bcc-4692-bf4e-338125e3d3bb"
+          },
+          "interfaceId": "pi_3OjJErH4caH7G0X11cqUfLTu",
+          "amountPlanned": {
+            "centAmount": 4900,
+            "currencyCode": "USD",
+            "type": "centPrecision",
+            "fractionDigits": 2
+          },
+          "paymentMethodInfo": {
+            "paymentInterface": "stripe_edx",
+            "method": "card"
+          },
+          "paymentStatus": {
+            "interfaceCode": "succeeded",
+            "interfaceText": "Succeeded"
+          },
+          "transactions": [
+            {
+              "id": "470ce2de-8456-497b-a7eb-59b2e0faa6e0",
+              "type": "Charge",
+              "amount": {
+                "centAmount": 4900,
+                "currencyCode": "USD",
+                "type": "centPrecision",
+                "fractionDigits": 2
+              },
+              "interactionId": "ch_3OjJErH4caH7G0X11nnFrS0J",
+              "state": "Success"
+            }
+          ],
+          "interfaceInteractions": [
+          ],
+          "key": "pi_3OjJErH4caH7G0X11cqUfLTu"
+        }
+      }
+    ]
+  },
+  "country": "US",
+  "locale": "en-US",
+  "origin": "Customer",
+  "cart": {
+    "typeId": "cart",
+    "id": "0cc5592e-1dfb-490b-8e29-e80480fd88e2"
+  },
+  "state": {
+    "id": "1DD2756E-1CDF-4F80-B0CA-9EE5040B0609",
+    "typeId": "state",
+    "obj": {
+      "id": "2e21a5e7-0636-4594-b1f7-617f306bf977",
+      "version": 4,
+      "createdAt": "2023-11-29T15:27:24.181000+00:00",
+      "lastModifiedAt": "2024-01-02T17:41:53.862000+00:00",
+      "lastModifiedBy": {
+        "clientId": "E1UbNz9SHIG_n4nnSAUP1uW4"
+      },
+      "createdBy": {
+        "clientId": "E1UbNz9SHIG_n4nnSAUP1uW4"
+      },
+      "key": "2u-sdn-order-state",
+      "type": "OrderState",
+      "name": {
+        "en": "Sanctioned",
+        "en-US": "Sanctioned"
+      },
+      "description": {
+        "en": "This order has been sanctioned for an SDN hit",
+        "en-US": "This order has been sanctioned for an SDN hit"
+      },
+      "initial": true,
+      "builtIn": false,
+      "roles": [],
+      "transitions": []
+    }
+  },
+  "orderState": "Complete",
+  "shipmentState": "Shipped",
+  "custom": {
+    "typeId": "type",
+    "id": "d4ae2b24-3be4-4033-b55c-237ca62cc4bf",
+    "fields": {
+     "mobileOrder":true
+    }
+  },
+  "paymentState": "Paid",
+  "syncInfo": [],
+  "returnInfo": [
+    {
+      "items": [
+        {
+          "id": "1234",
+          "type": "LineItemReturnItem",
+          "lineItemId": "order_line_id"
+
+        },
+        {
+          "id": "5678",
+          "type": "LineItemReturnItem",
+          "lineItemId": "not_order_line_id"
+
+        }
+      ],
+      "returnTrackingId": "1",
+      "returnDate": "2023-10-31T19:56:46.127Z"
+    }
+  ],
+  "lastMessageSequenceNumber": 5,
+  "lastModifiedBy": {
+    "clientId": "E1UbNz9SHIG_n4nnSAUP1uW4"
+  },
+  "createdBy": {
+    "clientId": "E1UbNz9SHIG_n4nnSAUP1uW4"
+  },
+  "discountOnTotalPrice": {
+    "discountedAmount": {
+      "centAmount": 2500,
+      "currencyCode": "USD",
+      "type": "centPrecision",
+      "fractionDigits": 2
+    }
+  }
+}

@@ -24,6 +24,7 @@ from commerce_coordinator.apps.commercetools.tests.conftest import (
     DEFAULT_EDX_LMS_USER_ID,
     gen_customer,
     gen_order,
+    gen_order_multiple_line_items,
     gen_payment,
     gen_product,
     gen_program_order
@@ -87,6 +88,15 @@ class TestEdXFunctions(unittest.TestCase):
 
     def test_get_line_item_price_to_refund_single_item(self):
         order = gen_order(uuid4_str())
+        line_item_id = order.line_items[0].id
+        expected_refund_amount = decimal.Decimal(order.line_items[0].total_price.cent_amount / 100)
+
+        refund_amount = get_line_item_price_to_refund(order, [line_item_id])
+
+        self.assertEqual(refund_amount, expected_refund_amount)
+
+    def test_get_line_item_price_to_refund_item_in_multi_purchase(self):
+        order = gen_order_multiple_line_items(uuid4_str())
         line_item_id = order.line_items[0].id
         expected_refund_amount = decimal.Decimal(order.line_items[0].total_price.cent_amount / 100)
 
