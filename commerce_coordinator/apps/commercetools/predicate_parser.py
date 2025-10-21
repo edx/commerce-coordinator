@@ -275,6 +275,12 @@ class CartPredicateParser:
 
         if kind == "cmp":  # pragma: no cover
             operator, expression, expected = params
+
+            if expected == "true":
+                expected = 1
+            elif expected == "false":
+                expected = 0
+
             if isinstance(expression, tuple) and expression[0] == "func":
                 evaluated = self._evaluate(expression)
             else:
