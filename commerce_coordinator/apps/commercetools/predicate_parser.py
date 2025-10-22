@@ -177,7 +177,7 @@ class CartPredicateParser:
 
         NOT: "not"
 
-        value: ESCAPED_STRING | SIGNED_NUMBER
+        value: ESCAPED_STRING | SIGNED_NUMBER | CNAME
 
         %import common.CNAME
         %import common.ESCAPED_STRING
@@ -261,6 +261,15 @@ class CartPredicateParser:
         keys = path.split(".")
         return reduce(getitem, keys, self.context)
 
+    def _normalize_expected(self, expected):
+        """Normalize expected value to 1 or 0"""
+        if expected == "true":
+            return 1
+        elif expected == "false":
+            return 0
+        else:
+            return expected
+
     def _evaluate(self, expression):
         """
         Evaluate the expression.
@@ -275,6 +284,8 @@ class CartPredicateParser:
 
         if kind == "cmp":  # pragma: no cover
             operator, expression, expected = params
+            expected = self._normalize_expected(expected)
+
             if isinstance(expression, tuple) and expression[0] == "func":
                 evaluated = self._evaluate(expression)
             else:
@@ -362,6 +373,8 @@ class CartPredicateParser:
 
         if kind == "cmp":
             operator, expression, expected = params
+            expected = self._normalize_expected(expected)
+
             if isinstance(expression, tuple) and expression[0] == "func":
                 evaluated, debug_output = self._evaluate_with_debug_output(
                     expression, depth + 1
