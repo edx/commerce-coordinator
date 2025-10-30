@@ -239,20 +239,20 @@
   "customLineItems": [
   ],
   "totalPrice": {
-    "centAmount": 4900,
+    "centAmount": 2400,
     "currencyCode": "USD",
     "type": "centPrecision",
     "fractionDigits": 2
   },
   "taxedPrice": {
     "totalNet": {
-      "centAmount": 4900,
+      "centAmount": 2400,
       "currencyCode": "USD",
       "type": "centPrecision",
       "fractionDigits": 2
     },
     "totalGross": {
-      "centAmount": 4900,
+      "centAmount": 2400,
       "currencyCode": "USD",
       "type": "centPrecision",
       "fractionDigits": 2
@@ -319,7 +319,7 @@
           },
           "interfaceId": "pi_3OjJErH4caH7G0X11cqUfLTu",
           "amountPlanned": {
-            "centAmount": 4900,
+            "centAmount": 2400,
             "currencyCode": "USD",
             "type": "centPrecision",
             "fractionDigits": 2
@@ -337,7 +337,7 @@
               "id": "470ce2de-8456-497b-a7eb-59b2e0faa6e0",
               "type": "Charge",
               "amount": {
-                "centAmount": 4900,
+                "centAmount": 2400,
                 "currencyCode": "USD",
                 "type": "centPrecision",
                 "fractionDigits": 2

@@ -164,12 +164,21 @@ def get_line_item_price_to_refund(order: CTOrder, return_line_item_ids: List[str
     Returns:
         decimal.Decimal: The discounted price of the line item in dollars. Returns 0.00 if no discounted price is found.
     """
-    refund_amount = 0
-    for line_item in get_edx_items(order):
-        if line_item.id in return_line_item_ids:
-            refund_amount += cents_to_dollars(line_item.total_price)
+    # If multiple items, refund line item total(s)
+    if len(order.line_items) > 1:
+        refund_amount = 0
+        for line_item in get_edx_items(order):
+            if line_item.id in return_line_item_ids:
+                refund_amount += cents_to_dollars(line_item.total_price)
 
-    return refund_amount
+        return refund_amount
+
+    # If one item, refund cart total
+    elif len(order.line_items) == 1 and order.line_items[0].id in return_line_item_ids:
+        return cents_to_dollars(order.total_price)
+
+    # Refund 0 if line item id doesn't match
+    return 0
 
 
 def get_edx_refund_info(payment: CTPayment, order: CTOrder, return_line_item_ids: List[str]) -> (decimal.Decimal, str):

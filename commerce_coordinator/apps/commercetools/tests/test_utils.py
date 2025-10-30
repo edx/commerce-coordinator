@@ -231,8 +231,8 @@ class TestBrazeHelpers(unittest.TestCase):
                                     f"?order_number={order.order_number}",
             "purchase_date": 'Oct 31, 2023',
             "purchase_time": '07:56 PM (UTC)',
-            "subtotal": "$74.00",
-            "total": "$49.00",
+            "subtotal": "$49.00",
+            "total": "$24.00",
             'discount_code': 'TEST_DISCOUNT_CODE',
             'discount_value': '$25.00'
         }
