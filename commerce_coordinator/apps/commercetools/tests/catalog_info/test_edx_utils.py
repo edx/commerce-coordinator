@@ -83,13 +83,14 @@ class TestEdXFunctions(unittest.TestCase):
 
         refund_amount, interaction_id = get_edx_refund_info(payment, order, return_line_item_id)
 
-        self.assertEqual(refund_amount, decimal.Decimal(order.line_items[0].total_price.cent_amount / 100))
+        self.assertEqual(refund_amount, decimal.Decimal(order.total_price.cent_amount / 100))
         self.assertEqual(interaction_id, "test_interaction_id")
 
     def test_get_line_item_price_to_refund_single_item(self):
         order = gen_order(uuid4_str())
         line_item_id = order.line_items[0].id
-        expected_refund_amount = decimal.Decimal(order.line_items[0].total_price.cent_amount / 100)
+        # If only one item, refund total cart price
+        expected_refund_amount = decimal.Decimal(order.total_price.cent_amount / 100)
 
         refund_amount = get_line_item_price_to_refund(order, [line_item_id])
 
@@ -98,6 +99,7 @@ class TestEdXFunctions(unittest.TestCase):
     def test_get_line_item_price_to_refund_item_in_multi_purchase(self):
         order = gen_order_multiple_line_items(uuid4_str())
         line_item_id = order.line_items[0].id
+        # If multiple items, return only price of line item(s) specified
         expected_refund_amount = decimal.Decimal(order.line_items[0].total_price.cent_amount / 100)
 
         refund_amount = get_line_item_price_to_refund(order, [line_item_id])
