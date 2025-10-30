@@ -176,7 +176,7 @@ def get_line_item_price_to_refund(order: CTOrder, return_line_item_ids: List[str
     # If one item, refund cart total
     elif len(order.line_items) == 1 and order.line_items[0].id in return_line_item_ids:
         return cents_to_dollars(order.total_price)
-    
+
     # Refund 0 if line item id doesn't match
     return 0
 
