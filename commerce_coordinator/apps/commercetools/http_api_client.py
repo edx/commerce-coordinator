@@ -7,6 +7,10 @@ from typing import Dict, List, Optional, Union
 
 import requests
 from django.conf import settings
+from edx_django_utils.cache import TieredCache
+
+from commerce_coordinator.apps.commercetools.constants import GET_PROGRAM_CACHE_TTL_SECS
+from commerce_coordinator.apps.core.memcache import safe_key
 
 logger = logging.getLogger(__name__)
 
@@ -149,6 +153,11 @@ class CTCustomAPIClient:
         if not product_key:
             raise ValueError("[get_program_variants] Missing required product_key")
 
+        cache_key = safe_key(key=product_key, key_prefix='commercetools_get_program_variants', version='1')
+        cache_entry = TieredCache.get_cached_response(cache_key)
+        if cache_entry.is_found:
+            return cache_entry.get_value_or_default([])
+
         params = {
             "where": f'key="{product_key}"',
             "expand": 'variants[*].attributes[*].value',
@@ -161,7 +170,11 @@ class CTCustomAPIClient:
             log_info=f"bundle_key={product_key}",
         )
 
-        if not program or not program.get("results"):
+        if not program:
+            return []
+
+        if not program.get("results"):
+            TieredCache.set_all_tiers(cache_key, value=[], django_cache_timeout=GET_PROGRAM_CACHE_TTL_SECS)
             return []
 
         variants = program["results"][0].get("variants", [])
@@ -177,6 +190,9 @@ class CTCustomAPIClient:
                         "variant_key": variant.get("key"),
                     })
 
+        TieredCache.set_all_tiers(
+            cache_key, value=entitlement_products, django_cache_timeout=GET_PROGRAM_CACHE_TTL_SECS
+        )
         return entitlement_products
 
     def get_standalone_prices_for_skus(

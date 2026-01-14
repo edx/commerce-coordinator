@@ -4,10 +4,12 @@ from unittest.mock import patch
 
 import requests_mock
 from django.test import TestCase
+from edx_django_utils.cache import TieredCache
 from requests import Response
 from requests.exceptions import HTTPError
 
 from commerce_coordinator.apps.commercetools.http_api_client import CTCustomAPIClient
+from commerce_coordinator.apps.core.memcache import safe_key
 
 
 class TestCTCustomAPIClient(TestCase):
@@ -29,6 +31,34 @@ class TestCTCustomAPIClient(TestCase):
             "projectKey": "project_key"
         }
         self.client.access_token = "mock_access_token"
+        self.mock_product_projections_response = {
+            "results": [{
+                "variants": [{
+                    "key": "variant_key",
+                    "attributes": [{
+                        "name": "ref-edx-course-entitlement",
+                        "value": {
+                            "obj": {
+                                "masterData": {
+                                    "current": {
+                                        "masterVariant": {
+                                            "sku": "entitlement_sku"
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }]
+                }]
+            }]
+        }
+        self.get_program_variants_cache_key = safe_key(
+            key='product_key', key_prefix='commercetools_get_program_variants', version='1'
+        )
+
+    def tearDown(self):
+        super().tearDown()
+        TieredCache.dangerous_clear_all_tiers()
 
     def test_get_access_token(self):
         with requests_mock.Mocker() as mocker:
@@ -144,38 +174,73 @@ class TestCTCustomAPIClient(TestCase):
 
     def test_get_program_variants(self):
         with requests_mock.Mocker() as mocker:
-            mock_response = {
-                "results": [{
-                    "variants": [{
-                        "key": "variant_key",
-                        "attributes": [{
-                            "name": "ref-edx-course-entitlement",
-                            "value": {
-                                "obj": {
-                                    "masterData": {
-                                        "current": {
-                                            "masterVariant": {
-                                                "sku": "entitlement_sku"
-                                            }
-                                        }
-                                    }
-                                }
-                            }
-                        }]
-                    }]
-                }]
-            }
             mocker.get(
                 f"{self.client.config['apiUrl']}/{self.client.config['projectKey']}/product-projections",
-                json=mock_response
+                json=self.mock_product_projections_response
             )
 
-            response = self.client.get_program_variants("product_key")
+            response = self.client.get_program_variants('product_key')
             expected_response = [{
                 "entitlement_sku": "entitlement_sku",
                 "variant_key": "variant_key"
             }]
             self.assertEqual(response, expected_response)
+
+    def test_get_program_variants_failed(self):
+        with requests_mock.Mocker() as mocker:
+            mocker.get(
+                f"{self.client.config['apiUrl']}/{self.client.config['projectKey']}/product-projections",
+                json=None
+            )
+
+            response = self.client.get_program_variants('product_key')
+            expected_response = []
+            self.assertEqual(response, expected_response)
+            # don't cache failed response
+            self.assertFalse(TieredCache.get_cached_response(self.get_program_variants_cache_key).is_found)
+
+    def test_get_program_variants_no_results(self):
+        with requests_mock.Mocker() as mocker:
+            mocker.get(
+                f"{self.client.config['apiUrl']}/{self.client.config['projectKey']}/product-projections",
+                json={"results": []}
+            )
+
+            response = self.client.get_program_variants('product_key')
+            self.assertEqual(response, [])
+            self.assertEqual(
+                response, TieredCache.get_cached_response(self.get_program_variants_cache_key).get_value_or_default([])
+            )
+
+    def test_get_program_variants_cache(self):
+        with requests_mock.Mocker() as mocker:
+            # pylint: disable-next=protected-access
+            with patch.object(self.client, '_make_request', wraps=self.client._make_request) as wrapped_request:
+                product_key = 'product_key'
+                mocker.get(
+                    f"{self.client.config['apiUrl']}/{self.client.config['projectKey']}/product-projections",
+                    json=self.mock_product_projections_response
+                )
+
+                response = self.client.get_program_variants(product_key)
+                expected_response = [{
+                    "entitlement_sku": "entitlement_sku",
+                    "variant_key": "variant_key"
+                }]
+                self.assertEqual(response, expected_response)
+                self.assertEqual(
+                    response,
+                    TieredCache.get_cached_response(self.get_program_variants_cache_key).get_value_or_default([])
+                )
+
+                # return cached response even if CT response changes
+                mocker.get(
+                    f"{self.client.config['apiUrl']}/{self.client.config['projectKey']}/product-projections",
+                    json=None
+                )
+                response = self.client.get_program_variants(product_key)
+                wrapped_request.assert_called_once()
+                self.assertEqual(response, expected_response)
 
     def test_get_standalone_prices_for_skus(self):
         with requests_mock.Mocker() as mocker:
