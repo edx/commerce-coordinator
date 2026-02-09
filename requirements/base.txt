@@ -6,22 +6,22 @@
 #
 aiohappyeyeballs==2.6.1
     # via aiohttp
-aiohttp==3.12.15
+aiohttp==3.13.3
     # via inapppy
 aiosignal==1.4.0
     # via aiohttp
 amqp==5.3.1
     # via kombu
-anyio==4.10.0
+anyio==4.12.1
     # via httpx
-apimatic-core==0.2.22
+apimatic-core==0.2.24
     # via paypal-server-sdk
-apimatic-core-interfaces==0.1.6
+apimatic-core-interfaces==0.1.8
     # via
     #   apimatic-core
     #   apimatic-requests-client-adapter
     #   paypal-server-sdk
-apimatic-requests-client-adapter==0.1.8
+apimatic-requests-client-adapter==0.1.10
     # via paypal-server-sdk
 app-store-notifications-v2-validator==0.0.9
     # via -r requirements/base.in
@@ -30,40 +30,38 @@ asgiref==3.7.2
     #   -r requirements/base.in
     #   django
     #   django-cors-headers
-attrs==25.3.0
+attrs==25.4.0
     # via
     #   -r requirements/base.in
     #   aiohttp
     #   edx-ace
-babel==2.17.0
+babel==2.18.0
     # via -r requirements/base.in
 backoff==2.2.1
     # via segment-analytics-python
-billiard==4.2.1
+billiard==4.2.4
     # via celery
-cachecontrol==0.12.14
+cachecontrol==0.14.4
     # via
     #   apimatic-requests-client-adapter
     #   firebase-admin
-cachetools==5.5.2
-    # via google-auth
 celery[redis]==5.4.0
     # via
     #   -c requirements/constraints.txt
     #   -r requirements/base.in
-certifi==2025.8.3
+certifi==2026.1.4
     # via
     #   httpcore
     #   httpx
     #   requests
-cffi==1.17.1
+cffi==2.0.0
     # via
     #   app-store-notifications-v2-validator
     #   cryptography
     #   pynacl
-charset-normalizer==3.4.3
+charset-normalizer==3.4.4
     # via requests
-click==8.2.1
+click==8.3.1
     # via
     #   celery
     #   click-didyoumean
@@ -87,19 +85,19 @@ coreapi==2.3.3
     #   openapi-codec
 coreschema==0.0.4
     # via coreapi
-cryptography==45.0.7
+cryptography==46.0.4
     # via
     #   app-store-notifications-v2-validator
+    #   google-auth
     #   pyjwt
     #   pyopenssl
-    #   social-auth-core
 currencies==2020.12.12
     # via -r requirements/base.in
 defusedxml==0.7.1
     # via
     #   python3-openid
     #   social-auth-core
-django==4.2.24
+django==4.2.28
     # via
     #   -c requirements/common_constraints.txt
     #   -c requirements/constraints.txt
@@ -120,7 +118,7 @@ django==4.2.24
     #   edx-toggles
     #   openedx-filters
     #   social-auth-app-django
-django-cors-headers==4.8.0
+django-cors-headers==4.9.0
     # via -r requirements/base.in
 django-crum==0.7.9
     # via
@@ -128,7 +126,7 @@ django-crum==0.7.9
     #   edx-toggles
 django-extensions==4.1
     # via -r requirements/base.in
-django-push-notifications==3.2.1
+django-push-notifications==3.3.0
     # via edx-ace
 django-rest-swagger==2.2.0
     # via -r requirements/base.in
@@ -144,19 +142,19 @@ djangorestframework==3.16.1
     #   django-rest-swagger
     #   drf-jwt
     #   edx-drf-extensions
-dnspython==2.7.0
+dnspython==2.8.0
     # via pymongo
 drf-jwt==1.19.2
     # via edx-drf-extensions
 edx-ace==1.15.0
     # via edx-braze-client
-edx-auth-backends==4.6.0
+edx-auth-backends==4.6.2
     # via -r requirements/base.in
 edx-braze-client==1.1.3
     # via -r requirements/base.in
 edx-django-release-util==1.5.0
     # via -r requirements/base.in
-edx-django-utils==8.0.0
+edx-django-utils==8.0.1
     # via
     #   -r requirements/base.in
     #   edx-ace
@@ -173,27 +171,26 @@ edx-opaque-keys[django]==3.0.0
     #   openedx-filters
 edx-rest-api-client==6.2.0
     # via -r requirements/base.in
-edx-toggles==5.3.0
+edx-toggles==5.4.1
     # via edx-auth-backends
-firebase-admin==6.9.0
+firebase-admin==7.1.0
     # via edx-ace
-frozenlist==1.7.0
+frozenlist==1.8.0
     # via
     #   aiohttp
     #   aiosignal
-google-api-core[grpc]==2.25.1
+google-api-core[grpc]==2.29.0
     # via
     #   firebase-admin
     #   google-api-python-client
     #   google-cloud-core
     #   google-cloud-firestore
     #   google-cloud-storage
-google-api-python-client==2.176.0
+google-api-python-client==2.189.0
     # via
     #   -r requirements/base.in
-    #   firebase-admin
     #   inapppy
-google-auth==2.40.3
+google-auth==2.48.0
     # via
     #   -r requirements/base.in
     #   google-api-core
@@ -202,31 +199,31 @@ google-auth==2.40.3
     #   google-cloud-core
     #   google-cloud-firestore
     #   google-cloud-storage
-google-auth-httplib2==0.2.0
+google-auth-httplib2==0.3.0
     # via google-api-python-client
-google-cloud-core==2.4.3
+google-cloud-core==2.5.0
     # via
     #   google-cloud-firestore
     #   google-cloud-storage
-google-cloud-firestore==2.21.0
+google-cloud-firestore==2.23.0
     # via firebase-admin
-google-cloud-storage==3.2.0
+google-cloud-storage==3.9.0
     # via firebase-admin
-google-crc32c==1.7.1
+google-crc32c==1.8.0
     # via
     #   google-cloud-storage
     #   google-resumable-media
-google-resumable-media==2.7.2
+google-resumable-media==2.8.0
     # via google-cloud-storage
-googleapis-common-protos==1.70.0
+googleapis-common-protos==1.72.0
     # via
     #   google-api-core
     #   grpcio-status
-grpcio==1.74.0
+grpcio==1.78.0
     # via
     #   google-api-core
     #   grpcio-status
-grpcio-status==1.74.0
+grpcio-status==1.78.0
     # via google-api-core
 h11==0.16.0
     # via httpcore
@@ -236,7 +233,7 @@ hpack==4.1.0
     # via h2
 httpcore==1.0.9
     # via httpx
-httplib2==0.22.0
+httplib2==0.31.2
     # via
     #   google-api-python-client
     #   google-auth-httplib2
@@ -245,7 +242,7 @@ httpx[http2]==0.28.1
     # via firebase-admin
 hyperframe==6.1.0
     # via h2
-idna==3.10
+idna==3.11
     # via
     #   anyio
     #   httpx
@@ -253,7 +250,7 @@ idna==3.10
     #   yarl
 inapppy==2.5.2
     # via -r requirements/base.in
-iso4217==1.14.20250512
+iso4217==1.15.20260101
     # via -r requirements/base.in
 itypes==1.2.0
     # via coreapi
@@ -261,15 +258,15 @@ jinja2==3.1.6
     # via
     #   code-annotations
     #   coreschema
-jsonpickle==3.3.0
+jsonpickle==4.0.5
     # via apimatic-core
-jsonpointer==2.4
+jsonpointer==3.0.0
     # via apimatic-core
-kombu==5.5.4
+kombu==5.6.2
     # via celery
-lark==1.2.2
+lark==1.3.1
     # via -r requirements/base.in
-markupsafe==3.0.2
+markupsafe==3.0.3
     # via
     #   jinja2
     #   werkzeug
@@ -280,9 +277,9 @@ marshmallow==3.26.1
     #   marshmallow-enum
 marshmallow-enum==1.5.1
     # via commercetools
-msgpack==1.1.1
+msgpack==1.1.2
     # via cachecontrol
-multidict==6.6.4
+multidict==6.7.1
     # via
     #   aiohttp
     #   yarl
@@ -298,34 +295,34 @@ openapi-codec==1.3.2
     # via django-rest-swagger
 openedx-filters==2.1.0
     # via -r requirements/base.in
-packaging==25.0
+packaging==26.0
     # via
     #   kombu
     #   marshmallow
-paypal-server-sdk==1.1.0
+paypal-server-sdk==2.2.0
     # via -r requirements/base.in
-pillow==11.3.0
+pillow==12.1.0
     # via -r requirements/base.in
 prompt-toolkit==3.0.52
     # via click-repl
-propcache==0.3.2
+propcache==0.4.1
     # via
     #   aiohttp
     #   yarl
-proto-plus==1.26.1
+proto-plus==1.27.1
     # via
     #   google-api-core
     #   google-cloud-firestore
-protobuf==6.32.0
+protobuf==6.33.5
     # via
     #   google-api-core
     #   google-cloud-firestore
     #   googleapis-common-protos
     #   grpcio-status
     #   proto-plus
-psutil==7.0.0
+psutil==7.2.2
     # via edx-django-utils
-pyasn1==0.6.1
+pyasn1==0.6.2
     # via
     #   oauth2client
     #   pyasn1-modules
@@ -334,7 +331,7 @@ pyasn1-modules==0.4.2
     # via
     #   google-auth
     #   oauth2client
-pycparser==2.22
+pycparser==3.0
     # via
     #   app-store-notifications-v2-validator
     #   cffi
@@ -346,15 +343,16 @@ pyjwt[crypto]==2.10.1
     #   edx-drf-extensions
     #   edx-rest-api-client
     #   firebase-admin
+    #   redis
     #   segment-analytics-python
     #   social-auth-core
-pymongo==4.13.2
+pymongo==4.16.0
     # via edx-opaque-keys
-pynacl==1.6.0
+pynacl==1.6.2
     # via edx-django-utils
-pyopenssl==25.1.0
+pyopenssl==25.3.0
     # via app-store-notifications-v2-validator
-pyparsing==3.2.3
+pyparsing==3.3.2
     # via httplib2
 python-dateutil==2.9.0.post0
     # via
@@ -363,6 +361,8 @@ python-dateutil==2.9.0.post0
     #   celery
     #   edx-ace
     #   segment-analytics-python
+python-dotenv==1.2.1
+    # via paypal-server-sdk
 python-slugify==8.0.4
     # via code-annotations
 python3-openid==3.2.0
@@ -371,11 +371,11 @@ pytz==2025.2
     # via
     #   -r requirements/base.in
     #   commercetools
-pyyaml==6.0.2
+pyyaml==6.0.3
     # via
     #   code-annotations
     #   edx-django-release-util
-redis==5.2.1
+redis==5.3.1
     # via celery
 requests==2.32.5
     # via
@@ -409,11 +409,11 @@ rsa==4.9.1
     #   oauth2client
 sailthru-client==2.2.3
     # via edx-ace
-segment-analytics-python==2.3.4
+segment-analytics-python==2.3.5
     # via -r requirements/base.in
 semantic-version==2.10.0
     # via edx-drf-extensions
-simplejson==3.20.1
+simplejson==3.20.2
     # via
     #   django-rest-swagger
     #   sailthru-client
@@ -424,25 +424,23 @@ six==1.17.0
     #   edx-django-release-util
     #   oauth2client
     #   python-dateutil
-sniffio==1.3.1
-    # via anyio
 social-auth-app-django==5.4.3
     # via edx-auth-backends
-social-auth-core==4.7.0
+social-auth-core==4.8.3
     # via
     #   edx-auth-backends
     #   social-auth-app-django
-sqlparse==0.5.3
+sqlparse==0.5.5
     # via django
-stevedore==5.5.0
+stevedore==5.6.0
     # via
     #   code-annotations
     #   edx-ace
     #   edx-django-utils
     #   edx-opaque-keys
-stripe==12.3.0
+stripe==14.3.0
     # via -r requirements/base.in
-tenacity==9.1.2
+tenacity==9.1.4
     # via -r requirements/base.in
 text-unidecode==1.3
     # via python-slugify
@@ -450,10 +448,12 @@ typing-extensions==4.15.0
     # via
     #   aiosignal
     #   anyio
+    #   apimatic-core
     #   edx-opaque-keys
+    #   grpcio
     #   pyopenssl
     #   stripe
-tzdata==2025.2
+tzdata==2025.3
     # via
     #   celery
     #   kombu
@@ -461,24 +461,22 @@ uritemplate==4.2.0
     # via
     #   coreapi
     #   google-api-python-client
-urllib3==2.2.3
-    # via
-    #   -c requirements/common_constraints.txt
-    #   requests
+urllib3==2.6.3
+    # via requests
 vine==5.1.0
     # via
     #   amqp
     #   celery
     #   kombu
-wcwidth==0.2.13
+wcwidth==0.6.0
     # via prompt-toolkit
 webob==1.8.9
     # via commercetools
-werkzeug==3.1.3
+werkzeug==3.1.5
     # via commercetools
-wrapt==1.17.3
+wrapt==2.1.1
     # via commercetools
-yarl==1.20.1
+yarl==1.22.0
     # via aiohttp
 
 # The following packages are considered to be unsafe in a requirements file:
