@@ -300,7 +300,7 @@ edx-ace==1.15.0
     #   -r requirements/quality.txt
     #   -r requirements/test.txt
     #   edx-braze-client
-edx-auth-backends==4.6.0
+edx-auth-backends==4.6.2
     # via
     #   -r requirements/quality.txt
     #   -r requirements/test.txt
