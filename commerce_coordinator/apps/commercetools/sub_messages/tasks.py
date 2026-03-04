@@ -434,6 +434,18 @@ def fulfill_order_returned_signal_task(order_id, return_items, message_id):
                         product = _get_product_data(line_item, is_bundle)
                         segment_event_properties['products'].append(product)
 
+                        # Expire entitlement if there is one associated with the refunded line item
+                        refunded_entitlement_id = return_line_entitlement_ids.get(line_item.id)
+                        if refunded_entitlement_id:
+                            LMSAPIClient().expire_entitlement(
+                                entitlement_id=refunded_entitlement_id,
+                                fulfillment_logging_obj={
+                                    'order_id': order_id,
+                                    'lms_user_id': lms_user_id,
+                                    'message_id': '1063f19c-08f3-41a4-a952-a8577374373c'
+                                }
+                            )
+
                 if segment_event_properties['products']:  # pragma no cover
                     segment_event_properties['title'] = ", ".join(refund_items_titles)
                     # Emitting the 'Order Refunded' Segment event upon successfully processing a refund.

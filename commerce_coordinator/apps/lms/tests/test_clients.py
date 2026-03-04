@@ -3,6 +3,7 @@ Tests for the lms app API clients.
 """
 import logging
 
+import responses
 from django.test import override_settings
 from mock import MagicMock, patch
 from requests.exceptions import HTTPError
@@ -42,7 +43,8 @@ class FulfillmentCompletedUpdateCTLineItemSignalMock(MagicMock):
 class LMSAPIClientTests(CoordinatorOAuthClientTestCase):
     """LMSAPIClient tests."""
 
-    url = urljoin_directory(TEST_LMS_URL_ROOT, '/api/enrollment/v1/enrollment')
+    enrollment_url = urljoin_directory(TEST_LMS_URL_ROOT, '/api/enrollment/v1/enrollment')
+    entitlement_url = urljoin_directory(TEST_LMS_URL_ROOT, '/api/entitlements/v1/entitlements/')
     deactivate_user_url = urljoin_directory(TEST_LMS_URL_ROOT, '/api/user/v1/accounts/{username}/deactivate/')
 
     def setUp(self):
@@ -60,7 +62,7 @@ class LMSAPIClientTests(CoordinatorOAuthClientTestCase):
                 'fulfillment_logging_obj': EXAMPLE_FULFILLMENT_LOGGING_OBJ
             },
             expected_request=EXAMPLE_ENROLLMENT_FULFILLMENT_REQUEST_PAYLOAD,
-            mock_url=self.url,
+            mock_url=self.enrollment_url,
             mock_response=EXAMPLE_FULFILLMENT_RESPONSE_PAYLOAD,
             expected_output=EXAMPLE_FULFILLMENT_RESPONSE_PAYLOAD,
         )
@@ -78,7 +80,7 @@ class LMSAPIClientTests(CoordinatorOAuthClientTestCase):
                     'line_item_state_payload': EXAMPLE_LINE_ITEM_STATE_PAYLOAD,
                     'fulfillment_logging_obj': EXAMPLE_FULFILLMENT_LOGGING_OBJ
                 },
-                mock_url=self.url,
+                mock_url=self.enrollment_url,
                 mock_status=400,
             )
         mock_signal.assert_called_once()
@@ -105,4 +107,39 @@ class LMSAPIClientTests(CoordinatorOAuthClientTestCase):
                 },
                 mock_url=self.deactivate_user_url.format(username='test_user', ct_message_id='mock_message_id'),
                 mock_status=400,
+            )
+
+    def test_expire_entitlement(self):
+        """Test expire entitlement in LMS request and response"""
+        mock_entitlement_id = '732b2ef1-b6c3-4888-855c-2ccfd5d79cf9'
+        mock_url = f"{self.entitlement_url}{mock_entitlement_id}/"
+        responses.add(method='DELETE', url=mock_url)
+
+        self.assertJSONClientResponse(
+            uut=self.client.expire_entitlement,
+            input_kwargs={
+                'entitlement_id': mock_entitlement_id,
+                'fulfillment_logging_obj': EXAMPLE_FULFILLMENT_LOGGING_OBJ
+            },
+            mock_method='DELETE',
+            mock_url=mock_url,
+            mock_status=204,
+            expected_output={}
+        )
+
+    def test_expire_entitlement_error(self):
+        """Test expire entitlement in LMS request and response"""
+        mock_entitlement_id = 'invalid-uuid'
+        mock_url = f"{self.entitlement_url}{mock_entitlement_id}/"
+
+        with self.assertRaises(HTTPError):
+            self.assertJSONClientResponse(
+                uut=self.client.expire_entitlement,
+                input_kwargs={
+                    'entitlement_id': mock_entitlement_id,
+                    'fulfillment_logging_obj': EXAMPLE_FULFILLMENT_LOGGING_OBJ
+                },
+                mock_method='DELETE',
+                mock_url=mock_url,
+                mock_status=404,
             )

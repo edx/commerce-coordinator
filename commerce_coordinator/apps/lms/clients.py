@@ -119,6 +119,25 @@ class LMSAPIClient(BaseEdxOAuthClient):
             timeout=settings.FULFILLMENT_TIMEOUT
         )
 
+    def expire_entitlement(
+            self,
+            entitlement_id,
+            fulfillment_logging_obj
+    ):
+        """
+        Send a POST request to LMS Entitlement API endpoint.
+        Arguments:
+            entitlement_uuid: uuid of entitlement to expire
+        Returns:
+            dict: Dictionary representation of JSON returned from API.
+        """
+        return self.delete(
+            fulfillment_type=FulfillmentType.ENTITLEMENT.value,
+            url=f"{self.api_entitlement_base_url}{entitlement_id}/",
+            logging_obj={**fulfillment_logging_obj, 'entitlement_id': entitlement_id},
+            timeout=settings.FULFILLMENT_TIMEOUT
+        )
+
     def post(
         self,
         fulfillment_type,
@@ -187,4 +206,44 @@ class LMSAPIClient(BaseEdxOAuthClient):
                 sender=self.__class__,
                 **payload
             )
+            raise
+
+    def delete(
+        self,
+        fulfillment_type,
+        url,
+        logging_obj,
+        timeout=None,
+    ):
+        """
+        Send a DELETE request to a URL.
+        """
+        if not timeout:   # pragma no cover
+            timeout = self.normal_timeout
+        try:
+            headers = {
+                # EDX_API_KEY is a legacy authentication mechanism. Even though
+                # this endpoint uses OAuth2, we send a valid EDX_API_KEY
+                # anyways because LMS still uses this key to recognize whether
+                # a request should receive backend service superpowers.
+                'X-Edx-Api-Key': settings.EDX_API_KEY
+            }
+            response = self.client.delete(
+                url,
+                headers=headers,
+                timeout=timeout,
+            )
+            response.raise_for_status()
+            logger.info(f"Status: {response.status_code}")
+            logger.info(
+                f"[LMSAPIClient.delete.{fulfillment_type}] LMS call successful with {logging_obj}."
+            )
+            
+            return True
+        except RequestException as exc:
+            context_prefix = (
+                f"[LMSAPIClient.delete.{fulfillment_type}] {logging_obj}"
+            )
+            self.log_request_exception(context_prefix, logger, exc)
+
             raise
