@@ -22,7 +22,8 @@ from commerce_coordinator.apps.commercetools.catalog_info.edx_utils import (
     get_edx_line_item_state,
     get_edx_lms_user_id,
     get_edx_lms_user_name,
-    get_edx_product_course_run_key
+    get_edx_product_course_run_key,
+    get_line_item_lms_entitlement_id
 )
 from commerce_coordinator.apps.commercetools.catalog_info.utils import get_line_item_attribute, get_product_data
 from commerce_coordinator.apps.core.memcache import safe_key
@@ -376,6 +377,82 @@ def refund_from_mobile_task(
             f"with error {err.errors} and correlation id {err.correlation_id}"
         )
         raise err
+
+
+@shared_task(
+    autoretry_for=(CommercetoolsError,),
+    retry_kwargs={"max_retries": 5, "countdown": 3},
+)
+def revoke_line_items_task(order_id: str, return_items: list):
+    """
+    Celery task to unenroll a user from one or multiple courses based on the order ID and list of line item IDs. If
+    there is an associated entitlement, it will also be expired.
+
+    Steps:
+    - Retrieve the order using the order ID.
+    - Resolve LMS user from Commercetools customer.
+    - Determine the line items to be revoked based on return item IDs.
+    - Get the course run key (and entitlement UUID if applicable) from each line item.
+    - Call the Order Fulfillment API to revoke each enrollment/entitlement.
+
+    Args:
+        order_id (str): The ID of the order.
+        return_items (list): List of line items being returned.
+    """
+
+    tag = "revoke_line_items"
+
+    logger.info(f"[CT-{tag}] Starting revoke task for order_id {order_id}")
+
+    client = CommercetoolsAPIClient()
+
+    order = client.get_order_by_id(order_id)
+    customer = client.get_customer_by_id(order.customer_id)
+    lms_user_id = get_edx_lms_user_id(customer)
+    lms_user_username = get_edx_lms_user_name(customer)
+
+    return_line_items = []
+    for item in return_items:
+        item_to_revoke = get_edx_line_item(order.line_items, item.id)
+        if item_to_revoke:
+            return_line_items.append(item_to_revoke)
+
+    for line_item in return_line_items:
+        course_run_key = get_edx_product_course_run_key(line_item)
+        course_mode = get_line_item_attribute(line_item, "mode")
+
+        entitlement_uuid = get_line_item_lms_entitlement_id(line_item)
+
+        logging_data = {
+            "order_id": order.id,
+            "line_item_id": line_item.id,
+            "customer_id": customer.id,
+            "course_run_key": course_run_key,
+            "entitlement_uuid": entitlement_uuid,
+            "lms_user_id": lms_user_id,
+            "lms_user_name": lms_user_username,
+            "course_mode": course_mode,
+        }
+
+        lob = get_lob_from_variant_attr(line_item.variant) or "edx"
+        serializer = OrderRevokeLineRequestSerializer(data={
+            "edx_lms_username": lms_user_username,
+            "course_run_key": course_run_key,
+            "course_mode": course_mode,
+            "entitlement_uuid": entitlement_uuid,
+            "lob": lob,
+        })
+        serializer.is_valid(raise_exception=True)
+
+        OrderFulfillmentAPIClient().revoke_line(
+            payload=serializer.validated_data,
+            logging_data=logging_data,
+        )
+
+    logger.info(f"[CT-{tag}] Successfully called revoke_line for user {lms_user_username} "
+                f"on course {course_run_key} and {logging_data}")
+
+    return True
 
 
 @shared_task(

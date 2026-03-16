@@ -118,15 +118,15 @@ class OrderSanctionedView(SingleInvocationAPIView):
 
 # noinspection DuplicatedCode
 class OrderReturnedView(SingleInvocationAPIView):
-    """View to sanction an order and deactivate the lms user"""
+    """View to return an order and revoke the associated enrollments/entitlements"""
 
     authentication_classes = [JwtBearerAuthentication, SessionAuthentication]
     permission_classes = [IsAdminUser]
 
     def post(self, request):
         """
-        Receive a message from commerce tools forwarded by aws event bridge
-        to sanction order and deactivate user through LMS
+        Receive a message from commerce tools forwarded by aws event bridge to return an order and revoke the
+        associated enrollments/entitlements
         """
 
         tag = type(self).__name__
