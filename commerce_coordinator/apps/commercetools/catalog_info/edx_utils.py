@@ -115,8 +115,7 @@ def get_edx_is_sanctioned(order: CTOrder) -> bool:
     return get_edx_order_workflow_state_key(order) == TwoUKeys.SDN_SANCTIONED_ORDER_STATE
 
 
-def cents_to_dollars(in_amount: CentPrecisionMoney):
-
+def cents_to_dollars(in_amount: CentPrecisionMoney) -> float:
     if not in_amount:
         return 0
     else:
@@ -174,7 +173,7 @@ def get_line_item_price_to_refund(
         return_line_item_ids (List[str]): A list of line item IDs to refund.
 
     Returns:
-        decimal.Decimal: The refund amount in the payment currency's units (e.g. dollars).
+        float: The refund amount in the payment currency's units (e.g. dollars).
         Returns 0.00 if no matching line items or no amount to refund.
     """
     amount_planned = payment.amount_planned
@@ -191,23 +190,23 @@ def get_line_item_price_to_refund(
         if amount_planned_cents == order_total_cents:
             for line_item in get_edx_items(order):
                 if line_item.id in return_line_item_ids:
-                    refund_amount += cents_to_dollars(line_item.total_price)
-            return refund_amount
+                    refund_amount += line_item.total_price.cent_amount
+            return refund_amount / pow(10, fraction_digits)
 
         # Otherwise allocate amount_planned by each line item's share of the order total
         for line_item in get_edx_items(order):
             if line_item.id in return_line_item_ids:
                 line_item_percentage = line_item.total_price.cent_amount / order_total_cents
                 line_item_refund_cents = line_item_percentage * amount_planned_cents
-                refund_amount += decimal.Decimal(line_item_refund_cents) / (10 ** fraction_digits)
-        return refund_amount
+                refund_amount += line_item_refund_cents
+        return refund_amount / pow(10, fraction_digits)
 
     # Single item in cart: use amount planned as-is
     if len(order.line_items) == 1 and order.line_items[0].id in return_line_item_ids:
         return cents_to_dollars(amount_planned)
 
     # Refund 0.00 if line item id doesn't match
-    return decimal.Decimal(0)
+    return 0.00
 
 
 def get_edx_refund_info(
