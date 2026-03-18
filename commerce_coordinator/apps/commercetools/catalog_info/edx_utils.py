@@ -1,6 +1,6 @@
 import decimal
 from types import SimpleNamespace
-from typing import List, Optional, Union
+from typing import List, Optional, Tuple, Union
 
 from commercetools.platform.models import Attribute, CentPrecisionMoney
 from commercetools.platform.models import Customer as CTCustomer
@@ -115,7 +115,7 @@ def get_edx_is_sanctioned(order: CTOrder) -> bool:
     return get_edx_order_workflow_state_key(order) == TwoUKeys.SDN_SANCTIONED_ORDER_STATE
 
 
-def cents_to_dollars(in_amount):
+def cents_to_dollars(in_amount: CentPrecisionMoney):
 
     if not in_amount:
         return 0
@@ -153,35 +153,68 @@ def check_is_bundle(line_items):
     return any(bool(get_line_item_bundle_id(line_item)) for line_item in line_items)
 
 
-def get_line_item_price_to_refund(order: CTOrder, return_line_item_ids: List[str]):
+def get_line_item_price_to_refund(
+    order: CTOrder,
+    payment: CTPayment,
+    return_line_item_ids: List[str],
+) -> decimal.Decimal:
     """
-    Calculate the discounted price of a line item in an order.
+    Calculate the refund amount for specified line items using the payment's amount_planned.
+
+    When payment is provided with amount_planned:
+    - Single item: returns amount_planned as the refund amount.
+    - Multiple items: if amount_planned equals the order total (same currency and amount),
+      sums the returned line items' total_price (USD behavior). If amount_planned differs
+      from the order total (e.g. payment in another currency), allocates amount_planned
+      by each line item's percentage of the order total and sums those amounts.
 
     Args:
         order (CTOrder): The order object containing line items.
-        return_line_item_ids (List[str]): A list of line item IDs to check for discounted prices.
+        payment (CTPayment): The payment object (amount_planned is used for refund amount).
+        return_line_item_ids (List[str]): A list of line item IDs to refund.
 
     Returns:
-        decimal.Decimal: The discounted price of the line item in dollars. Returns 0.00 if no discounted price is found.
+        decimal.Decimal: The refund amount in the payment currency's units (e.g. dollars).
+        Returns 0.00 if no matching line items or no amount to refund.
     """
-    # If multiple items, refund line item total(s)
+    amount_planned = payment.amount_planned
+
+    # Multiple items: refund only the requested line items
     if len(order.line_items) > 1:
+        order_total_cents = order.total_price.cent_amount
+        amount_planned_cents = amount_planned.cent_amount
+        fraction_digits = getattr(amount_planned, "fraction_digits", 2)
+
         refund_amount = 0
+
+        # If amount planned and order total are equal, line item totals can be added up as is
+        if amount_planned_cents == order_total_cents:
+            for line_item in get_edx_items(order):
+                if line_item.id in return_line_item_ids:
+                    refund_amount += cents_to_dollars(line_item.total_price)
+            return refund_amount
+
+        # Otherwise allocate amount_planned by each line item's share of the order total
         for line_item in get_edx_items(order):
             if line_item.id in return_line_item_ids:
-                refund_amount += cents_to_dollars(line_item.total_price)
-
+                line_item_percentage = line_item.total_price.cent_amount / order_total_cents
+                line_item_refund_cents = line_item_percentage * amount_planned_cents
+                refund_amount += decimal.Decimal(line_item_refund_cents) / (10 ** fraction_digits)
         return refund_amount
 
-    # If one item, refund cart total
-    elif len(order.line_items) == 1 and order.line_items[0].id in return_line_item_ids:
-        return cents_to_dollars(order.total_price)
+    # Single item in cart: use amount planned as-is
+    if len(order.line_items) == 1 and order.line_items[0].id in return_line_item_ids:
+        return cents_to_dollars(amount_planned)
 
-    # Refund 0 if line item id doesn't match
-    return 0
+    # Refund 0.00 if line item id doesn't match
+    return decimal.Decimal(0)
 
 
-def get_edx_refund_info(payment: CTPayment, order: CTOrder, return_line_item_ids: List[str]) -> (decimal.Decimal, str):
+def get_edx_refund_info(
+    payment: CTPayment,
+    order: CTOrder,
+    return_line_item_ids: List[str]
+) -> Tuple[decimal.Decimal, str]:
     """
     Calculate the refund amount for specified line items in an order and retrieve the interaction ID from the payment.
 
@@ -201,7 +234,9 @@ def get_edx_refund_info(payment: CTPayment, order: CTOrder, return_line_item_ids
         if transaction.type == TransactionType.CHARGE:  # pragma no cover
             interaction_id = transaction.interaction_id
 
-    refund_amount = get_line_item_price_to_refund(order, return_line_item_ids)
+    refund_amount = get_line_item_price_to_refund(
+        order, payment, return_line_item_ids,
+    )
 
     return refund_amount, interaction_id
 
