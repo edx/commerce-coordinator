@@ -1,4 +1,5 @@
 """Tests for edX Customization handlers for CoCo"""
+import decimal
 import unittest
 from typing import Union
 
@@ -87,7 +88,8 @@ class TestEdXFunctions(unittest.TestCase):
 
         refund_amount, interaction_id = get_edx_refund_info(payment, order, return_line_item_ids)
 
-        self.assertEqual(refund_amount, order.total_price.cent_amount / 100)
+        expected = decimal.Decimal(order.total_price.cent_amount) / 100
+        self.assertEqual(refund_amount, expected)
         self.assertEqual(interaction_id, "test_interaction_id")
 
     def test_get_line_item_price_to_refund_single_item(self):
@@ -100,7 +102,7 @@ class TestEdXFunctions(unittest.TestCase):
         )
         line_item_id = order.line_items[0].id
         # Single item: refund is amount_planned (matches order total here)
-        expected_refund_amount = order.total_price.cent_amount / 100
+        expected_refund_amount = decimal.Decimal(order.total_price.cent_amount) / 100
 
         refund_amount = get_line_item_price_to_refund(order, payment, [line_item_id])
 
@@ -116,7 +118,7 @@ class TestEdXFunctions(unittest.TestCase):
         )
         line_item_id = order.line_items[0].id
         # amount_planned == order total: sum returned line item total_price
-        expected_refund_amount = order.line_items[0].total_price.cent_amount / 100
+        expected_refund_amount = decimal.Decimal(order.line_items[0].total_price.cent_amount) / 100
 
         refund_amount = get_line_item_price_to_refund(order, payment, [line_item_id])
 
@@ -131,7 +133,7 @@ class TestEdXFunctions(unittest.TestCase):
             fraction_digits=getattr(order.total_price, "fraction_digits", 2),
         )
         line_item_id = order.line_items[0].id
-        expected_refund_amount = order.line_items[0].total_price.cent_amount / 100
+        expected_refund_amount = decimal.Decimal(order.line_items[0].total_price.cent_amount) / 100
 
         refund_amount = get_line_item_price_to_refund(order, payment, [line_item_id])
 
@@ -146,7 +148,7 @@ class TestEdXFunctions(unittest.TestCase):
             fraction_digits=getattr(order.total_price, "fraction_digits", 2),
         )
         non_existent_line_item_id = "non_existent_id"
-        expected_refund_amount = 0.00
+        expected_refund_amount = decimal.Decimal("0.00")
 
         refund_amount = get_line_item_price_to_refund(order, payment, [non_existent_line_item_id])
 
@@ -160,7 +162,7 @@ class TestEdXFunctions(unittest.TestCase):
         payment.amount_planned = CentPrecisionMoney(
             cent_amount=5900, currency_code="USD", fraction_digits=2
         )
-        expected_refund_amount = 59.00
+        expected_refund_amount = decimal.Decimal("59.00")
 
         refund_amount = get_line_item_price_to_refund(order, payment, [line_item_id])
 
@@ -176,14 +178,14 @@ class TestEdXFunctions(unittest.TestCase):
             currency_code=order.total_price.currency_code,
             fraction_digits=getattr(order.total_price, "fraction_digits", 2),
         )
-        expected_refund_amount = order.line_items[0].total_price.cent_amount / 100
+        expected_refund_amount = decimal.Decimal(order.line_items[0].total_price.cent_amount) / 100
 
         refund_amount = get_line_item_price_to_refund(order, payment, [line_item_id])
 
         self.assertEqual(refund_amount, expected_refund_amount)
 
     def test_get_line_item_price_to_refund_multi_item_amount_planned_differs_from_order_total(self):
-        """Multiple items, amount_planned != order total: allocate by line item share."""
+        """Multiple items, amount_planned != order total: allocate by line item share (quantized)."""
         order = gen_order_multiple_line_items(uuid4_str())
         order_total_cents = order.total_price.cent_amount
         # Simulate payment in another currency: e.g. order was 10000 cents, charged 10500
@@ -196,11 +198,31 @@ class TestEdXFunctions(unittest.TestCase):
         )
         line_item_id = order.line_items[0].id
         line_item = order.line_items[0]
-        line_item_percentage = line_item.total_price.cent_amount / order_total_cents
-        expected_cent_amount = line_item_percentage * amount_planned_cents
-        expected_refund_amount = expected_cent_amount / 100
+        # Implementation uses Decimal and quantizes to fraction_digits with ROUND_HALF_UP
+        line_item_percentage = decimal.Decimal(line_item.total_price.cent_amount) / decimal.Decimal(order_total_cents)
+        refund_cents = line_item_percentage * decimal.Decimal(amount_planned_cents)
+        refund_units = refund_cents / 100
+        expected_refund_amount = refund_units.quantize(
+            decimal.Decimal("0.01"), rounding=decimal.ROUND_HALF_UP
+        )
 
         refund_amount = get_line_item_price_to_refund(order, payment, [line_item_id])
+
+        self.assertEqual(refund_amount, expected_refund_amount)
+
+    def test_get_line_item_price_to_refund_multi_item_all_items_returned(self):
+        """When all line items are returned (IDs and count match), return full amount_planned."""
+        order = gen_order_multiple_line_items(uuid4_str())
+        return_line_item_ids = [li.id for li in order.line_items]
+        payment = gen_payment()
+        payment.amount_planned = CentPrecisionMoney(
+            cent_amount=10500,
+            currency_code="EUR",
+            fraction_digits=2,
+        )
+        expected_refund_amount = decimal.Decimal("105.00")
+
+        refund_amount = get_line_item_price_to_refund(order, payment, return_line_item_ids)
 
         self.assertEqual(refund_amount, expected_refund_amount)
 

@@ -173,40 +173,52 @@ def get_line_item_price_to_refund(
         return_line_item_ids (List[str]): A list of line item IDs to refund.
 
     Returns:
-        float: The refund amount in the payment currency's units (e.g. dollars).
-        Returns 0.00 if no matching line items or no amount to refund.
+        decimal.Decimal: The refund amount in the payment currency's units (e.g. dollars).
+        Never exceeds amount_planned. Returns 0.00 if no matching line items or no amount to refund.
     """
     amount_planned = payment.amount_planned
 
     # Multiple items: refund only the requested line items
     if len(order.line_items) > 1:
+        order_line_items = get_edx_items(order)
+        order_line_item_ids = {li.id for li in order_line_items}
+
+        # Returning all items in the order, refund the amount planned rather than calculating per item
+        if len(return_line_item_ids) == len(order_line_item_ids) and set(return_line_item_ids) == order_line_item_ids:
+            return decimal.Decimal(cents_to_dollars(amount_planned))
+
         order_total_cents = order.total_price.cent_amount
         amount_planned_cents = amount_planned.cent_amount
         fraction_digits = getattr(amount_planned, "fraction_digits", 2)
 
-        refund_amount = 0
-
         # If amount planned and order total are equal, line item totals can be added up as is
         if amount_planned_cents == order_total_cents:
-            for line_item in get_edx_items(order):
+            refund_cents = 0
+            for line_item in order_line_items:
                 if line_item.id in return_line_item_ids:
-                    refund_amount += line_item.total_price.cent_amount
-            return refund_amount / pow(10, fraction_digits)
+                    refund_cents += line_item.total_price.cent_amount
+            return decimal.Decimal(refund_cents) / (10 ** fraction_digits)
 
-        # Otherwise allocate amount_planned by each line item's share of the order total
-        for line_item in get_edx_items(order):
+        # Otherwise allocate amount_planned by each line item's share of the order total.
+        # Use Decimal to avoid float rounding (e.g. 1 cent short when refunding all items).
+        # Quantize and cap at amount_planned so we never exceed the refundable amount.
+        refund_cents = decimal.Decimal(0)
+        for line_item in order_line_items:
             if line_item.id in return_line_item_ids:
-                line_item_percentage = line_item.total_price.cent_amount / order_total_cents
-                line_item_refund_cents = line_item_percentage * amount_planned_cents
-                refund_amount += line_item_refund_cents
-        return refund_amount / pow(10, fraction_digits)
+                line_item_percentage = decimal.Decimal(line_item.total_price.cent_amount) / decimal.Decimal(order_total_cents)
+                line_item_refund_cents = line_item_percentage * decimal.Decimal(amount_planned_cents)
+                refund_cents += line_item_refund_cents
+        refund_units = refund_cents / (10 ** fraction_digits)
+        quantized = refund_units.quantize(decimal.Decimal(10) ** -fraction_digits, rounding=decimal.ROUND_HALF_UP)
+        amount_planned_units = decimal.Decimal(amount_planned_cents) / (10 ** fraction_digits)
+        return min(quantized, amount_planned_units)
 
     # Single item in cart: use amount planned as-is
     if len(order.line_items) == 1 and order.line_items[0].id in return_line_item_ids:
-        return cents_to_dollars(amount_planned)
+        return decimal.Decimal(cents_to_dollars(amount_planned))
 
     # Refund 0.00 if line item id doesn't match
-    return 0.00
+    return decimal.Decimal("0.00")
 
 
 def get_edx_refund_info(
