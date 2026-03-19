@@ -205,7 +205,9 @@ def get_line_item_price_to_refund(
         refund_cents = decimal.Decimal(0)
         for line_item in order_line_items:
             if line_item.id in return_line_item_ids:
-                line_item_percentage = decimal.Decimal(line_item.total_price.cent_amount) / decimal.Decimal(order_total_cents)
+                line_item_percentage = (
+                    decimal.Decimal(line_item.total_price.cent_amount) / decimal.Decimal(order_total_cents)
+                )
                 line_item_refund_cents = line_item_percentage * decimal.Decimal(amount_planned_cents)
                 refund_cents += line_item_refund_cents
         refund_units = refund_cents / (10 ** fraction_digits)
