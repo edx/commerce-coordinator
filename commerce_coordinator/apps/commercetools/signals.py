@@ -10,6 +10,7 @@ from commerce_coordinator.apps.commercetools.tasks import (
     refund_from_mobile_task,
     refund_from_paypal_task,
     refund_from_stripe_task,
+    revoke_line_items_task,
     revoke_line_mobile_order_task
 )
 from commerce_coordinator.apps.core.signal_helpers import CoordinatorSignal, log_receiver
@@ -79,6 +80,16 @@ def refund_from_mobile(**kwargs):
         redirect_to_legacy_enabled=kwargs.get("redirect_to_legacy_enabled", False),
         legacy_redirect_payload=kwargs.get("legacy_redirect_payload", b''),
     )
+    return async_result.id
+
+
+@log_receiver(logger)
+def revoke_line_items(**kwargs):
+    """
+    Trigger a task to unenroll the user from one or several courses (and revoke associated entitlements, if applicable)
+    based on the order ID and return items passed in.
+    """
+    async_result = revoke_line_items_task.delay(order_id=kwargs["order_id"], return_items=kwargs["return_items"])
     return async_result.id
 
 

@@ -322,6 +322,7 @@ CC_SIGNALS = {
     ],
     'commerce_coordinator.apps.commercetools.sub_messages.signals_dispatch.fulfill_order_returned_signal': [
         'commerce_coordinator.apps.commercetools.sub_messages.signals_delayed.fulfill_order_returned_signal',
+        'commerce_coordinator.apps.commercetools.signals.revoke_line_items',
     ],
     'commerce_coordinator.apps.stripe.signals.payment_refunded_signal': [
         'commerce_coordinator.apps.commercetools.signals.refund_from_stripe',

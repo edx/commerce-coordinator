@@ -22,4 +22,5 @@ class OrderRevokeLineRequestSerializer(CoordinatorSerializer):
     edx_lms_username = serializers.CharField(allow_null=False)
     course_run_key = serializers.CharField(allow_null=False)
     course_mode = serializers.CharField(allow_null=False)
+    entitlement_uuid = serializers.UUIDField(required=False, allow_null=True)
     lob = serializers.CharField(allow_null=False)
