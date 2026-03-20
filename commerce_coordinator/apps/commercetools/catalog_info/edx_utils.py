@@ -201,11 +201,16 @@ def get_line_item_price_to_refund(
 
     Returns:
         decimal.Decimal: The refund amount in the payment currency's units (e.g. dollars).
-        Never exceeds amount_planned. Returns 0.00 if no matching line items or no amount to refund.
+        Never exceeds amount_planned. Returns 0 if no matching line items or no amount to refund.
     """
     amount_planned = payment.amount_planned
     amount_planned_cents = amount_planned.cent_amount
+    order_total_cents = order.total_price.cent_amount
     fraction_digits = getattr(amount_planned, "fraction_digits", 2)
+
+    # Edge case, nothing to refund
+    if amount_planned_cents == 0 or order_total_cents == 0:
+        return get_quantized_amount(0, fraction_digits)
 
     # Multiple items: refund only the requested line items
     if len(order.line_items) > 1:
@@ -215,8 +220,6 @@ def get_line_item_price_to_refund(
         # Returning all items in the order, refund the amount planned rather than calculating per item
         if len(return_line_item_ids) == len(order_line_item_ids) and set(return_line_item_ids) == order_line_item_ids:
             return get_quantized_amount(amount_planned_cents, fraction_digits)
-
-        order_total_cents = order.total_price.cent_amount
 
         # If amount planned and order total are equal, line item totals can be added up as is
         if amount_planned_cents == order_total_cents:
@@ -244,8 +247,8 @@ def get_line_item_price_to_refund(
     if len(order.line_items) == 1 and order.line_items[0].id in return_line_item_ids:
         return get_quantized_amount(amount_planned_cents, fraction_digits)
 
-    # Refund 0.00 if line item id doesn't match
-    return decimal.Decimal("0.00")
+    # Refund 0 if line item id doesn't match
+    return get_quantized_amount(0, fraction_digits)
 
 
 def get_edx_refund_info(

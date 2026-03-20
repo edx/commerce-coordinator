@@ -227,6 +227,56 @@ class TestEdXFunctions(unittest.TestCase):
 
         self.assertEqual(refund_amount, expected_refund_amount)
 
+    def test_get_line_item_price_to_refund_zero_amount_planned(self):
+        """amount_planned_cents == 0: nothing to refund (avoids useless allocation)."""
+        order = gen_order_multiple_line_items(uuid4_str())
+        payment = gen_payment()
+        payment.amount_planned = CentPrecisionMoney(
+            cent_amount=0,
+            currency_code=order.total_price.currency_code,
+            fraction_digits=getattr(order.total_price, "fraction_digits", 2),
+        )
+        line_item_id = order.line_items[0].id
+
+        refund_amount = get_line_item_price_to_refund(order, payment, [line_item_id])
+
+        self.assertEqual(refund_amount, decimal.Decimal("0.00"))
+
+    def test_get_line_item_price_to_refund_zero_order_total(self):
+        """order_total_cents == 0: nothing to refund (avoids division by zero in proportional path)."""
+        order = gen_order_multiple_line_items(uuid4_str())
+        order.total_price = CentPrecisionMoney(
+            cent_amount=0,
+            currency_code=order.total_price.currency_code,
+            fraction_digits=getattr(order.total_price, "fraction_digits", 2),
+        )
+        payment = gen_payment()
+        payment.amount_planned = CentPrecisionMoney(
+            cent_amount=10500,
+            currency_code=order.total_price.currency_code,
+            fraction_digits=getattr(order.total_price, "fraction_digits", 2),
+        )
+        line_item_id = order.line_items[0].id
+
+        refund_amount = get_line_item_price_to_refund(order, payment, [line_item_id])
+
+        self.assertEqual(refund_amount, decimal.Decimal("0.00"))
+
+    def test_get_line_item_price_to_refund_single_item_zero_amount_planned(self):
+        """Single-item order with amount_planned 0 returns quantized zero."""
+        order = gen_order(uuid4_str())
+        payment = gen_payment()
+        payment.amount_planned = CentPrecisionMoney(
+            cent_amount=0,
+            currency_code=order.total_price.currency_code,
+            fraction_digits=getattr(order.total_price, "fraction_digits", 2),
+        )
+        line_item_id = order.line_items[0].id
+
+        refund_amount = get_line_item_price_to_refund(order, payment, [line_item_id])
+
+        self.assertEqual(refund_amount, decimal.Decimal("0.00"))
+
 
 class TestGetQuantizedAmount(unittest.TestCase):
     """Tests for get_quantized_amount (minor units → major units with ROUND_HALF_UP)."""
