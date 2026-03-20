@@ -18,7 +18,7 @@
 | commerce\_coordinator/apps/commercetools/\_\_init\_\_.py                               |        0 |        0 |        0 |        0 |    100% |           |
 | commerce\_coordinator/apps/commercetools/authentication.py                             |        6 |        0 |        0 |        0 |    100% |           |
 | commerce\_coordinator/apps/commercetools/catalog\_info/constants.py                    |       58 |        0 |        0 |        0 |    100% |           |
-| commerce\_coordinator/apps/commercetools/catalog\_info/edx\_utils.py                   |      106 |       20 |       36 |        4 |     79% |25-26, 85, 104, 121, 294-311 |
+| commerce\_coordinator/apps/commercetools/catalog\_info/edx\_utils.py                   |      129 |       20 |       46 |        4 |     83% |25-26, 85, 104, 120, 370-387 |
 | commerce\_coordinator/apps/commercetools/catalog\_info/foundational\_types.py          |       19 |        0 |        0 |        0 |    100% |           |
 | commerce\_coordinator/apps/commercetools/catalog\_info/utils.py                        |       72 |        0 |       30 |        0 |    100% |           |
 | commerce\_coordinator/apps/commercetools/clients.py                                    |      500 |       74 |       82 |       23 |     82% |210, 317-322, 426-430, 475, 547-565, 706-712, 739, 761-768, 796->802, 803, 809->813, 817->820, 823->830, 834->836, 851->862, 877-878, 883, 994-997, 1063-1064, 1094-1098, 1189, 1283-1289, 1337-1343, 1363-1376, 1392-1399, 1414-1420, 1453-1459, 1539-1545, 1681-1687, 1717-1724, 1774-1781, 1846, 1849->1848, 1850->1849, 1857-1864, 1923, 1929 |
@@ -38,7 +38,7 @@
 | commerce\_coordinator/apps/commercetools/tests/\_\_init\_\_.py                         |        0 |        0 |        0 |        0 |    100% |           |
 | commerce\_coordinator/apps/commercetools/tests/\_test\_cases.py                        |       25 |        0 |        2 |        1 |     96% |  36->exit |
 | commerce\_coordinator/apps/commercetools/tests/catalog\_info/\_\_init\_\_.py           |        0 |        0 |        0 |        0 |    100% |           |
-| commerce\_coordinator/apps/commercetools/tests/catalog\_info/test\_edx\_utils.py       |      116 |        1 |        2 |        1 |     98% |       213 |
+| commerce\_coordinator/apps/commercetools/tests/catalog\_info/test\_edx\_utils.py       |      202 |        1 |        2 |        1 |     99% |       406 |
 | commerce\_coordinator/apps/commercetools/tests/catalog\_info/test\_utils.py            |       89 |        0 |        4 |        0 |    100% |           |
 | commerce\_coordinator/apps/commercetools/tests/conftest.py                             |      116 |        1 |       12 |        1 |     98% |       145 |
 | commerce\_coordinator/apps/commercetools/tests/constants.py                            |       10 |        0 |        0 |        0 |    100% |           |
@@ -210,7 +210,7 @@
 | commerce\_coordinator/apps/stripe/views.py                                             |       63 |       11 |       10 |        3 |     78% |65, 67, 112-145 |
 | commerce\_coordinator/docker\_gunicorn\_configuration.py                               |       27 |       27 |       10 |        0 |      0% |      4-57 |
 | commerce\_coordinator/urls.py                                                          |       24 |        0 |        0 |        0 |    100% |           |
-| **TOTAL**                                                                              | **10086** |  **435** |  **760** |   **92** | **95%** |           |
+| **TOTAL**                                                                              | **10195** |  **435** |  **770** |   **92** | **95%** |           |
 
 
 ## Setup coverage badge
