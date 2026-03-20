@@ -1,6 +1,6 @@
 import decimal
 from types import SimpleNamespace
-from typing import List, Optional, Union
+from typing import List, Optional, Tuple, Union
 
 from commercetools.platform.models import Attribute, CentPrecisionMoney
 from commercetools.platform.models import Customer as CTCustomer
@@ -115,8 +115,7 @@ def get_edx_is_sanctioned(order: CTOrder) -> bool:
     return get_edx_order_workflow_state_key(order) == TwoUKeys.SDN_SANCTIONED_ORDER_STATE
 
 
-def cents_to_dollars(in_amount):
-
+def cents_to_dollars(in_amount: CentPrecisionMoney) -> float:
     if not in_amount:
         return 0
     else:
@@ -153,35 +152,110 @@ def check_is_bundle(line_items):
     return any(bool(get_line_item_bundle_id(line_item)) for line_item in line_items)
 
 
-def get_line_item_price_to_refund(order: CTOrder, return_line_item_ids: List[str]):
+def get_quantized_amount(
+    cent_amount: Union[int, decimal.Decimal],
+    fraction_digits: int,
+) -> decimal.Decimal:
     """
-    Calculate the discounted price of a line item in an order.
+    Convert a minor-unit amount (e.g. cents) to major units and round to the currency's precision.
+
+    Divides cent_amount by 10 ** fraction_digits (e.g. cents → dollars when fraction_digits is 2), then quantizes the
+    result to that many decimal places using ROUND_HALF_UP.
+
+    Args:
+        cent_amount: Amount in the smallest currency unit (integer cents), or decimal.Decimal.
+        fraction_digits: Number of fraction digits for the currency.
+
+    Returns:
+        The amount in major currency units as decimal.Decimal with exactly fraction_digits decimal places.
+
+    Examples:
+        >>> get_quantized_amount(4900, 2)
+        Decimal('49.00')
+        >>> get_quantized_amount(decimal.Decimal('4360.169491524'), 2)
+        Decimal('43.60')
+    """
+    units = decimal.Decimal(cent_amount) / (decimal.Decimal(10) ** fraction_digits)
+    return units.quantize(decimal.Decimal(10) ** -fraction_digits, rounding=decimal.ROUND_HALF_UP)
+
+
+def get_line_item_price_to_refund(
+    order: CTOrder,
+    payment: CTPayment,
+    return_line_item_ids: List[str],
+) -> decimal.Decimal:
+    """
+    Calculate the refund amount for specified line items using the payment's amount_planned.
+
+    When payment is provided with amount_planned:
+    - Single item: returns amount_planned as the refund amount.
+    - Multiple items: if amount_planned numerically equals the order total,
+      sums the returned line items' total_price. If amount_planned differs
+      from the order total, allocates amount_planned according to each line
+      item's percentage of the order total and sums those allocated amounts.
 
     Args:
         order (CTOrder): The order object containing line items.
-        return_line_item_ids (List[str]): A list of line item IDs to check for discounted prices.
+        payment (CTPayment): The payment object (amount_planned is used for refund amount).
+        return_line_item_ids (List[str]): A list of line item IDs to refund.
 
     Returns:
-        decimal.Decimal: The discounted price of the line item in dollars. Returns 0.00 if no discounted price is found.
+        decimal.Decimal: The refund amount in the payment currency's units (e.g. dollars).
+        Never exceeds amount_planned. Returns 0 if no matching line items or no amount to refund.
     """
-    # If multiple items, refund line item total(s)
+    amount_planned = payment.amount_planned
+    amount_planned_cents = amount_planned.cent_amount
+    order_total_cents = order.total_price.cent_amount
+    fraction_digits = getattr(amount_planned, "fraction_digits", 2)
+
+    # Edge case, nothing to refund
+    if amount_planned_cents == 0 or order_total_cents == 0:
+        return get_quantized_amount(0, fraction_digits)
+
+    # Multiple items: refund only the requested line items
     if len(order.line_items) > 1:
-        refund_amount = 0
-        for line_item in get_edx_items(order):
+        order_line_items = get_edx_items(order)
+        order_line_item_ids = {li.id for li in order_line_items}
+
+        # Returning all items in the order, refund the amount planned rather than calculating per item
+        if len(return_line_item_ids) == len(order_line_item_ids) and set(return_line_item_ids) == order_line_item_ids:
+            return get_quantized_amount(amount_planned_cents, fraction_digits)
+
+        # If amount planned and order total are equal, line item totals can be added up as is
+        if amount_planned_cents == order_total_cents:
+            refund_cents = 0
+            for line_item in order_line_items:
+                if line_item.id in return_line_item_ids:
+                    refund_cents += line_item.total_price.cent_amount
+            return get_quantized_amount(refund_cents, fraction_digits)
+
+        # Otherwise allocate amount_planned by each line item's share of the order total.
+        # Quantize and cap at amount_planned so we never exceed the refundable amount.
+        refund_cents = 0
+        for line_item in order_line_items:
             if line_item.id in return_line_item_ids:
-                refund_amount += cents_to_dollars(line_item.total_price)
+                line_item_percentage = (
+                    decimal.Decimal(line_item.total_price.cent_amount) / decimal.Decimal(order_total_cents)
+                )
+                line_item_refund_cents = line_item_percentage * amount_planned_cents
+                refund_cents += line_item_refund_cents
+        refund_units = get_quantized_amount(refund_cents, fraction_digits)
+        amount_planned_units = get_quantized_amount(amount_planned_cents, fraction_digits)
+        return min(refund_units, amount_planned_units)
 
-        return refund_amount
-
-    # If one item, refund cart total
-    elif len(order.line_items) == 1 and order.line_items[0].id in return_line_item_ids:
-        return cents_to_dollars(order.total_price)
+    # Single item in cart: use amount planned as-is
+    if len(order.line_items) == 1 and order.line_items[0].id in return_line_item_ids:
+        return get_quantized_amount(amount_planned_cents, fraction_digits)
 
     # Refund 0 if line item id doesn't match
-    return 0
+    return get_quantized_amount(0, fraction_digits)
 
 
-def get_edx_refund_info(payment: CTPayment, order: CTOrder, return_line_item_ids: List[str]) -> (decimal.Decimal, str):
+def get_edx_refund_info(
+    payment: CTPayment,
+    order: CTOrder,
+    return_line_item_ids: List[str]
+) -> Tuple[decimal.Decimal, str]:
     """
     Calculate the refund amount for specified line items in an order and retrieve the interaction ID from the payment.
 
@@ -201,7 +275,9 @@ def get_edx_refund_info(payment: CTPayment, order: CTOrder, return_line_item_ids
         if transaction.type == TransactionType.CHARGE:  # pragma no cover
             interaction_id = transaction.interaction_id
 
-    refund_amount = get_line_item_price_to_refund(order, return_line_item_ids)
+    refund_amount = get_line_item_price_to_refund(
+        order, payment, return_line_item_ids,
+    )
 
     return refund_amount, interaction_id
 
