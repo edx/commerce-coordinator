@@ -15,3 +15,4 @@
 Django<4.3
 marshmallow == 3.26.1  #TODO: Remove constraint when commercetools SDK supports marshmallow v4.0+.
 celery[redis] == 5.4.0
+setuptools<82  # v82 includes breaking change by removing pkg_resources
