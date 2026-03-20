@@ -3,7 +3,6 @@ Commercetools app Task Tests
 """
 
 import logging
-from types import SimpleNamespace
 from unittest.mock import Mock, call, patch
 
 import stripe
@@ -19,7 +18,7 @@ from commerce_coordinator.apps.commercetools.tasks import (
     refund_from_paypal_task,
     refund_from_stripe_task,
     revoke_line_items_task,
-    revoke_line_mobile_order_task,
+    revoke_line_mobile_order_task
 )
 from commerce_coordinator.apps.commercetools.tests.conftest import (
     gen_order,
