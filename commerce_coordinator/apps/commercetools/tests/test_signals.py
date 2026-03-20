@@ -2,7 +2,6 @@
 
 import logging
 from copy import copy
-from types import SimpleNamespace
 from unittest.mock import patch
 
 from django.test import override_settings
@@ -209,8 +208,14 @@ class RevokeLineItemsTest(CoordinatorSignalReceiverTestCase):
     mock_parameters = {
         "order_id": "7506b6f1-8fe2-440d-ac76-4f62dfbd3775",
         "return_items": [
-            SimpleNamespace(id="822d77c4-00a6-4fb9-909b-094ef0b8c4b9"),
-            SimpleNamespace(id="ec70dd3e-a42b-4214-8114-643fc717c5eb"),
+            {
+                "id": "return-item-id-1",
+                "lineItemId": "822d77c4-00a6-4fb9-909b-094ef0b8c4b9",
+            },
+            {
+                "id": "return-item-id-2",
+                "lineItemId": "ec70dd3e-a42b-4214-8114-643fc717c5eb",
+            },
         ],
     }
 

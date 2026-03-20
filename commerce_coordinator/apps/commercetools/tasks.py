@@ -397,7 +397,7 @@ def revoke_line_items_task(order_id: str, return_items: list):
 
     Args:
         order_id (str): The ID of the order.
-        return_items (list): List of line items being returned.
+        return_items (list): Each entry has `lineItemId` (order line item) and `id` (return record).
     """
 
     tag = "revoke_line_items"
@@ -413,9 +413,25 @@ def revoke_line_items_task(order_id: str, return_items: list):
 
     return_line_items = []
     for item in return_items:
-        item_to_revoke = get_edx_line_item(order.line_items, item.id)
+        item_to_revoke = None
+        try:
+            line_item_id = item["lineItemId"]
+            item_to_revoke = get_edx_line_item(order.line_items, line_item_id)
+        except KeyError:
+            logger.warning(
+                f"[CT-{tag}] Skipping return item with no lineItemId for order_id {order_id}"
+            )
+            continue
         if item_to_revoke:
             return_line_items.append(item_to_revoke)
+
+    if not return_line_items:
+        logger.info(
+            f"[CT-{tag}] No matching order line items to revoke for order_id {order_id}; skipping fulfillment calls"
+        )
+        return True
+
+    fulfillment_client = OrderFulfillmentAPIClient()
 
     for line_item in return_line_items:
         course_run_key = get_edx_product_course_run_key(line_item)
@@ -444,13 +460,20 @@ def revoke_line_items_task(order_id: str, return_items: list):
         })
         serializer.is_valid(raise_exception=True)
 
-        OrderFulfillmentAPIClient().revoke_line(
+        fulfillment_client.revoke_line(
             payload=serializer.validated_data,
             logging_data=logging_data,
         )
 
-        logger.info(f"[CT-{tag}] Successfully called revoke_line for user {lms_user_username} "
-                    f"on course {course_run_key} and {logging_data}")
+        logger.info(
+            f"[CT-{tag}] Successfully called revoke_line for user {lms_user_username} "
+            f"on course {course_run_key} line_item_id={line_item.id}"
+        )
+
+    logger.info(
+        f"[CT-{tag}] Finished revoke task for order_id {order_id}, "
+        f"revoked {len(return_line_items)} line item(s) for user {lms_user_username}"
+    )
 
     return True
 
