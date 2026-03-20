@@ -17,6 +17,7 @@ from commerce_coordinator.apps.commercetools.catalog_info.edx_utils import (
     get_edx_product_course_run_key,
     get_edx_refund_info,
     get_line_item_price_to_refund,
+    get_quantized_amount,
     is_edx_lms_order,
     sum_money
 )
@@ -225,6 +226,46 @@ class TestEdXFunctions(unittest.TestCase):
         refund_amount = get_line_item_price_to_refund(order, payment, return_line_item_ids)
 
         self.assertEqual(refund_amount, expected_refund_amount)
+
+
+class TestGetQuantizedAmount(unittest.TestCase):
+    """Tests for get_quantized_amount (minor units → major units with ROUND_HALF_UP)."""
+
+    def test_integer_cents_two_fraction_digits(self):
+        self.assertEqual(get_quantized_amount(4900, 2), decimal.Decimal("49.00"))
+        self.assertEqual(get_quantized_amount(105, 2), decimal.Decimal("1.05"))
+        self.assertEqual(get_quantized_amount(10000, 2), decimal.Decimal("100.00"))
+
+    def test_zero(self):
+        self.assertEqual(get_quantized_amount(0, 2), decimal.Decimal("0.00"))
+
+    def test_round_half_up_minor_units(self):
+        """1.5 minor units at 2 fraction digits → 0.02 major (half rounds up)."""
+        self.assertEqual(
+            get_quantized_amount(decimal.Decimal("1.5"), 2),
+            decimal.Decimal("0.02"),
+        )
+
+    def test_decimal_fractional_cents_proportional_refund(self):
+        """Matches proportional refund path: fractional summed cents quantize to currency."""
+        fractional_cents = decimal.Decimal("4360.169491524")
+        self.assertEqual(
+            get_quantized_amount(fractional_cents, 2),
+            decimal.Decimal("43.60"),
+        )
+
+    def test_three_fraction_digits(self):
+        self.assertEqual(
+            get_quantized_amount(12345, 3),
+            decimal.Decimal("12.345"),
+        )
+
+    def test_round_half_up_at_second_decimal(self):
+        """125.5 cents → 1.255 dollars, quantize to 2 dp → 1.26."""
+        self.assertEqual(
+            get_quantized_amount(decimal.Decimal("125.5"), 2),
+            decimal.Decimal("1.26"),
+        )
 
 
 class TestSumMoney(unittest.TestCase):

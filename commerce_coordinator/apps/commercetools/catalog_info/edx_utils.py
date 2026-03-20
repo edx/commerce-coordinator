@@ -152,6 +152,33 @@ def check_is_bundle(line_items):
     return any(bool(get_line_item_bundle_id(line_item)) for line_item in line_items)
 
 
+def get_quantized_amount(
+    cent_amount: Union[int, decimal.Decimal],
+    fraction_digits: int,
+) -> decimal.Decimal:
+    """
+    Convert a minor-unit amount (e.g. cents) to major units and round to the currency's precision.
+
+    Divides cent_amount by 10 ** fraction_digits (e.g. cents → dollars when fraction_digits is 2), then quantizes the
+    result to that many decimal places using ROUND_HALF_UP.
+
+    Args:
+        cent_amount: Amount in the smallest currency unit (integer cents), or decimal.Decimal.
+        fraction_digits: Number of fraction digits for the currency.
+
+    Returns:
+        The amount in major currency units as decimal.Decimal with exactly fraction_digits decimal places.
+
+    Examples:
+        >>> get_quantized_amount(4900, 2)
+        Decimal('49.00')
+        >>> get_quantized_amount(decimal.Decimal('4360.169491524'), 2)
+        Decimal('43.60')
+    """
+    units = decimal.Decimal(cent_amount) / (decimal.Decimal(10) ** fraction_digits)
+    return units.quantize(decimal.Decimal(10) ** -fraction_digits, rounding=decimal.ROUND_HALF_UP)
+
+
 def get_line_item_price_to_refund(
     order: CTOrder,
     payment: CTPayment,
@@ -177,6 +204,8 @@ def get_line_item_price_to_refund(
         Never exceeds amount_planned. Returns 0.00 if no matching line items or no amount to refund.
     """
     amount_planned = payment.amount_planned
+    amount_planned_cents = amount_planned.cent_amount
+    fraction_digits = getattr(amount_planned, "fraction_digits", 2)
 
     # Multiple items: refund only the requested line items
     if len(order.line_items) > 1:
@@ -185,11 +214,9 @@ def get_line_item_price_to_refund(
 
         # Returning all items in the order, refund the amount planned rather than calculating per item
         if len(return_line_item_ids) == len(order_line_item_ids) and set(return_line_item_ids) == order_line_item_ids:
-            return decimal.Decimal(cents_to_dollars(amount_planned))
+            return get_quantized_amount(amount_planned_cents, fraction_digits)
 
         order_total_cents = order.total_price.cent_amount
-        amount_planned_cents = amount_planned.cent_amount
-        fraction_digits = getattr(amount_planned, "fraction_digits", 2)
 
         # If amount planned and order total are equal, line item totals can be added up as is
         if amount_planned_cents == order_total_cents:
@@ -197,27 +224,25 @@ def get_line_item_price_to_refund(
             for line_item in order_line_items:
                 if line_item.id in return_line_item_ids:
                     refund_cents += line_item.total_price.cent_amount
-            return decimal.Decimal(refund_cents) / (10 ** fraction_digits)
+            return get_quantized_amount(refund_cents, fraction_digits)
 
         # Otherwise allocate amount_planned by each line item's share of the order total.
-        # Use Decimal to avoid float rounding (e.g. 1 cent short when refunding all items).
         # Quantize and cap at amount_planned so we never exceed the refundable amount.
-        refund_cents = decimal.Decimal(0)
+        refund_cents = 0
         for line_item in order_line_items:
             if line_item.id in return_line_item_ids:
                 line_item_percentage = (
                     decimal.Decimal(line_item.total_price.cent_amount) / decimal.Decimal(order_total_cents)
                 )
-                line_item_refund_cents = line_item_percentage * decimal.Decimal(amount_planned_cents)
+                line_item_refund_cents = line_item_percentage * amount_planned_cents
                 refund_cents += line_item_refund_cents
-        refund_units = refund_cents / (10 ** fraction_digits)
-        quantized = refund_units.quantize(decimal.Decimal(10) ** -fraction_digits, rounding=decimal.ROUND_HALF_UP)
-        amount_planned_units = decimal.Decimal(amount_planned_cents) / (10 ** fraction_digits)
-        return min(quantized, amount_planned_units)
+        refund_units = get_quantized_amount(refund_cents, fraction_digits)
+        amount_planned_units = get_quantized_amount(amount_planned_cents, fraction_digits)
+        return min(refund_units, amount_planned_units)
 
     # Single item in cart: use amount planned as-is
     if len(order.line_items) == 1 and order.line_items[0].id in return_line_item_ids:
-        return decimal.Decimal(cents_to_dollars(amount_planned))
+        return get_quantized_amount(amount_planned_cents, fraction_digits)
 
     # Refund 0.00 if line item id doesn't match
     return decimal.Decimal("0.00")
