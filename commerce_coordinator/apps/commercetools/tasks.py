@@ -449,8 +449,8 @@ def revoke_line_items_task(order_id: str, return_items: list):
             logging_data=logging_data,
         )
 
-    logger.info(f"[CT-{tag}] Successfully called revoke_line for user {lms_user_username} "
-                f"on course {course_run_key} and {logging_data}")
+        logger.info(f"[CT-{tag}] Successfully called revoke_line for user {lms_user_username} "
+                    f"on course {course_run_key} and {logging_data}")
 
     return True
 

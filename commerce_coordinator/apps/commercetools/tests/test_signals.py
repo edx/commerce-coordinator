@@ -2,6 +2,7 @@
 
 import logging
 from copy import copy
+from types import SimpleNamespace
 from unittest.mock import patch
 
 from django.test import override_settings
@@ -190,5 +191,43 @@ class RevokeMobileOrderTest(CoordinatorSignalReceiverTestCase):
         self.assertEqual(
             result[0][1],
             "revoke_mobile_task_id",
+            "Check receiver result is same as return from task",
+        )
+
+
+@override_settings(
+    CC_SIGNALS={
+        "commerce_coordinator.apps.core.tests.utils.example_signal": [
+            "commerce_coordinator.apps.commercetools.signals.revoke_line_items",
+        ],
+    }
+)
+@patch("commerce_coordinator.apps.commercetools.signals.revoke_line_items_task")
+class RevokeLineItemsTest(CoordinatorSignalReceiverTestCase):
+    """Order return / revoke: enqueue revoke_line_items_task for LMS unenrollment."""
+
+    mock_parameters = {
+        "order_id": "7506b6f1-8fe2-440d-ac76-4f62dfbd3775",
+        "return_items": [
+            SimpleNamespace(id="822d77c4-00a6-4fb9-909b-094ef0b8c4b9"),
+            SimpleNamespace(id="ec70dd3e-a42b-4214-8114-643fc717c5eb"),
+        ],
+    }
+
+    def test_correct_arguments_passed(self, mock_task):
+        _, logs = self.fire_signal()
+        logger.info("logs.output: %s", logs.output)
+        mock_task.delay.assert_called_once_with(
+            order_id=self.mock_parameters["order_id"],
+            return_items=self.mock_parameters["return_items"],
+        )
+
+    def test_correct_response_returned(self, mock_task):
+        mock_task.delay.return_value.id = "revoke_line_items_task_id"
+        result, _ = self.fire_signal()
+        logger.info("result: %s", result)
+        self.assertEqual(
+            result[0][1],
+            "revoke_line_items_task_id",
             "Check receiver result is same as return from task",
         )
