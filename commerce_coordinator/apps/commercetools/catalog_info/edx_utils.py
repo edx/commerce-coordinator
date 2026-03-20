@@ -189,10 +189,10 @@ def get_line_item_price_to_refund(
 
     When payment is provided with amount_planned:
     - Single item: returns amount_planned as the refund amount.
-    - Multiple items: if amount_planned equals the order total (same currency and amount),
-      sums the returned line items' total_price (USD behavior). If amount_planned differs
-      from the order total (e.g. payment in another currency), allocates amount_planned
-      by each line item's percentage of the order total and sums those amounts.
+    - Multiple items: if amount_planned numerically equals the order total,
+      sums the returned line items' total_price. If amount_planned differs
+      from the order total, allocates amount_planned according to each line
+      item's percentage of the order total and sums those allocated amounts.
 
     Args:
         order (CTOrder): The order object containing line items.
