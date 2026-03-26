@@ -32,6 +32,7 @@ from commerce_coordinator.apps.core.tasks import TASK_LOCK_RETRY, acquire_task_l
 from commerce_coordinator.apps.ecommerce.clients import EcommerceAPIClient
 from commerce_coordinator.apps.iap.signals import revoke_line_mobile_order_signal
 from commerce_coordinator.apps.order_fulfillment.clients import OrderFulfillmentAPIClient
+from commerce_coordinator.apps.order_fulfillment.exceptions import OrderFulfillmentRevokeLineError
 from commerce_coordinator.apps.order_fulfillment.serializers import OrderRevokeLineRequestSerializer
 
 from .clients import CommercetoolsAPIClient, Refund
@@ -380,7 +381,7 @@ def refund_from_mobile_task(
 
 
 @shared_task(
-    autoretry_for=(CommercetoolsError,),
+    autoretry_for=(CommercetoolsError, OrderFulfillmentRevokeLineError),
     retry_kwargs={"max_retries": 5, "countdown": 3},
 )
 def revoke_line_items_task(order_id: str, return_items: list):
@@ -412,16 +413,17 @@ def revoke_line_items_task(order_id: str, return_items: list):
     lms_user_username = get_edx_lms_user_name(customer)
 
     return_line_items = []
+
+    line_items_by_id = {line_item.id: line_item for line_item in order.line_items}
     for item in return_items:
-        item_to_revoke = None
         try:
             line_item_id = item["lineItemId"]
-            item_to_revoke = get_edx_line_item(order.line_items, line_item_id)
         except KeyError:
             logger.warning(
                 f"[CT-{tag}] Skipping return item with no lineItemId for order_id {order_id}"
             )
             continue
+        item_to_revoke = line_items_by_id.get(line_item_id)
         if item_to_revoke:
             return_line_items.append(item_to_revoke)
 
@@ -434,8 +436,8 @@ def revoke_line_items_task(order_id: str, return_items: list):
     fulfillment_client = OrderFulfillmentAPIClient()
 
     for line_item in return_line_items:
-        course_run_key = get_edx_product_course_run_key(line_item)
         course_mode = get_line_item_attribute(line_item, "mode")
+        course_run_key = get_edx_product_course_run_key(line_item, course_mode)
 
         entitlement_uuid = get_line_item_lms_entitlement_id(line_item)
 
@@ -451,19 +453,29 @@ def revoke_line_items_task(order_id: str, return_items: list):
         }
 
         lob = get_lob_from_variant_attr(line_item.variant) or "edx"
-        serializer = OrderRevokeLineRequestSerializer(data={
+        serializer_data = {
             "edx_lms_username": lms_user_username,
             "course_run_key": course_run_key,
             "course_mode": course_mode,
-            "entitlement_uuid": entitlement_uuid,
             "lob": lob,
-        })
+        }
+        if entitlement_uuid is not None:
+            serializer_data["entitlement_uuid"] = entitlement_uuid
+        serializer = OrderRevokeLineRequestSerializer(data=serializer_data)
         serializer.is_valid(raise_exception=True)
 
-        fulfillment_client.revoke_line(
-            payload=serializer.validated_data,
+        revoke_response = fulfillment_client.revoke_line(
+            payload=serializer.data,
             logging_data=logging_data,
         )
+        if revoke_response is None:
+            logger.error(
+                f"[CT-{tag}] Order Fulfillment revoke_line returned no response after client retries | "
+                f"{logging_data}"
+            )
+            raise OrderFulfillmentRevokeLineError(
+                f"revoke_line failed for order {order.id} line_item_id={line_item.id}"
+            )
 
         logger.info(
             f"[CT-{tag}] Successfully called revoke_line for user {lms_user_username} "

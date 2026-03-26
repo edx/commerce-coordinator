@@ -2,6 +2,7 @@
 Commercetools app Task Tests
 """
 
+import json
 import logging
 from unittest.mock import Mock, call, patch
 
@@ -12,6 +13,7 @@ from django.test import TestCase
 from requests.exceptions import RequestException
 
 from commerce_coordinator.apps.commercetools.catalog_info.constants import EdXFieldNames
+from commerce_coordinator.apps.commercetools.catalog_info.edx_utils import get_line_item_lms_entitlement_id
 from commerce_coordinator.apps.commercetools.tasks import (
     fulfillment_completed_update_ct_line_item_task,
     refund_from_mobile_task,
@@ -24,7 +26,8 @@ from commerce_coordinator.apps.commercetools.tests.conftest import (
     gen_order,
     gen_order_multiple_line_items,
     gen_payment,
-    gen_payment_with_multiple_transactions
+    gen_payment_with_multiple_transactions,
+    gen_program_order
 )
 from commerce_coordinator.apps.commercetools.tests.constants import (
     EXAMPLE_RETURNED_ORDER_STRIPE_CLIENT_PAYLOAD,
@@ -32,6 +35,7 @@ from commerce_coordinator.apps.commercetools.tests.constants import (
     EXAMPLE_UPDATE_LINE_ITEM_SIGNAL_PAYLOAD
 )
 from commerce_coordinator.apps.core.models import User
+from commerce_coordinator.apps.order_fulfillment.exceptions import OrderFulfillmentRevokeLineError
 
 # Log using module name.
 logger = logging.getLogger(__name__)
@@ -741,6 +745,7 @@ class RevokeLineItemsTaskTest(TestCase):
 
         mock_ct_client.return_value.get_order_by_id.return_value = mock_order
         mock_ct_client.return_value.get_customer_by_id.return_value = self._mock_customer()
+        mock_fulfillment_client.return_value.revoke_line.return_value = {"ok": True}
 
         result = revoke_line_items_task(mock_order.id, return_items)
 
@@ -752,6 +757,60 @@ class RevokeLineItemsTaskTest(TestCase):
         self.assertEqual(call_kwargs["payload"]["course_mode"], "verified")
         self.assertEqual(call_kwargs["logging_data"]["line_item_id"], line_item_id)
         self.assertEqual(call_kwargs["logging_data"]["order_id"], mock_order.id)
+
+    @patch("commerce_coordinator.apps.commercetools.tasks.get_line_item_attribute")
+    def test_revoke_line_includes_entitlement_uuid_when_present(
+        self,
+        mock_get_attribute,
+        mock_ct_client,
+        mock_fulfillment_client,
+    ):
+        """Line items with edxLMSEntitlementId pass it through payload as a JSON-serializable value."""
+        mock_get_attribute.return_value = "verified"
+        mock_order = gen_program_order("order-revoke-entitlement")
+        mock_order.customer_id = "customer-123"
+        line_item = mock_order.line_items[0]
+        expected_entitlement = get_line_item_lms_entitlement_id(line_item)
+        self.assertIsNotNone(expected_entitlement)
+        return_items = [self._ct_return_item(line_item.id)]
+
+        mock_ct_client.return_value.get_order_by_id.return_value = mock_order
+        mock_ct_client.return_value.get_customer_by_id.return_value = self._mock_customer()
+        mock_fulfillment_client.return_value.revoke_line.return_value = {"ok": True}
+
+        result = revoke_line_items_task(mock_order.id, return_items)
+
+        self.assertTrue(result)
+        mock_fulfillment_client.return_value.revoke_line.assert_called_once()
+        call_kwargs = mock_fulfillment_client.return_value.revoke_line.call_args[1]
+        payload = call_kwargs["payload"]
+        self.assertEqual(payload["entitlement_uuid"], expected_entitlement)
+        self.assertEqual(call_kwargs["logging_data"]["entitlement_uuid"], expected_entitlement)
+        json.dumps(payload)
+        self.assertIsInstance(expected_entitlement, str)
+
+    @patch("commerce_coordinator.apps.commercetools.tasks.get_line_item_attribute")
+    def test_raises_when_revoke_line_returns_none(
+        self,
+        mock_get_attribute,
+        mock_ct_client,
+        mock_fulfillment_client,
+    ):
+        """None from OF client after retries must fail the task so Celery can retry."""
+        mock_get_attribute.return_value = "verified"
+        mock_order = gen_order("order-revoke-items-none")
+        mock_order.customer_id = "customer-123"
+        line_item_id = mock_order.line_items[0].id
+        return_items = [self._ct_return_item(line_item_id)]
+
+        mock_ct_client.return_value.get_order_by_id.return_value = mock_order
+        mock_ct_client.return_value.get_customer_by_id.return_value = self._mock_customer()
+        mock_fulfillment_client.return_value.revoke_line.return_value = None
+
+        with self.assertRaises(OrderFulfillmentRevokeLineError):
+            revoke_line_items_task(mock_order.id, return_items)
+
+        mock_fulfillment_client.return_value.revoke_line.assert_called_once()
 
     @patch("commerce_coordinator.apps.commercetools.tasks.get_line_item_attribute")
     def test_no_revoke_when_line_item_id_not_on_order(
@@ -789,6 +848,7 @@ class RevokeLineItemsTaskTest(TestCase):
 
         mock_ct_client.return_value.get_order_by_id.return_value = mock_order
         mock_ct_client.return_value.get_customer_by_id.return_value = self._mock_customer()
+        mock_fulfillment_client.return_value.revoke_line.return_value = {"ok": True}
 
         result = revoke_line_items_task(mock_order.id, return_items)
 
@@ -843,6 +903,7 @@ class RevokeLineItemsTaskTest(TestCase):
 
         mock_ct_client.return_value.get_order_by_id.return_value = mock_order
         mock_ct_client.return_value.get_customer_by_id.return_value = self._mock_customer()
+        mock_fulfillment_client.return_value.revoke_line.return_value = {"ok": True}
 
         with self.assertLogs(
             "commerce_coordinator.apps.commercetools.tasks", level="WARNING"
