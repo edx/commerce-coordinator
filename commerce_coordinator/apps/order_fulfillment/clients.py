@@ -59,7 +59,7 @@ class OrderFulfillmentAPIClient(BaseEdxOAuthClient):
 
     def revoke_line(self, payload, logging_data):
         """
-        Sends a POST request to the Order Fulfillment service to revoke course line Item for mobile orders.
+        Sends a POST request to the Order Fulfillment service to revoke course line item.
 
         Args:
             payload (dict): JSON payload with order details.
