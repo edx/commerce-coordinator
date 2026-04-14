@@ -41,7 +41,8 @@ from commerce_coordinator.apps.commercetools.serializers import (
 )
 from commerce_coordinator.apps.commercetools.signals import (
     fulfill_order_placed_send_enroll_in_course_signal,
-    fulfill_order_placed_send_entitlement_signal
+    fulfill_order_placed_send_entitlement_signal,
+    fulfill_order_returned_send_revoke_line_items_signal
 )
 from commerce_coordinator.apps.commercetools.utils import (
     convert_ct_cent_amount_to_localized_price,
@@ -457,6 +458,13 @@ def fulfill_order_returned_signal_task(order_id, return_items, message_id):
             order=order,
             return_line_item_return_ids=return_line_item_return_ids,
         )
+
+    # revoke line items on successful return
+    fulfill_order_returned_send_revoke_line_items_signal.send_robust(
+        sender=fulfill_order_returned_signal_task,
+        order_id=order_id,
+        return_items=return_items,
+    )
 
     logger.info(f'[CT-{tag}] Finished return for order: {order_id}, line item: {return_line_item_ids}, '
                 f'message id: {message_id}')

@@ -19,6 +19,7 @@ logger = logging.getLogger(__name__)
 
 fulfill_order_placed_send_enroll_in_course_signal = CoordinatorSignal()
 fulfill_order_placed_send_entitlement_signal = CoordinatorSignal()
+fulfill_order_returned_send_revoke_line_items_signal = CoordinatorSignal()
 
 
 @log_receiver(logger)
