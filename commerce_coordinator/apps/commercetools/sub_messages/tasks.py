@@ -443,6 +443,13 @@ def fulfill_order_returned_signal_task(order_id, return_items, message_id):
                         event='Order Refunded',
                         properties=segment_event_properties
                     )
+
+            # revoke line items
+            fulfill_order_returned_send_revoke_line_items_signal.send_robust(
+                sender=fulfill_order_returned_signal_task,
+                order_id=order_id,
+                return_items=return_items,
+            )
         else:  # pragma no cover
             logger.info(f'[CT-{tag}] payment {psp_payment_id} not refunded, '
                         f'sending Slack notification, message id: {message_id}')
@@ -458,13 +465,6 @@ def fulfill_order_returned_signal_task(order_id, return_items, message_id):
             order=order,
             return_line_item_return_ids=return_line_item_return_ids,
         )
-
-    # revoke line items on successful return
-    fulfill_order_returned_send_revoke_line_items_signal.send_robust(
-        sender=fulfill_order_returned_signal_task,
-        order_id=order_id,
-        return_items=return_items,
-    )
 
     logger.info(f'[CT-{tag}] Finished return for order: {order_id}, line item: {return_line_item_ids}, '
                 f'message id: {message_id}')
