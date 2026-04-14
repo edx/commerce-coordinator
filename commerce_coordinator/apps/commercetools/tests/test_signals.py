@@ -6,6 +6,7 @@ from unittest.mock import patch
 
 from django.test import override_settings
 
+from commerce_coordinator.apps.commercetools.signals import fulfill_order_returned_send_revoke_line_items_signal
 from commerce_coordinator.apps.commercetools.tests.constants import EXAMPLE_RETURNED_ORDER_STRIPE_SIGNAL_PAYLOAD
 from commerce_coordinator.apps.core.tests.utils import CoordinatorSignalReceiverTestCase
 
@@ -196,7 +197,7 @@ class RevokeMobileOrderTest(CoordinatorSignalReceiverTestCase):
 
 @override_settings(
     CC_SIGNALS={
-        "commerce_coordinator.apps.core.tests.utils.example_signal": [
+        "commerce_coordinator.apps.commercetools.signals.fulfill_order_returned_send_revoke_line_items_signal": [
             "commerce_coordinator.apps.commercetools.signals.revoke_line_items",
         ],
     }
@@ -204,6 +205,8 @@ class RevokeMobileOrderTest(CoordinatorSignalReceiverTestCase):
 @patch("commerce_coordinator.apps.commercetools.signals.revoke_line_items_task")
 class RevokeLineItemsTest(CoordinatorSignalReceiverTestCase):
     """Order return / revoke: enqueue revoke_line_items_task for LMS unenrollment."""
+
+    mock_signal = fulfill_order_returned_send_revoke_line_items_signal
 
     mock_parameters = {
         "order_id": "7506b6f1-8fe2-440d-ac76-4f62dfbd3775",

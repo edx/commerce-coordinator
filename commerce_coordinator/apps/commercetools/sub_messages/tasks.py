@@ -41,7 +41,8 @@ from commerce_coordinator.apps.commercetools.serializers import (
 )
 from commerce_coordinator.apps.commercetools.signals import (
     fulfill_order_placed_send_enroll_in_course_signal,
-    fulfill_order_placed_send_entitlement_signal
+    fulfill_order_placed_send_entitlement_signal,
+    fulfill_order_returned_send_revoke_line_items_signal
 )
 from commerce_coordinator.apps.commercetools.utils import (
     convert_ct_cent_amount_to_localized_price,
@@ -442,6 +443,13 @@ def fulfill_order_returned_signal_task(order_id, return_items, message_id):
                         event='Order Refunded',
                         properties=segment_event_properties
                     )
+
+            # revoke line items
+            fulfill_order_returned_send_revoke_line_items_signal.send_robust(
+                sender=fulfill_order_returned_signal_task,
+                order_id=order_id,
+                return_items=return_items,
+            )
         else:  # pragma no cover
             logger.info(f'[CT-{tag}] payment {psp_payment_id} not refunded, '
                         f'sending Slack notification, message id: {message_id}')
