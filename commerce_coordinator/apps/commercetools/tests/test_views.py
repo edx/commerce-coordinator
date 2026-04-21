@@ -342,9 +342,16 @@ class OrderSanctionedViewTests(APITestCase):
 
 
 @ddt.ddt
-@patch('commerce_coordinator.apps.commercetools.sub_messages.signals_dispatch'
-       '.fulfill_order_returned_signal.send_robust',
-       new_callable=SendRobustSignalMock)
+@patch(
+    'commerce_coordinator.apps.commercetools.views.'
+    'fulfill_order_returned_send_revoke_line_items_signal.send_robust',
+    new_callable=SendRobustSignalMock,
+)
+@patch(
+    'commerce_coordinator.apps.commercetools.sub_messages.signals_dispatch'
+    '.fulfill_order_returned_signal.send_robust',
+    new_callable=SendRobustSignalMock,
+)
 class OrderReturnedViewTests(APITestCase):
     """Tests for order sanctioned view"""
     url = reverse('commercetools:returned')
@@ -379,7 +386,7 @@ class OrderReturnedViewTests(APITestCase):
         'commerce_coordinator.apps.commercetools.clients.CommercetoolsAPIClient.get_customer_by_id',
         new_callable=CTCustomerByIdMock
     )
-    def test_view_returns_ok(self, _mock_customer, _mock_order, _mock_signal):
+    def test_view_returns_ok(self, _mock_customer, _mock_order, _mock_signal, _mock_revoke_signal):
         """Check authorized user requesting sanction receives a HTTP 200 OK."""
 
         # Login
@@ -390,6 +397,8 @@ class OrderReturnedViewTests(APITestCase):
 
         # Check 200 OK
         self.assertEqual(response.status_code, 200)
+        _mock_signal.assert_called_once()
+        _mock_revoke_signal.assert_called_once()
 
     @patch(
         'commerce_coordinator.apps.commercetools.clients.CommercetoolsAPIClient.get_order_by_id',
@@ -399,7 +408,7 @@ class OrderReturnedViewTests(APITestCase):
         'commerce_coordinator.apps.commercetools.clients.CommercetoolsAPIClient.get_customer_by_id',
         new_callable=CTCustomerByIdMock
     )
-    def test_view_returns_expected_error(self, _mock_customer, _mock_order, _mock_signal):
+    def test_view_returns_expected_error(self, _mock_customer, _mock_order, _mock_signal, _mock_revoke_signal):
         """Check an authorized account requesting fulfillment with bad inputs receive an expected error."""
 
         # Login
@@ -417,6 +426,8 @@ class OrderReturnedViewTests(APITestCase):
             'detail': ['This field is required.'],
         }
         self.assertEqual(response.json(), expected_response)
+        _mock_signal.assert_not_called()
+        _mock_revoke_signal.assert_not_called()
 
     @patch(
         'commerce_coordinator.apps.commercetools.clients.CommercetoolsAPIClient.get_order_by_id',
@@ -426,7 +437,7 @@ class OrderReturnedViewTests(APITestCase):
         'commerce_coordinator.apps.commercetools.clients.CommercetoolsAPIClient.get_customer_by_id',
         new_callable=CTCustomerByIdMock
     )
-    def test_view_returns_expected_error_no_order(self, mock_customer, _mock_order, _mock_signal):
+    def test_view_returns_expected_error_no_order(self, mock_customer, _mock_order, _mock_signal, _mock_revoke_signal):
         """Check an authorized account requesting fulfillment unable to get customer receive an expected error."""
         mock_customer.return_value = None
         # Login
@@ -445,7 +456,7 @@ class OrderReturnedViewTests(APITestCase):
         'commerce_coordinator.apps.commercetools.clients.CommercetoolsAPIClient.get_customer_by_id',
         new_callable=CTCustomerByIdMock
     )
-    def test_view_returns_ok_bad_order_state(self, _mock_customer, _mock_order, _mock_signal):
+    def test_view_returns_ok_bad_order_state(self, _mock_customer, _mock_order, _mock_signal, _mock_revoke_signal):
         """Check authorized user requesting sanction receives a HTTP 200 OK."""
 
         # Login
@@ -465,7 +476,7 @@ class OrderReturnedViewTests(APITestCase):
         'commerce_coordinator.apps.commercetools.clients.CommercetoolsAPIClient.get_customer_by_id',
         new_callable=CTCustomerByIdMock
     )
-    def test_view_returns_ok_missing_order_state(self, _mock_customer, _mock_order, _mock_signal):
+    def test_view_returns_ok_missing_order_state(self, _mock_customer, _mock_order, _mock_signal, _mock_revoke_signal):
         """Check authorized with missing order user requesting sanction receives a HTTP 200 OK."""
 
         # Login
@@ -477,7 +488,7 @@ class OrderReturnedViewTests(APITestCase):
         # Check 200 OK
         self.assertEqual(response.status_code, 200)
 
-    def test_unauthorized_user(self, _mock_signal):
+    def test_unauthorized_user(self, _mock_signal, _mock_revoke_signal):
         """Check unauthorized user is forbidden."""
 
         # Login
@@ -488,3 +499,5 @@ class OrderReturnedViewTests(APITestCase):
 
         # Check 403 Forbidden
         self.assertEqual(response.status_code, 403)
+        _mock_signal.assert_not_called()
+        _mock_revoke_signal.assert_not_called()
