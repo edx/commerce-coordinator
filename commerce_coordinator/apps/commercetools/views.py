@@ -15,6 +15,7 @@ from commerce_coordinator.apps.commercetools.serializers import (
     OrderReturnedViewMessageInputSerializer,
     OrderSanctionedViewMessageInputSerializer
 )
+from commerce_coordinator.apps.commercetools.signals import fulfill_order_returned_send_revoke_line_items_signal
 from commerce_coordinator.apps.commercetools.sub_messages.signals_dispatch import (
     fulfill_order_placed_message_signal,
     fulfill_order_returned_signal,
@@ -149,6 +150,13 @@ class OrderReturnedView(SingleInvocationAPIView):
             order_id=order_id,
             return_items=return_items,
             message_id=message_id
+        )
+
+        # revoke line items
+        fulfill_order_returned_send_revoke_line_items_signal.send_robust(
+            sender=self,
+            order_id=order_id,
+            return_items=return_items,
         )
 
         return Response(status=status.HTTP_200_OK)
