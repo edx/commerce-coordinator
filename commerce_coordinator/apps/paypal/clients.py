@@ -32,6 +32,9 @@ class PayPalClient:
 
         Args:
             capture_id (str): The identifier of the PayPal order to capture refund.
+            amount (decimal.Decimal | int | float): Refund amount; coerced to str for the
+                request body because the PayPal SDK serializes the body with jsonpickle,
+                which encodes Decimal as null (PayPal expects Money.value as a string).
 
         Returns:
             The response from PayPal.
@@ -45,7 +48,7 @@ class PayPalClient:
             "prefer": "return=representation",
             "body": {
                 "amount": {
-                    "value": amount,
+                    "value": str(amount),
                     "currency_code": "USD"
                 }
             }
