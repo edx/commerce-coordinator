@@ -18,8 +18,9 @@ class PayPalClientRefundOrderTests(TestCase):
         self, mock_json_serialize, mock_sdk_class
     ):
         """
-        PayPal Money.value is a string. The SDK body uses jsonpickle, which emits null
-        for Decimal unless we pass a string (see get_line_item_price_to_refund Decimal).
+        PayPal Money.value is a string. The refund amount may come from
+        get_line_item_price_to_refund as a Decimal, and the SDK body uses
+        jsonpickle, which emits null for Decimal unless we pass a string.
         """
         mock_json_serialize.return_value = json.dumps(
             {
