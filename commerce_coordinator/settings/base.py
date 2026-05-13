@@ -311,9 +311,6 @@ CC_SIGNALS = {
     'commerce_coordinator.apps.commercetools.signals.fulfill_order_placed_send_entitlement_signal': [
         'commerce_coordinator.apps.lms.signal_handlers.fulfill_order_placed_send_entitlement',
     ],
-    'commerce_coordinator.apps.commercetools.signals.fulfill_order_returned_send_revoke_line_items_signal': [
-        'commerce_coordinator.apps.commercetools.signals.revoke_line_items',
-    ],
     'commerce_coordinator.apps.lms.signals.fulfillment_completed_update_ct_line_item_signal': [
         'commerce_coordinator.apps.commercetools.signals.fulfillment_completed_update_ct_line_item',
     ],

@@ -42,8 +42,8 @@ from commerce_coordinator.apps.commercetools.serializers import (
 from commerce_coordinator.apps.commercetools.signals import (
     fulfill_order_placed_send_enroll_in_course_signal,
     fulfill_order_placed_send_entitlement_signal,
-    fulfill_order_returned_send_revoke_line_items_signal
 )
+from commerce_coordinator.apps.commercetools.tasks import revoke_line_items_task
 from commerce_coordinator.apps.commercetools.utils import (
     convert_ct_cent_amount_to_localized_price,
     extract_ct_order_information_for_braze_canvas,
@@ -445,8 +445,7 @@ def fulfill_order_returned_signal_task(order_id, return_items, message_id):
                     )
 
             # revoke line items
-            fulfill_order_returned_send_revoke_line_items_signal.send_robust(
-                sender=fulfill_order_returned_signal_task,
+            revoke_line_items_task.delay(
                 order_id=order_id,
                 return_items=return_items,
             )

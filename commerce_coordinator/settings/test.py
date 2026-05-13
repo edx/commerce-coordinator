@@ -74,6 +74,9 @@ CC_SIGNALS = {
     'commerce_coordinator.apps.commercetools.signals.fulfill_order_placed_send_enroll_in_course_signal': [
         'commerce_coordinator.apps.lms.signal_handlers.fulfill_order_placed_send_enroll_in_course',
     ],
+    'commerce_coordinator.apps.commercetools.signals.fulfill_order_placed_send_entitlement_signal': [
+        'commerce_coordinator.apps.lms.signal_handlers.fulfill_order_placed_send_entitlement',
+    ],
     'commerce_coordinator.apps.lms.signals.fulfillment_completed_update_ct_line_item_signal': [
         'commerce_coordinator.apps.commercetools.signals.fulfillment_completed_update_ct_line_item',
     ],
@@ -88,6 +91,15 @@ CC_SIGNALS = {
     ],
     'commerce_coordinator.apps.stripe.signals.payment_refunded_signal': [
         'commerce_coordinator.apps.commercetools.signals.refund_from_stripe',
+    ],
+    "commerce_coordinator.apps.paypal.signals.payment_refunded_signal": [
+        "commerce_coordinator.apps.commercetools.signals.refund_from_paypal",
+    ],
+    "commerce_coordinator.apps.iap.signals.payment_refunded_signal": [
+        "commerce_coordinator.apps.commercetools.signals.refund_from_mobile",
+    ],
+    "commerce_coordinator.apps.iap.signals.revoke_line_mobile_order_signal": [
+        "commerce_coordinator.apps.commercetools.signals.revoke_line_mobile_order",
     ],
 }
 

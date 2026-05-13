@@ -452,12 +452,12 @@ class OrderReturnedMessageSignalTaskTests(TestCase):
         super().setUp()
         self.mock = CommercetoolsAPIClientMock()
 
-        revoke_send_patcher = patch(
+        revoke_task_patcher = patch(
             "commerce_coordinator.apps.commercetools.sub_messages.tasks."
-            "fulfill_order_returned_send_revoke_line_items_signal.send_robust",
+            "revoke_line_items_task",
         )
-        self.mock_revoke_line_send = revoke_send_patcher.start()
-        self.addCleanup(revoke_send_patcher.stop)
+        self.mock_revoke_line_task = revoke_task_patcher.start()
+        self.addCleanup(revoke_task_patcher.stop)
 
         # Force reset nested mocked return object
         order_return = self.mock.order_mock.return_value
@@ -659,12 +659,12 @@ class FulfillOrderReturnedSignalTaskTests(TestCase):
 
     def setUp(self):
         super().setUp()
-        revoke_send_patcher = patch(
+        revoke_task_patcher = patch(
             "commerce_coordinator.apps.commercetools.sub_messages.tasks."
-            "fulfill_order_returned_send_revoke_line_items_signal.send_robust",
+            "revoke_line_items_task",
         )
-        self.mock_revoke_line_send = revoke_send_patcher.start()
-        self.addCleanup(revoke_send_patcher.stop)
+        self.mock_revoke_line_task = revoke_task_patcher.start()
+        self.addCleanup(revoke_task_patcher.stop)
 
     @staticmethod
     def unpack_for_uut(values):
@@ -692,8 +692,7 @@ class FulfillOrderReturnedSignalTaskTests(TestCase):
         self.assertTrue(ret_val)
         mock_values.order_mock.assert_called_once_with(mock_values.order_id)
         mock_values.customer_mock.assert_called_once_with(mock_values.customer_id)
-        self.mock_revoke_line_send.assert_called_once_with(
-            sender=fulfill_order_returned_signal_task,
+        self.mock_revoke_line_task.delay.assert_called_once_with(
             order_id=payload["order_id"],
             return_items=payload["return_items"],
         )
@@ -708,7 +707,7 @@ class FulfillOrderReturnedSignalTaskTests(TestCase):
         with self.assertRaises(CommercetoolsError):
             self.get_uut()(*self.unpack_for_uut(mock_values.example_payload))
 
-        self.mock_revoke_line_send.assert_not_called()
+        self.mock_revoke_line_task.delay.assert_not_called()
         mock_values.order_mock.assert_called_once_with(mock_values.order_id)
 
     def test_customer_not_found(self, _ct_client_init: CommercetoolsAPIClientMock, _run_filter_mock):
@@ -721,7 +720,7 @@ class FulfillOrderReturnedSignalTaskTests(TestCase):
         with self.assertRaises(CommercetoolsError):
             self.get_uut()(*self.unpack_for_uut(mock_values.example_payload))
 
-        self.mock_revoke_line_send.assert_not_called()
+        self.mock_revoke_line_task.delay.assert_not_called()
         mock_values.order_mock.assert_called_once_with(mock_values.order_id)
         mock_values.customer_mock.assert_called_once_with(mock_values.customer_id)
 
@@ -735,7 +734,7 @@ class FulfillOrderReturnedSignalTaskTests(TestCase):
             ret_val = self.get_uut()(*self.unpack_for_uut(mock_values.example_payload))
 
         self.assertTrue(ret_val)
-        self.mock_revoke_line_send.assert_not_called()
+        self.mock_revoke_line_task.delay.assert_not_called()
         mock_values.order_mock.assert_called_once_with(mock_values.order_id)
         mock_values.customer_mock.assert_called_once_with(mock_values.customer_id)
 
@@ -751,8 +750,7 @@ class FulfillOrderReturnedSignalTaskTests(TestCase):
         self.assertTrue(ret_val)
         mock_values.order_mock.assert_called_once_with(mock_values.order_id)
         mock_values.customer_mock.assert_called_once_with(mock_values.customer_id)
-        self.mock_revoke_line_send.assert_called_once_with(
-            sender=fulfill_order_returned_signal_task,
+        self.mock_revoke_line_task.delay.assert_called_once_with(
             order_id=payload["order_id"],
             return_items=payload["return_items"],
         )
@@ -773,8 +771,7 @@ class FulfillOrderReturnedSignalTaskTests(TestCase):
         self.assertTrue(ret_val)
         mock_values.order_mock.assert_called_once_with(mock_values.order_id)
         mock_values.customer_mock.assert_called_once_with(mock_values.customer_id)
-        self.mock_revoke_line_send.assert_called_once_with(
-            sender=fulfill_order_returned_signal_task,
+        self.mock_revoke_line_task.delay.assert_called_once_with(
             order_id=payload["order_id"],
             return_items=payload["return_items"],
         )
@@ -788,6 +785,6 @@ class FulfillOrderReturnedSignalTaskTests(TestCase):
         with self.assertRaises(Exception):
             self.get_uut()(*self.unpack_for_uut(mock_values.example_payload))
 
-        self.mock_revoke_line_send.assert_not_called()
+        self.mock_revoke_line_task.delay.assert_not_called()
         mock_values.order_mock.assert_called_once_with(mock_values.order_id)
         mock_values.customer_mock.assert_called_once_with(mock_values.customer_id)
