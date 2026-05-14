@@ -41,7 +41,7 @@ from commerce_coordinator.apps.commercetools.serializers import (
 )
 from commerce_coordinator.apps.commercetools.signals import (
     fulfill_order_placed_send_enroll_in_course_signal,
-    fulfill_order_placed_send_entitlement_signal,
+    fulfill_order_placed_send_entitlement_signal
 )
 from commerce_coordinator.apps.commercetools.tasks import revoke_line_items_task
 from commerce_coordinator.apps.commercetools.utils import (
