@@ -337,7 +337,7 @@ def fulfill_order_returned_signal_task(order_id, return_items, message_id):
         return_line_items[line_item_id] = return_id
 
     logger.info(f'[CT-{tag}] Processing return for order: {order_id}, '
-                f'line items: {','.join(return_line_item_return_ids)}, message id: {message_id}')
+                f"line items: {','.join(return_line_item_return_ids)}, message id: {message_id}")
 
     client = CommercetoolsAPIClient()
 
