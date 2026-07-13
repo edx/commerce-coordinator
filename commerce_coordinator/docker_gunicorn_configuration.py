@@ -11,16 +11,19 @@ bind = "0.0.0.0:8140"
 workers = 2
 
 # StatsD / DogStatsD configuration
-_dogstatsd_url = os.environ.get("DD_DOGSTATSD_URL", "")
+_dogstatsd_url = os.environ.get("DD_DOGSTATSD_URL", "").strip()
 
 if _dogstatsd_url:
     # Gunicorn accepts either "HOST:PORT" or "unix://PATH".
-    statsd_host = (
+    _statsd_host = (
         _dogstatsd_url[len("udp://"):]
         if _dogstatsd_url.startswith("udp://")
         else _dogstatsd_url
-    )
-    statsd_prefix = "commerce-coordinator"
+    ).strip()
+
+    if _statsd_host:
+        statsd_host = _statsd_host
+        statsd_prefix = "commerce-coordinator"
 
 
 def pre_request(worker, req):
