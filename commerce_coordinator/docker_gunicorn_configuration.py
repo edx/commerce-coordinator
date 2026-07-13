@@ -13,10 +13,15 @@ workers = 2
 # StatsD / DogStatsD configuration
 _dogstatsd_url = os.environ.get("DD_DOGSTATSD_URL", "")
 
-if _dogstatsd_url.startswith("unix://"):
-    statsd_host = _dogstatsd_url.replace("unix://", "", 1)
+if _dogstatsd_url:
+    # Gunicorn accepts either "HOST:PORT" or "unix://PATH".
+    statsd_host = (
+        _dogstatsd_url[len("udp://"):]
+        if _dogstatsd_url.startswith("udp://")
+        else _dogstatsd_url
+    )
     statsd_prefix = "commerce-coordinator"
-    
+
 def pre_request(worker, req):
     """Log requests before they are processed."""
     worker.log.info(f"{req.method} {req.path}")
