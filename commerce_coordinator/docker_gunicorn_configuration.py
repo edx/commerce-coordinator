@@ -22,6 +22,7 @@ if _dogstatsd_url:
     )
     statsd_prefix = "commerce-coordinator"
 
+
 def pre_request(worker, req):
     """Log requests before they are processed."""
     worker.log.info(f"{req.method} {req.path}")
