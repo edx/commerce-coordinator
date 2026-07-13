@@ -15,12 +15,8 @@ _dogstatsd_url = os.environ.get("DD_DOGSTATSD_URL", "")
 
 if _dogstatsd_url.startswith("unix://"):
     statsd_host = _dogstatsd_url.replace("unix://", "", 1)
-else:
-    statsd_host = ("localhost", 8125)
-
-statsd_prefix = "commerce-coordinator"
-
-
+    statsd_prefix = "commerce-coordinator"
+    
 def pre_request(worker, req):
     """Log requests before they are processed."""
     worker.log.info(f"{req.method} {req.path}")
