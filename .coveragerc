@@ -14,3 +14,4 @@ omit =
     */templates/*
     commerce_coordinator/celery.py
     commerce_coordinator/apps/core/tasks.py
+    commerce_coordinator/docker_gunicorn_configuration.py

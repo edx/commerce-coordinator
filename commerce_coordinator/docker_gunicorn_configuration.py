@@ -2,12 +2,29 @@
 gunicorn configuration file, see https://docs.gunicorn.org/en/develop/configure.html for more info.
 """
 import multiprocessing  # pylint: disable=unused-import
+import os
 
 preload_app = True
 timeout = 300
 bind = "0.0.0.0:8140"
 
 workers = 2
+
+
+# StatsD / DogStatsD configuration
+_dogstatsd_url = os.environ.get("DD_DOGSTATSD_URL", "").strip()
+
+if _dogstatsd_url:
+    # Gunicorn accepts either "HOST:PORT" or "unix://PATH".
+    _statsd_host = (
+        _dogstatsd_url[len("udp://"):]
+        if _dogstatsd_url.startswith("udp://")
+        else _dogstatsd_url
+    ).strip()
+
+    if _statsd_host:
+        statsd_host = _statsd_host
+        statsd_prefix = "commerce-coordinator"
 
 
 def pre_request(worker, req):
