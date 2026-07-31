@@ -15,16 +15,21 @@ workers = 2
 _dogstatsd_url = os.environ.get("DD_DOGSTATSD_URL", "").strip()
 
 if _dogstatsd_url:
-    # Gunicorn accepts either "HOST:PORT" or "unix://PATH".
-    _statsd_host = (
-        _dogstatsd_url[len("udp://"):]
-        if _dogstatsd_url.startswith("udp://")
-        else _dogstatsd_url
-    ).strip()
-
-    if _statsd_host:
-        statsd_host = _statsd_host
+    if _dogstatsd_url.startswith("unix://"):
+        # Gunicorn accepts unix socket directly as "unix:///path".
+        statsd_host = _dogstatsd_url
         statsd_prefix = "commerce-coordinator"
+    else:
+        # Strip "udp://" when present; Gunicorn expects plain "HOST:PORT".
+        _statsd_host = (
+            _dogstatsd_url[len("udp://"):]
+            if _dogstatsd_url.startswith("udp://")
+            else _dogstatsd_url
+        ).strip()
+
+        if _statsd_host:
+            statsd_host = _statsd_host
+            statsd_prefix = "commerce-coordinator"
 
 
 def pre_request(worker, req):
