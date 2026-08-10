@@ -66,8 +66,8 @@
             <a id="indexLink" class="nav" href="index.html">&Hat; index</a> &nbsp; &nbsp;
             <a id="nextFileLink" class="nav" href="z_66cbb5cd902b2a9e_test_pipeline_py.html">&#xbb; next</a>
             &nbsp; &nbsp; &nbsp;
-            <a class="nav" href="https://coverage.readthedocs.io/en/7.15.2">coverage.py v7.15.2</a>,
-            created at 2026-07-30 10:56 +0000
+            <a class="nav" href="https://coverage.readthedocs.io/en/7.15.4">coverage.py v7.15.4</a>,
+            created at 2026-08-10 13:41 +0000
         </p>
         <aside class="hidden">
             <button type="button" class="button_next_chunk" data-shortcut="j"></button>
@@ -82,7 +82,7 @@
     </div>
 </header>
 <main id="source">
-    <p class="pln"><span class="n"><a id="t1" href="#t1">1</a></span><span class="t"><span class="str">"""Tests for PayPal API client."""</span>&nbsp;</span><span class="r"></span></p>
+    <p class="pln"><span class="n"><a id="t1" href="#t1">1</a></span><span class="t"><span class="str">&quot;&quot;&quot;Tests for PayPal API client.&quot;&quot;&quot;</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t2" href="#t2">2</a></span><span class="t">&nbsp;</span><span class="r"></span></p>
     <p class="run"><span class="n"><a id="t3" href="#t3">3</a></span><span class="t"><span class="key">import</span> <span class="nam">json</span>&nbsp;</span><span class="r"></span></p>
     <p class="run"><span class="n"><a id="t4" href="#t4">4</a></span><span class="t"><span class="key">from</span> <span class="nam">decimal</span> <span class="key">import</span> <span class="nam">Decimal</span>&nbsp;</span><span class="r"></span></p>
@@ -94,35 +94,35 @@
     <p class="pln"><span class="n"><a id="t10" href="#t10">10</a></span><span class="t">&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t11" href="#t11">11</a></span><span class="t">&nbsp;</span><span class="r"></span></p>
     <p class="run"><span class="n"><a id="t12" href="#t12">12</a></span><span class="t"><span class="key">class</span> <span class="nam">PayPalClientRefundOrderTests</span><span class="op">(</span><span class="nam">TestCase</span><span class="op">)</span><span class="op">:</span>&nbsp;</span><span class="r"></span></p>
-    <p class="pln"><span class="n"><a id="t13" href="#t13">13</a></span><span class="t">    <span class="str">"""Regression tests for refund_order request shaping."""</span>&nbsp;</span><span class="r"></span></p>
+    <p class="pln"><span class="n"><a id="t13" href="#t13">13</a></span><span class="t">    <span class="str">&quot;&quot;&quot;Regression tests for refund_order request shaping.&quot;&quot;&quot;</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t14" href="#t14">14</a></span><span class="t">&nbsp;</span><span class="r"></span></p>
-    <p class="run"><span class="n"><a id="t15" href="#t15">15</a></span><span class="t">    <span class="op">@</span><span class="nam">patch</span><span class="op">(</span><span class="str">"commerce_coordinator.apps.paypal.clients.PaypalServersdkClient"</span><span class="op">)</span>&nbsp;</span><span class="r"></span></p>
-    <p class="run"><span class="n"><a id="t16" href="#t16">16</a></span><span class="t">    <span class="op">@</span><span class="nam">patch</span><span class="op">(</span><span class="str">"commerce_coordinator.apps.paypal.clients.ApiHelper.json_serialize"</span><span class="op">)</span>&nbsp;</span><span class="r"></span></p>
+    <p class="run"><span class="n"><a id="t15" href="#t15">15</a></span><span class="t">    <span class="op">@</span><span class="nam">patch</span><span class="op">(</span><span class="str">&quot;commerce_coordinator.apps.paypal.clients.PaypalServersdkClient&quot;</span><span class="op">)</span>&nbsp;</span><span class="r"></span></p>
+    <p class="run"><span class="n"><a id="t16" href="#t16">16</a></span><span class="t">    <span class="op">@</span><span class="nam">patch</span><span class="op">(</span><span class="str">&quot;commerce_coordinator.apps.paypal.clients.ApiHelper.json_serialize&quot;</span><span class="op">)</span>&nbsp;</span><span class="r"></span></p>
     <p class="run"><span class="n"><a id="t17" href="#t17">17</a></span><span class="t">    <span class="key">def</span> <span class="nam">test_refund_order_serializes_decimal_amount_as_string</span><span class="op">(</span>&nbsp;</span><span class="r"></span></p>
     <p class="run run2"><span class="n"><a id="t18" href="#t18">18</a></span><span class="t">        <span class="nam">self</span><span class="op">,</span> <span class="nam">mock_json_serialize</span><span class="op">,</span> <span class="nam">mock_sdk_class</span>&nbsp;</span><span class="r"></span></p>
     <p class="run run2"><span class="n"><a id="t19" href="#t19">19</a></span><span class="t">    <span class="op">)</span><span class="op">:</span>&nbsp;</span><span class="r"></span></p>
-    <p class="pln"><span class="n"><a id="t20" href="#t20">20</a></span><span class="t">        <span class="str">"""</span>&nbsp;</span><span class="r"></span></p>
+    <p class="pln"><span class="n"><a id="t20" href="#t20">20</a></span><span class="t">        <span class="str">&quot;&quot;&quot;</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t21" href="#t21">21</a></span><span class="t"><span class="str">        PayPal Money.value is a string. The refund amount may come from</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t22" href="#t22">22</a></span><span class="t"><span class="str">        get_line_item_price_to_refund as a Decimal, and the SDK body uses</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t23" href="#t23">23</a></span><span class="t"><span class="str">        jsonpickle, which emits null for Decimal unless we pass a string.</span>&nbsp;</span><span class="r"></span></p>
-    <p class="pln"><span class="n"><a id="t24" href="#t24">24</a></span><span class="t"><span class="str">        """</span>&nbsp;</span><span class="r"></span></p>
+    <p class="pln"><span class="n"><a id="t24" href="#t24">24</a></span><span class="t"><span class="str">        &quot;&quot;&quot;</span>&nbsp;</span><span class="r"></span></p>
     <p class="run"><span class="n"><a id="t25" href="#t25">25</a></span><span class="t">        <span class="nam">mock_json_serialize</span><span class="op">.</span><span class="nam">return_value</span> <span class="op">=</span> <span class="nam">json</span><span class="op">.</span><span class="nam">dumps</span><span class="op">(</span>&nbsp;</span><span class="r"></span></p>
     <p class="run run2"><span class="n"><a id="t26" href="#t26">26</a></span><span class="t">            <span class="op">{</span>&nbsp;</span><span class="r"></span></p>
-    <p class="run run2"><span class="n"><a id="t27" href="#t27">27</a></span><span class="t">                <span class="str">"id"</span><span class="op">:</span> <span class="str">"REFUND_ID"</span><span class="op">,</span>&nbsp;</span><span class="r"></span></p>
-    <p class="run run2"><span class="n"><a id="t28" href="#t28">28</a></span><span class="t">                <span class="str">"create_time"</span><span class="op">:</span> <span class="str">"2024-01-01T00:00:00Z"</span><span class="op">,</span>&nbsp;</span><span class="r"></span></p>
-    <p class="run run2"><span class="n"><a id="t29" href="#t29">29</a></span><span class="t">                <span class="str">"status"</span><span class="op">:</span> <span class="str">"COMPLETED"</span><span class="op">,</span>&nbsp;</span><span class="r"></span></p>
-    <p class="run run2"><span class="n"><a id="t30" href="#t30">30</a></span><span class="t">                <span class="str">"amount"</span><span class="op">:</span> <span class="op">{</span><span class="str">"value"</span><span class="op">:</span> <span class="str">"49.00"</span><span class="op">,</span> <span class="str">"currency_code"</span><span class="op">:</span> <span class="str">"USD"</span><span class="op">}</span><span class="op">,</span>&nbsp;</span><span class="r"></span></p>
+    <p class="run run2"><span class="n"><a id="t27" href="#t27">27</a></span><span class="t">                <span class="str">&quot;id&quot;</span><span class="op">:</span> <span class="str">&quot;REFUND_ID&quot;</span><span class="op">,</span>&nbsp;</span><span class="r"></span></p>
+    <p class="run run2"><span class="n"><a id="t28" href="#t28">28</a></span><span class="t">                <span class="str">&quot;create_time&quot;</span><span class="op">:</span> <span class="str">&quot;2024-01-01T00:00:00Z&quot;</span><span class="op">,</span>&nbsp;</span><span class="r"></span></p>
+    <p class="run run2"><span class="n"><a id="t29" href="#t29">29</a></span><span class="t">                <span class="str">&quot;status&quot;</span><span class="op">:</span> <span class="str">&quot;COMPLETED&quot;</span><span class="op">,</span>&nbsp;</span><span class="r"></span></p>
+    <p class="run run2"><span class="n"><a id="t30" href="#t30">30</a></span><span class="t">                <span class="str">&quot;amount&quot;</span><span class="op">:</span> <span class="op">{</span><span class="str">&quot;value&quot;</span><span class="op">:</span> <span class="str">&quot;49.00&quot;</span><span class="op">,</span> <span class="str">&quot;currency_code&quot;</span><span class="op">:</span> <span class="str">&quot;USD&quot;</span><span class="op">}</span><span class="op">,</span>&nbsp;</span><span class="r"></span></p>
     <p class="run run2"><span class="n"><a id="t31" href="#t31">31</a></span><span class="t">            <span class="op">}</span>&nbsp;</span><span class="r"></span></p>
     <p class="run run2"><span class="n"><a id="t32" href="#t32">32</a></span><span class="t">        <span class="op">)</span>&nbsp;</span><span class="r"></span></p>
     <p class="run"><span class="n"><a id="t33" href="#t33">33</a></span><span class="t">        <span class="nam">mock_payments</span> <span class="op">=</span> <span class="nam">MagicMock</span><span class="op">(</span><span class="op">)</span>&nbsp;</span><span class="r"></span></p>
     <p class="run"><span class="n"><a id="t34" href="#t34">34</a></span><span class="t">        <span class="nam">mock_sdk_class</span><span class="op">.</span><span class="nam">return_value</span><span class="op">.</span><span class="nam">payments</span> <span class="op">=</span> <span class="nam">mock_payments</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t35" href="#t35">35</a></span><span class="t">&nbsp;</span><span class="r"></span></p>
     <p class="run"><span class="n"><a id="t36" href="#t36">36</a></span><span class="t">        <span class="nam">client</span> <span class="op">=</span> <span class="nam">PayPalClient</span><span class="op">(</span><span class="op">)</span>&nbsp;</span><span class="r"></span></p>
-    <p class="run"><span class="n"><a id="t37" href="#t37">37</a></span><span class="t">        <span class="nam">client</span><span class="op">.</span><span class="nam">refund_order</span><span class="op">(</span><span class="str">"CAPTURE_ID"</span><span class="op">,</span> <span class="nam">Decimal</span><span class="op">(</span><span class="str">"49.00"</span><span class="op">)</span><span class="op">)</span>&nbsp;</span><span class="r"></span></p>
+    <p class="run"><span class="n"><a id="t37" href="#t37">37</a></span><span class="t">        <span class="nam">client</span><span class="op">.</span><span class="nam">refund_order</span><span class="op">(</span><span class="str">&quot;CAPTURE_ID&quot;</span><span class="op">,</span> <span class="nam">Decimal</span><span class="op">(</span><span class="str">&quot;49.00&quot;</span><span class="op">)</span><span class="op">)</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t38" href="#t38">38</a></span><span class="t">&nbsp;</span><span class="r"></span></p>
     <p class="run"><span class="n"><a id="t39" href="#t39">39</a></span><span class="t">        <span class="nam">mock_payments</span><span class="op">.</span><span class="nam">refund_captured_payment</span><span class="op">.</span><span class="nam">assert_called_once</span><span class="op">(</span><span class="op">)</span>&nbsp;</span><span class="r"></span></p>
     <p class="run"><span class="n"><a id="t40" href="#t40">40</a></span><span class="t">        <span class="nam">collect</span> <span class="op">=</span> <span class="nam">mock_payments</span><span class="op">.</span><span class="nam">refund_captured_payment</span><span class="op">.</span><span class="nam">call_args</span><span class="op">[</span><span class="num">0</span><span class="op">]</span><span class="op">[</span><span class="num">0</span><span class="op">]</span>&nbsp;</span><span class="r"></span></p>
-    <p class="run"><span class="n"><a id="t41" href="#t41">41</a></span><span class="t">        <span class="nam">self</span><span class="op">.</span><span class="nam">assertEqual</span><span class="op">(</span><span class="nam">collect</span><span class="op">[</span><span class="str">"body"</span><span class="op">]</span><span class="op">[</span><span class="str">"amount"</span><span class="op">]</span><span class="op">[</span><span class="str">"value"</span><span class="op">]</span><span class="op">,</span> <span class="str">"49.00"</span><span class="op">)</span>&nbsp;</span><span class="r"></span></p>
+    <p class="run"><span class="n"><a id="t41" href="#t41">41</a></span><span class="t">        <span class="nam">self</span><span class="op">.</span><span class="nam">assertEqual</span><span class="op">(</span><span class="nam">collect</span><span class="op">[</span><span class="str">&quot;body&quot;</span><span class="op">]</span><span class="op">[</span><span class="str">&quot;amount&quot;</span><span class="op">]</span><span class="op">[</span><span class="str">&quot;value&quot;</span><span class="op">]</span><span class="op">,</span> <span class="str">&quot;49.00&quot;</span><span class="op">)</span>&nbsp;</span><span class="r"></span></p>
 </main>
 <footer>
     <div class="content">
@@ -131,8 +131,8 @@
             <a class="nav" href="index.html">&Hat; index</a> &nbsp; &nbsp;
             <a class="nav" href="z_66cbb5cd902b2a9e_test_pipeline_py.html">&#xbb; next</a>
             &nbsp; &nbsp; &nbsp;
-            <a class="nav" href="https://coverage.readthedocs.io/en/7.15.2">coverage.py v7.15.2</a>,
-            created at 2026-07-30 10:56 +0000
+            <a class="nav" href="https://coverage.readthedocs.io/en/7.15.4">coverage.py v7.15.4</a>,
+            created at 2026-08-10 13:41 +0000
         </p>
     </div>
 </footer>
