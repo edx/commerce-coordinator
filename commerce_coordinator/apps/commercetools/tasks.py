@@ -576,7 +576,7 @@ def _log_quarantine(*, pi_id, ct_payment_id, ct_cart_id, reason, source):
 
 @shared_task(
     bind=True,
-    autoretry_for=(CommercetoolsError,),
+    autoretry_for=(CommercetoolsError, stripe.error.StripeError),
     retry_kwargs={"max_retries": 5, "countdown": 3},
 )
 def finalize_commercetools_stripe_payment_task(
@@ -588,8 +588,8 @@ def finalize_commercetools_stripe_payment_task(
     Celery task wrapping the shared finalize path for a Stripe
     PaymentIntent that originated from a CommerceTools cart.
 
-    Bounded retries on transient CT errors; non-retryable failures
-    are quarantined via structured log + metric.
+    Bounded retries on transient CT/Stripe errors; non-retryable failures
+    are quarantined via structured log.
     """
     from commerce_coordinator.apps.commercetools.stripe_payment_finalize import (
         FinalizeError,
@@ -617,30 +617,45 @@ def finalize_commercetools_stripe_payment_task(
     except FinalizeError as exc:
         _log_quarantine(
             pi_id=payment_intent_id,
-            ct_payment_id="unknown",
-            ct_cart_id="unknown",
+            ct_payment_id=getattr(exc, "ct_payment_id", "unknown"),
+            ct_cart_id=getattr(exc, "ct_cart_id", "unknown"),
             reason=str(exc),
             source=source,
         )
         return None
 
-    except CommercetoolsError:
+    except (CommercetoolsError, stripe.error.StripeError):
         if self.request.retries >= self.max_retries:
+            ct_payment_id, ct_cart_id = _quarantine_ids_from_pi(payment_intent_id)
             _log_quarantine(
                 pi_id=payment_intent_id,
-                ct_payment_id="unknown",
-                ct_cart_id="unknown",
-                reason="max retries exhausted on CommercetoolsError",
+                ct_payment_id=ct_payment_id,
+                ct_cart_id=ct_cart_id,
+                reason="max retries exhausted on transient error",
                 source=source,
             )
         raise
 
     except Exception as exc:
+        ct_payment_id, ct_cart_id = _quarantine_ids_from_pi(payment_intent_id)
         _log_quarantine(
             pi_id=payment_intent_id,
-            ct_payment_id="unknown",
-            ct_cart_id="unknown",
+            ct_payment_id=ct_payment_id,
+            ct_cart_id=ct_cart_id,
             reason=f"unexpected error: {exc}",
             source=source,
         )
         raise
+
+
+def _quarantine_ids_from_pi(payment_intent_id: str) -> tuple[str, str]:
+    """Best-effort ct_payment_id / ct_cart_id from Stripe PI metadata for quarantine logs."""
+    try:
+        pi = stripe.PaymentIntent.retrieve(payment_intent_id)
+        metadata = pi.metadata or {}
+        return (
+            metadata.get("ct_payment_id") or "unknown",
+            metadata.get("ct_cart_id") or "unknown",
+        )
+    except Exception:
+        return "unknown", "unknown"

@@ -126,7 +126,7 @@ class TestFinalizeCTOrderFromStripePI(TestCase):
         client = MockClient.return_value
         client.get_payment_by_key.return_value = payment
         client.create_charge_payment_transaction.return_value = payment
-        client.get_order_by_payment_id.side_effect = Exception("not found")
+        client.get_order_by_payment_id.side_effect = ValueError("not found")
         client.get_cart_by_id.return_value = cart
         client.create_order_from_cart.return_value = order
         client.update_line_items_transition_state.return_value = order
@@ -140,6 +140,77 @@ class TestFinalizeCTOrderFromStripePI(TestCase):
         client.create_order_from_cart.assert_called_once_with(cart)
         client.update_line_items_transition_state.assert_called_once()
         mock_track.assert_called_once()
+        mock_stripe.PaymentIntent.modify.assert_called_once()
+
+    def test_order_already_exists_backfills_missing_pi_metadata(self, MockClient, mock_track, mock_stripe):
+        """Existing order + missing PI order_id still heals metadata (recovery convergence)."""
+        pi = _mock_pi()
+        charge = _mock_charge()
+        mock_stripe.PaymentIntent.retrieve.return_value = pi
+        mock_stripe.Charge.retrieve.return_value = charge
+
+        payment = _mock_payment(payment_id="pay-123", has_charge=True, charge_id="ch_test456")
+        existing_order = gen_order(uuid4_str())
+
+        client = MockClient.return_value
+        client.get_payment_by_key.return_value = payment
+        client.get_order_by_payment_id.return_value = existing_order
+
+        result = finalize_ct_order_from_stripe_pi("pi_test123", source="recovery")
+
+        self.assertTrue(result.already_existed)
+        self.assertEqual(result.order_id, existing_order.id)
+        client.create_order_from_cart.assert_not_called()
+        mock_track.assert_not_called()
+        mock_stripe.PaymentIntent.modify.assert_called_once_with(
+            "pi_test123",
+            metadata={
+                "order_id": existing_order.id,
+                "ct_payment_id": "pay-123",
+            },
+        )
+
+    def test_order_already_exists_skips_when_metadata_complete(self, MockClient, mock_track, mock_stripe):
+        """When order exists and PI already has order_id, do not modify again."""
+        existing_order = gen_order(uuid4_str())
+        pi = _mock_pi(order_id=existing_order.id, ct_payment_id="pay-123")
+        charge = _mock_charge()
+        mock_stripe.PaymentIntent.retrieve.return_value = pi
+        mock_stripe.Charge.retrieve.return_value = charge
+
+        payment = _mock_payment(payment_id="pay-123", has_charge=True, charge_id="ch_test456")
+
+        client = MockClient.return_value
+        client.base_client.payments.get_by_id.return_value = payment
+        client.get_order_by_payment_id.return_value = existing_order
+
+        result = finalize_ct_order_from_stripe_pi("pi_test123", source="webhook")
+
+        self.assertTrue(result.already_existed)
+        mock_stripe.PaymentIntent.modify.assert_not_called()
+
+    def test_ct_outage_on_order_lookup_propagates(self, MockClient, mock_track, mock_stripe):
+        """CommercetoolsError during order lookup must not be treated as not-found."""
+        pi = _mock_pi()
+        charge = _mock_charge()
+        mock_stripe.PaymentIntent.retrieve.return_value = pi
+        mock_stripe.Charge.retrieve.return_value = charge
+
+        payment = _mock_payment(payment_id="pay-123", has_charge=True, charge_id="ch_test456")
+
+        client = MockClient.return_value
+        client.get_payment_by_key.return_value = payment
+        client.get_order_by_payment_id.side_effect = CommercetoolsError(
+            message="boom",
+            errors=[{"code": "ConcurrentModification", "message": "boom"}],
+            response={},
+            correlation_id="corr",
+        )
+
+        with self.assertRaises(CommercetoolsError):
+            finalize_ct_order_from_stripe_pi("pi_test123", source="webhook")
+
+        client.create_order_from_cart.assert_not_called()
 
     def test_order_already_exists_skips(self, MockClient, mock_track, mock_stripe):
         """When order already exists for the payment, skip creation."""
@@ -176,7 +247,7 @@ class TestFinalizeCTOrderFromStripePI(TestCase):
 
         client = MockClient.return_value
         client.get_payment_by_key.return_value = payment
-        client.get_order_by_payment_id.side_effect = Exception("not found")
+        client.get_order_by_payment_id.side_effect = ValueError("not found")
         client.get_cart_by_id.return_value = cart
         client.create_order_from_cart.return_value = order
         client.update_line_items_transition_state.return_value = order
@@ -208,8 +279,10 @@ class TestFinalizeCTOrderFromStripePI(TestCase):
         pi.metadata.pop("ct_cart_id", None)
         mock_stripe.PaymentIntent.retrieve.return_value = pi
 
-        with self.assertRaises(FinalizeError):
+        with self.assertRaises(FinalizeError) as ctx:
             finalize_ct_order_from_stripe_pi("pi_test123", source="webhook")
+
+        self.assertEqual(ctx.exception.ct_cart_id, "unknown")
 
     def test_resolves_payment_by_ct_payment_id(self, MockClient, mock_track, mock_stripe):
         """When ct_payment_id is in metadata, use it for lookup."""
@@ -231,7 +304,7 @@ class TestFinalizeCTOrderFromStripePI(TestCase):
         self.assertTrue(result.already_existed)
 
     def test_segment_event_has_web_properties(self, MockClient, mock_track, mock_stripe):
-        """Segment Order Completed should have is_mobile=False and plan 18."""
+        """Segment Order Completed should have is_mobile=False, plan 18, payment_method=upi."""
         pi = _mock_pi()
         charge = _mock_charge()
         mock_stripe.PaymentIntent.retrieve.return_value = pi
@@ -245,7 +318,7 @@ class TestFinalizeCTOrderFromStripePI(TestCase):
         client = MockClient.return_value
         client.get_payment_by_key.return_value = payment
         client.create_charge_payment_transaction.return_value = payment
-        client.get_order_by_payment_id.side_effect = Exception("not found")
+        client.get_order_by_payment_id.side_effect = ValueError("not found")
         client.get_cart_by_id.return_value = cart
         client.create_order_from_cart.return_value = order
         client.update_line_items_transition_state.return_value = order
@@ -259,3 +332,4 @@ class TestFinalizeCTOrderFromStripePI(TestCase):
         self.assertEqual(props["track_plan_id"], 18)
         self.assertEqual(props["trigger_source"], "server-side")
         self.assertEqual(props["processor_name"], "stripe")
+        self.assertEqual(props["payment_method"], "upi")

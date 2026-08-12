@@ -1875,7 +1875,7 @@ class CommercetoolsAPIClient:
             )
 
             if not response or not response.results:
-                raise Exception(f"No order found for payment ID {payment_id}")
+                raise ValueError(f"No order found for payment ID {payment_id}")
 
             return response.results[0]
 

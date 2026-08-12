@@ -28,6 +28,17 @@ logger = logging.getLogger(__name__)
 class FinalizeError(Exception):
     """Non-retryable finalization error (quarantine candidate)."""
 
+    def __init__(
+        self,
+        message: str,
+        *,
+        ct_payment_id: str = "unknown",
+        ct_cart_id: str = "unknown",
+    ):
+        super().__init__(message)
+        self.ct_payment_id = ct_payment_id or "unknown"
+        self.ct_cart_id = ct_cart_id or "unknown"
+
 
 @dataclass
 class FinalizeResult:
@@ -47,6 +58,41 @@ def _payment_has_charge_for(payment, charge_id: str) -> bool:
     )
 
 
+def _backfill_pi_metadata(payment_intent_id: str, order_id: str, payment_id: str) -> None:
+    """Write order_id / ct_payment_id onto the Stripe PaymentIntent (idempotent)."""
+    try:
+        stripe.PaymentIntent.modify(
+            payment_intent_id,
+            metadata={
+                "order_id": order_id,
+                "ct_payment_id": payment_id,
+            },
+        )
+    except Exception:
+        logger.warning(
+            "[finalize_ct_order] Failed to backfill PI metadata for %s",
+            payment_intent_id,
+            exc_info=True,
+        )
+
+
+def _discount_amount_dollars(cart) -> float:
+    """Extract cart-level discount as dollars from CT cart shapes."""
+    discount_on_total = getattr(cart, "discount_on_total_price", None)
+    if not discount_on_total:
+        return 0
+
+    discounted_amount = getattr(discount_on_total, "discounted_amount", None)
+    if discounted_amount is not None:
+        return cents_to_dollars(discounted_amount)
+
+    # Fallback if a money-like object was passed directly (tests / older shapes)
+    if hasattr(discount_on_total, "cent_amount"):
+        return cents_to_dollars(discount_on_total)
+
+    return 0
+
+
 def finalize_ct_order_from_stripe_pi(
     payment_intent_id: str,
     *,
@@ -62,7 +108,7 @@ def finalize_ct_order_from_stripe_pi(
       2. Resolve CT Payment (by key = pi.id or metadata.ct_payment_id)
       3. Resolve CT Cart (by metadata.ct_cart_id)
       4. Add Charge transaction if absent (idempotent by interaction_id)
-      5. Skip if order already exists for this payment
+      5. Skip if order already exists for this payment (still heal PI metadata)
       6. Create order from cart → COMPLETE / PAID / SHIPPED
       7. Transition line items → PENDING_FULFILMENT
       8. Emit Segment Order Completed (plan 18, is_mobile=False)
@@ -84,23 +130,28 @@ def finalize_ct_order_from_stripe_pi(
         client = CommercetoolsAPIClient()
 
     pi = stripe.PaymentIntent.retrieve(payment_intent_id)
+    metadata = pi.metadata or {}
 
     if pi.status != "succeeded":
         raise FinalizeError(
-            f"PaymentIntent {payment_intent_id} status is '{pi.status}', expected 'succeeded'"
+            f"PaymentIntent {payment_intent_id} status is '{pi.status}', expected 'succeeded'",
+            ct_cart_id=metadata.get("ct_cart_id", "unknown"),
+            ct_payment_id=metadata.get("ct_payment_id", "unknown"),
         )
 
-    metadata = pi.metadata or {}
     if metadata.get("source_system") != "commercetools":
         raise FinalizeError(
             f"PaymentIntent {payment_intent_id} source_system is "
-            f"'{metadata.get('source_system')}', expected 'commercetools'"
+            f"'{metadata.get('source_system')}', expected 'commercetools'",
+            ct_cart_id=metadata.get("ct_cart_id", "unknown"),
+            ct_payment_id=metadata.get("ct_payment_id", "unknown"),
         )
 
     ct_cart_id = metadata.get("ct_cart_id")
     if not ct_cart_id:
         raise FinalizeError(
-            f"PaymentIntent {payment_intent_id} missing metadata.ct_cart_id"
+            f"PaymentIntent {payment_intent_id} missing metadata.ct_cart_id",
+            ct_payment_id=metadata.get("ct_payment_id", "unknown"),
         )
 
     ct_payment_id_from_meta = metadata.get("ct_payment_id")
@@ -141,20 +192,27 @@ def finalize_ct_order_from_stripe_pi(
         )
 
     # --- Check if order already exists ---
+    # ValueError = not found (aligned with client docstring). CommercetoolsError must
+    # propagate so Celery can retry instead of creating a duplicate order.
     try:
         existing_order = client.get_order_by_payment_id(payment.id)
+    except ValueError:
+        existing_order = None
+
+    if existing_order is not None:
         logger.info(
-            "[finalize_ct_order] Order %s already exists for payment %s (pi=%s), skipping creation",
+            "[finalize_ct_order] Order %s already exists for payment %s (pi=%s), "
+            "skipping creation; ensuring PI metadata is backfilled",
             existing_order.id, payment.id, payment_intent_id,
         )
+        if not metadata.get("order_id") or metadata.get("ct_payment_id") != payment.id:
+            _backfill_pi_metadata(payment_intent_id, existing_order.id, payment.id)
         return FinalizeResult(
             order_id=existing_order.id,
             order_number=existing_order.order_number or "",
             payment_id=payment.id,
             already_existed=True,
         )
-    except Exception:
-        pass
 
     # --- Load cart and create order ---
     cart = client.get_cart_by_id(ct_cart_id)
@@ -174,19 +232,7 @@ def finalize_ct_order_from_stripe_pi(
     _emit_web_order_completed(client, order, cart, payment)
 
     # --- Backfill PI metadata ---
-    try:
-        stripe.PaymentIntent.modify(
-            payment_intent_id,
-            metadata={
-                "order_id": order.id,
-                "ct_payment_id": payment.id,
-            },
-        )
-    except Exception:
-        logger.warning(
-            "[finalize_ct_order] Failed to backfill PI metadata for %s",
-            payment_intent_id, exc_info=True,
-        )
+    _backfill_pi_metadata(payment_intent_id, order.id, payment.id)
 
     logger.info(
         "[finalize_ct_order] Successfully finalized order %s for pi=%s source=%s",
@@ -213,11 +259,8 @@ def _emit_web_order_completed(client, order, cart, payment):
         ]
 
         payment_method = "unknown"
-        processor_name = "stripe"
-        if payment.payment_method_info:
-            payment_method = payment.payment_method_info.method or "unknown"
-            if payment.payment_method_info.name:
-                processor_name = payment.payment_method_info.name.get("en", "stripe")
+        if payment.payment_method_info and payment.payment_method_info.method:
+            payment_method = payment.payment_method_info.method
 
         discount_codes = getattr(cart, "discount_codes", []) or []
         discount_code = None
@@ -225,10 +268,14 @@ def _emit_web_order_completed(client, order, cart, payment):
         if discount_codes:
             codes_as_dicts = []
             for dc in discount_codes:
-                if hasattr(dc, "code"):
+                code_obj = getattr(dc, "discount_code", None)
+                if code_obj is not None and hasattr(code_obj, "obj") and code_obj.obj:
+                    codes_as_dicts.append({"code": getattr(code_obj.obj, "code", None)})
+                elif hasattr(dc, "code"):
                     codes_as_dicts.append({"code": dc.code})
                 elif isinstance(dc, dict) and "code" in dc:
                     codes_as_dicts.append(dc)
+            codes_as_dicts = [d for d in codes_as_dicts if d.get("code")]
             if codes_as_dicts:
                 discount_code = codes_as_dicts[-1].get("code")
                 coupon_name = [
@@ -240,10 +287,6 @@ def _emit_web_order_completed(client, order, cart, payment):
         if order.taxed_price and order.taxed_price.total_tax:
             taxed_amount = cents_to_dollars(order.taxed_price.total_tax)
 
-        discount_amount = 0
-        if cart.discount_on_total_price:
-            discount_amount = cents_to_dollars(cart.discount_on_total_price)
-
         event_props = {
             "track_plan_id": 18,
             "trigger_source": "server-side",
@@ -254,9 +297,9 @@ def _emit_web_order_completed(client, order, cart, payment):
             "tax": taxed_amount,
             "coupon": discount_code,
             "coupon_name": coupon_name,
-            "discount": discount_amount,
+            "discount": _discount_amount_dollars(cart),
             "payment_method": payment_method,
-            "processor_name": processor_name,
+            "processor_name": "stripe",
             "products": products,
             "is_mobile": False,
             "multi_item_cart_enabled": len(cart.line_items) > 1,

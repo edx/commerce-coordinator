@@ -107,6 +107,30 @@ class WebhooksViewTests(APITestCase):
 
     @mock.patch('stripe.Webhook.construct_event')
     @mock.patch('commerce_coordinator.apps.stripe.views.payment_succeeded_commercetools_signal.send_robust')
+    @mock.patch.object(WebhookView, '_is_running', return_value=True)
+    def test_ct_payment_succeeded_single_invocation_short_circuits(
+        self, mock_is_running, mock_ct_signal, mock_construct_event
+    ):
+        """Duplicate CT success delivery short-circuits via SingleInvocation."""
+        pi_id = 'pi_ct_dup'
+        self.mock_stripe_event.type = StripeEventType.PAYMENT_SUCCESS.value
+        metadata = {'source_system': 'commercetools', 'ct_cart_id': 'cart-uuid'}
+        self.mock_stripe_event.data.object.id = pi_id
+        self.mock_stripe_event.data.object.metadata = StripeObject()
+        self.mock_stripe_event.data.object.metadata.update(metadata)
+        self.mock_stripe_event.data.object.amount = 4900
+        mock_construct_event.return_value = self.mock_stripe_event
+
+        response = self.client.post(
+            self.url, data={}, format='json', **self.mock_header
+        )
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        mock_is_running.assert_called()
+        mock_ct_signal.assert_not_called()
+
+    @mock.patch('stripe.Webhook.construct_event')
+    @mock.patch('commerce_coordinator.apps.stripe.views.payment_succeeded_commercetools_signal.send_robust')
     def test_ct_payment_failed_returns_200_no_signal(self, mock_ct_signal, mock_construct_event):
         """
         Verify payment_intent.payment_failed with source_system=commercetools

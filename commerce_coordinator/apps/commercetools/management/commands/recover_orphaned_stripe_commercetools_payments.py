@@ -1,19 +1,25 @@
 """
-Management command to discover and finalize orphaned Stripe PaymentIntents
-that have source_system=commercetools, status=succeeded, but no order_id
-in their metadata.
+Management command to discover and finalize orphaned Stripe PaymentIntents /
+CommerceTools Payments that have succeeded without a linked Order.
+
+Discovery:
+  1. Stripe primary — succeeded PIs with source_system=commercetools and no order_id
+  2. CT secondary — stripe_edx payments with a Success Charge and no Order
 
 Intended to run on an external cron (e.g. every 15-30 minutes).
 """
 
 import datetime
 import logging
-import time
 
 import stripe
 from commercetools import CommercetoolsError
+from commercetools.platform.models import TransactionState, TransactionType
 from django.conf import settings
 
+from commerce_coordinator.apps.commercetools.catalog_info.constants import (
+    EDX_STRIPE_PAYMENT_INTERFACE_NAME,
+)
 from commerce_coordinator.apps.commercetools.management.commands._ct_api_client_command import (
     CommercetoolsAPIClientCommand,
 )
@@ -30,8 +36,9 @@ stripe.api_key = settings.PAYMENT_PROCESSOR_CONFIG['edx']['stripe']['secret_key'
 
 class Command(CommercetoolsAPIClientCommand):
     help = (
-        "Discover orphaned Stripe PaymentIntents (succeeded, source_system=commercetools, "
-        "no order_id) and finalize them into CT orders. Supports --since, --limit, --dry-run."
+        "Discover orphaned Stripe PaymentIntents / CT Payments (succeeded, "
+        "source_system=commercetools / stripe_edx, no Order) and finalize them. "
+        "Supports --since, --limit, --dry-run."
     )
 
     def add_arguments(self, parser):
@@ -62,13 +69,26 @@ class Command(CommercetoolsAPIClientCommand):
         created_after = int(
             (datetime.datetime.now(datetime.timezone.utc) - datetime.timedelta(days=since_days)).timestamp()
         )
+        created_after_iso = datetime.datetime.fromtimestamp(
+            created_after, tz=datetime.timezone.utc
+        ).strftime("%Y-%m-%dT%H:%M:%S.000Z")
 
         self.stdout.write(
             f"Recovery: since={since_days}d limit={limit} dry_run={dry_run}"
         )
 
-        orphans = self._discover_stripe_orphans(created_after, limit)
-        self.stdout.write(f"Discovered {len(orphans)} Stripe orphan candidate(s)")
+        stripe_orphans = self._discover_stripe_orphans(created_after, limit)
+        self.stdout.write(f"Discovered {len(stripe_orphans)} Stripe orphan candidate(s)")
+
+        remaining = max(0, limit - len(stripe_orphans))
+        ct_orphans = []
+        if remaining > 0:
+            ct_orphans = self._discover_ct_orphans(
+                created_after_iso, remaining, set(stripe_orphans),
+            )
+            self.stdout.write(f"Discovered {len(ct_orphans)} CT-secondary orphan candidate(s)")
+
+        orphans = stripe_orphans + ct_orphans
 
         if dry_run:
             for pi_id in orphans:
@@ -79,6 +99,7 @@ class Command(CommercetoolsAPIClientCommand):
         quarantined = 0
 
         for pi_id in orphans:
+            meta = self._pi_metadata(pi_id)
             try:
                 result = finalize_ct_order_from_stripe_pi(
                     pi_id, source="recovery", client=self.ct_api_client,
@@ -96,8 +117,12 @@ class Command(CommercetoolsAPIClientCommand):
                 self.stderr.write(f"  [quarantine] {pi_id}: {exc}")
                 _log_quarantine(
                     pi_id=pi_id,
-                    ct_payment_id="unknown",
-                    ct_cart_id="unknown",
+                    ct_payment_id=getattr(exc, "ct_payment_id", None)
+                    or meta.get("ct_payment_id")
+                    or "unknown",
+                    ct_cart_id=getattr(exc, "ct_cart_id", None)
+                    or meta.get("ct_cart_id")
+                    or "unknown",
                     reason=str(exc),
                     source="recovery",
                 )
@@ -106,8 +131,8 @@ class Command(CommercetoolsAPIClientCommand):
                 self.stderr.write(f"  [quarantine] {pi_id}: {exc}")
                 _log_quarantine(
                     pi_id=pi_id,
-                    ct_payment_id="unknown",
-                    ct_cart_id="unknown",
+                    ct_payment_id=meta.get("ct_payment_id") or "unknown",
+                    ct_cart_id=meta.get("ct_cart_id") or "unknown",
                     reason=str(exc),
                     source="recovery",
                 )
@@ -117,6 +142,13 @@ class Command(CommercetoolsAPIClientCommand):
             f"Recovery complete: {finalized} finalized, {quarantined} quarantined, "
             f"{len(orphans) - finalized - quarantined} skipped"
         )
+
+    def _pi_metadata(self, pi_id: str) -> dict:
+        try:
+            pi = stripe.PaymentIntent.retrieve(pi_id)
+            return dict(pi.metadata or {})
+        except Exception:
+            return {}
 
     def _discover_stripe_orphans(self, created_after: int, limit: int) -> list[str]:
         """
@@ -202,3 +234,110 @@ class Command(CommercetoolsAPIClientCommand):
                 break
 
         return orphan_ids
+
+    def _discover_ct_orphans(
+        self,
+        created_after_iso: str,
+        limit: int,
+        already_found: set[str],
+    ) -> list[str]:
+        """
+        CT secondary discovery: stripe_edx payments with a Success Charge and
+        no linked Order. Returns Stripe PaymentIntent IDs (payment.interface_id).
+        """
+        orphan_ids = []
+        offset = 0
+        page_size = 50
+
+        while len(orphan_ids) < limit:
+            try:
+                result = self.ct_api_client.base_client.payments.query(
+                    where=[
+                        f'paymentMethodInfo(paymentInterface="{EDX_STRIPE_PAYMENT_INTERFACE_NAME}")',
+                        f'createdAt > "{created_after_iso}"',
+                    ],
+                    sort=["createdAt desc"],
+                    limit=page_size,
+                    offset=offset,
+                )
+            except CommercetoolsError:
+                logger.warning(
+                    "[recovery] CT payment query failed during secondary discovery",
+                    exc_info=True,
+                )
+                break
+
+            if not result.results:
+                break
+
+            for payment in result.results:
+                if len(orphan_ids) >= limit:
+                    break
+
+                pi_id = payment.interface_id
+                if not pi_id or pi_id in already_found or pi_id in orphan_ids:
+                    continue
+
+                if not self._payment_has_success_charge(payment):
+                    continue
+
+                try:
+                    self.ct_api_client.get_order_by_payment_id(payment.id)
+                    continue  # order exists
+                except ValueError:
+                    pass  # no order — candidate
+                except CommercetoolsError:
+                    logger.warning(
+                        "[recovery] CT order lookup failed for payment %s",
+                        payment.id,
+                        exc_info=True,
+                    )
+                    continue
+
+                if not self._stripe_pi_still_orphan(pi_id):
+                    continue
+
+                orphan_ids.append(pi_id)
+
+            if len(result.results) < page_size:
+                break
+            offset += page_size
+
+        if len(orphan_ids) >= limit:
+            logger.info(
+                "[recovery] CT secondary discovery truncated at limit=%d",
+                limit,
+            )
+
+        return orphan_ids
+
+    @staticmethod
+    def _payment_has_success_charge(payment) -> bool:
+        if not payment.transactions:
+            return False
+        return any(
+            t.type == TransactionType.CHARGE and t.state == TransactionState.SUCCESS
+            for t in payment.transactions
+        )
+
+    @staticmethod
+    def _stripe_pi_still_orphan(pi_id: str) -> bool:
+        """Confirm Stripe PI is succeeded commercetools and still missing order_id."""
+        try:
+            pi = stripe.PaymentIntent.retrieve(pi_id)
+        except Exception:
+            logger.warning(
+                "[recovery] Failed to retrieve Stripe PI %s during CT secondary check",
+                pi_id,
+                exc_info=True,
+            )
+            return False
+
+        if pi.status != "succeeded":
+            return False
+
+        metadata = pi.metadata or {}
+        if metadata.get("source_system") != "commercetools":
+            return False
+
+        return not metadata.get("order_id")
