@@ -19,7 +19,11 @@ from commerce_coordinator.apps.stripe.exceptions import (
     SignatureVerificationAPIError,
     UnhandledStripeEventAPIError
 )
-from commerce_coordinator.apps.stripe.signals import payment_processed_signal, payment_refunded_signal
+from commerce_coordinator.apps.stripe.signals import (
+    payment_processed_signal,
+    payment_refunded_signal,
+    payment_succeeded_commercetools_signal,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -40,7 +44,6 @@ class WebhookView(SingleInvocationAPIView):
     http_method_names = ['post']  # accept POST request only
     authentication_classes = []
     permission_classes = [AllowAny]
-    # TODO: Make this endpoint accessible for Stripe servers only. To be done in SONIC-898.
 
     @csrf_exempt
     def post(self, request):
@@ -61,10 +64,71 @@ class WebhookView(SingleInvocationAPIView):
             raise SignatureVerificationAPIError from e
 
         # Handle the event
-        if event.type == StripeEventType.PAYMENT_SUCCESS:
-            payment_state = PaymentState.COMPLETED.value
-        elif event.type == StripeEventType.PAYMENT_FAILED:
-            payment_state = PaymentState.FAILED.value
+        if event.type in (StripeEventType.PAYMENT_SUCCESS, StripeEventType.PAYMENT_FAILED):
+            payment_intent = event.data.object
+            event_source_system = payment_intent.metadata.get('source_system')
+
+            # --- CommerceTools path (UPI / CT-originated PIs) ---
+            if event_source_system == 'commercetools':
+                if event.type == StripeEventType.PAYMENT_SUCCESS:
+                    if self._is_running(tag, payment_intent.id):  # pragma no cover
+                        self.meta_should_mark_not_running = False
+                        return Response(status=status.HTTP_200_OK)
+                    else:
+                        self.mark_running(tag, payment_intent.id)
+
+                    logger.info(
+                        '[Stripe webhooks] CT payment_intent.succeeded for PI [%s]',
+                        payment_intent.id,
+                    )
+
+                    payment_succeeded_commercetools_signal.send_robust(
+                        sender=self.__class__,
+                        payment_intent_id=payment_intent.id,
+                    )
+                else:
+                    logger.info(
+                        '[Stripe webhooks] CT payment_intent.payment_failed for PI [%s], ignoring',
+                        payment_intent.id,
+                    )
+                return Response(status=status.HTTP_200_OK)
+
+            # --- Legacy edX path ---
+            if event.type == StripeEventType.PAYMENT_SUCCESS:
+                payment_state = PaymentState.COMPLETED.value
+            else:
+                payment_state = PaymentState.FAILED.value
+
+            logger.info(
+                '[Stripe webhooks] event %s with amount %d and payment intent ID [%s], source: [%s].',
+                event.type,
+                payment_intent.amount,
+                payment_intent.id,
+                event_source_system,
+            )
+
+            if event_source_system != source_system_identifier:
+                logger.info(
+                    '[Stripe webhooks] Skipping event %s with payment intent ID [%s], source: [%s].',
+                    event.type,
+                    payment_intent.id,
+                    event_source_system,
+                )
+                return Response(status=status.HTTP_200_OK)
+
+            payment_processed_signal.send_robust(
+                sender=self.__class__,
+                edx_lms_user_id=payment_intent.metadata.edx_lms_user_id,
+                order_uuid=payment_intent.metadata.order_number,
+                payment_number=payment_intent.metadata.payment_number,
+                payment_state=payment_state,
+                reference_number=payment_intent.id,
+                amount_in_cents=payment_intent.amount,
+                currency=payment_intent.currency,
+                provider_response_body=payload,
+            )
+            return Response(status=status.HTTP_200_OK)
+
         elif event.type == StripeEventType.PAYMENT_REFUNDED:
             idempotency_key = event.get('request').get('idempotency_key')
             if self._is_running(tag, idempotency_key):  # pragma no cover
@@ -110,36 +174,3 @@ class WebhookView(SingleInvocationAPIView):
             return Response(status=status.HTTP_200_OK)
         else:
             raise UnhandledStripeEventAPIError
-
-        payment_intent = event.data.object
-
-        event_source_system_identifier = payment_intent.metadata.get('source_system')
-        logger.info(
-            '[Stripe webhooks] event %s with amount %d and payment intent ID [%s], source: [%s].',
-            event.type,
-            payment_intent.amount,
-            payment_intent.id,
-            event_source_system_identifier,
-        )
-
-        if event_source_system_identifier != source_system_identifier:
-            logger.info(
-                '[Stripe webhooks] Skipping event %s with payment intent ID [%s], source: [%s].',
-                event.type,
-                payment_intent.id,
-                event_source_system_identifier,
-            )
-            return Response(status=status.HTTP_200_OK)
-
-        payment_processed_signal.send_robust(
-            sender=self.__class__,
-            edx_lms_user_id=payment_intent.metadata.edx_lms_user_id,
-            order_uuid=payment_intent.metadata.order_number,
-            payment_number=payment_intent.metadata.payment_number,
-            payment_state=payment_state,
-            reference_number=payment_intent.id,
-            amount_in_cents=payment_intent.amount,
-            currency=payment_intent.currency,
-            provider_response_body=payload,
-        )
-        return Response(status=status.HTTP_200_OK)

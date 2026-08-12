@@ -79,6 +79,114 @@ class WebhooksViewTests(APITestCase):
                 )
             )
 
+    @mock.patch('stripe.Webhook.construct_event')
+    @mock.patch('commerce_coordinator.apps.stripe.views.payment_succeeded_commercetools_signal.send_robust')
+    def test_ct_payment_succeeded_fires_signal(self, mock_ct_signal, mock_construct_event):
+        """
+        Verify payment_succeeded_commercetools_signal is emitted for
+        payment_intent.succeeded with source_system=commercetools.
+        """
+        pi_id = 'pi_ct_test_123'
+        self.mock_stripe_event.type = StripeEventType.PAYMENT_SUCCESS.value
+        metadata = {'source_system': 'commercetools', 'ct_cart_id': 'cart-uuid'}
+        self.mock_stripe_event.data.object.id = pi_id
+        self.mock_stripe_event.data.object.metadata = StripeObject()
+        self.mock_stripe_event.data.object.metadata.update(metadata)
+        self.mock_stripe_event.data.object.amount = 4900
+        mock_construct_event.return_value = self.mock_stripe_event
+
+        response = self.client.post(
+            self.url, data={}, format='json', **self.mock_header
+        )
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        mock_ct_signal.assert_called_once_with(
+            sender=WebhookView,
+            payment_intent_id=pi_id,
+        )
+
+    @mock.patch('stripe.Webhook.construct_event')
+    @mock.patch('commerce_coordinator.apps.stripe.views.payment_succeeded_commercetools_signal.send_robust')
+    def test_ct_payment_failed_returns_200_no_signal(self, mock_ct_signal, mock_construct_event):
+        """
+        Verify payment_intent.payment_failed with source_system=commercetools
+        returns 200 but does NOT fire the CT succeeded signal.
+        """
+        self.mock_stripe_event.type = StripeEventType.PAYMENT_FAILED.value
+        metadata = {'source_system': 'commercetools', 'ct_cart_id': 'cart-uuid'}
+        self.mock_stripe_event.data.object.id = 'pi_ct_fail'
+        self.mock_stripe_event.data.object.metadata = StripeObject()
+        self.mock_stripe_event.data.object.metadata.update(metadata)
+        self.mock_stripe_event.data.object.amount = 4900
+        mock_construct_event.return_value = self.mock_stripe_event
+
+        response = self.client.post(
+            self.url, data={}, format='json', **self.mock_header
+        )
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        mock_ct_signal.assert_not_called()
+
+    @mock.patch('stripe.Webhook.construct_event')
+    @mock.patch('commerce_coordinator.apps.stripe.views.payment_processed_signal.send_robust')
+    @mock.patch('commerce_coordinator.apps.stripe.views.payment_succeeded_commercetools_signal.send_robust')
+    def test_legacy_payment_succeeded_fires_processed_signal(
+        self, mock_ct_signal, mock_processed_signal, mock_construct_event
+    ):
+        """
+        Verify legacy source_system still fires payment_processed_signal,
+        not the CT signal.
+        """
+        pi_id = 'pi_legacy'
+        source_system = settings.PAYMENT_PROCESSOR_CONFIG['edx']['stripe']['source_system_identifier']
+        self.mock_stripe_event.type = StripeEventType.PAYMENT_SUCCESS.value
+        metadata = {
+            'source_system': source_system,
+            'edx_lms_user_id': '123',
+            'order_number': 'EDX-000001',
+            'payment_number': 'PAY-001',
+        }
+        self.mock_stripe_event.data.object.id = pi_id
+        self.mock_stripe_event.data.object.metadata = StripeObject()
+        self.mock_stripe_event.data.object.metadata.update(metadata)
+        self.mock_stripe_event.data.object.amount = 4900
+        self.mock_stripe_event.data.object.currency = 'usd'
+        mock_construct_event.return_value = self.mock_stripe_event
+
+        response = self.client.post(
+            self.url, data={}, format='json', **self.mock_header
+        )
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        mock_ct_signal.assert_not_called()
+        mock_processed_signal.assert_called_once()
+
+    @mock.patch('stripe.Webhook.construct_event')
+    @mock.patch('commerce_coordinator.apps.stripe.views.payment_processed_signal.send_robust')
+    @mock.patch('commerce_coordinator.apps.stripe.views.payment_succeeded_commercetools_signal.send_robust')
+    def test_unknown_source_system_skips_both_signals(
+        self, mock_ct_signal, mock_processed_signal, mock_construct_event
+    ):
+        """
+        Verify that an unrecognized source_system returns 200
+        but does not fire any signal.
+        """
+        self.mock_stripe_event.type = StripeEventType.PAYMENT_SUCCESS.value
+        metadata = {'source_system': 'unknown_system'}
+        self.mock_stripe_event.data.object.id = 'pi_unknown'
+        self.mock_stripe_event.data.object.metadata = StripeObject()
+        self.mock_stripe_event.data.object.metadata.update(metadata)
+        self.mock_stripe_event.data.object.amount = 4900
+        mock_construct_event.return_value = self.mock_stripe_event
+
+        response = self.client.post(
+            self.url, data={}, format='json', **self.mock_header
+        )
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        mock_ct_signal.assert_not_called()
+        mock_processed_signal.assert_not_called()
+
     @ddt.data(
         name_test(
             "Test 2U order refund and correct source_system",

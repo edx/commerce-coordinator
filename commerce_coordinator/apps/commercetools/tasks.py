@@ -552,3 +552,95 @@ def revoke_line_mobile_order_task(payment_id: str):
                 f"on course {course_run_key} and {logging_data}")
 
     return True
+
+
+def _log_quarantine(*, pi_id, ct_payment_id, ct_cart_id, reason, source):
+    """
+    Structured quarantine log for finalize failures that exhaust retries
+    or hit non-retryable errors. Fixed field contract for ops queries.
+    """
+    logger.error(
+        "[quarantine] Finalize failure | pi_id=%s ct_payment_id=%s "
+        "ct_cart_id=%s reason=%s source=%s",
+        pi_id, ct_payment_id, ct_cart_id, reason, source,
+        extra={
+            "quarantine": True,
+            "pi_id": pi_id,
+            "ct_payment_id": ct_payment_id,
+            "ct_cart_id": ct_cart_id,
+            "reason": reason,
+            "source": source,
+        },
+    )
+
+
+@shared_task(
+    bind=True,
+    autoretry_for=(CommercetoolsError,),
+    retry_kwargs={"max_retries": 5, "countdown": 3},
+)
+def finalize_commercetools_stripe_payment_task(
+    self,
+    payment_intent_id: str,
+    source: str = "webhook",
+):
+    """
+    Celery task wrapping the shared finalize path for a Stripe
+    PaymentIntent that originated from a CommerceTools cart.
+
+    Bounded retries on transient CT errors; non-retryable failures
+    are quarantined via structured log + metric.
+    """
+    from commerce_coordinator.apps.commercetools.stripe_payment_finalize import (
+        FinalizeError,
+        finalize_ct_order_from_stripe_pi,
+    )
+
+    tag = "finalize_commercetools_stripe_payment_task"
+
+    try:
+        result = finalize_ct_order_from_stripe_pi(
+            payment_intent_id, source=source,
+        )
+        if result.already_existed:
+            logger.info(
+                "[%s] Order %s already existed for pi=%s, no action taken",
+                tag, result.order_id, payment_intent_id,
+            )
+        else:
+            logger.info(
+                "[%s] Finalized order %s for pi=%s",
+                tag, result.order_id, payment_intent_id,
+            )
+        return result.order_id
+
+    except FinalizeError as exc:
+        _log_quarantine(
+            pi_id=payment_intent_id,
+            ct_payment_id="unknown",
+            ct_cart_id="unknown",
+            reason=str(exc),
+            source=source,
+        )
+        return None
+
+    except CommercetoolsError:
+        if self.request.retries >= self.max_retries:
+            _log_quarantine(
+                pi_id=payment_intent_id,
+                ct_payment_id="unknown",
+                ct_cart_id="unknown",
+                reason="max retries exhausted on CommercetoolsError",
+                source=source,
+            )
+        raise
+
+    except Exception as exc:
+        _log_quarantine(
+            pi_id=payment_intent_id,
+            ct_payment_id="unknown",
+            ct_cart_id="unknown",
+            reason=f"unexpected error: {exc}",
+            source=source,
+        )
+        raise
