@@ -1,8 +1,12 @@
 """
 gunicorn configuration file, see https://docs.gunicorn.org/en/develop/configure.html for more info.
 """
+import logging
 import multiprocessing  # pylint: disable=unused-import
 import os
+
+
+logger = logging.getLogger(__name__)
 
 preload_app = True
 timeout = 300
@@ -15,20 +19,22 @@ workers = 2
 _dogstatsd_url = os.environ.get("DD_DOGSTATSD_URL", "").strip()
 
 if _dogstatsd_url:
+    # Strip protocol schemes so Gunicorn receives the raw file path or HOST:PORT
     if _dogstatsd_url.startswith("unix://"):
-        # Gunicorn accepts unix socket directly as "unix:///path".
-        _statsd_host = _dogstatsd_url if _dogstatsd_url != "unix://" else ""
+        _statsd_host = _dogstatsd_url[len("unix://"):]
+    elif _dogstatsd_url.startswith("unixpack://"):
+        _statsd_host = _dogstatsd_url[len("unixpack://"):]
+    elif _dogstatsd_url.startswith("udp://"):
+        _statsd_host = _dogstatsd_url[len("udp://"):]
     else:
-        # Strip "udp://" when present; Gunicorn expects plain "HOST:PORT".
-        _statsd_host = (
-            _dogstatsd_url[len("udp://"):]
-            if _dogstatsd_url.startswith("udp://")
-            else _dogstatsd_url
-        ).strip()
+        _statsd_host = _dogstatsd_url
 
     if _statsd_host:
         statsd_host = _statsd_host
         statsd_prefix = "commerce-coordinator"
+
+        # Log parsed statsd host on startup for verification
+        logger.info("Configured statsd_host=%s", statsd_host)
 
 
 def pre_request(worker, req):
