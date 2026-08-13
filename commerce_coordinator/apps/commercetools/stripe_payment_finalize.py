@@ -17,7 +17,7 @@ from commerce_coordinator.apps.commercetools.catalog_info.constants import TwoUK
 from commerce_coordinator.apps.commercetools.catalog_info.edx_utils import (
     cents_to_dollars,
     get_edx_lms_user_id,
-    get_product_from_line_item,
+    get_product_from_line_item
 )
 from commerce_coordinator.apps.commercetools.clients import CommercetoolsAPIClient
 from commerce_coordinator.apps.core.segment import track
@@ -68,7 +68,7 @@ def _backfill_pi_metadata(payment_intent_id: str, order_id: str, payment_id: str
                 "ct_payment_id": payment_id,
             },
         )
-    except Exception:
+    except Exception:  # pylint: disable=broad-exception-caught
         logger.warning(
             "[finalize_ct_order] Failed to backfill PI metadata for %s",
             payment_intent_id,
@@ -314,7 +314,7 @@ def _emit_web_order_completed(client, order, cart, payment):
             "[finalize_ct_order] Emitted Segment Order Completed for order %s, user %s",
             order.id, lms_user_id,
         )
-    except Exception:
+    except Exception:  # pylint: disable=broad-exception-caught
         logger.warning(
             "[finalize_ct_order] Failed to emit Segment Order Completed for order %s",
             order.id, exc_info=True,

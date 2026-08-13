@@ -8,6 +8,9 @@ from unittest.mock import MagicMock, patch
 from commercetools.platform.models import TransactionState, TransactionType
 from django.test import TestCase
 
+from commerce_coordinator.apps.commercetools.management.commands.recover_orphaned_stripe_commercetools_payments import (
+    Command
+)
 from commerce_coordinator.apps.commercetools.stripe_payment_finalize import FinalizeError, FinalizeResult
 
 CMD_MODULE = (
@@ -18,10 +21,10 @@ CMD_MODULE = (
 
 @patch(f"{CMD_MODULE}.CommercetoolsAPIClientCommand.__init__", return_value=None)
 class TestRecoveryCommand(TestCase):
+    """Tests for the orphaned Stripe/CT payment recovery management command."""
 
     def _make_command(self):
-        from commerce_coordinator.apps.commercetools.management.commands.recover_orphaned_stripe_commercetools_payments import Command  # noqa: E501
-
+        """Build a command instance with a mocked CT client and captured output streams."""
         cmd = Command()
         cmd.ct_api_client = MagicMock()
         cmd.stdout = StringIO()

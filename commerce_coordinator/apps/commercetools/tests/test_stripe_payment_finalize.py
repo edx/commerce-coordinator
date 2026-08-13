@@ -1,37 +1,30 @@
 """
 Tests for the shared CT order finalization from Stripe PaymentIntents.
 """
+# Class-level patch decorators inject every mock into each test method.
+# pylint: disable=unused-argument
 
 import datetime
-from unittest.mock import MagicMock, Mock, patch
+from unittest.mock import MagicMock, patch
 
 from commercetools import CommercetoolsError
 from commercetools.platform.models import (
     CentPrecisionMoney,
-    CustomFields,
-    FieldContainer,
-    Order,
     Payment,
     PaymentMethodInfo,
     PaymentState,
     Transaction,
     TransactionState,
-    TransactionType,
-    TypeReference,
+    TransactionType
 )
 from django.test import TestCase
 
 from commerce_coordinator.apps.commercetools.stripe_payment_finalize import (
     FinalizeError,
-    FinalizeResult,
     _payment_has_charge_for,
-    finalize_ct_order_from_stripe_pi,
+    finalize_ct_order_from_stripe_pi
 )
-from commerce_coordinator.apps.commercetools.tests.conftest import (
-    gen_cart,
-    gen_customer,
-    gen_order,
-)
+from commerce_coordinator.apps.commercetools.tests.conftest import gen_cart, gen_customer, gen_order
 from commerce_coordinator.apps.core.tests.utils import uuid4_str
 
 
@@ -44,6 +37,7 @@ def _mock_pi(
     order_id=None,
     latest_charge="ch_test456",
 ):
+    """Build a Stripe PaymentIntent stub with CT-linking metadata."""
     pi = MagicMock()
     pi.id = pi_id
     pi.status = pi_status
@@ -60,6 +54,7 @@ def _mock_pi(
 
 
 def _mock_charge(charge_id="ch_test456", amount=4900, currency="usd"):
+    """Build a Stripe Charge stub for the PaymentIntent's latest charge."""
     charge = MagicMock()
     charge.id = charge_id
     charge.amount = amount
@@ -69,6 +64,7 @@ def _mock_charge(charge_id="ch_test456", amount=4900, currency="usd"):
 
 
 def _mock_payment(payment_id=None, version=1, has_charge=False, charge_id="ch_test456"):
+    """Build a CT Payment, optionally already carrying a successful Charge transaction."""
     txns = []
     if has_charge:
         txns.append(Transaction(
@@ -93,6 +89,8 @@ def _mock_payment(payment_id=None, version=1, has_charge=False, charge_id="ch_te
 
 
 class TestPaymentHasChargeFor(TestCase):
+    """Tests for Charge transaction idempotency detection on a CT payment."""
+
     def test_no_transactions(self):
         payment = _mock_payment()
         self.assertFalse(_payment_has_charge_for(payment, "ch_test"))
@@ -110,6 +108,7 @@ class TestPaymentHasChargeFor(TestCase):
 @patch("commerce_coordinator.apps.commercetools.stripe_payment_finalize.track")
 @patch("commerce_coordinator.apps.commercetools.stripe_payment_finalize.CommercetoolsAPIClient")
 class TestFinalizeCTOrderFromStripePI(TestCase):
+    """Tests for finalizing a CT order from a Stripe PaymentIntent."""
 
     def test_happy_path(self, MockClient, mock_track, mock_stripe):
         """Full finalize: charge + order + line state + segment + PI metadata."""

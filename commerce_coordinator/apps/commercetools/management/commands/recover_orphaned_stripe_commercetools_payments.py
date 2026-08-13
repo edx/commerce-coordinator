@@ -17,15 +17,13 @@ from commercetools import CommercetoolsError
 from commercetools.platform.models import TransactionState, TransactionType
 from django.conf import settings
 
-from commerce_coordinator.apps.commercetools.catalog_info.constants import (
-    EDX_STRIPE_PAYMENT_INTERFACE_NAME,
-)
+from commerce_coordinator.apps.commercetools.catalog_info.constants import EDX_STRIPE_PAYMENT_INTERFACE_NAME
 from commerce_coordinator.apps.commercetools.management.commands._ct_api_client_command import (
-    CommercetoolsAPIClientCommand,
+    CommercetoolsAPIClientCommand
 )
 from commerce_coordinator.apps.commercetools.stripe_payment_finalize import (
     FinalizeError,
-    finalize_ct_order_from_stripe_pi,
+    finalize_ct_order_from_stripe_pi
 )
 from commerce_coordinator.apps.commercetools.tasks import _log_quarantine
 

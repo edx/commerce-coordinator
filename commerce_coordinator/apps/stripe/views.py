@@ -22,7 +22,7 @@ from commerce_coordinator.apps.stripe.exceptions import (
 from commerce_coordinator.apps.stripe.signals import (
     payment_processed_signal,
     payment_refunded_signal,
-    payment_succeeded_commercetools_signal,
+    payment_succeeded_commercetools_signal
 )
 
 logger = logging.getLogger(__name__)
@@ -68,109 +68,120 @@ class WebhookView(SingleInvocationAPIView):
             payment_intent = event.data.object
             event_source_system = payment_intent.metadata.get('source_system')
 
-            # --- CommerceTools path (UPI / CT-originated PIs) ---
             if event_source_system == 'commercetools':
-                if event.type == StripeEventType.PAYMENT_SUCCESS:
-                    if self._is_running(tag, payment_intent.id):  # pragma no cover
-                        self.meta_should_mark_not_running = False
-                        return Response(status=status.HTTP_200_OK)
-                    else:
-                        self.mark_running(tag, payment_intent.id)
+                return self._handle_commercetools_payment_event(tag, event, payment_intent)
 
-                    logger.info(
-                        '[Stripe webhooks] CT payment_intent.succeeded for PI [%s]',
-                        payment_intent.id,
-                    )
+            return self._handle_legacy_payment_event(event, payment_intent, event_source_system, payload)
 
-                    payment_succeeded_commercetools_signal.send_robust(
-                        sender=self.__class__,
-                        payment_intent_id=payment_intent.id,
-                    )
-                else:
-                    logger.info(
-                        '[Stripe webhooks] CT payment_intent.payment_failed for PI [%s], ignoring',
-                        payment_intent.id,
-                    )
-                return Response(status=status.HTTP_200_OK)
+        if event.type == StripeEventType.PAYMENT_REFUNDED:
+            return self._handle_refund_event(tag, event)
 
-            # --- Legacy edX path ---
-            if event.type == StripeEventType.PAYMENT_SUCCESS:
-                payment_state = PaymentState.COMPLETED.value
-            else:
-                payment_state = PaymentState.FAILED.value
+        raise UnhandledStripeEventAPIError
 
+    def _handle_commercetools_payment_event(self, tag, event, payment_intent):
+        """Route CommerceTools-originated PaymentIntents (UPI) to the async finalize path."""
+        if event.type != StripeEventType.PAYMENT_SUCCESS:
             logger.info(
-                '[Stripe webhooks] event %s with amount %d and payment intent ID [%s], source: [%s].',
+                '[Stripe webhooks] CT payment_intent.payment_failed for PI [%s], ignoring',
+                payment_intent.id,
+            )
+            return Response(status=status.HTTP_200_OK)
+
+        if self._is_running(tag, payment_intent.id):  # pragma no cover
+            self.meta_should_mark_not_running = False
+            return Response(status=status.HTTP_200_OK)
+
+        self.mark_running(tag, payment_intent.id)
+
+        logger.info(
+            '[Stripe webhooks] CT payment_intent.succeeded for PI [%s]',
+            payment_intent.id,
+        )
+
+        payment_succeeded_commercetools_signal.send_robust(
+            sender=self.__class__,
+            payment_intent_id=payment_intent.id,
+        )
+        return Response(status=status.HTTP_200_OK)
+
+    def _handle_legacy_payment_event(self, event, payment_intent, event_source_system, payload):
+        """Route legacy edX ecommerce PaymentIntents to the existing processed signal."""
+        if event.type == StripeEventType.PAYMENT_SUCCESS:
+            payment_state = PaymentState.COMPLETED.value
+        else:
+            payment_state = PaymentState.FAILED.value
+
+        logger.info(
+            '[Stripe webhooks] event %s with amount %d and payment intent ID [%s], source: [%s].',
+            event.type,
+            payment_intent.amount,
+            payment_intent.id,
+            event_source_system,
+        )
+
+        if event_source_system != source_system_identifier:
+            logger.info(
+                '[Stripe webhooks] Skipping event %s with payment intent ID [%s], source: [%s].',
                 event.type,
-                payment_intent.amount,
                 payment_intent.id,
                 event_source_system,
             )
+            return Response(status=status.HTTP_200_OK)
 
-            if event_source_system != source_system_identifier:
-                logger.info(
-                    '[Stripe webhooks] Skipping event %s with payment intent ID [%s], source: [%s].',
-                    event.type,
-                    payment_intent.id,
-                    event_source_system,
-                )
-                return Response(status=status.HTTP_200_OK)
+        payment_processed_signal.send_robust(
+            sender=self.__class__,
+            edx_lms_user_id=payment_intent.metadata.edx_lms_user_id,
+            order_uuid=payment_intent.metadata.order_number,
+            payment_number=payment_intent.metadata.payment_number,
+            payment_state=payment_state,
+            reference_number=payment_intent.id,
+            amount_in_cents=payment_intent.amount,
+            currency=payment_intent.currency,
+            provider_response_body=payload,
+        )
+        return Response(status=status.HTTP_200_OK)
 
-            payment_processed_signal.send_robust(
-                sender=self.__class__,
-                edx_lms_user_id=payment_intent.metadata.edx_lms_user_id,
-                order_uuid=payment_intent.metadata.order_number,
-                payment_number=payment_intent.metadata.payment_number,
-                payment_state=payment_state,
-                reference_number=payment_intent.id,
-                amount_in_cents=payment_intent.amount,
-                currency=payment_intent.currency,
-                provider_response_body=payload,
+    def _handle_refund_event(self, tag, event):
+        """Route Commercetools refunds to the refund signal, skipping legacy orders."""
+        idempotency_key = event.get('request').get('idempotency_key')
+        if self._is_running(tag, idempotency_key):  # pragma no cover
+            self.meta_should_mark_not_running = False
+            return Response(status=status.HTTP_200_OK)
+
+        self.mark_running(tag, idempotency_key)
+
+        event_object = event.data.object
+        order_number = event_object.metadata.order_number
+        is_legacy_order_check = is_legacy_order(order_number)
+        is_ct_order_check = is_commercetools_stripe_refund(event_object.metadata.get('source_system'))
+        payment_intent_id = event_object.payment_intent
+
+        if not is_legacy_order_check and is_ct_order_check:
+            event_source_system_identifier = event_object.metadata.get('source_system')
+            refunds = event_object.refunds.data
+            latest_refund = max(refunds, key=lambda refund: refund['created'])
+
+            logger.info(
+                '[Stripe webhooks] refund event %s with payment intent ID [%s] '
+                'and order number [%s], source: [%s].',
+                event.type,
+                payment_intent_id,
+                order_number,
+                event_source_system_identifier,
             )
-            return Response(status=status.HTTP_200_OK)
 
-        elif event.type == StripeEventType.PAYMENT_REFUNDED:
-            idempotency_key = event.get('request').get('idempotency_key')
-            if self._is_running(tag, idempotency_key):  # pragma no cover
-                self.meta_should_mark_not_running = False
-                return Response(status=status.HTTP_200_OK)
-            else:
-                self.mark_running(tag, idempotency_key)
-
-            event_object = event.data.object
-            order_number = event_object.metadata.order_number
-            is_legacy_order_check = is_legacy_order(order_number)
-            is_ct_order_check = is_commercetools_stripe_refund(event_object.metadata.get('source_system'))
-            payment_intent_id = event_object.payment_intent
-
-            if not is_legacy_order_check and is_ct_order_check:
-                event_source_system_identifier = event_object.metadata.get('source_system')
-                refunds = event_object.refunds.data
-                latest_refund = max(refunds, key=lambda refund: refund['created'])
-
-                logger.info(
-                    '[Stripe webhooks] refund event %s with payment intent ID [%s] '
-                    'and order number [%s], source: [%s].',
-                    event.type,
-                    payment_intent_id,
-                    order_number,
-                    event_source_system_identifier,
-                )
-
-                payment_refunded_signal.send_robust(
-                    sender=self.__class__,
-                    payment_intent_id=payment_intent_id,
-                    stripe_refund=latest_refund,
-                    order_number=order_number,
-                )
-            else:
-                logger.info(
-                    '[Stripe webhooks] skipping refund event %s with payment intent ID [%s] '
-                    'and order number [%s], as it is not a Commercetools order.',
-                    event.type,
-                    payment_intent_id,
-                    order_number,
-                )
-            return Response(status=status.HTTP_200_OK)
+            payment_refunded_signal.send_robust(
+                sender=self.__class__,
+                payment_intent_id=payment_intent_id,
+                stripe_refund=latest_refund,
+                order_number=order_number,
+            )
         else:
-            raise UnhandledStripeEventAPIError
+            logger.info(
+                '[Stripe webhooks] skipping refund event %s with payment intent ID [%s] '
+                'and order number [%s], as it is not a Commercetools order.',
+                event.type,
+                payment_intent_id,
+                order_number,
+            )
+        return Response(status=status.HTTP_200_OK)

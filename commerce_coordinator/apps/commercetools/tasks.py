@@ -36,6 +36,7 @@ from commerce_coordinator.apps.order_fulfillment.exceptions import OrderFulfillm
 from commerce_coordinator.apps.order_fulfillment.serializers import OrderRevokeLineRequestSerializer
 
 from .clients import CommercetoolsAPIClient, Refund
+from .stripe_payment_finalize import FinalizeError, finalize_ct_order_from_stripe_pi
 from .utils import (
     convert_ct_cent_amount_to_localized_price,
     get_lob_from_variant_attr,
@@ -591,11 +592,6 @@ def finalize_commercetools_stripe_payment_task(
     Bounded retries on transient CT/Stripe errors; non-retryable failures
     are quarantined via structured log.
     """
-    from commerce_coordinator.apps.commercetools.stripe_payment_finalize import (
-        FinalizeError,
-        finalize_ct_order_from_stripe_pi,
-    )
-
     tag = "finalize_commercetools_stripe_payment_task"
 
     try:
@@ -657,5 +653,5 @@ def _quarantine_ids_from_pi(payment_intent_id: str) -> tuple[str, str]:
             metadata.get("ct_payment_id") or "unknown",
             metadata.get("ct_cart_id") or "unknown",
         )
-    except Exception:
+    except Exception:  # pylint: disable=broad-exception-caught
         return "unknown", "unknown"

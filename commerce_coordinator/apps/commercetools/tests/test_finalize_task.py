@@ -1,22 +1,21 @@
 """
 Tests for the finalize_commercetools_stripe_payment_task Celery task.
 """
+# Celery's bind=True self argument is supplied by the task decorator.
+# pylint: disable=no-value-for-parameter
 
 from unittest.mock import patch
 
-from commercetools import CommercetoolsError
 from django.test import TestCase
 
 from commerce_coordinator.apps.commercetools.stripe_payment_finalize import FinalizeError, FinalizeResult
 from commerce_coordinator.apps.commercetools.tasks import finalize_commercetools_stripe_payment_task
 
-FINALIZE_PATH = (
-    "commerce_coordinator.apps.commercetools.stripe_payment_finalize"
-    ".finalize_ct_order_from_stripe_pi"
-)
+FINALIZE_PATH = "commerce_coordinator.apps.commercetools.tasks.finalize_ct_order_from_stripe_pi"
 
 
 class TestFinalizeTask(TestCase):
+    """Tests for the Celery task wrapping the shared Stripe/CT finalize path."""
 
     @patch(FINALIZE_PATH)
     def test_happy_path_returns_order_id(self, mock_finalize):
