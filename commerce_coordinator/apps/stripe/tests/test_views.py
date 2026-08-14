@@ -283,3 +283,56 @@ class WebhooksViewTests(APITestCase):
             )
         else:
             mock_refund_task.assert_not_called()
+
+    @mock.patch('stripe.Webhook.construct_event')
+    @mock.patch('commerce_coordinator.apps.stripe.views.payment_refunded_signal.send_robust')
+    @mock.patch('commerce_coordinator.apps.stripe.views.is_legacy_order', return_value=False)
+    @mock.patch('commerce_coordinator.apps.stripe.views.is_commercetools_stripe_refund', return_value=True)
+    @mock.patch.object(WebhookView, 'mark_running')
+    @mock.patch.object(WebhookView, '_is_running', return_value=False)
+    def test_refund_falls_back_to_event_id_when_idempotency_key_missing(
+        self,
+        mock_is_running,
+        mock_mark_running,
+        mock_is_ct_refund,
+        mock_is_legacy,
+        mock_refund_task,
+        mock_construct_event,
+    ):
+        """Null Stripe request.idempotency_key must not become the SingleInvocation key."""
+        payment_intent_id = 'pi_refund_no_idem'
+        refund_data = {
+            'id': "re_missing_idem",
+            'amount': 1000,
+            'charge': "ch_missing_idem",
+            'created': 1692942318,
+            'currency': "usd",
+            'payment_intent': payment_intent_id,
+            'status': "succeeded",
+        }
+        event_id = 'evt_refund_123'
+        source_system = settings.PAYMENT_PROCESSOR_CONFIG['edx']['stripe']['source_system_identifier']
+        self.mock_stripe_event.type = StripeEventType.PAYMENT_REFUNDED.value
+        self.mock_stripe_event.id = event_id
+        self.mock_stripe_event.get.side_effect = lambda key, default=None: {
+            'request': {'idempotency_key': None},
+            'id': event_id,
+        }.get(key, default)
+        self.mock_stripe_event.data.object.payment_intent = payment_intent_id
+        self.mock_stripe_event.data.object.refunds.data = [refund_data]
+        metadata = {
+            'order_number': '2U-123456',
+            'source_system': source_system,
+        }
+        self.mock_stripe_event.data.object.metadata = StripeObject()
+        self.mock_stripe_event.data.object.metadata.update(metadata)
+        mock_construct_event.return_value = self.mock_stripe_event
+
+        response = self.client.post(self.url, data={}, format='json', **self.mock_header)
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        mock_is_running.assert_called_with(WebhookView.__name__, event_id)
+        mock_mark_running.assert_called_with(WebhookView.__name__, event_id)
+        mock_refund_task.assert_called_once()
+        mock_is_ct_refund.assert_called()
+        mock_is_legacy.assert_called()

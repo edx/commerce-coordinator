@@ -143,12 +143,16 @@ class WebhookView(SingleInvocationAPIView):
 
     def _handle_refund_event(self, tag, event):
         """Route Commercetools refunds to the refund signal, skipping legacy orders."""
-        idempotency_key = event.get('request').get('idempotency_key')
-        if self._is_running(tag, idempotency_key):  # pragma no cover
+        request = event.get('request') or {}
+        idempotency_key = request.get('idempotency_key') if hasattr(request, 'get') else None
+        # Stripe request.idempotency_key can be null; fall back to event.id so
+        # unrelated refunds do not collide on a shared None cache key.
+        invocation_key = idempotency_key or event.get('id') or getattr(event, 'id', None)
+        if self._is_running(tag, invocation_key):  # pragma no cover
             self.meta_should_mark_not_running = False
             return Response(status=status.HTTP_200_OK)
 
-        self.mark_running(tag, idempotency_key)
+        self.mark_running(tag, invocation_key)
 
         event_object = event.data.object
         order_number = event_object.metadata.order_number

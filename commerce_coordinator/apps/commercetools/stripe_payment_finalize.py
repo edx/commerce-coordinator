@@ -58,15 +58,26 @@ def _payment_has_charge_for(payment, charge_id: str) -> bool:
     )
 
 
-def _backfill_pi_metadata(payment_intent_id: str, order_id: str, payment_id: str) -> None:
-    """Write order_id / ct_payment_id onto the Stripe PaymentIntent (idempotent)."""
+def _backfill_pi_metadata(
+    payment_intent_id: str,
+    order_id: str,
+    payment_id: str,
+    *,
+    existing_metadata: dict | None = None,
+) -> None:
+    """
+    Write order_id / ct_payment_id onto the Stripe PaymentIntent (idempotent).
+
+    Merges with existing metadata so keys like source_system / ct_cart_id are preserved
+    even if Stripe treats metadata as a full replacement.
+    """
     try:
+        merged = dict(existing_metadata or {})
+        merged["order_id"] = order_id
+        merged["ct_payment_id"] = payment_id
         stripe.PaymentIntent.modify(
             payment_intent_id,
-            metadata={
-                "order_id": order_id,
-                "ct_payment_id": payment_id,
-            },
+            metadata=merged,
         )
     except Exception:  # pylint: disable=broad-exception-caught
         logger.warning(
@@ -160,7 +171,10 @@ def finalize_ct_order_from_stripe_pi(
     if ct_payment_id_from_meta:
         try:
             payment = client.base_client.payments.get_by_id(ct_payment_id_from_meta)
-        except CommercetoolsError:
+        except CommercetoolsError as err:
+            # Only fall back on true not-found; re-raise transient CT failures for retry.
+            if err.code != "ResourceNotFound":
+                raise
             logger.warning(
                 "[finalize_ct_order] ct_payment_id %s from metadata not found, "
                 "falling back to key lookup for pi %s",
@@ -206,7 +220,12 @@ def finalize_ct_order_from_stripe_pi(
             existing_order.id, payment.id, payment_intent_id,
         )
         if not metadata.get("order_id") or metadata.get("ct_payment_id") != payment.id:
-            _backfill_pi_metadata(payment_intent_id, existing_order.id, payment.id)
+            _backfill_pi_metadata(
+                payment_intent_id,
+                existing_order.id,
+                payment.id,
+                existing_metadata=metadata,
+            )
         return FinalizeResult(
             order_id=existing_order.id,
             order_number=existing_order.order_number or "",
@@ -232,7 +251,12 @@ def finalize_ct_order_from_stripe_pi(
     _emit_web_order_completed(client, order, cart, payment)
 
     # --- Backfill PI metadata ---
-    _backfill_pi_metadata(payment_intent_id, order.id, payment.id)
+    _backfill_pi_metadata(
+        payment_intent_id,
+        order.id,
+        payment.id,
+        existing_metadata=metadata,
+    )
 
     logger.info(
         "[finalize_ct_order] Successfully finalized order %s for pi=%s source=%s",
