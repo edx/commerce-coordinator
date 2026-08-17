@@ -307,10 +307,10 @@ class Command(CommercetoolsAPIClientCommand):
         while len(orphan_ids) < limit:
             try:
                 result = self.ct_api_client.base_client.payments.query(
-                    where=[
-                        f'paymentMethodInfo(paymentInterface="{EDX_STRIPE_PAYMENT_INTERFACE_NAME}")',
-                        f'createdAt > "{created_after_iso}"',
-                    ],
+                    where=(
+                        f'paymentMethodInfo(paymentInterface="{EDX_STRIPE_PAYMENT_INTERFACE_NAME}") '
+                        f'and createdAt > "{created_after_iso}"'
+                    ),
                     sort=["createdAt desc"],
                     limit=page_size,
                     offset=offset,
