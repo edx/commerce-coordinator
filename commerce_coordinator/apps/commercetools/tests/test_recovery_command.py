@@ -5,13 +5,18 @@ Tests for the recover_orphaned_stripe_commercetools_payments management command.
 from io import StringIO
 from unittest.mock import MagicMock, patch
 
+from commercetools import CommercetoolsError
 from commercetools.platform.models import TransactionState, TransactionType
 from django.test import TestCase
 
 from commerce_coordinator.apps.commercetools.management.commands.recover_orphaned_stripe_commercetools_payments import (
     Command
 )
-from commerce_coordinator.apps.commercetools.stripe_payment_finalize import FinalizeError, FinalizeResult
+from commerce_coordinator.apps.commercetools.stripe_payment_finalize import (
+    FinalizeError,
+    FinalizeInProgressError,
+    FinalizeResult
+)
 
 CMD_MODULE = (
     "commerce_coordinator.apps.commercetools.management.commands"
@@ -48,7 +53,7 @@ class TestRecoveryCommand(TestCase):
             search_result.has_more = False
             mock_stripe.PaymentIntent.search.return_value = search_result
 
-            cmd.handle(since=7, limit=100, dry_run=True)
+            cmd.handle(since=7, limit=100, dry_run=True, max_list_examined=1000)
 
         output = cmd.stdout.getvalue()
         self.assertIn("[dry-run] orphan: pi_orphan1", output)
@@ -75,7 +80,7 @@ class TestRecoveryCommand(TestCase):
             search_result.has_more = False
             mock_stripe.PaymentIntent.search.return_value = search_result
 
-            cmd.handle(since=7, limit=100, dry_run=False)
+            cmd.handle(since=7, limit=100, dry_run=False, max_list_examined=1000)
 
         output = cmd.stdout.getvalue()
         self.assertIn("[finalized] pi_orphan1 -> order order-new", output)
@@ -98,7 +103,7 @@ class TestRecoveryCommand(TestCase):
             search_result.has_more = False
             mock_stripe.PaymentIntent.search.return_value = search_result
 
-            cmd.handle(since=7, limit=100, dry_run=False)
+            cmd.handle(since=7, limit=100, dry_run=False, max_list_examined=1000)
 
         err_output = cmd.stderr.getvalue()
         self.assertIn("[quarantine] pi_bad", err_output)
@@ -129,7 +134,7 @@ class TestRecoveryCommand(TestCase):
             search_result.has_more = False
             mock_stripe.PaymentIntent.search.return_value = search_result
 
-            cmd.handle(since=7, limit=100, dry_run=False)
+            cmd.handle(since=7, limit=100, dry_run=False, max_list_examined=1000)
 
         output = cmd.stdout.getvalue()
         self.assertIn("[skip] pi_existing", output)
@@ -151,7 +156,7 @@ class TestRecoveryCommand(TestCase):
             search_result.next_page = "page2"
             mock_stripe.PaymentIntent.search.return_value = search_result
 
-            cmd.handle(since=7, limit=3, dry_run=True)
+            cmd.handle(since=7, limit=3, dry_run=True, max_list_examined=1000)
 
         output = cmd.stdout.getvalue()
         self.assertIn("3 Stripe orphan candidate(s)", output)
@@ -170,7 +175,7 @@ class TestRecoveryCommand(TestCase):
             list_result.auto_paging_iter.return_value = [pi1]
             mock_stripe.PaymentIntent.list.return_value = list_result
 
-            cmd.handle(since=7, limit=100, dry_run=True)
+            cmd.handle(since=7, limit=100, dry_run=True, max_list_examined=1000)
 
         output = cmd.stdout.getvalue()
         self.assertIn("[dry-run] orphan: pi_list_orphan", output)
@@ -206,9 +211,90 @@ class TestRecoveryCommand(TestCase):
             mock_stripe.PaymentIntent.search.return_value = search_result
             mock_stripe.PaymentIntent.retrieve.return_value = stripe_pi
 
-            cmd.handle(since=7, limit=100, dry_run=True)
+            cmd.handle(since=7, limit=100, dry_run=True, max_list_examined=1000)
 
         output = cmd.stdout.getvalue()
         self.assertIn("1 CT-secondary orphan candidate(s)", output)
         self.assertIn("[dry-run] orphan: pi_ct_secondary", output)
         mock_finalize.assert_not_called()
+
+    @patch(f"{CMD_MODULE}._log_quarantine")
+    @patch(f"{CMD_MODULE}.finalize_ct_order_from_stripe_pi")
+    def test_commercetools_error_deferred_not_quarantined(
+        self, mock_finalize, mock_quarantine, _mock_init
+    ):
+        """Transient CT errors must not quarantine (next cron retries)."""
+        cmd = self._make_command()
+
+        pi1 = MagicMock()
+        pi1.id = "pi_transient"
+        pi1.metadata = {"source_system": "commercetools"}
+
+        mock_finalize.side_effect = CommercetoolsError(
+            message="blip",
+            errors=[{"code": "ConcurrentModification", "message": "blip"}],
+            response={},
+            correlation_id="corr",
+        )
+
+        with patch(f"{CMD_MODULE}.stripe") as mock_stripe:
+            search_result = MagicMock()
+            search_result.data = [pi1]
+            search_result.has_more = False
+            mock_stripe.PaymentIntent.search.return_value = search_result
+
+            cmd.handle(since=7, limit=100, dry_run=False, max_list_examined=1000)
+
+            mock_stripe.PaymentIntent.retrieve.assert_not_called()
+
+        self.assertIn("[retryable] pi_transient", cmd.stderr.getvalue())
+        self.assertIn("1 deferred", cmd.stdout.getvalue())
+        mock_quarantine.assert_not_called()
+
+    @patch(f"{CMD_MODULE}._log_quarantine")
+    @patch(f"{CMD_MODULE}.finalize_ct_order_from_stripe_pi")
+    def test_lock_contention_deferred_not_quarantined(
+        self, mock_finalize, mock_quarantine, _mock_init
+    ):
+        cmd = self._make_command()
+
+        pi1 = MagicMock()
+        pi1.id = "pi_busy"
+        pi1.metadata = {"source_system": "commercetools"}
+        mock_finalize.side_effect = FinalizeInProgressError("locked")
+
+        with patch(f"{CMD_MODULE}.stripe") as mock_stripe:
+            search_result = MagicMock()
+            search_result.data = [pi1]
+            search_result.has_more = False
+            mock_stripe.PaymentIntent.search.return_value = search_result
+
+            cmd.handle(since=7, limit=100, dry_run=False, max_list_examined=1000)
+
+        self.assertIn("[deferred] pi_busy", cmd.stderr.getvalue())
+        mock_quarantine.assert_not_called()
+
+    def test_list_filter_respects_max_examined(self, _mock_init):
+        """List+filter fallback must stop after max_list_examined PIs."""
+        cmd = self._make_command()
+
+        pis = []
+        for i in range(20):
+            pi = MagicMock()
+            pi.id = f"pi_{i}"
+            pi.status = "succeeded"
+            # Non-matching source so we keep examining without filling limit early
+            pi.metadata = {"source_system": "other"}
+            pis.append(pi)
+
+        with patch(f"{CMD_MODULE}.stripe") as mock_stripe:
+            mock_stripe.PaymentIntent.search.side_effect = Exception("search down")
+            list_result = MagicMock()
+            list_result.auto_paging_iter.return_value = pis
+            mock_stripe.PaymentIntent.list.return_value = list_result
+
+            cmd.handle(since=7, limit=100, dry_run=True, max_list_examined=5)
+
+        # No orphans found (wrong source_system), but we must not walk past the cap
+        output = cmd.stdout.getvalue()
+        self.assertIn("0 Stripe orphan candidate(s)", output)

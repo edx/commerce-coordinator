@@ -1414,8 +1414,16 @@ class CommercetoolsAPIClient:
         Returns:
             Cart object
         """
-        logger.info(f"[CommercetoolsAPIClient] - Attempting to find cart with ID {cart_id}")
-        return self.base_client.carts.get_by_id(cart_id)
+        try:
+            logger.info(f"[CommercetoolsAPIClient] - Attempting to find cart with ID {cart_id}")
+            return self.base_client.carts.get_by_id(cart_id)
+        except CommercetoolsError as err:
+            handle_commercetools_error(
+                "[CommercetoolsAPIClient.get_cart_by_id]",
+                err,
+                f"Failed to find cart with ID {cart_id}",
+            )
+            raise err
 
     @conditional_retry
     def get_customer_cart(self, customer_id: str) -> Optional[Cart]:

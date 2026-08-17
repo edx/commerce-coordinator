@@ -20,9 +20,13 @@ from commerce_coordinator.apps.commercetools.catalog_info.edx_utils import (
     get_product_from_line_item
 )
 from commerce_coordinator.apps.commercetools.clients import CommercetoolsAPIClient
+from commerce_coordinator.apps.core.memcache import safe_key
 from commerce_coordinator.apps.core.segment import track
+from commerce_coordinator.apps.core.tasks import acquire_task_lock, release_task_lock
 
 logger = logging.getLogger(__name__)
+
+FINALIZE_LOCK_PREFIX = "finalize_ct_order_from_stripe_pi"
 
 
 class FinalizeError(Exception):
@@ -38,6 +42,10 @@ class FinalizeError(Exception):
         super().__init__(message)
         self.ct_payment_id = ct_payment_id or "unknown"
         self.ct_cart_id = ct_cart_id or "unknown"
+
+
+class FinalizeInProgressError(Exception):
+    """Another webhook/recovery worker holds the finalize lock for this PI."""
 
 
 @dataclass
@@ -104,6 +112,51 @@ def _discount_amount_dollars(cart) -> float:
     return 0
 
 
+def _line_item_has_state_id(line_item, state_id: str) -> bool:
+    """True if any ItemState on the line item references the given state ID."""
+    for item_state in (getattr(line_item, "state", None) or []):
+        ref = getattr(item_state, "state", None)
+        if ref is not None and getattr(ref, "id", None) == state_id:
+            return True
+    return False
+
+
+def _ensure_pending_fulfilment(client, order):
+    """
+    Transition line items still in Initial → PENDING_FULFILMENT.
+
+    Uses TwoUKeys.INITIAL_FULFILMENT_STATE (looked up by key) as from_state so we do
+    not depend on line_items[0].state[0], which is fragile on partial-success retries.
+    """
+    if not order.line_items:
+        logger.warning(
+            "[finalize_ct_order] Order %s has no line items; cannot transition fulfillment",
+            order.id,
+        )
+        return order
+
+    initial_state = client.get_state_by_key(TwoUKeys.INITIAL_FULFILMENT_STATE)
+    items_needing_transition = [
+        item for item in order.line_items
+        if _line_item_has_state_id(item, initial_state.id)
+    ]
+    if not items_needing_transition:
+        logger.info(
+            "[finalize_ct_order] Order %s line items already past Initial; skipping transition",
+            order.id,
+        )
+        return order
+
+    return client.update_line_items_transition_state(
+        order_id=order.id,
+        order_version=order.version,
+        line_items=items_needing_transition,
+        from_state_id=initial_state.id,
+        new_state_key=TwoUKeys.PENDING_FULFILMENT_STATE,
+        use_state_id=True,
+    )
+
+
 def finalize_ct_order_from_stripe_pi(
     payment_intent_id: str,
     *,
@@ -119,9 +172,9 @@ def finalize_ct_order_from_stripe_pi(
       2. Resolve CT Payment (by key = pi.id or metadata.ct_payment_id)
       3. Resolve CT Cart (by metadata.ct_cart_id)
       4. Add Charge transaction if absent (idempotent by interaction_id)
-      5. Skip if order already exists for this payment (still heal PI metadata)
+      5. If order already exists: heal PENDING_FULFILMENT + PI metadata, return
       6. Create order from cart → COMPLETE / PAID / SHIPPED
-      7. Transition line items → PENDING_FULFILMENT
+      7. Transition line items → PENDING_FULFILMENT (from Initial by key)
       8. Emit Segment Order Completed (plan 18, is_mobile=False)
       9. Backfill PI metadata with order_id + ct_payment_id
 
@@ -135,8 +188,34 @@ def finalize_ct_order_from_stripe_pi(
 
     Raises:
         FinalizeError: on non-retryable problems (missing metadata, etc.)
+        FinalizeInProgressError: when another writer holds the PI finalize lock
         CommercetoolsError: on transient CT failures (retryable by caller)
     """
+    lock_key = safe_key(
+        key=payment_intent_id,
+        key_prefix=FINALIZE_LOCK_PREFIX,
+        version="1",
+    )
+    if not acquire_task_lock(lock_key):
+        raise FinalizeInProgressError(
+            f"Finalize already in progress for PaymentIntent {payment_intent_id}"
+        )
+
+    try:
+        return _finalize_ct_order_from_stripe_pi_locked(
+            payment_intent_id, source=source, client=client,
+        )
+    finally:
+        release_task_lock(lock_key)
+
+
+def _finalize_ct_order_from_stripe_pi_locked(
+    payment_intent_id: str,
+    *,
+    source: str,
+    client: CommercetoolsAPIClient | None = None,
+) -> FinalizeResult:
+    """Finalize body; caller holds the PI lock."""
     if client is None:
         client = CommercetoolsAPIClient()
 
@@ -216,9 +295,11 @@ def finalize_ct_order_from_stripe_pi(
     if existing_order is not None:
         logger.info(
             "[finalize_ct_order] Order %s already exists for payment %s (pi=%s), "
-            "skipping creation; ensuring PI metadata is backfilled",
+            "skipping creation; healing PENDING_FULFILMENT and PI metadata",
             existing_order.id, payment.id, payment_intent_id,
         )
+        # Partial-success heal: order may exist while line items are still Initial.
+        _ensure_pending_fulfilment(client, existing_order)
         if not metadata.get("order_id") or metadata.get("ct_payment_id") != payment.id:
             _backfill_pi_metadata(
                 payment_intent_id,
@@ -238,14 +319,7 @@ def finalize_ct_order_from_stripe_pi(
     order = client.create_order_from_cart(cart)
 
     # --- Transition line items → PENDING_FULFILMENT ---
-    order = client.update_line_items_transition_state(
-        order_id=order.id,
-        order_version=order.version,
-        line_items=order.line_items,
-        from_state_id=order.line_items[0].state[0].state.id,
-        new_state_key=TwoUKeys.PENDING_FULFILMENT_STATE,
-        use_state_id=True,
-    )
+    order = _ensure_pending_fulfilment(client, order)
 
     # --- Emit Segment Order Completed (plan 18, web) ---
     _emit_web_order_completed(client, order, cart, payment)

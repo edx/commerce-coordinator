@@ -16,6 +16,7 @@ import stripe
 from commercetools import CommercetoolsError
 from commercetools.platform.models import TransactionState, TransactionType
 from django.conf import settings
+from stripe.error import StripeError
 
 from commerce_coordinator.apps.commercetools.catalog_info.constants import EDX_STRIPE_PAYMENT_INTERFACE_NAME
 from commerce_coordinator.apps.commercetools.management.commands._ct_api_client_command import (
@@ -23,6 +24,7 @@ from commerce_coordinator.apps.commercetools.management.commands._ct_api_client_
 )
 from commerce_coordinator.apps.commercetools.stripe_payment_finalize import (
     FinalizeError,
+    FinalizeInProgressError,
     finalize_ct_order_from_stripe_pi
 )
 from commerce_coordinator.apps.commercetools.tasks import _log_quarantine
@@ -31,8 +33,14 @@ logger = logging.getLogger(__name__)
 
 stripe.api_key = settings.PAYMENT_PROCESSOR_CONFIG['edx']['stripe']['secret_key']
 
+# Cap how many PaymentIntents the list+filter fallback will examine so a Search
+# API failure cannot walk the entire Stripe account.
+DEFAULT_MAX_LIST_EXAMINED = 1000
+
 
 class Command(CommercetoolsAPIClientCommand):
+    """Discover and finalize orphaned Stripe/CT payments that have no Order."""
+
     help = (
         "Discover orphaned Stripe PaymentIntents / CT Payments (succeeded, "
         "source_system=commercetools / stripe_edx, no Order) and finalize them. "
@@ -58,11 +66,21 @@ class Command(CommercetoolsAPIClientCommand):
             default=False,
             help="List orphan candidates without calling finalize",
         )
+        parser.add_argument(
+            "--max-list-examined",
+            type=int,
+            default=DEFAULT_MAX_LIST_EXAMINED,
+            help=(
+                "Max PaymentIntents to examine when falling back to list+filter "
+                f"(default: {DEFAULT_MAX_LIST_EXAMINED})"
+            ),
+        )
 
     def handle(self, *args, **options):
         since_days = options["since"]
         limit = options["limit"]
         dry_run = options["dry_run"]
+        max_list_examined = options["max_list_examined"]
 
         created_after = int(
             (datetime.datetime.now(datetime.timezone.utc) - datetime.timedelta(days=since_days)).timestamp()
@@ -75,7 +93,9 @@ class Command(CommercetoolsAPIClientCommand):
             f"Recovery: since={since_days}d limit={limit} dry_run={dry_run}"
         )
 
-        stripe_orphans = self._discover_stripe_orphans(created_after, limit)
+        stripe_orphans = self._discover_stripe_orphans(
+            created_after, limit, max_list_examined=max_list_examined,
+        )
         self.stdout.write(f"Discovered {len(stripe_orphans)} Stripe orphan candidate(s)")
 
         remaining = max(0, limit - len(stripe_orphans))
@@ -95,24 +115,30 @@ class Command(CommercetoolsAPIClientCommand):
 
         finalized = 0
         quarantined = 0
+        deferred = 0
 
         for pi_id in orphans:
-            meta = self._pi_metadata(pi_id)
             try:
                 result = finalize_ct_order_from_stripe_pi(
                     pi_id, source="recovery", client=self.ct_api_client,
                 )
                 if result.already_existed:
                     self.stdout.write(
-                        f"  [skip] {pi_id} -> order {result.order_id} already existed"
+                        f"  [skip] {pi_id} -> order {result.order_id} already existed "
+                        "(fulfillment/metadata heal applied)"
                     )
                 else:
                     self.stdout.write(
                         f"  [finalized] {pi_id} -> order {result.order_id}"
                     )
                     finalized += 1
+            except FinalizeInProgressError as exc:
+                # Another writer holds the lock; next cron will retry. Do not quarantine.
+                self.stderr.write(f"  [deferred] {pi_id}: {exc}")
+                deferred += 1
             except FinalizeError as exc:
                 self.stderr.write(f"  [quarantine] {pi_id}: {exc}")
+                meta = self._pi_metadata(pi_id)
                 _log_quarantine(
                     pi_id=pi_id,
                     ct_payment_id=getattr(exc, "ct_payment_id", None)
@@ -125,8 +151,13 @@ class Command(CommercetoolsAPIClientCommand):
                     source="recovery",
                 )
                 quarantined += 1
-            except (CommercetoolsError, Exception) as exc:
+            except (CommercetoolsError, StripeError) as exc:
+                # Retryable — leave for the next cron run; do not quarantine (avoids NR noise).
+                self.stderr.write(f"  [retryable] {pi_id}: {exc}")
+                deferred += 1
+            except Exception as exc:  # pylint: disable=broad-exception-caught
                 self.stderr.write(f"  [quarantine] {pi_id}: {exc}")
+                meta = self._pi_metadata(pi_id)
                 _log_quarantine(
                     pi_id=pi_id,
                     ct_payment_id=meta.get("ct_payment_id") or "unknown",
@@ -138,17 +169,25 @@ class Command(CommercetoolsAPIClientCommand):
 
         self.stdout.write(
             f"Recovery complete: {finalized} finalized, {quarantined} quarantined, "
-            f"{len(orphans) - finalized - quarantined} skipped"
+            f"{deferred} deferred, "
+            f"{len(orphans) - finalized - quarantined - deferred} skipped"
         )
 
     def _pi_metadata(self, pi_id: str) -> dict:
+        """Fetch PI metadata only when needed for quarantine logging."""
         try:
             pi = stripe.PaymentIntent.retrieve(pi_id)
             return dict(pi.metadata or {})
-        except Exception:
+        except Exception:  # pylint: disable=broad-exception-caught
             return {}
 
-    def _discover_stripe_orphans(self, created_after: int, limit: int) -> list[str]:
+    def _discover_stripe_orphans(
+        self,
+        created_after: int,
+        limit: int,
+        *,
+        max_list_examined: int = DEFAULT_MAX_LIST_EXAMINED,
+    ) -> list[str]:
         """
         Query Stripe for PaymentIntents that are succeeded with
         source_system=commercetools but missing order_id metadata.
@@ -159,12 +198,14 @@ class Command(CommercetoolsAPIClientCommand):
 
         try:
             orphan_ids = self._search_stripe_orphans(created_after, limit)
-        except Exception:
+        except Exception:  # pylint: disable=broad-exception-caught
             logger.warning(
                 "[recovery] Stripe Search API failed, falling back to list+filter",
                 exc_info=True,
             )
-            orphan_ids = self._list_filter_stripe_orphans(created_after, limit)
+            orphan_ids = self._list_filter_stripe_orphans(
+                created_after, limit, max_examined=max_list_examined,
+            )
 
         return orphan_ids
 
@@ -205,9 +246,16 @@ class Command(CommercetoolsAPIClientCommand):
 
         return orphan_ids
 
-    def _list_filter_stripe_orphans(self, created_after: int, limit: int) -> list[str]:
-        """Fallback: list PIs and filter client-side."""
+    def _list_filter_stripe_orphans(
+        self,
+        created_after: int,
+        limit: int,
+        *,
+        max_examined: int = DEFAULT_MAX_LIST_EXAMINED,
+    ) -> list[str]:
+        """Fallback: list PIs and filter client-side, with a hard examine cap."""
         orphan_ids = []
+        examined = 0
 
         params = {
             "limit": 100,
@@ -215,6 +263,15 @@ class Command(CommercetoolsAPIClientCommand):
         }
 
         for pi in stripe.PaymentIntent.list(**params).auto_paging_iter():
+            examined += 1
+            if examined > max_examined:
+                logger.warning(
+                    "[recovery] List+filter stopped after examining %d PaymentIntents "
+                    "(max_list_examined=%d); orphans found so far=%d",
+                    examined - 1, max_examined, len(orphan_ids),
+                )
+                break
+
             if pi.status != "succeeded":
                 continue
 
@@ -323,7 +380,7 @@ class Command(CommercetoolsAPIClientCommand):
         """Confirm Stripe PI is succeeded commercetools and still missing order_id."""
         try:
             pi = stripe.PaymentIntent.retrieve(pi_id)
-        except Exception:
+        except Exception:  # pylint: disable=broad-exception-caught
             logger.warning(
                 "[recovery] Failed to retrieve Stripe PI %s during CT secondary check",
                 pi_id,

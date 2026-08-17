@@ -8,7 +8,11 @@ from unittest.mock import patch
 
 from django.test import TestCase
 
-from commerce_coordinator.apps.commercetools.stripe_payment_finalize import FinalizeError, FinalizeResult
+from commerce_coordinator.apps.commercetools.stripe_payment_finalize import (
+    FinalizeError,
+    FinalizeInProgressError,
+    FinalizeResult
+)
 from commerce_coordinator.apps.commercetools.tasks import finalize_commercetools_stripe_payment_task
 
 FINALIZE_PATH = "commerce_coordinator.apps.commercetools.tasks.finalize_ct_order_from_stripe_pi"
@@ -67,3 +71,15 @@ class TestFinalizeTask(TestCase):
             finalize_commercetools_stripe_payment_task("pi_boom")
 
         mock_quarantine.assert_called_once()
+
+    @patch.object(finalize_commercetools_stripe_payment_task, "apply_async")
+    @patch(FINALIZE_PATH)
+    def test_lock_contention_reschedules(self, mock_finalize, mock_apply_async):
+        mock_finalize.side_effect = FinalizeInProgressError("locked")
+
+        result = finalize_commercetools_stripe_payment_task("pi_busy")
+
+        self.assertIsNone(result)
+        mock_apply_async.assert_called_once()
+        call_kwargs = mock_apply_async.call_args.kwargs
+        self.assertEqual(call_kwargs["kwargs"]["payment_intent_id"], "pi_busy")

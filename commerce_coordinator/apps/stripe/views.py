@@ -44,6 +44,7 @@ class WebhookView(SingleInvocationAPIView):
     http_method_names = ['post']  # accept POST request only
     authentication_classes = []
     permission_classes = [AllowAny]
+    # TODO: Make this endpoint accessible for Stripe servers only. To be done in SONIC-898.
 
     @csrf_exempt
     def post(self, request):

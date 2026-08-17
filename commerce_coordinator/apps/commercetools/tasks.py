@@ -36,7 +36,7 @@ from commerce_coordinator.apps.order_fulfillment.exceptions import OrderFulfillm
 from commerce_coordinator.apps.order_fulfillment.serializers import OrderRevokeLineRequestSerializer
 
 from .clients import CommercetoolsAPIClient, Refund
-from .stripe_payment_finalize import FinalizeError, finalize_ct_order_from_stripe_pi
+from .stripe_payment_finalize import FinalizeError, FinalizeInProgressError, finalize_ct_order_from_stripe_pi
 from .utils import (
     convert_ct_cent_amount_to_localized_price,
     get_lob_from_variant_attr,
@@ -601,7 +601,7 @@ def finalize_commercetools_stripe_payment_task(
         )
         if result.already_existed:
             logger.info(
-                "[%s] Order %s already existed for pi=%s, no action taken",
+                "[%s] Order %s already existed for pi=%s; fulfillment/metadata heal applied",
                 tag, result.order_id, payment_intent_id,
             )
         else:
@@ -610,6 +610,20 @@ def finalize_commercetools_stripe_payment_task(
                 tag, result.order_id, payment_intent_id,
             )
         return result.order_id
+
+    except FinalizeInProgressError:
+        logger.info(
+            "[%s] Finalize lock held for pi=%s; retrying in %s seconds",
+            tag, payment_intent_id, TASK_LOCK_RETRY,
+        )
+        finalize_commercetools_stripe_payment_task.apply_async(
+            kwargs={
+                "payment_intent_id": payment_intent_id,
+                "source": source,
+            },
+            countdown=TASK_LOCK_RETRY,
+        )
+        return None
 
     except FinalizeError as exc:
         _log_quarantine(
