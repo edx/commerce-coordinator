@@ -27,6 +27,8 @@ from commerce_coordinator.apps.core.tasks import acquire_task_lock, release_task
 logger = logging.getLogger(__name__)
 
 FINALIZE_LOCK_PREFIX = "finalize_ct_order_from_stripe_pi"
+# Stripe + multiple CT calls + Segment can exceed the default 60s lock TTL.
+FINALIZE_LOCK_EXPIRE = 1800  # 30 minutes; matches commercetools/views.py
 
 
 class FinalizeError(Exception):
@@ -196,7 +198,7 @@ def finalize_ct_order_from_stripe_pi(
         key_prefix=FINALIZE_LOCK_PREFIX,
         version="1",
     )
-    if not acquire_task_lock(lock_key):
+    if not acquire_task_lock(lock_key, FINALIZE_LOCK_EXPIRE):
         raise FinalizeInProgressError(
             f"Finalize already in progress for PaymentIntent {payment_intent_id}"
         )
