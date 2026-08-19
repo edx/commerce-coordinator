@@ -3,10 +3,6 @@ gunicorn configuration file, see https://docs.gunicorn.org/en/develop/configure.
 """
 import multiprocessing  # pylint: disable=unused-import
 import os
-import logging
-
-# Use the specific gunicorn error logger
-logger = logging.getLogger("gunicorn.error")
 
 preload_app = True
 timeout = 300
@@ -16,7 +12,7 @@ workers = 2
 
 
 # StatsD / DogStatsD configuration
-# Gunicorn's statsd_host validator (validate_statsd_address) accepts:
+# Gunicorn's statsd_host validator (validate_statsd_address) accepts a STRING:
 #   "HOST:PORT"     -> Gunicorn parses into (host, port) tuple -> AF_INET UDP
 #   "unix://PATH"   -> Gunicorn parses into a bare string path -> AF_UNIX SOCK_DGRAM
 _dogstatsd_url = os.environ.get("DD_DOGSTATSD_URL", "").strip()
@@ -25,11 +21,9 @@ if _dogstatsd_url:
     if _dogstatsd_url.startswith(("unix://", "unixgram://")):
         # Normalize unixgram:// -> unix:// (Gunicorn's validator expects unix://)
         _socket_path = _dogstatsd_url.split("://", 1)[1]
-        if _socket_path:
-            # Pass as a string; Gunicorn validator detects this and sets address_family = AF_UNIX
+        if _socket_path:  # guard against bare "unix://" with no path
             statsd_host = f"unix://{_socket_path}"
             statsd_prefix = "commerce-coordinator"
-            logger.info("Configured statsd_host as UDS: %s", statsd_host)
     else:
         # Strip udp:// if present; pass plain HOST:PORT string to Gunicorn
         _statsd_host = (
@@ -39,10 +33,8 @@ if _dogstatsd_url:
         ).strip()
 
         if _statsd_host:
-            # Pass as a string; Gunicorn validator detects host:port and converts to (host, port) tuple
             statsd_host = _statsd_host
             statsd_prefix = "commerce-coordinator"
-            logger.info("Configured statsd_host as UDP: %s", statsd_host)
 
 
 def pre_request(worker, req):
