@@ -65,7 +65,7 @@ class WebhookView(SingleInvocationAPIView):
             raise SignatureVerificationAPIError from e
 
         # Handle the event
-        if event.type in (StripeEventType.PAYMENT_SUCCESS, StripeEventType.PAYMENT_FAILED):
+        if event.type in (StripeEventType.PAYMENT_SUCCESS.value, StripeEventType.PAYMENT_FAILED.value):
             payment_intent = event.data.object
             event_source_system = payment_intent.metadata.get('source_system')
 
@@ -74,14 +74,14 @@ class WebhookView(SingleInvocationAPIView):
 
             return self._handle_legacy_payment_event(event, payment_intent, event_source_system, payload)
 
-        if event.type == StripeEventType.PAYMENT_REFUNDED:
+        if event.type == StripeEventType.PAYMENT_REFUNDED.value:
             return self._handle_refund_event(tag, event)
 
         raise UnhandledStripeEventAPIError
 
     def _handle_commercetools_payment_event(self, tag, event, payment_intent):
         """Route CommerceTools-originated PaymentIntents (UPI) to the async finalize path."""
-        if event.type != StripeEventType.PAYMENT_SUCCESS:
+        if event.type != StripeEventType.PAYMENT_SUCCESS.value:
             logger.info(
                 '[Stripe webhooks] CT payment_intent.payment_failed for PI [%s], ignoring',
                 payment_intent.id,
@@ -107,7 +107,7 @@ class WebhookView(SingleInvocationAPIView):
 
     def _handle_legacy_payment_event(self, event, payment_intent, event_source_system, payload):
         """Route legacy edX ecommerce PaymentIntents to the existing processed signal."""
-        if event.type == StripeEventType.PAYMENT_SUCCESS:
+        if event.type == StripeEventType.PAYMENT_SUCCESS.value:
             payment_state = PaymentState.COMPLETED.value
         else:
             payment_state = PaymentState.FAILED.value
