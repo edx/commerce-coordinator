@@ -1,6 +1,6 @@
 """
 Shared finalization logic for CommerceTools orders originating from Stripe
-PaymentIntents (UPI webhook + orphan recovery).
+PaymentIntents (UPI webhook).
 
 Parity source: customer-twou finalizeStripePayment + runPostPaymentActions.
 """
@@ -27,8 +27,9 @@ from commerce_coordinator.apps.core.tasks import acquire_task_lock, release_task
 logger = logging.getLogger(__name__)
 
 FINALIZE_LOCK_PREFIX = "finalize_ct_order_from_stripe_pi"
-# Stripe + multiple CT calls + Segment can exceed the default 60s lock TTL.
-FINALIZE_LOCK_EXPIRE = 1800  # 30 minutes; matches commercetools/views.py
+# Default lock TTL is 60s; this path can exceed that under CT latency.
+# 5 minutes covers a slow run without pinning a crashed worker for 30 minutes.
+FINALIZE_LOCK_EXPIRE = 300
 
 
 class FinalizeError(Exception):
@@ -47,7 +48,7 @@ class FinalizeError(Exception):
 
 
 class FinalizeInProgressError(Exception):
-    """Another webhook/recovery worker holds the finalize lock for this PI."""
+    """Another worker holds the finalize lock for this PI."""
 
 
 @dataclass
@@ -166,8 +167,7 @@ def finalize_ct_order_from_stripe_pi(
     client: CommercetoolsAPIClient | None = None,
 ) -> FinalizeResult:
     """
-    Shared finalize path used by both the webhook Celery task and the
-    recovery management command.
+    Shared finalize path used by the webhook Celery task.
 
     Steps (parity with customer-twou finalizeStripePayment):
       1. Retrieve / validate Stripe PaymentIntent
@@ -182,7 +182,7 @@ def finalize_ct_order_from_stripe_pi(
 
     Args:
         payment_intent_id: Stripe PaymentIntent ID
-        source: 'webhook' or 'recovery' (for quarantine log context)
+        source: quarantine log context (typically 'webhook')
         client: Optional pre-built CT client (avoids re-init in loops)
 
     Returns:

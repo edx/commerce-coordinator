@@ -211,7 +211,7 @@ class TestFinalizeCTOrderFromStripePI(TestCase):
         client.update_line_items_transition_state.return_value = existing_order
         initial = _stub_initial_matching_order(client, existing_order)
 
-        result = finalize_ct_order_from_stripe_pi("pi_test123", source="recovery")
+        result = finalize_ct_order_from_stripe_pi("pi_test123", source="webhook")
 
         self.assertTrue(result.already_existed)
         self.assertEqual(result.order_id, existing_order.id)
@@ -342,7 +342,7 @@ class TestFinalizeCTOrderFromStripePI(TestCase):
         mock_stripe.PaymentIntent.retrieve.return_value = pi
 
         with self.assertRaises(FinalizeError) as ctx:
-            finalize_ct_order_from_stripe_pi("pi_test123", source="recovery")
+            finalize_ct_order_from_stripe_pi("pi_test123", source="webhook")
 
         self.assertIn("requires_payment_method", str(ctx.exception))
 
@@ -353,7 +353,7 @@ class TestFinalizeCTOrderFromStripePI(TestCase):
         mock_stripe.PaymentIntent.retrieve.return_value = pi
 
         with self.assertRaises(FinalizeError):
-            finalize_ct_order_from_stripe_pi("pi_test123", source="recovery")
+            finalize_ct_order_from_stripe_pi("pi_test123", source="webhook")
 
     def test_missing_ct_cart_id_raises_finalize_error(
         self, MockClient, mock_track, mock_stripe, _mock_lock, _mock_unlock
