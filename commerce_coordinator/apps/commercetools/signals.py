@@ -6,6 +6,7 @@ import logging
 
 from commerce_coordinator.apps.commercetools.catalog_info.constants import TwoUKeys
 from commerce_coordinator.apps.commercetools.tasks import (
+    finalize_commercetools_stripe_payment_task,
     fulfillment_completed_update_ct_line_item_task,
     refund_from_mobile_task,
     refund_from_paypal_task,
@@ -91,6 +92,19 @@ def revoke_line_items(**kwargs):
     based on the order ID and return items passed in.
     """
     async_result = revoke_line_items_task.delay(order_id=kwargs["order_id"], return_items=kwargs["return_items"])
+    return async_result.id
+
+
+@log_receiver(logger)
+def finalize_commercetools_stripe_payment(**kwargs):
+    """
+    Receive the payment_succeeded_commercetools_signal and dispatch
+    the shared finalize task for a CT Stripe PaymentIntent.
+    """
+    async_result = finalize_commercetools_stripe_payment_task.delay(
+        payment_intent_id=kwargs["payment_intent_id"],
+        source="webhook",
+    )
     return async_result.id
 
 

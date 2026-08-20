@@ -1,6 +1,6 @@
 """ Commercetools API Client(s) Testing """
 
-from datetime import datetime
+from datetime import datetime, timezone
 from unittest.mock import MagicMock, Mock
 
 import pytest
@@ -1845,11 +1845,35 @@ class ClientTests(TestCase):
                 status_code=200
             )
 
-            with self.assertRaises(Exception) as exc:
+            with self.assertRaises(ValueError) as exc:
                 self.client_set.client.get_order_by_payment_id(payment_id)
 
             # Verify the exception message
             self.assertEqual(str(exc.exception), f"No order found for payment ID {payment_id}")
+
+    def test_create_charge_payment_transaction(self):
+        """Add a Charge transaction to an existing CT payment."""
+        base_url = self.client_set.get_base_url_from_client()
+        mock_response_payment = gen_payment()
+        charge_created = datetime.fromtimestamp(1692942318, tz=timezone.utc)
+
+        with requests_mock.Mocker(real_http=True, case_sensitive=False) as mocker:
+            mocker.post(
+                f"{base_url}payments/{mock_response_payment.id}",
+                json=mock_response_payment.serialize(),
+                status_code=200
+            )
+
+            result = self.client_set.client.create_charge_payment_transaction(
+                payment_id=mock_response_payment.id,
+                payment_version=mock_response_payment.version,
+                charge_id="ch_3P9RWsH4caH7G0X11toRGUJf",
+                amount_in_cents=4900,
+                currency_code="usd",
+                charge_created=charge_created,
+            )
+
+            self.assertEqual(result.id, mock_response_payment.id)
 
     def test_get_credit_variant_by_course_run(self):
         base_url = self.client_set.get_base_url_from_client()

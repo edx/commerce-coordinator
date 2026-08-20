@@ -21,6 +21,12 @@ class UnhandledStripeEventAPIError(APIException):
     default_code = 'unhandled_stripe_event'
 
 
+class StripeWebhookDispatchAPIError(APIException):
+    status_code = 503
+    default_detail = 'Failed to enqueue Stripe webhook handler.'
+    default_code = 'stripe_webhook_dispatch_error'
+
+
 class StripeIntentCreateAPIError(APIException):
     status_code = 502
     default_detail = 'Error while creating payment intent on payment gateway.'

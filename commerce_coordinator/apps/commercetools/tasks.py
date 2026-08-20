@@ -36,6 +36,7 @@ from commerce_coordinator.apps.order_fulfillment.exceptions import OrderFulfillm
 from commerce_coordinator.apps.order_fulfillment.serializers import OrderRevokeLineRequestSerializer
 
 from .clients import CommercetoolsAPIClient, Refund
+from .stripe_payment_finalize import FinalizeError, FinalizeInProgressError, finalize_ct_order_from_stripe_pi
 from .utils import (
     convert_ct_cent_amount_to_localized_price,
     get_lob_from_variant_attr,
@@ -552,3 +553,120 @@ def revoke_line_mobile_order_task(payment_id: str):
                 f"on course {course_run_key} and {logging_data}")
 
     return True
+
+
+def _log_quarantine(*, pi_id, ct_payment_id, ct_cart_id, reason, source):
+    """
+    Structured quarantine log for finalize failures that exhaust retries
+    or hit non-retryable errors. Fixed field contract for ops queries.
+    """
+    logger.error(
+        "[quarantine] Finalize failure | pi_id=%s ct_payment_id=%s "
+        "ct_cart_id=%s reason=%s source=%s",
+        pi_id, ct_payment_id, ct_cart_id, reason, source,
+        extra={
+            "quarantine": True,
+            "pi_id": pi_id,
+            "ct_payment_id": ct_payment_id,
+            "ct_cart_id": ct_cart_id,
+            "reason": reason,
+            "source": source,
+        },
+    )
+
+
+@shared_task(
+    bind=True,
+    autoretry_for=(CommercetoolsError, stripe.error.StripeError),
+    max_retries=5,
+    retry_kwargs={"countdown": 300},  # 5 minutes between retries, to cover time during outage
+)
+def finalize_commercetools_stripe_payment_task(
+    self,
+    payment_intent_id: str,
+    source: str = "webhook",
+):
+    """
+    Celery task wrapping the shared finalize path for a Stripe
+    PaymentIntent that originated from a CommerceTools cart.
+
+    Bounded retries on transient CT/Stripe errors; non-retryable failures
+    are quarantined via structured log.
+    """
+    tag = "finalize_commercetools_stripe_payment_task"
+
+    try:
+        result = finalize_ct_order_from_stripe_pi(
+            payment_intent_id, source=source,
+        )
+        if result.already_existed:
+            logger.info(
+                "[%s] Order %s already existed for pi=%s; fulfillment/metadata heal applied",
+                tag, result.order_id, payment_intent_id,
+            )
+        else:
+            logger.info(
+                "[%s] Finalized order %s for pi=%s",
+                tag, result.order_id, payment_intent_id,
+            )
+        return result.order_id
+
+    except FinalizeInProgressError:
+        logger.info(
+            "[%s] Finalize lock held for pi=%s; retrying in %s seconds",
+            tag, payment_intent_id, TASK_LOCK_RETRY,
+        )
+        finalize_commercetools_stripe_payment_task.apply_async(
+            kwargs={
+                "payment_intent_id": payment_intent_id,
+                "source": source,
+            },
+            countdown=TASK_LOCK_RETRY,
+        )
+        return None
+
+    except FinalizeError as exc:
+        _log_quarantine(
+            pi_id=payment_intent_id,
+            ct_payment_id=getattr(exc, "ct_payment_id", "unknown"),
+            ct_cart_id=getattr(exc, "ct_cart_id", "unknown"),
+            reason=str(exc),
+            source=source,
+        )
+        return None
+
+    except (CommercetoolsError, stripe.error.StripeError):
+        if self.request.retries >= self.max_retries:
+            ct_payment_id, ct_cart_id = _quarantine_ids_from_pi(payment_intent_id)
+            _log_quarantine(
+                pi_id=payment_intent_id,
+                ct_payment_id=ct_payment_id,
+                ct_cart_id=ct_cart_id,
+                reason="max retries exhausted on transient error",
+                source=source,
+            )
+        raise
+
+    except Exception as exc:
+        ct_payment_id, ct_cart_id = _quarantine_ids_from_pi(payment_intent_id)
+        _log_quarantine(
+            pi_id=payment_intent_id,
+            ct_payment_id=ct_payment_id,
+            ct_cart_id=ct_cart_id,
+            reason=f"unexpected error: {exc}",
+            source=source,
+        )
+        raise
+
+
+def _quarantine_ids_from_pi(payment_intent_id: str) -> tuple[str, str]:
+    """Best-effort ct_payment_id / ct_cart_id from Stripe PI metadata for quarantine logs."""
+    try:
+        pi = stripe.PaymentIntent.retrieve(payment_intent_id)
+        metadata = pi.metadata or {}
+        return (
+            metadata.get("ct_payment_id") or "unknown",
+            metadata.get("ct_cart_id") or "unknown",
+        )
+    except Exception:  # pylint: disable=broad-exception-caught
+        return "unknown", "unknown"

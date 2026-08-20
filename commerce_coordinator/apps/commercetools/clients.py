@@ -957,6 +957,67 @@ class CommercetoolsAPIClient:
             )
             raise err
 
+    def create_charge_payment_transaction(
+        self,
+        payment_id: str,
+        payment_version: int,
+        charge_id: str,
+        amount_in_cents: int,
+        currency_code: str,
+        charge_created: datetime.datetime,
+    ) -> Payment:
+        """
+        Add a Charge transaction to an existing CT Payment, mirroring
+        create_return_payment_transaction but for TransactionType.CHARGE.
+
+        Args:
+            payment_id: CT Payment ID (UUID)
+            payment_version: Current version of the CT payment
+            charge_id: Stripe Charge ID (used as interaction_id for idempotency)
+            amount_in_cents: Charge amount in minor currency units
+            currency_code: ISO 4217 currency code (e.g. 'USD')
+            charge_created: Timestamp of the Stripe charge
+
+        Returns:
+            Updated Payment object with the new Charge transaction
+        """
+        try:
+            logger.info(
+                f"[CommercetoolsAPIClient] - Creating charge transaction for "
+                f"payment {payment_id} with charge {charge_id}"
+            )
+
+            amount_as_money = Money(
+                cent_amount=amount_in_cents,
+                currency_code=currency_code.upper(),
+            )
+
+            transaction_draft = TransactionDraft(
+                type=TransactionType.CHARGE,
+                amount=amount_as_money,
+                timestamp=charge_created,
+                state=TransactionState.SUCCESS,
+                interaction_id=charge_id,
+            )
+
+            add_transaction_action = PaymentAddTransactionAction(
+                transaction=transaction_draft
+            )
+
+            return self.base_client.payments.update_by_id(
+                id=payment_id,
+                version=payment_version,
+                actions=[add_transaction_action],
+            )
+        except CommercetoolsError as err:
+            handle_commercetools_error(
+                "[CommercetoolsAPIClient.create_charge_payment_transaction]",
+                err,
+                f"Unable to create charge transaction for payment {payment_id}, "
+                f"charge {charge_id}",
+            )
+            raise err
+
     def update_line_item_on_fulfillment(
         self,
         entitlement_uuid: str,
@@ -1339,6 +1400,28 @@ class CommercetoolsAPIClient:
                 "[CommercetoolsAPIClient.update_customer]",
                 err,
                 f"Failed to update customer: {customer.id}",
+            )
+            raise err
+
+    @conditional_retry
+    def get_cart_by_id(self, cart_id: str) -> Cart:
+        """
+        Fetch a cart by its ID.
+
+        Args:
+            cart_id (str): Cart ID (UUID)
+
+        Returns:
+            Cart object
+        """
+        try:
+            logger.info(f"[CommercetoolsAPIClient] - Attempting to find cart with ID {cart_id}")
+            return self.base_client.carts.get_by_id(cart_id)
+        except CommercetoolsError as err:
+            handle_commercetools_error(
+                "[CommercetoolsAPIClient.get_cart_by_id]",
+                err,
+                f"Failed to find cart with ID {cart_id}",
             )
             raise err
 
@@ -1800,7 +1883,7 @@ class CommercetoolsAPIClient:
             )
 
             if not response or not response.results:
-                raise Exception(f"No order found for payment ID {payment_id}")
+                raise ValueError(f"No order found for payment ID {payment_id}")
 
             return response.results[0]
 
