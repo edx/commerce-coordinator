@@ -579,7 +579,7 @@ def _log_quarantine(*, pi_id, ct_payment_id, ct_cart_id, reason, source):
     bind=True,
     autoretry_for=(CommercetoolsError, stripe.error.StripeError),
     max_retries=5,
-    retry_kwargs={"countdown": 3},
+    retry_kwargs={"countdown": 300},  # 5 minutes between retries, to cover time during outage
 )
 def finalize_commercetools_stripe_payment_task(
     self,
