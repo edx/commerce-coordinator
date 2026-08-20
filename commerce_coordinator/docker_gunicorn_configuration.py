@@ -12,23 +12,29 @@ workers = 2
 
 
 # StatsD / DogStatsD configuration
+# Gunicorn's statsd_host validator (validate_statsd_address) accepts a STRING:
+#   "HOST:PORT"     -> Gunicorn parses into (host, port) tuple -> AF_INET UDP
+#   "unix://PATH"   -> Gunicorn parses into a bare string path -> AF_UNIX SOCK_DGRAM
 _dogstatsd_url = os.environ.get("DD_DOGSTATSD_URL", "").strip()
 
 if _dogstatsd_url:
-    if _dogstatsd_url.startswith("unix://"):
-        # Gunicorn accepts unix socket directly as "unix:///path".
-        _statsd_host = _dogstatsd_url if _dogstatsd_url != "unix://" else ""
+    if _dogstatsd_url.startswith(("unix://", "unixgram://")):
+        # Normalize unixgram:// -> unix:// (Gunicorn's validator expects unix://)
+        _socket_path = _dogstatsd_url.split("://", 1)[1]
+        if _socket_path:  # guard against bare "unix://" with no path
+            statsd_host = f"unix://{_socket_path}"
+            statsd_prefix = "commerce-coordinator"
     else:
-        # Strip "udp://" when present; Gunicorn expects plain "HOST:PORT".
+        # Strip udp:// if present; pass plain HOST:PORT string to Gunicorn
         _statsd_host = (
             _dogstatsd_url[len("udp://"):]
             if _dogstatsd_url.startswith("udp://")
             else _dogstatsd_url
         ).strip()
 
-    if _statsd_host:
-        statsd_host = _statsd_host
-        statsd_prefix = "commerce-coordinator"
+        if _statsd_host:
+            statsd_host = _statsd_host
+            statsd_prefix = "commerce-coordinator"
 
 
 def pre_request(worker, req):
