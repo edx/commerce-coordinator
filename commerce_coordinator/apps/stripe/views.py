@@ -11,12 +11,14 @@ from rest_framework.permissions import AllowAny
 from rest_framework.response import Response
 
 from commerce_coordinator.apps.core.constants import PaymentState
+from commerce_coordinator.apps.core.signal_helpers import format_signal_results
 from commerce_coordinator.apps.core.views import SingleInvocationAPIView
 from commerce_coordinator.apps.rollout.utils import is_commercetools_stripe_refund, is_legacy_order
 from commerce_coordinator.apps.stripe.constants import StripeEventType
 from commerce_coordinator.apps.stripe.exceptions import (
     InvalidPayloadAPIError,
     SignatureVerificationAPIError,
+    StripeWebhookDispatchAPIError,
     UnhandledStripeEventAPIError
 )
 from commerce_coordinator.apps.stripe.signals import (
@@ -99,11 +101,23 @@ class WebhookView(SingleInvocationAPIView):
             payment_intent.id,
         )
 
-        payment_succeeded_commercetools_signal.send_robust(
+        results = payment_succeeded_commercetools_signal.send_robust(
             sender=self.__class__,
             payment_intent_id=payment_intent.id,
         )
+        self._assert_signal_dispatched(results, payment_intent_id=payment_intent.id)
         return Response(status=status.HTTP_200_OK)
+
+    def _assert_signal_dispatched(self, results, *, payment_intent_id):
+        """Raise so Stripe retries if enqueue failed; handle_exception clears the running flag."""
+        formatted = format_signal_results(results)
+        if not results or any(entry["error"] for entry in formatted.values()):
+            logger.error(
+                '[Stripe webhooks] Failed to enqueue CT finalize for PI [%s]: %s',
+                payment_intent_id,
+                formatted,
+            )
+            raise StripeWebhookDispatchAPIError
 
     def _handle_legacy_payment_event(self, event, payment_intent, event_source_system, payload):
         """Route legacy edX ecommerce PaymentIntents to the existing processed signal."""

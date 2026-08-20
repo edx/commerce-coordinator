@@ -94,6 +94,7 @@ class WebhooksViewTests(APITestCase):
         self.mock_stripe_event.data.object.metadata.update(metadata)
         self.mock_stripe_event.data.object.amount = 4900
         mock_construct_event.return_value = self.mock_stripe_event
+        mock_ct_signal.return_value = [(lambda **kwargs: None, 'celery-task-id')]
 
         response = self.client.post(
             self.url, data={}, format='json', **self.mock_header
@@ -104,6 +105,36 @@ class WebhooksViewTests(APITestCase):
             sender=WebhookView,
             payment_intent_id=pi_id,
         )
+
+    @mock.patch('stripe.Webhook.construct_event')
+    @mock.patch('commerce_coordinator.apps.stripe.views.payment_succeeded_commercetools_signal.send_robust')
+    def test_ct_payment_succeeded_dispatch_failure_returns_503_and_clears_running(
+        self, mock_ct_signal, mock_construct_event
+    ):
+        """
+        A failed send_robust must not ACK Stripe or leave the SingleInvocation
+        flag set; otherwise Stripe will not retry and duplicates are suppressed.
+        """
+        pi_id = 'pi_ct_broker_down'
+
+        def _receiver(**kwargs):
+            pass
+
+        self.mock_stripe_event.type = StripeEventType.PAYMENT_SUCCESS.value
+        metadata = {'source_system': 'commercetools', 'ct_cart_id': 'cart-uuid'}
+        self.mock_stripe_event.data.object.id = pi_id
+        self.mock_stripe_event.data.object.metadata = StripeObject()
+        self.mock_stripe_event.data.object.metadata.update(metadata)
+        self.mock_stripe_event.data.object.amount = 4900
+        mock_construct_event.return_value = self.mock_stripe_event
+        mock_ct_signal.return_value = [(_receiver, RuntimeError('Celery broker down'))]
+
+        response = self.client.post(
+            self.url, data={}, format='json', **self.mock_header
+        )
+
+        self.assertEqual(response.status_code, status.HTTP_503_SERVICE_UNAVAILABLE)
+        self.assertFalse(WebhookView._is_running(WebhookView.__name__, pi_id))
 
     @mock.patch('stripe.Webhook.construct_event')
     @mock.patch('commerce_coordinator.apps.stripe.views.payment_succeeded_commercetools_signal.send_robust')
