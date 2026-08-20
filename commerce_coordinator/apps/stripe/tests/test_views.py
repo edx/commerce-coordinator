@@ -134,7 +134,9 @@ class WebhooksViewTests(APITestCase):
         )
 
         self.assertEqual(response.status_code, status.HTTP_503_SERVICE_UNAVAILABLE)
-        self.assertFalse(WebhookView._is_running(WebhookView.__name__, pi_id))
+        self.assertFalse(
+            WebhookView._is_running(WebhookView.__name__, pi_id)  # pylint: disable=protected-access
+        )
 
     @mock.patch('stripe.Webhook.construct_event')
     @mock.patch('commerce_coordinator.apps.stripe.views.payment_succeeded_commercetools_signal.send_robust')
