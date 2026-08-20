@@ -329,7 +329,7 @@ def _finalize_ct_order_from_stripe_pi_locked(
     except CommercetoolsError as create_error:
         try:
             existing_order = client.get_order_by_payment_id(payment.id)
-        except (ValueError, CommercetoolsError):
+        except ValueError:
             existing_order = None
         if existing_order is None:
             raise create_error
