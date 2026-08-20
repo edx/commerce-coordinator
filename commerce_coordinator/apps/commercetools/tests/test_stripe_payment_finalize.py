@@ -307,6 +307,60 @@ class TestFinalizeCTOrderFromStripePI(TestCase):
         client.create_order_from_cart.assert_not_called()
         mock_track.assert_not_called()
 
+    def test_create_failure_heals_when_order_appears_on_requery(
+        self, MockClient, mock_track, mock_stripe, _mock_lock, _mock_unlock
+    ):
+        """A concurrent writer winning cart conversion is healed by authoritative re-query."""
+        pi = _mock_pi()
+        charge = _mock_charge()
+        mock_stripe.PaymentIntent.retrieve.return_value = pi
+        mock_stripe.Charge.retrieve.return_value = charge
+
+        payment = _mock_payment(payment_id="pay-123", has_charge=True, charge_id="ch_test456")
+        existing_order = gen_order(uuid4_str())
+        cart = gen_cart(cart_id="cart-uuid", customer_id=existing_order.customer_id)
+
+        client = MockClient.return_value
+        client.get_payment_by_key.return_value = payment
+        client.get_order_by_payment_id.side_effect = [ValueError("not found"), existing_order]
+        client.get_cart_by_id.return_value = cart
+        client.create_order_from_cart.side_effect = _ct_error("UnverifiedAlreadyOrderedShape")
+        client.update_line_items_transition_state.return_value = existing_order
+        _stub_initial_matching_order(client, existing_order)
+
+        result = finalize_ct_order_from_stripe_pi("pi_test123", source="webhook")
+
+        self.assertTrue(result.already_existed)
+        self.assertEqual(result.order_id, existing_order.id)
+        self.assertEqual(client.get_order_by_payment_id.call_count, 2)
+        mock_track.assert_not_called()
+
+    def test_create_failure_reraises_original_when_requery_is_empty(
+        self, MockClient, mock_track, mock_stripe, _mock_lock, _mock_unlock
+    ):
+        """Unrelated create failures retain retry/quarantine behavior when no order exists."""
+        pi = _mock_pi()
+        charge = _mock_charge()
+        mock_stripe.PaymentIntent.retrieve.return_value = pi
+        mock_stripe.Charge.retrieve.return_value = charge
+
+        payment = _mock_payment(payment_id="pay-123", has_charge=True, charge_id="ch_test456")
+        cart = gen_cart(cart_id="cart-uuid")
+        create_error = _ct_error("ConcurrentModification")
+
+        client = MockClient.return_value
+        client.get_payment_by_key.return_value = payment
+        client.get_order_by_payment_id.side_effect = ValueError("not found")
+        client.get_cart_by_id.return_value = cart
+        client.create_order_from_cart.side_effect = create_error
+
+        with self.assertRaises(CommercetoolsError) as ctx:
+            finalize_ct_order_from_stripe_pi("pi_test123", source="webhook")
+
+        self.assertIs(ctx.exception, create_error)
+        self.assertEqual(client.get_order_by_payment_id.call_count, 2)
+        mock_track.assert_not_called()
+
     def test_charge_already_present_skips_creation(
         self, MockClient, mock_track, mock_stripe, _mock_lock, _mock_unlock
     ):
