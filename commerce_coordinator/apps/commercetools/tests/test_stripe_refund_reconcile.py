@@ -134,7 +134,7 @@ class TestStripeRefundReconcile:
         mock_segment.assert_not_called()
         assert result.transaction_state == expected_state
 
-    def test_pending_to_success_runs_side_effects_then_records_refunded(
+    def test_pending_to_success_records_refunded_before_side_effects(
         self,
         mock_revoke,
         mock_segment,
@@ -148,7 +148,50 @@ class TestStripeRefundReconcile:
         client.get_payment_by_key.return_value = _payment(pending)
         client.change_refund_transaction_state.return_value = _payment(succeeded)
         client.get_order_by_payment_id.return_value = _order()
+        call_order = []
+        mock_update_return.side_effect = lambda *args, **kwargs: call_order.append("update")
+        mock_revoke.side_effect = lambda *args, **kwargs: call_order.append("revoke")
+        mock_segment.side_effect = lambda *args, **kwargs: call_order.append("segment")
 
+        result = reconcile_stripe_refund(
+            "pi_async",
+            _refund(),
+            source="webhook",
+            client=client,
+        )
+
+        assert call_order == ["update", "revoke", "segment"]
+        assert mock_update_return.call_args.kwargs["payment_state"] == ReturnPaymentState.REFUNDED
+        assert result.side_effects_completed is True
+
+    def test_return_update_failure_does_not_emit_side_effects(
+        self,
+        mock_revoke,
+        mock_segment,
+        mock_update_return,
+        _mock_acquire,
+        _mock_release,
+    ):
+        client = MagicMock()
+        pending = _transaction(TransactionState.PENDING)
+        succeeded = _transaction(TransactionState.SUCCESS)
+        client.get_payment_by_key.return_value = _payment(pending)
+        client.change_refund_transaction_state.return_value = _payment(succeeded)
+        client.get_order_by_payment_id.return_value = _order()
+        mock_update_return.side_effect = RuntimeError("ct write failed")
+
+        with pytest.raises(RuntimeError):
+            reconcile_stripe_refund(
+                "pi_async",
+                _refund(),
+                source="webhook",
+                client=client,
+            )
+
+        mock_revoke.assert_not_called()
+        mock_segment.assert_not_called()
+
+        mock_update_return.side_effect = None
         result = reconcile_stripe_refund(
             "pi_async",
             _refund(),
@@ -158,10 +201,9 @@ class TestStripeRefundReconcile:
 
         mock_revoke.assert_called_once()
         mock_segment.assert_called_once()
-        assert mock_update_return.call_args.kwargs["payment_state"] == ReturnPaymentState.REFUNDED
         assert result.side_effects_completed is True
 
-    def test_duplicate_success_uses_refunded_return_as_completion_marker(
+    def test_already_refunded_retries_idempotent_side_effects(
         self,
         mock_revoke,
         mock_segment,
@@ -181,9 +223,9 @@ class TestStripeRefundReconcile:
         )
 
         client.change_refund_transaction_state.assert_not_called()
-        mock_revoke.assert_not_called()
-        mock_segment.assert_not_called()
         mock_update_return.assert_not_called()
+        mock_revoke.assert_called_once()
+        mock_segment.assert_called_once()
         assert result.side_effects_completed is True
 
     def test_existing_success_with_incomplete_side_effects_heals(
@@ -236,8 +278,8 @@ class TestStripeRefundReconcile:
             client=client,
         )
 
-        mock_revoke.assert_called_once()
-        mock_segment.assert_called_once()
+        assert mock_revoke.call_count == 2
+        assert mock_segment.call_count == 2
         mock_update_return.assert_called_once()
 
     def test_unknown_status_does_not_default_to_success(
@@ -263,3 +305,57 @@ class TestStripeRefundReconcile:
         mock_segment.assert_not_called()
         mock_update_return.assert_not_called()
         assert result.transaction_state is None
+
+
+@patch("commerce_coordinator.apps.commercetools.stripe_refund_reconcile.track")
+@patch("commerce_coordinator.apps.commercetools.stripe_refund_reconcile.get_edx_lms_user_id", return_value="lms-1")
+def test_segment_uses_stripe_refund_id_as_message_id(_mock_lms_id, mock_track):
+    client = MagicMock()
+    client.get_customer_by_id.return_value = SimpleNamespace(id="cust-1")
+    order = SimpleNamespace(
+        id="order-1",
+        customer_id="cust-1",
+        line_items=[
+            SimpleNamespace(
+                id="line-1",
+                name={"en-US": "Course"},
+                product_key="course-1",
+                product_type=SimpleNamespace(obj=SimpleNamespace(name="course")),
+                variant=SimpleNamespace(sku="sku", images=[], attributes=[]),
+                price=SimpleNamespace(value=SimpleNamespace(cent_amount=4900, currency_code="USD", fraction_digits=2)),
+                quantity=1,
+            )
+        ],
+        return_info=[],
+        custom=None,
+        total_price=SimpleNamespace(cent_amount=4900, currency_code="USD"),
+        taxed_price=None,
+        discount_on_total_price=None,
+        discount_codes=[],
+        payment_info=None,
+    )
+    from commerce_coordinator.apps.commercetools.stripe_refund_reconcile import _emit_segment_refund
+
+    with patch(
+        "commerce_coordinator.apps.commercetools.stripe_refund_reconcile.prepare_segment_event_properties",
+        return_value={"products": []},
+    ) as mock_props:
+        mock_props.return_value = {"products": [{"name": "Course"}]}
+        with patch(
+            "commerce_coordinator.apps.commercetools.stripe_refund_reconcile.get_product_data",
+            return_value={"name": "Course"},
+        ):
+            with patch(
+                "commerce_coordinator.apps.commercetools.stripe_refund_reconcile.check_is_bundle",
+                return_value=False,
+            ):
+                _emit_segment_refund(
+                    client,
+                    order,
+                    _refund(),
+                    [SimpleNamespace(id="return-1", line_item_id="line-1")],
+                )
+
+    mock_track.assert_called_once()
+    assert mock_track.call_args.kwargs["message_id"] == "re_async"
+    assert mock_track.call_args.kwargs["event"] == "Order Refunded"

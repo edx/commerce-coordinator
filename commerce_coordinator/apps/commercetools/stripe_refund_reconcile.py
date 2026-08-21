@@ -215,24 +215,18 @@ def _reconcile_stripe_refund_locked(
         )
         return result
 
-    if _all_in_payment_state(return_items, ReturnPaymentState.REFUNDED):
-        logger.info(
-            "[stripe_refund_reconcile] Refund %s side effects already recorded by CT return state",
-            refund_id,
+    if not _all_in_payment_state(return_items, ReturnPaymentState.REFUNDED):
+        _update_return_state(
+            client,
+            order,
+            payment,
+            return_items,
+            stripe_refund,
+            payment_state=ReturnPaymentState.REFUNDED,
         )
-        result.side_effects_completed = True
-        return result
 
     _dispatch_revoke(order.id, return_items)
     _emit_segment_refund(client, order, stripe_refund, return_items)
-    _update_return_state(
-        client,
-        order,
-        payment,
-        return_items,
-        stripe_refund,
-        payment_state=ReturnPaymentState.REFUNDED,
-    )
     result.side_effects_completed = True
     logger.info(
         "[stripe_refund_reconcile] Refund %s completed lms_revoke=true segment_emitted=true",
@@ -351,6 +345,7 @@ def _emit_segment_refund(client, order, stripe_refund: Refund, return_items) -> 
             lms_user_id=lms_user_id,
             event="Order Refunded",
             properties=properties,
+            message_id=stripe_refund["id"],
         )
 
 

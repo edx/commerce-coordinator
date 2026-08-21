@@ -43,7 +43,11 @@ from commerce_coordinator.apps.commercetools.signals import (
     fulfill_order_placed_send_entitlement_signal,
     fulfill_order_returned_send_revoke_line_items_signal
 )
-from commerce_coordinator.apps.commercetools.stripe_refund_reconcile import reconcile_stripe_refund
+from commerce_coordinator.apps.commercetools.stripe_refund_reconcile import (
+    RefundReconcileInProgressError,
+    RefundSideEffectDispatchError,
+    reconcile_stripe_refund,
+)
 from commerce_coordinator.apps.commercetools.utils import (
     extract_ct_order_information_for_braze_canvas,
     extract_ct_product_information_for_braze_canvas,
@@ -300,7 +304,15 @@ def fulfill_order_sanctioned_message_signal_task(
 
 
 # noinspection DuplicatedCode
-@shared_task(autoretry_for=(RequestException, CommercetoolsError), retry_kwargs={'max_retries': 5, 'countdown': 3})
+@shared_task(
+    autoretry_for=(
+        RequestException,
+        CommercetoolsError,
+        RefundReconcileInProgressError,
+        RefundSideEffectDispatchError,
+    ),
+    retry_kwargs={'max_retries': 5, 'countdown': 3},
+)
 def fulfill_order_returned_signal_task(order_id, return_items, message_id):
     """Celery task for an order return (and refunded) message."""
     # pylint: disable=too-many-statements

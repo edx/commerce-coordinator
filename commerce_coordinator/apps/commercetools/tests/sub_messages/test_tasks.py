@@ -17,6 +17,10 @@ from commerce_coordinator.apps.commercetools.sub_messages.tasks import (
     fulfill_order_returned_signal_task,
     fulfill_order_sanctioned_message_signal_task
 )
+from commerce_coordinator.apps.commercetools.stripe_refund_reconcile import (
+    RefundReconcileInProgressError,
+    RefundSideEffectDispatchError,
+)
 from commerce_coordinator.apps.commercetools.tests.conftest import MonkeyPatch, gen_return_item
 from commerce_coordinator.apps.commercetools.tests.mocks import (
     CTCustomerByIdMock,
@@ -829,6 +833,28 @@ class FulfillOrderReturnedSignalTaskTests(TestCase):
         self.assertTrue(ret_val)
         self.mock_reconcile_refund.assert_not_called()
         self.mock_revoke_line_send.assert_not_called()
+
+    def test_forward_succeeded_retries_reconciler_errors(
+        self,
+        _ct_client_init: CommercetoolsAPIClientMock,
+        _run_filter_mock,
+    ):
+        self.assertIn(RefundReconcileInProgressError, fulfill_order_returned_signal_task.autoretry_for)
+        self.assertIn(RefundSideEffectDispatchError, fulfill_order_returned_signal_task.autoretry_for)
+
+        mock_values = _ct_client_init.return_value
+        _run_filter_mock.return_value = {
+            'refund_response': {
+                'id': 're_succeeded',
+                'payment_intent': 'pi_succeeded',
+                'status': 'succeeded',
+            },
+            'psp': EDX_STRIPE_PAYMENT_INTERFACE_NAME,
+        }
+        self.mock_reconcile_refund.side_effect = RefundReconcileInProgressError("locked")
+
+        with self.assertRaises(RefundReconcileInProgressError):
+            self.get_uut()(*self.unpack_for_uut(mock_values.example_payload))
 
     def test_refund_unsuccessful(self, _ct_client_init: CommercetoolsAPIClientMock, _run_filter_mock):
         """
