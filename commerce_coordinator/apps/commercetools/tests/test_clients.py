@@ -635,6 +635,26 @@ class ClientTests(TestCase):
             self.assertEqual(result.transactions[0].type, mock_response_payment.transactions[0].type)
             self.assertEqual(result.transactions[0].state, TransactionState.SUCCESS)
 
+    def test_change_refund_transaction_state(self):
+        mock_base_client = MagicMock()
+        expected_payment = gen_payment()
+        mock_base_client.payments.update_by_id.return_value = expected_payment
+        self.client_set.client.base_client = mock_base_client
+
+        result = self.client_set.client.change_refund_transaction_state(
+            payment_id="payment-1",
+            payment_version=4,
+            transaction_id="transaction-1",
+            state=TransactionState.SUCCESS,
+        )
+
+        self.assertEqual(result, expected_payment)
+        _, kwargs = mock_base_client.payments.update_by_id.call_args
+        self.assertEqual(kwargs["id"], "payment-1")
+        self.assertEqual(kwargs["version"], 4)
+        self.assertEqual(kwargs["actions"][0].transaction_id, "transaction-1")
+        self.assertEqual(kwargs["actions"][0].state, TransactionState.SUCCESS)
+
     def test_create_refund_transaction_exception(self):
         base_url = self.client_set.get_base_url_from_client()
         mock_stripe_refund = stripe.Refund()

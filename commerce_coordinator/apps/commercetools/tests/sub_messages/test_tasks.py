@@ -9,7 +9,7 @@ from commercetools.platform.models import ReturnInfo as CTReturnInfo
 from commercetools.platform.models import ReturnPaymentState as CTReturnPaymentState
 from edx_django_utils.cache import TieredCache
 
-from commerce_coordinator.apps.commercetools.catalog_info.constants import TwoUKeys
+from commerce_coordinator.apps.commercetools.catalog_info.constants import EDX_STRIPE_PAYMENT_INTERFACE_NAME, TwoUKeys
 from commerce_coordinator.apps.commercetools.clients import CommercetoolsAPIClient
 from commerce_coordinator.apps.commercetools.constants import SOURCE_SYSTEM
 from commerce_coordinator.apps.commercetools.sub_messages.tasks import (
@@ -451,6 +451,11 @@ class OrderReturnedMessageSignalTaskTests(TestCase):
     def setUp(self):
         super().setUp()
         self.mock = CommercetoolsAPIClientMock()
+        reconcile_patcher = patch(
+            "commerce_coordinator.apps.commercetools.sub_messages.tasks.reconcile_stripe_refund",
+        )
+        self.mock_reconcile_refund = reconcile_patcher.start()
+        self.addCleanup(reconcile_patcher.stop)
 
         revoke_send_patcher = patch(
             "commerce_coordinator.apps.commercetools.sub_messages.tasks."
@@ -508,8 +513,11 @@ class OrderReturnedMessageSignalTaskTests(TestCase):
         """
         mock_values = self.mock
         _stripe_api_mock.return_value.refund_payment_intent.return_value = {
+            "id": "re_existing",
+            "payment_intent": "mock_payment_intent_id",
             "currency": "usd",
-            "amount": 1000
+            "amount": 1000,
+            "status": "succeeded",
         }
         ret_val = self.get_uut()(*self.unpack_for_uut(self.mock.example_payload))
 
@@ -537,8 +545,11 @@ class OrderReturnedMessageSignalTaskTests(TestCase):
         mock_values = self.mock
         mock_values.order_mock.return_value.return_info = []
         _stripe_api_mock.return_value.refund_payment_intent.return_value = {
+            "id": "re_valid",
+            "payment_intent": "mock_payment_intent_id",
             "currency": "usd",
-            "amount": 1000
+            "amount": 1000,
+            "status": "succeeded",
         }
         _return_order_mock.return_value = CTOrder.deserialize(mock_values.order_mock.return_value.serialize())
         _return_order_mock.return_value.return_info.append(
@@ -553,6 +564,7 @@ class OrderReturnedMessageSignalTaskTests(TestCase):
         mock_values.order_mock.assert_has_calls([call(mock_values.order_id), call(order_id=mock_values.order_id)])
         mock_values.customer_mock.assert_called_once_with(mock_values.customer_id)
         _stripe_api_mock.return_value.refund_payment_intent.assert_called_once()
+        self.mock_reconcile_refund.assert_called_once()
 
     @patch('commerce_coordinator.apps.commercetools.sub_messages.tasks.get_edx_psp_payment_id')
     @patch('commerce_coordinator.apps.commercetools.sub_messages.tasks.OrderRefundRequested.run_filter')
@@ -659,6 +671,11 @@ class FulfillOrderReturnedSignalTaskTests(TestCase):
 
     def setUp(self):
         super().setUp()
+        reconcile_patcher = patch(
+            "commerce_coordinator.apps.commercetools.sub_messages.tasks.reconcile_stripe_refund",
+        )
+        self.mock_reconcile_refund = reconcile_patcher.start()
+        self.addCleanup(reconcile_patcher.stop)
         revoke_send_patcher = patch(
             "commerce_coordinator.apps.commercetools.sub_messages.tasks."
             "fulfill_order_returned_send_revoke_line_items_signal.send_robust",
@@ -744,18 +761,29 @@ class FulfillOrderReturnedSignalTaskTests(TestCase):
         Check calling uut when refund is successful.
         """
         mock_values = _ct_client_init.return_value
-        _run_filter_mock.return_value = {'refund_response': 'succeeded'}
+        _run_filter_mock.return_value = {
+            'refund_response': {
+                'id': 're_succeeded',
+                'payment_intent': 'pi_succeeded',
+                'status': 'succeeded',
+            },
+            'psp': EDX_STRIPE_PAYMENT_INTERFACE_NAME,
+        }
         payload = mock_values.example_payload
         ret_val = self.get_uut()(*self.unpack_for_uut(payload))
 
         self.assertTrue(ret_val)
         mock_values.order_mock.assert_called_once_with(mock_values.order_id)
         mock_values.customer_mock.assert_called_once_with(mock_values.customer_id)
-        self.mock_revoke_line_send.assert_called_once_with(
-            sender=fulfill_order_returned_signal_task,
-            order_id=payload["order_id"],
-            return_items=payload["return_items"],
+        self.mock_reconcile_refund.assert_called_once()
+        reconcile_args, reconcile_kwargs = self.mock_reconcile_refund.call_args
+        self.assertEqual(
+            reconcile_args[1],
+            _run_filter_mock.return_value["refund_response"],
         )
+        self.assertEqual(reconcile_kwargs["source"], "forward")
+        self.assertEqual(reconcile_kwargs["client"], mock_values)
+        self.mock_revoke_line_send.assert_not_called()
 
     def test_refund_successful_with_segment(self, _ct_client_init: CommercetoolsAPIClientMock, _run_filter_mock):
         """
@@ -763,7 +791,12 @@ class FulfillOrderReturnedSignalTaskTests(TestCase):
         """
         mock_values = _ct_client_init.return_value
         _run_filter_mock.return_value = {
-            'refund_response': 'succeeded',
+            'refund_response': {
+                'id': 're_succeeded',
+                'payment_intent': 'pi_succeeded',
+                'status': 'succeeded',
+            },
+            'psp': EDX_STRIPE_PAYMENT_INTERFACE_NAME,
             'amount_in_cents': 5400,
             'filtered_line_item_ids': ['822d77c4-00a6-4fb9-909b-094ef0b8c4b9'],
         }
@@ -773,11 +806,29 @@ class FulfillOrderReturnedSignalTaskTests(TestCase):
         self.assertTrue(ret_val)
         mock_values.order_mock.assert_called_once_with(mock_values.order_id)
         mock_values.customer_mock.assert_called_once_with(mock_values.customer_id)
-        self.mock_revoke_line_send.assert_called_once_with(
-            sender=fulfill_order_returned_signal_task,
-            order_id=payload["order_id"],
-            return_items=payload["return_items"],
-        )
+        self.mock_reconcile_refund.assert_called_once()
+        self.mock_revoke_line_send.assert_not_called()
+
+    def test_pending_refund_skips_revoke_segment_and_reconcile(
+        self,
+        _ct_client_init: CommercetoolsAPIClientMock,
+        _run_filter_mock,
+    ):
+        mock_values = _ct_client_init.return_value
+        _run_filter_mock.return_value = {
+            'refund_response': {
+                'id': 're_pending',
+                'payment_intent': 'pi_pending',
+                'status': 'pending',
+            },
+            'psp': EDX_STRIPE_PAYMENT_INTERFACE_NAME,
+        }
+
+        ret_val = self.get_uut()(*self.unpack_for_uut(mock_values.example_payload))
+
+        self.assertTrue(ret_val)
+        self.mock_reconcile_refund.assert_not_called()
+        self.mock_revoke_line_send.assert_not_called()
 
     def test_refund_unsuccessful(self, _ct_client_init: CommercetoolsAPIClientMock, _run_filter_mock):
         """

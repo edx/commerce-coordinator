@@ -282,7 +282,10 @@ def has_full_refund_transaction(payment: Payment):
     for transaction in payment.transactions:
         if transaction.type == TransactionType.CHARGE:
             charge_amount += cents_to_dollars(transaction.amount)
-        if transaction.type == TransactionType.REFUND:  # pragma no cover
+        if (
+            transaction.type == TransactionType.REFUND
+            and transaction.state == TransactionState.SUCCESS
+        ):  # pragma no cover
             refunded_amount += cents_to_dollars(transaction.amount)
 
     return refunded_amount == charge_amount
@@ -297,6 +300,19 @@ def is_transaction_already_refunded(payment: Payment, psp_refund_transaction_id:
             return True
 
     return False
+
+
+def get_refund_transaction_by_interaction_id(payment: Payment, interaction_id: str):
+    """Return the refund transaction matching a PSP refund identifier."""
+    return next(
+        (
+            transaction
+            for transaction in payment.transactions
+            if transaction.type == TransactionType.REFUND
+            and transaction.interaction_id == interaction_id
+        ),
+        None,
+    )
 
 
 def find_refund_transaction(payment: Payment, psp_refund_transaction_id: str):

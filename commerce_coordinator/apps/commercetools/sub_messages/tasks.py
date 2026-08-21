@@ -7,7 +7,6 @@ from celery.utils.log import get_task_logger
 from commercetools import CommercetoolsError
 from django.contrib.auth import get_user_model
 from edx_django_utils.cache import TieredCache
-from iso4217 import Currency
 from requests import RequestException
 
 from commerce_coordinator.apps.commercetools.catalog_info.constants import (
@@ -44,8 +43,8 @@ from commerce_coordinator.apps.commercetools.signals import (
     fulfill_order_placed_send_entitlement_signal,
     fulfill_order_returned_send_revoke_line_items_signal
 )
+from commerce_coordinator.apps.commercetools.stripe_refund_reconcile import reconcile_stripe_refund
 from commerce_coordinator.apps.commercetools.utils import (
-    convert_ct_cent_amount_to_localized_price,
     extract_ct_order_information_for_braze_canvas,
     extract_ct_product_information_for_braze_canvas,
     get_lob_from_variant_attr,
@@ -57,6 +56,7 @@ from commerce_coordinator.apps.core.memcache import safe_key
 from commerce_coordinator.apps.core.segment import track
 from commerce_coordinator.apps.lms.clients import LMSAPIClient
 from commerce_coordinator.apps.order_fulfillment.clients import OrderFulfillmentAPIClient
+from commerce_coordinator.apps.stripe.constants import StripeRefundStatus
 
 User = get_user_model()
 
@@ -397,16 +397,25 @@ def fulfill_order_returned_signal_task(order_id, return_items, message_id):
                 refunded_line_item_ids = result.get("filtered_line_item_ids", return_line_item_ids)
 
                 if psp == EDX_STRIPE_PAYMENT_INTERFACE_NAME:
-                    fraction_digits = Currency(
-                        refund_response["currency"].upper()
-                    ).exponent
-                    refund_amount_in_dollars = str(
-                        convert_ct_cent_amount_to_localized_price(
-                            refund_response["amount"],
-                            fraction_digits,
+                    if refund_response.get("status") == StripeRefundStatus.REFUND_PENDING.value:
+                        logger.info(
+                            "[CT-%s] Stripe refund %s is pending; deferring return state, "
+                            "LMS revoke, and Segment",
+                            tag,
+                            refund_response["id"],
                         )
+                        return True
+
+                    reconcile_stripe_refund(
+                        psp_payment_id,
+                        refund_response,
+                        order_number=order.order_number,
+                        source="forward",
+                        client=client,
                     )
-                elif psp == EDX_PAYPAL_PAYMENT_INTERFACE_NAME:
+                    return True
+
+                if psp == EDX_PAYPAL_PAYMENT_INTERFACE_NAME:
                     refund_amount_in_dollars = result["refund_response"]["amount"]
                 else:
                     refund_amount_in_dollars = result.get("amount_in_dollars")

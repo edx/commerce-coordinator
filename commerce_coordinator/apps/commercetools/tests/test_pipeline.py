@@ -299,6 +299,30 @@ class OrderReturnPipelineTests(TestCase):
         result_data = ret['returned_order']
         self.assertEqual(result_data, self.update_order_response)
 
+    @patch(
+        'commerce_coordinator.apps.commercetools.clients.CommercetoolsAPIClient'
+        '.update_return_payment_state_after_successful_refund'
+    )
+    def test_pending_stripe_refund_does_not_transition_return_to_refunded(
+        self,
+        mock_order_return_update,
+    ):
+        pipe = UpdateCommercetoolsOrderReturnPaymentStatus("test_pipe", None)
+        mock_order_return_update.return_value = self.update_order_response
+
+        result = pipe.run_filter(
+            order_data=self.update_order_data,
+            payment_intent_id="pi_pending",
+            psp=EDX_STRIPE_PAYMENT_INTERFACE_NAME,
+            refund_response={"id": "re_pending", "status": "pending"},
+            return_line_items={"mock_line_item_id": "mock_return_item_id"},
+            refunded_line_item_refunds={},
+            return_line_entitlement_ids={},
+        )
+
+        self.assertTrue(result["refund_pending"])
+        self.assertFalse(mock_order_return_update.call_args.kwargs["should_transition_state"])
+
     @patch('commerce_coordinator.apps.commercetools.pipeline.log.info')
     def test_pipeline_with_free_order(self, mock_logger):
         """Ensure pipeline is functioning as expected"""

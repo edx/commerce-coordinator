@@ -7,7 +7,6 @@ from celery.utils.log import get_task_logger
 from commercetools import CommercetoolsError
 from commercetools.platform.models import Payment
 from django.conf import settings
-from iso4217 import Currency
 from requests import RequestException
 
 from commerce_coordinator.apps.commercetools.catalog_info.constants import (
@@ -37,8 +36,12 @@ from commerce_coordinator.apps.order_fulfillment.serializers import OrderRevokeL
 
 from .clients import CommercetoolsAPIClient, Refund
 from .stripe_payment_finalize import FinalizeError, FinalizeInProgressError, finalize_ct_order_from_stripe_pi
+from .stripe_refund_reconcile import (
+    RefundReconcileInProgressError,
+    RefundSideEffectDispatchError,
+    reconcile_stripe_refund
+)
 from .utils import (
-    convert_ct_cent_amount_to_localized_price,
     get_lob_from_variant_attr,
     has_full_refund_transaction,
     is_transaction_already_refunded,
@@ -129,14 +132,19 @@ def fulfillment_completed_update_ct_line_item_task(
 
 
 @shared_task(
-    autoretry_for=(CommercetoolsError,),
+    autoretry_for=(
+        CommercetoolsError,
+        RefundReconcileInProgressError,
+        RefundSideEffectDispatchError,
+    ),
     retry_kwargs={"max_retries": 5, "countdown": 3},
 )
 def refund_from_stripe_task(
     payment_intent_id: str,
     stripe_refund: Refund,
-    order_number: str | None = None
-) -> Payment | None:
+    order_number: str | None = None,
+    source: str = "webhook",
+):
     """
     Celery task for handling a refund registered in the Stripe dashboard.
     Creates a refund payment transaction record via the Commercetools API.
@@ -145,44 +153,12 @@ def refund_from_stripe_task(
         refund (dict): Refund object
         payment_intent_id (str): The Stripe payment intent identifier
     """
-    client = CommercetoolsAPIClient()
-    try:
-        logger.info(
-            f"[refund_from_stripe_task] Initiating creation of CT payment's refund transaction object "
-            f"for payment Intent ID {payment_intent_id}."
-        )
-        payment = client.get_payment_by_key(payment_intent_id)
-        if has_full_refund_transaction(payment) or is_transaction_already_refunded(
-            payment, stripe_refund["id"]
-        ):
-            logger.info(
-                f"[refund_from_stripe_task] Event 'charge.refunded' received, but Payment with ID {payment.id} "
-                f"already has a full refund. Skipping task to add refund transaction"
-            )
-            return None
-
-        updated_payment = client.create_return_payment_transaction(
-            payment_id=payment.id,
-            payment_version=payment.version,
-            refund=stripe_refund,
-        )
-        total_in_dollars = convert_ct_cent_amount_to_localized_price(
-            stripe_refund["amount"],
-            Currency(stripe_refund["currency"].upper()).exponent,
-        )
-        _send_segement_event(
-            order_number=order_number,
-            total_in_dollars=str(total_in_dollars),
-            client=client,
-        )
-        return updated_payment
-    except CommercetoolsError as err:
-        logger.error(
-            f"[refund_from_stripe_task] Unable to create CT payment's refund transaction "
-            f"object for [ {payment.id} ] on Stripe refund {stripe_refund['id']} "
-            f"with error {err.errors} and correlation id {err.correlation_id}"
-        )
-        raise err
+    return reconcile_stripe_refund(
+        payment_intent_id,
+        stripe_refund,
+        order_number=order_number,
+        source=source,
+    )
 
 
 def _send_segement_event(*, order_number, total_in_dollars, client) -> None:

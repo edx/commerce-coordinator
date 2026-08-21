@@ -9,6 +9,8 @@ class StripeEventType(str, Enum):
     PAYMENT_SUCCESS = 'payment_intent.succeeded'
     PAYMENT_FAILED = 'payment_intent.payment_failed'
     PAYMENT_REFUNDED = 'charge.refunded'
+    REFUND_UPDATED = 'refund.updated'
+    REFUND_FAILED = 'refund.failed'
 
 
 class Currency(str, Enum):
@@ -21,3 +23,6 @@ class StripeErrorCode(str, Enum):
 
 class StripeRefundStatus(str, Enum):
     REFUND_SUCCESS = 'succeeded'
+    REFUND_PENDING = 'pending'
+    REFUND_FAILED = 'failed'
+    REFUND_CANCELED = 'canceled'
