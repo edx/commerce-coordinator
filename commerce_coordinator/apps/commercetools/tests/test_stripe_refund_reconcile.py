@@ -6,7 +6,10 @@ from unittest.mock import MagicMock, patch
 import pytest
 from commercetools.platform.models import ReturnPaymentState, TransactionState, TransactionType
 
-from commerce_coordinator.apps.commercetools.stripe_refund_reconcile import reconcile_stripe_refund
+from commerce_coordinator.apps.commercetools.stripe_refund_reconcile import (
+    _emit_segment_refund,
+    reconcile_stripe_refund,
+)
 
 
 def _refund(status="succeeded"):
@@ -334,7 +337,6 @@ def test_segment_uses_stripe_refund_id_as_message_id(_mock_lms_id, mock_track):
         discount_codes=[],
         payment_info=None,
     )
-    from commerce_coordinator.apps.commercetools.stripe_refund_reconcile import _emit_segment_refund
 
     with patch(
         "commerce_coordinator.apps.commercetools.stripe_refund_reconcile.prepare_segment_event_properties",
