@@ -372,6 +372,26 @@ class WebhooksViewTests(APITestCase):
         mock_is_ct_refund.assert_called()
         mock_is_legacy.assert_called()
 
+    @mock.patch('stripe.Webhook.construct_event')
+    @mock.patch.object(WebhookView, 'mark_running')
+    @mock.patch.object(WebhookView, '_is_running')
+    def test_refund_event_without_event_id_returns_400_without_cache_key(
+        self,
+        mock_is_running,
+        mock_mark_running,
+        mock_construct_event,
+    ):
+        """A malformed event must not use a shared None single-invocation key."""
+        self.mock_stripe_event.id = None
+        self.mock_stripe_event.type = StripeEventType.REFUND_UPDATED.value
+        mock_construct_event.return_value = self.mock_stripe_event
+
+        response = self.client.post(self.url, data={}, format='json', **self.mock_header)
+
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        mock_is_running.assert_not_called()
+        mock_mark_running.assert_not_called()
+
     @ddt.data(
         (StripeEventType.REFUND_UPDATED.value, "succeeded"),
         (StripeEventType.REFUND_FAILED.value, "failed"),

@@ -306,8 +306,8 @@ class StripeAPIClient:
             raise err
 
         accepted_statuses = {
-            StripeRefundStatus.REFUND_SUCCESS,
-            StripeRefundStatus.REFUND_PENDING,
+            StripeRefundStatus.REFUND_SUCCESS.value,
+            StripeRefundStatus.REFUND_PENDING.value,
         }
         if refund.status not in accepted_statuses:
             logger.exception('Refund for order [%s] was unsuccessful', order_uuid)

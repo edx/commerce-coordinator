@@ -5,6 +5,7 @@ from dataclasses import dataclass
 
 from commercetools.platform.models import ReturnPaymentState, TransactionState
 from django.utils.module_loading import import_string
+from edx_django_utils.cache import TieredCache
 from iso4217 import Currency
 
 from commerce_coordinator.apps.commercetools.catalog_info.edx_utils import check_is_bundle, get_edx_lms_user_id
@@ -25,6 +26,8 @@ logger = logging.getLogger(__name__)
 
 REFUND_RECONCILE_LOCK_PREFIX = "reconcile_stripe_refund"
 REFUND_RECONCILE_LOCK_EXPIRE = 300
+REFUND_SIDE_EFFECT_CACHE_PREFIX = "stripe_refund_side_effect"
+REFUND_SIDE_EFFECT_CACHE_TTL_SECS = 60 * 60 * 24 * 7
 
 STRIPE_TO_CT_STATE = {
     StripeRefundStatus.REFUND_PENDING.value: TransactionState.PENDING,
@@ -215,6 +218,8 @@ def _reconcile_stripe_refund_locked(
         )
         return result
 
+    revoke_completed = _side_effect_completed(refund_id, "lms_revoke")
+    segment_completed = _side_effect_completed(refund_id, "segment")
     if not _all_in_payment_state(return_items, ReturnPaymentState.REFUNDED):
         _update_return_state(
             client,
@@ -225,8 +230,20 @@ def _reconcile_stripe_refund_locked(
             payment_state=ReturnPaymentState.REFUNDED,
         )
 
-    _dispatch_revoke(order.id, return_items)
-    _emit_segment_refund(client, order, stripe_refund, return_items)
+    if revoke_completed and segment_completed:
+        logger.info(
+            "[stripe_refund_reconcile] Refund %s side effects already completed",
+            refund_id,
+        )
+        result.side_effects_completed = True
+        return result
+
+    if not revoke_completed:
+        _dispatch_revoke(order.id, return_items)
+        _mark_side_effect_completed(refund_id, "lms_revoke")
+    if not segment_completed:
+        _emit_segment_refund(client, order, stripe_refund, return_items)
+        _mark_side_effect_completed(refund_id, "segment")
     result.side_effects_completed = True
     logger.info(
         "[stripe_refund_reconcile] Refund %s completed lms_revoke=true segment_emitted=true",
@@ -286,6 +303,28 @@ def _resolve_return_items(order, transaction) -> list:
 
 def _all_in_payment_state(return_items, payment_state: ReturnPaymentState) -> bool:
     return all(item.payment_state == payment_state for item in return_items)
+
+
+def _side_effect_cache_key(refund_id: str, side_effect: str) -> str:
+    return safe_key(
+        key=f"{refund_id}_{side_effect}",
+        key_prefix=REFUND_SIDE_EFFECT_CACHE_PREFIX,
+        version="1",
+    )
+
+
+def _side_effect_completed(refund_id: str, side_effect: str) -> bool:
+    cache_key = _side_effect_cache_key(refund_id, side_effect)
+    return TieredCache.get_cached_response(cache_key).is_found
+
+
+def _mark_side_effect_completed(refund_id: str, side_effect: str) -> None:
+    cache_key = _side_effect_cache_key(refund_id, side_effect)
+    TieredCache.set_all_tiers(
+        cache_key,
+        value="COMPLETED",
+        django_cache_timeout=REFUND_SIDE_EFFECT_CACHE_TTL_SECS,
+    )
 
 
 def _return_item_payload(return_items) -> list[dict]:

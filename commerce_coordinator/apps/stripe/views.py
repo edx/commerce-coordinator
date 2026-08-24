@@ -170,6 +170,10 @@ class WebhookView(SingleInvocationAPIView):
     def _handle_refund_event(self, tag, event):
         """Route Commercetools refunds to the refund signal, skipping legacy orders."""
         event_id = getattr(event, 'id', None)
+        if not event_id:
+            logger.error('[Stripe webhooks] refund event is missing its Stripe event ID')
+            raise InvalidPayloadAPIError
+
         if self._is_running(tag, event_id):  # pragma no cover
             self.meta_should_mark_not_running = False
             return Response(status=status.HTTP_200_OK)

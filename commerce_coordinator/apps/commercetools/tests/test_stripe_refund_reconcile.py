@@ -5,9 +5,11 @@ from unittest.mock import MagicMock, patch
 
 import pytest
 from commercetools.platform.models import ReturnPaymentState, TransactionState, TransactionType
+from edx_django_utils.cache import TieredCache
 
 from commerce_coordinator.apps.commercetools.stripe_refund_reconcile import (
     _emit_segment_refund,
+    _side_effect_cache_key,
     reconcile_stripe_refund
 )
 
@@ -57,6 +59,20 @@ def _order(payment_state=ReturnPaymentState.INITIAL):
             )
         ],
     )
+
+
+@pytest.fixture(autouse=True)
+def clear_refund_side_effect_cache():
+    """Keep per-refund completion markers isolated between tests."""
+    cache_keys = [
+        _side_effect_cache_key("re_async", "lms_revoke"),
+        _side_effect_cache_key("re_async", "segment"),
+    ]
+    for cache_key in cache_keys:
+        TieredCache.delete_all_tiers(cache_key)
+    yield
+    for cache_key in cache_keys:
+        TieredCache.delete_all_tiers(cache_key)
 
 
 @patch("commerce_coordinator.apps.commercetools.stripe_refund_reconcile.release_task_lock")
@@ -206,7 +222,7 @@ class TestStripeRefundReconcile:
         mock_segment.assert_called_once()
         assert result.side_effects_completed is True
 
-    def test_already_refunded_retries_idempotent_side_effects(
+    def test_already_refunded_dispatches_unmarked_side_effects(
         self,
         mock_revoke,
         mock_segment,
@@ -281,9 +297,38 @@ class TestStripeRefundReconcile:
             client=client,
         )
 
-        assert mock_revoke.call_count == 2
-        assert mock_segment.call_count == 2
+        mock_revoke.assert_called_once()
+        mock_segment.assert_called_once()
         mock_update_return.assert_called_once()
+
+    def test_partial_side_effect_completion_only_heals_missing_effect(
+        self,
+        mock_revoke,
+        mock_segment,
+        mock_update_return,
+        _mock_acquire,
+        _mock_release,
+    ):
+        client = MagicMock()
+        client.get_payment_by_key.return_value = _payment(_transaction(TransactionState.SUCCESS))
+        client.get_order_by_payment_id.return_value = _order(ReturnPaymentState.REFUNDED)
+        TieredCache.set_all_tiers(
+            _side_effect_cache_key("re_async", "lms_revoke"),
+            value="COMPLETED",
+            django_cache_timeout=60,
+        )
+
+        result = reconcile_stripe_refund(
+            "pi_async",
+            _refund(),
+            source="webhook",
+            client=client,
+        )
+
+        mock_revoke.assert_not_called()
+        mock_segment.assert_called_once()
+        mock_update_return.assert_not_called()
+        assert result.side_effects_completed is True
 
     def test_unknown_status_does_not_default_to_success(
         self,
