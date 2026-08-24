@@ -8,7 +8,7 @@ from commercetools.platform.models import ReturnPaymentState, TransactionState, 
 
 from commerce_coordinator.apps.commercetools.stripe_refund_reconcile import (
     _emit_segment_refund,
-    reconcile_stripe_refund,
+    reconcile_stripe_refund
 )
 
 

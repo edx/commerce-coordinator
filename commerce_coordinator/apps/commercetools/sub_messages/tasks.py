@@ -46,7 +46,7 @@ from commerce_coordinator.apps.commercetools.signals import (
 from commerce_coordinator.apps.commercetools.stripe_refund_reconcile import (
     RefundReconcileInProgressError,
     RefundSideEffectDispatchError,
-    reconcile_stripe_refund,
+    reconcile_stripe_refund
 )
 from commerce_coordinator.apps.commercetools.utils import (
     extract_ct_order_information_for_braze_canvas,
