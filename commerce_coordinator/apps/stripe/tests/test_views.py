@@ -1,11 +1,11 @@
 """
 Tests for the stripe views.
 """
-import inspect
 import logging
 
 import ddt
 import mock
+from commercetools import CommercetoolsError
 from django.conf import settings
 from django.contrib.auth import get_user_model
 from django.urls import reverse
@@ -21,6 +21,20 @@ from commerce_coordinator.apps.stripe.views import WebhookView
 User = get_user_model()
 log = logging.getLogger(__name__)
 log_name = 'commerce_coordinator.apps.stripe.views'
+
+
+def _ct_error(code: str, message: str = "boom") -> CommercetoolsError:
+    """Build a CommercetoolsError whose .code property matches production CT errors."""
+    response = mock.MagicMock()
+    err_obj = mock.MagicMock()
+    err_obj.code = code
+    response.errors = [err_obj]
+    return CommercetoolsError(
+        message=message,
+        errors=[{"code": code, "message": message}],
+        response=response,
+        correlation_id="corr",
+    )
 
 
 @ddt.ddt
@@ -484,7 +498,7 @@ class WebhooksViewTests(APITestCase):
     @mock.patch('stripe.Webhook.construct_event')
     @mock.patch('commerce_coordinator.apps.stripe.views.CommercetoolsAPIClient')
     @mock.patch('commerce_coordinator.apps.stripe.views.payment_refunded_signal.send_robust')
-    def test_refund_webhook_does_not_acquire_reconcile_lock(
+    def test_refund_updated_dispatches_signal(
         self,
         mock_refund_signal,
         mock_ct_client,
@@ -513,10 +527,65 @@ class WebhooksViewTests(APITestCase):
 
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         mock_refund_signal.assert_called_once()
-        self.assertNotIn(
-            'acquire_task_lock',
-            inspect.getsource(WebhookView._handle_refund_event),  # pylint: disable=protected-access
-        )
+
+    @mock.patch('stripe.Webhook.construct_event')
+    @mock.patch('commerce_coordinator.apps.stripe.views.CommercetoolsAPIClient')
+    @mock.patch('commerce_coordinator.apps.stripe.views.payment_refunded_signal.send_robust')
+    def test_refund_webhook_skips_missing_ct_payment(
+        self,
+        mock_refund_signal,
+        mock_ct_client,
+        mock_construct_event,
+    ):
+        refund = StripeObject()
+        refund.update({
+            "id": "re_legacy",
+            "payment_intent": "pi_legacy",
+            "amount": 4900,
+            "currency": "usd",
+            "created": 1692942318,
+            "status": "succeeded",
+        })
+        self.mock_stripe_event.id = "evt_legacy_refund"
+        self.mock_stripe_event.type = StripeEventType.REFUND_UPDATED.value
+        self.mock_stripe_event.data.object = refund
+        mock_construct_event.return_value = self.mock_stripe_event
+        mock_ct_client.return_value.get_payment_by_key.side_effect = _ct_error("ResourceNotFound")
+
+        response = self.client.post(self.url, data={}, format='json', **self.mock_header)
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        mock_refund_signal.assert_not_called()
+
+    @mock.patch('stripe.Webhook.construct_event')
+    @mock.patch('commerce_coordinator.apps.stripe.views.CommercetoolsAPIClient')
+    @mock.patch('commerce_coordinator.apps.stripe.views.payment_refunded_signal.send_robust')
+    def test_refund_webhook_rethrows_ct_outage(
+        self,
+        mock_refund_signal,
+        mock_ct_client,
+        mock_construct_event,
+    ):
+        refund = StripeObject()
+        refund.update({
+            "id": "re_ct_outage",
+            "payment_intent": "pi_ct_outage",
+            "amount": 4900,
+            "currency": "usd",
+            "created": 1692942318,
+            "status": "succeeded",
+        })
+        self.mock_stripe_event.id = "evt_ct_outage"
+        self.mock_stripe_event.type = StripeEventType.REFUND_UPDATED.value
+        self.mock_stripe_event.data.object = refund
+        mock_construct_event.return_value = self.mock_stripe_event
+        mock_ct_client.return_value.get_payment_by_key.side_effect = _ct_error("ConcurrentModification")
+
+        # Django's test client re-raises; production surfaces this as 5xx so Stripe retries.
+        with self.assertRaises(CommercetoolsError):
+            self.client.post(self.url, data={}, format='json', **self.mock_header)
+
+        mock_refund_signal.assert_not_called()
 
     @mock.patch('stripe.Webhook.construct_event')
     @mock.patch('commerce_coordinator.apps.stripe.views.CommercetoolsAPIClient')

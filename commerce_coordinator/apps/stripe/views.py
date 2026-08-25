@@ -4,6 +4,7 @@ Views for the stripe app
 import logging
 
 import stripe
+from commercetools import CommercetoolsError
 from django.conf import settings
 from django.views.decorators.csrf import csrf_exempt
 from rest_framework import status
@@ -197,7 +198,19 @@ class WebhookView(SingleInvocationAPIView):
             stripe_refund = dict(event_object)
             payment_intent_id = event_object.payment_intent
             client = CommercetoolsAPIClient()
-            payment = client.get_payment_by_key(payment_intent_id)
+            try:
+                payment = client.get_payment_by_key(payment_intent_id)
+            except CommercetoolsError as err:
+                # Legacy Stripe refunds have no CT Payment; ack so Stripe does not retry forever.
+                if err.code != "ResourceNotFound":
+                    raise
+                logger.info(
+                    '[Stripe webhooks] skipping refund event %s for payment intent [%s] '
+                    'with no Commercetools payment.',
+                    event.type,
+                    payment_intent_id,
+                )
+                return Response(status=status.HTTP_200_OK)
             payment_interface = getattr(payment.payment_method_info, 'payment_interface', None)
             if payment_interface != EDX_STRIPE_PAYMENT_INTERFACE_NAME:
                 logger.info(
