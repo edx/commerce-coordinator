@@ -375,7 +375,7 @@ def _emit_segment_refund(client, order, stripe_refund: Refund, return_items) -> 
         line_item_ids=list(line_item_ids),
         return_id=", ".join(item.id for item in return_items),
     )
-    is_bundle = check_is_bundle(order.line_items)
+    is_bundle = check_is_bundle(selected_line_items)
     properties["products"] = [
         get_product_data(item, is_bundle) for item in selected_line_items
     ]

@@ -421,11 +421,11 @@ def test_segment_uses_stripe_refund_id_as_message_id(_mock_lms_id, mock_track):
         with patch(
             "commerce_coordinator.apps.commercetools.stripe_refund_reconcile.get_product_data",
             return_value={"name": "Course"},
-        ):
+        ) as mock_product_data:
             with patch(
                 "commerce_coordinator.apps.commercetools.stripe_refund_reconcile.check_is_bundle",
                 return_value=False,
-            ):
+            ) as mock_is_bundle:
                 _emit_segment_refund(
                     client,
                     order,
@@ -436,6 +436,64 @@ def test_segment_uses_stripe_refund_id_as_message_id(_mock_lms_id, mock_track):
     mock_track.assert_called_once()
     assert mock_track.call_args.kwargs["message_id"] == "re_async"
     assert mock_track.call_args.kwargs["event"] == "Order Refunded"
+    mock_is_bundle.assert_called_once_with(order.line_items)
+    mock_product_data.assert_called_once()
+    assert mock_product_data.call_args.args[1] is False
+
+
+@patch("commerce_coordinator.apps.commercetools.stripe_refund_reconcile.track")
+@patch("commerce_coordinator.apps.commercetools.stripe_refund_reconcile.get_edx_lms_user_id", return_value="lms-1")
+def test_segment_computes_is_bundle_from_refunded_line_items(_mock_lms_id, mock_track):
+    client = MagicMock()
+    client.get_customer_by_id.return_value = SimpleNamespace(id="cust-1")
+    refunded_item = SimpleNamespace(
+        id="line-course",
+        name={"en-US": "Course"},
+        product_key="course-1",
+        product_type=SimpleNamespace(obj=SimpleNamespace(name="course")),
+        variant=SimpleNamespace(sku="sku", images=[], attributes=[]),
+        price=SimpleNamespace(value=SimpleNamespace(cent_amount=4900, currency_code="USD", fraction_digits=2)),
+        quantity=1,
+    )
+    bundled_item = SimpleNamespace(id="line-bundle")
+    order = SimpleNamespace(
+        id="order-1",
+        customer_id="cust-1",
+        line_items=[bundled_item, refunded_item],
+        return_info=[],
+        custom=None,
+        total_price=SimpleNamespace(cent_amount=4900, currency_code="USD"),
+        taxed_price=None,
+        discount_on_total_price=None,
+        discount_codes=[],
+        payment_info=None,
+    )
+
+    with patch(
+        "commerce_coordinator.apps.commercetools.stripe_refund_reconcile.prepare_segment_event_properties",
+        return_value={"products": []},
+    ) as mock_props:
+        mock_props.return_value = {"products": [{"name": "Course"}]}
+        with patch(
+            "commerce_coordinator.apps.commercetools.stripe_refund_reconcile.get_product_data",
+            return_value={"name": "Course"},
+        ) as mock_product_data:
+            with patch(
+                "commerce_coordinator.apps.commercetools.stripe_refund_reconcile.check_is_bundle",
+                return_value=False,
+            ) as mock_is_bundle:
+                _emit_segment_refund(
+                    client,
+                    order,
+                    _refund(),
+                    [SimpleNamespace(id="return-1", line_item_id="line-course")],
+                )
+
+    mock_is_bundle.assert_called_once_with([refunded_item])
+    mock_product_data.assert_called_once()
+    assert mock_product_data.call_args.args[0] is refunded_item
+    assert mock_product_data.call_args.args[1] is False
+    mock_track.assert_called_once()
 
 
 @patch("commerce_coordinator.apps.commercetools.stripe_refund_reconcile.track")
