@@ -8,6 +8,7 @@ from commercetools.platform.models import Order as CTOrder
 from commercetools.platform.models import ReturnInfo as CTReturnInfo
 from commercetools.platform.models import ReturnPaymentState as CTReturnPaymentState
 from edx_django_utils.cache import TieredCache
+from openedx_filters.exceptions import OpenEdxFilterException
 
 from commerce_coordinator.apps.commercetools.catalog_info.constants import EDX_STRIPE_PAYMENT_INTERFACE_NAME, TwoUKeys
 from commerce_coordinator.apps.commercetools.clients import CommercetoolsAPIClient
@@ -841,6 +842,7 @@ class FulfillOrderReturnedSignalTaskTests(TestCase):
     ):
         self.assertIn(RefundReconcileInProgressError, fulfill_order_returned_signal_task.autoretry_for)
         self.assertIn(RefundSideEffectDispatchError, fulfill_order_returned_signal_task.autoretry_for)
+        self.assertIn(OpenEdxFilterException, fulfill_order_returned_signal_task.autoretry_for)
 
         mock_values = _ct_client_init.return_value
         _run_filter_mock.return_value = {

@@ -7,6 +7,7 @@ from celery.utils.log import get_task_logger
 from commercetools import CommercetoolsError
 from django.contrib.auth import get_user_model
 from edx_django_utils.cache import TieredCache
+from openedx_filters.exceptions import OpenEdxFilterException
 from requests import RequestException
 
 from commerce_coordinator.apps.commercetools.catalog_info.constants import (
@@ -308,6 +309,7 @@ def fulfill_order_sanctioned_message_signal_task(
     autoretry_for=(
         RequestException,
         CommercetoolsError,
+        OpenEdxFilterException,
         RefundReconcileInProgressError,
         RefundSideEffectDispatchError,
     ),

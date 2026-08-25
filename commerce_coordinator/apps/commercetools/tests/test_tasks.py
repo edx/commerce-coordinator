@@ -10,6 +10,7 @@ import stripe
 from commercetools import CommercetoolsError
 from commercetools.platform.models import Money, TransactionType
 from django.test import TestCase
+from openedx_filters.exceptions import OpenEdxFilterException
 from requests.exceptions import RequestException
 
 from commerce_coordinator.apps.commercetools.catalog_info.constants import EdXFieldNames
@@ -140,6 +141,10 @@ class ReturnedOrderfromStripeTaskTest(TestCase):
         refund_from_stripe_task(*self.unpack_for_uut(EXAMPLE_RETURNED_ORDER_STRIPE_SIGNAL_PAYLOAD))
 
         self.mock_reconcile_refund.assert_called_once()
+
+    def test_retries_filter_and_reconciler_errors(self, _mock_client):
+        self.assertIn(OpenEdxFilterException, refund_from_stripe_task.autoretry_for)
+        self.assertIn(CommercetoolsError, refund_from_stripe_task.autoretry_for)
 
     @patch('commerce_coordinator.apps.commercetools.tasks.logger')
     def test_exception_handling(self, mock_logger, mock_client):

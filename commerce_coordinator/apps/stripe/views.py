@@ -112,15 +112,20 @@ class WebhookView(SingleInvocationAPIView):
             sender=self.__class__,
             payment_intent_id=payment_intent.id,
         )
-        self._assert_signal_dispatched(results, payment_intent_id=payment_intent.id)
+        self._assert_signal_dispatched(
+            results,
+            payment_intent_id=payment_intent.id,
+            action="CT finalize",
+        )
         return Response(status=status.HTTP_200_OK)
 
-    def _assert_signal_dispatched(self, results, *, payment_intent_id):
+    def _assert_signal_dispatched(self, results, *, payment_intent_id, action):
         """Raise so Stripe retries if enqueue failed; handle_exception clears the running flag."""
         formatted = format_signal_results(results)
         if not results or any(entry["error"] for entry in formatted.values()):
             logger.error(
-                '[Stripe webhooks] Failed to enqueue CT finalize for PI [%s]: %s',
+                '[Stripe webhooks] Failed to enqueue %s for PI [%s]: %s',
+                action,
                 payment_intent_id,
                 formatted,
             )
@@ -196,7 +201,15 @@ class WebhookView(SingleInvocationAPIView):
             stripe_refund = max(refunds, key=lambda refund: refund['created'])
         else:
             stripe_refund = dict(event_object)
-            payment_intent_id = event_object.payment_intent
+            payment_intent_id = stripe_refund.get("payment_intent")
+            if not payment_intent_id:
+                logger.info(
+                    '[Stripe webhooks] skipping refund event %s with refund ID [%s] '
+                    'because it has no payment intent.',
+                    event.type,
+                    stripe_refund.get("id"),
+                )
+                return Response(status=status.HTTP_200_OK)
             client = CommercetoolsAPIClient()
             try:
                 payment = client.get_payment_by_key(payment_intent_id)
@@ -241,5 +254,9 @@ class WebhookView(SingleInvocationAPIView):
             stripe_refund=stripe_refund,
             order_number=order_number,
         )
-        self._assert_signal_dispatched(results, payment_intent_id=payment_intent_id)
+        self._assert_signal_dispatched(
+            results,
+            payment_intent_id=payment_intent_id,
+            action="refund reconcile",
+        )
         return Response(status=status.HTTP_200_OK)

@@ -7,6 +7,7 @@ from celery.utils.log import get_task_logger
 from commercetools import CommercetoolsError
 from commercetools.platform.models import Payment
 from django.conf import settings
+from openedx_filters.exceptions import OpenEdxFilterException
 from requests import RequestException
 
 from commerce_coordinator.apps.commercetools.catalog_info.constants import (
@@ -134,6 +135,7 @@ def fulfillment_completed_update_ct_line_item_task(
 @shared_task(
     autoretry_for=(
         CommercetoolsError,
+        OpenEdxFilterException,
         RefundReconcileInProgressError,
         RefundSideEffectDispatchError,
     ),
