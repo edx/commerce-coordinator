@@ -30,7 +30,7 @@
 | commerce\_coordinator/apps/commercetools/predicate\_parser.py                          |      109 |       13 |       42 |       10 |     83% |114, 119-\>121, 130-131, 138, 250, 257-258, 269, 316, 326, 341, 350-353 |
 | commerce\_coordinator/apps/commercetools/serializers.py                                |       97 |        0 |        2 |        1 |     99% |   21-\>23 |
 | commerce\_coordinator/apps/commercetools/signals.py                                    |       40 |        2 |        2 |        0 |     95% |   104-108 |
-| commerce\_coordinator/apps/commercetools/stripe\_payment\_finalize.py                  |      148 |       25 |       54 |        7 |     77% |93-94, 107-115, 135-139, 221-\>224, 270-\>273, 362-\>365, 369-381, 387-\>390, 417-418 |
+| commerce\_coordinator/apps/commercetools/stripe\_payment\_finalize.py                  |      160 |       25 |       56 |        7 |     79% |93-94, 107-115, 135-139, 239-\>242, 288-\>291, 383-\>386, 390-402, 408-\>411, 438-439 |
 | commerce\_coordinator/apps/commercetools/sub\_messages/\_\_init\_\_.py                 |        0 |        0 |        0 |        0 |    100% |           |
 | commerce\_coordinator/apps/commercetools/sub\_messages/signals\_delayed.py             |       16 |        0 |        0 |        0 |    100% |           |
 | commerce\_coordinator/apps/commercetools/sub\_messages/signals\_dispatch.py            |        4 |        0 |        0 |        0 |    100% |           |
@@ -54,7 +54,7 @@
 | commerce\_coordinator/apps/commercetools/tests/test\_http\_api\_client.py              |      111 |        0 |        0 |        0 |    100% |           |
 | commerce\_coordinator/apps/commercetools/tests/test\_pipeline.py                       |      206 |        0 |        0 |        0 |    100% |           |
 | commerce\_coordinator/apps/commercetools/tests/test\_signals.py                        |       92 |        0 |        0 |        0 |    100% |           |
-| commerce\_coordinator/apps/commercetools/tests/test\_stripe\_payment\_finalize.py      |      270 |        0 |        6 |        0 |    100% |           |
+| commerce\_coordinator/apps/commercetools/tests/test\_stripe\_payment\_finalize.py      |      327 |        0 |        6 |        0 |    100% |           |
 | commerce\_coordinator/apps/commercetools/tests/test\_tasks.py                          |      380 |        0 |        0 |        0 |    100% |           |
 | commerce\_coordinator/apps/commercetools/tests/test\_utils.py                          |      306 |        0 |        0 |        0 |    100% |           |
 | commerce\_coordinator/apps/commercetools/tests/test\_views.py                          |      197 |        0 |        0 |        0 |    100% |           |
@@ -214,7 +214,7 @@
 | commerce\_coordinator/apps/stripe/utils.py                                             |        2 |        0 |        0 |        0 |    100% |           |
 | commerce\_coordinator/apps/stripe/views.py                                             |       86 |        2 |       14 |        2 |     96% |   82, 127 |
 | commerce\_coordinator/urls.py                                                          |       24 |        0 |        0 |        0 |    100% |           |
-| **TOTAL**                                                                              | **11073** |  **435** |  **840** |   **98** | **95%** |           |
+| **TOTAL**                                                                              | **11142** |  **435** |  **842** |   **98** | **95%** |           |
 
 
 ## Setup coverage badge
