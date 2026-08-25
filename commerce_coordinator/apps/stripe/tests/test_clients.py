@@ -457,6 +457,30 @@ class TestStripeAPIClient(CoordinatorClientTestCase):
             expected_output=None
         )
 
+    def test_refund_payment_intent_returns_pending_refund(self):
+        self.assertJSONClientResponse(
+            uut=self.client.refund_payment_intent,
+            input_kwargs={
+                'order_uuid': '123',
+                'payment_intent_id': TEST_PAYMENT_INTENT_ID,
+                'amount': 100
+            },
+            expected_request={
+                'payment_intent': [TEST_PAYMENT_INTENT_ID],
+                'amount': ['10000']
+            },
+            request_type='query_string',
+            mock_url='https://api.stripe.com/v1/refunds',
+            mock_response={
+                'id': 'mock_pending_id',
+                'status': 'pending'
+            },
+            expected_output={
+                'id': 'mock_pending_id',
+                'status': 'pending'
+            }
+        )
+
     def test_refund_payment_intent_error(self):
         with self.assertRaises(stripe.error.APIError):
             self.assertJSONClientResponse(

@@ -366,6 +366,17 @@ class TestHasFullRefundTransaction(unittest.TestCase):
         payment = gen_payment_with_multiple_transactions(TransactionType.CHARGE, 4900, TransactionType.REFUND, 2500)
         self.assertFalse(has_full_refund_transaction(payment))
 
+    def test_pending_refund_does_not_count_as_fully_refunded(self):
+        payment = gen_payment_with_multiple_transactions(
+            TransactionType.CHARGE,
+            4900,
+            TransactionType.REFUND,
+            4900,
+        )
+        payment.transactions[-1].state = TransactionState.PENDING
+
+        self.assertFalse(has_full_refund_transaction(payment))
+
     def test_has_no_refund_transaction(self):
         payment = gen_payment_with_multiple_transactions(TransactionType.CHARGE, 4900)
         self.assertFalse(has_full_refund_transaction(payment))
@@ -428,6 +439,9 @@ class TestTranslateStripeRefundStatus(unittest.TestCase):
 
     def test_translate_stripe_refund_status_failed(self):
         self.assertEqual(translate_refund_status_to_transaction_status('failed'), TransactionState.FAILURE)
+
+    def test_translate_stripe_refund_status_canceled(self):
+        self.assertEqual(translate_refund_status_to_transaction_status('canceled'), TransactionState.FAILURE)
 
     def test_translate_stripe_refund_status_other(self):
         # Test for an unknown status

@@ -154,5 +154,6 @@ class SingleInvocationAPIView(APIView):
         """Mark view as not running on exception"""
         tag = self.meta_view
         identifier = self.meta_id
-        self.mark_running(tag, identifier, False)
+        if tag is not None and identifier is not None:
+            self.mark_running(tag, identifier, False)
         return super().handle_exception(exc)

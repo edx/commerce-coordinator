@@ -5,6 +5,7 @@ import logging
 
 import ddt
 import mock
+from commercetools import CommercetoolsError
 from django.conf import settings
 from django.contrib.auth import get_user_model
 from django.urls import reverse
@@ -20,6 +21,20 @@ from commerce_coordinator.apps.stripe.views import WebhookView
 User = get_user_model()
 log = logging.getLogger(__name__)
 log_name = 'commerce_coordinator.apps.stripe.views'
+
+
+def _ct_error(code: str, message: str = "boom") -> CommercetoolsError:
+    """Build a CommercetoolsError whose .code property matches production CT errors."""
+    response = mock.MagicMock()
+    err_obj = mock.MagicMock()
+    err_obj.code = code
+    response.errors = [err_obj]
+    return CommercetoolsError(
+        message=message,
+        errors=[{"code": code, "message": message}],
+        response=response,
+        correlation_id="corr",
+    )
 
 
 @ddt.ddt
@@ -303,6 +318,7 @@ class WebhooksViewTests(APITestCase):
         mock_construct_event.return_value = self.mock_stripe_event
         mock_is_legacy.return_value = is_legacy_order
         mock_is_ct_refund.return_value = is_ct_order
+        mock_refund_task.return_value = [(lambda **kwargs: None, 'celery-task-id')]
 
         response = self.client.post(self.url, data=body, format='json', **self.mock_header)
         self.assertEqual(response.status_code, expected_status)
@@ -360,6 +376,7 @@ class WebhooksViewTests(APITestCase):
         self.mock_stripe_event.data.object.metadata = StripeObject()
         self.mock_stripe_event.data.object.metadata.update(metadata)
         mock_construct_event.return_value = self.mock_stripe_event
+        mock_refund_task.return_value = [(lambda **kwargs: None, 'celery-task-id')]
 
         response = self.client.post(self.url, data={}, format='json', **self.mock_header)
 
@@ -369,3 +386,287 @@ class WebhooksViewTests(APITestCase):
         mock_refund_task.assert_called_once()
         mock_is_ct_refund.assert_called()
         mock_is_legacy.assert_called()
+
+    @mock.patch('stripe.Webhook.construct_event')
+    @mock.patch.object(WebhookView, 'mark_running')
+    @mock.patch.object(WebhookView, '_is_running')
+    def test_refund_event_without_event_id_returns_400_without_cache_key(
+        self,
+        mock_is_running,
+        mock_mark_running,
+        mock_construct_event,
+    ):
+        """A malformed event must not use a shared None single-invocation key."""
+        self.mock_stripe_event.id = None
+        self.mock_stripe_event.type = StripeEventType.REFUND_UPDATED.value
+        mock_construct_event.return_value = self.mock_stripe_event
+
+        response = self.client.post(self.url, data={}, format='json', **self.mock_header)
+
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        mock_is_running.assert_not_called()
+        mock_mark_running.assert_not_called()
+
+    @ddt.data(
+        (StripeEventType.REFUND_UPDATED.value, "succeeded"),
+        (StripeEventType.REFUND_FAILED.value, "failed"),
+    )
+    @ddt.unpack
+    @mock.patch('stripe.Webhook.construct_event')
+    @mock.patch('commerce_coordinator.apps.stripe.views.CommercetoolsAPIClient')
+    @mock.patch('commerce_coordinator.apps.stripe.views.payment_refunded_signal.send_robust')
+    def test_refund_object_events_route_to_reconciler(
+        self,
+        event_type,
+        refund_status,
+        mock_refund_signal,
+        mock_ct_client,
+        mock_construct_event,
+    ):
+        refund = StripeObject()
+        refund.update({
+            "id": "re_async",
+            "payment_intent": "pi_async",
+            "amount": 4900,
+            "currency": "usd",
+            "created": 1692942318,
+            "status": refund_status,
+        })
+        self.mock_stripe_event.id = f"evt_refund_object_{refund_status}"
+        self.mock_stripe_event.type = event_type
+        self.mock_stripe_event.data.object = refund
+        mock_construct_event.return_value = self.mock_stripe_event
+        mock_refund_signal.return_value = [(lambda **kwargs: None, "celery-task-id")]
+        payment = mock_ct_client.return_value.get_payment_by_key.return_value
+        payment.id = "payment-1"
+        payment.payment_method_info.payment_interface = "stripe_edx"
+        mock_ct_client.return_value.get_order_by_payment_id.return_value.order_number = "2U-123"
+
+        response = self.client.post(self.url, data={}, format='json', **self.mock_header)
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        mock_refund_signal.assert_called_once_with(
+            sender=WebhookView,
+            payment_intent_id="pi_async",
+            stripe_refund=dict(refund),
+            order_number="2U-123",
+        )
+
+    @mock.patch('stripe.Webhook.construct_event')
+    @mock.patch('commerce_coordinator.apps.stripe.views.CommercetoolsAPIClient')
+    @mock.patch('commerce_coordinator.apps.stripe.views.payment_refunded_signal.send_robust')
+    def test_pending_event_does_not_suppress_later_terminal_event(
+        self,
+        mock_refund_signal,
+        mock_ct_client,
+        mock_construct_event,
+    ):
+        payment = mock_ct_client.return_value.get_payment_by_key.return_value
+        payment.id = "payment-1"
+        payment.payment_method_info.payment_interface = "stripe_edx"
+        mock_ct_client.return_value.get_order_by_payment_id.return_value.order_number = "2U-123"
+        mock_refund_signal.return_value = [(lambda **kwargs: None, "celery-task-id")]
+
+        def _event(event_id, refund_status):
+            refund = StripeObject()
+            refund.update({
+                "id": "re_same",
+                "payment_intent": "pi_same",
+                "amount": 4900,
+                "currency": "usd",
+                "created": 1692942318,
+                "status": refund_status,
+            })
+            event = mock.Mock()
+            event.id = event_id
+            event.type = StripeEventType.REFUND_UPDATED.value
+            event.data.object = refund
+            return event
+
+        mock_construct_event.side_effect = [
+            _event("evt_pending", "pending"),
+            _event("evt_succeeded", "succeeded"),
+        ]
+
+        first = self.client.post(self.url, data={}, format='json', **self.mock_header)
+        second = self.client.post(self.url, data={}, format='json', **self.mock_header)
+
+        self.assertEqual(first.status_code, status.HTTP_200_OK)
+        self.assertEqual(second.status_code, status.HTTP_200_OK)
+        self.assertEqual(mock_refund_signal.call_count, 2)
+
+    @mock.patch('stripe.Webhook.construct_event')
+    @mock.patch('commerce_coordinator.apps.stripe.views.CommercetoolsAPIClient')
+    @mock.patch('commerce_coordinator.apps.stripe.views.payment_refunded_signal.send_robust')
+    @mock.patch('commerce_coordinator.apps.commercetools.stripe_refund_reconcile.acquire_task_lock')
+    @mock.patch('commerce_coordinator.apps.core.tasks.acquire_task_lock')
+    def test_refund_webhook_dispatches_without_acquiring_reconcile_lock(
+        self,
+        mock_core_acquire_lock,
+        mock_reconcile_acquire_lock,
+        mock_refund_signal,
+        mock_ct_client,
+        mock_construct_event,
+    ):
+        refund = StripeObject()
+        refund.update({
+            "id": "re_unlocked",
+            "payment_intent": "pi_unlocked",
+            "amount": 4900,
+            "currency": "usd",
+            "created": 1692942318,
+            "status": "succeeded",
+        })
+        self.mock_stripe_event.id = "evt_unlocked"
+        self.mock_stripe_event.type = StripeEventType.REFUND_UPDATED.value
+        self.mock_stripe_event.data.object = refund
+        mock_construct_event.return_value = self.mock_stripe_event
+        mock_refund_signal.return_value = [(lambda **kwargs: None, "celery-task-id")]
+        payment = mock_ct_client.return_value.get_payment_by_key.return_value
+        payment.id = "payment-1"
+        payment.payment_method_info.payment_interface = "stripe_edx"
+        mock_ct_client.return_value.get_order_by_payment_id.return_value.order_number = "2U-123"
+
+        response = self.client.post(self.url, data={}, format='json', **self.mock_header)
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        mock_refund_signal.assert_called_once()
+        # The worker owns the refund lock; the webhook must only enqueue.
+        mock_core_acquire_lock.assert_not_called()
+        mock_reconcile_acquire_lock.assert_not_called()
+
+    @mock.patch('stripe.Webhook.construct_event')
+    @mock.patch('commerce_coordinator.apps.stripe.views.CommercetoolsAPIClient')
+    @mock.patch('commerce_coordinator.apps.stripe.views.payment_refunded_signal.send_robust')
+    def test_refund_webhook_skips_missing_ct_payment(
+        self,
+        mock_refund_signal,
+        mock_ct_client,
+        mock_construct_event,
+    ):
+        refund = StripeObject()
+        refund.update({
+            "id": "re_legacy",
+            "payment_intent": "pi_legacy",
+            "amount": 4900,
+            "currency": "usd",
+            "created": 1692942318,
+            "status": "succeeded",
+        })
+        self.mock_stripe_event.id = "evt_legacy_refund"
+        self.mock_stripe_event.type = StripeEventType.REFUND_UPDATED.value
+        self.mock_stripe_event.data.object = refund
+        mock_construct_event.return_value = self.mock_stripe_event
+        mock_ct_client.return_value.get_payment_by_key.side_effect = _ct_error("ResourceNotFound")
+
+        response = self.client.post(self.url, data={}, format='json', **self.mock_header)
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        mock_refund_signal.assert_not_called()
+
+    @mock.patch('stripe.Webhook.construct_event')
+    @mock.patch('commerce_coordinator.apps.stripe.views.CommercetoolsAPIClient')
+    @mock.patch('commerce_coordinator.apps.stripe.views.payment_refunded_signal.send_robust')
+    def test_refund_webhook_skips_missing_payment_intent(
+        self,
+        mock_refund_signal,
+        mock_ct_client,
+        mock_construct_event,
+    ):
+        refund = StripeObject()
+        refund.update({
+            "id": "re_no_pi",
+            "amount": 4900,
+            "currency": "usd",
+            "created": 1692942318,
+            "status": "succeeded",
+        })
+        self.mock_stripe_event.id = "evt_no_pi"
+        self.mock_stripe_event.type = StripeEventType.REFUND_UPDATED.value
+        self.mock_stripe_event.data.object = refund
+        mock_construct_event.return_value = self.mock_stripe_event
+
+        response = self.client.post(self.url, data={}, format='json', **self.mock_header)
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        mock_ct_client.return_value.get_payment_by_key.assert_not_called()
+        mock_refund_signal.assert_not_called()
+
+    @mock.patch('stripe.Webhook.construct_event')
+    @mock.patch('commerce_coordinator.apps.stripe.views.CommercetoolsAPIClient')
+    @mock.patch('commerce_coordinator.apps.stripe.views.payment_refunded_signal.send_robust')
+    def test_refund_webhook_rethrows_ct_outage(
+        self,
+        mock_refund_signal,
+        mock_ct_client,
+        mock_construct_event,
+    ):
+        refund = StripeObject()
+        refund.update({
+            "id": "re_ct_outage",
+            "payment_intent": "pi_ct_outage",
+            "amount": 4900,
+            "currency": "usd",
+            "created": 1692942318,
+            "status": "succeeded",
+        })
+        self.mock_stripe_event.id = "evt_ct_outage"
+        self.mock_stripe_event.type = StripeEventType.REFUND_UPDATED.value
+        self.mock_stripe_event.data.object = refund
+        mock_construct_event.return_value = self.mock_stripe_event
+        mock_ct_client.return_value.get_payment_by_key.side_effect = _ct_error("ConcurrentModification")
+
+        # Django's test client re-raises; production surfaces this as 5xx so Stripe retries.
+        with self.assertRaises(CommercetoolsError):
+            self.client.post(self.url, data={}, format='json', **self.mock_header)
+
+        mock_refund_signal.assert_not_called()
+
+    @mock.patch('stripe.Webhook.construct_event')
+    @mock.patch('commerce_coordinator.apps.stripe.views.CommercetoolsAPIClient')
+    @mock.patch('commerce_coordinator.apps.stripe.views.payment_refunded_signal.send_robust')
+    def test_refund_dispatch_failure_returns_503_and_clears_event_key(
+        self,
+        mock_refund_signal,
+        mock_ct_client,
+        mock_construct_event,
+    ):
+        refund = StripeObject()
+        refund.update({
+            "id": "re_dispatch_failure",
+            "payment_intent": "pi_dispatch_failure",
+            "amount": 4900,
+            "currency": "usd",
+            "created": 1692942318,
+            "status": "succeeded",
+        })
+        self.mock_stripe_event.id = "evt_refund_dispatch_failure"
+        self.mock_stripe_event.type = StripeEventType.REFUND_UPDATED.value
+        self.mock_stripe_event.data.object = refund
+        mock_construct_event.return_value = self.mock_stripe_event
+        payment = mock_ct_client.return_value.get_payment_by_key.return_value
+        payment.id = "payment-1"
+        payment.payment_method_info.payment_interface = "stripe_edx"
+        mock_ct_client.return_value.get_order_by_payment_id.return_value.order_number = "2U-123"
+
+        def _receiver(**kwargs):
+            pass
+
+        mock_refund_signal.return_value = [(_receiver, RuntimeError("Celery broker down"))]
+
+        with LogCapture(log_name) as log_capture:
+            response = self.client.post(self.url, data={}, format='json', **self.mock_header)
+
+        self.assertEqual(response.status_code, status.HTTP_503_SERVICE_UNAVAILABLE)
+        self.assertFalse(
+            WebhookView._is_running(  # pylint: disable=protected-access
+                WebhookView.__name__,
+                "evt_refund_dispatch_failure",
+            )
+        )
+        self.assertTrue(
+            any(
+                "Failed to enqueue refund reconcile" in rec.getMessage()
+                for rec in log_capture.records
+            )
+        )

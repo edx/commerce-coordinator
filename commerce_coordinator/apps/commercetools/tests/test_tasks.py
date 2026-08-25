@@ -4,12 +4,13 @@ Commercetools app Task Tests
 
 import json
 import logging
-from unittest.mock import Mock, call, patch
+from unittest.mock import Mock, patch
 
 import stripe
 from commercetools import CommercetoolsError
 from commercetools.platform.models import Money, TransactionType
 from django.test import TestCase
+from openedx_filters.exceptions import OpenEdxFilterException
 from requests.exceptions import RequestException
 
 from commerce_coordinator.apps.commercetools.catalog_info.constants import EdXFieldNames
@@ -30,7 +31,6 @@ from commerce_coordinator.apps.commercetools.tests.conftest import (
     gen_program_order
 )
 from commerce_coordinator.apps.commercetools.tests.constants import (
-    EXAMPLE_RETURNED_ORDER_STRIPE_CLIENT_PAYLOAD,
     EXAMPLE_RETURNED_ORDER_STRIPE_SIGNAL_PAYLOAD,
     EXAMPLE_UPDATE_LINE_ITEM_SIGNAL_PAYLOAD
 )
@@ -96,6 +96,11 @@ class ReturnedOrderfromStripeTaskTest(TestCase):
 
     def setUp(self):
         User.objects.create(username='test-user', lms_user_id=4)
+        reconcile_patcher = patch(
+            'commerce_coordinator.apps.commercetools.tasks.reconcile_stripe_refund'
+        )
+        self.mock_reconcile_refund = reconcile_patcher.start()
+        self.addCleanup(reconcile_patcher.stop)
 
     def test_correct_arguments_passed(self, mock_client):
         '''
@@ -113,10 +118,11 @@ class ReturnedOrderfromStripeTaskTest(TestCase):
         _ = returned_uut(*self.unpack_for_uut(EXAMPLE_RETURNED_ORDER_STRIPE_SIGNAL_PAYLOAD))
         logger.info('mock_client().mock_calls: %s', mock_client().mock_calls)
 
-        mock_client().create_return_payment_transaction.assert_called_once_with(
-            payment_id=mock_payment.id,
-            payment_version=mock_payment.version,
-            refund=mock_stripe_refund
+        self.mock_reconcile_refund.assert_called_once_with(
+            EXAMPLE_RETURNED_ORDER_STRIPE_SIGNAL_PAYLOAD['payment_intent_id'],
+            mock_stripe_refund,
+            order_number=None,
+            source="webhook",
         )
 
     def test_full_refund_already_exists(self, mock_client):
@@ -132,22 +138,13 @@ class ReturnedOrderfromStripeTaskTest(TestCase):
 
         mock_client.return_value.get_payment_by_key.return_value = mock_payment
 
-        payment_intent_id = EXAMPLE_RETURNED_ORDER_STRIPE_SIGNAL_PAYLOAD['payment_intent_id']
+        refund_from_stripe_task(*self.unpack_for_uut(EXAMPLE_RETURNED_ORDER_STRIPE_SIGNAL_PAYLOAD))
 
-        with patch('commerce_coordinator.apps.commercetools.tasks.logger') as mock_logger:
-            result = refund_from_stripe_task(*self.unpack_for_uut(EXAMPLE_RETURNED_ORDER_STRIPE_SIGNAL_PAYLOAD))
-            self.assertIsNone(result)
+        self.mock_reconcile_refund.assert_called_once()
 
-            # Check that both info messages were logged in the expected order
-            mock_logger.info.assert_has_calls([
-                call(
-                    f"[refund_from_stripe_task] "
-                    f"Initiating creation of CT payment's refund transaction object "
-                    f"for payment Intent ID {payment_intent_id}."),
-                call(f"[refund_from_stripe_task] Event 'charge.refunded' received, "
-                     f"but Payment with ID {mock_payment.id} "
-                     f"already has a full refund. Skipping task to add refund transaction")
-            ])
+    def test_retries_filter_and_reconciler_errors(self, _mock_client):
+        self.assertIn(OpenEdxFilterException, refund_from_stripe_task.autoretry_for)
+        self.assertIn(CommercetoolsError, refund_from_stripe_task.autoretry_for)
 
     @patch('commerce_coordinator.apps.commercetools.tasks.logger')
     def test_exception_handling(self, mock_logger, mock_client):
@@ -158,7 +155,7 @@ class ReturnedOrderfromStripeTaskTest(TestCase):
         mock_payment = gen_payment()
         mock_payment.id = 'f988e0c5-ea44-4111-a7f2-39ecf6af9840'
         mock_client.return_value.get_payment_by_key.return_value = mock_payment
-        mock_client().create_return_payment_transaction.side_effect = CommercetoolsError(
+        self.mock_reconcile_refund.side_effect = CommercetoolsError(
             message="Could not create return transaction",
             errors="Some error message",
             response={},
@@ -168,12 +165,7 @@ class ReturnedOrderfromStripeTaskTest(TestCase):
         with self.assertRaises(CommercetoolsError):
             returned_uut(*self.unpack_for_uut(EXAMPLE_RETURNED_ORDER_STRIPE_SIGNAL_PAYLOAD))
 
-        mock_logger.error.assert_called_once_with(
-            f"[refund_from_stripe_task] Unable to create CT payment's refund transaction "
-            f"object for [ {mock_payment.id} ] "
-            f"on Stripe refund {EXAMPLE_RETURNED_ORDER_STRIPE_CLIENT_PAYLOAD['stripe_refund']['id']} "
-            f"with error Some error message and correlation id 123456"
-        )
+        mock_logger.error.assert_not_called()
 
 
 @patch("commerce_coordinator.apps.commercetools.tasks.CommercetoolsAPIClient")

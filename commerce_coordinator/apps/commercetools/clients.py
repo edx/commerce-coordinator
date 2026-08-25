@@ -9,7 +9,7 @@ import uuid
 from decimal import Decimal
 from functools import wraps
 from types import SimpleNamespace
-from typing import Generic, List, NamedTuple, Optional, Tuple, TypedDict, TypeVar, Union
+from typing import Generic, List, NamedTuple, NotRequired, Optional, Tuple, TypedDict, TypeVar, Union
 
 import requests
 from commercetools import Client, CommercetoolsError
@@ -48,6 +48,7 @@ from commercetools.platform.models import (
     OrderTransitionLineItemStateAction,
     Payment,
     PaymentAddTransactionAction,
+    PaymentChangeTransactionStateAction,
     PaymentDraft,
     PaymentMethodInfo,
     PaymentResourceIdentifier,
@@ -142,6 +143,7 @@ class Refund(TypedDict):
     currency: str
     created: Union[str, int]
     status: str
+    payment_intent: NotRequired[str]
 
 
 class ProcessedRefund(TypedDict):
@@ -956,6 +958,40 @@ class CommercetoolsAPIClient:
                 context,
             )
             raise err
+
+    def change_refund_transaction_state(
+        self,
+        payment_id: str,
+        payment_version: int,
+        transaction_id: str,
+        state: TransactionState,
+    ) -> Payment:
+        """Change the state of an existing CommerceTools refund transaction."""
+        logger.info(
+            "[CommercetoolsAPIClient] - Changing refund transaction %s on payment %s to %s",
+            transaction_id,
+            payment_id,
+            state,
+        )
+        try:
+            return self.base_client.payments.update_by_id(
+                id=payment_id,
+                version=payment_version,
+                actions=[
+                    PaymentChangeTransactionStateAction(
+                        transaction_id=transaction_id,
+                        state=state,
+                    )
+                ],
+            )
+        except CommercetoolsError as err:
+            handle_commercetools_error(
+                "[CommercetoolsAPIClient.change_refund_transaction_state]",
+                err,
+                f"Unable to change refund transaction {transaction_id} "
+                f"on payment {payment_id} to {state}",
+            )
+            raise
 
     def create_charge_payment_transaction(
         self,

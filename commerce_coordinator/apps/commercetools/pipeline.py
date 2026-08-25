@@ -34,6 +34,7 @@ from commerce_coordinator.apps.rollout.utils import (
     is_commercetools_line_item_already_refunded
 )
 from commerce_coordinator.apps.rollout.waffle import is_redirect_to_commercetools_enabled_for_user
+from commerce_coordinator.apps.stripe.constants import StripeRefundStatus
 
 log = getLogger(__name__)
 
@@ -313,7 +314,15 @@ class UpdateCommercetoolsOrderReturnPaymentStatus(PipelineStep):
         refunded_line_item_refunds = kwargs['refunded_line_item_refunds']
         refund_response = kwargs.get('refund_response', {})
 
-        interaction_id = refund_response.get('id') if isinstance(refund_response, dict) else None
+        interaction_id = refund_response.get('id') if hasattr(refund_response, 'get') else None
+        refund_status = refund_response.get('status') if hasattr(refund_response, 'get') else None
+        is_stripe_async_refund = (
+            kwargs.get('psp') == EDX_STRIPE_PAYMENT_INTERFACE_NAME
+            and refund_status in {
+                StripeRefundStatus.REFUND_PENDING.value,
+                StripeRefundStatus.REFUND_SUCCESS.value,
+            }
+        )
 
         ct_api_client = CommercetoolsAPIClient()
         updated_order = ct_api_client.update_return_payment_state_after_successful_refund(
@@ -324,11 +333,13 @@ class UpdateCommercetoolsOrderReturnPaymentStatus(PipelineStep):
             refunded_line_item_refunds=refunded_line_item_refunds,
             payment_intent_id=kwargs['payment_intent_id'],
             interaction_id=interaction_id,
-            payment_state=payment_state
+            payment_state=payment_state,
+            should_transition_state=not is_stripe_async_refund,
         )
 
         return {
-            "returned_order": updated_order
+            "returned_order": updated_order,
+            "refund_pending": refund_status == StripeRefundStatus.REFUND_PENDING.value,
         }
 
 
