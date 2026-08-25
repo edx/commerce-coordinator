@@ -160,6 +160,24 @@ def _ensure_pending_fulfilment(client, order):
     )
 
 
+def _heal_existing_order(client, order, payment_intent_id, payment, metadata):
+    """Heal fulfillment and PI metadata without re-emitting analytics."""
+    _ensure_pending_fulfilment(client, order)
+    if not metadata.get("order_id") or metadata.get("ct_payment_id") != payment.id:
+        _backfill_pi_metadata(
+            payment_intent_id,
+            order.id,
+            payment.id,
+            existing_metadata=metadata,
+        )
+    return FinalizeResult(
+        order_id=order.id,
+        order_number=order.order_number or "",
+        payment_id=payment.id,
+        already_existed=True,
+    )
+
+
 def finalize_ct_order_from_stripe_pi(
     payment_intent_id: str,
     *,
@@ -300,25 +318,28 @@ def _finalize_ct_order_from_stripe_pi_locked(
             "skipping creation; healing PENDING_FULFILMENT and PI metadata",
             existing_order.id, payment.id, payment_intent_id,
         )
-        # Partial-success heal: order may exist while line items are still Initial.
-        _ensure_pending_fulfilment(client, existing_order)
-        if not metadata.get("order_id") or metadata.get("ct_payment_id") != payment.id:
-            _backfill_pi_metadata(
-                payment_intent_id,
-                existing_order.id,
-                payment.id,
-                existing_metadata=metadata,
-            )
-        return FinalizeResult(
-            order_id=existing_order.id,
-            order_number=existing_order.order_number or "",
-            payment_id=payment.id,
-            already_existed=True,
+        return _heal_existing_order(
+            client, existing_order, payment_intent_id, payment, metadata,
         )
 
     # --- Load cart and create order ---
     cart = client.get_cart_by_id(ct_cart_id)
-    order = client.create_order_from_cart(cart)
+    try:
+        order = client.create_order_from_cart(cart)
+    except CommercetoolsError as create_error:
+        try:
+            existing_order = client.get_order_by_payment_id(payment.id)
+        except ValueError:
+            existing_order = None
+        if existing_order is None:
+            raise create_error
+        logger.info(
+            "[finalize_ct_order] Order %s appeared after create failed for payment %s; healing",
+            existing_order.id, payment.id,
+        )
+        return _heal_existing_order(
+            client, existing_order, payment_intent_id, payment, metadata,
+        )
 
     # --- Transition line items → PENDING_FULFILMENT ---
     order = _ensure_pending_fulfilment(client, order)
