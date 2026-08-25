@@ -1,6 +1,7 @@
 """
 Tests for the stripe views.
 """
+import inspect
 import logging
 
 import ddt
@@ -398,8 +399,6 @@ class WebhooksViewTests(APITestCase):
     )
     @ddt.unpack
     @mock.patch('stripe.Webhook.construct_event')
-    @mock.patch('commerce_coordinator.apps.stripe.views.release_task_lock')
-    @mock.patch('commerce_coordinator.apps.stripe.views.acquire_task_lock', return_value=True)
     @mock.patch('commerce_coordinator.apps.stripe.views.CommercetoolsAPIClient')
     @mock.patch('commerce_coordinator.apps.stripe.views.payment_refunded_signal.send_robust')
     def test_refund_object_events_route_to_reconciler(
@@ -408,8 +407,6 @@ class WebhooksViewTests(APITestCase):
         refund_status,
         mock_refund_signal,
         mock_ct_client,
-        _mock_acquire,
-        _mock_release,
         mock_construct_event,
     ):
         refund = StripeObject()
@@ -442,16 +439,12 @@ class WebhooksViewTests(APITestCase):
         )
 
     @mock.patch('stripe.Webhook.construct_event')
-    @mock.patch('commerce_coordinator.apps.stripe.views.release_task_lock')
-    @mock.patch('commerce_coordinator.apps.stripe.views.acquire_task_lock', return_value=True)
     @mock.patch('commerce_coordinator.apps.stripe.views.CommercetoolsAPIClient')
     @mock.patch('commerce_coordinator.apps.stripe.views.payment_refunded_signal.send_robust')
     def test_pending_event_does_not_suppress_later_terminal_event(
         self,
         mock_refund_signal,
         mock_ct_client,
-        _mock_acquire,
-        _mock_release,
         mock_construct_event,
     ):
         payment = mock_ct_client.return_value.get_payment_by_key.return_value
@@ -489,27 +482,28 @@ class WebhooksViewTests(APITestCase):
         self.assertEqual(mock_refund_signal.call_count, 2)
 
     @mock.patch('stripe.Webhook.construct_event')
-    @mock.patch('commerce_coordinator.apps.stripe.views.acquire_task_lock', return_value=False)
     @mock.patch('commerce_coordinator.apps.stripe.views.CommercetoolsAPIClient')
-    def test_refund_lock_contention_returns_503(
+    @mock.patch('commerce_coordinator.apps.stripe.views.payment_refunded_signal.send_robust')
+    def test_refund_webhook_does_not_acquire_reconcile_lock(
         self,
+        mock_refund_signal,
         mock_ct_client,
-        _mock_acquire,
         mock_construct_event,
     ):
         refund = StripeObject()
         refund.update({
-            "id": "re_locked",
-            "payment_intent": "pi_locked",
+            "id": "re_unlocked",
+            "payment_intent": "pi_unlocked",
             "amount": 4900,
             "currency": "usd",
             "created": 1692942318,
             "status": "succeeded",
         })
-        self.mock_stripe_event.id = "evt_locked"
+        self.mock_stripe_event.id = "evt_unlocked"
         self.mock_stripe_event.type = StripeEventType.REFUND_UPDATED.value
         self.mock_stripe_event.data.object = refund
         mock_construct_event.return_value = self.mock_stripe_event
+        mock_refund_signal.return_value = [(lambda **kwargs: None, "celery-task-id")]
         payment = mock_ct_client.return_value.get_payment_by_key.return_value
         payment.id = "payment-1"
         payment.payment_method_info.payment_interface = "stripe_edx"
@@ -517,25 +511,20 @@ class WebhooksViewTests(APITestCase):
 
         response = self.client.post(self.url, data={}, format='json', **self.mock_header)
 
-        self.assertEqual(response.status_code, status.HTTP_503_SERVICE_UNAVAILABLE)
-        self.assertFalse(
-            WebhookView._is_running(  # pylint: disable=protected-access
-                WebhookView.__name__,
-                "evt_locked",
-            )
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        mock_refund_signal.assert_called_once()
+        self.assertNotIn(
+            'acquire_task_lock',
+            inspect.getsource(WebhookView._handle_refund_event),  # pylint: disable=protected-access
         )
 
     @mock.patch('stripe.Webhook.construct_event')
-    @mock.patch('commerce_coordinator.apps.stripe.views.release_task_lock')
-    @mock.patch('commerce_coordinator.apps.stripe.views.acquire_task_lock', return_value=True)
     @mock.patch('commerce_coordinator.apps.stripe.views.CommercetoolsAPIClient')
     @mock.patch('commerce_coordinator.apps.stripe.views.payment_refunded_signal.send_robust')
     def test_refund_dispatch_failure_returns_503_and_clears_event_key(
         self,
         mock_refund_signal,
         mock_ct_client,
-        _mock_acquire,
-        _mock_release,
         mock_construct_event,
     ):
         refund = StripeObject()

@@ -194,6 +194,7 @@ def _reconcile_stripe_refund_locked(
             payment,
             return_items,
             stripe_refund,
+            payment_intent_id=payment_intent_id,
             should_transition_state=False,
         )
         logger.info(
@@ -210,6 +211,7 @@ def _reconcile_stripe_refund_locked(
                 payment,
                 return_items,
                 stripe_refund,
+                payment_intent_id=payment_intent_id,
                 payment_state=ReturnPaymentState.NOT_REFUNDED,
             )
         logger.warning(
@@ -227,6 +229,7 @@ def _reconcile_stripe_refund_locked(
             payment,
             return_items,
             stripe_refund,
+            payment_intent_id=payment_intent_id,
             payment_state=ReturnPaymentState.REFUNDED,
         )
 
@@ -395,6 +398,7 @@ def _update_return_state(
     return_items,
     stripe_refund,
     *,
+    payment_intent_id: str | None = None,
     payment_state: ReturnPaymentState = ReturnPaymentState.REFUNDED,
     should_transition_state: bool = True,
 ):
@@ -406,7 +410,7 @@ def _update_return_state(
         return_line_item_return_ids=return_item_ids,
         return_line_entitlement_ids={},
         refunded_line_item_refunds={},
-        payment_intent_id=stripe_refund["payment_intent"],
+        payment_intent_id=stripe_refund.get("payment_intent") or payment_intent_id or "",
         interaction_id=stripe_refund["id"],
         payment_state=payment_state,
         payment=payment,

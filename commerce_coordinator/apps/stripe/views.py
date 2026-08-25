@@ -12,13 +12,8 @@ from rest_framework.response import Response
 
 from commerce_coordinator.apps.commercetools.catalog_info.constants import EDX_STRIPE_PAYMENT_INTERFACE_NAME
 from commerce_coordinator.apps.commercetools.clients import CommercetoolsAPIClient
-from commerce_coordinator.apps.commercetools.stripe_refund_reconcile import (
-    REFUND_RECONCILE_LOCK_EXPIRE,
-    refund_reconcile_lock_key
-)
 from commerce_coordinator.apps.core.constants import PaymentState
 from commerce_coordinator.apps.core.signal_helpers import format_signal_results
-from commerce_coordinator.apps.core.tasks import acquire_task_lock, release_task_lock
 from commerce_coordinator.apps.core.views import SingleInvocationAPIView
 from commerce_coordinator.apps.rollout.utils import is_commercetools_stripe_refund, is_legacy_order
 from commerce_coordinator.apps.stripe.constants import StripeEventType
@@ -227,23 +222,11 @@ class WebhookView(SingleInvocationAPIView):
             order_number,
         )
 
-        lock_key = refund_reconcile_lock_key(stripe_refund['id'])
-        if not acquire_task_lock(lock_key, REFUND_RECONCILE_LOCK_EXPIRE):
-            logger.warning(
-                '[Stripe webhooks] refund %s is already reconciling; returning retryable failure',
-                stripe_refund['id'],
-            )
-            raise StripeWebhookDispatchAPIError
-
-        try:
-            results = payment_refunded_signal.send_robust(
-                sender=self.__class__,
-                payment_intent_id=payment_intent_id,
-                stripe_refund=stripe_refund,
-                order_number=order_number,
-            )
-            self._assert_signal_dispatched(results, payment_intent_id=payment_intent_id)
-        finally:
-            release_task_lock(lock_key)
-
+        results = payment_refunded_signal.send_robust(
+            sender=self.__class__,
+            payment_intent_id=payment_intent_id,
+            stripe_refund=stripe_refund,
+            order_number=order_number,
+        )
+        self._assert_signal_dispatched(results, payment_intent_id=payment_intent_id)
         return Response(status=status.HTTP_200_OK)

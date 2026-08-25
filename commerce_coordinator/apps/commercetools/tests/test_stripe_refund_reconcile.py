@@ -10,6 +10,7 @@ from edx_django_utils.cache import TieredCache
 from commerce_coordinator.apps.commercetools.stripe_refund_reconcile import (
     _emit_segment_refund,
     _side_effect_cache_key,
+    _update_return_state,
     reconcile_stripe_refund
 )
 
@@ -47,6 +48,7 @@ def _order(payment_state=ReturnPaymentState.INITIAL):
     return SimpleNamespace(
         id="order-1",
         order_number="2U-123",
+        version=1,
         return_info=[
             SimpleNamespace(
                 items=[
@@ -406,3 +408,23 @@ def test_segment_uses_stripe_refund_id_as_message_id(_mock_lms_id, mock_track):
     mock_track.assert_called_once()
     assert mock_track.call_args.kwargs["message_id"] == "re_async"
     assert mock_track.call_args.kwargs["event"] == "Order Refunded"
+
+
+def test_update_return_state_uses_reconciler_payment_intent_when_refund_omits_it():
+    client = MagicMock()
+    refund = _refund()
+    del refund["payment_intent"]
+    return_items = [SimpleNamespace(id="return-1", line_item_id="line-1")]
+
+    _update_return_state(
+        client,
+        _order(),
+        _payment(),
+        return_items,
+        refund,
+        payment_intent_id="pi_async",
+    )
+
+    assert client.update_return_payment_state_after_successful_refund.call_args.kwargs[
+        "payment_intent_id"
+    ] == "pi_async"
