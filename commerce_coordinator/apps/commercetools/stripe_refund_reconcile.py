@@ -379,16 +379,20 @@ def _emit_segment_refund(client, order, stripe_refund: Refund, return_items) -> 
     properties["products"] = [
         get_product_data(item, is_bundle) for item in selected_line_items
     ]
-    if properties["products"]:
-        properties["title"] = ", ".join(
-            item.name["en-US"] for item in selected_line_items
+    if not properties["products"]:
+        raise RefundSideEffectDispatchError(
+            f"Unable to emit Order Refunded for refund {stripe_refund['id']}: "
+            "no matching line items to include as products"
         )
-        track(
-            lms_user_id=lms_user_id,
-            event="Order Refunded",
-            properties=properties,
-            message_id=stripe_refund["id"],
-        )
+    properties["title"] = ", ".join(
+        item.name["en-US"] for item in selected_line_items
+    )
+    track(
+        lms_user_id=lms_user_id,
+        event="Order Refunded",
+        properties=properties,
+        message_id=stripe_refund["id"],
+    )
 
 
 def _update_return_state(

@@ -146,12 +146,17 @@ def refund_from_stripe_task(
     source: str = "webhook",
 ):
     """
-    Celery task for handling a refund registered in the Stripe dashboard.
-    Creates a refund payment transaction record via the Commercetools API.
+    Celery task that reconciles a Stripe refund against CommerceTools.
+
+    Delegates to ``reconcile_stripe_refund``, which creates or updates the CT
+    refund transaction, may update Return payment state, and on confirmed
+    success dispatches LMS revoke and Segment ``Order Refunded`` side effects.
 
     Args:
-        refund (dict): Refund object
         payment_intent_id (str): The Stripe payment intent identifier
+        stripe_refund (dict): Stripe Refund object
+        order_number (str | None): Optional CT order number
+        source (str): Caller identifier (for example ``webhook``)
     """
     return reconcile_stripe_refund(
         payment_intent_id,

@@ -8,8 +8,10 @@ from commercetools.platform.models import ReturnPaymentState, TransactionState, 
 from edx_django_utils.cache import TieredCache
 
 from commerce_coordinator.apps.commercetools.stripe_refund_reconcile import (
+    RefundSideEffectDispatchError,
     _emit_segment_refund,
     _side_effect_cache_key,
+    _side_effect_completed,
     _update_return_state,
     reconcile_stripe_refund
 )
@@ -224,6 +226,32 @@ class TestStripeRefundReconcile:
         mock_segment.assert_called_once()
         assert result.side_effects_completed is True
 
+    def test_segment_emit_failure_does_not_mark_segment_complete(
+        self,
+        mock_revoke,
+        mock_segment,
+        mock_update_return,
+        _mock_acquire,
+        _mock_release,
+    ):
+        client = MagicMock()
+        client.get_payment_by_key.return_value = _payment(_transaction(TransactionState.SUCCESS))
+        client.get_order_by_payment_id.return_value = _order(ReturnPaymentState.REFUNDED)
+        mock_segment.side_effect = RefundSideEffectDispatchError("no products")
+
+        with pytest.raises(RefundSideEffectDispatchError):
+            reconcile_stripe_refund(
+                "pi_async",
+                _refund(),
+                source="webhook",
+                client=client,
+            )
+
+        mock_revoke.assert_called_once()
+        mock_update_return.assert_not_called()
+        assert _side_effect_completed("re_async", "lms_revoke")
+        assert not _side_effect_completed("re_async", "segment")
+
     def test_already_refunded_dispatches_unmarked_side_effects(
         self,
         mock_revoke,
@@ -408,6 +436,39 @@ def test_segment_uses_stripe_refund_id_as_message_id(_mock_lms_id, mock_track):
     mock_track.assert_called_once()
     assert mock_track.call_args.kwargs["message_id"] == "re_async"
     assert mock_track.call_args.kwargs["event"] == "Order Refunded"
+
+
+@patch("commerce_coordinator.apps.commercetools.stripe_refund_reconcile.track")
+@patch("commerce_coordinator.apps.commercetools.stripe_refund_reconcile.get_edx_lms_user_id", return_value="lms-1")
+def test_segment_raises_when_no_products_can_be_built(_mock_lms_id, mock_track):
+    client = MagicMock()
+    client.get_customer_by_id.return_value = SimpleNamespace(id="cust-1")
+    order = SimpleNamespace(
+        id="order-1",
+        customer_id="cust-1",
+        line_items=[],
+        return_info=[],
+        custom=None,
+        total_price=SimpleNamespace(cent_amount=4900, currency_code="USD"),
+        taxed_price=None,
+        discount_on_total_price=None,
+        discount_codes=[],
+        payment_info=None,
+    )
+
+    with patch(
+        "commerce_coordinator.apps.commercetools.stripe_refund_reconcile.prepare_segment_event_properties",
+        return_value={"products": []},
+    ):
+        with pytest.raises(RefundSideEffectDispatchError, match="no matching line items"):
+            _emit_segment_refund(
+                client,
+                order,
+                _refund(),
+                [SimpleNamespace(id="return-1", line_item_id="line-missing")],
+            )
+
+    mock_track.assert_not_called()
 
 
 def test_update_return_state_uses_reconciler_payment_intent_when_refund_omits_it():
