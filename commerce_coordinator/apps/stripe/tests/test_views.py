@@ -498,8 +498,12 @@ class WebhooksViewTests(APITestCase):
     @mock.patch('stripe.Webhook.construct_event')
     @mock.patch('commerce_coordinator.apps.stripe.views.CommercetoolsAPIClient')
     @mock.patch('commerce_coordinator.apps.stripe.views.payment_refunded_signal.send_robust')
-    def test_refund_updated_dispatches_signal(
+    @mock.patch('commerce_coordinator.apps.commercetools.stripe_refund_reconcile.acquire_task_lock')
+    @mock.patch('commerce_coordinator.apps.core.tasks.acquire_task_lock')
+    def test_refund_webhook_dispatches_without_acquiring_reconcile_lock(
         self,
+        mock_core_acquire_lock,
+        mock_reconcile_acquire_lock,
         mock_refund_signal,
         mock_ct_client,
         mock_construct_event,
@@ -527,6 +531,9 @@ class WebhooksViewTests(APITestCase):
 
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         mock_refund_signal.assert_called_once()
+        # The worker owns the refund lock; the webhook must only enqueue.
+        mock_core_acquire_lock.assert_not_called()
+        mock_reconcile_acquire_lock.assert_not_called()
 
     @mock.patch('stripe.Webhook.construct_event')
     @mock.patch('commerce_coordinator.apps.stripe.views.CommercetoolsAPIClient')
