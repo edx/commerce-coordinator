@@ -12,19 +12,25 @@ Follow the `internationalization coding guidelines`_ in the edX Developer's Guid
 
 Updating Translations
 *********************
-This project uses `Transifex`_ to translate content. After new features are developed the translation source files
-should be pushed to Transifex. Our translation community will translate the content, after which we can retrieve the
-translations.
+This project follows `OEP-58`_. Translations are not stored in this repository. They live in the
+`edx/openedx-translations`_ repository and are downloaded with the `openedx-atlas`_ CLI (``atlas``).
 
-.. _Transifex: https://www.transifex.com/
+.. _OEP-58: https://docs.openedx.org/en/latest/developers/concepts/oep58.html
+.. _edx/openedx-translations: https://github.com/edx/openedx-translations
+.. _openedx-atlas: https://github.com/openedx/openedx-atlas
 
-Pushing source translation files to Transifex requires access to the edx-platform. Request access from the Open Source
-Team if you will be pushing translation files. You should also `configure the Transifex client`_ if you have not done so
-already.
+Source strings do not need to be pushed. A daily GitHub Actions workflow in edx/openedx-translations checks out this
+repository, runs ``make extract_translations`` and commits the English source files (``django.po`` and
+``djangojs.po``). The translations for each language are then generated in edx/openedx-translations by the
+ai-translations service.
 
-.. _configure the Transifex client: https://docs.transifex.com/client/config/
+``make pull_translations`` removes every language directory under ``commerce_coordinator/conf/locale``, downloads the
+translation files with ``atlas pull`` and compiles them. ``atlas`` pulls from ``openedx/openedx-translations`` by
+default, which does not have this project's translations, so set ``ATLAS_OPTIONS`` when you run it locally::
 
-The `make` targets listed below can be used to push or pull translations.
+    ATLAS_OPTIONS=--repository=edx/openedx-translations make pull_translations
+
+The ``make`` targets listed below are used in this process.
 
 ..  list-table::
     :widths: 25 75
@@ -32,10 +38,10 @@ The `make` targets listed below can be used to push or pull translations.
 
     * - Target
       - Description
+    * - extract_translations
+      - Extract strings marked for translation into the English source files
     * - pull_translations
-      - Pull translations from Transifex
-    * - push_translations
-      - Push source translation files to Transifex
+      - Pull translations from edx/openedx-translations with ``atlas`` and compile them
 
 Fake Translations
 *****************

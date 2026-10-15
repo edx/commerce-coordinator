@@ -5,9 +5,9 @@
         production-requirements static shell test coverage isort_check isort style \
         lint quality pii_check validate migrate html_coverage upgrade \
         extract_translation dummy_translations compile_translations \
-        fake_translations pull_translations push_translations start-devstack \
+        fake_translations pull_translations start-devstack \
         open-devstack pkg-devstack detect_changed_source_translations \
-        validate_translations check_keywords install_transifex_client
+        validate_translations check_keywords
 
 define BROWSER_PYSCRIPT
 import os, webbrowser, sys
@@ -143,11 +143,10 @@ compile_translations: # compile translation files, outputting .po files for each
 
 fake_translations: ## generate and compile dummy translation files
 
-pull_translations: ## pull translations from Transifex
-	tx pull -af -t --mode reviewed
-
-push_translations: ## push source translation files (.po) from Transifex
-	tx push -s
+pull_translations: ## pull translations from edx/openedx-translations via atlas (OEP-58)
+	find commerce_coordinator/conf/locale -mindepth 1 -maxdepth 1 -type d -exec rm -r {} \;
+	atlas pull $(ATLAS_OPTIONS) translations/commerce-coordinator/commerce_coordinator/conf/locale:commerce_coordinator/conf/locale
+	python manage.py compilemessages
 
 start-devstack: ## run a local development copy of the server
 	docker-compose --x-networking up
@@ -205,10 +204,3 @@ db-shell: # Run the app shell as root, enter the app's database
 
 selfcheck: ## check that the Makefile is well-formed
 	@echo "The Makefile is well-formed."
-
-install_transifex_client: ## Install the Transifex client
-	# Instaling client will skip CHANGELOG and LICENSE files from git changes
-	# so remind the user to commit the change first before installing client.
-	git diff -s --exit-code HEAD || { echo "Please commit changes first."; exit 1; }
-	curl -o- https://raw.githubusercontent.com/transifex/cli/master/install.sh | bash
-	git checkout -- LICENSE README.md ## overwritten by Transifex installer

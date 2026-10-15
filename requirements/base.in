@@ -30,6 +30,7 @@ iso4217
 inapppy
 lark
 mysqlclient
+openedx-atlas             # pulls translations from edx/openedx-translations at build time (make pull_translations)
 openedx-filters
 Pillow
 paypal-server-sdk
