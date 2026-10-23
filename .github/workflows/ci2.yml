@@ -16,7 +16,7 @@ jobs:
       matrix:
         os: [ubuntu-latest]
         python-version: ['3.12']
-        toxenv: [django42, quality, docs, pii_check]
+        toxenv: [django52, quality, docs, pii_check]
     permissions:
       # Gives the action the necessary permissions for publishing new
       # comments in pull requests.
@@ -46,7 +46,7 @@ jobs:
 
       - name: Report coverage
         id: coverage_comment
-        if: matrix.python-version == '3.12' && matrix.toxenv == 'django42'
+        if: matrix.python-version == '3.12' && matrix.toxenv == 'django52'
         uses: py-cov-action/python-coverage-comment-action@v3
         with:
           GITHUB_TOKEN: ${{ github.token }}
