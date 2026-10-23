@@ -151,8 +151,6 @@ TIME_ZONE = 'UTC'
 
 USE_I18N = True
 
-USE_L10N = True
-
 USE_TZ = True
 
 LOCALE_PATHS = (
@@ -492,9 +490,6 @@ COMMERCETOOLS_MERCHANT_CENTER_ORDERS_PAGE_URL = \
 
 # Will be suffixed with order numbers
 ECOMMERCE_RECEIPT_URL_BASE = f'{ECOMMERCE_URL}/checkout/receipt/?order_number='
-
-# Setting to keep using deprecated pytz with Django>4
-USE_DEPRECATED_PYTZ = True
 
 # BRAZE API SETTINGS
 BRAZE_API_KEY = None
