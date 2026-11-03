@@ -3,3 +3,4 @@
 # precedence, @edx/revenue-squad will be requested for
 # review when someone opens a pull request.
 * @edx/revenue-squad
+* @edx/edx-lp
