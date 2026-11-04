@@ -22,6 +22,15 @@ def is_uuid(value: str) -> bool:
     return re.search(r"\b[A-Fa-f0-9]{8}(?:-[A-Fa-f0-9]{4}){3}-[A-Fa-f0-9]{12}\b", value) is not None
 
 
+def is_course_run_key(value: str) -> bool:
+    """
+    Determine if a value is a course run key, like course-v1:edX+DemoX+Demo_Course.
+    """
+    if not value:
+        return False
+    return re.fullmatch(r"course-v1:[\w.~:-]+\+[\w.~:-]+\+[\w.~:-]+", value) is not None
+
+
 def get_order_return_info_return_items(order: CTOrder) -> List[CTReturnItem]:
     """ Returns array of Commercetools order return items """
     return_info_items = []

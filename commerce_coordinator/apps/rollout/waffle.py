@@ -14,6 +14,8 @@ ORDER_FULFILLMENT_SERVICE_FORWARDING_ENABLED = f'{WAFFLE_FLAG_NAMESPACE}.order_f
 
 REDIRECT_TO_LEGACY_ENABLED = 'redirect_to_legacy_enabled'
 
+REDIRECT_TO_ALACARTE_CHECKOUT = 'transition_to_alacarte.redirect_to_alacarte_checkout'
+
 
 def is_redirect_to_commercetools_enabled_for_user(request):
     """
@@ -42,3 +44,10 @@ def is_redirect_to_legacy_enabled(request):
     Check if redirect to legacy is enabled.
     """
     return waffle.flag_is_active(request, REDIRECT_TO_LEGACY_ENABLED)
+
+
+def is_redirect_to_alacarte_enabled_for_user(request):
+    """
+    Check if REDIRECT_TO_ALACARTE_CHECKOUT flag is enabled.
+    """
+    return waffle.flag_is_active(request, REDIRECT_TO_ALACARTE_CHECKOUT)

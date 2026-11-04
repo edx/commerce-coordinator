@@ -44,7 +44,11 @@ from commerce_coordinator.apps.lms.serializers import (
     UserRetiredInputSerializer,
     enrollment_attribute_key
 )
-from commerce_coordinator.apps.lms.utils import get_order_line_item_info_from_entitlement_uuid, get_program_offer
+from commerce_coordinator.apps.lms.utils import (
+    get_alacarte_checkout_url,
+    get_order_line_item_info_from_entitlement_uuid,
+    get_program_offer
+)
 from commerce_coordinator.apps.rollout.utils import is_legacy_order
 
 logger = logging.getLogger(__name__)
@@ -98,10 +102,12 @@ class PaymentPageRedirectView(APIView):
             response (django.http.HttpResponseRedirect):
         """
 
-        get_items = list(self.request.GET.lists())
-        redirect_url = self._add_query_params_to_redirect_url(
-            settings.COMMERCETOOLS_FRONTEND_URL, get_items
-        )
+        redirect_url = get_alacarte_checkout_url(request)
+        if not redirect_url:
+            get_items = list(self.request.GET.lists())
+            redirect_url = self._add_query_params_to_redirect_url(
+                settings.COMMERCETOOLS_FRONTEND_URL, get_items
+            )
         redirect = HttpResponseRedirect(redirect_url, status=HTTP_303_SEE_OTHER)
         redirect.headers[HttpHeadersNames.CONTENT_TYPE.value] = MediaTypes.JSON.value
         logger.debug(

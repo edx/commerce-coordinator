@@ -2,10 +2,22 @@
 
 import re
 from typing import List
+from urllib.parse import urlencode
+
+from django.conf import settings
+from django.core.cache import cache
+from requests.exceptions import RequestException
 
 from commerce_coordinator.apps.commercetools.catalog_info.constants import TwoUKeys
 from commerce_coordinator.apps.commercetools.clients import CommercetoolsAPIClient
-from commerce_coordinator.apps.lms.constants import CT_ABSOLUTE_DISCOUNT_TYPE, DEFAULT_BUNDLE_DISCOUNT_KEY
+from commerce_coordinator.apps.lms.clients import DiscoveryAPIClient
+from commerce_coordinator.apps.lms.constants import (
+    ALACARTE_COURSE_UUID_CACHE_TIMEOUT,
+    CT_ABSOLUTE_DISCOUNT_TYPE,
+    DEFAULT_BUNDLE_DISCOUNT_KEY
+)
+from commerce_coordinator.apps.rollout.utils import is_course_run_key
+from commerce_coordinator.apps.rollout.waffle import is_redirect_to_alacarte_enabled_for_user
 
 
 def get_order_line_item_info_from_entitlement_uuid(order_number: str, entitlement_uuid: str) -> tuple[str, str]:
@@ -89,3 +101,51 @@ def get_program_offer(cart_discounts: list, bundle_key: str) -> dict:
         "discount_type": discount_type,
         "key": discount_key,
     }
+
+
+def get_course_uuid(course_run_key: str) -> str | None:
+    """
+    Get the UUID of the course of a course run from Discovery, or None when Discovery cannot tell.
+
+    A course run never changes its course, so a UUID that was found is cached.
+    """
+    cache_key = f'alacarte.course_uuid.{course_run_key}'
+    course_uuid = cache.get(cache_key)
+    if course_uuid:
+        return course_uuid
+
+    try:
+        course_uuid = DiscoveryAPIClient().get_course_uuid(course_run_key)
+    except RequestException:
+        return None  # the client has logged it
+
+    if course_uuid:
+        cache.set(cache_key, course_uuid, ALACARTE_COURSE_UUID_CACHE_TIMEOUT)
+    return course_uuid
+
+
+def get_alacarte_checkout_url(request) -> str | None:
+    """
+    Get the URL of the a la carte checkout for the purchase of one course, or None to keep today's checkout.
+
+    The purchase goes to the a la carte checkout when the waffle flag is on for the user, and the link has one
+    course run key and no bundle (program) or catalog (enterprise). The checkout needs the course UUID as well.
+    """
+    if not is_redirect_to_alacarte_enabled_for_user(request):
+        return None
+
+    query_params = request.GET
+    course_run_keys = query_params.getlist('course_run_key')
+    if len(course_run_keys) != 1 or query_params.get('bundle') or query_params.get('catalog'):
+        return None
+
+    course_run_key = course_run_keys[0].strip()
+    if not is_course_run_key(course_run_key):
+        return None
+
+    course_uuid = get_course_uuid(course_run_key)
+    if not course_uuid:
+        return None
+
+    query = urlencode({'course_uuid': course_uuid, 'course_run_key': course_run_key})
+    return f'{settings.ALACARTE_CHECKOUT_URL}?{query}'

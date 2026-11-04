@@ -465,6 +465,7 @@ PAYMENT_PROCESSOR_CONFIG = {
 
 LMS_URL_ROOT = "http://localhost:18000"
 LMS_DASHBOARD_URL = "http://localhost:18000"  # fix me
+DISCOVERY_URL_ROOT = "http://localhost:18381"
 ORDER_HISTORY_URL = "http://localhost:1996"
 
 ORDER_FULFILLMENT_URL_ROOT = "http://localhost:8155"
@@ -485,6 +486,7 @@ COMMERCETOOLS_CONFIG = {
 
 # Checkout view urls
 COMMERCETOOLS_FRONTEND_URL = 'http://localhost:3000/en/add-to-cart/'
+ALACARTE_CHECKOUT_URL = 'http://localhost:2000/aca-checkout'
 
 COMMERCETOOLS_MERCHANT_CENTER_ORDERS_PAGE_URL = \
     f'https://mc.{_COMMERCETOOLS_CONFIG_GEO}.commercetools.com/{COMMERCETOOLS_CONFIG["projectKey"]}/orders'

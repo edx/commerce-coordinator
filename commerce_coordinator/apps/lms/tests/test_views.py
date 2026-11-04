@@ -16,6 +16,7 @@ from mock import patch
 from openedx_filters.exceptions import OpenEdxFilterException
 from rest_framework import status
 from rest_framework.test import APITestCase
+from waffle.testutils import override_flag
 
 from commerce_coordinator.apps.commercetools.clients import DiscountCodeInfo
 from commerce_coordinator.apps.commercetools.tests.conftest import (
@@ -158,6 +159,55 @@ class PaymentPageRedirectViewTests(APITestCase):
                 {'sku': ['sku1', 'sku2'], 'bundle': '818aff6f-1a39-4515-8779-dfebc0742d8e'}
             )
             self.assertEqual(response.status_code, status.HTTP_303_SEE_OTHER)
+
+    def test_payment_page_redirect_is_unchanged_without_the_alacarte_flag(self):
+        """Without the a la carte flag, every query param goes to the Commercetools checkout as before."""
+        self.client.force_authenticate(user=self.user)
+        response = self.client.get(
+            self.url,
+            {'sku': ['sku1'], 'course_run_key': 'course-v1:MichiganX+InjuryPreventionX+1T2021', 'code': 'DISCOUNT'}
+        )
+        self.assertEqual(response.status_code, status.HTTP_303_SEE_OTHER)
+        self.assertEqual(
+            response.url,
+            f'{settings.COMMERCETOOLS_FRONTEND_URL}?sku=sku1'
+            '&course_run_key=course-v1%3AMichiganX%2BInjuryPreventionX%2B1T2021&code=DISCOUNT'
+        )
+
+    @override_settings(ALACARTE_CHECKOUT_URL='https://learner-home.example.com/aca-checkout')
+    @override_flag('transition_to_alacarte.redirect_to_alacarte_checkout', active=True)
+    @patch('commerce_coordinator.apps.lms.utils.get_course_uuid')
+    def test_payment_page_redirect_to_alacarte(self, course_uuid_mock):
+        """With the a la carte flag on, a course purchase goes to the a la carte checkout."""
+        course_uuid_mock.return_value = '3bdf1dd1-49be-4a15-9145-38901f578c5a'
+        self.client.force_authenticate(user=self.user)
+        response = self.client.get(
+            self.url,
+            {'sku': ['sku1'], 'course_run_key': 'course-v1:MichiganX+InjuryPreventionX+1T2021'}
+        )
+        self.assertEqual(response.status_code, status.HTTP_303_SEE_OTHER)
+        self.assertEqual(
+            response.url,
+            'https://learner-home.example.com/aca-checkout?course_uuid=3bdf1dd1-49be-4a15-9145-38901f578c5a'
+            '&course_run_key=course-v1%3AMichiganX%2BInjuryPreventionX%2B1T2021'
+        )
+
+    @override_flag('transition_to_alacarte.redirect_to_alacarte_checkout', active=True)
+    @patch('commerce_coordinator.apps.lms.utils.get_course_uuid')
+    def test_payment_page_redirect_falls_back_to_commercetools_without_a_course_uuid(self, course_uuid_mock):
+        """With the a la carte flag on, a course without a Discovery UUID keeps the Commercetools checkout."""
+        course_uuid_mock.return_value = None
+        self.client.force_authenticate(user=self.user)
+        response = self.client.get(
+            self.url,
+            {'sku': ['sku1'], 'course_run_key': 'course-v1:MichiganX+InjuryPreventionX+1T2021'}
+        )
+        self.assertEqual(response.status_code, status.HTTP_303_SEE_OTHER)
+        self.assertEqual(
+            response.url,
+            f'{settings.COMMERCETOOLS_FRONTEND_URL}?sku=sku1'
+            '&course_run_key=course-v1%3AMichiganX%2BInjuryPreventionX%2B1T2021'
+        )
 
 
 @override_settings(COMMERCETOOLS_MERCHANT_CENTER_ORDERS_PAGE_URL='https://merchant-centre/orders')

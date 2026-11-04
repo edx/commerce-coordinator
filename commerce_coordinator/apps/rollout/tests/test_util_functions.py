@@ -8,6 +8,7 @@ from commerce_coordinator.apps.core.tests.utils import name_test, uuid4_str
 from commerce_coordinator.apps.rollout.utils import (
     get_order_return_info_return_items,
     is_commercetools_line_item_already_refunded,
+    is_course_run_key,
     is_legacy_order,
     is_uuid
 )
@@ -39,6 +40,21 @@ class TestUtilityFunctions(TestCase):
     @ddt.unpack
     def test_is_uuid(self, value, expectation):
         self.assertEqual(is_uuid(value), expectation)
+
+    @ddt.data(
+        name_test("test course run key passes", ("course-v1:edX+DemoX+Demo_Course", True)),
+        name_test("test key with dots and dashes passes", ("course-v1:MITx+6.00.1x+2T-2026", True)),
+        name_test("test credit variant sku fails", ("credit-course-v1:edX+DemoX+Demo_Course", False)),
+        name_test("test old style key fails", ("edX/DemoX/Demo_Course", False)),
+        name_test("test key with a path fails", ("course-v1:edX+DemoX+Demo_Course/../other", False)),
+        name_test("test key with a query fails", ("course-v1:edX+DemoX+Demo_Course?a=b", False)),
+        name_test("test key with a missing part fails", ("course-v1:edX+DemoX", False)),
+        name_test("test tolerates none but fails", (None, False)),
+        name_test("test tolerates blank but fails", ("", False)),
+    )
+    @ddt.unpack
+    def test_is_course_run_key(self, value, expectation):
+        self.assertEqual(is_course_run_key(value), expectation)
 
     def test_get_order_return_info_return_items(self):
         order = gen_order(uuid4_str())

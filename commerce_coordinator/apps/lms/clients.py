@@ -188,3 +188,38 @@ class LMSAPIClient(BaseEdxOAuthClient):
                 **payload
             )
             raise
+
+
+class DiscoveryAPIClient(BaseEdxOAuthClient):
+    """
+    API client for calls to the edX Discovery service.
+    """
+
+    @property
+    def api_course_run_base_url(self):
+        """
+        Base URL for the Discovery Course Run API.
+        """
+        return urljoin_directory(
+            settings.DISCOVERY_URL_ROOT, '/api/v1/course_runs/'
+        )
+
+    def get_course_uuid(self, course_run_key):
+        """
+        Return the UUID of the course that a course run belongs to.
+
+        The course run key is added to the URL as it is, because urljoin reads a key like course-v1:org+course+run
+        as a URL with the scheme course-v1.
+        """
+        try:
+            response = self.client.get(
+                f'{self.api_course_run_base_url}{course_run_key}/',
+                timeout=self.normal_timeout,
+            )
+            response.raise_for_status()
+            return response.json().get('course_uuid')
+        except RequestException as exc:
+            self.log_request_exception(
+                f"[DiscoveryAPIClient.get_course_uuid] course_run_key:{course_run_key}", logger, exc
+            )
+            raise
