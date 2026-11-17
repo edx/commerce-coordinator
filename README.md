@@ -49,14 +49,14 @@
 | commerce\_coordinator/apps/commercetools/tests/sub\_messages/test\_signals\_delayed.py |       45 |        0 |        0 |        0 |    100% |           |
 | commerce\_coordinator/apps/commercetools/tests/sub\_messages/test\_tasks.py            |      391 |        0 |        2 |        0 |    100% |           |
 | commerce\_coordinator/apps/commercetools/tests/test\_authentication.py                 |       25 |        0 |        0 |        0 |    100% |           |
-| commerce\_coordinator/apps/commercetools/tests/test\_clients.py                        |      835 |        4 |       10 |        1 |     99% |784-795, 869-880, 1151-\>1156 |
+| commerce\_coordinator/apps/commercetools/tests/test\_clients.py                        |      835 |        4 |        6 |        1 |     99% |784-795, 869-880, 1151-\>1156 |
 | commerce\_coordinator/apps/commercetools/tests/test\_data.py                           |       87 |        0 |        6 |        0 |    100% |           |
 | commerce\_coordinator/apps/commercetools/tests/test\_finalize\_task.py                 |       44 |        0 |        0 |        0 |    100% |           |
 | commerce\_coordinator/apps/commercetools/tests/test\_http\_api\_client.py              |      111 |        0 |        0 |        0 |    100% |           |
 | commerce\_coordinator/apps/commercetools/tests/test\_pipeline.py                       |      213 |        0 |        0 |        0 |    100% |           |
 | commerce\_coordinator/apps/commercetools/tests/test\_signals.py                        |       92 |        0 |        0 |        0 |    100% |           |
 | commerce\_coordinator/apps/commercetools/tests/test\_stripe\_payment\_finalize.py      |      327 |        0 |        6 |        0 |    100% |           |
-| commerce\_coordinator/apps/commercetools/tests/test\_stripe\_refund\_reconcile.py      |      198 |        0 |        8 |        0 |    100% |           |
+| commerce\_coordinator/apps/commercetools/tests/test\_stripe\_refund\_reconcile.py      |      198 |        0 |        4 |        0 |    100% |           |
 | commerce\_coordinator/apps/commercetools/tests/test\_tasks.py                          |      384 |        0 |        0 |        0 |    100% |           |
 | commerce\_coordinator/apps/commercetools/tests/test\_utils.py                          |      312 |        0 |        0 |        0 |    100% |           |
 | commerce\_coordinator/apps/commercetools/tests/test\_views.py                          |      197 |        0 |        0 |        0 |    100% |           |
@@ -216,7 +216,7 @@
 | commerce\_coordinator/apps/stripe/utils.py                                             |        2 |        0 |        0 |        0 |    100% |           |
 | commerce\_coordinator/apps/stripe/views.py                                             |      114 |        6 |       22 |        3 |     93% |89, 139, 229-234, 238-239 |
 | commerce\_coordinator/urls.py                                                          |       24 |        0 |        0 |        0 |    100% |           |
-| **TOTAL**                                                                              | **11742** |  **477** |  **900** |  **107** | **95%** |           |
+| **TOTAL**                                                                              | **11742** |  **477** |  **892** |  **107** | **95%** |           |
 
 
 ## Setup coverage badge
