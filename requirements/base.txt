@@ -25,9 +25,8 @@ apimatic-requests-client-adapter==0.1.8
     # via paypal-server-sdk
 app-store-notifications-v2-validator==0.0.9
     # via -r requirements/base.in
-asgiref==3.7.2
+asgiref==3.12.1
     # via
-    #   -r requirements/base.in
     #   django
     #   django-cors-headers
 attrs==25.3.0
@@ -99,10 +98,9 @@ defusedxml==0.7.1
     # via
     #   python3-openid
     #   social-auth-core
-django==4.2.24
+django==5.2.18
     # via
     #   -c requirements/common_constraints.txt
-    #   -c requirements/constraints.txt
     #   -r requirements/base.in
     #   django-cors-headers
     #   django-crum
@@ -294,10 +292,10 @@ oauthlib==3.3.1
     # via
     #   requests-oauthlib
     #   social-auth-core
-openedx-atlas==0.7.1
-    # via -r requirements/base.in
 openapi-codec==1.3.2
     # via django-rest-swagger
+openedx-atlas==0.7.1
+    # via -r requirements/base.in
 openedx-filters==2.1.0
     # via -r requirements/base.in
 packaging==25.0
@@ -429,9 +427,12 @@ six==1.17.0
 sniffio==1.3.1
     # via anyio
 social-auth-app-django==5.4.3
-    # via edx-auth-backends
+    # via
+    #   -c requirements/common_constraints.txt
+    #   edx-auth-backends
 social-auth-core==4.7.0
     # via
+    #   -c requirements/common_constraints.txt
     #   edx-auth-backends
     #   social-auth-app-django
 sqlparse==0.5.3
@@ -464,9 +465,7 @@ uritemplate==4.2.0
     #   coreapi
     #   google-api-python-client
 urllib3==2.2.3
-    # via
-    #   -c requirements/common_constraints.txt
-    #   requests
+    # via requests
 vine==5.1.0
     # via
     #   amqp
