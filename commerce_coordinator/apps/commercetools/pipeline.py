@@ -469,7 +469,9 @@ class AnonymizeRetiredUser(PipelineStep):
 
             first_name = customer.first_name
             last_name = customer.last_name
-            email = customer.email
+            # CT requires unique customer emails, so salt the retired email with the LMS user ID.
+            # Otherwise a later customer who reused a retired customer's email can't be retired (DuplicateField).
+            email = f"{customer.email}{lms_user_id}"
             lms_username = customer.custom.fields.get("edx-lms_user_name")
             fields_to_anonymize = {
                 "first_name": first_name,

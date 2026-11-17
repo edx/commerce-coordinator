@@ -394,6 +394,33 @@ class AnonymizeRetiredUserPipelineTests(TestCase):
         result_data = ret['returned_customer']
         self.assertEqual(result_data, 'customer_not_found')
 
+    @patch(
+        'commerce_coordinator.apps.commercetools.clients.CommercetoolsAPIClient'
+        '.retire_customer_anonymize_fields'
+    )
+    @patch(
+        'commerce_coordinator.apps.commercetools.clients.CommercetoolsAPIClient'
+        '.get_customer_by_lms_user_id'
+    )
+    @patch('commerce_coordinator.apps.commercetools.pipeline.create_retired_fields')
+    def test_pipeline_same_email_different_lms_users(
+        self, mock_anonymize_fields, mock_customer_by_lms_id, mock_retire_customer
+    ):
+        """Ensure customers sharing an email get distinct retired emails"""
+
+        pipe = AnonymizeRetiredUser("test_pipe", None)
+        mock_anonymize_fields.side_effect = lambda value, salts: f"retired_user_{value}"
+        mock_customer_by_lms_id.return_value = self.customer_data
+        mock_retire_customer.return_value = self.update_customer_response
+
+        pipe.run_filter(lms_user_id=self.mock_lms_user_id)
+        pipe.run_filter(lms_user_id=self.mock_lms_user_id + 1)
+
+        first_retired_email = mock_retire_customer.call_args_list[0].args[4]
+        second_retired_email = mock_retire_customer.call_args_list[1].args[4]
+        self.assertEqual(first_retired_email, f"retired_user_{self.customer_data.email}{self.mock_lms_user_id}")
+        self.assertNotEqual(first_retired_email, second_retired_email)
+
 
 class RefundPayPalPaymentTests(TestCase):
     """Tests for RefundPayPalPayment pipeline step"""
